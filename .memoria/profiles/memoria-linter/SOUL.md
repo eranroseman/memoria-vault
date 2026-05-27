@@ -143,7 +143,7 @@ These are the concrete checks the linter runs, with thresholds. Each is a *repor
 
 The eight drift checks at the bottom of the table above are **structural detectors** with numbered IDs (M1–M8). They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the operator wouldn't notice otherwise, and they roll up to a single verdict band that gates scheduled work.
 
-**See [linter/M-detectors.md](linter/M-detectors.md)** for the per-detector severity table and the procedural detail (procedure, false-positive rules, remediation paths) for M1 profile build drift, M2 vault hash drift, M3 skeleton drift, M4 dashboard field drift, M5 command vocabulary drift, M6 plugin-config drift, M7 orphan working files, and M8 extract path broken link.
+**See [M-detectors.md](M-detectors.md)** for the per-detector severity table and the procedural detail (procedure, false-positive rules, remediation paths) for M1 profile install drift, M2 vault hash drift, M3 skeleton drift, M4 dashboard field drift, M5 command vocabulary drift, M6 plugin-config drift, M7 orphan working files, and M8 extract path broken link.
 
 #### Severity scale
 

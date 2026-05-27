@@ -181,7 +181,7 @@ This action is `report` only. Never auto-clear the field, never auto-trigger Mar
 - **Clear the field.** If the extract is intentionally absent (e.g., a non-OA paper where the PDF couldn't be obtained), set `extract_path: ""` and let the schema-hygiene query surface it as a no-extract source-note.
 - **Investigate the citekey.** If Zotero's citekey was renamed but the source-note's filename wasn't, the `extract_path` is stale by reference rather than by file. Operator reconciles the names.
 
-False-positive cases to handle: paths with forward slashes on Windows, leading `./` or trailing whitespace, paths starting with the vault root prefix (e.g., `/vault/90-assets/...`) that the resolver should normalize. Treat all of these as resolvable; only report when the *normalized* path doesn't exist.
+False-positive cases to handle: paths with forward slashes on Windows, leading `./` or trailing whitespace, paths starting with a vault-absolute prefix (e.g., `/90-assets/...`) that the resolver should normalize to vault-relative. Treat all of these as resolvable; only report when the *normalized* path doesn't exist.
 
 ### Extension candidate (not yet implemented): orphan extracts
 
