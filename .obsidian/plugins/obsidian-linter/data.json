@@ -1,0 +1,59 @@
+{
+  "lintOnSave": true,
+  "recordLintOnSaveLogs": false,
+  "displayChanged": true,
+  "suppressMessageWhenNoChange": false,
+  "lintOnFileChange": false,
+  "displayLintOnFileChangeNotice": false,
+  "settingsConvertedToConfigKeyValues": true,
+  "additionalFileExtensions": [],
+  "foldersToIgnore": [
+    "00-meta",
+    "10-inbox",
+    "20-sources",
+    "30-synthesis",
+    "40-workbench",
+    "50-deliverables",
+    "90-assets",
+    "95-archive"
+  ],
+  "filesToIgnore": [],
+  "linterLocale": "system-default",
+  "logLevel": "ERROR",
+  "lintCommands": [],
+  "customRegexes": [],
+  "commonStyles": {
+    "aliasArrayStyle": "single-line",
+    "tagArrayStyle": "single-line",
+    "minimumNumberOfDollarSignsToBeAMathBlock": 2,
+    "escapeCharacter": "\"",
+    "removeUnnecessaryEscapeCharsForMultiLineArrays": false
+  },
+  "rules": {
+    "yaml-key-sort": {
+      "enabled": true,
+      "keyOrder": "title\ntype\nschema_version\ntriage_status\ntriage_completed\nfull_text_reviewed\nstatus\nrelevance\npub_status\npub_status_note\nsuperseded_by\nsupersedes\nmaturity\npromoted_date\nprojects\ntags\nmoc\nsources\nstudy_design\nmethods\ntopic\nadded\ncreated\ncitekey\ndoi\nopenalex_id\nsemantic_scholar_id\npmid\narxiv_id\norcid\nror\nauthors\nyear\njournal\ncontainer-title\nvolume\nissue\npages\nurl\nzotero_uri\nreview_status\nsource_papers\nrole_in_stack\nmaintenance_status\nrelevance_to_projects\nrelationship_to_research\noutreach_status\nscope\nparent_moc\ncompiled_by\nreviewed_by\nproject\nrepository\ndate\nslug\nlanguage",
+      "priorityKeyOrder": true
+    },
+    "trailing-spaces": {
+      "enabled": true,
+      "twospaceLineBreak": false
+    },
+    "yaml-trailing-newline": {
+      "enabled": true
+    },
+    "remove-multiple-spaces": {
+      "enabled": true
+    },
+    "yaml-timestamp": {
+      "enabled": false
+    },
+    "proper-ellipsis": {
+      "enabled": false
+    },
+    "no-bare-urls": {
+      "enabled": false
+    }
+  },
+  "recordWithFileChange": false
+}

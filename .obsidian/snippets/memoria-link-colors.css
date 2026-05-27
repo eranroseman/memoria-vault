@@ -1,0 +1,103 @@
+/* Memoria link colors — lifecycle-folder accents
+ *
+ * Drop this snippet into vault/.obsidian/snippets/memoria-link-colors.css and
+ * enable it via Settings -> Appearance -> CSS snippets.
+ *
+ * Requires the obsidian-style-settings plugin (for the CSS variables below to
+ * be operator-tunable) and the supercharged-links plugin (to apply the
+ * data-link-* attributes to internal links).
+ *
+ * The colors signal where a link points by folder lifecycle stage. A draft
+ * citing a claim note looks visually different from a draft citing a source
+ * note — useful in citation-heavy prose where the reader otherwise can't tell
+ * what kind of artifact each wikilink resolves to.
+ */
+
+/* @settings
+name: Memoria link colors
+id: memoria-link-colors
+settings:
+  -
+    id: memoria-source-color
+    title: Source notes (20-sources/)
+    description: Color for links into the source layer (literature, items, entities).
+    type: variable-color
+    format: hex
+    default: '#8a8a8a'
+  -
+    id: memoria-claim-color
+    title: Claim notes (30-synthesis/01-permanent/)
+    description: Color for links to claim notes — the primary synthesis layer.
+    type: variable-color
+    format: hex
+    default: '#4a90e2'
+  -
+    id: memoria-wiki-color
+    title: Reference notes (30-synthesis/02-wiki/)
+    description: Color for links to canonical reference notes (promoted from claims).
+    type: variable-color
+    format: hex
+    default: '#7b4ae2'
+  -
+    id: memoria-moc-color
+    title: MOCs (30-synthesis/03-moc/)
+    description: Color for Map-of-Content links — the topic-hub navigation layer.
+    type: variable-color
+    format: hex
+    default: '#e2a44a'
+  -
+    id: memoria-draft-color
+    title: Workbench drafts (40-workbench/02-drafts/)
+    description: Color for in-progress draft links — muted to signal "not canonical."
+    type: variable-color
+    format: hex
+    default: '#a0a0a0'
+*/
+
+/* Source notes — neutral accent (signals "describes the world", not your thinking) */
+a[data-href^="20-sources/"],
+a.internal-link[data-href^="20-sources/"] {
+  color: var(--memoria-source-color);
+}
+
+/* Claim notes — primary accent (your thinking, single-claim atomic) */
+a[data-href^="30-synthesis/01-permanent/"],
+a.internal-link[data-href^="30-synthesis/01-permanent/"] {
+  color: var(--memoria-claim-color);
+  font-weight: 500;
+}
+
+/* Reference notes (wiki) — secondary accent, denotes canonical status */
+a[data-href^="30-synthesis/02-wiki/"],
+a.internal-link[data-href^="30-synthesis/02-wiki/"] {
+  color: var(--memoria-wiki-color);
+  font-weight: 600;
+}
+
+/* MOCs — italic + accent (visual hierarchy: hubs, not leaves) */
+a[data-href^="30-synthesis/03-moc/"],
+a.internal-link[data-href^="30-synthesis/03-moc/"] {
+  color: var(--memoria-moc-color);
+  font-style: italic;
+}
+
+/* Workbench drafts — muted (signal "in progress, not canonical") */
+a[data-href^="40-workbench/02-drafts/"],
+a.internal-link[data-href^="40-workbench/02-drafts/"] {
+  color: var(--memoria-draft-color);
+}
+
+/* Inbox notes — muted strikethrough-leaning (signal "not yet triaged") */
+a[data-href^="10-inbox/"],
+a.internal-link[data-href^="10-inbox/"] {
+  color: var(--memoria-draft-color);
+  opacity: 0.7;
+}
+
+/* Archive — strikethrough (signal "superseded, do not cite") */
+a[data-href^="95-archive/"],
+a.internal-link[data-href^="95-archive/"] {
+  color: var(--memoria-draft-color);
+  text-decoration: line-through;
+  opacity: 0.5;
+}

@@ -1,0 +1,25 @@
+# Obsidian per-machine state — different per device, regenerated on use
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Obsidian Local REST API plugin: data.json contains generated secrets
+# (apiKey, TLS certificate, RSA private key). Plugin regenerates on first launch.
+# Only the .example file ships in this repo.
+.obsidian/plugins/obsidian-local-rest-api/data.json
+
+# Per-machine secret material (operator copies .env.EXAMPLE to .env, fills in keys)
+.env
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor scratch / sync conflict artifacts
+*.tmp.*
+*.bak
+*.swp
+*~
+.#*
+*.orig
+*.rej

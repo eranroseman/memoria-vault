@@ -1,0 +1,17 @@
+{
+  "_comment": "Sanitized example. Do NOT commit the real data.json — it contains an apiKey, a TLS certificate, and an RSA private key. Gitignore the real file; let the plugin regenerate secrets on first launch. See memoria-docs/references/obsidian-plugins.md#obsidian-local-rest-api.",
+
+  "port": 27124,
+  "insecurePort": 27123,
+  "enableInsecureServer": false,
+
+  "_apiKey_note": "On first launch the plugin generates a 64-char hex apiKey here. Copy that value into your local .env as MEMORIA_OBSIDIAN_API_KEY so Hermes can authenticate; do not edit it back into this example file.",
+  "apiKey": "REPLACE_ON_FIRST_LAUNCH",
+
+  "_crypto_note": "On first launch the plugin generates a self-signed TLS cert (1-year validity) and the matching RSA private key into a crypto: block. Do not commit these. If the keys leak, regenerate via the plugin's Reset command and rotate MEMORIA_OBSIDIAN_API_KEY.",
+  "crypto": {
+    "cert": "REPLACE_ON_FIRST_LAUNCH",
+    "privateKey": "REPLACE_ON_FIRST_LAUNCH",
+    "publicKey": "REPLACE_ON_FIRST_LAUNCH"
+  }
+}
