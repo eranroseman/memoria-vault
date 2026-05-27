@@ -41,12 +41,29 @@ You **can't** run Memoria yet — `install.ps1` doesn't exist, the per-profile `
 
 In rough order:
 
-1. `install.ps1` (Windows) + `install.sh` (macOS/Linux) — detect Hermes, copy the seven profile dirs to `~/.hermes/profiles/memoria-*/`, substitute `{{VAULT_PATH}}` in `mcp.json`, register profiles with `hermes profile install --alias --force --yes`
-2. Per-profile `config.yaml`, `mcp.json` (with placeholders), `.env.EXAMPLE`, `distribution.yaml` (×7)
-3. `.memoria/lane-overrides/*.yaml` — per-lane policy YAML the policy MCP reads at startup (×7)
-4. `.memoria/mcp/policy_mcp.py`, `tasks_mcp.py`, `requirements.txt` — Memoria's two MCP servers
+1. ✅ `install.ps1` (Windows) -- ships in this v0.1.1 scaffold. Detects Hermes + Python on PATH, copies any complete profile dirs to `~/.hermes/profiles/memoria-*/`, substitutes `{{VAULT_PATH}}` in `mcp.json`, registers profiles with `hermes profile install --alias --force --yes`, bootstraps `.env` from `.env.EXAMPLE`. **Gracefully skips profiles missing the v0.2 wiring** -- run it today and you'll see all 7 profiles skipped with clear "missing required files" messages.
+2. ⬜ `install.sh` (macOS/Linux) -- mirror of `install.ps1`.
+3. ⬜ Per-profile `config.yaml`, `mcp.json` (with `{{VAULT_PATH}}` placeholder), `.env.EXAMPLE`, `distribution.yaml` (×7). Each makes its profile installable.
+4. ⬜ `.memoria/lane-overrides/*.yaml` -- per-lane policy YAML the policy MCP reads at startup (×7).
+5. ⬜ `.memoria/mcp/policy_mcp.py`, `tasks_mcp.py`, `requirements.txt` -- Memoria's two MCP servers.
 
-When those land, `./install.ps1` will set up a working Memoria instance on the operator's machine.
+When the per-profile wiring lands, `./install.ps1` will set up a working Memoria instance on the operator's machine.
+
+## Trying install.ps1 today
+
+Even though no profiles will install yet, you can verify the script parses and runs correctly:
+
+```powershell
+./install.ps1 -SkipHermesCheck -SkipPythonCheck
+```
+
+It should report "0 of 7 installed" with all profiles skipped for "missing required files: config.yaml, mcp.json, distribution.yaml". That's the expected v0.1 behavior. When the wiring is authored for a single profile (say, `memoria-linter`), the next `./install.ps1` run will install just that one.
+
+Useful flags:
+
+- `-Only memoria-linter,memoria-researcher` -- target only specific profiles
+- `-SkipHermesCheck` -- bypass the Hermes-on-PATH check
+- `-SkipPythonCheck` -- bypass the Python check (until MCP servers need it)
 
 ## License
 
