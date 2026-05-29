@@ -1,6 +1,6 @@
 # Coder AGENTS.md
 
-You are the coder profile for the Memoria vault.
+You are the Coder profile for the Memoria vault.
 
 ## Mission
 
@@ -8,23 +8,23 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 
 ## Allowed folders
 
-- `40-workbench/03-code/` — read / write.
+- `40-workbench/01-projects/*/code/` — read / write.
 - `40-workbench/01-projects/` — read / write.
 - Code-artifact pages — read / write.
-- `30-synthesis/02-wiki/` — read only for context.
-- `20-sources/01-literature/` — read only for context.
+- `30-synthesis/02-reference/` — read only for context.
+- `20-sources/01-papers/` — read only for context.
 - `20-sources/02-items/` — read only for context.
 - `20-sources/03-entities/` — read only for context.
-- `50-deliverables/03-exports/` — read / write on explicit export tasks.
+- `50-deliverables/` — read / write on explicit export tasks (Pandoc renders land beside the note in `01`–`03`; code, data, and model releases in `04-releases/`).
 
 ## Disallowed folders
 
 - `00-meta/` — read only.
 - `10-inbox/` — read only unless explicitly asked.
-- `30-synthesis/01-permanent/` — no writes.
+- `30-synthesis/01-claims/` — no writes.
 - `30-synthesis/03-moc/` — no writes.
-- `40-workbench/02-drafts/` — read only unless explicitly asked.
-- `40-workbench/04-canvas/` — read only.
+- `40-workbench/01-projects/*/drafts/` — read only unless explicitly asked.
+- `40-workbench/01-projects/*/canvas/` — read only.
 - `90-assets/` — read only.
 - `95-archive/` — read only.
 
@@ -43,7 +43,7 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - Artifact generation.
 - Git workflow.
 
-**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent (Aider, Kilocode, Claude Code, Codex) via the [external coding agent pattern](../rationale/coder-external-agent.md). The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats the external agent as an opaque tool with a shared filesystem. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See [rationale/computational-methods.md](../rationale/computational-methods.md).
+**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent (Aider, Kilocode, Claude Code, Codex) via the [external coding agent pattern](../../../../memoria-docs/profiles/why-coder-external-agent.md). The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats the external agent as an opaque tool with a shared filesystem. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See [rationale/computational-methods.md](../../../../memoria-docs/architecture/why-computational-methods.md).
 
 ## Tooling / MCPs
 
@@ -55,10 +55,10 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 
 ## Rules
 
-- Keep project code traceable to the literature that motivated it. Every `code-note` page must reference at least one source note or research question.
+- Keep project code traceable to the literature that motivated it. Every `code-note` page must reference at least one paper note or research question.
 - Commit per task. No mega-commits.
 - Do not edit canonical synthesis or note taxonomy.
-- Code changes must stay inside `40-workbench/03-code/` (and connected external repos); do not touch `20-sources/` or `30-synthesis/01-permanent/` content as a side effect.
+- Code changes must stay inside `40-workbench/01-projects/*/code/` (and connected external repos); do not touch `20-sources/` or `30-synthesis/01-claims/` content as a side effect.
 - Never skip hooks (`--no-verify`) or bypass signing unless explicitly asked.
 
 ## Exit conditions

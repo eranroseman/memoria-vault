@@ -1,25 +1,30 @@
 # memoria-vault
 
-The operator-facing starter vault for **Memoria** — a research operating system that turns sources into durable knowledge through explicit Kanban states, specialized Hermes agent profiles, and a discipline of human-owned synthesis.
+The human-facing starter vault for **Memoria** — a research operating system that turns sources into durable knowledge through explicit Kanban states, specialized Hermes agent profiles, and a discipline of human-owned synthesis.
 
-> **Status: v0.1 scaffold.** The vault skeleton, the 11 dashboards, the 15 note templates, the 5 plugin configs, and the 7 profile `SOUL.md` prompts ship in this repo. The wiring around them — `install.ps1`, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE`, the lane-override YAML, the policy and tasks MCP server source — is still being authored. **Clones today are for review, not running.**
+> **Status: v0.1 scaffold.** The vault skeleton, the 10 dashboards, the 15 note templates, the 13 human-facing reference notes, the 5 plugin configs, and the 7 profile `SOUL.md` prompts ship in this repo. The wiring around them — `install.ps1`, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE`, the lane-override YAML, the policy and tasks MCP server source — is still being authored. **Clones today are for review, not running.**
 
 ## What's here
 
 - `00-meta/` — vault skeleton
-  - `01-templates/` — 15 note templates (claim-note, source-note, fleeting-note, …)
-  - `05-dashboards/` — 11 Obsidian dashboards (index, board-state, drift-watch, fleet-observability, weekly-dashboard, …)
-  - `02-csl/`, `03-config/`, `04-logs/`, `06-schema/`, `07-skills/`, `08-metrics/` — placeholders for content the operator and agents populate at runtime
-- `10-inbox/`, `20-sources/`, `30-synthesis/`, `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` — empty operator-facing folders following the canonical numbered-prefix taxonomy
+  - `01-dashboards/` — 9 Obsidian dashboards (index, board-state, drift-watch, audit-log, weekly-dashboard, discuss-queue, reading-pipeline, schema-hygiene, open-questions)
+  - `02-logs/` — populated Day 1 by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
+  - `03-templates/` — 15 note templates (claim-note, paper-note, fleeting-note, …)
+  - `04-reference/` — 10 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist)
+  - `index.md` — vault landing page (pin in sidebar)
+  - `research-directions.md` — Librarian's session-start input (populate this)
+  - `system-status.md` — runtime health snapshot
+- `10-inbox/`, `20-sources/`, `30-synthesis/`, `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` — empty human-facing folders following the standard numbered-prefix taxonomy
 - `.obsidian/` — Obsidian config (auto-hidden by Obsidian)
-  - `plugins/<plugin>/data.json{,.example,.TODO}` — five plugin configs (obsidian-linter, obsidian-citation-plugin, agent-client, obsidian-local-rest-api, callout-manager)
+  - `plugins/<plugin>/data.json{,.example,.TODO}` — five plugin configs (obsidian-Linter, obsidian-citation-plugin, agent-client, obsidian-local-rest-api, callout-manager)
   - `snippets/memoria-link-colors.css` — the Memoria visual-style snippet
 - `.memoria/` — Memoria tooling, dot-prefixed and auto-hidden by Obsidian
-  - `profiles/memoria-<name>/SOUL.md` — the seven hand-authored Hermes agent prompts (researcher, cartographer, socratic, writer, verifier, coder, linter)
-  - `profiles/memoria-linter/M-detectors.md` — the linter's structural-detector reference
+  - `profiles/memoria-<name>/SOUL.md` — the seven hand-authored Hermes agent prompts (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter)
+  - `profiles/memoria-linter/M-detectors.md` — the Linter's structural-detector reference
   - `mcp/`, `lane-overrides/` — placeholders for Python MCP source and policy YAML (not yet authored)
+  - `csl/`, `library.bib`, `tool-registry.yaml` — machine-read tool config (populated as needed)
 
-The dot-prefix on `.memoria/` is the same trick `.obsidian/` uses: Obsidian's vault scanner auto-ignores both, so the operator never sees tooling files in search, graph view, file explorer, or Dataview queries.
+The dot-prefix on `.memoria/` is the same trick `.obsidian/` uses: Obsidian's vault scanner auto-ignores both, so the human never sees tooling files in search, graph view, file explorer, or Dataview queries.
 
 ## Design docs
 
@@ -33,7 +38,7 @@ Clone with any folder name — Memoria is agnostic to it:
 git clone https://github.com/eranroseman/memoria-vault.git my-research-vault
 ```
 
-Open the folder in Obsidian as a vault. You'll see the numbered folders and templates; tooling stays out of the way. You can read the seven `.memoria/profiles/memoria-*/SOUL.md` prompts and the 11 dashboards (`00-meta/05-dashboards/*.md`) to understand the system.
+Open the folder in Obsidian as a vault. You'll see the numbered folders and templates; tooling stays out of the way. You can read the seven `.memoria/profiles/memoria-*/SOUL.md` prompts and the 10 dashboards (`00-meta/01-dashboards/*.md`) to understand the system. Start with `00-meta/index.md` as the landing page.
 
 You **can't** run Memoria yet — `install.ps1` doesn't exist, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE` files aren't authored, the MCP servers aren't written.
 
@@ -47,7 +52,7 @@ In rough order:
 4. ⬜ `.memoria/lane-overrides/*.yaml` -- per-lane policy YAML the policy MCP reads at startup (×7).
 5. ⬜ `.memoria/mcp/policy_mcp.py`, `tasks_mcp.py`, `requirements.txt` -- Memoria's two MCP servers.
 
-When the per-profile wiring lands, `./install.ps1` will set up a working Memoria instance on the operator's machine.
+When the per-profile wiring lands, `./install.ps1` will set up a working Memoria instance on the human's machine.
 
 ## Trying install.ps1 today
 
@@ -61,7 +66,7 @@ It should report "0 of 7 installed" with all profiles skipped for "missing requi
 
 Useful flags:
 
-- `-Only memoria-linter,memoria-researcher` -- target only specific profiles
+- `-Only memoria-linter,memoria-librarian` -- target only specific profiles
 - `-SkipHermesCheck` -- bypass the Hermes-on-PATH check
 - `-SkipPythonCheck` -- bypass the Python check (until MCP servers need it)
 

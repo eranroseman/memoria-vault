@@ -4,7 +4,7 @@
  * enable it via Settings -> Appearance -> CSS snippets.
  *
  * Requires the obsidian-style-settings plugin (for the CSS variables below to
- * be operator-tunable) and the supercharged-links plugin (to apply the
+ * be human-tunable) and the supercharged-links plugin (to apply the
  * data-link-* attributes to internal links).
  *
  * The colors signal where a link points by folder lifecycle stage. A draft
@@ -26,14 +26,14 @@ settings:
     default: '#8a8a8a'
   -
     id: memoria-claim-color
-    title: Claim notes (30-synthesis/01-permanent/)
+    title: Claim notes (30-synthesis/01-claims/)
     description: Color for links to claim notes — the primary synthesis layer.
     type: variable-color
     format: hex
     default: '#4a90e2'
   -
-    id: memoria-wiki-color
-    title: Reference notes (30-synthesis/02-wiki/)
+    id: memoria-reference-color
+    title: Reference notes (30-synthesis/02-reference/)
     description: Color for links to canonical reference notes (promoted from claims).
     type: variable-color
     format: hex
@@ -47,7 +47,7 @@ settings:
     default: '#e2a44a'
   -
     id: memoria-draft-color
-    title: Workbench drafts (40-workbench/02-drafts/)
+    title: Workbench drafts (40-workbench/01-projects/*/drafts/)
     description: Color for in-progress draft links — muted to signal "not canonical."
     type: variable-color
     format: hex
@@ -61,16 +61,16 @@ a.internal-link[data-href^="20-sources/"] {
 }
 
 /* Claim notes — primary accent (your thinking, single-claim atomic) */
-a[data-href^="30-synthesis/01-permanent/"],
-a.internal-link[data-href^="30-synthesis/01-permanent/"] {
+a[data-href^="30-synthesis/01-claims/"],
+a.internal-link[data-href^="30-synthesis/01-claims/"] {
   color: var(--memoria-claim-color);
   font-weight: 500;
 }
 
-/* Reference notes (wiki) — secondary accent, denotes canonical status */
-a[data-href^="30-synthesis/02-wiki/"],
-a.internal-link[data-href^="30-synthesis/02-wiki/"] {
-  color: var(--memoria-wiki-color);
+/* Reference notes — secondary accent, denotes canonical status */
+a[data-href^="30-synthesis/02-reference/"],
+a.internal-link[data-href^="30-synthesis/02-reference/"] {
+  color: var(--memoria-reference-color);
   font-weight: 600;
 }
 
@@ -82,8 +82,8 @@ a.internal-link[data-href^="30-synthesis/03-moc/"] {
 }
 
 /* Workbench drafts — muted (signal "in progress, not canonical") */
-a[data-href^="40-workbench/02-drafts/"],
-a.internal-link[data-href^="40-workbench/02-drafts/"] {
+a[data-href^="40-workbench/01-projects/"][data-href*="/drafts/"],
+a.internal-link[data-href^="40-workbench/01-projects/"][data-href*="/drafts/"] {
   color: var(--memoria-draft-color);
 }
 

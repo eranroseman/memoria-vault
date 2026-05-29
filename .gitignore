@@ -7,7 +7,7 @@
 # Only the .example file ships in this repo.
 .obsidian/plugins/obsidian-local-rest-api/data.json
 
-# Per-machine secret material (operator copies .env.EXAMPLE to .env, fills in keys)
+# Per-machine secret material (human copies .env.EXAMPLE to .env, fills in keys)
 .env
 
 # OS junk

@@ -1,7 +1,7 @@
 {
   "_comment": "Example agent-client config. Replace {{...}} placeholders with absolute paths on your machine before copying to vault/.obsidian/plugins/agent-client/data.json. After first launch, the plugin appends savedSessions[] — that's normal and safe to commit. See memoria-docs/references/obsidian-plugins.md#agent-client.",
 
-  "_customAgents_note": "Memoria configures four agents in the picker: Socratic (default — persistent processing chat), Cartographer (transient corpus queries), Writer (transient drafting chat / counter-outline), Verifier (transient similarity-check). On secondary devices that don't have all four profiles installed, delete the entries for profiles not installed. See memoria-docs/references/obsidian-plugins.md#agent-client for per-profile rationale.",
+  "_customAgents_note": "Memoria configures four interactive agents in the picker, labeled by identity (not action): Socratic (default — persistent thinking chat), Mapper (transient corpus queries), Writer (distill + drafting), Verifier (transient cite/similarity check). The three batch profiles — Librarian, Coder, Linter — are intentionally absent; they run via Kanban dispatch or cron, not interactive ACP chat. On secondary devices that don't have all four profiles installed, delete the entries for profiles not installed. See memoria-docs/plugins/required/agent-client.md for per-profile rationale and the mode-switching hotkey conventions.",
 
   "claude": {
     "id": "claude-code-acp",
@@ -30,28 +30,28 @@
   "customAgents": [
     {
       "id": "memoria-socratic",
-      "displayName": "Socratic (processing & lensing)",
+      "displayName": "Socratic — Think a source through in conversation before you distill it.",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-socratic", "acp"],
       "env": []
     },
     {
-      "id": "memoria-cartographer",
-      "displayName": "Cartographer (corpus queries)",
+      "id": "memoria-mapper",
+      "displayName": "Mapper — Map a project's corpus — what's ready, thin, missing — before writing.",
       "command": "{{HOME}}/.local/bin/hermes",
-      "args": ["-p", "memoria-cartographer", "acp"],
+      "args": ["-p", "memoria-mapper", "acp"],
       "env": []
     },
     {
       "id": "memoria-writer",
-      "displayName": "Writer (drafting chat)",
+      "displayName": "Writer — Distill sources into claim notes; turn framings into drafts.",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-writer", "acp"],
       "env": []
     },
     {
       "id": "memoria-verifier",
-      "displayName": "Verifier (similarity & traces)",
+      "displayName": "Verifier — Trace a draft's claims back to their sources; flag the gaps.",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-verifier", "acp"],
       "env": []
@@ -66,7 +66,7 @@
   "nodePath": "",
 
   "exportSettings": {
-    "defaultFolder": "40-workbench/02-drafts",
+    "defaultFolder": "10-inbox/02-answers",
     "filenameTemplate": "agent_client_{date}_{time}",
     "autoExportOnNewChat": false,
     "autoExportOnCloseChat": false,
@@ -92,7 +92,7 @@
     "fontSize": null
   },
 
-  "_savedSessions_note": "Populated by the plugin as you use ACP. Operator-generated state; safe to commit but periodically prune to keep data.json small. Sessions accumulate primarily from Socratic (persistent processing chats); Cartographer / Writer / Verifier sessions are transient and most operators clear them automatically.",
+  "_savedSessions_note": "Populated by the plugin as you use ACP. Human-generated state; safe to commit but periodically prune to keep data.json small. Sessions accumulate primarily from Socratic (persistent processing chats); Mapper / Writer / Verifier sessions are transient and they are usually cleared automatically.",
   "savedSessions": [],
 
   "lastUsedModels": {},

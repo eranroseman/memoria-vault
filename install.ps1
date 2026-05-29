@@ -7,7 +7,7 @@
 .DESCRIPTION
     Idempotent. Always overwrites profile directories under
     ~/.hermes/profiles/memoria-*/ from the source in .memoria/profiles/.
-    Preserves operator-owned .env files. Gracefully skips profiles whose
+    Preserves human-owned .env files. Gracefully skips profiles whose
     source is incomplete (missing required files) -- useful while the v0.1
     scaffold is still being filled in.
 
@@ -16,7 +16,7 @@
 
 .PARAMETER Only
     If specified, install only these profile names (comma-separated).
-    Example: ./install.ps1 -Only memoria-researcher,memoria-linter
+    Example: ./install.ps1 -Only memoria-librarian,memoria-linter
 
 .PARAMETER SkipHermesCheck
     Skip the Hermes-on-PATH check (use if Hermes is installed but not on PATH).
@@ -31,7 +31,7 @@
 
 .EXAMPLE
     ./install.ps1 -Only memoria-linter
-    Install just the linter (useful for incremental development).
+    Install just the Linter (useful for incremental development).
 #>
 
 [CmdletBinding()]
@@ -53,8 +53,8 @@ $McpRequirements   = Join-Path $MemoriaPath 'mcp\requirements.txt'
 $HermesProfilesDir = Join-Path $env:USERPROFILE '.hermes\profiles'
 
 $AllProfiles = @(
-    'memoria-researcher',
-    'memoria-cartographer',
+    'memoria-librarian',
+    'memoria-mapper',
     'memoria-socratic',
     'memoria-writer',
     'memoria-verifier',
@@ -184,7 +184,7 @@ try {
 
         $installed += $p
 
-        # Bootstrap .env from .env.EXAMPLE on first install. .env is operator-
+        # Bootstrap .env from .env.EXAMPLE on first install. .env is human-
         # owned and Hermes preserves it across re-installs; we only create it
         # if absent so re-running this script never clobbers credentials.
         $envExample = Join-Path $HermesProfilesDir "$p\.env.EXAMPLE"
@@ -240,4 +240,4 @@ Write-Host "       hermes -p $($installed[0]) chat"
 Write-Host ""
 Write-Host "Re-run this script after 'git pull' to refresh installed profiles."        -ForegroundColor DarkGray
 Write-Host "Author-owned files (SOUL.md, config.yaml, mcp.json, skills/, cron/)"        -ForegroundColor DarkGray
-Write-Host "are overwritten; operator-owned .env files are preserved."                  -ForegroundColor DarkGray
+Write-Host "are overwritten; human-owned .env files are preserved."                  -ForegroundColor DarkGray
