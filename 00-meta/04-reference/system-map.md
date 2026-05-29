@@ -20,7 +20,7 @@ A paper note about HCI lives in `20-sources/01-papers/`, not in `HCI/`. Topics b
 
 ## The review gate is structural, not advisory
 
-Promotion to canonical zones (`30-synthesis/01-claims/`, `30-synthesis/03-moc/`, `50-deliverables/`) requires explicit human approval. Agents propose; humans decide. The policy MCP enforces this — even an agent that thinks it's done cannot auto-promote. This is the design's defining commitment.
+Promotion to canonical zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) requires explicit human approval. Agents propose; humans decide. The policy MCP enforces this — even an agent that thinks it's done cannot auto-promote. This is the design's defining commitment.
 
 ## Three central insights
 

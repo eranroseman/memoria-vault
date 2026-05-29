@@ -1,6 +1,6 @@
-# `schema-hygiene.md` — catch leftover junk
+# `loose-ends.md` — catch leftover junk
 
-**Location.** `00-meta/01-dashboards/schema-hygiene.md`
+**Location.** `00-meta/01-dashboards/loose-ends.md`
 
 **Decision.** Catch junk filenames and notes the agent or human forgot to finish. Run after ingest batches or whenever something feels off. The action: rename, finish, archive, or delete.
 

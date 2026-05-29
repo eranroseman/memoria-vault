@@ -71,4 +71,4 @@ LIMIT 14
 
 - [Discuss workflow](../../../memoria-docs/workflows/upstream/discuss.md) — the workflow this dashboard surfaces.
 - [`reading-pipeline.md`](reading-pipeline.md) — upstream of this; shows papers stuck before classification.
-- [`weekly-dashboard.md`](weekly-dashboard.md) — human's Friday ritual; consumes this dashboard's stale-queue numbers as one input among many.
+- [`weekly-review.md`](weekly-review.md) — human's Friday ritual; consumes this dashboard's stale-queue numbers as one input among many.

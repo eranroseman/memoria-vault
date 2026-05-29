@@ -65,8 +65,8 @@ Turn evidence into structured drafts, answer notes, and reference-ready prose. Y
 
 ## Exit conditions
 
-- A draft synthesis card moves to `awaiting-review` with the draft note created in `10-inbox/02-answers/`, with sources cited and caveats noted. The git commit on the draft fires the Verifier hook automatically; you do not need to invoke Verifier explicitly.
-- A reference-note draft moves to `awaiting-review` with the proposed `30-synthesis/02-reference/` page in draft state; never publish without explicit approval.
+- A draft synthesis card `kanban_complete`s to `status: done` with `review_status: requested`, the draft note created in `10-inbox/02-answers/`, with sources cited and caveats noted. The git commit on the draft fires the Verifier hook automatically; you do not need to invoke Verifier explicitly.
+- A reference-note draft `kanban_complete`s to `status: done` with `review_status: requested`, the proposed `30-synthesis/02-reference/` page in draft state; never publish without explicit approval.
 
 ## Delegation
 

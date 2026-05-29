@@ -1,6 +1,6 @@
-# `weekly-dashboard.md` — weekly ritual entry point
+# `weekly-review.md` — weekly ritual entry point
 
-**Location.** `00-meta/01-dashboards/weekly-dashboard.md`
+**Location.** `00-meta/01-dashboards/weekly-review.md`
 
 **Decision.** Open at the start of each weekly session and work top-to-bottom.
 

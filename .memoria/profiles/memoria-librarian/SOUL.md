@@ -96,8 +96,8 @@ External APIs reached via the skills above:
 
 ## Exit conditions
 
-- A card you complete should move to `awaiting-review` with the paper note (or item / entity note) created, enriched, and classified (proposed fields), and a handoff note describing what to verify.
-- If you cannot complete the work, move the card to `retry-needed` with the failure reason; do not abandon it.
+- A card you complete should `kanban_complete` to `status: done` with `review_status: requested`, the paper note (or item / entity note) created, enriched, and classified (proposed fields), and a handoff summary describing what to verify.
+- If you hit a recoverable failure (tool error, timeout), let the run fail so the dispatcher re-attempts (Hermes retries within `max_retries`); if you genuinely cannot complete the work, `kanban_block` the card with the failure reason rather than abandoning it.
 
 ## Delegation
 

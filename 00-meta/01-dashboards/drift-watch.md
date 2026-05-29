@@ -123,7 +123,7 @@ Three ways to pay down what this query surfaces, in increasing effort:
 
 - **Not the same as `audit-log.md`.** The [audit-log dashboard](audit-log.md) shows policy MCP decisions (per write attempt). This dashboard shows structural detector findings (per lint pass). Different cadence, different abstraction layer.
 - **Not actionable on its own.** Every finding links back to its detector's documentation; the remediation lives there, not here. This dashboard surfaces *which* drift, not *how to fix*.
-- **Not for data-hygiene checks.** Orphan notes, stale enrichment, broken wikilinks are surfaced by the [`weekly-dashboard`](weekly-dashboard.md) and the lint report itself, not here. Structural detectors are reserved for structural drift between the vault source, the deployed Hermes profiles, and the human's working vault state.
+- **Not for data-hygiene checks.** Orphan notes, stale enrichment, broken wikilinks are surfaced by the [`weekly-review`](weekly-review.md) and the lint report itself, not here. Structural detectors are reserved for structural drift between the vault source, the deployed Hermes profiles, and the human's working vault state.
 
 ## Graceful degradation
 
@@ -135,4 +135,4 @@ Three ways to pay down what this query surfaces, in increasing effort:
 
 - [Linter SOUL.md](../../.memoria/profiles/memoria-linter/SOUL.md) — canonical detector definitions and verdict-band rules.
 - [`audit-log.md`](audit-log.md) — per-decision forensics, the layer below this one.
-- [`fleet-observability.md`](fleet-observability.md) — operational health (cost, retries, trust score). Different concern; complementary view.
+- [`fleet-health.md`](fleet-health.md) — operational health (cost, retries, trust score). Different concern; complementary view.

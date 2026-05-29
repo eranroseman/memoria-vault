@@ -29,7 +29,7 @@ routing:
   invocation: interactive_only   # never queue-dispatched
 ```
 
-The `routing.invocation: interactive_only` flag is what tells the Kanban dispatcher to skip Socratic when scanning for cards to claim. Socratic is reached only through synchronous human invocation (ACP pane, CLI). A cron entry that tried to create a `lane: socratic` card would result in a card that sits in `ready` forever — which is the intended behavior, because a ready Socratic card means someone (or something) tried to schedule Socratic work, and that's a configuration bug worth surfacing.
+The `routing.invocation: interactive_only` flag is what tells the Kanban dispatcher to skip Socratic when scanning for cards to claim. Socratic is reached only through synchronous human invocation (ACP pane, CLI). A cron entry that tried to create a card assigned to Socratic would result in a card that sits in `ready` forever — which is the intended behavior, because a `ready` Socratic card means someone (or something) tried to schedule Socratic work, and that's a configuration bug worth surfacing.
 
 ## Core commands
 

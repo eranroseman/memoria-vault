@@ -71,7 +71,7 @@ Use sparingly — only when TABLE / LIST can't handle the query. dataviewjs is h
 ### Pending review
 
 ```
-WHERE review_status = "awaiting-review"
+WHERE review_status = "requested"
 SORT file.mtime ASC
 ```
 

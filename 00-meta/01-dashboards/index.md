@@ -1,24 +1,24 @@
-# `index.md` — always-on health monitor
+# Daily Health — always-on health monitor
 
 **Location.** `00-meta/01-dashboards/index.md`
 
 **Decision.** Open every morning. Glance for 30 seconds. If nothing is red, close it and move on. If something is red, the surfaced item tells you what needs attention before any larger operation.
 
-**What this is not.** The vault-state queries (unreviewed synthesis, classification debt, evergreen promotion queue, orphan notes) live in [`weekly-dashboard.md`](weekly-dashboard.md) — those belong in the Friday ritual, not the daily glance. This dashboard is the **system-health** view: board queues, drift signals, lane health, cron status. Four sections, each one a one-decision query.
+**What this is not.** The vault-state queries (unreviewed synthesis, classification debt, evergreen promotion queue, orphan notes) live in [`weekly-review.md`](weekly-review.md) — those belong in the Friday ritual, not the daily glance. This dashboard is the **system-health** view: board queues, drift signals, lane health, cron status. Four sections, each one a one-decision query.
 
 ## 1. Today's queue
 
-Cards demanding your attention — `blocked-on-human` for explicit human decisions, `awaiting-review` for agent-completed work awaiting approval. Oldest first; cap at ten so the dashboard doesn't grow unbounded.
+Cards demanding your attention — `status: blocked` for explicit human decisions, `review_status: requested` (a `done` card) for agent-completed work awaiting approval. Oldest first; cap at ten so the dashboard doesn't grow unbounded.
 
 ```dataviewjs
 const cards = await dv.io.load("00-meta/02-logs/board-state.jsonl");
 const events = cards.trim().split("\n").map(l => JSON.parse(l));
 const active = events.filter(e =>
-  e.state === "blocked-on-human" || e.state === "awaiting-review"
+  e.state === "blocked" || e.review_status === "requested"
 ).sort((a, b) => a.last_updated.localeCompare(b.last_updated)).slice(0, 10);
 dv.table(
   ["State", "Lane", "Card", "Waiting since", "Reason"],
-  active.map(c => [c.state, c.lane, c.task_id, c.last_updated, c.blocked_reason ?? c.review_owner ?? ""])
+  active.map(c => [c.state, c.lane, c.task_id, c.last_updated, c.reason ?? c.review_owner ?? ""])
 );
 ```
 
@@ -45,7 +45,7 @@ Empty is the goal. If anything appears here, treat the day as a diagnostic day �
 
 ## 3. Lane health
 
-The [fleet-observability dashboard](fleet-observability.md)'s trust score per lane, summarized. Bands: 90+ healthy (no action), 70–89 watch (something is slipping), <70 act (pause scheduled work).
+The [fleet-health dashboard](fleet-health.md)'s trust score per lane, summarized. Bands: 90+ healthy (no action), 70–89 watch (something is slipping), <70 act (pause scheduled work).
 
 ```dataview
 TABLE WITHOUT ID
@@ -58,7 +58,7 @@ WHERE type = "lane-metric" AND period = string(date(today))
 SORT trust_score ASC
 ```
 
-Any lane at <70 is a flag. Click through to [`fleet-observability.md`](fleet-observability.md) for the contributing inputs (audit deny rate, drift incidents, retry rate, accept/reject ratios). If the trust score is empty entirely, the aggregator hasn't run today yet (cron failure or recent vault open).
+Any lane at <70 is a flag. Click through to [`fleet-health.md`](fleet-health.md) for the contributing inputs (audit deny rate, drift incidents, retry rate, accept/reject ratios). If the trust score is empty entirely, the aggregator hasn't run today yet (cron failure or recent vault open).
 
 ## 4. Cron status
 
@@ -87,12 +87,12 @@ Until the metrics aggregator, board-state JSONL feed, and lint-findings JSONL fe
 
 - `00-meta/02-logs/board-state.jsonl` — written by the Kanban dispatcher when cards transition states.
 - `00-meta/02-logs/lint-findings.jsonl` — written by the Linter on each pass.
-- `00-meta/08-metrics/lane-metric-*` — written by the scheduled metrics aggregator (see [`fleet-observability.md`](fleet-observability.md)).
+- `00-meta/08-metrics/lane-metric-*` — written by the scheduled metrics aggregator (see [`fleet-health.md`](fleet-health.md)).
 - `00-meta/02-logs/cron-history.jsonl` — written by Hermes after each cron task completes.
 
 ## Related
 
-- [`weekly-dashboard.md`](weekly-dashboard.md) — Friday-ritual vault-state view (top-to-bottom in 90 minutes).
+- [`weekly-review.md`](weekly-review.md) — Friday-ritual vault-state view (top-to-bottom in 90 minutes).
 - [`drift-watch.md`](drift-watch.md) — full structural-detector view + verdict band.
-- [`fleet-observability.md`](fleet-observability.md) — trust score contributing inputs + cost trends.
+- [`fleet-health.md`](fleet-health.md) — trust score contributing inputs + cost trends.
 - [`audit-log.md`](audit-log.md) — per-decision forensics when something needs investigation.

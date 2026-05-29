@@ -63,8 +63,8 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 
 ## Exit conditions
 
-- A code task moves to `awaiting-review` with code committed, the artifact page updated, and a handoff note describing what to verify (tests, behavior, integration).
-- If the implementation is incomplete, move the card to `rejected` with a clear explanation of what's blocked or undecided.
+- A code task `kanban_complete`s to `status: done` with `review_status: requested`, code committed, the artifact page updated, and a handoff summary describing what to verify (tests, behavior, integration).
+- If the implementation is incomplete, `kanban_block` the card with a clear explanation of what's blocked or undecided (a worker never declines its own work — that is the human's review decision).
 
 ## Delegation
 

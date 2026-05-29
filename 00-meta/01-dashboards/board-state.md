@@ -2,14 +2,14 @@
 
 **Location.** `00-meta/01-dashboards/board-state.md`
 
-**Decision.** A Dataview view of cards on the Kanban board. Only useful if the board is markdown-backed (or if there's a markdown export).
+**Decision.** A Dataview view of cards on the Kanban board. The board itself lives in Hermes' `kanban.db`; this view reads a markdown export of card state under `00-meta/board`. `status` carries the Hermes enum (`triage`/`todo`/`ready`/`running`/`blocked`/`done`/`archived`); `lane` is the card's `assignee`; `reason`, `review_*` come from the card `metadata`; `retry_count` and `last_updated` are denormalized by the exporter from Hermes run history and the event stream (they are not native card columns).
 
 ## Active cards
 
 ```dataview
-TABLE status, assignee, lane, blocked_reason, retry_count, last_updated
+TABLE status, assignee, reason, retry_count, last_updated
 FROM "00-meta/board"
-WHERE status != "done"
+WHERE status != "archived"
 SORT last_updated ASC
 ```
 
@@ -25,9 +25,9 @@ SORT review_requested_at ASC
 ## Retry watch
 
 ```dataview
-TABLE file.link AS Card, retry_count, blocked_reason, last_updated
+TABLE file.link AS Card, retry_count, reason, last_updated
 FROM "00-meta/board"
-WHERE retry_count > 0 AND status != "done"
+WHERE retry_count > 0 AND status != "archived"
 SORT retry_count DESC
 ```
 

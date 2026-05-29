@@ -4,9 +4,9 @@ The pinned landing page. Open it in the morning; close it when the system looks 
 
 ## Daily / weekly dashboards
 
-- [[01-dashboards/index|System health]] — daily 30-second glance (board queues, drift signals, lane health, cron status)
+- [[01-dashboards/index|Daily Health]] — daily 30-second glance (board queues, drift signals, lane health, cron status)
 - [[01-dashboards/discuss-queue|Reading queue]] — papers classified but not yet processed
-- [[01-dashboards/weekly-dashboard|Weekly ritual]] — Friday vault audit (orphans, stale enrichment, promotion queue)
+- [[01-dashboards/weekly-review|Weekly ritual]] — Friday vault audit (orphans, stale enrichment, promotion queue)
 - [[01-dashboards/board-state|Board state]] — full Kanban
 - [[01-dashboards/audit-log|Audit log]] — forensic view of policy MCP decisions
 - [[01-dashboards/drift-watch|Drift watch]] — Linter findings + verdict band

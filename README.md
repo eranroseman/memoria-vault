@@ -7,7 +7,7 @@ The human-facing starter vault for **Memoria** — a research operating system t
 ## What's here
 
 - `00-meta/` — vault skeleton
-  - `01-dashboards/` — 9 Obsidian dashboards (index, board-state, drift-watch, audit-log, weekly-dashboard, discuss-queue, reading-pipeline, schema-hygiene, open-questions)
+  - `01-dashboards/` — 9 Obsidian dashboards (Daily Health, board-state, drift-watch, audit-log, weekly-review, discuss-queue, reading-pipeline, loose-ends, open-questions)
   - `02-logs/` — populated Day 1 by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
   - `03-templates/` — 15 note templates (claim-note, paper-note, fleeting-note, …)
   - `04-reference/` — 10 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist)

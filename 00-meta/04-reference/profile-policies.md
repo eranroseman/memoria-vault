@@ -26,7 +26,7 @@ Legend: ✓ = full write; — = no write (denied by policy MCP); cell text = sco
 
 - **Socratic is architecturally write-denied.** Lane policy `allow.write: []` — no writes anywhere, ever. Safe on any device.
 - **Mapper is read-only across the vault.** Writes only to specific project-scratch paths (corpus-map, gap-report, comparative-briefs, cluster-maps).
-- **Canonical zones require human approval.** `30-synthesis/01-claims/`, `30-synthesis/03-moc/`, and `50-deliverables/` are policy-MCP `dry_run` for every lane.
+- **Canonical zones require human approval.** `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, and `50-deliverables/` are policy-MCP `dry_run` for every lane.
 - **No lane writes canonical content directly.** Every promotion is synchronous with human attention.
 - **Delete is universally human-only** and discouraged across the board. Prefer archive.
 
