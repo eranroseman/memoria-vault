@@ -1,0 +1,27 @@
+name: docs-doctor
+
+# Structural lint for docs/. Make this a required status check in branch
+# protection so a misfiled file or broken link fails the PR and cannot merge.
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "scripts/docs-doctor.py"
+      - ".github/workflows/docs-doctor.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "scripts/docs-doctor.py"
+      - ".github/workflows/docs-doctor.yml"
+
+jobs:
+  docs-doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run docs-doctor
+        run: python scripts/docs-doctor.py docs

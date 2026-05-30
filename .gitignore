@@ -1,0 +1,3 @@
+# Python bytecode (docs-doctor + profile scripts)
+__pycache__/
+*.pyc
