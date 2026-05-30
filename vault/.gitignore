@@ -10,6 +10,10 @@
 # Per-machine secret material (human copies .env.EXAMPLE to .env, fills in keys)
 .env
 
+# Python bytecode (profile detector scripts)
+__pycache__/
+*.pyc
+
 # OS junk
 .DS_Store
 Thumbs.db
