@@ -168,7 +168,7 @@ brand:
 
 ---
 
-**Companion to** [surfaces/design-system.md](../../../memoria-docs/surfaces/design-system.md) (design doc) — that file describes the schema and discipline; this file *implements* it for this vault.
+**Companion to** obsidian-ui/design-system.md (design doc) — that file describes the schema and discipline; this file *implements* it for this vault.
 
 **Consumers of this file:**
 

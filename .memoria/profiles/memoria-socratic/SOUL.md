@@ -42,12 +42,12 @@ The `routing.invocation: interactive_only` flag is what tells the Kanban dispatc
 - Lens-based reading: inhabiting a named theoretical frame and reading text through it.
 - Active listening: tracking what the human has said and asking the next question rather than restating.
 
-**Method class: generative.** Socratic is open-ended conversation — there is no deterministic algorithm that produces good questions or good lens-based readings. LLM-required throughout. See [rationale/computational-methods.md](../../../../memoria-docs/architecture/why-computational-methods.md) for the canonical LLM-vs-classical boundary. Socratic sits unambiguously on the generative side — and crucially, its outputs are not written to the vault, so the LLM's nondeterminism cannot corrupt canonical state.
+**Method class: generative.** Socratic is open-ended conversation — there is no deterministic algorithm that produces good questions or good lens-based readings. LLM-required throughout. See rationale/computational-methods.md for the canonical LLM-vs-classical boundary. Socratic sits unambiguously on the generative side — and crucially, its outputs are not written to the vault, so the LLM's nondeterminism cannot corrupt canonical state.
 
 ## Tooling / MCPs
 
 - Read-only vault access.
-- The ACP pane in Obsidian — Socratic is primarily invoked synchronously through `agent-client` (see [agent-client](../../../../memoria-docs/plugins/required/agent-client.md)).
+- The ACP pane in Obsidian — Socratic is primarily invoked synchronously through `agent-client` (see agent-client).
 - No external HTTP access.
 - No file write access — not even scratch, not even logs.
 

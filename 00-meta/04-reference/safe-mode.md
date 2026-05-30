@@ -48,7 +48,7 @@ The three core workflows (ingest, review, export) with minimal commands and fall
 - [ ] Check `.memoria/` is intact (`profiles/`, `mcp/`, `lane-overrides/`)
 - [ ] Check `00-meta/02-logs/` for recent error entries
 - [ ] `git status` — has anything unexpectedly changed?
-- [ ] If still broken: see [operations/failure-modes.md](../../../memoria-docs/operations/failure-modes.md)
+- [ ] If still broken: see operations/failure-modes.md
 
 ## Last-resort: re-install
 
@@ -63,4 +63,4 @@ The installer is idempotent and always-overwrite — it rewrites author-owned fi
 
 ---
 
-**For depth:** [operations/failure-modes.md](../../../memoria-docs/operations/failure-modes.md) — Detect / Fix / Verify recipes for every documented failure mode.
+**For depth:** operations/failure-modes.md — Detect / Fix / Verify recipes for every documented failure mode.

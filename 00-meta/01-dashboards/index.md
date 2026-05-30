@@ -2,7 +2,7 @@
 
 **Location.** `00-meta/01-dashboards/index.md`
 
-**Decision.** Open every morning. Glance for 30 seconds. If nothing is red, close it and move on. If something is red, the surfaced item tells you what needs attention before any larger operation.
+**Decision.** Open every morning. Glance for 30 seconds. If nothing is red, close it and move on. If something is red, the flagged item tells you what needs attention before any larger operation.
 
 **What this is not.** The vault-state queries (unreviewed synthesis, classification debt, evergreen promotion queue, orphan notes) live in [`weekly-review.md`](weekly-review.md) — those belong in the Friday ritual, not the daily glance. This dashboard is the **system-health** view: board queues, drift signals, lane health, cron status. Four sections, each one a one-decision query.
 
@@ -62,7 +62,7 @@ Any lane at <70 is a flag. Click through to [`fleet-health.md`](fleet-health.md)
 
 ## 4. Cron status
 
-Last run and next run for the four standard cron tasks (see [standard cron tasks](../../../memoria-docs/roadmap/standard-cron-tasks.md)). A missed nightly run is a signal — the system didn't sweep, drift may have accumulated, scheduled cards aren't in the queue.
+Last run and next run for the four standard cron tasks (see standard cron tasks). A missed nightly run is a signal — the system didn't sweep, drift may have accumulated, scheduled cards aren't in the queue.
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/cron-history.jsonl");
@@ -79,7 +79,7 @@ const rows = Object.entries(byTask).map(([task, e]) => [
 dv.table(["Task", "Lane", "Last run", "Next run", "Result"], rows);
 ```
 
-All four standard tasks should appear: `nightly-hygiene` (Linter), `weekly-cluster-report` (Mapping), `weekly-drift-report` (Linter), `fleeting-staleness-report` (Linter). A missing row means cron isn't enabled for that lane (see the [`cron_mode` migration](../../../memoria-docs/roadmap/standard-cron-tasks.md#cron_mode-migration)); a row with ✗ in Result means the last run failed.
+All four standard tasks should appear: `nightly-hygiene` (Linter), `weekly-cluster-report` (Mapping), `weekly-drift-report` (Linter), `fleeting-staleness-report` (Linter). A missing row means cron isn't enabled for that lane (see the `cron_mode` migration); a row with ✗ in Result means the last run failed.
 
 ## Graceful degradation
 

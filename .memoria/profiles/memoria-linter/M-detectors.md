@@ -162,7 +162,7 @@ Procedure:
 
 This action is `report` only. Never auto-delete — the file may be the human's in-progress work that simply needs to be moved into a transient zone, or evidence of a sync conflict the human needs to reconcile. The remediation is always a per-file decision (keep, move, archive, delete) made by the human, not the Linter.
 
-The patterns are deliberately narrow. Generic working files (`scratch.md`, `notes.md`) outside canonical zones are *not* flagged — only files whose suffixes encode "this is a leftover" semantically. False-positive avoidance is more important than coverage here, because human trust in `orphan-working-files` erodes the first time it tells them a real file is junk.
+The patterns are deliberately narrow. Generic working files (`scratch.md`, `notes.md`) outside review-gated zones are *not* flagged — only files whose suffixes encode "this is a leftover" semantically. False-positive avoidance is more important than coverage here, because human trust in `orphan-working-files` erodes the first time it tells them a real file is junk.
 
 ## `extract-path-broken` — Extract path broken link
 

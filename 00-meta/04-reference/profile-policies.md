@@ -13,10 +13,10 @@ Who can write where. Companion to the lane-override YAML files at `.memoria/lane
 | `30-synthesis/01-claims/` | — | — | — | — | — | — | — |
 | `30-synthesis/02-reference/` | — | — | dry-run | — | — | — | — |
 | `30-synthesis/03-moc/` | — | — | — | — | — | — | — |
-| `40-workbench/01-projects/` | — | corpus-maps, gap-reports | framing/ via counter-outline | verification/ | — | project notes | — |
-| `40-workbench/01-projects/*/drafts/` | — | — | ✓ | — | — | — | — |
-| `40-workbench/01-projects/*/code/` | — | — | — | — | — | ✓ | — |
-| `40-workbench/01-projects/*/canvas/` | — | — | — | — | — | — | — |
+| `40-workbench/` | — | corpus-maps, gap-reports | framing/ via counter-outline | verification/ | — | project notes | — |
+| `40-workbench/*/04-drafts/` | — | — | ✓ | — | — | — | — |
+| `40-workbench/*/06-code/` | — | — | — | — | — | ✓ | — |
+| `40-workbench/*/03-canvas/` | — | — | — | — | — | — | — |
 | `50-deliverables/` | — | — | export tasks | — | — | export tasks | — |
 | `00-meta/02-logs/` | — | — | — | — | — | — | audit + session logs |
 
@@ -26,7 +26,7 @@ Legend: ✓ = full write; — = no write (denied by policy MCP); cell text = sco
 
 - **Socratic is architecturally write-denied.** Lane policy `allow.write: []` — no writes anywhere, ever. Safe on any device.
 - **Mapper is read-only across the vault.** Writes only to specific project-scratch paths (corpus-map, gap-report, comparative-briefs, cluster-maps).
-- **Canonical zones require human approval.** `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, and `50-deliverables/` are policy-MCP `dry_run` for every lane.
+- **Review-gated zones require human approval.** `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, and `50-deliverables/` are policy-MCP `dry_run` for every lane.
 - **No lane writes canonical content directly.** Every promotion is synchronous with human attention.
 - **Delete is universally human-only** and discouraged across the board. Prefer archive.
 
@@ -36,4 +36,4 @@ The **policy MCP** intercepts every vault write. Each lane has a YAML file at `.
 
 ---
 
-**For depth:** [profiles/README.md#folder-permission-matrix](../../../memoria-docs/profiles/README.md#folder-permission-matrix) — the authoritative matrix. [architecture/policy-mcp.md](../../../memoria-docs/architecture/policy-mcp.md) — the runtime gate.
+**For depth:** profiles/README.md#folder-permission-matrix — the authoritative matrix. architecture/policy-mcp.md — the runtime gate.

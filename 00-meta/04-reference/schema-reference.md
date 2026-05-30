@@ -28,7 +28,7 @@ Four types are **bare** because they are not records:
 | `moc`, `canvas` | **Views** that organize other notes (an index/map; a spatial layout). Empty without the notes they point at. |
 | `draft`, `deliverable` | **Outputs** produced from notes (a manuscript; an export). |
 
-Rule of thumb: if the note *is* a thing you curate, it gets `-note`; if it *arranges* other notes or *is produced from* them, it stays bare. Every `-note` is also a markdown note with a `type` and a lifecycle field — but being markdown isn't enough to earn the suffix (`moc` is markdown too). `project-note` keeps the suffix because it records a project's own scope and status, not just a map of its parts. Full definition: [vault/templates.md](../../../memoria-docs/vault/templates.md#naming-convention--note-vs-bare-names).
+Rule of thumb: if the note *is* a thing you curate, it gets `-note`; if it *arranges* other notes or *is produced from* them, it stays bare. Every `-note` is also a markdown note with a `type` and a lifecycle field — but being markdown isn't enough to earn the suffix (`moc` is markdown too). `project-note` keeps the suffix because it records a project's own scope and status, not just a map of its parts. Full definition: vault/note-types.md.
 
 ## Lifecycle (universal)
 
@@ -80,6 +80,6 @@ Frontmatter has three namespaces with different ownership:
 
 ---
 
-**For depth:** [vault/frontmatter-schema.md](../../../memoria-docs/vault/frontmatter-schema.md) — the authoritative schema design.
+**For depth:** vault/frontmatter-schema.md — the authoritative schema design.
 
 **Drift discipline.** When the design schema changes, update this file to match. The Linter's structural-drift check flags this file if `updated` is older than the corresponding design doc.

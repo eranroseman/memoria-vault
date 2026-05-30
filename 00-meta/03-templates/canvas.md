@@ -1,6 +1,6 @@
 # `canvas` template
 
-Argument map for chapter or section drafting. Lives in `40-workbench/01-projects/*/canvas/`. Human-authored. Canvas files are `.canvas` (Obsidian format); the metadata sits in a companion frontmatter file or in the file's own front-matter block.
+Argument map for chapter or section drafting. Lives in `40-workbench/*/03-canvas/`. Human-authored. Canvas files are `.canvas` (Obsidian format); the metadata sits in a companion frontmatter file or in the file's own front-matter block.
 
 ## Frontmatter
 
@@ -28,7 +28,7 @@ updated:
 
 Open a canvas when you have 8–15 relevant claim notes on a topic and need to see how they fit together before writing. Not for exploration (use `hermes run draft`); for argument assembly.
 
-See the [Canvas → Draft sub-workflow](../../../memoria-docs/workflows/downstream/write.md#canvas--draft-sub-workflow) for the full process.
+See the Canvas → Draft sub-workflow for the full process.
 
 ## Archival
 

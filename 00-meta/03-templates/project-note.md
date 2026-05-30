@@ -1,6 +1,6 @@
 # `project-note` template
 
-Coordinates a research project, its scope, milestones, and active decisions. Lives in `40-workbench/01-projects/`. Human-authored.
+Coordinates a research project, its scope, milestones, and active decisions. Lives in `40-workbench/`. Human-authored.
 
 ## Frontmatter
 

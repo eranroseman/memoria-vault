@@ -1,6 +1,6 @@
 # System map
 
-Plain-language summary of how Memoria fits together. The in-vault counterpart to [architecture/README.md](../../../memoria-docs/architecture/README.md).
+Plain-language summary of how Memoria fits together. The in-vault counterpart to architecture/README.md.
 
 ## Three layers
 
@@ -20,7 +20,7 @@ A paper note about HCI lives in `20-sources/01-papers/`, not in `HCI/`. Topics b
 
 ## The review gate is structural, not advisory
 
-Promotion to canonical zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) requires explicit human approval. Agents propose; humans decide. The policy MCP enforces this — even an agent that thinks it's done cannot auto-promote. This is the design's defining commitment.
+Promotion to review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) requires explicit human approval. Agents propose; humans decide. The policy MCP enforces this — even an agent that thinks it's done cannot auto-promote. This is the design's defining commitment.
 
 ## Three central insights
 
@@ -44,4 +44,4 @@ Promotion to canonical zones (`30-synthesis/01-claims/`, `30-synthesis/02-refere
 
 ---
 
-**For depth:** [architecture/README.md](../../../memoria-docs/architecture/README.md) — the authoritative architecture explainer. [vision.md](../../../memoria-docs/vision.md) — the design philosophy.
+**For depth:** architecture/README.md — the authoritative architecture explainer. vision.md — the design philosophy.

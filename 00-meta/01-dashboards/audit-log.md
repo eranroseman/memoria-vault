@@ -2,7 +2,7 @@
 
 **Location.** `00-meta/01-dashboards/audit-log.md`
 
-**Decision.** Spot policy-MCP decisions that need attention: writes blocked at the tool layer, dry-run escalations awaiting human action, and writes to canonical zones. Open when something feels off — a worker behaving strangely, a board card stuck on an unclear reason, or after a scheduled overnight run completes.
+**Decision.** Spot policy-MCP decisions that need attention: writes blocked at the tool layer, dry-run escalations awaiting human action, and writes to review-gated zones. Open when something feels off — a worker behaving strangely, a board card stuck on an unclear reason, or after a scheduled overnight run completes.
 
 The audit log lives at `00-meta/02-logs/audit.jsonl`, one JSON object per line. See [[../04-reference/profile-policies|profile-policies]] for the in-vault permissions summary; the authoritative policy-MCP format and decision protocol live in the design docs.
 
@@ -23,9 +23,9 @@ dv.table(
 );
 ```
 
-## Writes to canonical zones
+## Writes to review-gated zones
 
-Should be near zero. Every entry here is either an approved promotion (`decision: allow_with_log` with a corresponding `task_id` — canonical-zone writes always require `flags.explicit_authorization`, which triggers `allow_with_log`) or an attempted bypass (`decision: deny` or `dry_run`). A raw `allow` to a canonical path is itself a smell, since canonical zones are supposed to degrade to `dry_run` by default.
+Should be near zero. Every entry here is either an approved promotion (`decision: allow_with_log` with a corresponding `task_id` — review-gated-zone writes always require `flags.explicit_authorization`, which triggers `allow_with_log`) or an attempted bypass (`decision: deny` or `dry_run`). A raw `allow` to a review-gated path is itself a smell, since review-gated zones are supposed to degrade to `dry_run` by default.
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
@@ -90,9 +90,9 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 Specific patterns worth alerting on. Add rows here as you discover new failure modes — the dashboard is the diary of how the system actually misbehaves.
 
-- **Linter `auto_fix` allowed outside the gated classes.** Should be impossible: the policy MCP requires `flags.class ∈ {"safe-and-unambiguous", "authorized-targeted"}`. An entry here means the policy rule drifted from [profiles/linter.md](../../../memoria-docs/profiles/linter.md#auto-fix-policy).
+- **Linter `auto_fix` allowed outside the gated classes.** Should be impossible: the policy MCP requires `flags.class ∈ {"safe-and-unambiguous", "authorized-targeted"}`. An entry here means the policy rule drifted from profiles/linter.md.
 - **Socratic with any allowed write.** Socratic's lane policy is `policy.allow.write: []` — the hard wall. Any `decision: allow` or `allow_with_log` for `profile: memoria-socratic` is a configuration bug (the lane-override file has been tampered with or replaced).
-- **Mapper or Verifier with allowed writes outside their declared scratch paths.** Both are `read_only_mode` for the vault and only write to specific project-scratch paths. Any `allow` outside `40-workbench/01-projects/*/map/corpus-map.md` (Mapper) or `40-workbench/01-projects/*/verification/*` (Verifier) is a configuration bug.
+- **Mapper or Verifier with allowed writes outside their declared scratch paths.** Both are `read_only_mode` for the vault and only write to specific project-scratch paths. Any `allow` outside `40-workbench/*/01-map/corpus-map.md` (Mapper) or `40-workbench/*/05-verification/*` (Verifier) is a configuration bug.
 - **Librarian writing to `30-synthesis/**` with `decision: allow` or `allow_with_log`.** Librarians do not promote to synthesis. Any allowed write here means the lane override is too permissive.
 - **Write recorded with missing hashes.** Every `allow` or `allow_with_log` write must carry both `before_hash` and `after_hash`. Missing hashes break tamper detection.
 
@@ -101,8 +101,8 @@ const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
 const events = text.trim().split("\n").map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
-const mapperScratch = (p) => /^40-workbench\/01-projects\/[^/]+\/map\/(corpus-map\.md|gap-report\.md|comparative-briefs\/|cluster-maps\/)/.test(p ?? "");
-const verifierScratch = (p) => /^40-workbench\/01-projects\/[^/]+\/verification\//.test(p ?? "");
+const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|comparative-briefs\/|cluster-maps\/)/.test(p ?? "");
+const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "");
 const anomalies = events.filter(e =>
   (e.profile === "memoria-linter" && e.action === "auto_fix" && isAllowed(e.decision) &&
     !["safe-and-unambiguous", "authorized-targeted"].some(c => (e.policy_rule ?? "").includes(c))) ||
@@ -120,4 +120,4 @@ dv.table(
 
 ## Rotation
 
-`audit.jsonl` is append-only and grows without bound. Rotate weekly: rename the current file to `00-meta/02-logs/archive/audit-YYYY-WW.jsonl` and start a fresh one. The dashboard reads only the current week's file; archived files remain greppable from the shell. Rotation is the Linter's responsibility — see [profiles/linter.md](../../../memoria-docs/profiles/linter.md).
+`audit.jsonl` is append-only and grows without bound. Rotate weekly: rename the current file to `00-meta/02-logs/archive/audit-YYYY-WW.jsonl` and start a fresh one. The dashboard reads only the current week's file; archived files remain greppable from the shell. Rotation is the Linter's responsibility — see profiles/linter.md.

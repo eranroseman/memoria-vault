@@ -24,12 +24,12 @@ What each Hermes profile does. Companion to the per-profile contracts at `.memor
 
 ## Architectural protection
 
-Each profile has **narrow permissions**, enforced by the policy MCP at every vault write. Socratic can't write at all. Mapper is read-only outside project scratch. Verifier writes only verification reports. Writer can't write to canonical zones. See [[profile-policies]] for the full matrix.
+Each profile has **narrow permissions**, enforced by the policy MCP at every vault write. Socratic can't write at all. Mapper is read-only outside project scratch. Verifier writes only verification reports. Writer can't write to review-gated zones. See [[profile-policies]] for the full matrix.
 
 ## Why the split
 
-The seven-profile design exists because **specialists are safer than generalists**. A profile with narrow permissions cannot accidentally do work outside its lane — even if a malformed task or a hallucinated path would push it there. The review gate (canonical zones require human approval) and the lane-overrides (machine-enforced YAML) compose so that the worst case is a logged `deny`, not a silent canonical write.
+The seven-profile design exists because **specialists are safer than generalists**. A profile with narrow permissions cannot accidentally do work outside its lane — even if a malformed task or a hallucinated path would push it there. The review gate (review-gated zones require human approval) and the lane-overrides (machine-enforced YAML) compose so that the worst case is a logged `deny`, not a silent review-gated-zone write.
 
 ---
 
-**For depth:** [profiles/README.md](../../../memoria-docs/profiles/README.md) — the authoritative per-profile contracts and the seven-profile design rationale.
+**For depth:** profiles/README.md — the authoritative per-profile contracts and the seven-profile design rationale.

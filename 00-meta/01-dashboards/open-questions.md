@@ -2,7 +2,7 @@
 
 **Location.** `00-meta/01-dashboards/open-questions.md`
 
-**Decision.** Turn the vault into a research agenda by surfacing all explicit open questions. Use when planning the next research direction. Filter further by project or MOC as needed.
+**Decision.** Turn the vault into a research agenda by collecting all explicit open questions. Use when planning the next research direction. Filter further by project or MOC as needed.
 
 ```dataview
 TABLE file.link AS Note, file.mtime AS Modified

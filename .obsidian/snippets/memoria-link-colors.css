@@ -47,7 +47,7 @@ settings:
     default: '#e2a44a'
   -
     id: memoria-draft-color
-    title: Workbench drafts (40-workbench/01-projects/*/drafts/)
+    title: Workbench drafts (40-workbench/*/04-drafts/)
     description: Color for in-progress draft links — muted to signal "not canonical."
     type: variable-color
     format: hex
@@ -82,8 +82,8 @@ a.internal-link[data-href^="30-synthesis/03-moc/"] {
 }
 
 /* Workbench drafts — muted (signal "in progress, not canonical") */
-a[data-href^="40-workbench/01-projects/"][data-href*="/drafts/"],
-a.internal-link[data-href^="40-workbench/01-projects/"][data-href*="/drafts/"] {
+a[data-href^="40-workbench/"][data-href*="/04-drafts/"],
+a.internal-link[data-href^="40-workbench/"][data-href*="/04-drafts/"] {
   color: var(--memoria-draft-color);
 }
 

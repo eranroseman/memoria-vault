@@ -1,6 +1,6 @@
 # `draft` template
 
-Manuscript or chapter in progress. Lives in `40-workbench/01-projects/*/drafts/`. Human-authored. Promoted to `deliverable` on export.
+Manuscript or chapter in progress. Lives in `40-workbench/*/04-drafts/`. Human-authored. Promoted to `deliverable` on export.
 
 ## Frontmatter
 

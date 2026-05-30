@@ -2,7 +2,7 @@
 
 **Location.** `00-meta/01-dashboards/reading-pipeline.md`
 
-**Decision.** Keep papers flowing through the pipeline; surface what's stuck. Use when the inbox feels full and you need to decide what to process next.
+**Decision.** Keep papers flowing through the pipeline; show what's stuck. Use when the inbox feels full and you need to decide what to process next.
 
 ## Papers in active processing
 

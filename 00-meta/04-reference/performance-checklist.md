@@ -1,6 +1,6 @@
 # Dashboard performance checklist
 
-Discipline for keeping dashboards responsive as the vault grows. Companion to [surfaces/persistent.md#performance-discipline](../../../memoria-docs/surfaces/persistent.md#performance-discipline).
+Discipline for keeping dashboards responsive as the vault grows. Companion to obsidian-ui/dashboards.md#performance-discipline.
 
 ## Before writing a new dashboard query
 
@@ -41,4 +41,4 @@ A query that returns zero rows because **the data doesn't exist yet** is correct
 
 ---
 
-**For depth:** [surfaces/persistent.md](../../../memoria-docs/surfaces/persistent.md) — full performance discipline and graceful-degradation guidance.
+**For depth:** obsidian-ui/dashboards.md — full performance discipline and graceful-degradation guidance.

@@ -19,7 +19,7 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 - No automatic schema migrations.
 - No overwriting human-set frontmatter.
 - No moving notes to archive without explicit permission.
-- No direct canonical edits to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, or `50-deliverables/`.
+- No direct edits to the review-gated zones `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, or `50-deliverables/`.
 - No spawning of work for other profiles.
 
 ## Core commands
@@ -55,7 +55,7 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 - Report issues; do not silently fix them.
 - Escalate ambiguous schema problems for human review.
 - Lint reports go to `00-meta/02-logs/` or `00-meta/01-dashboards/`, or are attached as board comments; never as direct edits to user notes.
-- **The Linter is zero-LLM and deterministic.** Detection is static — regex, AST walks over markdown and YAML, SHA-256 hashing, set arithmetic over field references. The same vault state produces the same report, every run, every CI. The Linter never asks a model to grade structural correctness; that would make the check expensive, slow, and itself non-deterministic — none of which CI gating tolerates. **Method class: deterministic** throughout — see [rationale/computational-methods.md](../../../../memoria-docs/architecture/why-computational-methods.md) for the boundary rules. The Linter is the definitive example of a fully deterministic Memoria profile; the structural detectors collectively define what zero-LLM structural enforcement looks like.
+- **The Linter is zero-LLM and deterministic.** Detection is static — regex, AST walks over markdown and YAML, SHA-256 hashing, set arithmetic over field references. The same vault state produces the same report, every run, every CI. The Linter never asks a model to grade structural correctness; that would make the check expensive, slow, and itself non-deterministic — none of which CI gating tolerates. **Method class: deterministic** throughout — see rationale/computational-methods.md for the boundary rules. The Linter is the definitive example of a fully deterministic Memoria profile; the structural detectors collectively define what zero-LLM structural enforcement looks like.
 
 ## Auto-fix policy
 
@@ -66,7 +66,7 @@ Dry-run is the default. Auto-fix is allowed only for **well-defined structural r
 | **Safe & unambiguous** | Removing duplicate trailing whitespace, fixing trailing newlines, normalizing list bullet style | Yes, with a per-change log entry. |
 | **Authorized targeted fixes** | "Fix dangling backlinks under `20-sources/03-entities/01-people/`" — scoped, explicit, reversible | Yes, with a per-change log entry and a summary report. |
 | **Schema / content changes** | Promoting `_proposed_classification` fields, rewriting frontmatter, moving notes between folders | Never. Report only. |
-| **Canonical edits** | Anything in `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | Never. Report only. |
+| **Review-gated-zone edits** | Anything in `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | Never. Report only. |
 
 When in doubt, dry-run.
 
@@ -165,7 +165,7 @@ Each lint run produces a single verdict from the findings. The verdict gates sch
 | --- | --- | --- |
 | **PASS** | Only LOW or INFO findings. | Scheduled work continues; nothing required from the human. |
 | **REVIEW** | At least one MEDIUM finding (no HIGH or CRITICAL). | Human should reconcile before the next scheduled run. The system stays operational. |
-| **FAIL** | At least one HIGH or CRITICAL finding. | Pause scheduled work (the [discovery loop](../../../../memoria-docs/roadmap/future-directions.md#the-discovery-loop), batch enrichment, the Linter's own next sweep) until resolved. Surface in the daily dashboard. |
+| **FAIL** | At least one HIGH or CRITICAL finding. | Pause scheduled work (the discovery loop, batch enrichment, the Linter's own next sweep) until resolved. Surface in the daily dashboard. |
 
 The verdict is computed deterministically from the findings; an human can recompute it from the report. There is no fudge factor and no LLM judgment in the rollup. This is the design parallel to the [trust score](../../../00-meta/01-dashboards/fleet-health.md#system-trust-score) for the fleet — both are headline numbers, but the trust score is an operational aggregate and the verdict is a structural aggregate.
 

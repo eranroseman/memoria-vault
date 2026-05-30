@@ -1,6 +1,6 @@
 # Dataview cheatsheet
 
-Reference patterns for dashboard authors. Companion to [surfaces/persistent.md](../../../memoria-docs/surfaces/persistent.md).
+Reference patterns for dashboard authors. Companion to obsidian-ui/dashboards.md.
 
 ## TABLE — the most common
 
@@ -90,6 +90,6 @@ WHERE length(file.inlinks) = 0
 
 ---
 
-**For depth:** [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/). [surfaces/persistent.md#performance-discipline](../../../memoria-docs/surfaces/persistent.md#performance-discipline) for query-shape rules.
+**For depth:** [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/). obsidian-ui/dashboards.md#performance-discipline for query-shape rules.
 
 **Promotion bar.** When a new query pattern proves useful across two or more dashboards, add it here. The cheatsheet is the operational complement to the dashboard discipline doc.

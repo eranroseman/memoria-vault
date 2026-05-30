@@ -2,7 +2,7 @@
 
 **Location.** `00-meta/01-dashboards/discuss-queue.md`
 
-**Decision.** Surface every paper note that has been classified but not yet processed (the Discuss workflow). This is the upstream-discipline dashboard: if cards pile up here, your processing rhythm is slipping. The corollary signal — when the list is short, your processing is keeping up with ingest.
+**Decision.** List every paper note that's been classified (`lifecycle: current`) but not yet processed via the Discuss workflow. This is the upstream-discipline dashboard: a long queue means your processing is falling behind ingest; a short one means you're keeping up.
 
 **When to open.** During a reading session, when deciding which source to think about next. The single most important dashboard for protecting upstream cognitive discipline.
 
@@ -65,10 +65,10 @@ LIMIT 14
 
 - **Not a to-do list.** It's a queue surface, not a task tracker. Use the Hermes Kanban itself for the actual `discuss` cards' state.
 - **Not for Socratic conversation transcripts.** Socratic is `read_only_mode` — it produces no artifacts. The processing happens in the human's head; the claim note (when written) lives in `30-synthesis/01-claims/`.
-- **Not the same as the `reading-pipeline` dashboard.** [`reading-pipeline.md`](reading-pipeline.md) shows papers by classify stage (the upstream-of-discuss question: "what's still partially classified?"). This dashboard shows papers post-classification, pre-claim (the processing question).
+- **Not the same as the `reading-pipeline` dashboard.** [`reading-pipeline.md`](reading-pipeline.md) shows papers still in active processing (`lifecycle: proposed`) — the upstream-of-discuss question, "what's in flight?". This dashboard shows papers that are fully classified (`lifecycle: current`) but not yet processed — pre-claim, the processing question.
 
 ## Related
 
-- [Discuss workflow](../../../memoria-docs/workflows/upstream/discuss.md) — the workflow this dashboard surfaces.
-- [`reading-pipeline.md`](reading-pipeline.md) — upstream of this; shows papers stuck before classification.
+- Discuss workflow — the workflow this dashboard feeds.
+- [`reading-pipeline.md`](reading-pipeline.md) — upstream of this; shows papers still being classified (`lifecycle: proposed`).
 - [`weekly-review.md`](weekly-review.md) — human's Friday ritual; consumes this dashboard's stale-queue numbers as one input among many.

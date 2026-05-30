@@ -1,6 +1,6 @@
 # Obsidian configuration
 
-Which Obsidian community plugins Memoria uses and the load-bearing settings you shouldn't change. Companion to [plugins/README.md](../../../memoria-docs/plugins/README.md).
+Which Obsidian community plugins Memoria uses and the load-bearing settings you shouldn't change. Companion to plugins/README.md.
 
 ## Required plugins
 
@@ -20,7 +20,7 @@ Which Obsidian community plugins Memoria uses and the load-bearing settings you 
 | Plugin | Purpose |
 | --- | --- |
 | **Tag Wrangler** | Bulk-rename / merge controlled vocabularies |
-| **Smart Connections** | Embedding-based similarity for Mapper |
+| **Smart Connections** | Human-side, in-Obsidian semantic search ("what notes do I have on X?"). *Not* wired into the Mapper — the agent's retrieval substrate is `qmd`; the two run separately. |
 | **Obsidian Linter** | Note formatting consistency |
 | **Hover Editor** | Preview wikilinks without opening |
 | **Supercharged Links** | Visual cues on link colors by note type |
@@ -44,15 +44,15 @@ Which Obsidian community plugins Memoria uses and the load-bearing settings you 
 
 ## Workspace conventions
 
-- **One mode per workspace.** Reading & Processing (`Cmd-2`), Drafting (`Cmd-3`), Maintenance (`Cmd-4`)
+- **One mode per workspace.** Human (`Cmd-1`), Reading & Processing (`Cmd-2`), Drafting (`Cmd-3`)
 - **Three workspaces is the working set.** Resist proliferation
 - **Pin [[../index]]** in the file explorer
 
 ## Hotkey conventions (Memoria-specific)
 
-- `Ctrl+Shift+1/2/3/4` — mode-switching for the ACP chat (Ask / Map / Draft / Check)
+- `Ctrl+Shift+1/2/3/4` — profile-switching for the ACP chat (Socratic / Mapper / Writer / Verifier)
 - `Cmd-P → "M"` — filter palette to Memoria commands only
 
 ---
 
-**For depth:** [plugins/README.md](../../../memoria-docs/plugins/README.md) — per-plugin design rationale and full configuration.
+**For depth:** plugins/README.md — per-plugin design rationale and full configuration.

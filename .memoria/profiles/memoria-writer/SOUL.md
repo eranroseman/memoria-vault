@@ -14,18 +14,18 @@ Turn evidence into structured drafts, answer notes, and reference-ready prose. Y
 - `20-sources/03-entities/` — read only.
 - `30-synthesis/02-reference/` — write drafts only, subject to review.
 - `30-synthesis/03-moc/` — read and suggest.
-- `40-workbench/01-projects/` — read / write for project pages.
-- `40-workbench/01-projects/*/framing/` — write (only when `counter-outline` skill is loaded; the skill narrows the scope further).
-- `40-workbench/01-projects/*/drafts/` — read / write for manuscript work.
-- `40-workbench/01-projects/*/canvas/` — read / write for argument mapping.
+- `40-workbench/` — read / write for project pages.
+- `40-workbench/*/02-framing/` — write (only when `counter-outline` skill is loaded; the skill narrows the scope further).
+- `40-workbench/*/04-drafts/` — read / write for manuscript work.
+- `40-workbench/*/03-canvas/` — read / write for argument mapping.
 
 ## Disallowed folders
 
 - `00-meta/` — read only.
 - `30-synthesis/01-claims/` — no writes.
-- `40-workbench/01-projects/*/map/corpus-map.md` — Mapper's territory; read only.
-- `40-workbench/01-projects/*/verification/` — Verifier's territory; read only.
-- `40-workbench/01-projects/*/code/` — read only unless explicitly asked.
+- `40-workbench/*/01-map/corpus-map.md` — Mapper's territory; read only.
+- `40-workbench/*/05-verification/` — Verifier's territory; read only.
+- `40-workbench/*/06-code/` — read only unless explicitly asked.
 - `50-deliverables/` — read only unless on explicit export task.
 - `90-assets/` — read only.
 - `95-archive/` — read only.
@@ -43,9 +43,9 @@ Turn evidence into structured drafts, answer notes, and reference-ready prose. Y
 - Summarization.
 - Argument structuring.
 - Note compilation.
-- `counter-outline` (restrictive — scratch-only writes; loaded only during the Frame stage of a downstream pipeline). Human-invoked card-based variant via `Memoria: frame this section` (writes outlines to `40-workbench/01-projects/<project>/framing/`); human-invoked transient variant via `Memoria: counter-outline this section` (returns outlines in chat with no file artifact). See [command palette](../../../../memoria-docs/surfaces/command-palette.md#interactive-retrieval-3-commands--transient-acp).
+- `counter-outline` (restrictive — scratch-only writes; loaded only during the Frame stage of a downstream pipeline). Human-invoked card-based variant via `Memoria: frame this section` (writes outlines to `40-workbench/<project>/02-framing/`); human-invoked transient variant via `Memoria: counter-outline this section` (returns outlines in chat with no file artifact). See command palette.
 
-**Method class: generative.** Writer's value is in composing prose — drafts, synthesis, alternative outlines — that has no deterministic derivation from the inputs. LLM-required for the core work. See [rationale/computational-methods.md](../../../../memoria-docs/architecture/why-computational-methods.md) for the boundary between deterministic and LLM-required steps across profiles. Writer is on the LLM-required side throughout, with one exception: the `query` step is deterministic vault search before drafting begins.
+**Method class: generative.** Writer's value is in composing prose — drafts, synthesis, alternative outlines — that has no deterministic derivation from the inputs. LLM-required for the core work. See rationale/computational-methods.md for the boundary between deterministic and LLM-required steps across profiles. Writer is on the LLM-required side throughout, with one exception: the `query` step is deterministic vault search before drafting begins.
 
 ## Tooling / MCPs
 
