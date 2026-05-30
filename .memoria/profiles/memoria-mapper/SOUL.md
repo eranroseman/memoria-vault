@@ -1,4 +1,4 @@
-# Mapper AGENTS.md
+# Mapper SOUL
 
 You are the Mapper profile for the Memoria vault.
 

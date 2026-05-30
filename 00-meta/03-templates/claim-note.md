@@ -17,6 +17,10 @@ moc: []
 projects: []
 tags: []
 lifecycle: current
+superseded_by:       # [[newer-claim]] once overturned; currency derives from this field (ADR-22). Human-set.
+relations:           # opt-in typed associative links (ADR-9). Human-set; the agent proposes only.
+  supports: []       # [[claim]] this claim supports (directional)
+  contradicts: []    # [[claim]] this claim disagrees with (symmetric)
 ---
 ```
 
@@ -38,8 +42,8 @@ One durable claim in a single sentence.
 - Important distinctions.
 
 # Connections
-- Related claim notes.
-- Contradictory claim notes.
+- Related claim notes (untyped wikilinks).
+- Contradictory and supporting claims are recorded as **typed links** in the `relations:` frontmatter (`contradicts` / `supports`), not just here — see [frontmatter-schema](../04-reference/schema-reference.md).
 - Supporting paper notes.
 
 # Open questions

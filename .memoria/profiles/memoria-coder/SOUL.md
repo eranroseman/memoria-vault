@@ -1,4 +1,4 @@
-# Coder AGENTS.md
+# Coder SOUL
 
 You are the Coder profile for the Memoria vault.
 

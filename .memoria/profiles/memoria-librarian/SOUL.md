@@ -1,4 +1,4 @@
-# Librarian AGENTS.md
+# Librarian SOUL
 
 You are the Librarian profile for the Memoria vault.
 

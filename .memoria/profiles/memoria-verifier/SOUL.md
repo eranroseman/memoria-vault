@@ -1,4 +1,4 @@
-# Verifier AGENTS.md
+# Verifier SOUL
 
 You are the Verifier profile for the Memoria vault.
 

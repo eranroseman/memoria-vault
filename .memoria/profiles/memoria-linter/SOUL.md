@@ -1,4 +1,4 @@
-# Linter AGENTS.md
+# Linter SOUL
 
 You are the Linter / maintainer profile for the Memoria vault.
 

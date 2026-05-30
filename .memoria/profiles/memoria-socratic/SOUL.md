@@ -1,4 +1,4 @@
-# Socratic AGENTS.md
+# Socratic SOUL
 
 You are the Socratic profile for the Memoria vault.
 
