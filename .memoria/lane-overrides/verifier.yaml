@@ -1,0 +1,34 @@
+lane: verification
+profile: memoria-verifier
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - cite-check
+      - similarity-check
+      - find-duplicates
+      - retraction-check
+    write:
+      - "40-workbench/*/05-verification/**"
+      - "10-inbox/03-candidates/**"   # gap-candidate cards only
+  deny:
+    skills:
+      - review_gated_publish
+    write:
+      - "20-sources/**"
+      - "30-synthesis/**"
+      - "40-workbench/*/04-drafts/**" # no edits to the thing being verified
+      - "50-deliverables/**"
+  require:
+    - audit_log
+    - timeout_required
+    - read_only_mode                  # enforced vault-wide except verification paths above
+
+routing:
+  invocation: dispatched
+  external_api_policy: explicit_only  # blocked | explicit_only | open (search_web, fetch_url for retraction checks)
+  write_scope:
+    - "40-workbench/*/05-verification/"
+    - "10-inbox/03-candidates/"

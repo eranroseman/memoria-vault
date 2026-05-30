@@ -1,0 +1,32 @@
+lane: coding
+profile: memoria-coder
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - scaffold-code-note
+      - workspace-coordinate
+      - commit-and-document      # thin Hermes-side wrappers; substantive coding in external agent
+    write:
+      - "40-workbench/*/06-code/**"
+  deny:
+    skills:
+      - review_gated_publish
+    write:
+      - "10-inbox/**"
+      - "20-sources/**"
+      - "30-synthesis/**"
+      - "40-workbench/*/04-drafts/**"
+      - "50-deliverables/**"
+  require:
+    - audit_log
+    - timeout_required
+    - source_tracking
+
+routing:
+  invocation: dispatched         # dispatched | interactive_only (external agent handoff)
+  external_api_policy: explicit_only  # blocked | explicit_only | open (Git, repo APIs)
+  write_scope:
+    - "40-workbench/*/06-code/"

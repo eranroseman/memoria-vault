@@ -1,0 +1,40 @@
+lane: linting
+profile: memoria-linter
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - schema-check
+      - graph-analyze
+      - health-report
+      - session-log
+    write:
+      - "00-meta/02-logs/**"     # audit logs, session logs, and rotation archive
+    auto_fix:
+      classes:
+        - safe-and-unambiguous   # trailing whitespace, missing timestamps — via Templater
+        - authorized-targeted    # audit-log rotation, lint-findings file, dashboard last_updated
+  deny:
+    skills:
+      - review_gated_publish
+    write:
+      - "10-inbox/**"
+      - "20-sources/**"
+      - "30-synthesis/**"        # review-gated zones — always deny (policy MCP forces dry_run)
+      - "40-workbench/**"
+      - "50-deliverables/**"
+    auto_fix:
+      classes:
+        - schema-content          # always dry_run — needs schema-migrate
+        - review-gated-edit       # always deny regardless of class
+  require:
+    - audit_log
+    - dry_run_default             # dry-run is the default; auto_fix is class-gated
+
+routing:
+  invocation: dispatched         # dispatched | interactive_only (also runs on cron: Level 1)
+  external_api_policy: blocked   # blocked | explicit_only | open
+  write_scope:
+    - "00-meta/02-logs/"

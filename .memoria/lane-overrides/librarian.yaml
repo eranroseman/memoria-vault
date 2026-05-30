@@ -1,0 +1,37 @@
+lane: library
+profile: memoria-librarian
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - paper-lookup
+      - arxiv-search
+      - pyzotero
+      - citation-management
+      - literature-review
+      - obsidian-paper-note
+      - rest-passthrough
+    write:
+      - "10-inbox/**"
+      - "20-sources/**"
+  deny:
+    skills:
+      - review_gated_publish
+      - destructive_shell
+    write:
+      - "30-synthesis/**"
+      - "40-workbench/**"
+      - "50-deliverables/**"
+  require:
+    - audit_log
+    - timeout_required
+    - source_tracking
+
+routing:
+  invocation: dispatched
+  external_api_policy: explicit_only    # blocked | explicit_only | open
+  write_scope:
+    - "10-inbox/"
+    - "20-sources/"

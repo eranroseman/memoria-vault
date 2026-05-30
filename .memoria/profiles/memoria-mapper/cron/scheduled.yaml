@@ -1,0 +1,6 @@
+# stub — verify lane and schedule against Hermes cron docs before enabling
+cron:
+  - schedule: "0 3 * * MON"        # weekly Monday 03:00
+    skill: cluster-mapping-scan
+    lane: mapping
+    creates_card: {task: weekly-cluster-report, state: ready}

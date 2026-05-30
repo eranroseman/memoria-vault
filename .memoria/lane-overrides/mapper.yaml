@@ -1,0 +1,34 @@
+lane: mapping
+profile: memoria-mapper
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - scope-project
+      - gap-report
+      - cluster-mapping
+      - comparative-brief
+    write:
+      - "40-workbench/*/01-map/corpus-map.md"
+      - "40-workbench/*/01-map/gap-report.md"
+      - "40-workbench/*/01-map/comparative-briefs/**"
+      - "40-workbench/*/01-map/cluster-maps/**"
+  deny:
+    skills: []
+    write:
+      - "10-inbox/**"
+      - "20-sources/**"
+      - "30-synthesis/**"
+      - "50-deliverables/**"
+  require:
+    - audit_log
+    - timeout_required
+    - read_only_mode         # enforced vault-wide except project-scratch write paths above
+
+routing:
+  invocation: dispatched
+  external_api_policy: blocked          # blocked | explicit_only | open
+  write_scope:
+    - "40-workbench/*/01-map/"

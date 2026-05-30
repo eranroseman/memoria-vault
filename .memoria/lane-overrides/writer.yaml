@@ -1,0 +1,39 @@
+lane: writing
+profile: memoria-writer
+
+# stub — wire fully in v0.2
+
+policy:
+  allow:
+    skills:
+      - llm-wiki-draft
+      - note-refactor
+      - scientific-writing
+      - counter-outline
+    write:
+      - "10-inbox/02-answers/**"
+      - "40-workbench/*/04-drafts/**"
+      - "40-workbench/*/03-canvas/**"
+      - "40-workbench/*/02-framing/**"
+  deny:
+    skills:
+      - rest-passthrough
+    write:
+      - "20-sources/**"
+      - "30-synthesis/01-claims/**"    # review-gated → degrades to dry_run
+      - "30-synthesis/02-reference/**" # review-gated → degrades to dry_run
+      - "30-synthesis/03-moc/**"       # review-gated → degrades to dry_run
+      - "50-deliverables/**"           # review-gated → degrades to dry_run
+  require:
+    - audit_log
+    - timeout_required
+    - review_gated_write               # writes to review-gated zones degrade to dry_run
+
+routing:
+  invocation: dispatched
+  external_api_policy: blocked          # blocked | explicit_only | open
+  write_scope:
+    - "10-inbox/02-answers/"
+    - "40-workbench/*/04-drafts/"
+    - "40-workbench/*/03-canvas/"
+    - "40-workbench/*/02-framing/"

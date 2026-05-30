@@ -1,0 +1,25 @@
+# Linter-lane scheduled tasks (see roadmap/standard-cron-tasks.md).
+# All read-mostly / write-to-logs only -- none can modify canonical content,
+# which is what makes scheduled dispatch on this lane safe to enable first.
+#
+# Enablement is a deliberate, recorded decision: turn these on only after Phase 3
+# (profile build) is stable, and note it in deployment notes, e.g.
+#   "Linter cron enabled 2026-06-12 after 4 weeks of stable dry-run reports."
+#
+# approvals.cron_mode stays at its `deny` default (set in config.yaml): these jobs
+# run unattended but cannot execute approval-gated commands.
+cron:
+  - schedule: "0 2 * * *"          # nightly 02:00
+    skill: hygiene-sweep
+    lane: linter
+    creates_card: {task: nightly-hygiene, state: ready}
+
+  - schedule: "0 4 * * MON"        # weekly Monday 04:00
+    skill: drift-detector
+    lane: linter
+    creates_card: {task: weekly-drift-report, state: ready}
+
+  - schedule: "0 5 * * *"          # nightly 05:00
+    skill: stale-fleeting-check
+    lane: linter
+    creates_card: {task: fleeting-staleness-report, state: ready}
