@@ -36,9 +36,19 @@ Short description of the area and why it matters.
 - What should be split into a child hub.
 
 # Live query
+
+## Papers in this MOC
+​```dataview
+TABLE file.link AS Note, lifecycle
+FROM "20-sources/01-papers"
+WHERE contains(moc, this.file.link)
+SORT file.mtime DESC
+​```
+
+## Claims in this MOC
 ​```dataview
 TABLE file.link AS Note, maturity, lifecycle
-FROM "20-sources/01-papers" OR "30-synthesis/01-claims"
+FROM "30-synthesis/01-claims"
 WHERE contains(moc, this.file.link)
 SORT file.mtime DESC
 ​```
