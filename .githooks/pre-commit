@@ -1,0 +1,19 @@
+#!/bin/sh
+# docs-doctor pre-commit guard — blocks commits that break docs/ structure.
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+#
+# Runs only when docs/ or the linter itself is staged. Bypass (rarely) with:
+#   git commit --no-verify
+
+git diff --cached --name-only | grep -qE '^docs/|^scripts/docs-doctor\.py' || exit 0
+
+PY=$(command -v python || command -v python3)
+[ -z "$PY" ] && { echo "pre-commit: python not found; skipping docs-doctor" >&2; exit 0; }
+
+"$PY" scripts/docs-doctor.py docs || {
+  echo "" >&2
+  echo "pre-commit: docs-doctor found issues (above). Fix them, or bypass with: git commit --no-verify" >&2
+  exit 1
+}
