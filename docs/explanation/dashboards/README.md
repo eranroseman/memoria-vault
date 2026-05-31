@@ -1,28 +1,46 @@
----
-topic: dashboards
----
-
 # Dashboards
 
-Dashboards are Dataview queries rendered as notes — the **dashboard** component from [obsidian-ui/README.md](../obsidian-ui/README.md). Each one answers a single recurring question (what's blocked, what's drifting, what's ready to read) and is meant to be opened, glanced at, and closed. This folder holds one design summary per dashboard — each following the shared [design-summary page template](../../reference/templates/design-summary-template.md) — while the runtime Dataview queries ship at `00-meta/01-dashboards/` in the [starter vault](https://github.com/eranroseman/memoria-vault).
+Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped here by the kind of attention they demand.
 
-[`daily-health`](daily-health.md) is the entry point — opened every morning, it summarizes the red signals from the deeper dashboards and is the page you click through from. (It ships as `00-meta/01-dashboards/index.md` in the starter vault.) For the design rules every dashboard follows (one decision per query, filter the boring cases, sort oldest-first) and the Dataview performance discipline, see [obsidian-ui/dashboards.md](../../reference/obsidian-ui/dashboards.md).
+## Daily glance
 
-## All dashboards at a glance
+| Dashboard | Question it answers |
+| --- | --- |
+| [daily-health.md](daily-health.md) | Is anything broken right now? What needs attention today? |
+| [board-state.md](board-state.md) | What work is in flight? Where are cards stuck? |
 
-The dashboards fall into an entry glance (Daily Health), operational and structural health (audit-log, board-state, drift-watch, fleet-health), knowledge and reading (open-questions, contradictions, discuss-queue, reading-pipeline), maintenance (loose-ends, and the *deferred* skill-lifecycle), and the weekly ritual that orchestrates them. Ten dashboards plus the `index.md` entry point ship in the starter vault; `skill-lifecycle` is deferred (see [implementation-status.md](../../project/implementation-status.md)). The order below follows that grouping; each row's last column is the one comparison worth keeping straight.
+## Synthesis agenda
 
-| Dashboard | Role | When to open | Reads from | Closest sibling |
-|---|---|---|---|---|
-| [`daily-health`](daily-health.md) | system-health glance | every morning, 30s | red signals from the three deeper health dashboards (drift-watch, fleet-health, board-state), plus cron | entry point for all below |
-| [`audit-log`](audit-log.md) | per-write forensics | a write looks wrong; after an overnight run | `audit.jsonl` | [`drift-watch`](drift-watch.md) — per lint pass, not per write |
-| [`board-state`](board-state.md) | workflow execution | reviewing cards from inside Obsidian | `00-meta/board/` markdown cards | [`discuss-queue`](discuss-queue.md) — cards, not content |
-| [`drift-watch`](drift-watch.md) | structural drift | the system feels wrong; after profile/plugin changes | `lint-findings.jsonl` | [`audit-log`](audit-log.md); [`fleet-health`](fleet-health.md) |
-| [`fleet-health`](fleet-health.md) | operational health | the fleet runs real weekly volume (Phase 6+) | `lane-metric` / `skill-metric` notes | [`drift-watch`](drift-watch.md) — structural counterpart |
-| [`open-questions`](open-questions.md) | research agenda | planning the next research direction | claim + paper notes with `# Open questions` | — (works day one) |
-| [`contradictions`](contradictions.md) | claim-tension surfacing | building an argument; weekly synthesis | claim notes with `relations.contradicts` | [`open-questions`](open-questions.md) — agenda from tensions, not questions |
-| [`discuss-queue`](discuss-queue.md) | upstream discipline | sitting down to read | paper notes `lifecycle: current`, no `processed:` | [`reading-pipeline`](reading-pipeline.md) — broader |
-| [`reading-pipeline`](reading-pipeline.md) | upstream flow | the inbox feels full | paper notes `lifecycle: proposed` + claim maturity | [`discuss-queue`](discuss-queue.md) — narrower |
-| [`loose-ends`](loose-ends.md) | naming hygiene | after ingest batches | filename keywords, whole vault | Linter `orphan-working-files` — automation, not human |
-| [`skill-lifecycle`](skill-lifecycle.md) *(deferred)* | skill governance | adding or auditing skills, once stood up | `skill-note` files | — |
-| [`weekly-review`](weekly-review.md) | knowledge ritual | Friday, ~90 min | orchestrates the dashboards above | [`daily-health`](daily-health.md) — weekly, not daily |
+| Dashboard | Question it answers |
+| --- | --- |
+| [reading-pipeline.md](reading-pipeline.md) | What's queued, classified, and ready for claim-note writing? |
+| [discuss-queue.md](discuss-queue.md) | Which paper notes are waiting for a Socratic discussion pass? |
+| [open-questions.md](open-questions.md) | What open questions has past synthesis raised? |
+| [contradictions.md](contradictions.md) | Which claim notes disagree with each other? |
+
+## Structural health
+
+| Dashboard | Question it answers |
+| --- | --- |
+| [drift-watch.md](drift-watch.md) | What structural drift has the Linter detected? |
+| [loose-ends.md](loose-ends.md) | Which files are named `TODO`, `tmp`, or `untitled`? |
+| [weekly-review.md](weekly-review.md) | What needs attention this week across all categories? |
+
+## Operational health
+
+| Dashboard | Question it answers |
+| --- | --- |
+| [fleet-health.md](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
+| [audit-log.md](audit-log.md) | What did the policy MCP allow, deny, and flag today? |
+
+## Why the dashboards are designed the way they are
+
+Several principles cut across all ten dashboards.
+
+Each dashboard surfaces one type of decision. Mixed queries produce lists the human can't batch-act on — a dashboard that asks "review these cards AND check these orphan notes" forces context-switching within a single glance. The single-decision constraint keeps the cognitive mode coherent.
+
+The default state — nothing to review, everything healthy — should produce an empty or near-empty dashboard, not a list of green checks. Dataview tables that always have rows train the human to ignore them. A dashboard that is always busy is a dashboard that stops being read. Empty is success, not a broken query.
+
+Sort direction follows the decision type. Queues sort oldest-first because the oldest unreviewed item has waited the longest and should be acted on first. Logs sort newest-first because the most recent event is most actionable — investigating a log means starting from what just happened.
+
+When a dependency is missing (a plugin not installed, a log file not yet created, fleet volume too low for meaningful statistics), dashboards show explanatory text rather than an error or a blank table. The graceful degradation is intentional: a new vault should not look broken just because data is still accumulating.

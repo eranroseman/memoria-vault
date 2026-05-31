@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 28
 title: Per-note-type acceptance checklists ("frozen evaluator") — deferred
 status: proposed

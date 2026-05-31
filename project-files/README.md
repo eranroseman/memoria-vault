@@ -1,7 +1,3 @@
----
-topic: project
----
-
 # Project files
 
 Four folders. One job each.

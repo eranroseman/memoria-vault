@@ -1,32 +1,35 @@
+
+# The weekly-review dashboard
+
+The weekly-review dashboard is the Friday-ritual entry point. Open it at the start of each weekly session and work top to bottom: clear the inbox, decide on discovery candidates, promote evergreen claim notes, check orphans, review project pages, glance at metrics. The discipline is **one ritual per week, ~90 minutes** — not "open whenever." A weekly cadence is what prevents the vault from accumulating drift faster than it produces synthesis.
+
 ---
-topic: dashboards
----
-
-# `weekly-review` — design summary
-
-**Runtime artifact.** Ships at `00-meta/01-dashboards/weekly-review.md` in the [starter vault](https://github.com/eranroseman/memoria-vault) and runs in Obsidian via Dataview; the runtime queries live there. This page covers the design role.
-
-## Mission
-
-The Friday-ritual entry point. Open at the start of each weekly session and work top-to-bottom: clear the inbox, decide candidates, promote `evergreen` claim notes, check orphans, review project pages, glance at metrics. The discipline is **one ritual per week, ~90 minutes top-to-bottom** — not "open whenever." A scheduled weekly cadence is what keeps the vault from accumulating drift faster than it produces synthesis.
 
 ## What this dashboard is not
 
-- **Not [Daily Health](daily-health.md).** Daily Health is the daily glance (open every morning, 30 seconds). Weekly is knowledge ritual (open Friday afternoon, 90 minutes). Different rhythm, different scope.
-- **Not the only weekly view.** [`reading-pipeline`](reading-pipeline.md), [`loose-ends`](loose-ends.md), and [`drift-watch`](drift-watch.md) are also "weekly" by recommended cadence — but weekly-review is the ritual *entry point* that links to them and orchestrates the order.
-- **Not auto-actioned.** Every section requires human decisions (promote / archive / discard / triage). Nothing in this dashboard happens by cron.
+**Not [Daily Health](daily-health.md).** Daily Health is the morning health glance — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
 
-## Design decisions
+**Not the only weekly view.** The `reading-pipeline`, `loose-ends`, and `drift-watch` dashboards are also recommended-weekly — but weekly-review is the ritual *entry point* that links to them and defines the order. It is the orchestrator of the weekly ritual, not just one surface among several.
 
-- **Top-to-bottom ordering matches the workflow.** Inbox review → discovery candidates → promotion queue → orphan check → project pages → metrics. The order isn't arbitrary: clearing the inbox unblocks downstream synthesis; promotion comes before metrics because the metrics reflect promotion behavior.
-- **Empty-section discipline.** A healthy week leaves several sections empty. Empty isn't a bug; it's the goal for sections like "Notes older than 7 days unreviewed."
-- **The orphan check carries a coverage@k angle.** Beyond the raw orphan count (notes with zero inlinks), surface *qualifying notes not yet linked or found* — claims or papers that should connect to current work but don't (KnowledgeBerg; AutoResearchBench Wide-Research). This catches missing *coverage*, not just disconnected notes. See [roadmap/evaluation.md](../../project/roadmap/evaluation.md) (Observability).
-- **Schema-version migration progress is intentionally NOT here.** That belongs in [`drift-watch`](drift-watch.md)'s schema-migration-progress section — the weekly-review surfaces *content decisions*, not *structural maintenance*. Mixing the two crowds the human's Friday attention.
-- **Discovery candidates section degrades gracefully.** Until [ADR-21 shared candidate frontmatter](../../project/decisions/21-shared-candidate-frontmatter.md) is adopted and a `candidate-note` template exists, that section is empty by design.
+**Not auto-actioned.** Every section requires a human decision: promote or defer, archive or keep, include or exclude. Nothing in this dashboard is triggered by a cron job. The human is the agent of all state changes it surfaces.
+
+---
+
+## Why it's designed this way
+
+**Top-to-bottom ordering follows the workflow logic.** Inbox review unblocks downstream synthesis, so it comes first. Promotion comes before metrics because the metrics reflect promotion behavior — reviewing metrics before doing the promotions would show stale numbers. The sequence is not aesthetic; it is causal.
+
+**Empty sections are the goal, not a bug.** A healthy week leaves most sections empty. The discipline is recognizing empty as success rather than a sign that the dashboard isn't working.
+
+**The orphan check has a coverage angle.** Beyond the raw orphan count (notes with zero inbound links), the check surfaces qualifying notes that should connect to current work but don't. This catches missing coverage, not just disconnected notes — the difference between a note that genuinely stands alone and a note that should be connected but hasn't been.
+
+**Schema migration progress lives elsewhere.** Structural maintenance (schema drift, plugin config changes) belongs in `drift-watch`, not here. Weekly-review surfaces content decisions; mixing structural maintenance into the same ritual crowds the human's Friday attention with two different cognitive tasks.
+
+---
 
 ## Related
 
-- [`reading-pipeline`](reading-pipeline.md) — papers-by-stage view; linked from weekly-review for reading planning
-- [`loose-ends`](loose-ends.md) — leftover-junk surfacer; weekly companion
-- [`drift-watch`](drift-watch.md) — structural drift findings (also weekly)
-- [workflows/maintenance/lint.md](../../how-to/workflows/maintenance/lint.md) — the weekly ritual the dashboard structures
+- Dashboard opened first thing every morning: [Daily Health](daily-health.md)
+- Reading-stage companion: [reading-pipeline](reading-pipeline.md)
+- Structural drift companion: `drift-watch`
+- How to run the ritual: [run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)

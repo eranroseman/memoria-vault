@@ -1,30 +1,33 @@
+
+# The reading-pipeline dashboard
+
+The reading-pipeline dashboard shows what is actively in flight through the upstream pipeline and what has come out the other side. It answers two questions at once: "what should I read next?" (papers in active processing) and "what came out of my recent reading?" (claim notes by maturity). Open it during a reading session when the inbox feels full and you need to decide what to process next.
+
 ---
-topic: dashboards
----
-
-# `reading-pipeline` — design summary
-
-**Runtime artifact.** Ships at `00-meta/01-dashboards/reading-pipeline.md` in the [starter vault](https://github.com/eranroseman/memoria-vault) and runs in Obsidian via Dataview; the runtime queries live there. This page covers the design role.
-
-## Mission
-
-Keep papers flowing through the upstream pipeline and show what's stuck. The human opens this when the inbox feels full and they need to decide what to process next. Two views: papers in active processing (`lifecycle: proposed`), and claim notes by maturity (downstream of processing). Together they answer "what should I read next?" and "what came out of my recent reading?"
 
 ## What this dashboard is not
 
-- **Not [`discuss-queue`](discuss-queue.md).** Discuss-queue is narrowly scoped to fully-classified (`lifecycle: current`) paper notes that haven't yet had a Socratic pass — the upstream-cognitive-discipline view. Reading-pipeline is the broader working surface: papers still in active processing (`lifecycle: proposed`) plus downstream claim-note maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a Socratic conversation?"
-- **Not [`weekly-review`](weekly-review.md).** Weekly is a ritual entry point; reading-pipeline is a working surface used between rituals.
-- **Not a board view.** It queries note state (paper-note `lifecycle` and claim-note `maturity`), not card state. [`board-state`](board-state.md) is the card view.
+**Not [discuss-queue](discuss-queue.md).** The discuss-queue is narrowly scoped to fully-classified paper notes that haven't had a Socratic pass — one specific upstream debt. Reading-pipeline is the broader working surface: papers still in active processing plus downstream claim-note maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
 
-## Design decisions
+**Not [weekly-review](weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
 
-- **Two queries, two cadences.** "Papers in active processing" answers a near-term question (what to read this session). "Claim notes by maturity" answers a longer-term question (what's the durable output of all this reading). Surfacing both in one dashboard prevents the human from optimizing one without watching the other.
-- **`proposed` lifecycle is the in-flight signal.** A paper note moves from `proposed` to `current` when the human (or Verifier) finishes classification. Reading-pipeline shows everything currently `proposed` — the pipeline's middle band.
-- **Sort by `file.mtime` not by created date.** Recency of touch matters more than recency of ingest: a paper classified 6 months ago and edited yesterday is more likely the human's current focus than one ingested yesterday but not yet touched.
+**Not a board view.** This dashboard queries note state — paper-note `lifecycle` and claim-note `maturity` — not card state. The [board-state](board-state.md) dashboard is the card view.
+
+---
+
+## Why it's designed this way
+
+**Two queries, two cadences.** "Papers in active processing" answers a near-term question: what should I read this session? "Claim notes by maturity" answers a longer-term question: what is the durable output of all this reading? Showing both in one dashboard prevents optimizing one measure while ignoring the other — reading without synthesis, or synthesis without new sources.
+
+**`lifecycle: proposed` is the in-flight signal.** A paper note lives at `lifecycle: proposed` from the moment it's ingested until the human finishes classification and sets it to `current`. Reading-pipeline shows everything currently `proposed` — the pipeline's working middle band.
+
+**Sort by modification time, not creation date.** Recency of touch matters more than recency of ingest. A paper classified six months ago and edited yesterday is more likely the human's current focus than one ingested yesterday but not yet touched.
+
+---
 
 ## Related
 
-- [`discuss-queue`](discuss-queue.md) — the narrower upstream-discipline view
-- [`weekly-review`](weekly-review.md) — links to reading-pipeline as the weekly reading-planning step
-- [workflows/upstream/discuss.md](../../how-to/workflows/upstream/discuss.md) — the Discuss stage that drains the queue
-- [vault/README.md](../vault/README.md) — definitions of the `lifecycle` and `maturity` states
+- Narrower upstream-discipline sibling: [discuss-queue](discuss-queue.md)
+- Weekly entry point that links to this: [weekly-review](weekly-review.md)
+- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
+- Lifecycle stages explained: [knowledge/lifecycle-over-topic](../knowledge/lifecycle-over-topic.md)

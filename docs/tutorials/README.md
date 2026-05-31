@@ -1,17 +1,27 @@
----
-topic: tutorials
----
-
 # Tutorials
 
-Step-by-step walkthroughs, in order. Each builds on the last. Start at the top if you're new.
+Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you follow concrete steps in Obsidian and end with something real in your vault. Work through them in order — each builds on the last.
 
-| # | Tutorial | What you end with |
-| --- | --- | --- |
-| 01 | [Set up from zero](01-set-up-from-zero.md) | A working vault, one profile, one ingested source (agent steps gated on the v0.2 wiring). |
-| 02 | [Ingest and classify a batch](02-ingest-and-classify-a-batch.md) | 5–10 sources ingested and classified; the first `[!brief]` comparisons. |
-| 03 | [Run the Linter and read its findings](03-run-the-linter.md) | A lint report you can act on; the verdict band explained. |
-| 04 | [Promote a claim note](04-promote-a-claim-note.md) | One claim note authored and promoted toward `reference-note`. |
-| 05 | [Add a second profile](05-add-a-second-profile.md) | A second lane (e.g. Mapper) installed and exercised. |
+## Tutorial sequence
 
-> **Status.** Tutorials 02, 03, and 05 exercise the agent pipeline, which depends on the **v0.2 profile wiring** (`config.yaml`, `mcp.json`, `policy_mcp.py`, lane-overrides) not yet in the starter vault — see [implementation-status.md](../project/implementation-status.md). They are written as the intended flow; tutorial 04 (claim authoring + promotion) is mostly human-driven and works today.
+| # | Tutorial | What you'll do | What you end with |
+| --- | --- | --- | --- |
+| [01](01-set-up-from-zero.md) | Set up from zero | Clone the vault, install plugins, wire up Zotero, run the installer | A working vault with all eight required plugins and all seven profiles installed |
+| [02](02-your-first-note.md) | Your first note | Capture a thought, discuss it with Socratic, write a claim note | One permanent claim note in `30-synthesis/01-claims/`, authored in your own words |
+| [03](03-bring-in-a-paper.md) | Bring in a paper | Ingest one paper from Zotero, classify it, write one claim note | One classified `paper-note` and one linked `claim-note` |
+| [04](04-build-a-reading-batch.md) | Build a reading batch | Ingest 5 papers, classify them, write 3 linked claim notes | Your first connected knowledge cluster |
+| [05](05-start-a-writing-project.md) | Start a writing project | Create a project, read the corpus map, commit a framing | A project folder with corpus map and a chosen outline |
+| [06](06-verify-and-address-gaps.md) | Verify and address a gap | Write a draft paragraph, run verification, address one failed trace | A verified draft with a complete citation trail |
+
+---
+
+## See also
+
+- [What Memoria is](../explanation/what-memoria-is.md) — system identity, what it is and isn't, upstream/downstream directions
+- [How work moves through the system](../explanation/workflows/README.md) — the Zettelkasten model, the agent division of labour, and the board as coordination layer
+
+---
+
+## Implementation status
+
+Tutorials 02–06 exercise the agent pipeline, which requires the v0.2 profile wiring (`config.yaml`, `mcp.json`, `policy_mcp.py`, lane-overrides). See [implementation-status.md](../../project-files/operations/implementation-status.md) for what's shipped. Tutorial 02 (claim authoring) is mostly human-driven and works today without the full pipeline.

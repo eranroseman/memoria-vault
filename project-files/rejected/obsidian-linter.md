@@ -4,9 +4,9 @@ topic: plugins
 
 # obsidian-linter — evaluated, not in the install set
 
-The Obsidian Linter is a frontend Markdown formatter — **not** the Memoria Linter (a different thing: the Memoria Linter does deterministic structural validation under the policy MCP; the Obsidian Linter does inline formatting on save inside the GUI). Memoria **does not ship or recommend it** — see [ADR-24](../decisions/24-obsidian-linter-reference-only.md). Held here because the safe-config knowledge is worth keeping if a human chooses to run it anyway, or if the decision is ever revisited.
+The Obsidian Linter is a frontend Markdown formatter — **not** the Memoria Linter (a different thing: the Memoria Linter does deterministic structural validation under the policy MCP; the Obsidian Linter does inline formatting on save inside the GUI). Memoria **does not ship or recommend it** — see [ADR-12](../decisions/12-obsidian-linter-reference-only.md). Held here because the safe-config knowledge is worth keeping if a human chooses to run it anyway, or if the decision is ever revisited.
 
-**Why it's held out (ADR-24).** Even fully de-fanged, it is a *second formatter with its own config* doing work the Memoria Linter and `markdownlint` already own — and its writes land in the GUI, outside the policy MCP audit trail. The marginal value (whitespace + frontmatter key-sort on human-draft folders) doesn't justify the maintenance and per-upgrade audit burden (see the HTML-comment footgun below). The Memoria Linter owns frontmatter/schema authority; `markdownlint` owns Markdown hygiene.
+**Why it's held out (ADR-12).** Even fully de-fanged, it is a *second formatter with its own config* doing work the Memoria Linter and `markdownlint` already own — and its writes land in the GUI, outside the policy MCP audit trail. The marginal value (whitespace + frontmatter key-sort on human-draft folders) doesn't justify the maintenance and per-upgrade audit burden (see the HTML-comment footgun below). The Memoria Linter owns frontmatter/schema authority; `markdownlint` owns Markdown hygiene.
 
 **If a human runs it anyway, these constraints are non-negotiable** — they are what keep it from acting as a control-plane formatter:
 

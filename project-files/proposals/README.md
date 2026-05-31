@@ -1,7 +1,3 @@
----
-topic: proposals
----
-
 # Proposals
 
 Capabilities that have been thought through but not yet adopted. Each has a clear shape, known trade-offs, and an explicit adoption trigger — a specific condition that would warrant scheduling it.

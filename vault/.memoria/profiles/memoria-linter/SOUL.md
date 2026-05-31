@@ -128,6 +128,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 | Schema version mismatch | `schema_version` differs from current schema | Report — propose `schema-migrate --dry-run`. |
 | Promote-to-reference queue | `maturity: evergreen` notes still in `30-synthesis/01-claims/` | Report — surface in promotion backlog. |
 | Stale inbox | `answer-note` with `lifecycle: proposed` older than 7 days | Report — surface in weekly dashboard. |
+| Answer-draft retention | `answer-note` in `10-inbox/02-answers/` older than 90 days (mtime) — the `stale-answer-drafts` detector | Report — flag for keep / promote / discard; **never auto-archive**. Surface in weekly dashboard. |
 | Stale items | Item note's `last_checked` older than 90 days | Report. |
 | Stale literature | Paper note with `file.mtime` older than 180 days and `lifecycle: current` | Report. |
 | Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file (SOUL.md, config.yaml, mcp.json, anything under skills/ or cron/) has a different SHA-256 than its source at `.memoria/profiles/memoria-<name>/` (mcp.json compared after `{{VAULT_PATH}}` substitution) | Report — surface the affected profile and file; the human must either re-run `install.ps1` to refresh the deployed copy or revert the hand-edit. Never auto-install. |

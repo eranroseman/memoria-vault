@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 29
 title: Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt
 status: proposed

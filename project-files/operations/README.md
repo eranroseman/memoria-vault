@@ -1,7 +1,3 @@
----
-topic: operations
----
-
 # Operations
 
 Project logistics: what's built, what to do next, and how to run the system.

@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-Obsidian's default is to reopen the last-open notes, so a Memoria session lands wherever it left off. Memoria already designates [Daily Health](../../explanation/dashboards/daily-health.md) as the dashboards' entry point, but there is no *vault* front door and no deterministic landing. The community offers two shapes: plugins that render their own start-page UI (e.g., obsidian-startpage), and plugins that simply open a chosen note on launch (obsidian-homepage). The choice is constrained by two Memoria invariants — every canonical write flows through the Policy MCP / audit trail ([ADR-24](24-obsidian-linter-reference-only.md)), and UI surfaces are **Dataview notes**, not plugin-rendered views ([obsidian-ui](../../explanation/obsidian-ui/README.md)).
+Obsidian's default is to reopen the last-open notes, so a Memoria session lands wherever it left off. Memoria already designates [Daily Health](../../explanation/dashboards/daily-health.md) as the dashboards' entry point, but there is no *vault* front door and no deterministic landing. The community offers two shapes: plugins that render their own start-page UI (e.g., obsidian-startpage), and plugins that simply open a chosen note on launch (obsidian-homepage). The choice is constrained by two Memoria invariants — every canonical write flows through the Policy MCP / audit trail ([ADR-12](12-obsidian-linter-reference-only.md)), and UI surfaces are **Dataview notes**, not plugin-rendered views ([obsidian-ui](../../explanation/obsidian-ui/README.md)).
 
 ## Decision
 
@@ -38,5 +38,5 @@ Memoria ships a **`Home.md` front-door note** at the vault root and opens it on 
 ## Related
 
 - **Files affected:** [obsidian-ui/home.md](../../explanation/obsidian-ui/home.md) (the front-door design + runtime scaffold), [obsidian-plugins/recommended/obsidian-homepage.md](../../reference/plugins/obsidian-homepage.md), [obsidian-plugins/README.md](../../reference/plugins/README.md) (recommended 10→11).
-- **Related decisions:** [ADR-24 obsidian-linter reference-only](24-obsidian-linter-reference-only.md) — same control-plane test, opposite verdict (homepage opens a view and writes nothing; the linter wrote on save).
+- **Related decisions:** [ADR-12 obsidian-linter reference-only](12-obsidian-linter-reference-only.md) — same control-plane test, opposite verdict (homepage opens a view and writes nothing; the linter wrote on save).
 - **Surfaces:** [dashboards/daily-health.md](../../explanation/dashboards/daily-health.md) (Home leads with it), [obsidian-ui/README.md](../../explanation/obsidian-ui/README.md).

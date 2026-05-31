@@ -1,154 +1,124 @@
----
-topic: general
----
-
 # Glossary
 
-Terms used across the Memoria design docs. Pulled from the README to keep the doc-map terse and to give the vocabulary a dedicated reference home.
+Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [explanation/](../explanation/).
 
-## System and architecture
+---
 
-- **Memoria** — the whole system.
-- **Hermes** — the agent layer (specialized profiles execute work).
-- **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. There are seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. Notably absent: no Orchestrator (routing lives in lane-overrides + Kanban dispatch) and no Reviewer (review gates live in the policy MCP and the human).
-- **Lane** — a profile's execution path on the board. A lane **is** an `assignee` value: the dispatcher routes a card by matching `task.assignee` to a profile, so the lane and the profile are one and the same (one lane per profile; there is no separate `lane` field). **Socratic is a profile but not a lane** — it runs synchronously, off the board. See [kanban-board/states.md](../explanation/kanban-board/states.md#worker-lanes-and-the-exit-contract).
-- **Vault** — the Obsidian folder tree where durable knowledge lives, organized by lifecycle stage (`00-meta`, `10-inbox`, `20-sources`, `30-synthesis`, `40-workbench`, `50-deliverables`, `90-assets`, `95-archive`).
-- **Thin control over thick state** — the design principle (borrowed from Chen et al. 2026) that the control plane and workers carry as little persistent context as possible, while the durable knowledge — plans, claim notes, drafts, audit traces — lives in files that workers re-ground on between steps. Memoria's three-layer split is its structural form. See [architecture/README.md](../explanation/architecture/README.md#thin-control-over-thick-state).
-- **File-as-Bus** — Chen et al. 2026's name for passing state between agent steps through shared files rather than conversational handoffs; the same shape as Memoria's vault layer. Removing it in their ablation dropped PaperBench and MLE-Bench scores sharply — the empirical case for *thin control over thick state*.
-- **ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to IDE and editor agent panes (Obsidian, VS Code, Zed), giving the human a conversational interface to Hermes from inside the editor. Distinct from the Obsidian Local REST API: the REST API gives Hermes *vault-level* read/write access; ACP gives the human *session-level* chat access to a profile. The ACP connection is served by a local process (`hermes-acp`). See [architecture/capability-stack.md](architecture/capability-stack.md).
-- **Human** — the person who owns and runs the vault, making all approval, triage, and promotion decisions: sets `review_status` to `approved`, issues verdicts, promotes notes through lifecycle stages, and configures lane-override policies. Single-user by design.
-- **Canonical** (adjective) — approved as the authoritative, immutable form until explicitly archived (the **approved-outcome** sense; human approval is always the final gate). The everyday "*canonical* file" adjective — *the authoritative version of a file* — is a separate, accepted use. → full senses and the protective-mechanism names in [Disambiguations](#disambiguations).
-- **Review-gated zone** — a vault folder (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) where the policy MCP degrades all agent writes to `dry_run` regardless of lane policy — nothing there changes without explicit human approval. The protective mechanism behind canonical content; promotion into one is always synchronous with human attention. (Earlier drafts called this the *canonical zone*, and its policy gate `canonical_write_gate` is now `review_gated_write`.)
-- **Primary** — as an adjective, *principal* (the lane or profile that chiefly owns a workflow). Also names the **primary device**, a claim's **primary type**, and a DB **primary key**. Note: the role×stage matrices mark the execution lead as **Lead**, not *primary*. → [Disambiguations](#disambiguations).
-- **Contract** — the technical sense is a **profile/lane contract** (bounded permissions, commands, exit conditions; the SOUL.md *specifies* it, the design docs *summarize* it). Also: schema and API contracts. Distinct from the idiomatic "binding commitment" use. → [Disambiguations](#disambiguations).
+## System
+
+**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to IDE and editor chat panes (Obsidian, VS Code). Gives the human a conversational interface to a profile from inside the editor. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
+
+**Canonical** — approved as the authoritative, immutable form of a piece of knowledge until explicitly archived. Human approval is always the final gate. *Also used informally as "the authoritative version" — these are separate senses.*
+
+**Hermes** — the Nous Research agent runtime Memoria runs on. Provides Kanban, profile management, MCP server connections, skill installation, and the gateway process.
+
+**Human** — the person who owns and runs the vault. Makes all approval, triage, and promotion decisions. Single-user by design.
+
+**Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
+
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 15 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [operations/timeline.md](../../project-files/operations/timeline.md).
+
+**Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
+
+**Vault** — the Obsidian folder tree where durable knowledge lives, organized by lifecycle stage: `00-meta`, `10-inbox`, `20-sources`, `30-synthesis`, `40-workbench`, `50-deliverables`, `90-assets`, `95-archive`.
+
+---
 
 ## Board and cards
 
-- **Card** — a task on the board with `status`, `assignee`, blocker `reason`, retries, and a handoff summary. The board is the Hermes built-in Kanban (`kanban.db`); see [kanban-board/card-schema.md](../explanation/kanban-board/card-schema.md).
-- **Claim** — three senses: *to claim a card* (a board action — the **dispatcher** atomically claims a `ready` card and spawns the assigned profile), a *substantive claim* (an assertion in a draft the Verifier traces), and a **claim note** (`claim-note` — the durable synthesized idea). → [Disambiguations](#disambiguations).
-- **Handoff payload** — the JSON the worker passes via `kanban_complete`, stored in the card `metadata`: `task_id`, profiles, goal, context, allowed_paths, expected_outputs, review_checks. Self-contained so the receiving worker needs nothing else to start. (Earlier drafts called this the *task packet*.)
-- **Review gate** — the `metadata.review_status` overlay that blocks promotion until a human approves. Hermes has no native review state; Memoria layers one on top of `status: done`.
-- **Review** — five senses: the **review gate** (`review_status` overlay), the Linter's **REVIEW** verdict band, the deliberately-absent **Reviewer profile**, the **weekly review** ritual, and a **systematic review** (research methodology, deferred). → [Disambiguations](#disambiguations).
-- **Escalation threshold** — the `max_retries` ceiling (default `3`) at which a card auto-moves to `blocked` with `reason: "retry_threshold_exceeded"`. Prevents brittle prompts from burning through retries overnight. Per-lane configurable.
-- **Dispatcher** — the Hermes built-in Kanban component that polls the board queue (every 60 seconds — the mandated Memoria cadence, not a per-deployment default; see [kanban-board/README.md](../explanation/kanban-board/README.md#dispatch-interval)), claims `ready` cards matching an available lane worker, and advances them to `running`. Ignores `triage` cards (human-only state); automatically re-attempts recoverable failures by returning the card to `ready`. Does not make quality or approval decisions — those remain human actions.
-- **`outcome`** — the Hermes run-execution result recorded on a *run* (not a card): a closed, Hermes-defined enum — `completed`, `blocked`, `crashed`, `gave_up`, `reclaimed`, `timed_out`, `spawn_failed`, `protocol_violation`. Records what happened on an execution attempt. Distinct from `archive_reason` (why a *card* was filed) and `verdict` (the review decision).
-- **`archive_reason`** — the Memoria `metadata` field recording why a card was archived: `superseded` (a revision card spawns and the original is archived permanently) or `discarded` (work abandoned). The original card never reopens; revisions live on a new card with provenance back to the original. Archiving is a status transition with no native Hermes reason field, so Memoria records it here rather than in `outcome`.
-- **`verdict`** — the review *decision* on a card: `approve`, `reject`, or `escalate`. The human issues it (Verifier and Linter may attach recommendation-only verdicts in `metadata.agent_verdict`); it drives the next state transition. Distinct from `archive_reason` (why an archived card was filed — `superseded` vs `discarded`) and the Linter's **verdict band** (PASS / REVIEW / FAIL).
-- **`reason`** — freetext field on a card explaining why it is `blocked`. Required whenever `status` is `blocked`. Populated by the dispatcher when the escalation threshold is reached, or by a worker (`kanban_block`) that encounters a decision it cannot make.
-- **Promote** — three human-gated senses: *lifecycle promotion* (a note advances to a more durable type), *field promotion* (a reviewed value moves into the main YAML), and *canonical promotion* (work moves into a review-gated zone). → [Disambiguations](#disambiguations).
-- **Lifecycle** — three senses: the board's two **lifecycle tracks** (`status` + `review_status`), a **note's** `lifecycle` field (`proposed` / `current` / `dormant` / `archived`), and the vault's **lifecycle stages** (the numbered folders). The field name alone tells card from note. → [Disambiguations](#disambiguations).
-- **WIP limit** — a work-in-progress cap on a lane to prevent overload: *active-per-profile* (1 — enforced natively by Hermes; a profile holds one `running` card), *review-queue depth* (bounded; the dispatcher delays new cards once the human's review queue is full), and *synthesis* (bounded Writer drafts in flight). Operational tuning values, not architectural constants. See [kanban-board/states.md](../explanation/kanban-board/states.md#why-the-wip-limits).
-- **Lane exit contract** — what a lane guarantees when its card reaches `status: done`: which review signal is attached (`review_status: requested` or an `agent_verdict`) and what "done" means for that lane (e.g. Library = paper notes created and classified, awaiting human classification). The contract is how the board enforces that no lane self-approves — `done` ≠ `approved`. See [kanban-board/states.md](../explanation/kanban-board/states.md#worker-lanes-and-the-exit-contract).
-- **Workspace** (card field) — where a worker operates for a card: `scratch` (ephemeral), `dir:<path>` (a fixed directory), or `worktree:<path>` (an isolated git worktree, used by the Coder lane). A fixed Hermes field, not a Memoria addition.
+**Archive reason** — why a card was archived: `superseded` (a new card replaces it) or `discarded` (work abandoned). Stored in `metadata.archive_reason`. Distinct from `outcome` (what happened during execution).
 
-## Profile management and configuration
+**Card** — a task on the Hermes Kanban board. Carries `status`, `assignee`, `reason` (if blocked), retry count, and a handoff summary. Lives in `kanban.db`.
 
-- **Profile source** — under direct profile management, the seven hand-authored profile directories under `.memoria/profiles/memoria-<name>/` in the starter vault. The installer (`install.ps1`) copies these verbatim (with `{{VAULT_PATH}}` substitution in `mcp.json`) into `~/.hermes/profiles/memoria-<name>/`. The deferred [profile-compilation design](../project/roadmap/profile-compilation.md) describes the alternative compile-time-merge model that Memoria does not currently use.
-- **`.env.EXAMPLE`** — per-profile manifest of required and optional env vars, commented out, **designed to ship with every profile** (deferred — see [implementation-status](../project/implementation-status.md)). Human copies to `.env` and fills in. Excluded from `hermes profile install`/`update` so secrets never travel between machines.
-- **Automation tier** — the system-wide autonomy *setting* in profile config: `strict` (default; propose-only), `standard` (safe auto-fixes + low-stakes triage), or `minimal` (also scheduled answer drafting). Each tier is an explicit unlock from the previous. Controls how much the system acts without human confirmation — analogous to SAE L0–L5 autonomy levels, applied to knowledge-work tasks. **Distinct from two other scales** the docs also use: the per-profile **invocation level** (1–3, a cadence label — background / pulled / interactive — see [profile-matrices.md](profile-matrices.md#invocation-levels-cadence)) and Chen 2026's **L1–L5** field taxonomy (Memoria's position overall — see [vision.md](../explanation/vision.md#position-on-the-autonomy-spectrum)). In short: *tier* = how much the system may act; *invocation level* = how a profile is invoked; *L-level* = where Memoria sits in the field. Only *tier* and *L-level* are named with the word "autonomy."
+**Dispatcher** — the Hermes component that polls the board every 60 seconds, claims `ready` cards for matching-lane profiles, and advances them to `running`. Does not make quality or approval decisions.
 
-## Policy MCP and audit
+**Escalation threshold** — `max_retries` (default `3`): after this many recoverable failures, a card auto-moves to `blocked`. Per-lane configurable.
 
-- **Policy MCP** — the runtime write-gate. Intercepts every vault write, checks the lane-override rules, returns `allow` / `allow_with_log` / `deny` / `dry_run`, and appends every operationally significant decision to the audit log with SHA-256 hashes for tamper detection. Source in `.memoria/mcp/` (Python).
-- **Lane-override file** — per-lane YAML at `.memoria/lane-overrides/{lane}.yaml` declaring `policy.allow`, `policy.deny`, `policy.require`, and `routing`. Read by the policy MCP at startup; the machine-readable counterpart to the folder permission matrix.
-- **Audit log** — append-only JSONL trail of every policy-MCP decision at `00-meta/02-logs/audit.jsonl`. Feeds the `audit-log` dashboard.
-- **Skill-conditional policy** — mechanism by which a skill's SKILL.md frontmatter declares additive `policy.deny` rules that stack on top of the host lane's policy for the session. Session inherits the narrower of (lane policy ∩ skill policy); cannot be loosened from inside the session. Mechanism in [policy-mcp.md](architecture/policy-mcp.md#skill-conditional-policy); 01-architecture has a brief summary.
-- **Restrictive skill** — a skill that uses skill-conditional policy to tighten the host lane. The only currently-shipped restrictive skill is `counter-outline` (Writer-loaded; scratch-only writes to `40-workbench/*/02-framing/`). The capabilities that used to be restrictive skills (`socratic-processing`, `lens-reading`) are now native to the dedicated Socratic profile, whose lane policy is `policy.allow.write: []` — profile-level enforcement is stricter than skill-level. See [profiles/README.md](../explanation/profiles/README.md#skills-with-restrictive-policy).
-- **Fail-closed startup** — the Hermes API requires its auth token (`API_SERVER_KEY`) on every bind, including the default loopback bind, and a non-loopback bind must be explicitly configured (`API_SERVER_HOST`). Closes the always-on option's largest attack surface.
+**Handoff payload** — the structured `summary` a worker writes on `kanban_complete`, containing: `task`, `result`, `allowed_paths`, `promote_target`, `context_notes`. Self-contained so the next worker needs nothing else.
 
-## Observability and verdicts
+**Lane** — a profile's execution path on the board. A lane *is* an `assignee` value (`memoria-<name>`); there is no separate `lane` field. Socratic is a profile but not a lane — it runs synchronously, off the board.
 
-- **Trust score** — 0–100 aggregate per lane on the [fleet-health dashboard](../explanation/dashboards/fleet-health.md), combining audit deny rate, drift incidents, secret hits, retry rate, success rate, and (for lanes that produce human-approvable suggestions) accept/reject ratios on inline `[!suggestions]` callouts. Bands: 90+ healthy, 70–89 watch, <70 act. Ratio sub-thresholds: >90% accept = rubber-stamping (down-weight the lane's score); <20% accept = prompt drift (down-weight the lane's score).
-- **Verdict band** — the Linter's rollup of findings into PASS / REVIEW / FAIL, gating scheduled work. Parallel structural concept to the trust score.
-- **Verdict family** — four "judgement" vocabularies the docs deliberately keep distinct (same word-family, different layers):
+**Lane exit contract** — what a lane guarantees when its card reaches `status: done`: which review signal is attached and what "done" means for that specific lane.
 
-  | Name | Values | Who sets it | Scope |
-  | --- | --- | --- | --- |
-  | `verdict` | `approve` / `reject` / `escalate` | Human | the per-card review decision |
-  | `agent_verdict` | recommendation only | Verifier / Linter | advisory, stored in `metadata.agent_verdict` |
-  | **verdict band** | PASS / REVIEW / FAIL | Linter | structural rollup gating scheduled work |
-  | Verifier trace result | `verify-clean` / `verify-needs-revision` / `verify-needs-attention` | Verifier | per-draft claim-trace outcome; maps to the human's `verdict` (ADR-1) |
+**Outcome** — the Hermes execution result on a *run* (not a card): `completed`, `blocked`, `crashed`, `gave_up`, `reclaimed`, `timed_out`, `spawn_failed`, `protocol_violation`.
 
-- **Structural detector** — the Linter's eight deterministic, zero-LLM drift checks, each named by a descriptive slug (formerly identified as M1–M8 codes; now identified solely by descriptive slug): `profile-install-drift` (M1; vault source vs deployed copy under `~/.hermes/profiles/`), `vault-hash-drift` (M2; non-MCP write / audit-log SHA-chain break), `skeleton-drift` (M3), `dashboard-field-drift` (M4), `command-vocab-drift` (M5), `plugin-config-drift` (M6; working `.obsidian/plugins/<plugin>/data.json` vs git HEAD), `orphan-working-files` (M7; `.tmp.*`, `.bak`, editor backups outside transient zones), `extract-path-broken` (M8; paper-note's `extract_path` points to a missing file). See `.memoria/profiles/memoria-linter/M-detectors.md` in the starter vault.
-- **Graceful degradation** — dashboard discipline for handling a missing query dependency (a frontmatter field, an aggregator note, an unresolved design decision): an empty result paired with a markdown explanation, not a stack trace.
+**Promote** (three senses) — (1) *lifecycle promotion*: a note advances to a more durable type; (2) *field promotion*: a reviewed value moves from `_proposed_classification` or `_enrichment` to main YAML; (3) *canonical promotion*: work moves into a review-gated zone.
 
-## The Obsidian UI and channels
+**Review gate** — the `metadata.review_status` overlay that blocks promotion until a human approves. Hermes has no native review state; Memoria layers one on top of `status: done`.
 
-- **Channel** — *how the human reaches Memoria from outside Obsidian*: the two secondary access paths, **CLI** and **Telegram**, plus the non-human **API** (programs only, never direct human action). Obsidian itself is the *primary UI*, not a channel — its internal parts are **components** (below). Each access path owns one mode; misusing one (Telegram for desktop work, CLI for daily ops) produces drift. See [architecture/human-channels.md](../explanation/architecture/human-channels.md), summarized in [architecture/README.md](../explanation/architecture/README.md#human-channels).
-- **Obsidian UI component** — *a part of Memoria's primary UI*: dashboards, workspaces, callouts, the **status line** (a glanceable Dataview widget in a pinned note — not the OS status bar, which Dataview cannot write; see [obsidian-ui/status-line.md](obsidian-ui/status-line.md)), the command palette, and the Agent Client (ACP) pane. Earlier docs gave the first four an abstract four-type "surface" taxonomy (persistent / modal / inline / ambient) carried alongside the concrete name; that split is retired — a component is named for the concrete thing, and the interrupt-level discipline is a property, not a category. See [obsidian-ui/README.md](../explanation/obsidian-ui/README.md). (The verb *to surface* — bring something to attention — is a separate, unrelated use.)
-- **Workspace layout** — saved Obsidian workspace (Human / Reading / Drafting) bound to `Cmd-1` / `Cmd-2` / `Cmd-3`. One layout per cognitive mode; mode shifts become muscle memory. See [obsidian-ui/workspaces.md](obsidian-ui/workspaces.md).
-- **Callout** — agent output rendered in-place inside a note rather than on a dashboard: `[!brief]` (Mapper's comparative read on paper notes), `[!suggestions]` (Librarian's link candidates pending approval), `[!verification]` (Verifier's claim trace on drafts). Custom callouts render natively in Obsidian via CSS; the Callout Manager plugin supplies their icons, colors, and a management UI, and Memoria ships it for consistent styling (the callouts do not silently fail without it — they fall back to default styling). See [obsidian-ui/callouts.md](../explanation/obsidian-ui/callouts.md).
+**Review-gated zone** — a vault folder where the policy MCP degrades all agent writes to `dry_run` regardless of lane policy: `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`. Promotion into one is always synchronous with human attention.
 
-## Deployment
+**Verdict** (four senses — deliberately distinct):
 
-- **Deployment option** — human's choice of how the vault and execution layer sync across machines. Four patterns: **`local-only`** (single workstation), **`local-mesh`** (Syncthing peer-to-peer with no VPS — desktop + laptop), **`obsidian-sync`** (cloud-managed), **`always-on`** (Syncthing + VPS, always-on agent). See [roadmap/deployment-options.md](../project/roadmap/deployment-options.md).
+| Name | Values | Set by | Scope |
+| --- | --- | --- | --- |
+| `verdict` | `approve` / `reject` / `escalate` | Human | per-card review decision |
+| `agent_verdict` | `clean` / `issues-found` / `inconclusive` | Verifier / Linter | advisory recommendation only |
+| **verdict band** | `PASS` / `REVIEW` / `FAIL` | Linter | structural rollup gating scheduled work |
+| Verifier trace result | `verify-clean` / `verify-needs-revision` / `verify-needs-attention` | Verifier | per-draft claim-trace outcome |
 
-## Computational methods
+**WIP limit** — a work-in-progress cap: *active-per-profile* (1 `running` card, Hermes-enforced); *review-queue depth* (bounded; dispatcher delays new done cards once queue is full).
 
-- **Method class** — categorization of a task by computational approach. **Deterministic** (single right answer, derivable via regex / graph / similarity / classifier), **hybrid** (deterministic narrowing + LLM enrichment on the residual), or **generative** (open-ended composition, LLM-required). Memoria's design names this boundary explicitly to avoid using LLMs for tasks where regex or vector similarity would be correct, cheaper, faster, and more testable. See [architecture/why-computational-methods.md](../explanation/architecture/why-computational-methods.md).
-- **Hybrid pattern** — the most common Memoria pattern: a deterministic step reduces N candidates to K (where K ≪ N), then an LLM step generates or judges over the K. Used by `cite-check`, `[!brief]`, `[!suggestions]`, and `_proposed_classification`. The deterministic step's output is the audit trail; the LLM's output is the visible presentation. See [architecture/why-computational-methods.md](../explanation/architecture/why-computational-methods.md#the-hybrid-pattern).
-- **Classifier-with-LLM-fallback** — specific instance of the hybrid pattern. A small multi-label classifier trained on human's past classification decisions proposes labels with a calibrated softmax confidence; above the confidence threshold (~0.85), accept directly; below, fall back to an LLM proposal. Calibration improves as the corpus grows and retrains. Used for `_proposed_classification` ([profiles/librarian.md](../explanation/profiles/librarian.md)). Resolves [Decision 11](../project/decisions/README.md) (resolved 2026-05).
-- **Model routing** — the discipline of sending synthesis to Claude and bulk / mechanical tasks (embed, classify, quick-summary) to cheaper models via OpenRouter or similar. Configured per profile in `config.yaml`. See [architecture/capability-stack.md](architecture/capability-stack.md#model-routing-synthesis-on-claude-cheap-tasks-elsewhere).
-- **qmd** — the local hybrid-search CLI ([tobi/qmd](https://github.com/tobi/qmd): BM25 + vector + LLM rerank over a Markdown corpus) Memoria uses as its **agent-side retrieval substrate** — the Mapper and the search skills query it (`qmd embed` to index, `qmd search` / `qmd query` to recall). Distinct from the **Smart Connections** plugin, which is the *human-side*, in-Obsidian semantic search; the two run separately ([obsidian-plugins/recommended/smart-connections.md](../explanation/obsidian-plugins/smart-connections.md)). Adopt-when-needed for agent retrieval — not part of the [minimum capability stack](architecture/capability-stack.md).
+**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `00-meta/08-metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
+
+---
+
+## Notes and lifecycle
+
+**Claim** (three senses) — (1) *to claim a card*: the dispatcher atomically claims a `ready` card and spawns the assigned profile; (2) *a substantive claim*: an assertion in a draft that Verifier traces; (3) **claim-note**: a `claim-note` in `30-synthesis/01-claims/`.
+
+**Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
+
+**Note type** — one of the 15 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [note-types.md](note-types.md).
+
+---
+
+## Policy and audit
+
+**Audit log** — append-only JSONL trail of every policy MCP decision at `00-meta/02-logs/audit.jsonl`. Feeds the `audit-log` dashboard.
+
+**Automation tier** — the system-wide autonomy setting: `strict` (propose-only), `standard` (safe auto-fixes + low-stakes triage), or `minimal` (+ scheduled answer drafting). Configured per profile. Distinct from the per-profile *invocation level* (cadence: background / Kanban-pulled / interactive).
+
+**Lane-override file** — per-lane YAML at `.memoria/lane-overrides/<name>.yaml` declaring `policy.allow`, `policy.deny`, `policy.require`, and `routing`. Read by the policy MCP at startup.
+
+**Policy MCP** — the runtime write-gate. Intercepts every vault write, checks the lane-override rules, returns `allow` / `allow_with_log` / `deny` / `dry_run`, and appends decisions to the audit log.
+
+**Skill-conditional policy** — a skill's `SKILL.md` frontmatter can declare additive `policy.deny` rules that tighten the host lane's policy for that session. Cannot be loosened from inside the session.
+
+**Structural detector** — one of the Linter's eight deterministic, zero-LLM drift checks. Named by descriptive slug: `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, `extract-path-broken`. See `.memoria/profiles/memoria-linter/M-detectors.md`.
+
+---
+
+## Architecture
+
+**Computational method class** — how a task is solved: **deterministic** (regex / graph / similarity — single right answer), **hybrid** (deterministic narrowing + LLM on the residual), or **generative** (open-ended LLM composition). Memoria prefers deterministic and hybrid over generative wherever correctness and testability matter.
+
+**Deployment option** — how the vault and execution layer sync across machines. Four patterns: `local-only` (single device, v0.1 default), `local-mesh` (Syncthing, peer-to-peer), `obsidian-sync` (cloud-managed), `always-on` (Syncthing + VPS). See [operations/deployment.md](../../project-files/operations/deployment.md).
+
+**Thin control over thick state** — the design principle: the control plane carries as little persistent context as possible; durable knowledge (plans, notes, drafts, audit traces) lives in vault files that workers re-read between steps. See [explanation/architecture/](../../docs/explanation/architecture/).
+
+---
+
+## Obsidian UI
+
+**Callout** — agent output rendered in-place inside a note: `[!brief]` (Mapper's comparative read), `[!suggestions]` (Librarian's link candidates), `[!verification]` (Verifier's claim trace). Defined by the Callout Manager plugin.
+
+**Channel** — how the human reaches Memoria from outside Obsidian: CLI (terminal), Telegram (async), or API (programs only). Obsidian itself is the primary UI, not a channel.
+
+**Status line** — a glanceable Dataview widget in a pinned note showing lane health. Not the OS status bar (Dataview cannot write there).
+
+**Workspace layout** — a saved Obsidian workspace preset: Human (`Cmd-1`), Reading (`Cmd-2`), Drafting (`Cmd-3`).
+
+---
 
 ## Pipeline stages
 
-- **Discuss stage** — upstream pipeline stage between classify and distill. The paper note is read and discussed through the **Socratic profile** (write-denied across the entire vault) running its `socratic-processing` command before any claim note is written. Made a stage so the queue of "thought about but not yet written" becomes board-visible. See [workflows/upstream/discuss.md](../how-to/workflows/upstream/discuss.md).
-- **Assess stage** — first downstream pipeline stage. Mapper runs `scope-project` to produce a corpus map for a project (`40-workbench/*/01-map/corpus-map.md`); the human then decides whether the corpus is ready to write or needs more reading first. See [workflows/downstream/assess.md](../how-to/workflows/downstream/assess.md).
-- **Frame stage** — second downstream stage. Writer generates 2–3 competing project framings via `counter-outline` (scratch-only writes); Socratic optionally produces lens-based framings via `lens-reading` (conversational, write-denied). Outputs land scratch-only in `40-workbench/*/02-framing/`. Human commits to one via `framing/CHOSEN.md`. Prevents "first outline wins by default." See [workflows/downstream/frame.md](../how-to/workflows/downstream/frame.md).
-- **Verify stage** — downstream stage after draft. Verifier runs `cite-check` to trace every substantive claim back to a claim note; failed traces spawn `gap:` cards in the upstream queue, closing the gap-loop into discovery. Output is a `[!verification]` callout at the top of the draft. See [workflows/downstream/verify.md](../how-to/workflows/downstream/verify.md).
-- **Revise stage** — downstream stage between verify and export. Human addresses verification findings — soften the claim, pursue the gap, or accept-soft — until the verify→revise loop closes. Export is blocked on revise's closure. See [workflows/downstream/revise.md](../how-to/workflows/downstream/revise.md).
+**Discuss stage** — upstream pipeline stage between classify and distill. Paper note is read through the Socratic profile (write-denied vault-wide) before any claim note is written.
 
-## Note types
+**Assess stage** — first downstream stage. Mapper runs `scope-project` and produces `corpus-map.md`. Human decides whether corpus is ready to write or needs more reading.
 
-- **Source** (umbrella term, *not* a note type) — anything under `20-sources/`. Two ontological kinds: **items** (*things*, described by their properties — includes papers and other `item-note`s) and **entities** (*actors*, described by their relationships — people, organizations, venues). "Source" is never a `type:` value; the concrete types are `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`.
-- **Paper note** (`paper-note`) — one note per citable paper (journal article, conference paper, preprint, **report**, thesis); lives in `20-sources/01-papers/`. A paper is a *specialized kind of item* with extra properties (citekey, DOI, authors, venue, `pub_status`); it earns its own folder and type for volume and workflow reasons. **Datasets and software are `item-note`s** — unless they carry a stable publication ID (DOI / arXiv), in which case they earn a `paper-note`. The paper/item split keys on ID presence, not medium.
-- **Claim note** (`claim-note`) — a single durable idea, in the human's own words; lives in `30-synthesis/01-claims/`.
-- **Maturity** (claim-note refinement) — the within-`current` ladder `seedling` (one source, newly drafted) → `budding` (multi-source, linked from another note) → `evergreen` (stable, promotable to a `reference-note`). A refinement *within* the `lifecycle: current` phase, not a `lifecycle` value.
-- **Reference note** (`reference-note`) — a stable reference page promoted from the claim layer; lives in `30-synthesis/02-reference/`.
-- **MOC** — Map of Content, a navigational hub; lives in `30-synthesis/03-moc/`.
-- **Fleeting note** — raw capture awaiting promotion or discard; lives in `10-inbox/01-fleeting/`.
-- **Answer note** (`answer-note`) — an agent-drafted, cited answer to a research question; lives in `10-inbox/02-answers/`. An unreviewed inbox draft awaiting human approval; promoted to a `claim-note` if accepted, not durable knowledge itself.
-- **Deliverable** — finished manuscript, presentation, media asset, or release; lives in `50-deliverables/`.
-- **canvas** — spatial arrangement view backed by a `.canvas` JSON file. Lives in `40-workbench/*/03-canvas/`. See [note-types.md](note-types.md).
-- **code-note** — record of a code artifact produced in a Coder-lane experiment. See [note-types.md](note-types.md).
-- **draft** — pipeline output assembled from claim notes, headed to export via Pandoc. See [note-types.md](note-types.md).
-- **project-note** — hub note for a downstream writing project at `40-workbench/<project>/`. See [note-types.md](note-types.md).
+**Frame stage** — second downstream stage. Writer generates competing outlines via `counter-outline`; Socratic optionally produces lens-based framings. Human commits to one via `framing/CHOSEN.md`.
 
-## Disambiguations
+**Verify stage** — downstream stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
 
-Terms used in more than one sense across the docs. The domain sections above carry a one-line definition and point here; the full senses live in one place so they stay consistent.
-
-- **Canonical** (adjective) — approved as the authoritative, immutable form until explicitly archived. Reserved for the **approved-outcome** sense: the *source of truth* for a given record type (Zotero for bibliographic metadata; vault for synthesis), and *canonical promotion* — the human-approved state transition that moves work from draft to durable. Agent recommendations are necessary but not sufficient to make something canonical — human approval is always the final gate. The *mechanism* that protects canonical content carries its own names, kept distinct from this word: the **review-gated zone** (the folders where writes are held — see *System and architecture*), the `promote_target` card field (the path an approved output lands at), and the **verdict** (the `approve` / `reject` / `escalate` decision — see *Board and cards*). The ordinary-English adjective — "the *canonical* `data.json`," "the *canonical* list of frontmatter fields" — meaning simply *the authoritative version of a file* is a separate, accepted use, the way *to surface* is separate from *a surface*; the reservation here governs only the approved-outcome sense in the knowledge model.
-- **Primary** — senses the docs keep apart. The **primary device** (also *primary machine* / *primary dispatcher*) is the one machine under a multi-device [deployment option](../project/roadmap/deployment-options.md) that runs Hermes as a dispatcher and owns all cron, queue dispatch, and card claiming — the desktop under `local-mesh`, the VPS under `always-on`; unqualified, "the primary" means this. As an adjective (*primary lane*, *primary profile*) it means **principal** — the lane or profile that chiefly owns a workflow. Two niche senses: a claim's **primary type** (the type chosen when a claim is ambiguous — see [Chain-of-Evidence](../project/roadmap/future-directions.md#chain-of-evidence-claim-taxonomy-for-the-verifier)) and a database **primary key** (entity-resolution IDs — see [record linkage](../project/roadmap/future-directions.md#record-linkage-for-entity-resolution)). The [role × stage matrices](../explanation/workflows/pipeline-design.md#role--stage-matrix) mark the per-stage execution lead as **Lead** — distinct from this *principal* adjective and from the stage tables' *Primary owner* column (= decision authority).
-- **Contract** — the technical sense is a **profile/lane contract**: the bounded permissions, commands, and exit conditions a profile or lane must honor (the SOUL.md *specifies* it; the design docs *summarize* it). Related: the **schema contract** Hermes and the board both read (locked down in [timeline Phase 1](../project/roadmap/timeline.md#phase-1--full-system-setup--weeks-12)) and an **API contract** (a stable endpoint surface). Distinct from the looser idiomatic use meaning *binding commitment* — "a roadmap, not a **contract**"; "not **contract** metrics" (success metrics are diagnostic, not obligations).
-- **Claim** — three uses the docs keep distinct: *to claim a card* is the board action where the **dispatcher** atomically claims a `ready` card and spawns the assigned profile, advancing it to `running` (workers do not self-claim); a *substantive claim* is an assertion inside a draft that the Verifier traces back to its support; a **claim note** (`claim-note`, see Note types) is the durable synthesized idea itself. The first is a verb about board flow; the other two are nouns about content.
-- **Review** — five senses the docs keep apart. The **review gate** is the `review_status` overlay (see Board and cards) that blocks promotion until a human approves. The Linter's **REVIEW** verdict band is a structural-findings tier (see Observability and verdicts). The **Reviewer profile** is deliberately absent — review *judgment* is the human's; the mechanical parts (claim tracing, similarity, retraction) are the Verifier's. The **weekly review** is the recurring maintenance ritual surfaced by the [weekly-review dashboard](../explanation/dashboards/weekly-review.md) — the human's triage of inbox drafts, discovery candidates, and promotion decisions. A **systematic review** (and the related **scoping review**) is the research *methodology* with formal PRISMA-style reporting requirements; its schema and workflow support is deferred and adopt-on-demand (see [decisions: adopt-on-demand](../project/decisions/adopt-on-demand-for-reviews.md)).
-- **Promote** — three senses the docs keep distinct: *lifecycle promotion* advances a note to a more durable type (`fleeting-note` → `answer-note` → `claim-note` → `reference-note`); *field promotion* copies a reviewed value from `_proposed_classification` or `_enrichment` into the main YAML; *canonical promotion* is the human-approved transition that moves work into a review-gated zone. All three are human-gated.
-- **Lifecycle** — three senses the docs keep apart: the board's two **lifecycle tracks** (*execution* = the `status` enum, *review* = the `review_status` overlay; see [kanban-board/states.md](../explanation/kanban-board/states.md)); a **note's** durability phase — the `lifecycle` frontmatter field (`proposed` / `current` / `dormant` / `archived`); and the vault's **lifecycle stages**, the numbered top-level folders (see **Vault** above). A card carries `status` / `review_status` and never `lifecycle`; a note carries `lifecycle` and never `status` — the field name alone disambiguates the two. See [vault/frontmatter-schema.md](frontmatter-schema.md).
-
-## Evaluation metrics
-
-- **Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all profiles, all folders, all templates, all schema fields, all dashboards, and the Kanban board. No component is optional; "deferred" items in [implementation-status.md](../project/implementation-status.md) are not-yet-built gaps, not design decisions to omit. Multi-device is a Phase 3 expansion. See [roadmap/README.md](../project/roadmap/README.md#memoria-v01).
-- **NLI** (natural-language inference) — a model that labels a sentence pair as entailment / contradiction / neutral. Memoria's candidate engine for *proposing* `contradicts` relations (the human confirms). See [roadmap/future-directions.md](../project/roadmap/future-directions.md#nli-based-contradiction-detection).
-- **FAMA** — a memory-quality metric (from the Memora line of work) penalizing reliance on obsolete or invalidated memory. Memoria's analogue keys on `superseded_by`: a draft citing a superseded claim is FAMA exposure.
-- **coverage@k** — fraction of qualifying items retrieved within the top *k* results; a recall measure for the discovery/retrieval loop.
-- **pass^k** — consistency of success across *k* repeated trials of one task (τ-bench); distinct from pass@k (success on *any* of k).
-- **CRS** — ClawArena Completion-Robustness Score; a robustness measure for multi-step agent task completion.
-
-## External tools and standards
-
-- **Better BibTeX (BBT)** — a Zotero add-on that generates stable, pinned citekeys and auto-exports `library.bib`; the citekey source of truth for ingest.
-- **citekey** — the BibTeX entry key (e.g. `mamykina2010sense`) anchoring a paper-note's filename and its `[@citekey]` references; pinned via Better BibTeX.
-- **Marker** — a PDF-to-Markdown extraction tool; produces the searchable in-vault text a paper-note's `extract_path` points at.
-- **GROBID** — an ML service that extracts structured metadata (authors, affiliations, references, sections) from academic PDFs.
-- **Pandoc** — a deterministic document converter (Markdown → DOCX / PDF / HTML); the export engine, never an LLM task.
-- **PRISMA** — the systematic-review reporting standard; its fields/flags are adopt-on-demand (see [decisions/adopt-on-demand-for-reviews.md](../project/decisions/adopt-on-demand-for-reviews.md)).
-- **ASReview** — an active-learning tool for screening large candidate sets (200–5000) during a formal scoping/systematic review (ADR-19).
-- **Cohen's kappa** — an inter-rater agreement statistic; reported in the dual-rater workflow (ADR-20).
-- **Tirith** — Hermes's native per-profile tool-call gate (`tirith_enabled` / `tirith_fail_open`), operating at tool-invocation scope; complementary to Memoria's vault-write Policy MCP. A Hermes component, not a Memoria coinage.
-
-## Future-direction terms
-
-- **Propagation debts** — queue of dependents that need re-evaluation when a high-traffic note changes (a `claim-note` promoted to `evergreen`, a `reference-note` updated). Materialized by the Linter into a dashboard, worked down by the human.
-- **Execution-trace reflection** — retry pattern where the Kanban dispatcher (or a dedicated reflection skill) reads a failure trace and synthesizes a *modified* handoff payload for the next attempt, rather than re-dispatching the same payload. Strictly per-card scoped; never rewrites prompts or skills.
+**Revise stage** — downstream stage between verify and export. Human addresses verification findings until the verify→revise loop closes.

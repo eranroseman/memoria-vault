@@ -31,4 +31,4 @@ The reasoning is identical across all four:
 
 ## See also
 
-- Glossary: **Review** — the systematic-review sense versus the board review gate and the weekly-review ritual ([glossary.md](../../docs2/reference/glossary.md#disambiguations)).
+- Glossary: **Review** — the systematic-review sense versus the board review gate and the weekly-review ritual ([glossary.md](../../docs/reference/glossary.md#disambiguations)).

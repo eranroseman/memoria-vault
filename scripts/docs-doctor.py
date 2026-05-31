@@ -48,6 +48,9 @@ def check_readmes(root: Path, errors: list[str]) -> None:
     if not (root / "README.md").exists():
         errors.append(f"{root}/: missing README.md")
     for d in sorted(p for p in root.rglob("*") if p.is_dir()):
+        md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
+        if len(md_files) <= 1:
+            continue  # single-file folders need no landing page; the file is its own landing
         if not (d / "README.md").exists():
             errors.append(f"{d}/: missing README.md (folder landing page)")
 

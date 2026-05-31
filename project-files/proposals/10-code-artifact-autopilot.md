@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 10
 title: Code-artifact autopilot
 status: proposed

@@ -35,6 +35,10 @@ The cost is that the human is a bottleneck. This is the point: the human must st
 - The board's `review_status` field is the authoritative state of human approval — not comments, tags, or conversations.
 - A WIP cap on done-awaiting-review cards creates back-pressure: when the human's review queue is full, the dispatcher slows new card creation on that lane.
 
+## Promotion within synthesis is also manual
+
+The same principle governs promotion *between* synthesis layers, not just writes *into* them: a `claim-note` graduates to the `reference` layer only by a human setting `maturity: evergreen` in the weekly review — never by an automatic maturity threshold or a link-density heuristic. (Inlink count signals "well-cited," not "stable enough for reference"; contested claims accumulate inlinks too.) *Folded in from the former ADR-2 (auto-promotion threshold), which was only ever `proposed`.*
+
 ## Alternatives considered
 
 **Prompt-based rule ("always wait for review")** — degrades at long context; overrideable; doesn't survive session restart.

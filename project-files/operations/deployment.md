@@ -1,7 +1,3 @@
----
-topic: roadmap
----
-
 # Deployment options
 
 The system spans a vault (knowledge layer) and an execution layer (Hermes profiles, MCPs). Where each lives — and how they sync — is a human decision with real tradeoffs. Four deployment patterns, ordered by setup complexity.

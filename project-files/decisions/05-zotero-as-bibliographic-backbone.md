@@ -18,7 +18,7 @@ Memoria needs a canonical source for bibliographic metadata — author, title, y
 
 **Zotero** is the bibliographic backbone. Every citable source has a Zotero entry with a pinned **Better BibTeX (BBT)** citekey before the paper note is created. The vault's `library.bib` (auto-exported by Zotero on changes) is the source of truth for citation metadata. The Librarian reads from it; it never writes to it.
 
-Citekeys follow the convention defined in ADR-04.
+Citekeys follow the convention defined in [ADR-06](06-citekey-naming-convention.md).
 
 ## Why
 

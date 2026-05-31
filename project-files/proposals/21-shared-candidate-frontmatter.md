@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 21
 title: Shared candidate frontmatter format
 status: proposed
@@ -13,7 +12,7 @@ superseded_by: []
 
 ## Context
 
-Candidate notes can arrive from three pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-19](19-pre-ingest-screening.md)), or manual (human-typed lead). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run three separate queries.
+Candidate notes can arrive from three pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-16](../decisions/16-adopt-on-demand-for-reviews.md) (pre-ingest screening, in the systematic-review cluster)), or manual (human-typed lead). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run three separate queries.
 
 ## Decision
 
@@ -42,9 +41,9 @@ These are the candidate-specific fields; every note also carries the global requ
 
 **Per-pipeline schemas**: rejected — duplicates effort and forces three parallel queries in every candidate dashboard.
 
-**Hold off until [ADR-19](19-pre-ingest-screening.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
+**Hold off until [ADR-16](../decisions/16-adopt-on-demand-for-reviews.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
 
 ## Related
 
-- **Consumed by:** [ADR-19 pre-ingest screening](19-pre-ingest-screening.md) — reads this schema for bulk screening.
+- **Consumed by:** [ADR-16 pre-ingest screening](../decisions/16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
 - **Files affected:** [vault/README.md](../../explanation/vault/README.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../explanation/dashboards/weekly-review.md)

@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 17
 title: Retriever / Scout as a separate profile
 status: proposed

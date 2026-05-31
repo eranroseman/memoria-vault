@@ -178,6 +178,26 @@ def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
     return out
 
 
+def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
+    """Flag unreviewed answer drafts in 10-inbox/02-answers/ older than `days`.
+
+    REPORT-ONLY by design: the human decides keep / promote / discard in the
+    weekly review. Never auto-archive -- the most useful drafts are often the
+    ones not yet gotten to, so silent archival would hide them exactly when
+    they're most likely to be needed. (Formerly proposed as ADR-3, answer-draft
+    retention; realized here as a report-only check rather than a decision.)"""
+    out, cutoff = [], time.time() - days * 86400
+    folder = vault / "10-inbox" / "02-answers"
+    if not folder.is_dir():
+        return out
+    for p in folder.glob("*.md"):
+        if p.stat().st_mtime < cutoff:
+            age_d = (time.time() - p.stat().st_mtime) / 86400
+            out.append(Finding("stale-answer-drafts", "LOW", relpath(vault, p),
+                               f"answer draft {age_d:.0f}d old (>{days}d); keep, promote, or discard"))
+    return out
+
+
 def extract_path_broken(vault: Path) -> list[Finding]:
     out = []
     papers = vault / "20-sources" / "01-papers"
@@ -285,7 +305,7 @@ def out_empty() -> list[Finding]:
 
 
 DETECTORS = [
-    orphan_working_files, stale_fleeting, extract_path_broken,
+    orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
     frontmatter_schema_check, broken_wikilinks, dashboard_field_drift,
 ]
 
@@ -343,6 +363,12 @@ def self_test() -> int:
         old = time.time() - 8 * 86400
         import os
         os.utime(fl, (old, old))
+        # stale answer draft (100 days old) -> stale-answer-drafts finding
+        ad = v / "10-inbox/02-answers/old-answer.md"
+        ad.parent.mkdir(parents=True, exist_ok=True)
+        ad.write_text("draft answer", encoding="utf-8")
+        old_ad = time.time() - 100 * 86400
+        os.utime(ad, (old_ad, old_ad))
         # paper note with broken extract_path -> extract finding
         (v / "20-sources/01-papers/p.md").write_text(
             "---\ntype: paper-note\ncitekey: smith2020\nextract_path: 90-assets/extracts/missing.md\n---\n",
@@ -359,6 +385,7 @@ def self_test() -> int:
 
         check("orphan-working-files fires on .bak", any("notes.md.bak" in x.path for x in by("orphan-working-files")))
         check("stale-fleeting fires on 8d note", any("old.md" in x.path for x in by("stale-fleeting")))
+        check("stale-answer-drafts fires on 100d draft", any("old-answer.md" in x.path for x in by("stale-answer-drafts")))
         check("extract-path-broken fires", any("p.md" in x.path for x in by("extract-path-broken")))
         check("schema-check flags missing maturity", any("bad.md" in x.path for x in by("schema-check")))
         check("schema-check clean note not flagged", not any("good.md" in x.path for x in by("schema-check")))
@@ -368,7 +395,7 @@ def self_test() -> int:
         check("dashboard-field-drift ignores 'maturity'", not any("'maturity'" in x.message for x in by("dashboard-field-drift")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-    print(f"\n{10 - failures}/10 detector checks passed.")
+    print(f"\n{11 - failures}/11 detector checks passed.")
     return failures
 
 

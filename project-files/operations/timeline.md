@@ -1,7 +1,3 @@
----
-topic: roadmap
----
-
 # Timeline and phases
 
 The week-by-week ramp from [Memoria v0.1](README.md#memoria-v01) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
@@ -29,7 +25,7 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
 4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../explanation/obsidian/README.md)).
-5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-4](../decisions/04-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
+5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-6](../decisions/06-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
 6. Resolve the callout-manager configuration: copy `.obsidian/plugins/callout-manager/data.json.TODO` → `data.json` and fill in callout styling. Until resolved, `[!brief]`, `[!suggestions]`, and `[!verification]` callouts do not render correctly.
 
 **Profiles, skills, and plugins**
@@ -52,7 +48,7 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_verdict` recommendations the human promotes to `review_status: approved`.
 7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `00-meta/board/<task_id>.md` and `00-meta/02-logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
 8. **Enable the five-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact. The five signals are: (1) suggestion disposition (accept : edit : reject) per profile; (2) operator decision time per `awaiting-review` card; (3) per-card state-transition timestamps; (4) API cost per card; (5) policy deny-reasons. Defined in [success-metrics.md](success-metrics.md).
-9. Configure the review-gate mode per [ADR-31](../decisions/31-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
+9. Configure the review-gate mode per [proposal-31](../proposals/31-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
 10. Do not prune session `state.db`. It is small, and it preserves the reasoning-trace data needed for any retrospective analysis.
 
 **Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. All five pending Obsidian plugins are installed and dashboard queries return real data. Policy gate self-tests pass (34 + 18 checks). `board_export.py` is running and `00-meta/board/` is populating. All seven profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch. **The five-signal log is running and emitting all five signals. Every profile prompt is committed to git.**
@@ -96,8 +92,8 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 10. Set up Pandoc export pipeline for `40-workbench/*/04-drafts/`.
 11. Configure session logging to write to `00-meta/02-logs/` and commit weekly.
 12. **Retain the raw audit log and board history indefinitely.** Do not rotate or prune `00-meta/02-logs/audit.jsonl` or session `state.db`. Fleet observability and static reports are pure backfill from these logs — they have no value if the logs are gone.
-13. **Keep approved drafts** through the [ADR-3](../decisions/03-answer-draft-retention.md) 90-day sweep. They seed the vault-CiteME fixture and cannot be reconstructed.
-14. **Run the comparison arm** if you have accumulated enough review data: switch the review-gate mode to `advisory` on a comparable project (same operator), keep the same logger, and compare false-promotion rate and decision time against the `blocking` baseline. Add a promotion-reversal event so false-promotion is measurable. See [ADR-31](../decisions/31-configurable-review-gate-mode.md).
+13. **Keep approved drafts** through the Linter's answer-draft retention sweep (the `stale-answer-drafts` detector flags `10-inbox/02-answers/` notes older than 90 days for keep/promote/discard; no auto-archive). They seed the vault-CiteME fixture and cannot be reconstructed.
+14. **Run the comparison arm** if you have accumulated enough review data: switch the review-gate mode to `advisory` on a comparable project (same operator), keep the same logger, and compare false-promotion rate and decision time against the `blocking` baseline. Add a promotion-reversal event so false-promotion is measurable. See [proposal-31](../proposals/31-configurable-review-gate-mode.md).
 
 **Exit criteria.** The vault stops being a place you build and becomes a place you write from. The system runs without daily babysitting. The human shows up for review and synthesis; everything else flows. Three months of five-signal log data is available for retrospective analysis.
 

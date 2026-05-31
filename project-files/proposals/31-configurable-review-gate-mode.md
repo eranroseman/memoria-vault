@@ -1,5 +1,4 @@
 ---
-topic: decisions
 id: 31
 title: Configurable review-gate mode (blocking | advisory) for comparison studies
 status: proposed
@@ -13,7 +12,7 @@ superseded_by: []
 
 ## Context
 
-Memoria is designed **blocking-only**: review is a structurally enforced state, not an annotation. The human gate is mandatory (ADR-1, "judgment is always human-driven"), promotion never happens silently (ADR-2, no auto-promotion), and dispatch refuses to advance a card past review without `review_status: approved` ([timeline](../roadmap/timeline.md), steps 4 and 6). This is correct as the *operating* posture — and it is the core of the system's publication thesis.
+Memoria is designed **blocking-only**: review is a structurally enforced state, not an annotation. The human gate is mandatory and promotion never happens silently ([ADR-03](../decisions/03-structural-review-gate.md): the structurally-enforced human review gate, which also keeps claim→reference promotion manual), and dispatch refuses to advance a card past review without `review_status: approved` ([timeline](../roadmap/timeline.md), steps 4 and 6). This is correct as the *operating* posture — and it is the core of the system's publication thesis.
 
 But that thesis — **"for knowledge work, structurally blocking human review is the correct architectural commitment"** — is the central empirical claim of the system paper (Path 2) and the position paper (Path 3). A claim of the form "*blocking* beats *advisory*" is **unfalsifiable without an advisory baseline to compare against.** The publication-path analysis names exactly this: Path 2's comparison study needs "an advisory-review variant" run against the blocking arm with commensurable instrumentation (see [evaluation.md](../roadmap/evaluation.md), [success-metrics.md](../roadmap/success-metrics.md)).
 
@@ -58,5 +57,5 @@ Three invariants make the mode useful as evidence rather than just a weaker syst
 
 - **Workflows affected:** [Verify](../../how-to/workflows/downstream/verify.md), [Promote](../../how-to/workflows/upstream/promote.md) (the gate the mode conditions); the board dispatch rules ([timeline](../roadmap/timeline.md)).
 - **Files affected:** the card/log schema (`review_mode` field, `schema_version` bump); [success-metrics.md](../roadmap/success-metrics.md) and [evaluation.md](../roadmap/evaluation.md) (the comparison metrics and their definitions); the publication-instrumentation track in [timeline.md](../roadmap/timeline.md#publication-instrumentation-parallel-track-from-day-1).
-- **Related decisions:** [ADR-1] reviewer-vs-human-only (the blocking gate this makes measurable), [ADR-2](02-auto-promotion-threshold.md) (no auto-promotion — the advisory arm relaxes *the gate*, not this), [ADR-23 vault-eval](23-vault-eval-integration.md) (diagnostic eval the comparison data complements), [ADR-26](26-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review" — deliverables, not the agent gate).
+- **Related decisions:** [ADR-03 structural review gate](../decisions/03-structural-review-gate.md) (the blocking human gate + no-auto-promotion this makes measurable), [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md) (diagnostic eval the comparison data complements), [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review" — deliverables, not the agent gate).
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

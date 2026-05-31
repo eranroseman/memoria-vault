@@ -1,0 +1,10 @@
+[
+  "agent-client",
+  "callout-manager",
+  "dataview",
+  "obsidian-git",
+  "obsidian-local-rest-api",
+  "quickadd",
+  "templater-obsidian",
+  "obsidian-citation-plugin"
+]

@@ -4,7 +4,7 @@
 Profile permissions and lane scopes are not just documentation; they are
 enforced here. Every vault action goes through ``check_permission`` and gets
 one of four decisions -- ``allow`` / ``allow_with_log`` / ``deny`` / ``dry_run``
--- per the contract in docs/reference/architecture/policy-mcp.md.
+-- per the contract in docs/reference/policy.md.
 
 Design (mirrors .memoria/profiles/memoria-linter/detectors.py): a dependency-
 light, unit-testable *core* (the decision engine, the glob matcher, the SHA-256
@@ -54,7 +54,7 @@ ACTIONS = frozenset(
 MUTATING_ACTIONS = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 
 # Review-gated zones are *never auto-written*: an otherwise-allowed mutating
-# action here degrades to dry_run so a human approves the write. (policy-mcp.md
+# action here degrades to dry_run so a human approves the write. (policy.md
 # "decision protocol" + "two structural rules".)
 REVIEW_GATED_PREFIXES = (
     "30-synthesis/01-claims/",
@@ -64,7 +64,7 @@ REVIEW_GATED_PREFIXES = (
 )
 
 # Linter auto_fix is class-gated. These two classes may proceed; the other two
-# are pinned to dry_run / deny regardless of who asks. (linter.yaml + policy-mcp.md)
+# are pinned to dry_run / deny regardless of who asks. (linter.yaml + policy.md)
 AUTO_FIX_ALLOWED_CLASSES = frozenset({"safe-and-unambiguous", "authorized-targeted"})
 AUTO_FIX_DRY_RUN_CLASSES = frozenset({"schema-content"})
 AUTO_FIX_DENY_CLASSES = frozenset({"review-gated-edit"})
@@ -233,7 +233,7 @@ class Decision:
     log_required: bool = False
 
     def response(self) -> dict:
-        """Shape the MCP JSON response per policy-mcp.md."""
+        """Shape the MCP JSON response per policy.md."""
         out: dict = {"decision": self.decision, "policy_rule": self.policy_rule}
         if self.decision in ("allow", "allow_with_log"):
             out["log_required"] = self.log_required
@@ -252,7 +252,7 @@ def decide(
 ) -> Decision:
     """Return the policy Decision for one request. Pure: no file I/O, no logging.
 
-    Precedence (faithful to policy-mcp.md):
+    Precedence (faithful to policy.md):
       1. Invalid action            -> deny.
       2. Skill-conditional deny     -> deny (additive narrowing; mutating actions).
       3. report                     -> allow within lane.
@@ -372,7 +372,7 @@ def compose_skill_deny(lane: LanePolicy, skill_policy: dict | None) -> list[str]
 
     Deny composition is additive: the skill's write-deny patterns are added to
     the session's effective deny set (the narrower set wins). A skill cannot
-    declare ``policy.allow`` -- it may only narrow. (policy-mcp.md "composition
+    declare ``policy.allow`` -- it may only narrow. (policy.md "composition
     semantics".) Returns the extra deny-write patterns the skill contributes.
     """
     if not skill_policy:

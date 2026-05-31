@@ -1,131 +1,261 @@
+# On-disk layout
+
+Where every file lives across the two filesystem roots: the starter vault (versioned, distributable) and `.memoria/` (tooling layer). For the design rationale see [explanation/architecture/](../explanation/architecture/).
+
+**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See [implementation-status.md](../../project-files/operations/implementation-status.md) for build state.
+
 ---
-topic: architecture
----
 
-# On-disk layout reference
+## Vault root
 
-> [!warning] Scaffold vs. Complete Install
-> This layout shows the target on-disk structure. Several items marked below are not yet present in the v0.1 starter vault. Items annotated `# v0.2` or `# deferred` are planned but not yet created.
-
-The annotated directory trees below show *where each thing lives* across the two filesystem locations: the starter vault (versioned, distributable) and the user's Hermes runtime (per-user). For *why* the layout is shaped this way — the source-vs-runtime relationship, the installer flow, and the version-control boundary — see [the on-disk-layout explanation](../explanation/architecture/on-disk-layout.md).
-
-## Starter vault (versioned, distributable)
-
-The **vault root folder is human-defined**: the human clones the distribution into any folder name and can move it anywhere. Only the *contents* of the root — the `00-meta/`, `.obsidian/`, `.memoria/` shape — are fixed. See [vault/README.md](../explanation/vault/README.md#folder-structure) for the full folder taxonomy and per-folder role table.
+The vault root folder name is human-defined (clone into any folder). The internal shape is fixed.
 
 ```text
-<vault-root>/                           # any folder name; human picks at clone time
-├── README.md                           # human-facing: clone, run install
-├── install.ps1                         # Windows installer
-├── install.sh                          # macOS/Linux — v0.2
+<vault-root>/
+├── README.md                       # clone and install instructions
+├── install.ps1                     # Windows installer
+├── install.sh                      # macOS/Linux/WSL2 installer (shipped)
 │
-├── 00-meta/                            # vault skeleton (human-visible in Obsidian)
-│   ├── 01-dashboards/                  # 11 shipped dashboards (Daily Health as index.md, board-state, contradictions, drift-watch, audit-log, …; skill-lifecycle deferred)
-│   ├── 02-logs/                        # audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl
-│   ├── 03-templates/                   # 15 note templates (claim-note, paper-note, …)
-│   ├── 04-reference/                   # human-facing reference notes (design-system, schema-reference, …)
-│   ├── 05-eval/                        # vault-eval gold tasks (per-workflow gold sets) — ADR-23 (ships empty: .keep)
-│   ├── 07-skills/                      # skill-governance registry — ships empty (.keep); overlay deferred
-│   ├── 08-metrics/                     # fleet + eval metrics (telemetry rollups, eval/ run results) — ships empty (.keep); metrics aggregator deferred (Phase 6, not yet built)
-│   ├── board/                          # markdown board export — ships empty (.keep); Phase-4 export deferred
-│   ├── index.md                        # vault landing page (pinned in sidebar)
-│   ├── research-directions.md          # Librarian's session-start input
-│   └── system-status.md                # runtime health snapshot
-├── 10-inbox/
-│   ├── 01-fleeting/                    # raw captures
-│   ├── 02-answers/                   # answer drafts awaiting review
-│   └── 03-candidates/                  # discovery leads and screening queue
-├── 20-sources/
-│   ├── 01-papers/                     # one note per citable paper (specialized item)
-│   ├── 02-items/                       # tools, repos, packages, products, standards, datasets, software
-│   └── 03-entities/                    # 01-people / 02-organizations / 03-venues
-├── 30-synthesis/
-│   ├── 01-claims/                   # claim notes — human-owned
-│   ├── 02-reference/                        # reference notes
-│   └── 03-moc/                         # Maps of Content
-├── 40-workbench/
-│   └── <project>/                      # one folder per project: 01-map/ 02-framing/ 03-canvas/ 04-drafts/ 05-verification/ 06-code/
-├── 50-deliverables/
-│   ├── 01-manuscripts/                 # papers, articles, preprints
-│   ├── 02-presentations/               # slides, talks, posters
-│   ├── 03-media/                       # figures, infographics, web
-│   └── 04-releases/                    # datasets, models, code, supplementary
-├── 90-assets/                          # Marker extracts, figures, supplementary materials (PDFs stay in Zotero)
-├── 95-archive/                         # superseded notes
+├── 00-meta/                        # vault skeleton — human-visible in Obsidian
+├── 10-inbox/                       # capture zone
+├── 20-sources/                     # ingested sources
+├── 30-synthesis/                   # human-owned canonical knowledge
+├── 40-workbench/                   # project scratch
+├── 50-deliverables/                # terminal outputs
+├── 90-assets/                      # extracted figures, supplementary
+├── 95-archive/                     # superseded notes
 │
-├── .obsidian/                          # Obsidian config (auto-hidden by Obsidian)
-│   ├── plugins/
-│   │   ├── obsidian-linter/data.json   # post-v0.1 (reference-only per ADR-24; not installed)
-│   │   ├── obsidian-citation-plugin/data.json
-│   │   ├── agent-client/data.json.example
-│   │   ├── obsidian-local-rest-api/data.json.example
-│   │   └── callout-manager/data.json.TODO
-│   └── snippets/
-│       └── memoria-link-colors.css
-│
-└── .memoria/                           # Memoria tooling (dot-prefix: auto-hidden by Obsidian)
-    ├── profiles/                       # the seven Hermes profile directories, hand-authored
-    │   ├── memoria-librarian/
-    │   │   ├── SOUL.md                 # the actual system prompt
-    │   │   ├── config.yaml             # model, commands, tool filters
-    │   │   ├── mcp.json                # MCP server connections (with {{VAULT_PATH}} placeholders)
-    │   │   ├── cron/                   # scheduled tasks for this profile
-    │   │   ├── skills/                 # profile-bundled skills
-    │   │   ├── .env.EXAMPLE            # required env vars, commented out
-    │   │   └── distribution.yaml       # name, version
-    │   ├── memoria-mapper/
-    │   ├── memoria-socratic/
-    │   ├── memoria-writer/
-    │   ├── memoria-verifier/
-    │   ├── memoria-coder/
-    │   └── memoria-linter/             # also holds M-detectors.md alongside SOUL.md
-    ├── profile-memory/                 # learned MEMORY.md/USER.md, junctioned into ~/.hermes (opt-in multi-machine sync) — created on first multi-machine sync opt-in
-    │   └── memoria-<name>/
-    ├── mcp/                            # Memoria-specific MCP servers (Python)
-    │   ├── policy_mcp.py               # shipped — write-gate; `--self-test` + `--decide`
-    │   ├── tasks_mcp.py               # not yet authored (Phase 4 — fronts Hermes Kanban)
-    │   └── requirements.txt            # shipped — mcp + PyYAML
-    ├── lane-overrides/                 # 7 YAML files (one per lane); all ship — the policy MCP that reads them is v0.2
-    │   ├── librarian.yaml
-    │   ├── mapper.yaml
-    │   ├── socratic.yaml
-    │   ├── writer.yaml
-    │   ├── verifier.yaml
-    │   ├── coder.yaml
-    │   └── linter.yaml
-    ├── csl/                            # Pandoc citation style files
-    ├── library.bib                     # Zotero BibTeX export
-    └── tool-registry.yaml              # machine-read tool config
+├── .obsidian/                      # Obsidian config (hidden by Obsidian)
+└── .memoria/                       # Memoria tooling (hidden by Obsidian)
 ```
 
-Engineering documentation (architecture, workflows, decisions (ADRs), profile design summaries, dashboards, roadmap, and topic-distributed reference material) lives in the **`docs/` folder of this repo** — a sibling of the vault, not a separate repository. It is the engineering spec; the runtime vault doesn't need it to function. Because either folder can be cloned on its own, a cross-folder reference uses a GitHub URL rather than a relative path.
+---
 
-## Runtime install (per-user, not in repo)
+## Vault folders
 
-The installer copies the seven profile directories from `.memoria/profiles/` to Hermes's standard location at `~/.hermes/profiles/` (or `%USERPROFILE%\.hermes\profiles\` on Windows; both honor `HERMES_HOME` to override). Profiles are prefixed `memoria-` to keep them separable from other agents on the same machine.
+| Folder | Purpose | Primary writer |
+| --- | --- | --- |
+| `00-meta/` | Vault governance: dashboards, logs, templates, reference notes, eval, metrics | Human / Linter (logs only) |
+| `10-inbox/` | Capture zone: fleeting notes, answer drafts, discovery candidates | Human / Librarian / Writer |
+| `20-sources/` | Ingested sources: papers, items, entities | Librarian |
+| `30-synthesis/` | Canonical knowledge: claims, reference notes, MOCs | Human |
+| `40-workbench/` | Project scratch: maps, framing, canvas, drafts, verification, code | Multiple profiles (own subfolders) |
+| `50-deliverables/` | Terminal outputs: manuscripts, presentations, media, releases | Human / Coder (export task) |
+| `90-assets/` | Extracted figures, PDFs stay in Zotero | Librarian (Marker extracts) |
+| `95-archive/` | Superseded notes; never deleted | Human |
+
+### `00-meta/` subtree
 
 ```text
-~/.hermes/profiles/
-├── memoria-librarian/                 # copied from .memoria/profiles/memoria-librarian/
-│   ├── SOUL.md                         # author-owned, overwritten on every install
-│   ├── config.yaml                     # author-owned, overwritten on every install
-│   ├── mcp.json                        # author-owned, {{VAULT_PATH}} substituted with real path
-│   ├── cron/
-│   ├── skills/
-│   ├── .env.EXAMPLE                    # author-owned, overwritten on every install
-│   ├── .env                            # user-owned, preserved across installs
-│   └── distribution.yaml
-├── memoria-mapper/
-├── memoria-socratic/
-├── memoria-writer/
-├── memoria-verifier/
-├── memoria-coder/
-└── memoria-linter/
+00-meta/
+├── 01-dashboards/
+│   ├── index.md                    # dashboard entry point (opens Daily Health)
+│   ├── audit-log.md
+│   ├── board-state.md
+│   ├── contradictions.md
+│   ├── discuss-queue.md
+│   ├── drift-watch.md
+│   ├── fleet-health.md
+│   ├── loose-ends.md
+│   ├── open-questions.md
+│   ├── reading-pipeline.md
+│   └── weekly-review.md
+├── 02-logs/
+│   ├── audit.jsonl                 # pending (created by policy MCP at first run)
+│   ├── sessions/                   # per-session logs from Linter
+│   ├── board-state.jsonl           # pending
+│   ├── lint-findings.jsonl         # pending
+│   └── cron-history.jsonl          # pending
+├── 03-templates/                   # 15 note templates (see note-types.md)
+├── 04-reference/                   # 10 human-facing reference notes (shipped)
+├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
+├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
+├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
+├── board/                          # markdown board export — ships empty (.keep); pending
+├── index.md                        # vault landing page (pinned in sidebar)
+├── research-directions.md          # Librarian session-start input
+└── system-status.md                # runtime health snapshot
 ```
 
-Per-profile structure follows the [Hermes profile-distribution shape](https://hermes-agent.nousresearch.com/docs/user-guide/profile-distributions) — `SOUL.md`, `config.yaml`, `mcp.json`, `skills/`, `cron/` — so Memoria profiles are compatible with `hermes profile list` and the standard `hermes -p memoria-librarian chat` invocation surface.
+### `10-inbox/` subtree
 
-## Related
+```text
+10-inbox/
+├── 01-fleeting/                    # raw captures (human)
+├── 02-answers/                     # answer drafts awaiting review (Writer)
+└── 03-candidates/                  # discovery leads + gap candidates (Librarian, Verifier)
+```
 
-- Vault folder taxonomy: [vault/README.md](../explanation/vault/README.md)
-- Lane-override YAML format: [profiles/README.md lane-override files](../explanation/profiles/README.md#lane-override-files)
+### `20-sources/` subtree
+
+```text
+20-sources/
+├── 01-papers/                      # one note per citable paper
+└── 02-items/                       # tools, repos, packages, datasets, standards, software
+└── 03-entities/
+    ├── 01-people/
+    ├── 02-organizations/
+    └── 03-venues/
+```
+
+### `30-synthesis/` subtree
+
+```text
+30-synthesis/
+├── 01-claims/                      # claim notes (human-owned, review-gated)
+├── 02-reference/                   # reference notes (review-gated)
+└── 03-moc/                         # Maps of Content (review-gated)
+```
+
+### `40-workbench/<project>/` subtree
+
+One folder per project. All subfolders ship as `.keep` placeholders.
+
+```text
+40-workbench/<project>/
+├── 01-map/
+│   ├── corpus-map.md               # Mapper writes
+│   ├── gap-report.md               # Mapper writes
+│   ├── comparative-briefs/         # Mapper writes
+│   └── cluster-maps/               # Mapper writes
+├── 02-framing/                     # Writer (counter-outline)
+├── 03-canvas/                      # Human (canvas notes)
+├── 04-drafts/                      # Human / Writer (draft notes)
+├── 05-verification/                # Verifier writes
+└── 06-code/                        # Coder writes
+```
+
+### `50-deliverables/` subtree
+
+```text
+50-deliverables/
+├── 01-manuscripts/
+├── 02-presentations/
+├── 03-media/
+└── 04-releases/
+```
+
+---
+
+## `.obsidian/` layout
+
+```text
+.obsidian/
+├── plugins/
+│   ├── agent-client/
+│   │   └── data.json.example       # per-human setup required
+│   ├── callout-manager/
+│   │   └── data.json.TODO          # callout styling not yet configured
+│   ├── dataview/
+│   ├── obsidian-citation-plugin/
+│   │   └── data.json               # points at .memoria/library.bib
+│   ├── obsidian-git/
+│   ├── obsidian-homepage/
+│   ├── obsidian-local-rest-api/
+│   │   └── data.json.example       # contains secrets — gitignored
+│   ├── quickadd/
+│   └── templater-obsidian/
+└── snippets/
+    └── memoria-link-colors.css     # supercharged-links color rules
+```
+
+**`.gitignore` rule for secrets:**
+
+```text
+vault/.obsidian/plugins/obsidian-local-rest-api/data.json
+```
+
+---
+
+## `.memoria/` layout
+
+```text
+.memoria/
+├── profiles/
+│   ├── memoria-librarian/
+│   │   ├── SOUL.md                 # shipped
+│   │   ├── config.yaml             # shipped (model routing + policy-gate hooks)
+│   │   ├── mcp.json                # shipped (policy + obsidian servers)
+│   │   ├── distribution.yaml       # shipped (manifest + env_requires)
+│   │   ├── .env.EXAMPLE            # generated by `hermes profile install` from env_requires
+│   │   ├── cron/
+│   │   │   └── .keep               # empty placeholder
+│   │   └── skills/
+│   │       └── .keep               # empty placeholder; K-Dense installed here
+│   ├── memoria-mapper/
+│   │   ├── SOUL.md
+│   │   ├── cron/
+│   │   │   └── scheduled.yaml      # shipped (actual task definitions)
+│   │   └── skills/ (.keep)
+│   ├── memoria-socratic/   (SOUL.md + cron/.keep + skills/.keep)
+│   ├── memoria-writer/     (SOUL.md + cron/.keep + skills/.keep)
+│   ├── memoria-verifier/   (SOUL.md + cron/.keep + skills/.keep)
+│   ├── memoria-coder/      (SOUL.md + cron/.keep + skills/.keep)
+│   └── memoria-linter/
+│       ├── SOUL.md
+│       ├── detectors.py            # shipped (8 structural detectors)
+│       ├── M-detectors.md          # shipped
+│       ├── cron/
+│       │   └── scheduled.yaml      # shipped (actual task definitions)
+│       └── skills/ (.keep)
+├── lane-overrides/
+│   ├── librarian.yaml              # shipped
+│   ├── mapper.yaml                 # shipped
+│   ├── socratic.yaml               # shipped
+│   ├── writer.yaml                 # shipped
+│   ├── verifier.yaml               # shipped
+│   ├── coder.yaml                  # shipped
+│   └── linter.yaml                 # shipped
+├── mcp/
+│   ├── policy_mcp.py               # shipped (policy write-gate MCP server)
+│   ├── policy_hook.py              # shipped (pre/post_tool_call gate; routes obsidian writes through policy)
+│   ├── board_export.py             # shipped (board → 00-meta/board/ + board-state.jsonl)
+│   ├── metrics_aggregate.py        # shipped (board+audit → 08-metrics/ trust-score notes)
+│   └── requirements.txt            # shipped (mcp, PyYAML)
+│       # tasks_mcp.py — deferred, not needed (native Hermes kanban tools cover it)
+├── csl/
+│   └── .keep                       # shipped: placeholder for CSL citation style files
+├── library.bib                     # pending: user-generated by Better BibTeX auto-export
+├── project-hints.yaml.EXAMPLE      # shipped
+└── tool-registry.yaml              # shipped (per-profile tool allowlist)
+```
+
+---
+
+## Vault skeleton: human-facing notes
+
+Notes in `00-meta/` that ship with the starter vault for human reference.
+
+| Note | Purpose | Maintained by |
+| --- | --- | --- |
+| `00-meta/index.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
+| `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
+| `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
+| `00-meta/04-reference/getting-started.md` | First-time setup checklist — 5 steps from clone to first ingest. | Human (rarely changes) |
+| `00-meta/04-reference/system-map.md` | High-level architecture summary in plain language. Vault-resident companion to `docs/explanation/architecture/`. | Human (sync with design changes) |
+| `00-meta/04-reference/agent-roles.md` | Plain-language one-paragraph summary of each Hermes profile. Mirrors each `SOUL.md`. | Human (sync with profile changes) |
+| `00-meta/04-reference/profile-policies.md` | Plain-language who-can-write-where summary. Tracks the lane-override YAML files. | Human (sync with lane-override changes) |
+| `00-meta/04-reference/schema-reference.md` | Canonical list of every frontmatter field, type, and allowed values. Source of truth for templates and the Linter. | Human + Linter (flags drift) |
+| `00-meta/04-reference/dataview-cheatsheet.md` | Reference patterns for dashboard queries — TABLE / LIST / TASK / FROM / WHERE / SORT / FLATTEN / LIMIT examples. | Human (rarely changes) |
+| `00-meta/04-reference/performance-checklist.md` | Dashboard performance discipline for Dataview query authors. | Human (rarely changes) |
+| `00-meta/04-reference/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. | Human (rarely changes) |
+| `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/plugins.md`. | Human (sync with plugin changes) |
+| `00-meta/04-reference/design-system.md` | Canonical visual-style source: palette, typography, spacing, layout, motion, voice. Drives CSS snippet generators and Pandoc export configs. | Human (edits define the brand) |
+
+The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lags the corresponding design file.
+
+---
+
+## File naming conventions
+
+| Artifact | Convention | Example |
+| --- | --- | --- |
+| Note files | `kebab-case.md` | `receptivity-detection-timing.md` |
+| Paper notes | Citekey as filename | `mamykina2010sense.md` |
+| Template files | `<type>.md` | `claim.md`, `paper.md` |
+| Dashboard files | `kebab-case.md` | `weekly-review.md` |
+| Lane-override files | `<short-name>.yaml` | `librarian.yaml` |
+| Profile dirs | `memoria-<name>/` | `memoria-librarian/` |
+| Log files | `kebab-case.jsonl` | `audit.jsonl` |
+
+**Constraint:** No spaces in vault file names. Hermes path handling and shell scripts do not support them.

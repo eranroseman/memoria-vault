@@ -1,31 +1,28 @@
----
-topic: dashboards
----
+# `loose-ends` dashboard
 
-# `loose-ends` — design summary
+Catches leftover files with names that signal unfinished work: anything containing `TODO`, `tmp`, or `untitled`. Run it after ingest batches or whenever something feels incomplete. The dashboard flags; you decide the action per file — rename, finish, archive, or delete.
 
-**Runtime artifact.** Ships at `00-meta/01-dashboards/loose-ends.md` in the [starter vault](https://github.com/eranroseman/memoria-vault) and runs in Obsidian via Dataview; the runtime queries live there. This page covers the design role.
+## What it shows
 
-## Mission
+A whole-vault scan for files whose names contain `TODO`, `tmp`, or `untitled`, sorted by most-recently-modified. Recent junk is more actionable (you remember the context); old junk that's lingered is typically archive-or-delete territory.
 
-Catch leftover junk that accumulates between rituals: filenames containing `TODO`, `tmp`, or `untitled` that the agent or human forgot to finish or rename. Run after ingest batches or whenever something feels off. The dashboard flags; the human chooses the action per file (rename, finish, archive, delete).
+## Why these three keywords and not others
 
-## What this dashboard is not
+The three keywords (`TODO`, `tmp`, `untitled`) reliably signal files the human or an agent didn't finish naming. They don't appear in legitimate completed notes.
 
-- **Not [Linter `orphan-working-files`](../profiles/linter.md).** `orphan-working-files` detects transient *patterns* (`.tmp.*`, `.bak`, editor backups, manual-rename leftovers) outside permitted zones. Loose-ends detects *filename keywords* that signal in-progress human content. Different target: `orphan-working-files` is automation leftovers; loose-ends is human leftovers.
-- **Not Linter's schema-version-mismatch check.** That check (data-hygiene tier, not M-rule) shows up in [`drift-watch`](drift-watch.md)'s schema-migration-progress section. Loose-ends catches naming-level junk, not version-level migration debt.
-- **Not data-quality validation.** Empty frontmatter fields, missing wikilinks, broken references — those are Linter findings reported elsewhere. Loose-ends' mission is narrower: "files I clearly forgot to finish."
+`draft` is deliberately excluded even though it sounds similar. `draft` is a first-class Memoria note type living in `40-workbench/*/04-drafts/`. Matching filenames containing "draft" would flag real in-progress writing as junk.
 
-## Design decisions
+## What it is not
 
-- **Filename keyword detection, not content scanning.** The check is `contains(file.name, "TODO") OR contains(file.name, "tmp") OR contains(file.name, "untitled")`. Human habits create these filenames; surfacing them by name is cheap, deterministic, and false-positive-resistant (humans don't normally name finished notes "untitled-3.md").
-- **`draft` is deliberately not a keyword.** It would seem to belong with the others, but `draft` is a first-class Memoria note type living in `40-workbench/*/04-drafts/` — matching filenames containing "draft" would flag real in-progress work (and the `draft.md` template) as junk. The unambiguous junk signals (`TODO`, `tmp`, `untitled`) never name legitimate content; `draft` does.
-- **Whole-vault scan (`FROM ""`).** No folder restriction. The point is to catch junk anywhere, including in review-gated zones where it shouldn't be.
-- **Sort by `file.mtime` descending.** Recent junk is more actionable than old junk (human remembers the context). Old junk that's lingered is archive-or-delete territory.
-- **Capability-light.** Works on day one with no prerequisites — pure filename inspection.
+**Not the Linter's `orphan-working-files` detector.** That detector catches transient automation artifacts (`.tmp.*`, `.bak`, editor backups) outside permitted zones. Loose-ends catches human-left junk by filename keyword. Different targets, different layer.
+
+**Not data-quality validation.** Empty frontmatter, missing wikilinks, and broken references surface in the Linter's findings. Loose-ends is narrower: files the human clearly forgot to finish.
+
+## Works on day one
+
+Unlike most dashboards, loose-ends has no dependencies — no plugin, no log file, no schema. Any file in the vault with a matching filename appears immediately.
 
 ## Related
 
-- [Linter design summary](../profiles/linter.md) — `orphan-working-files` is the structural-detector counterpart
-- [`drift-watch`](drift-watch.md) — schema-version-mismatch and structural drift live there
-- [`weekly-review`](weekly-review.md) — recommends opening loose-ends as part of the Friday ritual
+- [explanation/dashboards/weekly-review.md](weekly-review.md) — the Friday ritual that includes a loose-ends pass
+- [explanation/profiles/linter.md](../profiles/linter.md) — `orphan-working-files` detector, the structural counterpart

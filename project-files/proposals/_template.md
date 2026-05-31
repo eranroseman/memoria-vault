@@ -1,5 +1,4 @@
 ---
-topic: proposals
 status: deferred  # deferred | under-consideration | adopted | rejected
 created: YYYY-MM-DD
 ---

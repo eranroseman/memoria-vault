@@ -1,30 +1,32 @@
----
-topic: dashboards
----
+# `open-questions` dashboard
 
-# `open-questions` — design summary
+Turns the vault into a research agenda by collecting every note that contains an explicit `## Open questions` section. Open it when planning the next reading direction — what questions has past synthesis raised that still haven't been answered?
 
-**Runtime artifact.** Ships at `00-meta/01-dashboards/open-questions.md` in the [starter vault](https://github.com/eranroseman/memoria-vault) and runs in Obsidian via Dataview; the runtime queries live there. This page covers the design role.
+## What it shows
 
-## Mission
+All claim notes and paper notes that contain a `## Open questions` heading section, sorted by most-recently-modified. The dashboard doesn't extract the questions into a list — it shows which notes have them, so you navigate to the note and read the questions in context.
 
-Turn the vault into a research agenda by collecting every note that contains an explicit `# Open questions` section. Open this when planning the next research direction — what questions has past synthesis raised that haven't been answered yet? The dashboard reads claim notes and paper notes (the two places open-questions sections accumulate naturally) and provides a single aggregated view across the corpus.
+## Two source folders
 
-## What this dashboard is not
+The dashboard reads from `30-synthesis/01-claims/` and `20-sources/01-papers/`. These are where durable questions accumulate naturally. Project pages might also have open-questions sections, but those tend to be operational ("what should we do next?") rather than research-direction questions ("what's still unknown in the field?").
 
-- **Not a synthesizer.** It collects existing open-questions sections; it doesn't propose new questions, cluster them, or rank them by importance. That's the human's job (or a future Mapper skill).
-- **Not the only place questions live.** Inline `# Open questions` sections inside claim notes and paper notes are the *durable* questions — the ones worth re-finding months later. Ephemeral session questions live in fleeting-notes and find-pass output, not here.
-- **Not auto-resolving.** When a question is answered, the human manually removes or restructures the section. The dashboard doesn't track which questions have been answered (no `resolved:` state) — that would require a richer schema than free-form section content.
+## What it is not
 
-## Design decisions
+**Not a synthesizer.** It collects existing sections; it doesn't propose new questions, cluster them, or rank them by importance.
 
-- **Free-form section, not structured frontmatter.** Questions live in markdown body content (`# Open questions` heading) rather than a frontmatter `open_questions: []` list. The reasoning: questions are *prose* (often paragraphs with context), and constraining them to flat YAML strings would lose the framing. The cost is that the dashboard can't filter/group by question metadata — it just lists the notes that have such sections.
-- **Two source folders: `30-synthesis/01-claims/` and `20-sources/01-papers/`.** These are the two places where durable questions accumulate. Project pages might also have questions, but those are typically operational ("what should we do next") rather than research-direction ("what's still unknown").
-- **Sort by `file.mtime` not by question count.** Recently-touched notes are likely the human's current focus; putting those first matters more than ranking by question density.
-- **No dependency fallback.** Unlike most dashboards, this one works on day one — any note with `# Open questions` appears immediately.
+**Not a tracker.** There's no `resolved:` state. When a question gets answered, you manually remove or update the section. The dashboard reflects what's currently in the notes; it doesn't remember history.
+
+**Not auto-resolving.** Nothing in the system reads these questions and attempts to answer them. The Librarian reads `00-meta/research-directions.md` to guide discovery; open questions from the dashboard can inform what you write there.
+
+## Why free-form section, not frontmatter
+
+Questions are prose — often a paragraph with context and stakes. Constraining them to a flat `open_questions: []` YAML list would lose the framing that makes them worth revisiting. The cost is that the dashboard can't filter by question topic; it shows which notes have questions, not what the questions say.
+
+## Works on day one
+
+Any note with a `## Open questions` section appears immediately. No plugin, no log file, no schema required.
 
 ## Related
 
-- [vault/README.md](../vault/README.md) — claim-note structure (Open questions is a recommended section)
-- [`weekly-review`](weekly-review.md) — the weekly ritual; open-questions is consulted as-needed for research-direction planning, not as a weekly step
-- [Librarian design summary](../profiles/librarian.md) — the upstream discovery direction is informed by aggregated open questions
+- [explanation/dashboards/contradictions.md](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
+- [how-to-guides/sources/write-a-claim-note.md](../../how-to-guides/sources/write-a-claim-note.md) — where to put open questions in claim notes

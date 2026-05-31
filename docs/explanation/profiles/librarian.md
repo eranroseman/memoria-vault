@@ -1,35 +1,37 @@
+
+# The Librarian
+
+The Librarian is Memoria's intake layer — the profile responsible for deciding what enters the vault. It fetches sources, enriches metadata, extracts PDF text, and proposes draft classifications. Its defining posture is **optimistic-by-default**: when in doubt, include the candidate and propose a classification, letting Verifier and the human do the gatekeeping at filing time.
+
+This posture is a deliberate design choice, not a shortcut. The cost of a missing source is invisible — you don't know what you don't have. The cost of an over-inclusive candidate that gets reviewed and rejected is just one human decision. Given that asymmetry, optimism is the right policy for an intake profile.
+
 ---
-topic: profiles
+
+## What the Librarian is not
+
+**Not a synthesizer.** Librarian curates evidence; Writer composes claims from that evidence. Librarian never writes to `30-synthesis/`. The boundary is firm: curation is about fidelity to source material; synthesis is about argument — different cognitive operations that should not be blurred in a single profile.
+
+**Not the gatekeeper.** Verifier is the system's quality bar. Librarian proposes optimistically; Verifier checks conservatively. The asymmetry between them is the design — two profiles with opposing postures produce better outcomes than one profile trying to be both.
+
+**Not Mapper.** Librarian and Mapper share retrieval tooling but face opposite directions: Librarian reaches outward to new sources; Mapper maps what already exists in the corpus. Giving them the same tooling without the same mission keeps the distinction sharp.
+
+**Not autonomous about classification.** The `_proposed_classification` block Librarian writes lives in an HTML comment — invisible until the human or Verifier reviews it. This is not a limitation; it's what makes optimistic proposals safe to ship without human attention on every one.
+
 ---
 
-# Librarian — design summary
+## Why it's designed this way
 
-**Runtime contract.** Full prompt and operational details live at `.memoria/profiles/memoria-librarian/SOUL.md` in the starter vault.
+**One card per source, not one card per batch.** Librarian's unit of work is the source, not the batch. A 30-paper import produces 30 cards. This keeps retries scoped (one broken PDF doesn't fail the batch), audit entries clean, and policy decisions atomic. Batching might feel efficient but it hides failures and makes provenance tracing harder.
 
-## Mission
+**Mostly deterministic, one LLM step.** Citation graph walks, metadata enrichment, PDF extraction, classification rule dispatch — all deterministic. The only LLM step is composing the relevance description when surfacing candidates for the human. This keeps costs proportionate to a high-volume profile and makes most of Librarian's behavior reproducible and auditable.
 
-Librarian is the system's intake layer — the profile that decides what enters the vault. It fetches sources, enriches metadata, extracts PDFs, and proposes draft classifications. The defining trait is **optimistic-by-default**: when in doubt, Librarian includes the candidate and proposes the classification, letting Verifier and the human do the gatekeeping at filing time. This is intentional — the cost of a missing source is invisible (you don't know what you don't have), while the cost of a candidate that gets reviewed and rejected is just one human decision.
+**Highest external API surface in the system.** Librarian is the only profile that regularly calls OpenAlex, Semantic Scholar, Crossref, PubMed, and Unpaywall. This concentration is intentional: isolating all external API calls in one profile makes the external surface visible, auditable, and controllable. The lane policy requires each skill to declare its API usage explicitly.
 
-## What this profile is not
-
-- **Not a synthesizer.** Librarian curates evidence; Writer composes claims from that evidence. Librarian never writes to `30-synthesis/01-claims/` or `30-synthesis/02-reference/`.
-- **Not the gatekeeper.** Verifier is the system's quality bar — Librarian proposes optimistically, Verifier checks conservatively. The asymmetry is the design.
-- **Not Mapper.** Same retrieval tooling (`qmd`), opposite direction — Librarian reaches outward to new sources, Mapper inward to the existing corpus (see [Profile boundaries](README.md#profile-boundaries)).
-- **Not autonomous about classification.** The `_proposed_classification` block Librarian writes is *proposal*, not fact. It lives in an HTML comment so it's invisible until the human or Verifier promotes it.
-
-## Design decisions
-
-- **Optimistic vs conservative classification.** Librarian errs toward proposing classifications even when uncertain. The HTML-commented `_proposed_classification` block makes proposals cheap to ignore — humans see them only when they choose to review.
-- **Mostly-deterministic core with one LLM step.** Citation graph walks (OpenAlex), metadata enrichment (Crossref / Unpaywall / PubMed), PDF extraction (Marker), classification rule dispatch — all deterministic. The only LLM step is composing the candidate-note relevance description when surfacing to the human. Keeps the cost surface small relative to the volume of work Librarian does.
-- **Highest external API surface in the system.** Librarian is the only profile that talks to OpenAlex, Semantic Scholar, Crossref, PubMed, and Unpaywall regularly. Its lane-override gates external API calls via `external_api_policy: explicit_only`, requiring each skill to declare its API usage explicitly.
-- **Ingest is one card per source, not one card per batch.** Librarian's unit of work is the source. A 30-paper ingest produces 30 cards. This keeps retries scoped (one broken PDF doesn't fail the batch), audit entries clean (one source = one trace), and policy decisions atomic.
-
-## Permissions and commands
-
-Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (full command list, allowed/disallowed folders, exit conditions) lives in the SOUL.md.
+---
 
 ## Related
 
-- Workflows: [ingest](../../how-to/workflows/upstream/ingest.md), [find](../../how-to/workflows/upstream/find.md), [classify](../../how-to/workflows/upstream/classify.md), [zotero-capture](../../how-to/workflows/upstream/zotero-capture.md)
-- ADRs: [19 pre-ingest screening](../../project/decisions/19-pre-ingest-screening.md), [17 retriever-scout profile](../../project/decisions/17-retriever-scout-profile.md), [21 shared candidate frontmatter](../../project/decisions/21-shared-candidate-frontmatter.md)
-- Method class: [architecture/why-computational-methods.md](../architecture/why-computational-methods.md) — Librarian is on the hybrid side, with deterministic enrichment and an LLM-required classification-proposal step.
+- The Librarian's opposing counterpart on posture: [Verifier](verifier.md)
+- Directional counterpart on retrieval: [Mapper](mapper.md)
+- Workflows the Librarian drives: [capture and ingest](../../how-to-guides/sources/capture-and-ingest.md), [find new sources](../../how-to-guides/sources/find-new-sources.md)
+- Why intake is separated from synthesis: [why specialist profiles](../architecture/why-specialist-profiles.md)

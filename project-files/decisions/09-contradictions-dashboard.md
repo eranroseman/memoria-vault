@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-At low claim-note density the human holds conflicts in their head; as claims accumulate across projects and MOCs, contradictions hide in the long tail — two papers years apart, in different MOCs, never read side by side. A dashboard that surfaces "claims I've filed that disagree with each other" is a high-value synthesis starting point. With [ADR-9](09-typed-relations-frontmatter.md) now adopting the `relations:` namespace (including `contradicts`), the data the dashboard needs exists.
+At low claim-note density the human holds conflicts in their head; as claims accumulate across projects and MOCs, contradictions hide in the long tail — two papers years apart, in different MOCs, never read side by side. A dashboard that surfaces "claims I've filed that disagree with each other" is a high-value synthesis starting point. With [ADR-8](08-typed-relations-frontmatter.md) now adopting the `relations:` namespace (including `contradicts`), the data the dashboard needs exists.
 
 ## Decision
 
@@ -23,7 +23,7 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 - Contradictions become queryable instead of held in memory — the synthesis value the dashboard exists for.
 - v1 is only as complete as the human's `contradicts` links; until those are filed the dashboard is sparse. That day-one emptiness is the signal that tells you whether the NLI proposer is worth building — expansion-threshold discipline.
-- Adds one dashboard design summary plus a runtime Dataview page; consumes ADR-9's `relations.contradicts`. No new judgment surface and no LLM in the rollup.
+- Adds one dashboard design summary plus a runtime Dataview page; consumes ADR-8's `relations.contradicts`. No new judgment surface and no LLM in the rollup.
 
 ## Alternatives considered
 
@@ -33,7 +33,7 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 ## Related
 
-- **Depends on:** [ADR-9 typed relations](09-typed-relations-frontmatter.md) (supplies `relations.contradicts`) — now adopted.
+- **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies `relations.contradicts`) — now adopted.
 - **Files affected:** [dashboards/contradictions.md](../../explanation/dashboards/contradictions.md) (new), [dashboards/README.md](../../explanation/dashboards/README.md) (index).
 - **Future proposer:** [future-directions §NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection) — the deterministic NLI candidate-generation engine that populates v2.
-- **Related decisions:** [ADR-22 claim supersession](22-claim-supersession.md) (supersession is the temporal complement to contradiction).
+- **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

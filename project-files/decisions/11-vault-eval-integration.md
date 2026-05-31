@@ -46,5 +46,5 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 
 - **Workflows affected:** [Verify](../../how-to/workflows/downstream/verify.md) (the eval reuses `cite-check`); the maintenance/`lint` surface (the Linter scores + reports).
 - **Files affected:** [roadmap/evaluation.md](../roadmap/evaluation.md), [architecture/on-disk-layout.md](../../explanation/architecture/on-disk-layout.md) (`00-meta/05-eval/`, `00-meta/08-metrics/eval/`), the Linter's `M-detectors.md` and a dashboard (in the starter vault).
-- **Related decisions / Depends on:** [ADR-22 claim supersession](22-claim-supersession.md) (the drift gold tasks exercise its FAMA check); [ADR-16 contradictions dashboard](16-contradictions-dashboard.md) and [ADR-9 typed relations](09-typed-relations-frontmatter.md) (shared observability lineage).
+- **Related decisions / Depends on:** [ADR-10 claim supersession](10-claim-supersession.md) (the drift gold tasks exercise its FAMA check); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) and [ADR-8 typed relations](08-typed-relations-frontmatter.md) (shared observability lineage).
 - **Source discussion:** [roadmap/evaluation.md](../roadmap/evaluation.md) (Observability + Integration); the `vault-eval` scaffold.

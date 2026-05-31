@@ -1,33 +1,39 @@
----
-topic: dashboards
----
+# `drift-watch` dashboard
 
-# `drift-watch` — design summary
+Surfaces the Linter's eight structural-detector findings as one consolidated view. Open it when something feels wrong but the system looks clean — a lint pass came back clear yet things still seem off. The verdict band at the top (PASS / REVIEW / FAIL) is the headline; the per-detector findings below are the diagnosis.
 
-**Runtime artifact.** Ships at `00-meta/01-dashboards/drift-watch.md` in the [starter vault](https://github.com/eranroseman/memoria-vault) and runs in Obsidian via Dataview; the runtime queries live there. This page covers the design role.
+## What it shows
 
-## Mission
+The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight M-detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
 
-Surface the Linter's eight structural-detector findings as one consolidated view. Each detector catches a specific kind of silent drift the human wouldn't otherwise notice. This is the dashboard the human opens when something feels off — the latest lint pass came back clean but the system still seems wrong. The verdict band (PASS / REVIEW / FAIL) at the top is the headline; the per-detector findings below are the diagnosis.
+**Verdict band:**
 
-## What this dashboard is not
+- `PASS` — no HIGH or CRITICAL findings
+- `REVIEW` — MEDIUM findings present, no HIGH
+- `FAIL` — any HIGH or CRITICAL finding; scheduled work pauses until resolved
 
-- **Not [`audit-log`](audit-log.md).** Audit-log shows policy MCP write decisions (per attempted write); drift-watch shows structural-detector findings (per lint pass). Different cadence, different abstraction layer.
-- **Not actionable on its own.** Every finding links back to the [Linter SOUL.md and M-detectors.md](../profiles/linter.md) in the starter vault; the remediation lives there, not here. This dashboard surfaces *which* drift, not *how to fix*.
-- **Not for data-hygiene checks.** Orphan notes, stale enrichment, broken wikilinks are surfaced by [`weekly-review`](weekly-review.md) and the lint report itself, not here. M-detectors are reserved for structural drift between vault source, deployed Hermes profiles, and the human's working vault state.
-- **Not claim-staleness / FAMA exposure.** Drift-watch is *structural / config* drift (source vs. deployed profile vs. working vault), not *claim validity*. A current claim a newer one superseded (`superseded_by`) is a correctness signal tracked separately — see [success-metrics.md](../../project/roadmap/success-metrics.md) (FAMA exposure) and [ADR-22](../../project/decisions/22-claim-supersession.md) — not on this dashboard.
+Schema migration progress also appears here — per-template `schema_version` rollups (e.g., "127 notes still on schema v1") share the dashboard because they represent related drift surfaces.
 
-## Design decisions
+## What it is not
 
-- **When to open.** Weekly review (Friday ritual); after accepting a plugin upgrade; after editing a profile's SOUL.md or a lane-override file and re-running `install.ps1`; when an audit-log anomaly suggests a configuration drift.
-- **Verdict band gates scheduled work.** Each lint pass produces one verdict (PASS / REVIEW / FAIL). FAIL pauses scheduled work (the discovery loop, batch enrichment, the Linter's next sweep) until resolved. This is the design parallel to [`fleet-health`](fleet-health.md)'s trust score — operational vs structural rollups, same epistemic discipline.
-- **Schema migration progress lives here too.** Per-template `schema_version` rollups (e.g., "127 notes still on v1") share the dashboard because they're related drift surfaces, even though schema-version-mismatch isn't an M-rule by design (data-hygiene check, not structural).
-- **Graceful degradation.** Until the Linter is implemented end-to-end and writing to `00-meta/02-logs/lint-findings.jsonl`, this dashboard is empty.
+**Not audit-log.** The audit log records per-write policy MCP decisions. Drift-watch records per-lint-pass structural findings. Different cadence, different layer.
+
+**Not fleet-health.** Fleet-health is operational (cost, latency, success rate). Drift-watch is structural (source-vs-deployed-profile-vs-working-vault alignment). They are complementary: verdict band is the structural headline; trust score is the operational headline.
+
+**Not for data hygiene.** Orphan notes, stale enrichment, and broken wikilinks surface in weekly-review and the lint report, not here. The M-detectors are reserved for structural drift between vault source, deployed Hermes profiles, and working vault state — the "silent" failures the human wouldn't notice by reading content.
+
+## When drift-watch becomes relevant
+
+Drift-watch is most useful after changes that could desynchronize the working vault from the deployed configuration: plugin upgrades, edits to profile `SOUL.md` files or lane-override files, or any event that appears in the audit log as an anomaly. The M-detectors exist precisely because these desynchronizations are invisible at the content level — the vault looks clean because the content is unchanged, but the structural alignment between source, deployed profiles, and working vault has shifted.
+
+The Friday weekly review includes a drift-watch pass because a week of ordinary operation also accumulates small drift signals that are not individually urgent but benefit from regular review.
+
+## Before it has real data
+
+Until the Linter is running end-to-end and writing to `00-meta/02-logs/lint-findings.jsonl`, this dashboard shows a placeholder. Daily-health shows the last-24h HIGH and CRITICAL findings (a filtered subset) once the Linter is active.
 
 ## Related
 
-- [Linter design summary](../profiles/linter.md) — the agent that produces these findings; the M-detector specs (`M-detectors.md`) live alongside its SOUL.md in the starter vault
-- [`audit-log`](audit-log.md) — per-decision forensics layer below this one
-- [`fleet-health`](fleet-health.md) — operational health complement to structural verdict band
-- [glossary.md](../../reference/glossary.md#observability-and-verdicts) — verdict-band (PASS / REVIEW / FAIL) and drift definitions
-- [Daily Health](daily-health.md) — daily glance shows last-24h HIGH/CRITICAL findings (filtered subset of this dashboard)
+- [explanation/profiles/linter.md](../profiles/linter.md) — the eight M-detectors and what each catches
+- [reference/profiles.md](../../reference/profiles.md#linter-eight-m-detectors) — M-detector severity table
+- [explanation/dashboards/audit-log.md](audit-log.md) — per-decision forensics layer below structural drift
