@@ -30,7 +30,7 @@ Verifier executes `cite-check`; human decides per claim; gap cards become Librar
 
 ## Command
 
-Auto-fired by git hook; manual trigger via `hermes -p memoria-verifier run cite-check --draft <draft-path>`.
+Auto-fired by git hook; manual trigger in a `memoria-verifier` session (`hermes -p memoria-verifier chat -s cite-check`): `/cite-check --draft <draft-path>`.
 
 ## Why verify is a stage instead of part of export
 

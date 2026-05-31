@@ -35,7 +35,9 @@ Canvas is the spatial layer between synthesis and writing. It is an argument map
 **4. Build the outline.** Once the spatial arrangement is stable, write the outline directly from Canvas groupings. Either by hand or:
 
 ```bash
-hermes run draft "outline the argument on {canvas topic}" \
+hermes -p memoria-writer chat -s draft
+# then, in the session:
+/draft "outline the argument on {canvas topic}" \
   --context 30-synthesis/01-claims/{note1}.md \
   --context 30-synthesis/01-claims/{note2}.md
 ```

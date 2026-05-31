@@ -139,7 +139,9 @@ The default `.memoria/lane-overrides/librarian.yaml` allows writes to `10-inbox/
 Pick the citekey you noted in Step 3. Then:
 
 ```bash
-hermes -p memoria-librarian run llm-wiki ingest --source mamykina2010sense
+hermes -p memoria-librarian chat -s llm-wiki
+# then, in the session:
+/llm-wiki ingest --source mamykina2010sense
 ```
 
 Replace `mamykina2010sense` with your actual citekey. Hermes will:
@@ -188,7 +190,7 @@ This is the loop you'll repeat. Each new source goes through this path. Promotio
 Now that one source is in the vault:
 
 1. **Ingest 5–10 more sources.** Drag them into Zotero and run `hermes ... ingest --source <citekey>` for each. Once you have 5+, the `[!brief]` callouts finally have a corpus to compare against.
-2. **Run the Linter once.** `hermes -p memoria-linter run lint --target 20-sources/` will report any structural issues (frontmatter shape, link health). The Linter profile was already installed by `install.ps1` in Step 4 — fill in its `~/.hermes/profiles/memoria-linter/.env` the first time you run it, exactly as you did for the Librarian.
+2. **Run the Linter once.** In a Linter session (`hermes -p memoria-linter chat -s lint`), `/lint --target 20-sources/` will report any structural issues (frontmatter shape, link health). The Linter profile was already installed by `install.ps1` in Step 4 — fill in its `~/.hermes/profiles/memoria-linter/.env` the first time you run it, exactly as you did for the Librarian.
 3. **Open the [weekly-review](../explanation/dashboards/weekly-review.md)** once a week (Friday afternoon is the recommended ritual). Decide what to promote from `10-inbox/` and classify outstanding paper-notes.
 
 When you start to feel the absence of capabilities — comparative scope reports, claim verification, drafting assistance — that's when to add more profiles. The [graduated start path](../project/roadmap/README.md#implementation-paths-graduated-start) describes when each one is worth adding.

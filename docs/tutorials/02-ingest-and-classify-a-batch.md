@@ -16,7 +16,9 @@ By the end you will have 5–10 sources in `20-sources/01-papers/`, each classif
 2. **Ingest each source.** For every citekey:
 
    ```bash
-   hermes -p memoria-librarian run llm-wiki ingest --source <citekey>
+   hermes -p memoria-librarian chat -s llm-wiki
+   # then, in the session:
+   /llm-wiki ingest --source <citekey>
    ```
 
    Each run creates a `paper-note` at `lifecycle: proposed` with `_proposed_classification`, enriches via OpenAlex/Crossref, and (for OA PDFs) extracts text to `90-assets/extracts/`. See [workflows/upstream/ingest.md](../how-to/workflows/upstream/ingest.md).

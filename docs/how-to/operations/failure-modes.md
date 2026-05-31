@@ -14,7 +14,7 @@ Full recipes for the failures most likely to block a core workflow. The [complet
 
 ### 1. Stale `.bib` — ingest can't find the citekey
 
-**Detect.** `hermes -p memoria-librarian run llm-wiki ingest --source {citekey}` returns "citekey not found" or "not in library.bib".
+**Detect.** In a `memoria-librarian` session, `/llm-wiki ingest --source {citekey}` returns "citekey not found" or "not in library.bib".
 
 ```bash
 grep {citekey} .memoria/library.bib   # should return one entry
@@ -34,7 +34,7 @@ git pull --ff-only   # on the agent node
 ```bash
 grep {citekey} .memoria/library.bib            # entry present
 git log --oneline .memoria/library.bib | head -3   # recent commit
-hermes -p memoria-librarian run llm-wiki ingest --source {citekey} --dry-run   # no "not found" error
+hermes -p memoria-librarian chat -s llm-wiki   # then: /llm-wiki ingest --source {citekey} --dry-run → no "not found" error
 ```
 
 ### 2. Missing `_proposed_classification` — classification can't proceed
@@ -44,7 +44,7 @@ hermes -p memoria-librarian run llm-wiki ingest --source {citekey} --dry-run   #
 **Fix.**
 
 ```bash
-hermes -p memoria-librarian run classify --source {citekey}
+hermes -p memoria-librarian chat -s classify   # then: /classify --source {citekey}
 # Re-runs classify on a single note; re-proposes classification from the abstract
 ```
 
@@ -55,8 +55,7 @@ hermes -p memoria-librarian run classify --source {citekey}
 **Detect.** Obsidian Properties panel shows a YAML parse error. Note does not appear in Dataview queries that should include it.
 
 ```bash
-hermes -p memoria-linter run lint --source {citekey} --dry-run
-# Reports YAML structure issues
+hermes -p memoria-linter chat -s lint   # then: /lint --source {citekey} --dry-run — reports YAML structure issues
 ```
 
 **Fix (human).** Open the raw file in an editor outside Obsidian (Obsidian masks the raw YAML). Common causes: unclosed string (`title: "Unterminated`), list indentation error, missing closing `---` delimiter. Fix manually, save.
@@ -64,14 +63,14 @@ hermes -p memoria-linter run lint --source {citekey} --dry-run
 **Verify.**
 
 ```bash
-hermes -p memoria-linter run lint --source {citekey} --dry-run   # no YAML errors reported
+hermes -p memoria-linter chat -s lint   # then: /lint --source {citekey} --dry-run → no YAML errors reported
 ```
 
 In Obsidian: Properties panel shows no error; note appears in a Dataview query (`FROM "20-sources/01-papers" WHERE file.name = "{citekey}"`).
 
 ### 4. Stale `qmd` index — vault search returns empty or outdated results
 
-**Detect.** `hermes -p memoria-writer run draft "known topic"` returns no vault results despite relevant notes existing.
+**Detect.** In a `memoria-writer` session, `/draft "known topic"` returns no vault results despite relevant notes existing.
 
 ```bash
 qmd search "known term" --vault {vault-path}
@@ -90,7 +89,7 @@ qmd embed
 
 ```bash
 qmd search "known term" --vault {vault-path}   # returns expected notes
-hermes -p memoria-writer run draft "known topic"   # returns vault results with citekeys
+hermes -p memoria-writer chat -s draft   # then: /draft "known topic" → returns vault results with citekeys
 ```
 
 ### 5. Profile install drift — deployed `SOUL.md` doesn't match vault source
@@ -102,8 +101,7 @@ hermes -p memoria-writer run draft "known topic"   # returns vault results with 
 **Verify.**
 
 ```bash
-hermes -p memoria-linter run health-report --detectors profile-install-drift
-# No drift reported
+hermes -p memoria-linter chat -s health-report   # then: /health-report --detectors profile-install-drift — no drift reported
 ```
 
 ### 6. Stuck card — claimed but not progressing
@@ -146,7 +144,7 @@ Sorted by severity (most urgent first), then by topic. The **Severity** column u
 | `_proposed_classification` not appearing | MEDIUM | `classify` skill not installed or not in lane's allow list | `hermes skills install classify`; check `.memoria/lane-overrides/librarian.yaml` |
 | Syncthing + `.bib` race condition | MEDIUM | VPS reads `.bib` while Syncthing is mid-transfer | Use Git pull for `.bib` distribution on the `always-on` option, not Syncthing — see [sync-and-coordination.md](../../project/roadmap/sync-and-coordination.md#bib-watcher-always-on-only). |
 | VPS tunnel drops on WSL2 restart | MEDIUM | systemd user service not auto-starting | `systemctl --user enable hermes-tunnel`. |
-| Schema version mismatch in Dataview | MEDIUM | Notes on old schema version | `hermes -p memoria-linter run schema-migrate --dry-run` → review proposed field additions → run without `--dry-run` on a single folder first. |
+| Schema version mismatch in Dataview | MEDIUM | Notes on old schema version | `/schema-migrate --dry-run` (in a `memoria-linter` session) → review proposed field additions → run without `--dry-run` on a single folder first. |
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host or stale `.env` | `always-on` option only (VPS); check `journalctl --user -u hermes-overnight` and the [discovery loop section](../../project/roadmap/future-directions.md#the-discovery-loop). |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) recoverable failures the card auto-escalates to `blocked` — see [kanban-board/README.md retry pattern](../../explanation/kanban-board/README.md#retry-pattern). The human decides whether to revise the payload or archive as infeasible. |
 | Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or a human decision owed on a `blocked` card | See the **Stuck card** recipe (#6) above. |

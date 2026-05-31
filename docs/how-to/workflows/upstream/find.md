@@ -20,12 +20,14 @@ The **Librarian** generates candidates. The human owns the corpus-boundary decis
 
 ## Commands
 
-- `hermes run find --source {citekey} --depth 1`
-- `hermes run find --query "..." --limit 20`
+In a Librarian session (`hermes -p memoria-librarian chat -s find`):
+
+- `/find --source {citekey} --depth 1`
+- `/find --query "..." --limit 20`
 
 ## Example
 
-The Librarian wants forward citations from the Mamykina paper. Runs `hermes run find --source mamykina2010sense --depth 1` → returns 18 candidate citations (papers that cite Mamykina) to `10-inbox/03-candidates/` → human reviews the queue weekly → includes 3 in Zotero (which triggers ingest on the next loop), excludes 15 with reasons like `not-empirical` or `wrong-population`.
+The Librarian wants forward citations from the Mamykina paper. Runs `/find --source mamykina2010sense --depth 1` (in a `memoria-librarian` session) → returns 18 candidate citations (papers that cite Mamykina) to `10-inbox/03-candidates/` → human reviews the queue weekly → includes 3 in Zotero (which triggers ingest on the next loop), excludes 15 with reasons like `not-empirical` or `wrong-population`.
 
 ## Related
 

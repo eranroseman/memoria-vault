@@ -17,7 +17,7 @@ Pre-ingest screening differs from `find` in scale (200â€“5000 candidates vs. 10â
 
 ## Decision
 
-**Adopt when starting a formal scoping or systematic review.** Use [ASReview](../../reference/glossary.md#external-tools-and-standards) for ranking; export existing vault papers as priors via `hermes run export prior-labels`. Keep the two pipelines (find vs. pre-ingest screening) separate but share the candidate frontmatter format from [ADR-21](21-shared-candidate-frontmatter.md).
+**Adopt when starting a formal scoping or systematic review.** Use [ASReview](../../reference/glossary.md#external-tools-and-standards) for ranking; export existing vault papers as priors via the Librarian's `export` skill (`hermes -p memoria-librarian chat -s export`, then `/export prior-labels`). Keep the two pipelines (find vs. pre-ingest screening) separate but share the candidate frontmatter format from [ADR-21](21-shared-candidate-frontmatter.md).
 
 ## Consequences
 

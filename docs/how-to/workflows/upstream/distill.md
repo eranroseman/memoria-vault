@@ -33,7 +33,7 @@ The `socratic-processing` capability used to be documented here as a pattern ins
 
 ## Command
 
-`hermes run draft "..."` (after discussion is done).
+Human-authored — the `Memoria: write claim note` palette command opens the claim template; the Writer assists with prose/links in a session (`hermes -p memoria-writer chat -s draft`). Distill is human-led (see Owners).
 
 ## Limit rule
 
@@ -52,11 +52,11 @@ Claim note titles state the **claim**, not the **topic**. `jitai-timing-accuracy
 
 ## Pre-filing similarity check
 
-Before a new `claim-note` is filed, `hermes -p memoria-verifier run similarity-check` surfaces the top 3 most-similar existing notes. This is a point-of-action duplicate guard — distinct from the monthly retrospective `find-duplicates` sweep. If similarity exceeds the threshold (~0.8), Verifier flags the card with `near-duplicate-candidate`; the human decides to file, merge, or extend. The check is informational, never blocking — see [profiles/verifier.md](../../../explanation/profiles/verifier.md) for the full protocol.
+Before a new `claim-note` is filed, the Verifier's `similarity-check` (`hermes -p memoria-verifier chat -s similarity-check`, then `/similarity-check`) surfaces the top 3 most-similar existing notes. This is a point-of-action duplicate guard — distinct from the monthly retrospective `find-duplicates` sweep. If similarity exceeds the threshold (~0.8), Verifier flags the card with `near-duplicate-candidate`; the human decides to file, merge, or extend. The check is informational, never blocking — see [profiles/verifier.md](../../../explanation/profiles/verifier.md) for the full protocol.
 
 ## Example
 
-Human reads `mamykina2010sense.md` and extracts one durable claim: "JITAI receptivity decreases under high cognitive load." Runs `hermes -p memoria-verifier run similarity-check "receptivity decreases under cognitive load"` → no near-duplicate above 0.8 → creates `30-synthesis/01-claims/receptivity-decreases-under-high-cognitive-load.md` at `maturity: seedling` → cites `[[mamykina2010sense]]` in the body, adds a one-line "Connections" section. Over the next month, two more sources confirm and one contradicts; cross-links accumulate → `maturity` advances to `budding`.
+Human reads `mamykina2010sense.md` and extracts one durable claim: "JITAI receptivity decreases under high cognitive load." Runs `/similarity-check "receptivity decreases under cognitive load"` (in a `memoria-verifier` session) → no near-duplicate above 0.8 → creates `30-synthesis/01-claims/receptivity-decreases-under-high-cognitive-load.md` at `maturity: seedling` → cites `[[mamykina2010sense]]` in the body, adds a one-line "Connections" section. Over the next month, two more sources confirm and one contradicts; cross-links accumulate → `maturity` advances to `budding`.
 
 ## Related
 

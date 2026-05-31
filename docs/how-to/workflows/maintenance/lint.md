@@ -20,7 +20,7 @@ The **Linter** detects and reports. The human approves fixes.
 
 ## Command
 
-`hermes run lint --dry-run`.
+In a Linter session (`hermes -p memoria-linter chat -s lint`): `/lint --dry-run`. (Usually the Linter runs scheduled via `hermes cron`, or on-demand via the `Memoria: lint this note` palette command.)
 
 ## Weekly ritual
 

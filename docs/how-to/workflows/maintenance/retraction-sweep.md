@@ -21,7 +21,7 @@ The **Verifier** detects and flags status changes (mechanical). The **human** de
 
 ## Commands
 
-`hermes -p memoria-verifier run retraction-sweep` (run periodically; the Verifier updates `pub_status` and surfaces affected claims on the contradictions dashboard for human review).
+In a `memoria-verifier` session (`hermes -p memoria-verifier chat -s retraction-sweep`): `/retraction-sweep` (run periodically; the Verifier updates `pub_status` and surfaces affected claims on the contradictions dashboard for human review).
 
 ## Related
 

@@ -21,7 +21,9 @@ The **Verifier** identifies duplicate or near-duplicate notes (via `find-duplica
 ## Command
 
 ```bash
-hermes run find-duplicates --folder 30-synthesis/01-claims --threshold 0.85
+hermes -p memoria-verifier chat -s find-duplicates
+# then, in the session:
+/find-duplicates --folder 30-synthesis/01-claims --threshold 0.85
 ```
 
 ## Example

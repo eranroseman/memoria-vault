@@ -62,11 +62,11 @@ The **Librarian** handles type detection, routing, creation, enrichment, content
 
 ## Command
 
-`hermes -p memoria-librarian run llm-wiki ingest --source {citekey}`.
+In a `memoria-librarian` session (`hermes -p memoria-librarian chat -s llm-wiki`): `/llm-wiki ingest --source {citekey}`.
 
 ## Example
 
-Citekey `mamykina2010sense` now exists in `library.bib`. The Librarian runs `hermes -p memoria-librarian run llm-wiki ingest --source mamykina2010sense` → DOI in `.bib` routes to `20-sources/01-papers/` → creates a note from `paper-note.md` → Marker extracts the PDF to `90-assets/extracts/mamykina2010sense.md` → populates paper-note frontmatter (`extract_path: 90-assets/extracts/mamykina2010sense.md`, `pdf_uri: zotero://open-pdf/library/items/<key>`, `zotero_uri: zotero://select/items/<key>`) → enriches via OpenAlex (citation count, abstract) and PubMed (publication metadata) → proposes `_proposed_classification: { topic: [receptivity-detection], methods: [field-study] }` → writes the OpenAlex ID back to Zotero's `Extra` field → exits at `done` (`review_status: requested`). The human will triage it next.
+Citekey `mamykina2010sense` now exists in `library.bib`. The Librarian runs `/llm-wiki ingest --source mamykina2010sense` (in a `memoria-librarian` session) → DOI in `.bib` routes to `20-sources/01-papers/` → creates a note from `paper-note.md` → Marker extracts the PDF to `90-assets/extracts/mamykina2010sense.md` → populates paper-note frontmatter (`extract_path: 90-assets/extracts/mamykina2010sense.md`, `pdf_uri: zotero://open-pdf/library/items/<key>`, `zotero_uri: zotero://select/items/<key>`) → enriches via OpenAlex (citation count, abstract) and PubMed (publication metadata) → proposes `_proposed_classification: { topic: [receptivity-detection], methods: [field-study] }` → writes the OpenAlex ID back to Zotero's `Extra` field → exits at `done` (`review_status: requested`). The human will triage it next.
 
 ## Related
 

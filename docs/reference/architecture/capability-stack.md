@@ -38,7 +38,7 @@ Hermes-side skills that operate inside the vault via the Obsidian Local REST API
 
 ### Hermes built-in skills
 
-- `llm-wiki` — the umbrella ingest/enrich/classify/draft/lint skill bundle for vault operations. `hermes run llm-wiki ingest --source {citekey}` is the standard entry point.
+- `llm-wiki` — the umbrella ingest/enrich/classify/draft/lint skill bundle for vault operations. Invoked in a Librarian session — `hermes -p memoria-librarian chat -s llm-wiki`, then `/llm-wiki ingest --source {citekey}` — or card-dispatched by the board.
 
 ### REST passthrough — the escape hatch
 

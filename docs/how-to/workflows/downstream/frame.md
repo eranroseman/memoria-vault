@@ -26,8 +26,8 @@ Writer executes `counter-outline` (scratch-only by construction). Socratic execu
 
 ## Commands
 
-- `hermes -p memoria-writer run counter-outline --project <project-name>` for the outlines
-- `hermes -p memoria-socratic chat --command lens-reading --lens <lens-name> --project <project-name>` for the lens readings
+- `hermes -p memoria-writer chat -s counter-outline`, then `/counter-outline --project <project-name>` for the outlines
+- `hermes -p memoria-socratic chat -s lens-reading`, then `/lens <lens-name> --project <project-name>` for the lens readings
 
 ## Why this is a stage and not a pattern inside Write
 

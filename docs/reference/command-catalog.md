@@ -82,6 +82,24 @@ Implementation pattern (same for all): QuickAdd → `open-chat-view` (defaultAge
 
 **Why each lens is its own command rather than one parameterized command.** Memoria's discipline says lens-based reading is *deliberately constrained* — the human picks a specific lens at the start of the session and stays in it, rather than switching mid-conversation. One command per lens makes the choice explicit before the conversation begins. A single parameterized command would invite mid-conversation lens-switching, which muddies whose questions are being asked.
 
+## Invoking skills from the CLI
+
+The commands above are the **palette** surface (the daily default). The same profile work runs from the terminal too — but **there is no `hermes run` subcommand.** A Memoria workflow is a *skill run by a profile*; invoke it three ways:
+
+- **Interactive session** — open the profile with the skill loaded, then drive it with a slash-command:
+
+  ```bash
+  hermes -p memoria-<profile> chat -s <skill>
+  # then, in the session:
+  /<skill> <args>
+  ```
+
+  One-shot (non-interactive): `hermes -p memoria-<profile> chat -s <skill> -q "<task>"`.
+- **Scheduled** — `hermes cron create` runs a profile + skill on a schedule (see [standard-cron-tasks.md](../project/roadmap/standard-cron-tasks.md)).
+- **Board / cards** — `hermes kanban` creates or moves cards; the dispatcher then runs the owning profile.
+
+Throughout the how-tos, a step written as `/<skill> <args>` runs inside such a session. The profile flag `-p` is a global option **before** the subcommand (`hermes -p memoria-librarian chat`).
+
 ## What's deliberately NOT in this catalog
 
 - **Card state management.** Approving, denying, rejecting individual cards happens through inline callout buttons (see [`obsidian-ui/callouts.md`](../explanation/obsidian-ui/callouts.md)) or through the Kanban directly. There's no `Memoria: approve this card` command because card state changes need card context the palette doesn't provide. (Card buttons live in the [`obsidian-ui/callouts.md`](../explanation/obsidian-ui/callouts.md) callouts.)

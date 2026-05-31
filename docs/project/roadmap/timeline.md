@@ -34,7 +34,7 @@ Exit: classification feels routine; claim notes have started to form a graph.
 
 - Complete classification on the full initial corpus.
 - Write claim notes consistently — target **2–3 per week**.
-- Run `hermes run find-duplicates` for the first time — establish the merge routine.
+- Run the `find-duplicates` skill (`hermes -p memoria-verifier chat -s find-duplicates`) for the first time — establish the merge routine.
 - Expand schema beyond MVS where you feel the absence (`pub_status`, `full_text_reviewed`, etc.).
 
 Exit: the claim note layer is dense enough that you start linking across papers.
@@ -44,7 +44,7 @@ Exit: the claim note layer is dense enough that you start linking across papers.
 - Create the **first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking-patterns.md](../../reference/linking-patterns.md#moc-creation-thresholds)).
 - Activate lag metrics in the weekly dashboard (once `triage_completed` is populated).
 - Begin Canvas sessions for chapter planning.
-- Start systematic `hermes run find` for whatever scoping work you have active.
+- Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for whatever scoping work you have active.
 - Add items / entities folders if you're consistently citing tools and people.
 
 Exit: the vault stops being a place you build and starts being a place you write from.

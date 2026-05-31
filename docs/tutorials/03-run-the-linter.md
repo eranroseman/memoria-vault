@@ -16,7 +16,9 @@ By the end you will have run a lint pass over your sources, read the report, and
 2. **Run a dry-run lint over the sources:**
 
    ```bash
-   hermes -p memoria-linter run lint --target 20-sources/ --dry-run
+   hermes -p memoria-linter chat -s lint
+   # then, in the session:
+   /lint --target 20-sources/ --dry-run
    ```
 
    Dry-run is the default — the Linter reports, it does not fix (except the `safe-and-unambiguous` and `authorized-targeted` classes). See [profiles/linter.md](../explanation/profiles/linter.md).
