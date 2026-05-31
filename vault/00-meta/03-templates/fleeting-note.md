@@ -12,7 +12,6 @@ created:
 updated:
 lifecycle: proposed
 source: ""
-tags: []
 schema_version: 1
 ---
 ```

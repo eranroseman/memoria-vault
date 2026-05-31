@@ -31,7 +31,7 @@ The authoritative reference for vault linking discipline: link types, the full r
 ## Required patterns
 
 - **Paper notes** — include `Cites` and `Cited by` sections when relevant, with agent-proposed links reviewed during classification.
-- **Claim notes** — include source links in body text and keep a `Connections` section for meaningful conceptual neighbors.
+- **Claim notes** — record the source notes the claim draws on in the `sources:` frontmatter (`[[paper-note]]`, `[[item-note]]`, or entity links — the source *note*, never a bare citekey), and keep a `Connections` section for meaningful conceptual neighbors.
 - **MOCs** — use frontmatter `moc:` links and keep the MOC body focused on overview, curated entries, and gaps.
 - **Reference notes** — link outward to the core paper notes and claim notes that define the concept, method, or domain.
 

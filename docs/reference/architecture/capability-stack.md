@@ -82,7 +82,7 @@ These are not skills — they are the surrounding ecosystem the agent integrates
 | **Scite** | Citation context (supporting / contrasting / mentioning signals). |
 | **Marker** | PDF full-text extraction (no GROBID needed for this workflow). |
 | **MarkItDown** | Fallback extractor for non-PDF sources. |
-| **MarkDB-Connect** | Obsidian plugin — link Zotero items to vault notes. |
+| **MarkDB-Connect** | Zotero add-on — tags Zotero items that have vault notes (runs in Zotero, not under `.obsidian/plugins/`). |
 | **qmd** | Hybrid BM25 + vector search over the vault. |
 | **Obsidian Local REST API** | Obsidian plugin — exposes the vault to Hermes for read/write. **Distinct from ACP**: REST API is *vault-level* read/write; ACP is *editor-level* agent interface. Complementary — REST API gives Hermes vault access; ACP exposes Hermes to Obsidian / VS Code / Zed agent panes. |
 | **Claude API** | The primary synthesis model. |

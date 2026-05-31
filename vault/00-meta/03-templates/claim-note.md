@@ -12,10 +12,9 @@ schema_version: 1
 created:
 updated:
 maturity: seedling   # seedling → budding → evergreen
-sources: []
+sources: []          # [[source notes]] this claim draws on — paper-note / item-note / entity in 20-sources/ (the source note, not a citekey)
 moc: []
 projects: []
-tags: []
 lifecycle: current
 superseded_by:       # [[newer-claim]] once overturned; currency derives from this field (ADR-22). Human-set.
 relations:           # opt-in typed associative links (ADR-9). Human-set; the agent proposes only.
