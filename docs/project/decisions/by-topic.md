@@ -20,6 +20,8 @@ Note types, frontmatter, naming, and the controlled vocabularies that govern the
 - [18-evidence-quality-fields.md](18-evidence-quality-fields.md) — Evidence quality fields layer · proposed
 - [21-shared-candidate-frontmatter.md](21-shared-candidate-frontmatter.md) — Shared candidate frontmatter format · proposed
 - [22-claim-supersession.md](22-claim-supersession.md) — Claim supersession relation · **accepted**
+- [28-frozen-evaluator-deferred.md](28-frozen-evaluator-deferred.md) — Frozen-evaluator acceptance checklists (deferred) · proposed
+- [30-project-auto-classification.md](30-project-auto-classification.md) — Project-membership auto-proposal from a topic hint · **accepted**
 
 ## Workflows
 
@@ -31,6 +33,8 @@ Upstream / downstream / maintenance pipelines and their stage-specific design ch
 - [12-systematic-review-mode.md](12-systematic-review-mode.md) — Systematic-review mode · proposed
 - [19-pre-ingest-screening.md](19-pre-ingest-screening.md) — Pre-ingest screening layer (PRISMA + ASReview) · proposed
 - [20-dual-rater-workflow.md](20-dual-rater-workflow.md) — Dual-rater workflow for inter-rater reliability · proposed
+- [26-advisor-review-vs-frozen-deliverable.md](26-advisor-review-vs-frozen-deliverable.md) — Advisor-review vs. frozen deliverable · **accepted**
+- [27-ratchet-duplicate-gate.md](27-ratchet-duplicate-gate.md) — Ratchet duplicate gate (deferred) · proposed
 
 ## Profiles
 
@@ -47,6 +51,7 @@ Persistent dashboards and how the human sees board / vault state.
 - [16-contradictions-dashboard.md](16-contradictions-dashboard.md) — Contradictions / tensions dashboard · **accepted**
 - [23-vault-eval-integration.md](23-vault-eval-integration.md) — vault-eval as a maintenance capability · **accepted**
 - [25-homepage-front-door.md](25-homepage-front-door.md) — Homepage front-door note, auto-opened by obsidian-homepage · **accepted**
+- [29-admin-gui-surface.md](29-admin-gui-surface.md) — Admin/forensic GUI surface (deferred — tool too immature) · proposed
 
 ## Plugins & tooling
 

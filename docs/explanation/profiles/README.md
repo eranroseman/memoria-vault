@@ -210,6 +210,23 @@ When a card needs to move between lanes (e.g., from library to verify after inge
 
 Delegation is strongest in profiles that produce derivative artifacts (drafts, code-notes), weakest in profiles whose value depends on independence or non-production.
 
+```text
+Delegation posture — strongest at top. Delegate narrow, temporary subtasks;
+never the role's defining judgment.
+
+  more ┌──────────────────────────────────────────────────────────────────┐
+   ▲   │ Coder      Moderate    helper/lookup + substantive coding to the   │
+   │   │                        external agent; commits stay per-task       │
+   │   │ Writer     Supportive  facts / cleanup; synthesis stays local      │
+   │   │ Librarian  Targeted    narrow enrichment / source lookups;         │
+   │   │                        keeps discovery ownership                    │
+   │   │ Mapper     Low         mechanical retrieval (qmd); keeps the map    │
+   │   │ Verifier   Very low    delegation weakens verification independence │
+   │   │ Linter     Lowest      does not spawn work; may request context    │
+   ▼   │ Socratic   None        can't write; questions are the whole product│
+  less └──────────────────────────────────────────────────────────────────┘
+```
+
 | Profile | Delegation posture |
 | --- | --- |
 | Librarian | **Targeted.** Delegates narrow enrichment or source lookups; keeps discovery ownership. |

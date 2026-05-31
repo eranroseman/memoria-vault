@@ -51,6 +51,19 @@ The two agent namespaces are stored as HTML-comment blocks in the note body (so 
 
 Both blocks are agent-owned (see the namespace table above): the agent writes them, the human promotes from them, and the agent never writes the main YAML directly. **No HTML-comment-stripping Obsidian Linter plugin rule may run** — it would silently delete these blocks (see [obsidian-plugins/reference/obsidian-linter.md](../project/evaluated-alternatives/obsidian-linter.md)).
 
+### Enrichment refresh cadence
+
+How often the Librarian re-enriches `_enrichment` fields, by source type, and what typically changes. The Linter's stale-enrichment check reads `enriched_date` against these per-type intervals (sharper than a single generic "> 90 days" default):
+
+| Source type | Re-enrich every | What changes |
+| --- | --- | --- |
+| Article | 180 days | citation count, related papers |
+| Preprint | 30 days | may have been published |
+| Person | 90 days | new papers, affiliation changes |
+| Organization | 365 days | rarely changes |
+| Repository | 30 days | stars, issues, releases |
+| Package | 30 days | new versions, deprecation |
+
 ## Rules
 
 - **`type` is universal and required.** Every note has a `type` field whose value is one of the 15 type names. Missing or unknown `type` is a schema-hygiene flag for the Linter.

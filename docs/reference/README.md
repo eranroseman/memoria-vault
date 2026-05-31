@@ -10,6 +10,7 @@ Lookup material: exact fields, values, commands, and schemas, with no narrative.
 
 - [glossary.md](glossary.md) — cross-cutting terms, grouped by domain, with a disambiguations section.
 - [frontmatter-schema.md](frontmatter-schema.md) — YAML frontmatter fields and controlled vocabularies.
+- [vocabulary-example.md](vocabulary-example.md) — a worked HCI/digital-health vocabulary for the open `topic` / `study_design` / `methods` fields (an example to copy-and-edit, not a default).
 - [note-types.md](note-types.md) — the fifteen note types and their lifecycles.
 - [linking-patterns.md](linking-patterns.md) — wikilink, typed-relation, and MOC conventions.
 - [on-disk-layout.md](on-disk-layout.md) — the vault folder tree and what each folder holds.

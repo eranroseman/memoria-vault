@@ -1,0 +1,24 @@
+# project-hints.yaml — optional, per-project topic hints for the Librarian's classify step.
+#
+# Copy this file to `.memoria/project-hints.yaml` and edit it for your own projects.
+# Absent file = project membership is fully manual (no agent proposal). See ADR-30.
+#
+# How it's used: at classify time the Librarian scores a paper's proposed `topic` values
+# against each project's `primary_topics` (simple overlap) and proposes the best-matching
+# project(s) in the note's `_proposed_classification` block. The human confirms or corrects
+# the `projects` value at triage, exactly like every other proposed field.
+#
+# A hint is a HINT, not a controlled vocabulary — edit `primary_topics` freely. Do NOT add
+# `expected_study_designs` / `expected_methods` matrices here (ADR-30 rejected them as
+# drift-prone; study_design and methods are proposed independently).
+
+projects:
+  - id: phd-dissertation
+    description: >-
+      Replace with your project's one-line scope. Example: HCI + digital health — JITAI,
+      receptivity, health coaching, equity, LLM mHealth.
+    primary_topics: [jitai, receptivity-detection, health-coaching, mhealth, sensemaking, health-equity]
+
+  - id: scoping-review
+    description: Replace with the actual scope of this project.
+    primary_topics: [jitai, mhealth]

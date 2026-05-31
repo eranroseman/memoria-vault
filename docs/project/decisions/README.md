@@ -46,10 +46,15 @@ The **Resolution / location** column records the one-line outcome for every deci
 | 23 | [vault-eval as a maintenance capability](23-vault-eval-integration.md) | `accepted` (2026-05) | Diagnostic eval from existing machinery: board-dispatched `eval` card, non-committing Policy-MCP writes, Linter scoring; gold tasks in `00-meta/05-eval/`, results in `00-meta/08-metrics/eval/`. Diagnostic, not gating. |
 | 24 | [obsidian-linter is reference-only](24-obsidian-linter-reference-only.md) | `accepted` (2026-05) | obsidian-linter is documented but not installed/recommended — a GUI on-save formatter writes outside the Policy-MCP audit trail and would be a second frontmatter authority; the Memoria Linter + markdownlint own this. Moved `recommended/` → `reference/`. |
 | 25 | [Homepage front-door note](25-homepage-front-door.md) | `accepted` (2026-05) | Ship a vault-root `Home.md` Dataview front door, auto-opened by obsidian-homepage (`recommended/`, view-only). A launchpad that surfaces the dashboards; obsidian-startpage rejected (plugin-rendered, not a note). |
+| 26 | [Advisor-review vs. frozen deliverable](26-advisor-review-vs-frozen-deliverable.md) | `accepted` (2026-05) | Advisor-review exports are live-citation working artifacts, **outside** the frozen-deliverable contract; routes + failure modes in [export-targets.md](../../how-to/workflows/downstream/export-targets.md). |
+| 27 | [Ratchet duplicate gate](27-ratchet-duplicate-gate.md) | `proposed` | Defer. A `qmd` similarity gate at synthesis-filing time; revisit when a live `qmd` index and a dense synthesis corpus exist. Pairs with ADR-28. |
+| 28 | [Frozen-evaluator checklist](28-frozen-evaluator-deferred.md) | `proposed` | Defer. Per-note-type acceptance checklists; revisit at 50+ claim-notes. Pairs with ADR-27. |
+| 29 | [Admin/forensic GUI surface](29-admin-gui-surface.md) | `proposed` | Defer/watch. The admin-forensic gap is real, but `hermes-workspace` (v0.1.0, single-contributor) is too immature to adopt or document; the CLI fills the gap. |
+| 30 | [Project-membership auto-proposal](30-project-auto-classification.md) | `accepted` (2026-05) | Librarian proposes `projects` from a lightweight per-project `primary_topics` hint (`.memoria/project-hints.yaml`), human-confirmed; the full corpus-profile matrix is rejected. |
 
 ## Numbering gaps and the graveyard
 
-The index above is gap-free — every number 1–25 has a row — but the *directory* is not, and a reader browsing the files will notice the missing numbers. They are accounted for here so the gaps read as intentional, not as lost work:
+The index above is gap-free — every number 1–30 has a row — but the *directory* is not, and a reader browsing the files will notice the missing numbers. They are accounted for here so the gaps read as intentional, not as lost work:
 
 - **No `01.md`, `08.md`, `11.md`.** ADRs 1, 8, and 11 are recorded **index-only**: `accepted`, but small enough to resolve in the Resolution column without a standalone file. The missing files are deliberate.
 - **Retired ADRs keep their files.** ADRs 5, 7, and 13 reached `retired` (withdrawn without replacement) but their files remain as history — see the `retired` rows above and the grouped view in [by-topic.md](by-topic.md).

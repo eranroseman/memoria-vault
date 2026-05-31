@@ -99,7 +99,7 @@ nightly (2am):
 
 - **[the always-on deployment option](deployment-options.md) (Syncthing + VPS)** — sleep-prone WSL2 won't survive the cron schedule.
 - `research-directions.md` actively maintained.
-- `00-meta/screening-protocol.md` or equivalent inclusion criteria — without explicit criteria, the inbox floods with low-quality candidates and the morning triage time explodes.
+- `00-meta/04-reference/screening-protocol.md` or equivalent inclusion criteria — without explicit criteria, the inbox floods with low-quality candidates and the morning triage time explodes.
 - Two weeks of tuning before the loop is trustworthy. Expect the first nightly batches to require aggressive pruning.
 - **Model routing configured** so embed / classify / quick-summary calls go to a cheap model — see [architecture/capability-stack.md](../../reference/architecture/capability-stack.md#model-routing-synthesis-on-claude-cheap-tasks-elsewhere). Without this the cost budget above blows out 3–5×.
 

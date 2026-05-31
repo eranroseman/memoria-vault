@@ -78,6 +78,20 @@ Used in: `ingest`, `enrich`, `retraction-check`, `find`.
 
 Cost: per-call API budget. Determinism: depends on the API (most are stable, some return ranked results that drift).
 
+### Citation-format parsers
+
+Every citation workflow rests on three to five mature parsers. **Do not hand-roll any of them** — encoding, cross-referencing, and CSL edge cases are deep, and these libraries already cover them. Used in `ingest`, `cite-check`, and export.
+
+| Format | Library | Note |
+| --- | --- | --- |
+| BibTeX / BibLaTeX | `bibtexparser` ≥ 2.0 | handles encoding, special chars, cross-refs |
+| RIS | `rispy` | round-trip; used internally by ASReview |
+| CSL-JSON | `citeproc-py` + `citeproc-py-styles` | CSL 1.0.1; plain/RST/HTML out |
+| JATS XML (publisher) | `pubmed-parser` or `lxml` | PMC + most publishers |
+| interchange / convert | `pypandoc` | the swiss-army knife between all the above + Markdown |
+
+**Evaluated, not yet adopted** (reach for them when a felt need fires — see [hermes-capability-adoption.md](../../project/roadmap/hermes-capability-adoption.md)): **Docling** (IBM/Linux Foundation; `docling-mcp`) as a single-tool PDF→Markdown option for table/figure-heavy corpora alongside the chosen Marker; **Inciteful** for citation-network discovery complementing OpenAlex snowballing; and identifier-reconciliation helpers (`habanero.content_negotiation`, `alex-mcp`, OpenRefine + ORCID/ROR) as the deterministic substrate behind the deferred [record-linkage](../../project/roadmap/future-directions.md#record-linkage-for-entity-resolution) idea.
+
 ### Natural-language inference (NLI) — *candidate, not yet shipped*
 
 For: detecting whether two claims contradict, entail, or are neutral to each other — surfacing candidate contradictions (and agreements) for the human to confirm. The classical replacement for "ask the LLM whether these claims conflict."
