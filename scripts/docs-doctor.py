@@ -55,6 +55,18 @@ def check_readmes(root: Path, errors: list[str]) -> None:
             errors.append(f"{d}/: missing README.md (folder landing page)")
 
 
+def check_thin_folders(root: Path, warnings: list[str]) -> None:
+    # Advisory: flag folders thin enough to consider flattening into their parent.
+    # Does not affect exit code — the human decides whether to act.
+    for d in sorted(p for p in root.rglob("*") if p.is_dir()):
+        md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
+        has_readme = (d / "README.md").exists()
+        if len(md_files) == 1 and not has_readme:
+            warnings.append(f"{d}/: single-file folder (no README) — consider flattening into parent")
+        elif len(md_files) == 1 and has_readme:
+            warnings.append(f"{d}/: README + one file — consider flattening into parent")
+
+
 def check_frontmatter(md: Path, errors: list[str]) -> None:
     m = FRONTMATTER_RE.match(read(md))
     if not m:
@@ -154,8 +166,10 @@ def main() -> int:
         return 1
 
     errors: list[str] = []
+    warnings: list[str] = []
     doc_md_names = {p.name.lower() for p in root.rglob("*.md")}
     check_readmes(root, errors)
+    check_thin_folders(root, warnings)
     for md in sorted(root.rglob("*.md")):
         check_frontmatter(md, errors)
         check_links(md, errors)
@@ -172,9 +186,15 @@ def main() -> int:
         print(f"docs-doctor: {len(errors)} issue(s)\n")
         for e in errors:
             print(f"  ✗ {e}")
-        return 1
-    print("docs-doctor: clean ✓")
-    return 0
+    else:
+        print("docs-doctor: clean ✓")
+
+    if warnings:
+        print(f"\ndocs-doctor: {len(warnings)} advisory warning(s)")
+        for w in warnings:
+            print(f"  ⚠ {w}")
+
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
