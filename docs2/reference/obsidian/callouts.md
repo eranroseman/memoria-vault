@@ -61,4 +61,4 @@ The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over tim
 
 - Callout Manager plugin: [reference/plugins.md](../plugins.md)
 - Fleet-health dashboard: [explanation/dashboards/](../../explanation/dashboards/)
-- Computational toolbox (scoring functions): [reference/architecture/computational-toolbox.md](../architecture/computational-toolbox.md)
+- Computational toolbox (scoring functions): [reference/computational-toolbox.md](../computational-toolbox.md)

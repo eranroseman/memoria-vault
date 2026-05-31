@@ -18,5 +18,7 @@ Lookup material for Memoria — fields, values, commands, schemas, folder paths.
 | [integrations.md](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
 | [ingest.md](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [export.md](export.md) | Citation states, export routes, editor comparison, deliverable targets |
+| [computational-toolbox.md](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [failure-modes.md](failure-modes.md) | All failure modes by severity: symptom, cause, fix |
 | [glossary.md](glossary.md) | Term definitions, alphabetical |
+| [obsidian/](obsidian/) | Callout types, status-line format, workspace definitions |

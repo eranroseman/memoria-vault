@@ -51,5 +51,5 @@ Without the split, every cross-session question collapses into "store it in memo
 
 - Hermes native memory: [hermes-agent.nousresearch.com/docs/user-guide/features/memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)
 - Board handoff payload (board memory travels here): [explanation/kanban-board/card-schema.md](../kanban-board/card-schema.md)
-- Audit log format: [reference/architecture/policy-mcp.md](../../reference/architecture/policy-mcp.md)
+- Audit log format: [reference/policy.md](../../reference/policy.md)
 - Architecture overview: [explanation/architecture/README.md](README.md)

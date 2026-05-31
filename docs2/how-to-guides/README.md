@@ -41,9 +41,10 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 
 | Guide | What it covers |
 | --- | --- |
-| [CLI interface](hermes/cli-interface.md) | Profile management, kanban, skills, and cron commands |
 | [Chat with Hermes](hermes/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
 | [Configure a profile](hermes/configuration.md) | Model routing, write permissions, skills, API keys |
+
+Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [reference/hermes-admin.md](../reference/hermes-admin.md).
 
 ### Sources (upstream)
 

@@ -74,7 +74,7 @@ Or run the session normally and copy the output — the profile logs session out
 
 ## Related
 
-- CLI command reference: [cli-interface.md](cli-interface.md)
+- Administrative CLI commands (profile, kanban, skills, cron): [reference/hermes-admin.md](../../reference/hermes-admin.md)
 - Profile configuration: [configuration.md](configuration.md)
 - Ingest: [capture-and-ingest.md](../sources/capture-and-ingest.md)
 - Lint: [run-the-linter.md](../maintenance/run-the-linter.md)

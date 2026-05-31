@@ -4,7 +4,7 @@ topic: reference
 
 # Policy MCP
 
-The policy MCP sits between Hermes profiles and the vault. It intercepts every vault write, evaluates it against the requesting profile's declared permissions, and returns one of four decisions before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md).
+The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md).
 
 ---
 
@@ -20,40 +20,39 @@ Hermes profile
       → filesystem execution or diff report
 ```
 
+Every request carries complete identity and task metadata. `task_id` is required — the MCP cannot ask the worker mid-decision which task it is running.
+
 ---
 
 ## Action vocabulary
 
-| Action | What it covers |
+| Action | Default disposition |
 |---|---|
-| `read` | Any vault file read |
-| `write` | Create or overwrite a file |
-| `append` | Append to an existing file |
-| `move` | Relocate a file within the vault |
-| `delete` | Remove a file |
-| `mkdir` | Create a directory |
-| `auto_fix` | Structural repair (separate class — see auto-fix policy below) |
-| `report` | Emit a dry-run diff without touching the filesystem |
+| `read` | `allow` within `policy.allow.read`; `allow_with_log` for review-gated zones and cross-zone reads. |
+| `write` | Governed by `policy.allow.write`. `dry_run` in review-gated zones. |
+| `append` | `allow` for audit and session logs within the lane's own paths. |
+| `move` | `allow_with_log` same-zone; `dry_run` cross-zone unless `flags.explicit_authorization`. |
+| `delete` | `deny` by default for all profiles. Requires `flags.explicit_authorization` + `allow_with_log`. |
+| `mkdir` | `allow` within `routing.write_scope`. |
+| `auto_fix` | Class-gated via `flags.class` (Linter only — see [Auto-fix policy](#auto-fix-policy)). |
+| `report` | Always `allow` within the worker's lane. |
 
 ---
 
 ## Decision values
 
-| Decision | Meaning |
-|---|---|
-| `allow` | Action proceeds; no log entry required unless `log_required` is set. |
-| `allow_with_log` | Action proceeds; a structured audit entry is written to `00-meta/02-logs/audit.jsonl`. |
-| `deny` | Action blocked; a `deny` entry is written; the agent receives an error response. |
-| `dry_run` | Action is converted to a `report` — the diff is computed and returned, but no file is written. Used for review-gated zones and Linter structural checks. |
+| Decision | Meaning | Logged? |
+|---|---|---|
+| `allow` | Action proceeds. | Only if lane's `policy.require` includes `audit_log`. |
+| `allow_with_log` | Action proceeds; audit entry mandatory. | Always. |
+| `deny` | Action blocked; worker must escalate or choose a different path. | Always. |
+| `dry_run` | Action logged and reported but not performed; worker escalates via board comment. | Always. |
 
-**Review-gated zones always degrade to `dry_run`** regardless of which profile requests the write and regardless of the profile's declared permissions:
+**Two rules override lane configuration entirely:**
 
-- `30-synthesis/01-claims/`
-- `30-synthesis/02-reference/`
-- `30-synthesis/03-moc/`
-- `50-deliverables/`
+1. **Review-gated zones are never auto-written.** Writes to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, and `50-deliverables/` degrade to `dry_run` regardless of the lane's `policy.allow` rules. No profile can bypass this. Any command or skill that writes to a review-gated zone or runs `schema-migrate` must default to dry-run.
 
-No profile can bypass this. The Linter's `dry_run` default for all non-trivial fixes uses the same mechanism. Any command or skill that writes to a review-gated zone or runs `schema-migrate` must default to dry-run; `schema-migrate` must never be run without reviewing the diff first.
+2. **Linter auto-fix is class-gated.** When `profile = memoria-linter` and `action = auto_fix`, the MCP requires `flags.class ∈ {safe-and-unambiguous, authorized-targeted}`. All other classes are `deny`.
 
 ---
 
@@ -68,7 +67,8 @@ No profile can bypass this. The Linter's `dry_run` default for all non-trivial f
   "task_id": "TASK-2026-05-31-007",
   "flags": {
     "explicit_authorization": false,
-    "draft_only": true
+    "draft_only": false,
+    "class": null
   }
 }
 ```
@@ -77,11 +77,12 @@ No profile can bypass this. The Linter's `dry_run` default for all non-trivial f
 |---|---|---|
 | `profile` | yes | Must match a known lane-override file. |
 | `action` | yes | One of the action vocabulary values above. |
-| `path` | yes | Relative to vault root. Normalized before evaluation. |
-| `reason` | no | Human-readable intent; written to audit log when present. |
-| `task_id` | no | Board card ID; required for `authorized-targeted` auto-fix class. |
+| `path` | yes | Vault-root-relative, forward slashes, no leading `./`. Normalized before evaluation. |
+| `reason` | no | Short prose for the audit log. |
+| `task_id` | yes | Board card that triggered the action. Required on every request. |
 | `flags.explicit_authorization` | no | Overrides default `dry_run` for specific paths when the card carries `review_status: approved`. |
 | `flags.draft_only` | no | Signals the write is a proposal landing in a working zone, not a canonical write. |
+| `flags.class` | no | Required for `auto_fix` actions (Linter only). |
 
 ---
 
@@ -89,36 +90,24 @@ No profile can bypass this. The Linter's `dry_run` default for all non-trivial f
 
 Allow:
 ```json
-{
-  "decision": "allow_with_log",
-  "policy_rule": "writer.write.workbench",
-  "log_required": true
-}
+{ "decision": "allow_with_log", "policy_rule": "writer.write.workbench", "log_required": true }
 ```
 
 Deny:
 ```json
-{
-  "decision": "deny",
-  "policy_rule": "writer.no-canonical-write",
-  "message": "memoria-writer cannot write to 30-synthesis/01-claims/ — review gate required"
-}
+{ "decision": "deny", "policy_rule": "writer.deny.30-synthesis-claims", "message": "memoria-writer cannot write to 30-synthesis/01-claims/ — review gate required" }
 ```
 
 Dry-run:
 ```json
-{
-  "decision": "dry_run",
-  "policy_rule": "review-gated-zone",
-  "diff": "--- /dev/null\n+++ 30-synthesis/01-claims/claim-xyz.md\n@@ -0,0 +1,12 @@\n..."
-}
+{ "decision": "dry_run", "policy_rule": "review_gated.dry_run", "diff": "--- /dev/null\n+++ 30-synthesis/01-claims/claim-xyz.md\n..." }
 ```
 
 ---
 
 ## Audit log format
 
-Every `allow_with_log` and `deny` decision writes a JSONL entry to `00-meta/02-logs/audit.jsonl`:
+Every `allow_with_log` and `deny` decision appends one JSONL entry to `00-meta/02-logs/audit.jsonl`:
 
 ```json
 {
@@ -129,31 +118,53 @@ Every `allow_with_log` and `deny` decision writes a JSONL entry to `00-meta/02-l
   "task_id": "TASK-2026-05-31-003",
   "decision": "allow_with_log",
   "policy_rule": "librarian.write.sources",
-  "sha256_before": "e3b0c44298fc1c149afbf4c8996fb924...",
-  "sha256_after": "a87ff679a2f3e71d9181a67b7542122c..."
+  "sha256_before": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
+  "sha256_after": "sha256:a87ff679a2f3e71d9181a67b7542122c..."
 }
 ```
 
-The full field definitions (types, notes, hash-chain rules) and log rotation spec are in [memory.md — Audit log event fields](memory.md#audit-log-event-fields).
+**SHA-256 rules:**
+
+- The MCP computes hashes — workers never supply them.
+- Format: `"sha256:<64-hex-chars>"` (algorithm is self-describing).
+- Newly created files: `before_hash` = SHA-256 of empty byte string (`sha256:e3b0c4...`), not `null`.
+- If the MCP cannot read the file to hash it (permissions error, race), the decision is `deny` — no hash, no allow.
+- `read` actions: `before_hash` only. `deny` and `dry_run`: neither hash (no write occurred).
+- The `before_hash` / `after_hash` chain must remain unbroken across the entire log. `vault-hash-drift` fires if any link fails.
+
+Full field definitions and log rotation spec: [memory.md — Audit log event fields](memory.md#audit-log-event-fields).
 
 ---
 
 ## Auto-fix policy
 
-`auto_fix` is a separate action class because the Linter allows only narrowly scoped structural repairs while denying schema and canonical-content changes. The MCP enforces the class gate at the tool layer — the Linter cannot bypass it.
+`auto_fix` is class-gated. The MCP enforces the class gate at the tool layer — the Linter cannot bypass it.
 
 | Class | Auto-fix allowed | Requires `task_id` | Examples |
 |---|---|---|---|
-| `safe-and-unambiguous` | Yes | No | Trailing whitespace, missing `created` timestamp on a new note, missing required template field with one obvious value |
+| `safe-and-unambiguous` | Yes | No | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value |
 | `authorized-targeted` | Yes | Yes | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh |
-| `schema-content` | No — dry_run always | — | Frontmatter field rename, value-set change, deprecated field removal |
-| `review-gated-edit` | No — deny always | — | Any write to a review-gated zone |
+| `schema-content` | No — `dry_run` always | — | Frontmatter field rename, value-set change, deprecated field removal |
+| `review-gated-edit` | No — `deny` always | — | Any write to a review-gated zone |
+
+---
+
+## Skill-conditional policy
+
+Skills can declare additive `policy.deny` rules in their `SKILL.md` frontmatter. Composition rules:
+
+- **Deny is additive.** Lane denies + skill denies both apply. The narrower set wins.
+- **Allow is a ceiling.** Skills cannot raise the lane's `policy.allow`. They can only carve from it.
+- **Require is union.** Any `require` invariant from either the lane or the skill must hold.
+- **Narrowing is one-way.** No tool call or nested skill load can override a deny rule the loaded skill brought in.
+
+The one shipped restrictive skill is `counter-outline` (Writer-loaded), which narrows Writer's write scope to `40-workbench/*/02-framing/` only during the framing stage.
 
 ---
 
 ## Lane-override file shape
 
-The policy manifest for each profile lives in `.memoria/lane-overrides/<lane>.yaml`. The MCP reads these at startup. Example for the Writer lane:
+The policy manifest for each profile lives in `.memoria/lane-overrides/<lane>.yaml`. The MCP reads these at startup.
 
 ```yaml
 profile: memoria-writer
@@ -178,7 +189,43 @@ routing:
     - "40-workbench/"
 ```
 
-`policy.deny` wins over `policy.allow`. Review-gated zones are enforced by the MCP independently of what the lane-override declares — even an explicit `allow` on a review-gated path degrades to `dry_run`.
+`policy.deny` wins over `policy.allow`. Review-gated zones are enforced independently of the lane-override — even an explicit `allow` on a review-gated path degrades to `dry_run`.
+
+---
+
+## Enforcement: the pre/post_tool_call hook
+
+`check_permission` only decides — by itself it does not stop a write. Vault writes go through the `obsidian` MCP server, which has no knowledge of the policy MCP. The bridge is a Hermes shell hook, `.memoria/mcp/policy_hook.py`, registered per profile in `config.yaml`:
+
+```yaml
+hooks:
+  pre_tool_call:
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
+      timeout: 10
+  post_tool_call:
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
+      timeout: 10
+```
+
+- **`pre_tool_call`** maps the obsidian tool to a policy action, calls `check_permission`, and blocks `deny`/`dry_run`. On an allowed write it stashes the `before_hash`.
+- **`post_tool_call`** reads the stash, computes `after_hash`, and appends the paired `write_complete` audit record.
+
+**Caveat — best-effort, not fail-closed.** Hermes fails open on hook errors (a crashing hook is logged but does not abort the loop). Hard enforcement that survives a broken hook would need a custom obsidian bridge that calls `check_permission` internally.
+
+---
+
+## Relationship to Hermes Tirith
+
+Two coexisting policy layers:
+
+| Layer | Scope | Owner |
+|---|---|---|
+| **Hermes Tirith** | Which *tools* a profile may call | Hermes-side, per-profile, runtime-internal |
+| **Memoria policy MCP** | What each call may *write to disk* | Memoria-side, per-lane via lane-override YAML |
+
+An unexpected `deny` is a Memoria-side question: check the lane-override YAML, then the audit log. A Tirith rejection (tool call blocked entirely) is a Hermes-side question. The two failure modes are distinct.
 
 ---
 

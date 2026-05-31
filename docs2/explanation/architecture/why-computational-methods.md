@@ -35,5 +35,5 @@ Without an explicit classification, there is pressure to route every task to an 
 
 ## Related
 
-- [reference/architecture/computational-toolbox.md](../../reference/architecture/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses
+- [reference/computational-toolbox.md](../../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses
 - [explanation/obsidian/callouts.md](../obsidian/callouts.md) — how the hybrid pattern produces callout content
