@@ -1,4 +1,5 @@
 ---
+topic: proposals
 id: 15
 title: Dedicated review-note type
 status: proposed

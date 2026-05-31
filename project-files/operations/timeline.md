@@ -16,12 +16,12 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 1. Establish Memoria as the official name in vault documentation and any AGENTS-style schema files. Keep `research-wiki` as an alias for migration.
 2. Define the card states, the worker lanes (one per profile), and the review gate rules in one schema document so Hermes and the board share the same contract.
-3. Confirm note-type names match the defined set in [vault/README.md](../../explanation/vault/README.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total). Keep any older names as deprecated aliases during transition.
+3. Confirm note-type names match the defined set in [vault/README.md](../../docs/explanation/vault.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total). Keep any older names as deprecated aliases during transition.
 4. Commit the design document set (`docs/`) as the shared source of truth.
 
 **Vault structure**
 
-1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../explanation/vault/README.md).
+1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../docs/explanation/vault.md).
 2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
 4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../explanation/obsidian/README.md)).
@@ -47,7 +47,7 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 5. Configure retry behavior so recoverable failures reuse the same card (returned to `ready`) within `max_retries`.
 6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_verdict` recommendations the human promotes to `review_status: approved`.
 7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `00-meta/board/<task_id>.md` and `00-meta/02-logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
-8. **Enable the five-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact. The five signals are: (1) suggestion disposition (accept : edit : reject) per profile; (2) operator decision time per `awaiting-review` card; (3) per-card state-transition timestamps; (4) API cost per card; (5) policy deny-reasons. Defined in [success-metrics.md](success-metrics.md).
+8. **Enable the five-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact. The five signals are: (1) suggestion disposition (accept : edit : reject) per profile; (2) operator decision time per `awaiting-review` card; (3) per-card state-transition timestamps; (4) API cost per card; (5) policy deny-reasons. Defined in [success-metrics.md](success-metrics.md) <!-- TODO: reorg link — no unique new target for success-metrics.md -->.
 9. Configure the review-gate mode per [proposal-31](../proposals/31-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
 10. Do not prune session `state.db`. It is small, and it preserves the reasoning-trace data needed for any retrospective analysis.
 
@@ -103,7 +103,7 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 **Steps.**
 
-1. **Choose a deployment pattern.** See [Deployment options](deployment-options.md) for the full comparison. `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
+1. **Choose a deployment pattern.** See [Deployment options](deployment-options.md) <!-- TODO: reorg link — no unique new target for deployment-options.md --> for the full comparison. `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
 2. **Determine the secondary device's role.** Install only the profiles that device's role justifies. `memoria-socratic` is the safe baseline for any secondary. Add Mapper, Writer, or Verifier only for explicit, justified use cases. Never install Librarian, Coder, or Linter on a secondary — these profiles own state that must not be duplicated across devices.
 3. **Keep all seven profiles and dispatch ownership on the primary.** The primary is the single source of truth for card dispatch. A secondary that runs Librarian or issues dispatch commands creates split ownership and audit gaps.
 4. **For developer secondaries only:** install all seven profiles, but isolate with `HERMES_HOME` pointed at a test vault — never the production vault. This is the one exception to the rule above, and the isolation is what makes it safe.

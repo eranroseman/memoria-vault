@@ -53,7 +53,7 @@ Security-wise, the API passes every write through the policy MCP — it does not
 
 ## Related
 
-- Obsidian UI components: [reference/obsidian/workspaces.md](../../reference/obsidian/workspaces.md)
+- Obsidian UI components: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
 - CLI commands: [reference/commands.md](../../reference/commands.md)
 - Messaging gateway setup: [how-to-guides/setup/set-up-messaging.md](../../how-to-guides/setup/set-up-messaging.md)
 - Policy MCP (what API calls go through): [reference/policy.md](../../reference/policy.md)

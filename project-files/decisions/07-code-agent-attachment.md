@@ -17,14 +17,14 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Decision
 
-**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md).
+**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md) <!-- TODO: reorg link — no unique new target for how-to/coder/external-agent-workspace.md -->.
 
 ## Consequences
 
 - The Coder profile stays narrow (scaffold + document); doesn't accumulate coding complexity it wasn't designed for.
 - Human can use whichever coding agent fits the project (Claude Code for unfamiliar codebases, Aider for fast diffs, etc.).
 - Adds a tool dependency — the human must install and configure one of the external agents.
-- The same parallel-agents-with-shared-filesystem pattern generalizes to rendering agents ([open-design](../../how-to/coder/external-agent-workspace.md#the-pattern-generalizes-external-rendering-agents)).
+- The same parallel-agents-with-shared-filesystem pattern generalizes to rendering agents ([open-design](../../how-to/coder/external-agent-workspace.md#the-pattern-generalizes-external-rendering-agents)) <!-- TODO: reorg link — no unique new target for how-to/coder/external-agent-workspace.md -->.
 
 ## Alternatives considered
 
@@ -32,5 +32,5 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Related
 
-- **Workflows affected:** [Code](../../how-to/workflows/downstream/code.md)
-- **Files affected:** [profiles/coder.md](../../explanation/profiles/coder.md), [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md), `00-meta/03-templates/code-note.md` (in the starter vault)
+- **Workflows affected:** [Code](../../how-to/workflows/downstream/code.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/code.md -->
+- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md) <!-- TODO: reorg link — no unique new target for how-to/coder/external-agent-workspace.md -->, `00-meta/03-templates/code-note.md` (in the starter vault)

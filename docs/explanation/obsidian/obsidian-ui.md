@@ -38,7 +38,7 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 The three workspace design (Human, Reading, Drafting) maps workspaces to cognitive modes rather than to projects. A fourth workspace is a signal that either a new cognitive mode has been identified — in which case the workspace system needs rethinking — or that a project has been mistaken for a mode. Projects change; cognitive modes are stable. A workspace per project would create as many workspaces as there are active projects, which defeats the purpose of workspaces as a stable navigational layer.
 
-The full workspace design is in [reference/obsidian/workspaces.md](../../reference/obsidian/workspaces.md).
+The full workspace design is in [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md).
 
 ## The underlying principle
 

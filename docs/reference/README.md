@@ -21,4 +21,6 @@ Lookup material for Memoria — fields, values, commands, schemas, folder paths.
 | [computational-toolbox.md](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [failure-modes.md](failure-modes.md) | All failure modes by severity: symptom, cause, fix |
 | [glossary.md](glossary.md) | Term definitions, alphabetical |
-| [obsidian/](obsidian/) | Callout types, status-line format, workspace definitions |
+| [obsidian-callouts.md](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema |
+| [obsidian-status-line.md](obsidian-status-line.md) | Status-line format, field definitions, and update cadence |
+| [obsidian-workspaces.md](obsidian-workspaces.md) | Workspace names, layout rules, and switching conventions |

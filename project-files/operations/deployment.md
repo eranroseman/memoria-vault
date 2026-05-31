@@ -7,7 +7,7 @@ The system spans a vault (knowledge layer) and an execution layer (Hermes profil
 | **`local-only`** | Git (manual pull / push) | ❌ Workstation must be on | ✅ Full localhost:23119 | $0 infra | Simplest start; single workstation; no discovery loop |
 | **`local-mesh`** | Syncthing peer-to-peer (no VPS) | ⚠️ Primary device when on | ✅ Full localhost on primary | $0 infra | Desktop + laptop; want auto-sync without cloud subscription or VPS |
 | **`obsidian-sync`** | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access is needed; small team |
-| **`always-on`** | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](future-directions.md#the-discovery-loop) |
+| **`always-on`** | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](future-directions.md#the-discovery-loop) <!-- TODO: reorg link — no unique new target for future-directions.md --> |
 
 *(Legacy labels map: A → `local-only`, A+ → `local-mesh`, B → `obsidian-sync`, C → `always-on`. The named forms are authoritative; the letters are retained only where an existing anchor depends on them.)*
 
@@ -19,13 +19,13 @@ These apply regardless of which option you pick:
 
 - **Git is the version history layer, not the sync layer.** All four options use Git for reversibility. Sync is a separate concern.
 - **`library.bib` lives inside the vault** at `.memoria/library.bib`, exported by Better BibTeX. This makes the bib a first-class artifact that travels with the vault under whichever sync mechanism you choose.
-- **Cheap-task routing is configured in Hermes, not in the deployment.** See [architecture/capability-stack.md](../../reference/architecture/capability-stack.md) for the model-routing pattern (synthesis to Claude, embed / classify / quick-summary to cheaper models via OpenRouter or similar).
+- **Cheap-task routing is configured in Hermes, not in the deployment.** See [architecture/capability-stack.md](../../reference/architecture/capability-stack.md) <!-- TODO: reorg link — no unique new target for reference/architecture/capability-stack.md --> for the model-routing pattern (synthesis to Claude, embed / classify / quick-summary to cheaper models via OpenRouter or similar).
 - **Per-session log files, not a single `log.md`.** Each agent session writes a new file to `00-meta/02-logs/`. With one append-only file, distributed writes from VPS and desktop produce sync conflicts; one-file-per-session has nothing to conflict on.
 - **Hermes data dir is `~/.hermes/` by default** (or `%USERPROFILE%\.hermes\` on Windows). Override with `HERMES_HOME=/path/to/dir` when you need isolation — most commonly on the local-mesh and always-on options, where any secondary device's Hermes should keep its own profiles, sessions, and audit log isolated from the primary's `~/.hermes/`.
 - **One Hermes dispatcher per vault.** Under the local-mesh and always-on options, multiple machines have the vault but only *one* should run Hermes as a dispatcher (cron + `hermes gateway` + card claiming). The task registry lives in `~/.hermes/` per machine; two active dispatchers against the same synced vault race on card writes and produce conflicting audit logs. The convention: the *[primary device](../../reference/glossary.md#system-and-architecture)* (desktop on local-mesh, VPS on always-on) owns dispatch; secondary devices run vault-only or in restricted modes — see [Secondary-device patterns](#secondary-device-patterns-local-mesh-and-always-on) below.
-- **Profile aliases are first-class.** The `install.ps1` script invokes `hermes profile install ./.memoria/profiles/memoria-<name> --alias memoria-<name>` for each profile, which gives you `memoria-librarian chat` as a shortcut for `hermes -p memoria-librarian chat`, which is what the workflows in [workflows/README.md](../../how-to/workflows/README.md) assume.
+- **Profile aliases are first-class.** The `install.ps1` script invokes `hermes profile install ./.memoria/profiles/memoria-<name> --alias memoria-<name>` for each profile, which gives you `memoria-librarian chat` as a shortcut for `hermes -p memoria-librarian chat`, which is what the workflows in [workflows/README.md](../../docs/explanation/workflows/README.md) assume.
 - **`.env` is per-machine, never committed.** Each profile ships a `.env.EXAMPLE` listing required and optional env vars with descriptions. The installer copies it to `.env` on first install if `.env` doesn't already exist; the human fills in keys. Hermes hard-excludes `.env` and `auth.json` from `hermes profile install` / `update` so credentials never travel between machines.
-- **Profile memory can ride the vault.** `MEMORY.md` / `USER.md` are per-machine by default, but the [`memories/` junction](sync-and-coordination.md#syncing-profile-memory-across-machines-the-memories-junction) promotes them into the git-synced vault (`.memoria/profile-memory/memoria-<name>/`) so learned notes follow you across machines — the automatic, no-extra-channel way to share profile memory under non-concurrent local-only / local-mesh use. Session history (`state.db`) and secrets (`.env`) deliberately stay per-machine.
+- **Profile memory can ride the vault.** `MEMORY.md` / `USER.md` are per-machine by default, but the [`memories/` junction](sync-and-coordination.md#syncing-profile-memory-across-machines-the-memories-junction) <!-- TODO: reorg link — no unique new target for sync-and-coordination.md --> promotes them into the git-synced vault (`.memoria/profile-memory/memoria-<name>/`) so learned notes follow you across machines — the automatic, no-extra-channel way to share profile memory under non-concurrent local-only / local-mesh use. Session history (`state.db`) and secrets (`.env`) deliberately stay per-machine.
 
 ## Secondary-device patterns (local-mesh and always-on)
 
@@ -98,7 +98,7 @@ Each added profile is an obligation the human is choosing to take on. Socratic-o
 
 #### Recommended secondary-device workflow
 
-Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../how-to/workflows/upstream/discuss.md). Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
+Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../how-to/workflows/upstream/discuss.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/upstream/discuss.md -->. Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
 
 ### SSH-spawned ACP (no local Hermes install)
 
@@ -108,7 +108,7 @@ Requirements: SSH always reachable (Tailscale or local network), primary awake, 
 
 Under SSH-spawned ACP you can talk to *any* profile remotely, not just Socratic — the spawned Hermes is the authoritative one on the primary with the full profile suite. This matters because it removes the "what's installed locally?" question: nothing's installed locally, so the device can use whichever profile is appropriate for the moment.
 
-Concrete `customAgents` configuration examples for both the SSH-spawn path and the local-install path are in [obsidian-plugins/required/agent-client.md — Configuring the laptop for non-Socratic ACP](../../reference/plugins/agent-client.md#configuring-the-laptop-for-non-socratic-acp). That section also has the deployment-option-specific recommendations table for which path to pick.
+Concrete `customAgents` configuration examples for both the SSH-spawn path and the local-install path are in [obsidian-plugins/required/agent-client.md — Configuring the laptop for non-Socratic ACP](../../reference/plugins/agent-client.md#configuring-the-laptop-for-non-socratic-acp) <!-- TODO: reorg link — no unique new target for reference/plugins/agent-client.md -->. That section also has the deployment-option-specific recommendations table for which path to pick.
 
 ### Pattern selection by option
 

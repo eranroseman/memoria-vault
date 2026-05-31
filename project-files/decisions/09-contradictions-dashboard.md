@@ -17,7 +17,7 @@ At low claim-note density the human holds conflicts in their head; as claims acc
 
 ## Decision
 
-Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `relations.contradicts` links and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([future-directions §NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection)), to be added when claim density makes manual noticing insufficient.
+Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `relations.contradicts` links and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([future-directions §NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md -->), to be added when claim density makes manual noticing insufficient.
 
 ## Consequences
 
@@ -27,13 +27,13 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [computational-methods anti-patterns](../../explanation/architecture/why-computational-methods.md#anti-patterns); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([roadmap/evaluation.md](../roadmap/evaluation.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [computational-methods anti-patterns](../../docs/explanation/architecture/why-computational-methods.md#anti-patterns); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([roadmap/evaluation.md](../roadmap/evaluation.md) <!-- TODO: reorg link — no unique new target for roadmap/evaluation.md -->) independently confirms LLM memory/similarity judgments are unreliable.
 
-**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods §candidate displacements](../../explanation/architecture/why-computational-methods.md#candidate-displacements-where-the-llm-can-still-recede)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
+**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods §candidate displacements](../../docs/explanation/architecture/why-computational-methods.md#candidate-displacements-where-the-llm-can-still-recede)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
 ## Related
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies `relations.contradicts`) — now adopted.
-- **Files affected:** [dashboards/contradictions.md](../../explanation/dashboards/contradictions.md) (new), [dashboards/README.md](../../explanation/dashboards/README.md) (index).
-- **Future proposer:** [future-directions §NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection) — the deterministic NLI candidate-generation engine that populates v2.
+- **Files affected:** [dashboards/contradictions.md](../../docs/explanation/dashboards/contradictions.md) (new), [dashboards/README.md](../../docs/explanation/dashboards/README.md) (index).
+- **Future proposer:** [future-directions §NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md --> — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

@@ -28,4 +28,4 @@ The discuss-queue dashboard lists every fully-classified paper note that hasn't 
 - Broader sibling: [reading-pipeline](reading-pipeline.md)
 - The profile invoked to drain this queue: [Socratic](../profiles/socratic.md)
 - Workflow: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
-- The workspace this dashboard anchors: [workspaces](../../reference/obsidian/workspaces.md)
+- The workspace this dashboard anchors: [workspaces](../../reference/obsidian-workspaces.md)

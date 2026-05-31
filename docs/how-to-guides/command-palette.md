@@ -7,7 +7,7 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 
 - Obsidian open with the vault
 - QuickAdd plugin installed (`Settings → Community plugins → Browse → QuickAdd`)
-- The Memoria command catalog open for reference: [reference/commands.md](../../reference/commands.md)
+- The Memoria command catalog open for reference: [reference/commands.md](../reference/commands.md)
 
 ## Steps
 
@@ -46,6 +46,6 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Related
 
-- Full command catalog: [reference/commands.md](../../reference/commands.md)
-- ACP pane and profile switching: [reference/obsidian/workspaces.md](../../reference/obsidian/workspaces.md)
-- QuickAdd plugin reference: [reference/plugins/](../../reference/plugins.md)
+- Full command catalog: [reference/commands.md](../reference/commands.md)
+- ACP pane and profile switching: [reference/obsidian/workspaces.md](../reference/obsidian-workspaces.md)
+- QuickAdd plugin reference: [reference/plugins/](../reference/plugins.md)

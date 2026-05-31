@@ -1,4 +1,5 @@
 ---
+topic: proposals
 id: 29
 title: Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt
 status: proposed
@@ -63,5 +64,5 @@ narrow, and the CLI + dashboards already cover the daily path. Not worth a bespo
 ## Related
 
 - **Existing surfaces:** the CLI (forensic), dashboards (state visibility), Telegram (push) — see [human-channels.md](../../explanation/architecture/human-channels.md)
-- **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../reference/architecture/policy-mcp.md)
-- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](../roadmap/future-directions.md#memoria-inspector-obsidian-plugin) covers part of the same forensic need from inside Obsidian
+- **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../reference/policy.md)
+- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](../roadmap/future-directions.md#memoria-inspector-obsidian-plugin) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md --> covers part of the same forensic need from inside Obsidian

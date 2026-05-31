@@ -4,7 +4,7 @@
 The authoritative board is the Hermes built-in Kanban (~/.hermes/kanban.db).
 Obsidian's Dataview cannot query that database, so this script writes two
 read-only projections the dashboards consume (see
-docs/explanation/kanban-board/board-export.md):
+docs/reference/kanban-board.md):
 
   00-meta/board/<task_id>.md          one markdown file per live card  (board-state dashboard)
   00-meta/02-logs/board-state.jsonl   per-lane count snapshot, one line per run (status line)

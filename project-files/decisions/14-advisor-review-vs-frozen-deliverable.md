@@ -15,8 +15,8 @@ superseded_by: []
 
 Memoria models a `deliverable` (`50-deliverables/`) as **terminal and frozen** — produced by
 re-running Pandoc, never edited in place; if it needs changes you supersede it with a new
-draft → export cycle ([export.md](../../how-to/workflows/downstream/export.md),
-[note-types.md](../../reference/note-types.md)). The current export path emits one thing: a
+draft → export cycle ([export.md](../../docs/reference/export.md),
+[note-types.md](../../reference/note-types.md) <!-- TODO: reorg link — multiple new targets for note-types.md (reference/ and explanation/knowledge/) -->). The current export path emits one thing: a
 static citeproc `.docx` whose citations are frozen text.
 
 This is correct for **final journal submission**. It has no answer for the **advisor-feedback
@@ -35,7 +35,7 @@ An **advisor-review export** — a live-citation `.docx`/`.odt` carrying editabl
 is a **separate, explicitly non-deliverable working artifact.** It does **not** live in
 `50-deliverables/`, is not subject to the "never edit in place" rule, and is regenerated from
 the same draft whenever a new round is needed. The routes and their failure modes are
-documented in [export-targets.md](../../how-to/workflows/downstream/export-targets.md); the
+documented in [export-targets.md](../../how-to/workflows/downstream/export-targets.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/export-targets.md -->; the
 human chooses the target editor **before drafting**.
 
 ## Consequences
@@ -66,6 +66,6 @@ not reimplement citation-field injection.
 
 ## Related
 
-- **Workflows affected:** [export-targets.md](../../how-to/workflows/downstream/export-targets.md) (companion how-to, added with this ADR), [export.md](../../how-to/workflows/downstream/export.md) (the existing static path)
-- **Files affected:** the `deliverable` note type — [note-types.md](../../reference/note-types.md)
-- **Profiles:** [Coder](../../explanation/profiles/coder.md) runs the Pandoc mechanics
+- **Workflows affected:** [export-targets.md](../../how-to/workflows/downstream/export-targets.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/export-targets.md --> (companion how-to, added with this ADR), [export.md](../../docs/reference/export.md) (the existing static path)
+- **Files affected:** the `deliverable` note type — [note-types.md](../../reference/note-types.md) <!-- TODO: reorg link — multiple new targets for note-types.md (reference/ and explanation/knowledge/) -->
+- **Profiles:** [Coder](../../docs/explanation/profiles/coder.md) runs the Pandoc mechanics

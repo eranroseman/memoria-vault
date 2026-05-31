@@ -36,4 +36,4 @@ The **policy MCP** intercepts every vault write. Each lane has a YAML file at `.
 
 ---
 
-**For depth:** profiles/README.md#folder-permission-matrix — the authoritative matrix. architecture/policy-mcp.md — the runtime gate.
+**For depth:** profiles/README.md#folder-permission-matrix <!-- TODO: reorg link — no unique new target for profiles/README.md --> — the authoritative matrix. docs/reference/policy.md — the runtime gate.

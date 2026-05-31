@@ -29,7 +29,7 @@ Two design forces pull against each other:
 
 - The corpus-profile *scoring matrix* (`expected_study_designs` + `expected_methods` per project)
   is exactly the kind of human-maintained config that **drifts** — the redesign shed similar
-  weight elsewhere, and [frontmatter-schema.md](../../reference/frontmatter-schema.md#controlled-vocabularies)
+  weight elsewhere, and [frontmatter-schema.md](../../reference/frontmatter-schema.md#controlled-vocabularies) <!-- TODO: reorg link — no unique new target for reference/frontmatter-schema.md -->
   deliberately leaves `study_design` / `methods` / `topic` open rather than controlled.
 - But "which of my projects does this paper belong to?" is a real, repetitive judgment the agent
   *can* usefully **propose** — losing it entirely pushes pure manual tagging onto the human.
@@ -87,7 +87,7 @@ explicit and auditable.
 ## Related
 
 - **Source:** the predecessor vault's corpus-profiles mechanism (internal salvage analysis).
-- **Profile:** [Librarian](../../explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
-- **Schema:** [frontmatter-schema.md](../../reference/frontmatter-schema.md) (`projects`, `_proposed_classification`).
-- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter-schema.md controlled vocabularies](../../reference/frontmatter-schema.md#controlled-vocabularies); a project hint is not a controlled vocabulary.
-- **Worked vocabulary example:** [vocabulary-example.md](../../reference/vocabulary-example.md) references this ADR for the project-hints linkage.
+- **Profile:** [Librarian](../../docs/explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
+- **Schema:** [frontmatter-schema.md](../../reference/frontmatter-schema.md) <!-- TODO: reorg link — no unique new target for reference/frontmatter-schema.md --> (`projects`, `_proposed_classification`).
+- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter-schema.md controlled vocabularies](../../reference/frontmatter-schema.md#controlled-vocabularies) <!-- TODO: reorg link — no unique new target for reference/frontmatter-schema.md -->; a project hint is not a controlled vocabulary.
+- **Worked vocabulary example:** [vocabulary-example.md](../../reference/vocabulary-example.md) <!-- TODO: reorg link — no unique new target for reference/vocabulary-example.md --> references this ADR for the project-hints linkage.

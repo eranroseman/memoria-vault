@@ -1,4 +1,5 @@
 ---
+topic: proposals
 id: 27
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: proposed

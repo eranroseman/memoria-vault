@@ -1,4 +1,5 @@
 ---
+topic: proposals
 id: 10
 title: Code-artifact autopilot
 status: proposed
@@ -32,5 +33,5 @@ Allowing `autopilot: true` on a `code-note` would let Hermes run scripted analys
 
 ## Related
 
-- **Workflows affected:** [Code](../../how-to/workflows/downstream/code.md)
+- **Workflows affected:** [Code](../../how-to/workflows/downstream/code.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/code.md -->
 - **Files affected:** [profiles/coder.md](../../explanation/profiles/coder.md), `00-meta/03-templates/code-note.md` (in the starter vault)

@@ -1,6 +1,6 @@
 # Linking
 
-Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds. For the conceptual model see [explanation/vault/](../../docs/explanation/vault/).
+Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds. For the conceptual model see [explanation/vault/](../explanation/vault.md).
 
 ---
 

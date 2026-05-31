@@ -1,4 +1,5 @@
 ---
+topic: proposals
 id: 14
 title: Cross-run skill-insights memory
 status: proposed

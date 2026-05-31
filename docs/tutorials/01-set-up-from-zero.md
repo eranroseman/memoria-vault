@@ -13,7 +13,7 @@
 
 - [Obsidian](https://obsidian.md/) installed
 - [Hermes](https://hermes-agent.nousresearch.com/) installed (`hermes --version` returns a version number)
-- [Zotero 7](https://www.zotero.org/) installed with the [Better BibTeX](https://retorque.re/zotero-better-bibtex/) add-on
+- [Zotero 9](https://www.zotero.org/) installed with the [Better BibTeX](https://retorque.re/zotero-better-bibtex/) add-on
 - [Git](https://git-scm.com/) installed
 
 ---

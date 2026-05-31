@@ -40,5 +40,5 @@ Socratic is the **persistent** default because reading sessions demand sustained
 ## Related
 
 - Socratic profile: [explanation/profiles/socratic.md](../profiles/socratic.md)
-- Reading & Processing workspace (where the persistent ACP pane lives): [reference/obsidian/workspaces.md](../../reference/obsidian/workspaces.md)
+- Reading & Processing workspace (where the persistent ACP pane lives): [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
 - Plugin settings: [reference/plugins.md](../../reference/plugins.md)
