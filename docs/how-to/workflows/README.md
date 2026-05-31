@@ -14,7 +14,7 @@ For each workflow, "owner" means *who has decision authority* — not just who e
 
 **Triggering work** — [How the human triggers work: the Command Palette](#how-the-human-triggers-work-the-command-palette), [Research directions (steering input)](#research-directions-steering-input).
 
-**The named workflows** — [Workflow inventory](#workflow-inventory) (the 18 named workflows, grouped upstream / downstream / maintenance).
+**The named workflows** — [Workflow inventory](#workflow-inventory) (the 21 named workflows — Upstream 9, Downstream 8, Maintenance 4 — grouped upstream / downstream / maintenance).
 
 **Discipline** — [Cross-cutting ownership rules](#cross-cutting-ownership-rules), [Default operating model](#default-operating-model), [Anti-patterns](#anti-patterns).
 

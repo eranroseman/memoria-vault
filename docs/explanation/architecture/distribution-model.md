@@ -6,14 +6,16 @@ topic: architecture
 
 Memoria ships as two repos with distinct roles. One holds the engineering design documents; the other is the distributable artifact — the starter vault — which the human clones, opens in Obsidian, and installs from with a single script.
 
-## The two repos
+## One repo, two folders
 
-| Repo | Contents | Audience |
+Memoria ships as a single repo (`memoria-vault`) with two top-level folders that can be cloned or used independently:
+
+| Folder | Contents | Audience |
 | --- | --- | --- |
-| `memoria-docs` | ~125 architecture, workflow, profile, and decision documents. Not needed at runtime. | Developers and contributors. |
-| `memoria-vault` | The starter vault: vault skeleton, Obsidian config, `.memoria/` scaffold including the seven hand-authored profile directories, and `install.ps1`. | End users. |
+| `docs/` | Architecture, workflow, profile, and decision documents. Not needed at runtime. | Developers and contributors. |
+| `vault/` | The starter vault: vault skeleton, Obsidian config, `.memoria/` scaffold including the seven hand-authored profile directories, and `install.ps1`. | End users. |
 
-The human's vault is a clone of `memoria-vault` opened directly in Obsidian. The engineering docs in `memoria-docs` are a separate concern — they explain how the system works but are not required for it to function.
+The human opens the `vault/` folder directly in Obsidian. The engineering docs in `docs/` are a separate concern — they explain how the system works but are not required for it to function. Because a user may clone only one folder, any cross-folder reference is a GitHub URL, never a relative path.
 
 ## What ships in the starter vault
 

@@ -28,7 +28,7 @@ The dot-prefix on `.memoria/` is the same trick `.obsidian/` uses: Obsidian's va
 
 ## Design docs
 
-The full architectural design — workflows, ADRs, rationale, per-profile design summaries, references — lives in the separate [memoria-docs](https://github.com/eranroseman/memoria-docs) repo. This vault is the **runtime** artifact; the docs corpus is the **engineering spec**. Both evolve together.
+The full architectural design — workflows, ADRs, rationale, per-profile design summaries, references — lives in the [`docs/` folder](https://github.com/eranroseman/memoria-vault/tree/main/docs) of this repo (a sibling of this `vault/` folder, not a separate repository). This vault is the **runtime** artifact; `docs/` is the **engineering spec**. Either folder can be used on its own; cross-folder references use a GitHub URL.
 
 ## Quick check (what you can do with v0.1)
 

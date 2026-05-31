@@ -242,7 +242,7 @@ Rule: delegate narrow, temporary, low-risk subtasks; never delegate away the rol
 
 ## Workflow ownership
 
-Each workflow has a primary profile. The authoritative view — workflows × profiles, with primary / support / no-claim distinctions across all 18 workflows — is the [Role × stage matrix in workflows/README.md](../workflows/pipeline-design.md#role--stage-matrix). Don't duplicate it here; keep one source of truth.
+Each workflow has a primary profile. The authoritative view — workflows × profiles, with primary / support / no-claim distinctions across all 21 workflows — is the [Role × stage matrix in workflows/README.md](../workflows/pipeline-design.md#role--stage-matrix). Don't duplicate it here; keep one source of truth.
 
 ## Inter-profile handoff patterns
 

@@ -16,7 +16,7 @@ Numbered-prefix subdirectories (e.g., `01-templates`, `02-csl`, `01-papers`) are
 
 The **tool registry** (`.memoria/tool-registry.yaml`) is the machine-read tool config: it declares which tools each profile may call, so the policy MCP and the lane overrides resolve against one authoritative list rather than per-profile duplicates.
 
-Engineering documentation (architecture, workflows, decisions (ADRs), profile design summaries, dashboards, roadmap, and topic-distributed reference material — ~125 files under `memoria-docs/`) lives in a **separate repository**. Documentation is not part of the runtime; the human's vault doesn't need it to function.
+Engineering documentation (architecture, workflows, decisions (ADRs), profile design summaries, dashboards, roadmap, and topic-distributed reference material) lives in the **`docs/` folder of this repo** — a sibling of the vault, not a separate repository. It is the engineering spec; the runtime vault doesn't need it to function. Because either folder can be cloned on its own, a cross-folder reference uses a GitHub URL rather than a relative path.
 
 ## Runtime install (per-user, not in repo)
 

@@ -68,7 +68,7 @@ Jupyter notebooks (`.ipynb`) are treated as a `code-note` with `format: notebook
 
 ## Lifecycle
 
-Every note carries one universal field, **`lifecycle`** — its durability phase. (`status` is reserved for board cards; see [kanban-board/states.md](../explanation/kanban-board/states.md).) Types that need finer state within a phase carry a **refinement** field.
+Every *knowledge-node* note carries one universal field, **`lifecycle`** — its durability phase. (`status` is reserved for board cards; see [kanban-board/states.md](../explanation/kanban-board/states.md).) Types that need finer state within a phase carry a **refinement** field. (`00-meta/` infrastructure notes — dashboards, templates, reference pages, `index.md` — are exempt: they carry no `type`/`lifecycle`.)
 
 | `lifecycle` | Meaning |
 | --- | --- |
@@ -107,7 +107,7 @@ The 15 templates (one per note type):
 
 `fleeting-note.md` · `answer-note.md` · `paper-note.md` · `item-note.md` · `person-note.md` · `organization-note.md` · `venue-note.md` · `claim-note.md` · `moc.md` · `reference-note.md` · `project-note.md` · `code-note.md` · `canvas.md` · `draft.md` · `deliverable.md`
 
-Templates are content shapes, not architectural concepts — they don't have separate design summaries here in memoria-docs. The runtime files in the vault repo are the authoritative spec. The frontmatter rules they encode are governed by [vault/frontmatter-schema.md](frontmatter-schema.md); the Linter's `dashboard-field-drift` detector ([Linter design summary](../explanation/profiles/linter.md)) catches Dataview queries that reference fields no template emits.
+Templates are content shapes, not architectural concepts — they don't have separate design summaries here in `docs/`. The runtime files in the vault are the authoritative spec. The frontmatter rules they encode are governed by [vault/frontmatter-schema.md](frontmatter-schema.md); the Linter's `dashboard-field-drift` detector ([Linter design summary](../explanation/profiles/linter.md)) catches Dataview queries that reference fields no template emits.
 
 ### Config templates (not note types)
 

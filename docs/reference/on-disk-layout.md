@@ -98,7 +98,7 @@ The **vault root folder is human-defined**: the human clones the distribution in
     └── tool-registry.yaml              # machine-read tool config
 ```
 
-Engineering documentation (architecture, workflows, decisions (ADRs), profile design summaries, dashboards, roadmap, and topic-distributed reference material — ~125 files under `memoria-docs/`) lives in a **separate repository**. Documentation is not part of the runtime; the human's vault doesn't need it to function.
+Engineering documentation (architecture, workflows, decisions (ADRs), profile design summaries, dashboards, roadmap, and topic-distributed reference material) lives in the **`docs/` folder of this repo** — a sibling of the vault, not a separate repository. It is the engineering spec; the runtime vault doesn't need it to function. Because either folder can be cloned on its own, a cross-folder reference uses a GitHub URL rather than a relative path.
 
 ## Runtime install (per-user, not in repo)
 

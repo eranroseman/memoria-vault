@@ -125,7 +125,7 @@ A small set of `00-meta/` files are not folders and not templates — they are h
 
 ## Vault skeleton: human-facing notes
 
-A freshly-cloned vault ships with a small set of plain-language human notes in `00-meta/`. These are the *human-facing* counterpart to the technical contracts in `.memoria/profiles/memoria-<name>/SOUL.md` (in the vault) and the topic-specific reference docs scattered across the design repo (`architecture/policy-mcp.md`, `vault/frontmatter-schema.md`, `profiles/profile-commands.md`, etc.) — they let someone opening the vault for the first time understand what they're looking at without reading the design docs.
+A freshly-cloned vault ships with a small set of plain-language human notes in `00-meta/`. These are the *human-facing* counterpart to the technical contracts in `.memoria/profiles/memoria-<name>/SOUL.md` (in the vault) and the topic-specific reference docs in `docs/` (`reference/architecture/policy-mcp.md`, `reference/frontmatter-schema.md`, `reference/profile-commands.md`, etc.) — they let someone opening the vault for the first time understand what they're looking at without reading the design docs.
 
 | Note | Purpose | Maintained by |
 | --- | --- | --- |
@@ -141,7 +141,7 @@ A freshly-cloned vault ships with a small set of plain-language human notes in `
 | `00-meta/04-reference/obsidian-config.md` | Plain-language summary of which Obsidian community plugins Memoria uses and the load-bearing settings the human should not change. Mirrors [obsidian-plugins/README.md](../../reference/plugins/README.md). | Human (sync with plugin changes) |
 | `00-meta/04-reference/design-system.md` | Canonical visual-style source for the vault — palette, typography, spacing, layout, components, motion, voice, brand, anti-patterns. Format follows [open-design](https://github.com/nexu-io/open-design)'s 9-section DESIGN.md schema so the same file can drive open-design's render pipeline. Read by CSS-snippet generators, by Pandoc export configs, and by open-design when rendering deliverables. Templated by [obsidian-ui/design-system.md](../../reference/templates/design-system.md). | Human (edits define the brand); design-system schema versioned independently |
 
-The design folder is the *engineering* spec — it describes how to build and reason about the system. The vault skeleton is what a *human* needs in front of them while using the vault day-to-day. The skeleton notes are intentionally short and plain-language; if a section needs architectural detail, it links to the relevant `memoria-docs/` document.
+The design folder is the *engineering* spec — it describes how to build and reason about the system. The vault skeleton is what a *human* needs in front of them while using the vault day-to-day. The skeleton notes are intentionally short and plain-language; if a section needs architectural detail, it links to the relevant `docs/` document.
 
 ### Drift discipline
 

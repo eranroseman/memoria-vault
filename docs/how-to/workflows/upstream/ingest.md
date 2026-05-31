@@ -13,7 +13,7 @@ Before any write, Hermes identifies the input type and routes to the correct pip
 
 | Input signal | Detected type | Destination folder |
 | --- | --- | --- |
-| DOI in `.bib` | Article / dataset / cited repo | `20-sources/01-papers/` |
+| DOI or arXiv ID in `.bib` | Paper — any source carrying a stable publication ID (an article, or a dataset/repo that has a DOI) | `20-sources/01-papers/` |
 | `github.com/...` or `gitlab.com/...` URL | Repository | `20-sources/02-items/` |
 | PyPI / npm / CRAN URL | Package | `20-sources/02-items/` |
 | Product or vendor URL | Product | `20-sources/02-items/` |
@@ -23,7 +23,7 @@ Before any write, Hermes identifies the input type and routes to the correct pip
 | Conference / journal name | Venue | `20-sources/03-entities/03-venues/` |
 | DOI not in `.bib` | Unknown | **Prompt human to add to Zotero first** |
 
-**Design rule.** The agent never creates a note in the wrong folder. If the type is ambiguous, it asks before proceeding.
+**Design rule.** The agent never creates a note in the wrong folder. If the type is ambiguous, it asks before proceeding. The paper/item split keys on a **stable publication ID, not medium**: a source carrying a DOI or arXiv ID is a `paper-note` (`01-papers/`); datasets, software, repos, products, and standards **without** such an ID are `item-note`s (`02-items/`).
 
 ## Steps
 
