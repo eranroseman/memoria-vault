@@ -1,7 +1,7 @@
 # project-hints.yaml — optional, per-project topic hints for the Librarian's classify step.
 #
 # Copy this file to `.memoria/project-hints.yaml` and edit it for your own projects.
-# Absent file = project membership is fully manual (no agent proposal). See ADR-30.
+# Absent file = project membership is fully manual (no agent proposal). See ADR-15.
 #
 # How it's used: at classify time the Librarian scores a paper's proposed `topic` values
 # against each project's `primary_topics` (simple overlap) and proposes the best-matching
@@ -9,7 +9,7 @@
 # the `projects` value at triage, exactly like every other proposed field.
 #
 # A hint is a HINT, not a controlled vocabulary — edit `primary_topics` freely. Do NOT add
-# `expected_study_designs` / `expected_methods` matrices here (ADR-30 rejected them as
+# `expected_study_designs` / `expected_methods` matrices here (ADR-15 rejected them as
 # drift-prone; study_design and methods are proposed independently).
 
 projects:

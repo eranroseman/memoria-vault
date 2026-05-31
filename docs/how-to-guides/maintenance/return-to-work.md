@@ -7,7 +7,7 @@ Three checks before starting any research session after being away — a day, a 
 **1. Confirm environment variables are loaded.**
 
 ```bash
-echo $ANTHROPIC_API_KEY $OPENALEX_EMAIL
+echo $KILOCODE_API_KEY $OPENALEX_EMAIL
 ```
 
 Both should return non-empty values. If either is blank, the corresponding Hermes operations will fail silently or with cryptic errors. Source your env file:

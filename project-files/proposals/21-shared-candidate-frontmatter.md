@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-21: Shared candidate frontmatter format
+# Proposal 21: Shared candidate frontmatter format
 
 ## Context
 
@@ -29,11 +29,11 @@ projects: []                # plural list, matches other templates
 
 These are the candidate-specific fields; every note also carries the global required fields (`schema_version`, `created`, `updated`, `lifecycle`) — see [vault/frontmatter.md](../../docs/reference/frontmatter.md).
 
-`candidate-note` is not in the 15 note types in [vault/note-types.md](../../reference/note-types.md#note-types); adopting this ADR means adding it as the 16th type with its own template (`00-meta/03-templates/candidate-note.md`) and updating the list.
+`candidate-note` is not in the 15 note types in [vault/note-types.md](../../docs/reference/note-types.md#note-types); adopting this ADR means adding it as the 16th type with its own template (`00-meta/03-templates/candidate-note.md`) and updating the list.
 
 ## Consequences
 
-- A single Dataview query in the [weekly-review](../../explanation/dashboards/weekly-review.md) covers all candidate sources.
+- A single Dataview query in the [weekly-review](../../docs/explanation/dashboards/weekly-review.md) covers all candidate sources.
 - Triage dashboards work uniformly regardless of where a candidate came from.
 - Tiny schema cost; high payoff for any later screening work.
 - Until the 16th note type is added in templates, the dashboard's "Discovery candidates" query returns no results.
@@ -47,4 +47,4 @@ These are the candidate-specific fields; every note also carries the global requ
 ## Related
 
 - **Consumed by:** [ADR-16 pre-ingest screening](../decisions/16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
-- **Files affected:** [vault/README.md](../../docs/explanation/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../explanation/dashboards/weekly-review.md)
+- **Files affected:** [vault/README.md](../../docs/explanation/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/weekly-review.md)

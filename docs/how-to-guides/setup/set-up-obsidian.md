@@ -61,7 +61,7 @@ The required plugins ship with their settings pre-configured in `.obsidian/plugi
 
 **7. (Only if you add the frontend Obsidian Linter) set its exclusions.**
 
-Memoria does **not** ship the frontend `obsidian-linter` plugin — it is deferred per [ADR-24 / decision 12](../../../project-files/decisions/12-obsidian-linter-reference-only.md) because it writes outside the policy MCP audit trail. Memoria's linting is the `memoria-linter` Hermes profile, not this plugin.
+Memoria does **not** ship the frontend `obsidian-linter` plugin — it is deferred per [ADR-12](../../../project-files/decisions/12-obsidian-linter-reference-only.md) because it writes outside the policy MCP audit trail. Memoria's linting is the `memoria-linter` Hermes profile, not this plugin.
 
 If you choose to install it anyway, it must never run on agent-maintained folders. Settings → Obsidian Linter → Folders to ignore — add:
 

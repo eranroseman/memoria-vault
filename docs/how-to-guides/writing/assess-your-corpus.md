@@ -52,6 +52,23 @@ The output is written to `40-workbench/<project-slug>/01-corpus-map/corpus-map.m
 
 Don't proceed to framing until the gaps are either filled or explicitly accepted as out-of-scope for this deliverable.
 
+## Interpreting the output — and when to reach for `cluster-map` / `gap-report`
+
+`scope-project` is the project-scoped map. Two narrower Mapper commands answer related questions when you don't have a brief yet:
+
+| Command | Question it answers | When to run |
+| --- | --- | --- |
+| `scope-project` | "For *this* brief, what do I have and what's missing?" | Before framing or drafting a specific deliverable |
+| `cluster-map` | "How is my corpus distributed across a topic — dense where, recent where?" | Exploring a topic with no project yet |
+| `gap-report` | "What adjacent topics are thin relative to a brief?" | Deciding what to read next |
+
+Whichever you run, read the output by pattern:
+
+- **Dense + recent cluster** — draft from it; the evidence is there and current.
+- **Dense + stale cluster** — well-read a while ago; check for newer work before drafting (run [find new sources](../sources/find-new-sources.md)).
+- **Thin cluster** — mentioned but under-evidenced; read more before you lean on it.
+- **Gap the brief requires** — fill it via the upstream pipeline, or explicitly scope it out. A gap you neither fill nor acknowledge becomes an unsupported section later.
+
 ## Verify
 
 - `40-workbench/<project-slug>/01-corpus-map/corpus-map.md` exists and has content
@@ -61,5 +78,4 @@ Don't proceed to framing until the gaps are either filled or explicitly accepted
 
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Frame a project](frame-a-project.md)
-- Assess workflow reference: [how-to/workflows/downstream/assess.md](../../how-to-guides/writing/assess-your-corpus.md)
 - Find new sources (if gaps need filling): [find-new-sources.md](../sources/find-new-sources.md)

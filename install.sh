@@ -37,12 +37,21 @@ done
 # ---------------------------------------------------------------------------
 # Paths and constants
 # ---------------------------------------------------------------------------
-VAULT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# This script lives at the repo root; the Obsidian vault is the ./vault
+# subfolder, and the profile sources live under ./vault/.memoria/.
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VAULT_PATH="$REPO_ROOT/vault"
 MEMORIA_PATH="$VAULT_PATH/.memoria"
 PROFILES_SRC="$MEMORIA_PATH/profiles"
 MCP_REQS="$MEMORIA_PATH/mcp/requirements.txt"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_PROFILES_DIR="$HERMES_HOME/profiles"
+
+if [ ! -d "$MEMORIA_PATH" ]; then
+  echo "[X] Cannot find the vault at $VAULT_PATH (no .memoria/ inside it)." >&2
+  echo "    Run install.sh from the repo root -- it expects a ./vault/ folder beside it." >&2
+  exit 1
+fi
 
 ALL_PROFILES="memoria-librarian memoria-mapper memoria-socratic memoria-writer memoria-verifier memoria-coder memoria-linter"
 # Minimum file set hermes profile install requires.

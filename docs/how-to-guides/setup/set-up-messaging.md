@@ -65,5 +65,5 @@ Send any message to your bot in Telegram. Within a few seconds, a `.md` file sho
 
 ## Related
 
-- Fleeting note triage workflow: [how-to/workflows/upstream/fleeting-triage.md](../../how-to-guides/sources/triage-fleeting-notes.md)
+- Fleeting note triage workflow: [Triage fleeting notes](../../how-to-guides/sources/triage-fleeting-notes.md)
 - Hermes gateway docs: [hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs)

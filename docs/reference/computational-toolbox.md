@@ -2,7 +2,7 @@
 
 Deterministic and hybrid methods Memoria uses, organized by purpose. The first seven are in active use; the last two (NLI, learning-to-rank) are catalogued candidates not yet shipped.
 
-For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [explanation/architecture/why-computational-methods](../explanation/architecture/).
+For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [why-computational-methods](../explanation/architecture/why-computational-methods.md).
 
 ---
 

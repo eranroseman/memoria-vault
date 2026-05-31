@@ -136,5 +136,5 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Export workflow reference: [how-to/workflows/downstream/export.md](../../how-to-guides/writing/export-a-draft.md)
+- Export reference (formats, CSL): [export.md](../../reference/export.md)
 - CSL styles: stored at `.memoria/csl/` in the vault

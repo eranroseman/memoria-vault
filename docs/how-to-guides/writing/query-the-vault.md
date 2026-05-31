@@ -3,6 +3,19 @@
 
 Ask the vault a research question and get a cited synthesis — an answer-note with every assertion tagged to a source. Query is a read operation: it doesn't create claim notes; it produces a draft answer for your review.
 
+## Which retrieval path?
+
+Several retrieval surfaces overlap; pick by what you want *out*:
+
+| You want… | Use | Output |
+| --- | --- | --- |
+| A cited written synthesis you'll verify and maybe keep | **Writer `query`** (this guide) | answer-note in `10-inbox/02-answers/` |
+| To sharpen your *own* thinking by being questioned | **Socratic pane** (`Memoria: ask about this note`) | conversation, no file |
+| A fast deterministic lookup of a known term or field | **Librarian `query`** | results in chat, no file |
+| The notes most similar to one you're looking at | **Mapper `find related notes`** | top matches in chat, no file |
+
+Rule of thumb: reach for **Socratic** when *you* should do the synthesizing; reach for **`query`** when you want the synthesis drafted for your review.
+
 ## Prerequisites
 
 - At least a handful of ingested and classified sources in `20-sources/`
@@ -61,5 +74,4 @@ Same result, different surface.
 ## Related
 
 - Promote to claim note: [write-a-claim-note.md](../sources/write-a-claim-note.md)
-- Query workflow reference: [how-to/workflows/downstream/query.md](../../how-to-guides/writing/query-the-vault.md)
 - Weekly review (step 2 — unreviewed synthesis): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)

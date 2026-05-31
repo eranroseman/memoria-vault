@@ -72,4 +72,4 @@ No drift reported for any profile.
 
 - Redeploy profiles (normal workflow): [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
 - Profile configuration: [configuration.md](../hermes/configuration.md)
-- Full failure-modes catalog: [how-to/operations/failure-modes.md](../../how-to-guides/recovery/)
+- Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)

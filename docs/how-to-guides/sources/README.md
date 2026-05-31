@@ -10,6 +10,8 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Classify a source](classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
 | [Pin a citekey](pin-a-citekey.md) | Override the auto-generated citekey before ingesting | Ingest |
 | [Discuss a paper](discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
+| [Read through a lens](read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](write-a-claim-note.md) | Distill a source into a durable claim | Distill |
+| [Link related claims](link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Link |
 | [Promote a claim to canonical reference](promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Promote |
 | [Archive a source](archive-a-source.md) | Retire an outdated or superseded source | Archive |

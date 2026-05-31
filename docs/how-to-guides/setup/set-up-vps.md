@@ -97,7 +97,7 @@ Confirm:
 
 ```bash
 # on VPS
-cat ~/.hermes/profiles/memoria-librarian/.env | grep ANTHROPIC_API_KEY
+cat ~/.hermes/profiles/memoria-librarian/.env | grep KILOCODE_API_KEY
 ```
 
 **8. Start Hermes as a persistent systemd service.**
@@ -213,4 +213,4 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 - Local install prerequisite: [quickstart.md](quickstart.md)
 - Profile configuration: [hermes/configuration.md](../hermes/configuration.md)
 - Redeploying profiles after vault changes: [maintenance/redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Tunnel drops on restart: [recovery/fix-stale-bib.md](../recovery/) — see failure-modes for `VPS tunnel drops`
+- Tunnel drops on restart: [failure-modes.md](../../reference/failure-modes.md) — see `VPS tunnel drops`

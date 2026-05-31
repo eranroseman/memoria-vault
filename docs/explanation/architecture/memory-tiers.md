@@ -47,9 +47,27 @@ Without the split, every cross-session question collapses into "store it in memo
 
 ---
 
+## Configuration is not memory
+
+A frequent miscategorization is trying to store a *fact* in a *config* file, or a *rule* in a memory tier. The six substrates above hold state the system produces and reads back as **recall**; configuration is input you author that the agent reads as **rules**. They're edited at different times by different owners, so keep them distinct:
+
+| If the thing is… | It belongs in… | Not in… |
+| --- | --- | --- |
+| A durable fact or convention the agent should recall | Profile `MEMORY.md` | `project-hints.yaml` (that's config, not recall) |
+| Your working style or preferences | Profile `USER.md` | `MEMORY.md` (keep identity vs. preference separate) |
+| Which topics map to which project | `.memoria/project-hints.yaml` (config) | Profile memory or a vault note |
+| A synthesized claim or finding | Vault notes (`30-synthesis/`) | Any memory tier |
+| Cross-lane project state (open questions, directions) | Vault project memory (`40-workbench/<project>/`) | Profile memory |
+
+The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [project-hints.yaml](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (profile memory).
+
+---
+
 ## Related
 
 - Hermes native memory: [hermes-agent.nousresearch.com/docs/user-guide/features/memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)
 - Board handoff payload (board memory travels here): [explanation/kanban-board/card-schema.md](../kanban-board/card-schema.md)
 - Audit log format: [reference/policy.md](../../reference/policy.md)
+- The substrate table as reference: [reference/memory.md](../../reference/memory.md)
+- Configuring project hints (the config example above): [configure-project-hints.md](../../how-to-guides/setup/configure-project-hints.md)
 - Architecture overview: [explanation/architecture/README.md](README.md)

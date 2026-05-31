@@ -48,5 +48,5 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 ## Related
 
 - Full command catalog: [reference/commands.md](../reference/commands.md)
-- ACP pane and profile switching: [reference/obsidian/workspaces.md](../reference/obsidian-workspaces.md)
-- QuickAdd plugin reference: [reference/plugins/](../reference/plugins.md)
+- ACP pane and profile switching: [obsidian-workspaces.md](../reference/obsidian-workspaces.md)
+- QuickAdd plugin reference: [plugins.md](../reference/plugins.md)

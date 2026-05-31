@@ -69,6 +69,6 @@ For multiple sources, run `/llm-wiki ingest --source <citekey>` once per source 
 ## Related
 
 - Next step: [Classify a source](classify-a-source.md)
-- Ingest reference (routing table, per-type enrichment): [how-to/workflows/upstream/ingest.md](../../how-to-guides/sources/capture-and-ingest.md)
+- Ingest reference (routing table, per-type enrichment): [ingest.md](../../reference/ingest.md)
 - If the citekey isn't found: [Fix a stale .bib](../recovery/fix-stale-bib.md)
 - Source types and note formats: [reference/note-types.md](../../reference/note-types.md)

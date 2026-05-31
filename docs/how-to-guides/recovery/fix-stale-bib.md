@@ -65,4 +65,4 @@ hermes -p memoria-librarian chat -s llm-wiki
 ## Related
 
 - Zotero setup: [set-up-zotero.md](../setup/set-up-zotero.md)
-- Full failure-modes catalog: [how-to/operations/failure-modes.md](../../how-to-guides/recovery/)
+- Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)

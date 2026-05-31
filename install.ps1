@@ -46,11 +46,20 @@ $ErrorActionPreference = 'Stop'
 # ============================================================================
 # Paths and constants
 # ============================================================================
-$VaultPath         = $PSScriptRoot
+# This script lives at the repo root; the Obsidian vault is the ./vault
+# subfolder, and the profile sources live under ./vault/.memoria/.
+$RepoRoot          = $PSScriptRoot
+$VaultPath         = Join-Path $RepoRoot 'vault'
 $MemoriaPath       = Join-Path $VaultPath '.memoria'
 $ProfilesSourceDir = Join-Path $MemoriaPath 'profiles'
 $McpRequirements   = Join-Path $MemoriaPath 'mcp\requirements.txt'
 $HermesProfilesDir = Join-Path $env:USERPROFILE '.hermes\profiles'
+
+if (-not (Test-Path $MemoriaPath)) {
+    Write-Host "[X] Cannot find the vault at $VaultPath (no .memoria/ inside it)." -ForegroundColor Red
+    Write-Host "    Run install.ps1 from the repo root -- it expects a ./vault/ folder beside it."
+    exit 1
+}
 
 $AllProfiles = @(
     'memoria-librarian',
@@ -62,9 +71,10 @@ $AllProfiles = @(
     'memoria-linter'
 )
 
-# Minimum file set a profile needs to be installable. SOUL.md ships in the v0.1
-# scaffold; the other three are the v0.2 wiring that hermes profile install
-# requires.
+# Minimum file set a profile needs to be installable. All four are part of v0.1
+# (the glossary defines v0.1 as the complete system); SOUL.md shipped first, the
+# other three (config.yaml, mcp.json, distribution.yaml) are the profile wiring
+# hermes profile install requires.
 $RequiredFiles = @('SOUL.md', 'config.yaml', 'mcp.json', 'distribution.yaml')
 
 $Targets = if ($Only) {

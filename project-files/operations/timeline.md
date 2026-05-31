@@ -1,6 +1,6 @@
 # Timeline and phases
 
-The week-by-week ramp from [Memoria v0.1](README.md#memoria-v01) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
+The week-by-week ramp from [Memoria v0.1](README.md) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
 
 ## Phases
 
@@ -22,17 +22,17 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 **Vault structure**
 
 1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../docs/explanation/vault.md).
-2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../reference/note-types.md)).
+2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../docs/reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
-4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../explanation/obsidian/README.md)).
+4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../docs/explanation/obsidian/README.md)).
 5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-6](../decisions/06-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
 6. Resolve the callout-manager configuration: copy `.obsidian/plugins/callout-manager/data.json.TODO` → `data.json` and fill in callout styling. Until resolved, `[!brief]`, `[!suggestions]`, and `[!verification]` callouts do not render correctly.
 
 **Profiles, skills, and plugins**
 
-1. **Run the installer** — `install.ps1` (Windows) or `install.sh` (macOS/Linux/WSL2). The installer stages all seven profiles, substitutes `{{VAULT_PATH}}` in every `mcp.json` and `config.yaml`, pip-installs MCP requirements (`mcp>=1.2.0`, `PyYAML>=6.0`), and registers profiles via `hermes profile install`. Do not drop files manually — the path substitution is what makes the policy gate and MCP wiring functional. The design contracts each `SOUL.md` must satisfy are in [profiles/](../../explanation/profiles/).
+1. **Run the installer** — `install.ps1` (Windows) or `install.sh` (macOS/Linux/WSL2). The installer stages all seven profiles, substitutes `{{VAULT_PATH}}` in every `mcp.json` and `config.yaml`, pip-installs MCP requirements (`mcp>=1.2.0`, `PyYAML>=6.0`), and registers profiles via `hermes profile install`. Do not drop files manually — the path substitution is what makes the policy gate and MCP wiring functional. The design contracts each `SOUL.md` must satisfy are in [profiles/](../../docs/explanation/profiles/).
 2. **Version every profile prompt in git from this first commit.** Prompt history cannot be reconstructed after the fact — it is the prerequisite for any retrospective analysis of suggestion quality, Chain-of-Evidence typing, or regression harness work. A profile whose prompt history has gaps cannot be audited.
-3. **Install the five pending Obsidian plugins** as post-clone steps via Community Plugins — see [reference/plugins.md](../../reference/plugins.md) for exact names and required configuration. The five are: `dataview` (every dashboard query depends on it), a template runner (template insertion), a quick-capture plugin (fleeting-note intake), `obsidian-git` (vault commits and prompt versioning), and `obsidian-homepage` (auto-opens `Home.md` on startup). None ship in `.obsidian/plugins/`; no dashboard, template, or capture workflow functions without them.
+3. **Install the five pending Obsidian plugins** as post-clone steps via Community Plugins — see [reference/plugins.md](../../docs/reference/plugins.md) for exact names and required configuration. The five are: `dataview` (every dashboard query depends on it), a template runner (template insertion), a quick-capture plugin (fleeting-note intake), `obsidian-git` (vault commits and prompt versioning), and `obsidian-homepage` (auto-opens `Home.md` on startup). None ship in `.obsidian/plugins/`; no dashboard, template, or capture workflow functions without them.
 4. Install all **ACP plugins** and the **K-Dense scientific-agent-skills** set (`hermes skills install`). K-Dense skills ship as empty `.keep` placeholders in each profile's `skills/` directory — `hermes skills install` must run before any profile can invoke them.
 5. **Verify the policy gate:** run `python .memoria/mcp/policy_mcp.py --self-test` (34 checks) and `python .memoria/mcp/policy_hook.py --self-test` (18 checks, including pre→post roundtrip). Both must pass before any profile is allowed to run against the production vault.
 6. Test each profile in isolation with a small task that exercises its lane.
@@ -40,8 +40,8 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 **Kanban board**
 
-1. Stand up the **Hermes built-in Kanban** (see [kanban-board/README.md](../../explanation/kanban-board/README.md) for the mandated choice and the alternatives considered).
-2. Adopt the Hermes Kanban's fixed `status` enum — `triage`, `todo`, `ready`, `running`, `blocked`, `done`, `archived` — and map Memoria's lifecycle onto them (see [kanban-board/states.md](../../explanation/kanban-board/states.md)).
+1. Stand up the **Hermes built-in Kanban** (see [kanban-board/README.md](../../docs/explanation/kanban-board/README.md) for the mandated choice and the alternatives considered).
+2. Adopt the Hermes Kanban's fixed `status` enum — `triage`, `todo`, `ready`, `running`, `blocked`, `done`, `archived` — and map Memoria's lifecycle onto them (see [kanban-board/states.md](../../docs/explanation/kanban-board/states.md)).
 3. Define the review overlay in card `metadata`: `review_status`, `agent_verdict`, `review_owner`, `review_requested_at`, `reviewed_at`, `promote_target`, `supersedes`. (The execution fields — `status`, `assignee`, `reason`, `max_retries` — are Hermes built-ins.)
 4. Configure dispatch logic so cards in `triage`, `done` (awaiting review), or `blocked` are not claimable by non-review workers.
 5. Configure retry behavior so recoverable failures reuse the same card (returned to `ready`) within `max_retries`.
@@ -80,11 +80,11 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 **Steps.**
 
-1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking.md](../../reference/linking.md#moc-creation-thresholds)).
+1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking.md](../../docs/reference/linking.md#moc-thresholds)).
 2. Activate lag metrics in the weekly dashboard (once `triage_completed` is populated).
 3. Begin Canvas sessions for chapter planning.
 4. Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for active scoping work.
-5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [linking.md](../../reference/linking.md#moc-creation-thresholds)).
+5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [linking.md](../../docs/reference/linking.md#moc-thresholds)).
 6. Begin drafting from the reference layer.
 7. Migrate the existing corpus into the new structure (one folder at a time, with Linter dry-runs at each stage).
 8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check. Also wire `metrics_aggregate.py` on a weekly cadence — it needs real run volume before trust-score bands are meaningful, so Phase 3 is the right trigger for this one (unlike `board_export.py`, which runs from Phase 1).

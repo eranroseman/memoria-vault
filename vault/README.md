@@ -2,13 +2,13 @@
 
 The human-facing starter vault for **Memoria** — a research operating system that turns sources into durable knowledge through explicit Kanban states, specialized Hermes agent profiles, and a discipline of human-owned synthesis.
 
-> **Status: v0.1 scaffold.** The vault skeleton, the 10 dashboards plus the `index.md` entry point, the 15 note templates, the 11 human-facing reference notes, the 5 plugin configs, and the 7 profile `SOUL.md` prompts ship in this repo. The wiring around them — `install.ps1`, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE`, the lane-override YAML, the policy and tasks MCP server source — is still being authored. **Clones today are for review, not running.**
+> **Status: Memoria v0.1.** The v0.1 system is the complete system (see the glossary) and ships in this repo: the vault skeleton, the 10 dashboards plus the `index.md` entry point, the 15 note templates, the 11 human-facing reference notes, the **8 bundled, pre-configured Obsidian plugins**, and the **7 Hermes profiles with full wiring** (`SOUL.md` + `config.yaml` + `mcp.json` + `distribution.yaml`), plus the policy MCP servers under `.memoria/mcp/` and the lane-override policy YAML. Profiles install today via the repo-root `install.ps1` / `install.sh`. **Not yet verified end-to-end** — a few v0.1 pieces are still pending (e.g. K-Dense skills); see the [implementation status ledger](https://github.com/eranroseman/memoria-vault/blob/main/project-files/operations/implementation-status.md) for exact build state.
 
 ## What's here
 
 - `00-meta/` — vault skeleton
   - `01-dashboards/` — 10 dashboards + `index.md` (Daily Health is `index.md`; plus audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review)
-  - `02-logs/` — populated Day 1 by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
+  - `02-logs/` — populated at runtime by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
   - `03-templates/` — 15 note templates (claim-note, paper-note, fleeting-note, …)
   - `04-reference/` — 11 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist, screening-protocol)
   - `index.md` — vault landing page (pin in sidebar)
@@ -16,59 +16,46 @@ The human-facing starter vault for **Memoria** — a research operating system t
   - `system-status.md` — runtime health snapshot
 - `10-inbox/`, `20-sources/`, `30-synthesis/`, `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` — empty human-facing folders following the standard numbered-prefix taxonomy
 - `.obsidian/` — Obsidian config (auto-hidden by Obsidian)
-  - `plugins/<plugin>/data.json{,.example,.TODO}` — five plugin configs (obsidian-Linter, obsidian-citation-plugin, agent-client, obsidian-local-rest-api, callout-manager)
+  - `plugins/<id>/` — the **8 bundled, pre-configured community plugins**: `obsidian-local-rest-api`, `agent-client`, `dataview`, `templater-obsidian`, `quickadd`, `obsidian-citation-plugin`, `callout-manager`, `obsidian-git`. Secret/per-machine configs (REST API, agent-client) ship as `data.json.example` and are gitignored.
   - `snippets/memoria-link-colors.css` — the Memoria visual-style snippet
 - `.memoria/` — Memoria tooling, dot-prefixed and auto-hidden by Obsidian
-  - `profiles/memoria-<name>/SOUL.md` — the seven hand-authored Hermes agent prompts (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter)
+  - `profiles/memoria-<name>/` — the seven Hermes profiles (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter), each with `SOUL.md` + `config.yaml` + `mcp.json` + `distribution.yaml`, plus `skills/` and `cron/`
   - `profiles/memoria-linter/M-detectors.md` — the Linter's structural-detector reference
-  - `mcp/`, `lane-overrides/` — placeholders for Python MCP source and policy YAML (not yet authored)
-  - `csl/`, `library.bib`, `tool-registry.yaml` — machine-read tool config (populated as needed)
+  - `mcp/` — the policy MCP servers (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`) + `requirements.txt`
+  - `lane-overrides/` — per-lane policy YAML the policy MCP reads at startup
+  - `csl/`, `library.bib`, `tool-registry.yaml` — machine-read config (populated as needed)
 
 The dot-prefix on `.memoria/` is the same trick `.obsidian/` uses: Obsidian's vault scanner auto-ignores both, so the human never sees tooling files in search, graph view, file explorer, or Dataview queries.
 
 ## Design docs
 
-The full architectural design — workflows, ADRs, rationale, per-profile design summaries, references — lives in the [`docs/` folder](https://github.com/eranroseman/memoria-vault/tree/main/docs) of this repo (a sibling of this `vault/` folder, not a separate repository). This vault is the **runtime** artifact; `docs/` is the **engineering spec**. Either folder can be used on its own; cross-folder references use a GitHub URL.
+The full architectural design — workflows, ADRs, rationale, per-profile design summaries, references — lives in the [`docs/` folder](https://github.com/eranroseman/memoria-vault/tree/main/docs) of this repo (a sibling of this `vault/` folder, not a separate repository). This vault is the **runtime** artifact; `docs/` is the **engineering spec**.
 
-## Quick check (what you can do with v0.1)
+## Install
 
-Clone with any folder name — Memoria is agnostic to it:
-
-```bash
-git clone https://github.com/eranroseman/memoria-vault.git my-research-vault
-```
-
-Open the folder in Obsidian as a vault. You'll see the numbered folders and templates; tooling stays out of the way. You can read the seven `.memoria/profiles/memoria-*/SOUL.md` prompts and the 10 dashboards + `index.md` (`00-meta/01-dashboards/*.md`) to understand the system. Start with `00-meta/index.md` as the landing page.
-
-You **can't** run Memoria yet — `install.ps1` doesn't exist, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE` files aren't authored, the MCP servers aren't written.
-
-## Roadmap to v0.2 (runnable)
-
-In rough order:
-
-1. ✅ `install.ps1` (Windows) -- ships in this v0.1.1 scaffold. Detects Hermes + Python on PATH, copies any complete profile dirs to `~/.hermes/profiles/memoria-*/`, substitutes `{{VAULT_PATH}}` in `mcp.json`, registers profiles with `hermes profile install --alias --force --yes`, bootstraps `.env` from `.env.EXAMPLE`. **Gracefully skips profiles missing the v0.2 wiring** -- run it today and you'll see all 7 profiles skipped with clear "missing required files" messages.
-2. ⬜ `install.sh` (macOS/Linux) -- mirror of `install.ps1`.
-3. ⬜ Per-profile `config.yaml`, `mcp.json` (with `{{VAULT_PATH}}` placeholder), `.env.EXAMPLE`, `distribution.yaml` (×7). Each makes its profile installable.
-4. ⬜ `.memoria/lane-overrides/*.yaml` -- per-lane policy YAML the policy MCP reads at startup (×7).
-5. ⬜ `.memoria/mcp/policy_mcp.py`, `tasks_mcp.py`, `requirements.txt` -- Memoria's two MCP servers.
-
-When the per-profile wiring lands, `./install.ps1` will set up a working Memoria instance on the human's machine.
-
-## Trying install.ps1 today
-
-Even though no profiles will install yet, you can verify the script parses and runs correctly:
+The installers live at the **repository root** (one level above this `vault/` folder). From the repo root:
 
 ```powershell
-./install.ps1 -SkipHermesCheck -SkipPythonCheck
+./install.ps1     # Windows (profiles run under WSL2)
 ```
 
-It should report "0 of 7 installed" with all profiles skipped for "missing required files: config.yaml, mcp.json, distribution.yaml". That's the expected v0.1 behavior. When the wiring is authored for a single profile (say, `memoria-linter`), the next `./install.ps1` run will install just that one.
+```bash
+./install.sh      # Ubuntu/Debian or WSL2
+```
 
-Useful flags:
+They stage each profile, substitute `{{VAULT_PATH}}`, and register the seven profiles with Hermes (`hermes profile install … --force`), then bootstrap each profile's `.env` from its `.env.EXAMPLE` if absent. They are idempotent — safe to re-run after a `git pull`. Prerequisites (Hermes, Python) and the full setup of Obsidian, Zotero + Better BibTeX, and secrets are covered in [docs/how-to-guides/setup/](https://github.com/eranroseman/memoria-vault/tree/main/docs/how-to-guides/setup).
 
-- `-Only memoria-linter,memoria-librarian` -- target only specific profiles
-- `-SkipHermesCheck` -- bypass the Hermes-on-PATH check
-- `-SkipPythonCheck` -- bypass the Python check (until MCP servers need it)
+A **one-line full-stack bootstrap installer** (which also installs Obsidian, Hermes, and Zotero) is designed and under review — see [proposals/bootstrap-installer.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/bootstrap-installer.md).
+
+Useful installer flags:
+
+- `-Only memoria-linter,memoria-librarian` / `--only memoria-linter` — target specific profiles
+- `-SkipHermesCheck` / `--skip-hermes-check` — bypass the Hermes-on-PATH check
+- `-SkipPythonCheck` / `--skip-python-check` — bypass the Python check
+
+## Versioning
+
+Memoria's release version and each Hermes profile package `version` are kept in lockstep — both are `0.1.0` for this release. The profiles ship and install together, so they are not versioned independently. The separate `hermes_requires` field in each `distribution.yaml` is the Hermes **runtime** dependency (`>=0.12.0`), not a Memoria version.
 
 ## License
 

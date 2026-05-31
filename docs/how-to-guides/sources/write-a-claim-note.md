@@ -96,7 +96,6 @@ The Writer can suggest links to existing claim notes but cannot author the claim
 ## Related
 
 - Previous step: [Discuss a paper](discuss-a-paper.md)
-- When the claim reaches `evergreen`: [how-to/workflows/upstream/promote.md](../../how-to-guides/sources/promote-a-claim.md)
-- Distill workflow reference: [how-to/workflows/upstream/distill.md](../../how-to-guides/sources/write-a-claim-note.md)
-- Linking patterns: [reference/linking-patterns.md](../../reference/linking.md)
-- Frontmatter schema: [reference/frontmatter-schema.md](../../reference/frontmatter.md)
+- When the claim reaches `evergreen`: [Promote a claim](promote-a-claim.md)
+- Linking patterns: [linking.md](../../reference/linking.md)
+- Frontmatter schema: [frontmatter.md](../../reference/frontmatter.md)

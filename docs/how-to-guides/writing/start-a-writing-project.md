@@ -79,6 +79,4 @@ Open `01-corpus-map/corpus-map.md`. If there are major gaps (a claim you need bu
 ## Related
 
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- Assess workflow reference: [how-to/workflows/downstream/assess.md](../../how-to-guides/writing/assess-your-corpus.md)
-- Frame workflow reference: [how-to/workflows/downstream/frame.md](../../how-to-guides/writing/frame-a-project.md)
-- Write workflow (full downstream pipeline): [how-to/workflows/downstream/write.md](../../how-to-guides/writing/draft-with-writer.md)
+- The rest of the downstream pipeline: [Assess your corpus](assess-your-corpus.md) → [Frame a project](frame-a-project.md) → [Draft with the Writer](draft-with-writer.md)

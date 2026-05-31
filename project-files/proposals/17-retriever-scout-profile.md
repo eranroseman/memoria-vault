@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-17: Retriever / Scout as a separate profile
+# Proposal 17: Retriever / Scout as a separate profile
 
 ## Context
 
@@ -34,4 +34,4 @@ Split the Librarian profile into Retriever (broad discovery, candidate generatio
 ## Related
 
 - **Workflows affected:** [Find](../../docs/how-to-guides/sources/find-new-sources.md), [Ingest](../../docs/how-to-guides/sources/capture-and-ingest.md)
-- **Files affected:** [profiles/README.md](../../explanation/profiles/README.md), [profiles/librarian.md](../../explanation/profiles/librarian.md)
+- **Files affected:** [profiles/README.md](../../docs/explanation/profiles/README.md), [profiles/librarian.md](../../docs/explanation/profiles/librarian.md)

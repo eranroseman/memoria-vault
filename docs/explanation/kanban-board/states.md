@@ -58,5 +58,5 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 - Conceptual overview: [README.md](README.md)
 - Card fields: [card-schema.md](card-schema.md)
 - Why no Reviewer: [README.md § why no Reviewer and no Orchestrator](README.md#why-no-reviewer-and-no-orchestrator)
-- Board-states lookup table: [reference/board-states](../../reference/kanban-board.md)
+- Board-states lookup table: [kanban-board.md](../../reference/kanban-board.md)
 - Recovery for stuck cards: [how-to-guides/recovery/fix-stuck-card](../../how-to-guides/recovery/fix-stuck-card.md)

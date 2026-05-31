@@ -25,4 +25,4 @@ Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you
 
 ## Implementation status
 
-Tutorials 02–06 exercise the agent pipeline, which requires the v0.2 profile wiring (`config.yaml`, `mcp.json`, `policy_mcp.py`, lane-overrides). See [implementation-status.md](../../project-files/operations/implementation-status.md) for what's shipped. Tutorial 02 (claim authoring) is mostly human-driven and works today without the full pipeline.
+Tutorials 02–06 exercise the agent pipeline, which requires the profile wiring (`config.yaml`, `mcp.json`, `policy_mcp.py`, lane-overrides) — part of v0.1, now shipped. See [implementation-status.md](../../project-files/operations/implementation-status.md) for what's shipped. Tutorial 02 (claim authoring) is mostly human-driven and works today without the full pipeline.

@@ -23,7 +23,7 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 
 **Generative but write-denied — an intentional combination.** Socratic is the only profile that is both LLM-required (open-ended conversation has no deterministic algorithm) and architecturally write-denied. The LLM's nondeterminism cannot corrupt canonical state because the LLM has no canonical state to write to. This is the pattern that makes Socratic safe to give genuine conversational latitude — the freedom is bounded by the write wall, not by a stricter prompt.
 
-**One frame per session.** When `lens-reading` loads with a named lens (e.g., `mamykina-lens`), Socratic stays in that frame for the session. Switching frames mid-session muddies whose questions are being asked. A new session for a different lens preserves the discipline.
+**One frame per session.** When `lens-reading` loads with a named lens (e.g., `mamykina-sensemaking`), Socratic stays in that frame for the session. Switching frames mid-session muddies whose questions are being asked. A new session for a different lens preserves the discipline.
 
 ---
 

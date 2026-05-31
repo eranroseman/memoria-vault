@@ -1,14 +1,18 @@
 # Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
 # Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-verifier
-version: 0.2.0
+version: 0.1.0
 description: "Memoria Verifier — checks claims, citations, duplicates, and retractions; writes reports to 40-workbench/*/05-verification/."
 author: "Memoria"
 hermes_requires: ">=0.12.0"
 env_requires:
-  - name: ANTHROPIC_API_KEY
-    description: "Anthropic API key (model access for provider: anthropic)."
+  - name: KILOCODE_API_KEY
+    description: "Kilo Code API key (kilo.ai) - model access for the shipped provider: kilocode."
     required: true
+  - name: ANTHROPIC_API_KEY
+    description: "Only needed if you switch config.yaml to provider: anthropic; unused by the shipped kilocode config."
+    required: false
+    default: ""
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex) — vault read + verification-report writes via the `obsidian` MCP server."
     required: true

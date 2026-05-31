@@ -1,6 +1,6 @@
 profile: memoria-socratic
 
-# stub — wire fully in v0.2
+# stub — wire fully in v0.1
 # ARCHITECTURAL NOTE: Socratic is hard write-denied across the entire vault.
 # policy.allow.write: [] is load-bearing — do not add write paths.
 # routing.invocation: interactive_only prevents queue dispatch.
@@ -9,7 +9,7 @@ policy:
   allow:
     skills:
       - socratic-processing
-      - lens-reading             # parameterized: mamykina-lens, veinot-equity-lens, etc.
+      - lens-reading             # parameterized: mamykina-sensemaking, veinot-informational-justice, etc.
     write: []                   # hard write-denial — architectural wall
   deny:
     skills:

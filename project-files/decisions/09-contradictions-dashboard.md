@@ -27,9 +27,9 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [computational-methods anti-patterns](../../docs/explanation/architecture/why-computational-methods.md#anti-patterns); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([measurement-and-verification.md](../proposals/measurement-and-verification.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [why-computational-methods.md](../../docs/explanation/architecture/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([measurement-and-verification.md](../proposals/measurement-and-verification.md)) independently confirms LLM memory/similarity judgments are unreliable.
 
-**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods §candidate displacements](../../docs/explanation/architecture/why-computational-methods.md#candidate-displacements-where-the-llm-can-still-recede)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
+**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods.md](../../docs/explanation/architecture/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
 ## Related
 

@@ -82,6 +82,6 @@ Status has changed from the stuck state, or the card is archived with an explici
 
 ## Related
 
-- Kanban board states reference: [reference/board-states.md](../../reference/kanban-board.md)
-- Retry pattern explanation: [explanation/kanban-board/README.md § retry-pattern](../../explanation/)
-- Full failure-modes catalog: [how-to/operations/failure-modes.md](../../how-to-guides/recovery/)
+- Kanban board states reference: [kanban-board.md](../../reference/kanban-board.md)
+- Retry pattern explanation: [kanban-board/README.md](../../explanation/kanban-board/README.md)
+- Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)

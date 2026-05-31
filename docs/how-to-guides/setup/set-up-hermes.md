@@ -22,13 +22,13 @@ notepad "$env:USERPROFILE\.hermes\profiles\memoria-librarian\.env"
 Set these values:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
-OPENROUTER_API_KEY=sk-or-...          # or any provider your model routing config expects
+KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
 OPENALEX_EMAIL=you@example.com        # required polite-pool header — any working address
 SEMANTIC_SCHOLAR_API_KEY=...          # optional but recommended
 PUBMED_API_KEY=...                    # optional but recommended
 GITHUB_TOKEN=ghp_...                  # optional, for repo enrichment
 OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
+# ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 
 **2. Fill the remaining profiles' `.env` files.**
@@ -36,7 +36,7 @@ OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
 The other six profiles share a common minimum set. Open each `.env` and set at minimum:
 
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+KILOCODE_API_KEY=<same Kilo Code key>
 OBSIDIAN_API_KEY=<same 64-char hex token>
 ```
 

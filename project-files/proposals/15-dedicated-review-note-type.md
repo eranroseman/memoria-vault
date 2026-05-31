@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-15: Dedicated review-note type
+# Proposal 15: Dedicated review-note type
 
 ## Context
 
@@ -27,11 +27,11 @@ Add a `review-note` type for storing reviewer judgments with provenance, separat
 
 ## Alternatives considered
 
-**Adopt now**: rejected — adds a note type to the 15 ([vault/note-types.md](../../reference/note-types.md#note-types)) for a benefit that isn't currently felt.
+**Adopt now**: rejected — adds a note type to the 15 ([vault/note-types.md](../../docs/reference/note-types.md#note-types)) for a benefit that isn't currently felt.
 
 **Use the audit log directly** (no new type, but query the JSONL more): the current approach. Works for now.
 
 ## Related
 
-- **See also:** [kanban-board/README.md](../../explanation/kanban-board/README.md) for the existing review_status semantics
+- **See also:** [kanban-board/README.md](../../docs/explanation/kanban-board/README.md) for the existing review_status semantics
 - **Files affected:** none currently

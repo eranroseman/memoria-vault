@@ -74,5 +74,3 @@ The Verifier will not flag accepted gaps on subsequent commits.
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- Verify workflow reference: [how-to/workflows/downstream/verify.md](../../how-to-guides/writing/verify-and-revise.md)
-- Revise workflow reference: [how-to/workflows/downstream/revise.md](../../how-to-guides/writing/verify-and-revise.md)

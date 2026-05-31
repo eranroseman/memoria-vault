@@ -61,4 +61,4 @@ Don't leave candidates undecided indefinitely. The weekly review surfaces the co
 - After including: [Capture and ingest a source](capture-and-ingest.md)
 - Gap candidates from Verify also land here: [Verify and revise a draft](../writing/verify-and-revise.md)
 - Weekly review (step 3 — process discovery candidates): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
-- ADR-19 (pre-ingest screening): [project/decisions/19-pre-ingest-screening.md](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)
+- Pre-ingest screening (now part of adopt-on-demand): [ADR-16](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)

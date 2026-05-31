@@ -1,5 +1,5 @@
 
-# Workspaces
+# Obsidian workspaces
 
 Three saved Obsidian workspace layouts, bound to hotkeys. One per cognitive mode.
 

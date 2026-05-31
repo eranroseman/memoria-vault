@@ -9,6 +9,19 @@ Re-run the `qmd` embedding to restore semantic search when the Writer returns em
 - A batch of 20+ notes was ingested and you haven't rebuilt since
 - `qmd search "known term"` returns empty or omits notes you know exist
 
+## When a re-embed is (and isn't) the fix
+
+A full `qmd embed` re-embeds *every* note — it's the right tool only for genuine index staleness. Before spending the time, rule out cheaper causes:
+
+| Symptom | Likely cause | What to do |
+| --- | --- | --- |
+| One new note isn't found | Not yet indexed | Confirm it's saved to disk; a few notes rarely justify a full rebuild — let the scheduled rebuild (step 4) catch it |
+| Search misses many notes or returns empty | Stale or missing index | Full `qmd embed` (this guide) |
+| Found by keyword but not by meaning | Vectors stale / embedding model changed | Full `qmd embed` — re-embedding is the only fix when the vectors are stale |
+| Found in `qmd search` but missing from `/draft` | Not an index problem — a Writer retrieval issue | Check the query, not the index |
+
+A full re-embed is genuinely *required* only when the embedding model or config changed, `.qmd-index/` is corrupt or missing, or a large batch (20+) landed. For a handful of notes, the scheduled rebuild is cheaper than an ad-hoc full pass.
+
 ## Steps
 
 **1. Confirm the symptom.**
@@ -76,4 +89,4 @@ Returns the note. The Writer's `/draft` command uses vault notes in its response
 ## Related
 
 - Writer profile: [explanation/profiles/writer.md](../../explanation/profiles/writer.md)
-- Stale search index failure mode: [how-to/operations/failure-modes.md](../../how-to-guides/recovery/) — "Stale qmd index"
+- Stale search index failure mode: [failure-modes.md](../../reference/failure-modes.md) — "Stale qmd index"

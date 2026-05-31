@@ -67,4 +67,4 @@ The dry-run output should show paths inside `my-second-vault/vault/`, not your p
 
 - First vault setup: [set-up-the-vault.md](set-up-the-vault.md)
 - Redeploying after profile edits: [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Distribution model explanation: [explanation/architecture/distribution-model.md](../../explanation/architecture/README.md)
+- Distribution model explanation: [distribution-model.md](../../explanation/architecture/distribution-model.md)

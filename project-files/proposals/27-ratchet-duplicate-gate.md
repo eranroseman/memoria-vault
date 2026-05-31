@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-27: ratchet — a `qmd` similarity gate before filing a synthesis note
+# Proposal 27: ratchet — a `qmd` similarity gate before filing a synthesis note
 
 ## Context
 
@@ -31,7 +31,7 @@ early vault — it needs (a) a live `qmd` index in the agent retrieval path and 
 corpus large enough that filing a duplicate is a real risk, *and* it can only be tuned (the
 similarity threshold, the false-positive rate) against real notes. Revisit when both hold;
 when adopted, wire it into the same pre-file moment as the deferred [frozen-evaluator
-checklist (ADR-28)](28-frozen-evaluator-deferred.md).
+checklist (Proposal 28)](28-frozen-evaluator-deferred.md).
 
 ## Proposed mechanism (for when the trigger fires)
 
@@ -79,7 +79,7 @@ gate only *surfaces* candidates.
 
 ## Related
 
-- **Pairs with:** [ADR-28 — frozen-evaluator checklist (deferred)](28-frozen-evaluator-deferred.md)
+- **Pairs with:** [Proposal 28 — frozen-evaluator checklist (deferred)](28-frozen-evaluator-deferred.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
-- **Profiles:** [Linter](../../explanation/profiles/linter.md), [Mapper](../../explanation/profiles/mapper.md)
-- **Note types gated:** [claim-note, reference-note](../../reference/note-types.md)
+- **Profiles:** [Linter](../../docs/explanation/profiles/linter.md), [Mapper](../../docs/explanation/profiles/mapper.md)
+- **Note types gated:** [claim-note, reference-note](../../docs/reference/note-types.md)

@@ -9,7 +9,7 @@ Five steps from zero to a working vault with one source ingested. For the full s
 - Obsidian installed
 - Zotero 9 + Better BibTeX installed
 - Hermes on your `PATH` (`hermes --version` returns a version number)
-- `ANTHROPIC_API_KEY` set in your shell
+- `KILOCODE_API_KEY` available (the shipped model provider is `kilocode` — kilo.ai)
 
 ## Steps
 
@@ -31,7 +31,7 @@ cd memoria-vault\vault
 notepad "$env:USERPROFILE\.hermes\profiles\memoria-librarian\.env"
 ```
 
-Set `ANTHROPIC_API_KEY`, `OPENALEX_EMAIL`, and `OBSIDIAN_API_KEY`.
+Set `KILOCODE_API_KEY`, `OPENALEX_EMAIL`, and `OBSIDIAN_API_KEY`.
 
 **5. Ingest your first source.** Drag one PDF into Zotero. Note the citekey Better BibTeX assigned. Then:
 

@@ -62,4 +62,4 @@ Read from the inside out: start with what the system is, then how it's structure
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR. The forward plan lives in the roadmap. Both are in [project/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [roadmap/](../../project-files/operations/) for direction. *(Stubs — content coming.)*
+The *why* behind a specific choice lives in an ADR. The forward plan lives in the timeline. Both are in [project-files/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [operations/](../../project-files/operations/) for direction and timeline.

@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-29: admin/forensic GUI surface (`hermes-workspace`) — deferred
+# Proposal 29: admin/forensic GUI surface (`hermes-workspace`) — deferred
 
 ## Context
 
@@ -63,6 +63,6 @@ narrow, and the CLI + dashboards already cover the daily path. Not worth a bespo
 
 ## Related
 
-- **Existing surfaces:** the CLI (forensic), dashboards (state visibility), Telegram (push) — see [human-channels.md](../../explanation/architecture/human-channels.md)
-- **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../reference/policy.md)
+- **Existing surfaces:** the CLI (forensic), dashboards (state visibility), Telegram (push) — see [human-channels.md](../../docs/explanation/architecture/human-channels.md)
+- **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../docs/reference/policy.md)
 - **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](integrations.md) covers part of the same forensic need from inside Obsidian

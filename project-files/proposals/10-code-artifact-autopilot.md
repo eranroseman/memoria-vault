@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-10: Code-artifact autopilot
+# Proposal 10: Code-artifact autopilot
 
 ## Context
 
@@ -34,4 +34,4 @@ Allowing `autopilot: true` on a `code-note` would let Hermes run scripted analys
 ## Related
 
 - **Workflows affected:** [Code](../../docs/how-to-guides/writing/create-a-code-artifact.md)
-- **Files affected:** [profiles/coder.md](../../explanation/profiles/coder.md), `00-meta/03-templates/code-note.md` (in the starter vault)
+- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), `00-meta/03-templates/code-note.md` (in the starter vault)

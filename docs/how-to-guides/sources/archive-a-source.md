@@ -60,6 +60,5 @@ Do not archive a source just to clear it from a queue. If the discuss card has b
 
 ## Related
 
-- Archive workflow reference: [how-to/workflows/upstream/archive.md](../../how-to-guides/sources/archive-a-source.md)
-- Lifecycle field values: [reference/frontmatter-schema.md](../../reference/frontmatter.md)
+- Lifecycle field values: [frontmatter.md](../../reference/frontmatter.md)
 - Weekly review (surfaces stale sources): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)

@@ -1,6 +1,6 @@
 profile: memoria-verifier
 
-# stub — wire fully in v0.2
+# stub — wire fully in v0.1
 
 policy:
   allow:

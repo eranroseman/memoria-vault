@@ -2,14 +2,18 @@
 # block is what Hermes writes out as .env.EXAMPLE (install.ps1 then copies that
 # to .env on first install). Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-librarian
-version: 0.2.0
+version: 0.1.0
 description: "Memoria Librarian — finds, ingests, enriches, and draft-classifies evidence into 10-inbox/ and 20-sources/."
 author: "Memoria"
 hermes_requires: ">=0.12.0"
 env_requires:
-  - name: ANTHROPIC_API_KEY
-    description: "Anthropic API key (model access for provider: anthropic)."
+  - name: KILOCODE_API_KEY
+    description: "Kilo Code API key (kilo.ai) - model access for the shipped provider: kilocode."
     required: true
+  - name: ANTHROPIC_API_KEY
+    description: "Only needed if you switch config.yaml to provider: anthropic; unused by the shipped kilocode config."
+    required: false
+    default: ""
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex from the plugin) — vault read/write via the `obsidian` MCP server."
     required: true

@@ -53,6 +53,7 @@ Thematic groups from the future-directions survey.
 | [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
 | [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
 | [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
+| [bootstrap-installer.md](bootstrap-installer.md) | One-line full-stack installer (Obsidian + Hermes + Zotero + vault); **user-requested, under review** |
 
 ### Rejected alternatives
 

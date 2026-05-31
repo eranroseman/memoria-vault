@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-14: Cross-run skill-insights memory
+# Proposal 14: Cross-run skill-insights memory
 
 ## Context
 

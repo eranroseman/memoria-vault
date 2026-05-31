@@ -78,6 +78,4 @@ git commit -m "code: figure-3 receptivity curve — <project-slug>"
 ## Related
 
 - Coder profile design: [explanation/profiles/coder.md](../../explanation/profiles/coder.md)
-- External coding agent workspace: [how-to/coder/external-agent-workspace.md](../../how-to-guides/writing/create-a-code-artifact.md)
-- Code workflow reference: [how-to/workflows/downstream/code.md](../../how-to-guides/writing/create-a-code-artifact.md)
-- ADR-6 (external coding agent delegation): [project/decisions/06-code-agent-attachment.md](../../../project-files/decisions/07-code-agent-attachment.md)
+- ADR-07 (external coding agent boundary): [07-code-agent-attachment.md](../../../project-files/decisions/07-code-agent-attachment.md)

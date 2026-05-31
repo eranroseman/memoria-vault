@@ -17,7 +17,7 @@ SORT file.mtime ASC
 
 ## Discovery candidates
 
-Include or exclude candidates from the corpus. Requires the candidate frontmatter format from ADR-21 — until that decision is adopted and a `candidate-note` template is added, this query returns no results.
+Include or exclude candidates from the corpus. Requires the candidate frontmatter format from Proposal 21 — until that proposal is adopted and a `candidate-note` template is added, this query returns no results.
 
 ```dataview
 TABLE file.link AS Candidate, candidate_status, file.mtime AS Modified

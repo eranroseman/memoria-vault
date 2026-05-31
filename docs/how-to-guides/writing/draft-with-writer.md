@@ -74,5 +74,4 @@ Read the `[!verification]` callout at the top of the draft file after each commi
 
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Verify and revise a draft](verify-and-revise.md)
-- Canvas sub-workflow: [how-to/workflows/downstream/write.md § Canvas → Draft](../../how-to-guides/writing/draft-with-writer.md)
-- Verify workflow: [how-to/workflows/downstream/verify.md](../../how-to-guides/writing/verify-and-revise.md)
+- Canvas sub-workflow: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)

@@ -29,7 +29,7 @@ Two design forces pull against each other:
 
 - The corpus-profile *scoring matrix* (`expected_study_designs` + `expected_methods` per project)
   is exactly the kind of human-maintained config that **drifts** — the redesign shed similar
-  weight elsewhere, and [frontmatter.md](../../docs/reference/frontmatter.md#controlled-vocabularies)
+  weight elsewhere, and [frontmatter.md](../../docs/reference/frontmatter.md#domain-fields)
   deliberately leaves `study_design` / `methods` / `topic` open rather than controlled.
 - But "which of my projects does this paper belong to?" is a real, repetitive judgment the agent
   *can* usefully **propose** — losing it entirely pushes pure manual tagging onto the human.
@@ -48,7 +48,7 @@ reopen the open-by-design choice for `study_design` / `methods` / `topic`.
 
 ```yaml
 # .memoria/project-hints.yaml  (optional; absent = project membership is fully manual)
-# The starter vault ships project-hints.yaml.EXAMPLE — copy to project-hints.yaml and edit.
+# The starter vault ships project-hints.yaml.example — copy to project-hints.yaml and edit.
 projects:
   - id: phd-dissertation
     description: HCI + digital health — JITAI, receptivity, health coaching, equity, LLM mHealth.
@@ -89,5 +89,5 @@ explicit and auditable.
 - **Source:** the predecessor vault's corpus-profiles mechanism (internal salvage analysis).
 - **Profile:** [Librarian](../../docs/explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
 - **Schema:** [frontmatter.md](../../docs/reference/frontmatter.md) (`projects`, `_proposed_classification`).
-- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../../docs/reference/frontmatter.md#controlled-vocabularies); a project hint is not a controlled vocabulary.
+- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../../docs/reference/frontmatter.md#domain-fields); a project hint is not a controlled vocabulary.
 - **Worked vocabulary example:** the worked vocabulary example references this ADR for the project-hints linkage.

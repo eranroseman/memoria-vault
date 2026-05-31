@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-31: Configurable review-gate mode (blocking | advisory) for comparison studies
+# Proposal 31: Configurable review-gate mode (blocking | advisory) for comparison studies
 
 ## Context
 
@@ -57,6 +57,6 @@ Three invariants make the mode useful as evidence rather than just a weaker syst
 ## Related
 
 - **Workflows affected:** [Verify](../../docs/how-to-guides/writing/verify-and-revise.md), [Promote](../../docs/how-to-guides/sources/promote-a-claim.md) (the gate the mode conditions); the board dispatch rules ([timeline](../operations/timeline.md)).
-- **Files affected:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](measurement-and-verification.md) (the comparison metrics and their definitions); the publication-instrumentation track in [timeline.md](../operations/timeline.md#publication-instrumentation-parallel-track-from-day-1).
+- **Files affected:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](measurement-and-verification.md) (the comparison metrics and their definitions); the publication-instrumentation track in [timeline.md](../operations/timeline.md).
 - **Related decisions:** [ADR-03 structural review gate](../decisions/03-structural-review-gate.md) (the blocking human gate + no-auto-promotion this makes measurable), [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md) (diagnostic eval the comparison data complements), [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review" — deliverables, not the agent gate).
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

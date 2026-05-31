@@ -55,4 +55,3 @@ The `CHOSEN.md` file is required before the project card can advance to drafting
 
 - Previous step: [Assess your corpus](assess-your-corpus.md)
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- Frame workflow reference: [how-to/workflows/downstream/frame.md](../../how-to-guides/writing/frame-a-project.md)

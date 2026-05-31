@@ -44,7 +44,7 @@ Each profile lives at `.memoria/profiles/memoria-<name>/`:
 | --- | --- | --- | --- | --- |
 | **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query` | `paper-lookup`, `arxiv-search`, `pyzotero`, `citation-management`, `literature-review`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
 | **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map`, `comparative-brief` | `scope-project`, `gap-report`, `cluster-mapping`, `comparative-brief` | Level 2 (Kanban) |
-| **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `socratic-processing`, `lens-reading` (parameterized: `mamykina-lens`, `veinot-equity-lens`, …) | Level 3 (interactive only) |
+| **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `socratic-processing`, `lens-reading` (parameterized: `mamykina-sensemaking`, `veinot-informational-justice`, …) | Level 3 (interactive only) |
 | **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki-draft`, `note-refactor`, `scientific-writing`, `counter-outline` | Level 2 (Kanban) with review gate |
 | **Verifier** | Verify claims, citations, duplicates | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | Level 2 (Kanban) |
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `scaffold-code-note`, `workspace-coordinate`, `commit-and-document` | Level 2 (external dispatch) |
