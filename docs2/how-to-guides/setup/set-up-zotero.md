@@ -19,7 +19,7 @@ In Zotero 9: Tools → Better BibTeX Preferences (in Zotero 5/6 this was Edit �
 
 Citation Keys tab → Citation key formula:
 
-```
+```text
 [auth.lower][year][title:lower:condense:6]
 ```
 

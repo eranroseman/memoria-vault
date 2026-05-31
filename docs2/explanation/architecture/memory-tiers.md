@@ -21,19 +21,21 @@ Two of these scopes are provided by Hermes natively; four are substrates Memoria
 
 ---
 
-## Rules
+## Why each substrate has its scope
 
-**Working context is not shared and does not persist.** The Librarian's in-session reasoning does not bleed into the Writer's session, and `/clear` discards it. Anything worth keeping must be written to one of the durable substrates.
+The scoping of each substrate is not arbitrary — it follows from what each substrate is responsible for holding, and the cost of getting it wrong.
 
-**Profile memory is per-profile and frozen at session start.** Because `MEMORY.md` and `USER.md` are injected as a snapshot, a mid-session write isn't visible until the next session. Keep them small — the token caps are load-bearing — and reserve them for stable facts, not in-flight task state (which belongs in board memory).
+**Working context** is correctly session-scoped because it is the agent's active reasoning state. Sharing it across profiles would mean the Librarian's in-flight reasoning bleeds into the Writer's session — a cross-contamination with no coherent owner. The cost of discarding it on `/clear` is zero, because anything worth keeping from a session must be written to one of the durable substrates.
 
-**Session search is the cross-session recall channel, not a planning store.** Use it to answer "did we discuss X before?" cheaply. It is read-only history; it never gates promotion and is never authoritative over the vault.
+**Profile memory** is per-profile and frozen at session start because it is injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800 tokens) and `USER.md` (~500 tokens) are load-bearing: profile memory that exceeds these caps gets truncated or degraded. This makes profile memory unsuitable for in-flight task state, which belongs in board memory instead, and appropriate only for stable facts that change infrequently.
 
-**Board memory is per-card, not per-profile.** When a card moves from the Librarian lane to the Writer lane, the handoff payload travels with it. The Writer does not inherit the Librarian's working context — only the structured payload.
+**Session search** is the cross-session recall channel but carries no authority. It is searchable history — useful for answering "did we discuss X before?" — but it never gates promotion and is never treated as authoritative over the vault. A session search result that contradicts a vault note loses; the vault is the ground truth.
 
-**Vault project memory is the cross-lane channel.** Anything that must survive across lanes within a project belongs here — not in profile memory (too local, capped) and not in vault audit memory (too distant). `research-directions.md` is the defining example.
+**Board memory** is per-card rather than per-profile because the handoff is the unit of cross-profile communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it. The Writer does not inherit the Librarian's conversational context — only the structured handoff payload. This is what makes cross-profile handoffs reliable without requiring profiles to share session state.
 
-**Vault audit memory is append-only.** Profiles read it; only the Linter writes to it. Capture it from day one — human-loop and cost trends cannot be reconstructed retroactively.
+**Vault project memory** is the appropriate location for anything that must survive across lanes within a project. Profile memory is too local (scoped to one profile, capped in size) and vault audit memory is too far downstream (aggregate history, not project state). `research-directions.md` is the canonical example: it must be readable by every profile that touches the project, but it is not an audit artifact.
+
+**Vault audit memory** is append-only because its value is the complete, unmodified chain. Profiles read it; only the Linter writes to it. The append-only constraint is not just a policy choice — the Linter's `vault-hash-drift` detector catches files modified outside this trail. Starting audit capture from day one matters because the cost and human-loop trends it tracks cannot be reconstructed retroactively.
 
 ---
 

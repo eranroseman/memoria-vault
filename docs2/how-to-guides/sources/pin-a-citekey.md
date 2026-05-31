@@ -1,14 +1,8 @@
-# Pin a citekey in Zotero
+# How to pin a citekey in Zotero
 
-**Goal:** Lock a paper's Better BibTeX citekey so it never regenerates when metadata changes.
+This guide shows you how to lock a paper's Better BibTeX citekey so it never regenerates when metadata changes.
 
-Do this immediately after adding a paper to Zotero — before running ingest, before the note is created in the vault.
-
-## Why this is critical
-
-Better BibTeX generates citekeys automatically from author name, year, and title (`mamykina2010sense`). If any of those metadata fields change — a typo fix, a name correction, an author order update — BBT regenerates the key. Every wikilink in the vault pointing to the old key breaks silently. Obsidian shows the links as unresolved but gives no notification.
-
-Once a paper has been ingested and wikilinks have formed across the vault, a citekey change creates maintenance debt that is tedious to repair. Pinning takes 3 seconds; fixing broken links takes 20 minutes.
+Do this immediately after adding a paper to Zotero — before running ingest, before the note is created in the vault. An unpinned key can drift if metadata is corrected later, silently breaking vault wikilinks. See [Unpinned citekeys](../../explanation/knowledge/common-pitfalls.md#unpinned-citekeys) for why key stability matters.
 
 ## Steps
 

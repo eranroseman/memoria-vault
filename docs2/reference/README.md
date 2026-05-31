@@ -14,6 +14,8 @@ Lookup material for Memoria — fields, values, commands, schemas, folder paths.
 | [plugins.md](plugins.md) | Obsidian plugin inventory and load-bearing configuration settings |
 | [linking.md](linking.md) | Wikilink conventions, typed-relation vocabulary, MOC thresholds |
 | [memory.md](memory.md) | Memory substrate table, audit log schema, log rotation spec |
+| [policy.md](policy.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
+| [integrations.md](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
 | [ingest.md](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [export.md](export.md) | Citation states, export routes, editor comparison, deliverable targets |
 | [failure-modes.md](failure-modes.md) | All failure modes by severity: symptom, cause, fix |

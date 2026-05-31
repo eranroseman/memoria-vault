@@ -1,0 +1,62 @@
+# tool-registry.yaml — the authoritative per-profile TOOL allowlist.
+#
+# Designed in architecture/on-disk-layout.md as "the machine-read tool config:
+# it declares which tools each profile may call, so the policy MCP and the lane
+# overrides resolve against one authoritative list rather than per-profile
+# duplicates."
+#
+# Two layers, deliberately separate:
+#   - THIS file governs WHICH TOOLS a profile may invoke (capability).
+#   - lane-overrides/<lane>.yaml governs WHICH PATHS those tools may write (scope).
+# So a profile that writes only one folder still needs the vault_write *capability*
+# here; the narrowing to that folder lives in its lane-override. Only Socratic —
+# which writes nowhere (policy.allow.write: []) — is denied the write capability.
+#
+# Semantics:
+#   - `allow` is an allowlist; anything not listed is DENIED (default-deny).
+#   - An `allow` entry is either a GROUP name (expanded via `groups` below) or a
+#     bare Hermes built-in toolset name (skills, todo, terminal, file, ...).
+#   - Tool IDs: Hermes built-in toolset names + `<mcp-server>.<tool>` for MCP tools.
+#
+# Enforcement: the policy MCP / hook may read this to gate tool calls (TODO — today
+# writes are gated by path in the lane-overrides). Meanwhile it is the single
+# source of truth the Linter checks each profile's config.yaml/mcp.json against
+# for drift (a profile granted a toolset not in its registry entry is a finding).
+
+version: 1
+
+# Reusable capability groups -> concrete tool IDs.
+groups:
+  vault_read:  [obsidian.get_file_contents, obsidian.list_files, obsidian.search]
+  vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.delete_file]
+  web:         [web_search, web_extract]          # "search_web" + "fetch_url"
+  policy:      [policy.check_permission, policy.complete_write]
+
+profiles:
+  memoria-librarian:
+    allow: [web, vault_read, vault_write, skills, todo, policy]
+    notes: "Discovery via web; vault read/write via obsidian (lane scopes writes to 10-inbox/ + 20-sources/). rest-passthrough is a skill, not a raw tool."
+
+  memoria-mapper:
+    allow: [vault_read, vault_write, skills, todo, policy]
+    notes: "No web/terminal (external APIs + drafting denied). vault_write capability is lane-scoped to 40-workbench/*/01-map/ scratch only."
+
+  memoria-socratic:
+    allow: [vault_read, skills, todo, policy]
+    notes: "Hard read-only: vault_write withheld at the capability layer, mirroring policy.allow.write: []. No web, no terminal."
+
+  memoria-writer:
+    allow: [web, vault_read, vault_write, skills, todo, policy]
+    notes: "Drafting; vault_write lane-scoped to answers/drafts/framing/canvas and review-gated 02-reference/50-deliverables (degrade to dry_run)."
+
+  memoria-verifier:
+    allow: [web, vault_read, vault_write, skills, todo, policy]
+    notes: "web for retraction/cite checks (external_api_policy: explicit_only); vault_write lane-scoped to verification reports + gap candidates."
+
+  memoria-coder:
+    allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
+    notes: "terminal + file for Git/repo + external-agent handoff; vault_write lane-scoped to 40-workbench/*/06-code/. No browser."
+
+  memoria-linter:
+    allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
+    notes: "terminal runs detectors.py; file reads the vault tree + Git; vault_write lane-scoped to 00-meta/02-logs/. No web/browser."

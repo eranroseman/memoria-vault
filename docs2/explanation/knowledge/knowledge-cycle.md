@@ -1,53 +1,41 @@
 # The knowledge cycle
 
-The long-term progression from ingested source to written output. Every note in the vault is somewhere in this cycle; the dashboards surface where things are stuck.
+Every note in the vault is somewhere in a long-term progression from ingested source to written output. Understanding the cycle as a whole — what it is for, where it gets stuck, and what makes it compound — is the conceptual foundation for understanding why the vault is structured the way it is.
 
-## The seven stages
+## The progression
 
-```text
-1. Ingest          → paper-note created, _proposed_classification proposed
-2. Classify        → classification promoted, lifecycle: current
-3. Synthesize      → claim notes distilled (maturity: seedling)
-4. Develop         → cross-referenced, linked into MOCs (maturity: evergreen)
-5. Promote         → claim promoted to reference-note when stable enough
-6. Write           → reference notes and claims assembled into a draft
-7. Export          → draft → deliverable
-```
+The cycle moves through seven broad stages: ingest, classify, synthesize, develop, promote, write, export. A new source arrives as a candidate, becomes a paper-note after the Librarian processes it, gets classified by the human, generates claim notes through Socratic discussion and synthesis, those claims mature and cross-link into the existing graph, stable claims get promoted to reference notes, and eventually assembled into a deliverable.
 
-This cycle runs in parallel across many sources. At any given time you will have paper-notes at stage 2, claim notes at stage 3, a growing MOC at stage 4, and an active draft at stage 6. The dashboards show what is stuck at each stage.
+This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one pipeline but many running concurrently.
 
-## Why stages, not a linear path
+## Why the cycle is not a linear path
 
-The cycle is not strictly sequential. A claim note can be at maturity: seedling for months before a new paper moves it to evergreen. A paper note can sit at "classified" for a year before you have time to distill claim notes from it. The cycle describes the intended direction of flow, not a timeline.
+The cycle describes the intended direction of flow, not a timeline or a required sequence. A claim note can remain at `maturity: seedling` for months — that is normal, not broken. A paper note can sit classified for a year before there is enough surrounding context to synthesize claim notes from it. A new paper may arrive and retroactively change what an older claim note was arguing.
 
-What the cycle prevents: notes that are captured but never synthesized (the most common failure mode), and claims that are synthesized but never written from (the second most common failure mode).
+What the cycle prevents is the two common failure modes at opposite ends: notes that are captured but never synthesized (the vault grows but never compounds), and claims that are synthesized but never written from (the knowledge accumulates but never produces output). The cycle's shape names these as distinct failure modes because they look identical from the outside — both appear as an active vault — but indicate different structural problems.
 
-## Where things get stuck
+## Why the vault compounds rather than accumulates
 
-| Stage | Common sticking point | Dashboard that surfaces it |
-| --- | --- | --- |
-| Ingest → Classify | `_proposed_classification` not reviewed | `reading-pipeline.md` |
-| Classify → Synthesize | Reading without writing claim notes | `reading-pipeline.md` (notes in `current` with no linked claims) |
-| Synthesize → Develop | Orphan claim notes with no connections | `open-questions.md`, `loose-ends.md` |
-| Develop → Write | Claims never assembled into a draft | No dashboard surfaces this directly — it's a judgment call |
-| Write → Export | Draft verification finding gaps | `board-state.md` (Verifier cards in review) |
+The distinction between a vault that compounds and one that merely accumulates is in the density of the claim-note layer. A vault with 500 paper-notes and 10 claim notes is a sophisticated reading list — useful for finding sources but not for writing from. A vault with 50 paper-notes and 40 claim notes that link to each other and to MOCs is a structure the human can write from directly, navigating the graph of connected ideas rather than remembering what they read.
 
-## The compound principle
+This is Karpathy's compiler insight applied to personal research: the vault's value is not in its size but in its integration. A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes.
 
-The cycle is what makes a knowledge system compound rather than just accumulate. A vault that ingests and classifies but never synthesizes is a sophisticated reading list. A vault where claim notes link to each other and to MOCs is a structure you can write from directly — not by remembering what you read, but by navigating a graph of connected ideas.
+## Where the cycle gets stuck
 
-The measure of a healthy vault is not the number of paper-notes. It is the density of the claim-note layer and the completeness of the MOC layer. A vault with 50 paper-notes and 40 claim notes that link to each other is more useful for writing than a vault with 500 paper-notes and 10 claim notes.
+The dashboards exist to surface exactly where in the cycle work has stopped. Classification backlog surfaces in `reading-pipeline.md`. Orphan claim notes with no connections surface in `open-questions.md` and `loose-ends.md`. Verification gaps surface in `board-state.md`. The correspondence between stuck points and dashboard views is not accidental — the dashboards were designed to make the cycle's failure modes visible before they compound.
 
-## The weekly ritual's role
+The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. This is also the hardest gap to notice because a vault full of well-developed claim notes looks healthy even when nothing is being written.
 
-The [weekly review](../dashboards/weekly-review.md) ritual is the mechanism that keeps the cycle moving. Without it, ingest accumulates at stage 2 and synthesis never advances. The ritual's seven steps map directly onto the stuck-points table above: triage debt, inbox review, structural checks, and commit.
+## Why archiving preserves the cycle's integrity
 
-## Archive at any stage
+Notes that are no longer useful do not become invisible by deletion — they become gaps in the provenance graph. A deleted source note breaks every claim note that cited it. A deleted claim note leaves claims in later notes without their grounding.
 
-A note that is no longer useful at any stage should be archived rather than deleted. Set `lifecycle: archived` (or for claim notes, `maturity: retired` and `superseded_by: [[newer-claim]]`), move it to `95-archive/`, and update any backlinks. Archived notes remain readable and in Git history; they disappear from all active Dataview queries and from the agent's search scope.
+Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
 
-Archive triggers at each stage:
-- **Paper-note:** `pub_status: retracted` or paper no longer relevant to the research direction
-- **Claim note:** a newer claim supersedes this one; set `superseded_by:` and `maturity: retired`
-- **MOC:** project has ended; MOC documents the intellectual structure of finished work
-- **Draft:** submitted or abandoned; move to `50-deliverables/` or `95-archive/`
+For the archive procedure, see [how-to-guides/maintenance/run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md).
+
+## Related
+
+- Why the cycle needs weekly attention: [../dashboards/weekly-review.md](../dashboards/weekly-review.md)
+- The epistemic roles of note types: [note-types.md](note-types.md)
+- Why promotion is gated: [promotion-model.md](promotion-model.md)

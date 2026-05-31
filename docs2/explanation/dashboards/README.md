@@ -33,9 +33,14 @@ Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type 
 | [fleet-health.md](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
 | [audit-log.md](audit-log.md) | What did the policy MCP allow, deny, and flag today? |
 
-## Design rules that apply to all dashboards
+## Why the dashboards are designed the way they are
 
-- **One decision per query.** Each dashboard query surfaces one type of thing the human needs to act on. Mixed queries produce lists the human can't batch-act on.
-- **Filter the boring cases.** The default state — nothing to review, everything healthy — should show nothing, not a list of green checks. Dataview tables that always have rows train the human to ignore them.
-- **Sort oldest-first for queues, newest-first for logs.** Oldest-unreviewed items get priority; most-recent events are most actionable in logs.
-- **Graceful degradation.** When a dependency is missing (a plugin not installed, a log file not yet created), the dashboard shows explanatory text rather than an error or an empty table.
+Several principles cut across all ten dashboards.
+
+Each dashboard surfaces one type of decision. Mixed queries produce lists the human can't batch-act on — a dashboard that asks "review these cards AND check these orphan notes" forces context-switching within a single glance. The single-decision constraint keeps the cognitive mode coherent.
+
+The default state — nothing to review, everything healthy — should produce an empty or near-empty dashboard, not a list of green checks. Dataview tables that always have rows train the human to ignore them. A dashboard that is always busy is a dashboard that stops being read. Empty is success, not a broken query.
+
+Sort direction follows the decision type. Queues sort oldest-first because the oldest unreviewed item has waited the longest and should be acted on first. Logs sort newest-first because the most recent event is most actionable — investigating a log means starting from what just happened.
+
+When a dependency is missing (a plugin not installed, a log file not yet created, fleet volume too low for meaningful statistics), dashboards show explanatory text rather than an error or a blank table. The graceful degradation is intentional: a new vault should not look broken just because data is still accumulating.

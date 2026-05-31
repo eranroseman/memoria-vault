@@ -31,7 +31,7 @@ cd memoria-vault\vault
 notepad "$env:USERPROFILE\.hermes\profiles\memoria-librarian\.env"
 ```
 
-Set `ANTHROPIC_API_KEY`, `OPENALEX_EMAIL`, and `MEMORIA_OBSIDIAN_API_KEY`.
+Set `ANTHROPIC_API_KEY`, `OPENALEX_EMAIL`, and `OBSIDIAN_API_KEY`.
 
 **5. Ingest your first source.** Drag one PDF into Zotero. Note the citekey Better BibTeX assigned. Then:
 

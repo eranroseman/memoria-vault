@@ -40,7 +40,7 @@ If `-s` is omitted, the profile starts with no skill loaded — useful for explo
 
 Once in a session, type `/skill-command [args]` to invoke the loaded skill:
 
-```
+```text
 /llm-wiki ingest --source mamykina2010sense
 /lint --dry-run
 /lint --target 20-sources/
@@ -56,7 +56,7 @@ Type `exit` or Ctrl-C to end the session cleanly.
 
 Most write-producing commands accept `--dry-run`. This reports what would be written without touching the vault:
 
-```bash
+```text
 /llm-wiki ingest --source mamykina2010sense --dry-run
 ```
 

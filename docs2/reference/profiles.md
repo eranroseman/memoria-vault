@@ -33,10 +33,10 @@ Each profile lives at `.memoria/profiles/memoria-<name>/`:
 | File | Status | Notes |
 | --- | --- | --- |
 | `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | pending | Model routing. Required by `install.ps1` for registration. |
-| `mcp.json` | pending | MCP registration; contains `{{VAULT_PATH}}` substitution target. |
-| `distribution.yaml` | pending | Install metadata. Required by `install.ps1`. |
-| `.env.EXAMPLE` | pending | Secret manifest; copied to `.env` on first install. |
+| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. Required by `install.ps1`. |
+| `mcp.json` | shipped | `mcp_servers`: `policy` + `obsidian`; `{{VAULT_PATH}}` substitution target. |
+| `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by `install.ps1`. |
+| `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
 | `skills/` | shipped | Placeholder (`.keep`). K-Dense skills installed here via `hermes skills install`. |
 

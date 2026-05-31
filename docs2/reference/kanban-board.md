@@ -12,7 +12,7 @@ Lookup tables for the Hermes Kanban board: the execution lifecycle, review overl
 
 Cards carry a `status` field (Hermes built-in, fixed 7-value enum). This field is disjoint from the note `lifecycle` field — never use one in place of the other.
 
-```
+```text
 triage ──► todo ──► ready ──► running ──► done ──► archived
                       ▲          │
           (retry) ────┘          └──► blocked ──(unblock)──► ready
@@ -36,7 +36,8 @@ A second lifecycle layered onto `status`. Applies once `status = done`. Source o
 
 | `metadata.review_status` | Meaning | Set by |
 | --- | --- | --- |
-| `unreviewed` | Default. Worker finished; human has not reviewed yet. | — |
+| `unreviewed` | Default. No review requested yet (card pre-`done`, or `done` but not yet handed off). | — |
+| `requested` | Worker finished and handed off for review (set on `kanban_complete`). The review queue counts these. | Worker |
 | `approved` | Human has accepted the work as canonical. | Human |
 | `rejected` | Human has rejected the work. Card proceeds to one of the post-rejection paths below. | Human |
 
@@ -82,7 +83,7 @@ Written to `metadata` on the Hermes card. Human-set fields that the policy MCP g
 
 | Field | Type | Owner | Notes |
 | --- | --- | --- | --- |
-| `review_status` | enum | Human | `unreviewed` · `approved` · `rejected`. |
+| `review_status` | enum | Worker / Human | `unreviewed` · `requested` · `approved` · `rejected`. |
 | `agent_verdict` | enum | Verifier / Linter | `clean` · `issues-found` · `inconclusive`. |
 | `review_owner` | string | Human / system | Who owes the next review decision. |
 | `review_requested_at` | datetime | System | When the card entered `done`. |
@@ -121,31 +122,3 @@ Workers write a structured `summary` on `kanban_complete`. Standard fields:
 | `dispatch_in_gateway` | `true` | Dispatcher runs in the Hermes gateway process. |
 | `dispatch_interval_seconds` | `60` | Dispatcher polls every 60 seconds. Mandated Memoria default. |
 | Retry threshold | `max_retries: 3` (default) | After 3 recoverable failures, card moves to `blocked`. Per-lane configurable. |
-
----
-
-## Board card lifecycle example
-
-```
-Human creates card ──► triage (spec incomplete)
-                          │
-              hermes kanban specify
-                          │
-                        todo (spec ready)
-                          │
-              Human releases (hermes kanban release)
-                          │
-                        ready
-                          │
-              Dispatcher claims + spawns profile
-                          │
-                        running
-                          │
-              Worker completes (kanban_complete)
-                          │
-                        done (review_status: unreviewed)
-                          │
-              Human reviews
-               ├── approved ──► review_status: approved ──► archived
-               └── rejected ──► review_status: rejected ──► archived (+ new triage card if supersede)
-```

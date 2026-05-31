@@ -31,8 +31,12 @@ For `[!verification]`: citekey resolution and embedding similarity produce a sco
 
 The audit trail for each callout is the deterministic step's output — which candidates ranked where, by what score. The LLM's prose is visible but the selection is what dashboards and the fleet-health ratios measure.
 
-## Callout design rules
+## Why callouts are producer-owned and human-curated
 
-- **Producer-owned, human-curated.** The agent writes the callout once; you accept, reject, or rewrite. The agent does not overwrite your edits on subsequent runs — it appends a new `(updated YYYY-MM-DD)` callout below.
-- **Collapsed by default for suggestions, expanded for briefs and verifications.** Volume-prone callouts start collapsed. One-shot context callouts start open.
-- **Callout writes are policy-MCP gated.** When the Mapper attaches a `[!brief]`, that write is logged, hashed, and reversible from the audit log like any other vault write.
+Three properties are shared across all three callout types and reflect common design commitments.
+
+Each callout is written once by the producing agent and then owned by the human. The agent does not overwrite edits on subsequent runs — it appends a new `(updated YYYY-MM-DD)` callout below any existing one. This preserves the human's edits while surfacing new agent output, rather than forcing a choice between freshness and persistence.
+
+The collapsed/expanded default follows the volume of the callout type. `[!suggestions]` starts collapsed because it contains a list of candidate links — seeing a wall of suggestions encourages rubber-stamping rather than review. `[!brief]` and `[!verification]` start expanded because they provide one-shot context that is always relevant when the note is open.
+
+Callout writes pass through the policy MCP like any other vault write — logged, hashed, and reversible from the audit log. This means the callout mechanism cannot be used to bypass the review gate, and the audit trail captures when and by whom each callout was written.

@@ -1,14 +1,10 @@
 ---
-status: stub
+topic: profiles
 ---
 
 # Profiles
 
-> **Stub** — this section contains per-profile design explanations: mission, scope, what makes each profile distinct, and the key design choices.
-
-## What goes here
-
-One document per profile, explaining the *why* behind its design:
+One document per profile. Each explains the profile's mission, what makes it distinct, and the key design choices behind it.
 
 - **[librarian.md](librarian.md)** — discovery-optimistic, source-focused; why it's the system's entry point for new knowledge.
 - **[mapper.md](mapper.md)** — read-only corpus surveyor; why it never writes canonical content.

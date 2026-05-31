@@ -11,19 +11,12 @@
 
 ---
 
-## What you're about to do
-
-A single paper-note is an isolated fact. Five paper-notes on the same topic start forming a cluster — a web of related ideas where the `[!brief]` callouts have real material to compare, and your claim notes start linking to each other. This tutorial builds that first cluster.
-
-The flow is the same as Tutorial 03, done five times, with one additional step at the end: linking claims to each other.
-
----
-
 ## Step 1 — Choose your batch
 
 Add 5 papers to Zotero that are all on the same topic area — the same area as the paper from Tutorial 03.
 
-**How to choose well:**
+Choose papers by this criteria:
+
 - Pick papers you've actually been meaning to read, not the most famous ones in the field
 - Mix: at least one older foundational paper, two or three recent ones (last 3 years), one you're uncertain about
 - Aim for papers that might disagree with each other — divergence produces better claim notes than consensus
@@ -50,9 +43,7 @@ Wait until all 5 notes appear in the dashboard before moving on.
 
 Open each new paper-note. Read its `[!brief]` callout before doing anything else.
 
-By the third or fourth paper, the briefs will reference your earlier papers — "overlaps with `<earlier-citekey>` on receptivity timing." This is the corpus coming alive. The Mapper has compared each incoming paper against everything already in your vault.
-
-> **The briefs tell you what to look for.** If the brief flags a potential contradiction with an earlier paper, pay extra attention to that section when you read. If it flags a new construct, note it — that construct might become a topic term or a claim note of its own.
+By the third or fourth paper, the briefs will reference your earlier papers — "overlaps with `<earlier-citekey>` on receptivity timing." If a brief flags a potential contradiction with an earlier paper, pay extra attention to that section when you read. If it flags a new construct, note it in a fleeting note.
 
 Take brief notes (in a fleeting note, or directly in the paper-note body) about what each paper is actually saying. Not a summary — just the one or two things that matter to your thinking.
 
@@ -76,26 +67,28 @@ After classifying all five, open `reading-pipeline.md`. All five should show `li
 
 ## Step 5 — Write three claim notes
 
-Now comes the thinking work. From the five papers, write three claim notes.
+From the five papers, write three claim notes. Choose claims that:
 
-**How to choose which claims to write:**
-- Pick claims that you found genuinely surprising, or that changed how you think about the topic
-- Pick claims that appear in more than one paper (multiple sources = stronger grounding)
-- Pick at least one claim that *contradicts* or *qualifies* another — the tension is where synthesis happens
+- You found genuinely surprising, or that changed how you think about the topic
+- Appear in more than one paper (multiple sources = stronger grounding)
+- Include at least one that *contradicts* or *qualifies* another — the tension is where synthesis happens
 
 For each claim note:
 
 Press `Cmd+P` → type `write claim` → select **Memoria: write claim note**
 
 Fill in:
+
 - **Title:** One falsifiable sentence. Your words, not the paper's.
 - **Body:** 3–5 sentences. Why you believe this, what would overturn it, what it connects to.
 - **sources:** The citekeys of the papers that support this claim: `[[citekey1]], [[citekey2]]`
 - **maturity:** `seedling` (the default — keep it)
 
-> **One note, one claim.** If your title contains "and" doing real work, you have two claims. Split them. Atomic claim notes are more useful because they link independently — a compound claim can only link as a unit.
+If your title contains "and" doing real work, you have two claims — split them into separate notes.
 
 After writing all three, you have a synthesis zone with three permanent notes.
+
+**See also:** [Note types — claim-note](../explanation/knowledge/note-types.md) — atomicity discipline and when to split a compound claim.
 
 ---
 
@@ -121,7 +114,7 @@ relations:
 
 Do this for all three claim notes — check whether each connects to the others. Not every note needs to connect to every other; link only where the relationship would matter in a future reading session.
 
-After linking, open the Obsidian graph view (`Cmd+P → Open graph view`). You'll see your 5 paper-notes and 3 claim notes connected. This is the beginning of your knowledge graph.
+After linking, open the Obsidian graph view (`Cmd+P → Open graph view`). You'll see your 5 paper-notes and 3 claim notes connected.
 
 ---
 
@@ -134,8 +127,6 @@ This dashboard surfaces notes with `lifecycle: proposed` that have been sitting 
 If any of your five papers are still showing as `proposed`, go back and classify them.
 
 If any claim note shows as an orphan (no links in or out), add at least one link — either to a paper-note in `sources:` or to another claim note in `relations:`.
-
-An orphan claim note has not made it into the knowledge graph. The Zettelkasten discipline: a note with no connections is a note that won't be found when you need it.
 
 ---
 

@@ -11,17 +11,12 @@
 
 ---
 
-## What you're about to do
-
-This is the upstream pipeline for a paper: bring it into Zotero, hand it to the Librarian, let the agent create and enrich the paper-note, then do your intellectual work: classify, read, think, and write one claim note. The agent handles the mechanical work; you handle everything that requires judgment.
-
----
-
 ## Step 1 — Add the paper to Zotero
 
 Add a paper to Zotero that you actually want to read — one relevant to your research area. If you're unsure which paper to use, choose a well-cited one in your field that you've been meaning to read.
 
 Add it by:
+
 - Dragging a PDF onto Zotero, or
 - Using the Zotero browser connector on a journal page, or
 - Using **File → Import** with a RIS or BibTeX file
@@ -65,11 +60,10 @@ Open the paper-note at `20-sources/01-papers/<citekey>.md`.
 At the top of the paper-note, find the `[!brief]` callout. Read it before opening the paper.
 
 The brief tells you:
+
 - Which of your existing notes this paper overlaps with
 - Whether it might contradict something you've already noted
 - Any new constructs it introduces that your vault doesn't have yet
-
-> **Why read the brief first?** In Zettelkasten, the goal of reading a paper isn't to extract everything — it's to find what matters *to your thinking*. The brief primes your attention so you read actively: confirming what you expected, noticing what contradicts it, and catching the genuinely new.
 
 If you have no other papers in the vault yet, the brief will be sparse. That's fine — it will grow more useful as your corpus grows.
 
@@ -99,6 +93,7 @@ _proposed_classification:
 ```
 
 Review each field. For each one:
+
 - **If you agree:** move it to the main YAML frontmatter (the section before `_proposed_classification`)
 - **If you'd use different terms:** change it before moving it
 - **If a field is wrong:** delete it
@@ -119,7 +114,7 @@ Save the note.
 
 **Check the dashboard:** `reading-pipeline.md` now shows your paper as `lifecycle: current`. The reading pipeline has one fewer item in the `proposed` column.
 
-> **The vocabulary discipline:** The terms you use in `topic:` are your vocabulary — not a fixed taxonomy. Write terms you'll actually search for later. Keep your active topic list to around 30 terms total; a smaller vocabulary produces more consistent classification across notes.
+**See also:** [Vocabulary discipline](../reference/linking.md#vocabulary-discipline) — guidelines for choosing and maintaining your topic terms.
 
 ---
 
@@ -132,6 +127,7 @@ Press `Cmd+P` → type `ask about` → select **Memoria: ask about this note**.
 The Socratic pane opens with the paper-note attached. Tell it: "I just read this paper. Help me think about what it means for my research."
 
 Socratic will ask questions like:
+
 - "What's the core claim this paper makes?"
 - "What does it connect to in your existing thinking?"
 - "What would you need to believe in order to trust this finding?"

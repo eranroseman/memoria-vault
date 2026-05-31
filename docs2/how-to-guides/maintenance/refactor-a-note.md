@@ -1,6 +1,6 @@
-# Refactor claim notes
+# How to refactor claim notes
 
-**Goal:** Keep claim notes atomic and remove duplication without losing provenance.
+This guide shows you how to keep claim notes atomic and remove duplication without losing provenance.
 
 ## When to refactor
 
@@ -18,7 +18,7 @@ hermes -p memoria-verifier chat -s find-duplicates
 
 Then in the session:
 
-```
+```text
 /find-duplicates --folder 30-synthesis/01-claims --threshold 0.85
 ```
 

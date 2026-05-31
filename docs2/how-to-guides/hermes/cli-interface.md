@@ -5,7 +5,7 @@ Run Hermes commands for profile management, chat sessions, and system operations
 
 ## Core command structure
 
-```
+```bash
 hermes [global flags] <command> [subcommand] [args]
 ```
 

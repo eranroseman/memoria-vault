@@ -151,8 +151,4 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `hermes kanban archive <id>` | Archive a terminal card. |
 | `hermes kanban decompose <id>` | Fan out a `triage` card into child task cards. |
 
----
-
-## Review-gated write rule
-
-Any command that writes to a review-gated zone — `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` — or runs a schema migration must default to dry-run. `schema-migrate` must never be run without reviewing the diff first.
+See [policy.md — Review-gated zones](policy.md) for the rule on commands that target synthesis or deliverable folders.

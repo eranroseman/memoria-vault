@@ -28,27 +28,25 @@ Each layer has exactly one job. None of them owns business logic except the MCP 
 
 ---
 
-## Fail-closed startup
+## Why the API is fail-closed
 
-The Hermes API is the dispatch entry point with the largest blast radius if misconfigured — anything that reaches it can dispatch tasks and trigger writes. Two startup rules:
+The Hermes API is the dispatch entry point with the largest blast radius if misconfigured — anything that reaches it can dispatch tasks and trigger writes. The design responds to this with two complementary constraints.
 
-**Default to loopback only.** The API binds to `127.0.0.1` unless explicitly configured otherwise. The local-only, local-mesh, and obsidian-sync deployment options never need anything else. The always-on option may extend to a network interface — but only with the API's auth token set.
+First, the API defaults to binding on loopback only (`127.0.0.1`). The local-only, local-mesh, and obsidian-sync deployment configurations never need to go beyond this — the network surface is unexposed by default. Non-loopback binding is an explicit opt-in, and it requires the auth token to be set before binding takes effect.
 
-**Always authenticate.** Hermes requires `API_SERVER_KEY` for every deployment, including the default loopback bind. A non-loopback bind additionally requires `API_SERVER_HOST` to be set explicitly. The vault side mirrors this: the obsidian-local-rest-api plugin requires its own `apiKey` whenever it is reachable beyond loopback.
+Second, authentication is required for every deployment without exception, including the default loopback bind. The vault side mirrors this: the obsidian-local-rest-api plugin requires its own `apiKey` whenever it is reachable beyond loopback.
 
-The rule is binary: every HTTP surface runs authenticated, and non-loopback binding is opt-in. There is no "I'll add the token later" — a misconfiguration here is invisible until unexpected entries appear in the audit log.
+The reason there is no "add the token later" path is that misconfiguration here is invisible — the system functions without tokens, but unexpected entries begin appearing in the audit log. A silent security failure is worse than a startup failure. The fail-closed posture makes the misconfiguration immediately visible.
 
 ---
 
-## MCP server registration
+## Why MCP servers are registered per profile, not globally
 
-MCP servers are registered per profile. Each profile carries an `mcp.json` at `~/.hermes/profiles/memoria-<name>/mcp.json` listing the servers that profile may talk to. Memoria registers three servers across all profiles:
+MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers three servers across all profiles — `obsidian` for vault read/write, `policy` for permission checking and audit logging, and `tasks` for board state — but not every profile gets every tool from every server.
 
-- **`obsidian`** — vault read/write via the Obsidian Local REST API
-- **`policy`** — the Memoria policy MCP, reading lane-overrides from `.memoria/lane-overrides/`
-- **`tasks`** — the task registry MCP fronting the Hermes Kanban
+The reason for per-profile registration rather than a global server list is the same reason for separate profiles at all: `tools.include` filters let each profile's surface be narrowed to what it actually needs. The Socratic profile gets the `obsidian` server but only its read-side tools. This is the mechanism that makes "Socratic cannot write" enforceable at the API level, not just at the prompt level.
 
-Not every profile gets every tool from every server — `tools.include` filters narrow the surface per profile. The Socratic profile gets the `obsidian` server but only its read-side tools, for example.
+For the per-profile permission matrices, see [reference/profiles.md](../../reference/profiles.md).
 
 ---
 

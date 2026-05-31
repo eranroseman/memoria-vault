@@ -1,7 +1,7 @@
 
 # Board states and the review gate
 
-This page explains why the board's state machine is shaped the way it is: why execution and review are two separate lifecycles, what each state transition represents, why the review gate has five rules, and why the WIP limits are set where they are. For the state lookup tables — the `status` enum, the `review_status` enum, the lane-assignment table, and the WIP-cap values — see the [board-states reference](../../../docs/reference/board-states.md).
+This page explains why the board's state machine is shaped the way it is: why execution and review are two separate lifecycles, what each state transition represents, why the review gate has five rules, and why the WIP limits are set where they are. For the state lookup tables — the `status` enum, the `review_status` enum, the lane-assignment table, and the WIP-cap values — see the [board-states reference](../../reference/kanban-board.md).
 
 ---
 
@@ -21,17 +21,17 @@ The execution lifecycle is linear with two escape edges. This is deliberate:
 
 The review lifecycle only becomes meaningful once `status` reaches `done`. This separation is what lets a worker make progress on a card without implying anything about whether the human will accept it.
 
-The five rules of review:
+The review lifecycle rests on five design commitments that are worth understanding together rather than in isolation.
 
-**1. Agent recommendation and human acceptance are separate.** `agent_verdict: approve` (from Verifier or Linter) and `review_status: approved` (from the human) are not the same thing and cannot substitute for each other. The agent recommends; the human decides. A card with agent approval but no human approval is waiting for review — that is the normal state after a checked artifact.
+**Agent recommendation and human acceptance are distinct dimensions.** `agent_verdict: clean` (from Verifier or Linter) and `review_status: approved` (from the human) are not the same thing and cannot substitute for each other. This separation is the mechanism that prevents an agent's recommendation from becoming a rubber stamp — the two assessments can legitimately disagree, and each remains meaningful only if they are kept separate.
 
-**2. Review is a state, not a comment.** A card is canonical only after `review_status: approved` is set, not because a worker claimed to finish or because a comment said "looks fine." The field is authoritative; comments are not.
+**Review is a state, not a convention.** A card becomes canonical only when `review_status: approved` is set as a field. A worker claiming to be finished, or a comment saying "looks fine," carries no weight. This matters because field values can be queried, enforced, and audited; comments and claims cannot.
 
-**3. Review states block dispatch.** Cards in `done` (awaiting review), `blocked`, `triage`, or `todo` are not claimable by any worker. Hermes enforces the execution states; Memoria's policy MCP additionally blocks dispatch from review-pending zones.
+**Review states are blocking, not advisory.** Cards in `done`, `blocked`, `triage`, or `todo` are not claimable by any worker. The review gate is not a suggestion that workers respect — it is a dispatch precondition enforced by Hermes and reinforced by the policy MCP.
 
-**4. Review has ownership.** The reviewing party is recorded in `review_owner` — human, Verifier, or Linter depending on the card type. The board can always show who owes the next decision.
+**Review has a named owner.** The `review_owner` field records who owes the next decision — human, Verifier, or Linter depending on the card type. This makes the review queue queryable: at any moment it is possible to ask "what is waiting for human review?" and get a precise answer.
 
-**5. Rejection starts a new card.** A rejected card is archived. Any rework begins on a fresh card with a revised spec. The original is never quietly reopened. This is what keeps the audit trail honest: each card represents one attempt, with a stated outcome.
+**Rejection creates a new card, not a revision of the old one.** A rejected card is archived. Rework begins on a fresh card with a revised specification. This preserves the audit trail: each card represents one attempt with a stated outcome, and the history of attempts is traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.
 
 ---
 
@@ -58,5 +58,5 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 - Conceptual overview: [README.md](README.md)
 - Card fields: [card-schema.md](card-schema.md)
 - Why no Reviewer: [README.md § why no Reviewer and no Orchestrator](README.md#why-no-reviewer-and-no-orchestrator)
-- Board-states lookup table: [reference/board-states](../../../docs/reference/board-states.md)
+- Board-states lookup table: [reference/board-states](../../reference/kanban-board.md)
 - Recovery for stuck cards: [how-to-guides/recovery/fix-stuck-card](../../how-to-guides/recovery/fix-stuck-card.md)

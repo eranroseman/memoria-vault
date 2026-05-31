@@ -32,10 +32,12 @@ Always edit the vault source. Run `install.ps1` to push changes to the deployed 
 
 ```yaml
 model:
-  provider: anthropic
-  name: claude-opus-4-8
-  temperature: 0.3
+  provider: kilocode                       # your gateway/provider
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-opus-latest   # the model string (provider/model)
 ```
+
+The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus a `hooks` block) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
 
 3. Save and run `./install.ps1` to deploy.
 
@@ -46,17 +48,28 @@ Lane overrides control which vault folders a profile can write to. They live at 
 Example — restrict the Librarian to write only to `10-inbox/` and `20-sources/`:
 
 ```yaml
+profile: memoria-librarian
 policy:
   allow:
     write:
-      - "10-inbox/"
-      - "20-sources/"
-  degrade:
+      - "10-inbox/**"
+      - "20-sources/**"
+  deny:
     write:
-      - path: "30-synthesis/01-claims/"
-        to: dry_run
-  audit_log: "00-meta/02-logs/audit.jsonl"
+      - "30-synthesis/**"
+      - "40-workbench/**"
+      - "50-deliverables/**"
+  require:
+    - audit_log
+routing:
+  invocation: dispatched
+  external_api_policy: explicit_only
+  write_scope:
+    - "10-inbox/"
+    - "20-sources/"
 ```
+
+You do **not** declare review-gating per lane: writes to the review-gated zones (`30-synthesis/01-claims`, `02-reference`, `03-moc`, `50-deliverables`) are automatically degraded to `dry_run` by the policy MCP. `audit_log` is a token in the `require:` list (the log path is fixed at `00-meta/02-logs/audit.jsonl`), not a key.
 
 After editing, run `./install.ps1` — the installer picks up lane-override changes on every run.
 

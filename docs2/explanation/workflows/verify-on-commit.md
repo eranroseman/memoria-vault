@@ -1,24 +1,24 @@
 # Verify-on-commit
 
-When a Writer commits a draft to `40-workbench/<project>/04-drafts/`, a git post-commit hook fires automatically and creates a `verify` card in the Verifier's lane queue. This is what makes verification automatic rather than something you have to remember to trigger — committing a draft is sufficient.
+Committing a draft to `40-workbench/<project>/04-drafts/` automatically creates a verification card in the Verifier's lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.
 
-## What fires it and when
+## Why automation is the right fit here
 
-A git post-commit hook at `.git/hooks/post-commit` in the vault repository. The hook calls the Hermes API (port 8642) to create the verify card; it does not invoke the Verifier directly. The hook is registered by the installer (`install.ps1`) during vault setup.
+The verify step occupies an awkward position in the writing workflow: it is important enough to be non-negotiable in principle, but easily deferred under deadline pressure. A manual trigger depends on the human remembering to invoke it — the exact behavior that erodes under time pressure. An automatic trigger converts the decision from "should I verify this?" to "should I skip this verification?" The latter requires a deliberate act, not just forgetfulness.
 
-The hook fires only on commits that include files in `40-workbench/*/04-drafts/`. Commits to `00-meta/`, `20-sources/`, or project map folders do not trigger a verify card.
+The asymmetry is the point. The `[!verification]` callout appears in the draft automatically after a commit; it cannot be invisibly bypassed. Ignoring it requires reading past a visible signal. Skipping a manual step requires nothing.
 
-## What happens next
+## Why the trigger is a git hook, not a cron job
 
-1. The Kanban dispatcher sees the new `verify` card in the Verifier's queue (`status: ready`).
-2. Within 60 seconds the Verifier claims the card and runs `cite-check` on the committed draft.
-3. The Verifier writes a report to `40-workbench/<project>/05-verification/<chapter>-<date>.md` and attaches a `[!verification]` callout to the draft.
-4. The card reaches `status: done` with an `agent_verdict` of `verify-clean`, `verify-needs-revision`, or `verify-needs-attention`.
-5. You review the verdict and either address the gaps or proceed to export.
+The trigger fires on `post-commit` to `40-workbench/*/04-drafts/`, not on a schedule. A cron-based verification would verify drafts based on time, not on change — it might re-verify unchanged drafts and miss recently changed ones. The commit is the natural unit of change in the writing workflow; triggering on the commit ensures verification tracks actual edits.
 
-## Why automatic rather than manual
+The hook calls the Hermes API to create the verify card — it does not invoke the Verifier directly. This keeps the trigger thin: it creates a card and returns. The Verifier claims the card through the normal dispatch mechanism, which means verification is audited, retryable, and visible in the board like any other task. A direct invocation from a hook would bypass all of that.
 
-The verify step is easy to skip under deadline pressure. Making it automatic means the cost of skipping is a deliberate override — you'd have to ignore the `[!verification]` callout appearing in the draft — rather than just forgetting. The asymmetry is intentional: the system makes verification the path of least resistance.
+## What the automatic trigger is not
+
+The automatic card creation is not automatic verification completion. The card enters the Verifier's queue; the Verifier processes it within its normal dispatch window. The result is a recommendation (`verify-clean`, `verify-needs-revision`, `verify-needs-attention`), not an automatic gate. The human still reviews the verification report and decides whether to address gaps or proceed to export.
+
+This is consistent with the rest of the system's posture: agents produce recommendations; humans make decisions. The automation eliminates the "forget to trigger verification" failure mode without removing the "read and decide on the findings" step.
 
 ## Related
 

@@ -11,18 +11,6 @@
 
 ---
 
-## What you're about to do
-
-The Zettelkasten method asks you to do one thing with every piece of thinking: write it as a permanent note in your own words. Not a summary, not a copy-paste — your own formulation, your own claim.
-
-This tutorial walks the entire upstream loop in miniature:
-
-1. **Capture** a raw thought (the Zettelkasten "fleeting note")
-2. **Think** about it with Socratic (conversation that sharpens the thought without producing output)
-3. **Write** the permanent claim in your own words
-
-This loop is the core discipline. Everything else in Memoria — papers, dashboards, projects — serves it.
-
 ---
 
 ## Step 1 — Capture a fleeting note
@@ -36,13 +24,9 @@ A small input box appears. Type your thought in one or two sentences. Press Ente
 
 **What you'll see:** A new note appears in `10-inbox/01-fleeting/` with today's date as the filename. Open it — your thought is there, timestamped.
 
-> **Why a fleeting note first?** In Zettelkasten, the discipline is to separate the moment of capture from the moment of thinking. You don't have to get it right in the capture — you just have to get it out. Processing comes next.
-
 ---
 
 ## Step 2 — Open the Socratic conversation
-
-The Socratic profile is a conversation partner that asks questions. It has no write access to your vault — it cannot create notes, modify files, or add anything to your vault. Your thinking stays yours.
 
 With the fleeting note open:
 
@@ -80,6 +64,7 @@ A new note opens in `30-synthesis/01-claims/` from the claim-note template. Fill
 **Title:** State your claim in one sentence. Make it falsifiable. Example: `Delayed writing correlates with belief in prerequisite completeness, not motivation deficit`.
 
 **Frontmatter fields to set:**
+
 - `maturity: seedling` — already set by the template; keep it
 - `lifecycle: current` — already set; keep it
 - `topic:` — add one or two terms that describe the area (e.g., `writing-process`)
@@ -116,7 +101,7 @@ Open `30-synthesis/01-claims/`. Your claim note is there:
 
 This is the Zettelkasten permanent note. You wrote it — not the agent. Socratic sharpened your thinking; you produced the artifact.
 
-> **The rule: one note, one claim.** If your body paragraph contains "and" doing real work — two distinct ideas — split it into two notes. Atomic notes are more useful than compound ones because they can link independently.
+**See also:** [Note types — claim-note](../explanation/knowledge/note-types.md) — atomicity discipline, why one claim per note, and when to split a compound claim.
 
 ---
 

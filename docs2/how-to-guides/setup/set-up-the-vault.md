@@ -30,7 +30,11 @@ The `vault/` subfolder is the Obsidian vault. It contains `.obsidian/`, `.memori
 **3. Run the install script.**
 
 ```powershell
-./install.ps1
+./install.ps1     # Windows
+```
+
+```bash
+./install.sh      # macOS / Linux / WSL2
 ```
 
 The script is idempotent — safe to re-run. For each of the seven profiles it:

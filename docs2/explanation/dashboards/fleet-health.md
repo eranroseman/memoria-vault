@@ -4,14 +4,13 @@ Tracks whether the Hermes agent fleet is performing well over time: cost per tas
 
 ## The trust score
 
-The trust score for each lane combines: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and (for lanes that produce `[!suggestions]` callouts) accept/reject ratios on those suggestions.
+The trust score for each lane is a composite of several signals: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and — for lanes that produce `[!suggestions]` callouts — accept/reject ratios on those suggestions.
 
-Bands:
-- **90+** — healthy; no action needed
-- **70–89** — watch; investigate the contributing factor that's pulling the score down
-- **< 70** — act; something is consistently wrong in this lane
+The score is designed so that no single signal dominates, which means a lane can have a perfect citation-check record but a low trust score if its suggestion accept rate signals rubber-stamping. Conversely, a high accept rate combined with a low success rate would still produce a low score. The composite is what makes the number a summary of overall lane health rather than a measure of any one metric.
 
-Suggestion-ratio sub-thresholds: an accept rate above ~90% means the human is rubber-stamping suggestions without reviewing them (down-weight the lane score). A rate below ~20% means the candidate scoring is producing poor candidates and needs tuning (also down-weighted).
+The suggestion-ratio signal is worth understanding in both directions. A very high accept rate (above ~90%) indicates the human is approving suggestions without reading them — the signal has become noise. A very low accept rate (below ~20%) indicates the candidate scoring algorithm is producing poor candidates that need tuning. Both extremes down-weight the lane score, because both represent a failure of the suggestions mechanism to do useful work.
+
+For the exact band thresholds and the score formula, see [reference/glossary.md](../../reference/glossary.md).
 
 ## What it is not
 
@@ -23,7 +22,7 @@ Suggestion-ratio sub-thresholds: an accept rate above ~90% means the human is ru
 
 ## When it shows real data
 
-The dashboard ships in every vault from day 1 but shows meaningful data only once the metrics aggregator is built and weekly fleet volume accumulates. Until then, board-state and audit-log catch issues directly. The dashboard degrades gracefully — it shows explanatory text rather than empty tables before the aggregator exists.
+The dashboard and its metrics aggregator ship with the starter vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. The dashboard degrades gracefully: it shows explanatory text rather than empty or misleading small-sample tables.
 
 ## Related
 

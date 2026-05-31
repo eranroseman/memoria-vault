@@ -30,7 +30,7 @@ from pathlib import Path
 BOARD_RELDIR = "00-meta/board"
 SNAPSHOT_RELPATH = "00-meta/02-logs/board-state.jsonl"
 LIVE_STATUSES = ("triage", "todo", "ready", "running", "blocked", "done")  # not archived
-REVIEW_QUEUE_STATES = ("requested", "in-review")   # done cards awaiting a human decision
+REVIEW_QUEUE_STATES = ("requested",)   # done cards handed off for human review (review_status: requested)
 
 
 # --------------------------------------------------------------------------- #

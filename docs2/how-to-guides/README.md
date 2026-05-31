@@ -85,6 +85,7 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Run the Linter](maintenance/run-the-linter.md) | On-demand or scheduled structural health check |
 | [Rebuild the search index](maintenance/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
 | [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
+| [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 
 ### Recovery
 

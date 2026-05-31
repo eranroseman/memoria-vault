@@ -4,7 +4,7 @@ topic: reference
 
 # Memory substrates
 
-Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [explanation/architecture/memory-tiers.md](../../docs/explanation/architecture/memory-tiers.md).
+Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [explanation/architecture/memory-tiers.md](../explanation/architecture/memory-tiers.md).
 
 ---
 
@@ -67,17 +67,15 @@ Every policy MCP decision appended to `00-meta/02-logs/audit.jsonl`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `ts` | ISO datetime | When the event occurred. |
+| `timestamp` | ISO datetime | When the decision occurred (UTC, `...Z`). |
 | `profile` | string | `memoria-<name>` — which profile triggered the write. |
-| `action` | string | The vault action attempted (`write`, `move`, `delete`, `auto_fix`). |
+| `action` | string | The vault action attempted (one of the eight: `read`/`write`/`append`/`move`/`delete`/`mkdir`/`auto_fix`/`report`). |
 | `path` | string | Vault path the action targeted. |
+| `task_id` | string | The Kanban card that triggered the action (required on every request). |
 | `decision` | enum | `allow` · `allow_with_log` · `deny` · `dry_run` |
-| `before_hash` | SHA-256 | Hash of the file before the write (tamper-detection chain). |
-| `after_hash` | SHA-256 | Hash of the file after the write. |
-| `review_status` | enum | Disposition outcome (`approved`, `rejected`, `unreviewed`) if applicable. |
-| `cost_usd` | float | Token cost of the operation. |
-| `tool_call_outcome` | string | Result of any tool call in the action. |
-| `verify_result` | enum | `verify-clean` · `verify-needs-revision` · `verify-needs-attention` (Verifier-triggered events only). |
+| `policy_rule` | string | Which lane-override rule matched (for audit-trail reconstruction). |
+| `before_hash` | SHA-256 | Hash of the file before the write (tamper-detection chain). For a create, the empty-string SHA-256, not null. |
+| `after_hash` | SHA-256 | Hash after the write (set on the `write_complete` record written by the `post_tool_call` hook). |
 
 The `before_hash` / `after_hash` chain must be unbroken across the entire log. `vault-hash-drift` fires if any link fails.
 

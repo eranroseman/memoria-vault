@@ -25,15 +25,9 @@ Combining them would make the audit log verbose (session narrative) and would ma
 
 ---
 
-## Setup note
+## Why the sessions directory is not pre-created
 
-The `00-meta/02-logs/sessions/` directory is not pre-created in the starter vault. Create it on first setup:
-
-```bash
-mkdir -p vault/00-meta/02-logs/sessions
-```
-
-Without this directory, session logging silently fails.
+The `00-meta/02-logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [how-to-guides/setup/set-up-the-vault.md](../../how-to-guides/setup/set-up-the-vault.md) covers this.
 
 ---
 

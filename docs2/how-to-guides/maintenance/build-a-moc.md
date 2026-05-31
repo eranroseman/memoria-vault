@@ -1,28 +1,24 @@
-# Build a Map of Content
+# How to build a Map of Content
 
-**Goal:** Create a navigational hub note that gives a dense claim cluster a stable entry point.
-
-A MOC (`moc` note type, lives in `30-synthesis/03-moc/`) is authored by you — agents may surface MOC candidates but cannot write into the review-gated synthesis zone.
+This guide shows you how to create a navigational hub note that gives a dense claim cluster a stable entry point.
 
 ## When to create a MOC
 
-Create one when a topic cluster crosses this threshold: roughly 15–20 related claim notes, or a recurring topic appearing across 3 or more source notes that you keep mentally tracking. If you're opening the same five claim notes every time you work on a topic, that's the signal.
-
-See [reference/linking.md](../../reference/linking.md#moc-thresholds) for the full threshold table including child-MOC thresholds.
+Create one when a topic cluster crosses roughly 15–20 related claim notes, or a recurring topic appearing across 3 or more source notes. See [reference/linking.md](../../reference/linking.md#moc-thresholds) for the full threshold table including child-MOC thresholds.
 
 ## Steps
 
-1. **Open `30-synthesis/03-moc/`.** Create a new note using `Cmd+P → Memoria: write claim note` — wait, use the MOC template instead: in the file tree, right-click `30-synthesis/03-moc/` → New note from template → `moc.md`.
+1. **Open `30-synthesis/03-moc/`.** In the file tree, right-click `30-synthesis/03-moc/` → New note from template → `moc.md`.
 
-2. **Name the MOC.** Use the topic slug plus `-moc` suffix: `jitai-design-moc`, `receptivity-timing-moc`. The slug becomes the wikilink target that all member notes will use.
+2. **Name the MOC.** Use the topic slug plus `-moc` suffix: `jitai-design-moc`, `receptivity-timing-moc`.
 
-3. **Write the overview.** Two to four sentences: what this cluster is about, what it covers, what it doesn't. This is not a summary of every note — it's the frame that helps a reader (including future-you) understand the cluster's scope.
+3. **Write the overview.** Two to four sentences covering what the cluster is about, what it includes, and what it doesn't.
 
-4. **Link the member notes.** Under a `## Notes` section, list the claim notes and paper notes that belong. Use wikilinks. You don't need to include every note — curate; omit notes that are tangentially related.
+4. **Link the member notes.** Under a `## Notes` section, list the claim notes and paper notes that belong. Use wikilinks. Curate — omit tangentially related notes.
 
-5. **Update member notes.** Open each member note and add the MOC to its `moc:` frontmatter field: `moc: [[jitai-design-moc]]`. This is what the graph view uses to show MOC membership.
+5. **Update member notes.** Open each member note and add the MOC to its `moc:` frontmatter field: `moc: [[jitai-design-moc]]`.
 
-6. **Add a `## Gaps` section.** Note what the cluster is missing — thin sub-topics, open questions, papers you know exist but haven't ingested. This section feeds the `open-questions` dashboard.
+6. **Add a `## Gaps` section.** Note what the cluster is missing — thin sub-topics, open questions, papers not yet ingested. This section feeds the `open-questions` dashboard.
 
 ## Splitting a child MOC
 

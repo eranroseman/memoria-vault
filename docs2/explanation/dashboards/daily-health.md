@@ -21,7 +21,7 @@ Daily Health is the always-on system-health view, opened every morning. Four sec
 
 **Cron status is unique to Daily Health.** No other dashboard shows cron run history. This is the one Daily Health section without a deeper counterpart — it has nowhere else to live. If the overnight lint job didn't fire, the human needs to know before proceeding with the day's work.
 
-**Graceful degradation.** Until the metrics aggregator, board markdown files, lint-findings feed, and cron-history feed are wired, the four sections return empty. Empty reads as "feature not yet wired," not "nothing is wrong" — each section's placeholder states what would populate it.
+**Graceful degradation.** When a feed has no data yet — a fresh vault with no cron runs, no lint findings, or low board volume — the relevant section returns empty with a placeholder stating what would populate it. Empty means "nothing to report," not "something is broken."
 
 **30 seconds is a constraint, not a aspiration.** A daily ritual that consistently takes more than 30 seconds stops being daily. Daily Health is designed so that a healthy vault produces four empty or near-empty sections and the human closes it immediately. Length is a signal: a long Daily Health means something needs attention, not that the ritual needs more time allocated.
 

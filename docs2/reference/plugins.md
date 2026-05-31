@@ -73,12 +73,7 @@ Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-c
 | **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
 | **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
 
-**Choosing a plugin:**
-
-- **Capture-only workflow** (Memoria's default): `obsidian-citation-plugin` — works offline, no Zotero dependency, stable.
-- **PDF annotation import needed**: `zotero-integration` — most mature; requires Zotero running at import time.
-- **Bulk import of many papers at once**: `zotlit` — evaluate once Zotero 9 stability is confirmed; do not migrate a working setup until release notes confirm it.
-- **Custom automation scripts**: `zotero-bridge` — developer-oriented middleware; not a standalone solution.
+For guidance on choosing between these plugins see [how-to/setup/set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md).
 
 ---
 
@@ -97,68 +92,68 @@ Documented but not in the install set. Evaluated alternatives and future-migrati
 
 ## Load-bearing settings per plugin
 
-Settings the human must not change without understanding the consequences. All others are personal preference.
+Settings with a fixed required value. All others are personal preference. See [explanation/obsidian-plugins/](../../docs/explanation/obsidian-plugins/) for rationale.
 
 ### obsidian-local-rest-api
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| HTTPS port | `27124` | Hermes hard-coded to this port for vault access. |
-| HTTP (insecure) port | off | Off by default; enable only in a fully isolated environment. |
-| `data.json` | **gitignored** | Contains API key secrets — never commit. Ship as `.example`. |
+| HTTPS port | `27124` | Hermes hard-codes this port; changing it breaks vault access. |
+| HTTP (insecure) port | off | Enable only in a fully isolated environment. |
+| `data.json` | **gitignored** | Contains API key secrets. Ships as `.example`; never commit the real file. |
 
 ### templater-obsidian
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| `templates_folder` | `00-meta/03-templates` | Must match the vault schema convention. |
-| `trigger_on_file_creation` | `false` | Agents create files with their own frontmatter; auto-trigger races with agent writes. |
-| `enable_system_commands` | `false` | Not needed by Memoria's Linter scripts; keep the attack surface small. |
+| `templates_folder` | `00-meta/03-templates` | Must match vault schema convention. |
+| `trigger_on_file_creation` | `false` | Auto-trigger races with agent writes. |
+| `enable_system_commands` | `false` | Not required by Memoria; increases attack surface. |
 
 ### obsidian-citation-plugin
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| BibTeX file | `.memoria/library.bib` | Better BibTeX auto-exports here; this is the single source of bib data. |
+| BibTeX file | `.memoria/library.bib` | Single source of bib data; Better BibTeX auto-exports here. |
 | Literature note folder | `20-sources/01-papers/` | Notes must land in the canonical papers folder. |
 | Template | `00-meta/03-templates/paper.md` | Must use the Memoria paper-note template. |
 
 ### obsidian-git
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| `commitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` is diagnostic — a 200-file auto-commit is unusual and the human should notice. |
-| `autoBackupAfterFileChange` | `false` | Auto-committing on every file change fights with Hermes writes and produces hundreds of commits per session. Use scheduled commits instead (`autoSaveInterval: 30` minutes). |
-| `pullBeforeCommit` | `true` | Catches divergence before the local commit creates a conflict. |
-| `pullBeforePush` | `true` | Same defense at push time. The pair is what makes multi-machine setups survive without daily merge conflicts. |
-| `autoPullOnBoot` | `true` | Catches "opened the vault on a different machine without thinking about sync." |
+| `commitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large auto-commits visible. |
+| `autoBackupAfterFileChange` | `false` | Produces hundreds of commits per session when Hermes is writing; use scheduled commits (`autoSaveInterval: 30` min). |
+| `pullBeforeCommit` | `true` | Required to catch divergence before the local commit. |
+| `pullBeforePush` | `true` | Required; prevents conflicts on multi-machine setups. |
+| `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
 | `post-commit` hook | enabled | Load-bearing — fires Verify workflow. Do not disable. |
 
-**Deployment-conditional:**
+**`autoPush` by deployment:**
 
 | Deployment | `autoPush` | Notes |
 | --- | --- | --- |
-| `local-only` | `false` | Single machine; push manually for offsite-backup checkpoints. |
-| `local-mesh` | `false` | Syncthing handles sync; Git is history. Push manually. |
-| `obsidian-sync` | `false` | Obsidian Sync handles sync; Git is history. |
-| `always-on` (desktop) | `true` | Desktop auto-pushes as backup. Syncthing handles sync; this push is backup, not sync path. |
-| `always-on` (VPS) | — | Set `disablePush: true` on the VPS. VPS should only pull — allowing it to push would create writes that bypass the desktop's policy MCP review. |
+| `local-only` | `false` | Push manually for offsite-backup checkpoints. |
+| `local-mesh` | `false` | Syncthing handles sync; Git is history only. |
+| `obsidian-sync` | `false` | Obsidian Sync handles sync; Git is history only. |
+| `always-on` (desktop) | `true` | Desktop auto-pushes as backup; Syncthing handles sync. |
+| `always-on` (VPS) | — | Set `disablePush: true`; VPS must only pull. |
 
 ### dataview
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| Enable JavaScript queries | `true` | Several dashboards use `dataviewjs` blocks. |
-| Inline queries | `true` | Used in some reference notes for live field display. |
-| `refreshEnabled` | `true` | Queries must update as notes change. |
-| `refreshInterval` | `2500` (ms) | Default; lower values cause performance issues on large vaults. |
+| Enable JavaScript queries | `true` | Required; several dashboards use `dataviewjs` blocks. |
+| Inline queries | `true` | Required; used in some reference notes for live field display. |
+| `refreshEnabled` | `true` | Required; queries must update as notes change. |
+| `refreshInterval` | `2500` (ms) | Default; lower values degrade performance on large vaults. |
 
 ### agent-client
 
-| Setting | Value | Why |
+| Setting | Required value | Constraint |
 | --- | --- | --- |
-| `defaultAgentId` | `memoria-socratic` | The Socratic profile is the default chat partner for reading sessions. |
-| `autoMentionActiveNote` | `true` | The active note is automatically attached as context. |
+| `defaultAgentId` | `memoria-socratic` | Default chat partner for reading sessions. |
+| `autoMentionActiveNote` | `true` | Active note is automatically attached as context. |
 
 ### callout-manager
 
@@ -177,6 +172,7 @@ Settings the human must not change without understanding the consequences. All o
 | `data.json.TODO` | Committed; manual configuration required before the plugin is functional. |
 | (gitignored) | Contains secrets; generated on first launch with defaults. |
 
-**Never edit `data.json` while Obsidian is running.** Obsidian rewrites it on every settings change; external edits will be overwritten. Quit, edit, restart.
-
-**Do not commit `main.js` or `styles.css`** from plugin folders — they change on every update and bloat git history. `.gitignore` should include `.obsidian/plugins/**/main.js` and `.obsidian/plugins/**/styles.css`.
+| Constraint | Rule |
+| --- | --- |
+| `data.json` edits | Only edit while Obsidian is not running; Obsidian overwrites it on every settings change. |
+| `main.js` / `styles.css` | Do not commit; add `.obsidian/plugins/**/main.js` and `.obsidian/plugins/**/styles.css` to `.gitignore`. |

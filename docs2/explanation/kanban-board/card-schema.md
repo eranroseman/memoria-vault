@@ -1,7 +1,7 @@
 
 # Why the card schema is split
 
-The card schema divides into two layers: Hermes' fixed built-in fields and a Memoria-specific `metadata` overlay. This page explains why the split exists and why the handoff payload is designed to be self-contained. For the field-by-field tables — each field's name, type, allowed values, and who writes it — see the [card-schema reference](../../../docs/reference/card-schema.md).
+The card schema divides into two layers: Hermes' fixed built-in fields and a Memoria-specific `metadata` overlay. This page explains why the split exists and why the handoff payload is designed to be self-contained. For the field-by-field tables — each field's name, type, allowed values, and who writes it — see the [card-schema reference](../../reference/kanban-board.md).
 
 ---
 
@@ -49,5 +49,5 @@ Scheduling would encode a guess about *when* A finishes. The dependency edge enc
 
 - Conceptual overview: [README.md](README.md)
 - State machine: [states.md](states.md)
-- Card-schema field tables: [reference/card-schema](../../../docs/reference/card-schema.md)
-- How policy gates the payload: [reference/architecture/policy-mcp](../../../docs/reference/architecture/policy-mcp.md)
+- Card-schema field tables: [reference/card-schema](../../reference/kanban-board.md)
+- How policy gates the payload: [reference/architecture/policy-mcp](../../reference/profiles.md)

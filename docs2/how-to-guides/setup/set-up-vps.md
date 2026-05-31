@@ -78,7 +78,7 @@ Add a `.stignore` in the vault root to exclude noise:
 ```bash
 # on VPS — from inside the vault/
 cd ~/memoria-vault/vault
-./install.ps1   # or install.sh when available
+./install.sh    # POSIX installer (use ./install.ps1 on Windows)
 ```
 
 **6. Configure the VPS profiles — remove the Obsidian MCP server.**

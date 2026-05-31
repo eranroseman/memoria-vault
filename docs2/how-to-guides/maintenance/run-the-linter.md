@@ -19,7 +19,7 @@ hermes -p memoria-linter chat -s lint
 
 **2. Run a dry-run scan.**
 
-```bash
+```text
 /lint --dry-run
 ```
 
@@ -29,7 +29,7 @@ This reports findings without making any changes. Review the output before decid
 
 To limit the scan to a specific folder (faster for targeted checks):
 
-```bash
+```text
 /lint --target 20-sources/ --dry-run
 /lint --target 30-synthesis/ --dry-run
 ```
@@ -49,7 +49,7 @@ The Linter categorizes findings by severity:
 
 For findings the Linter can fix without human judgment (e.g., whitespace normalization, missing `lifecycle` defaults on new notes):
 
-```bash
+```text
 /lint --fix --target 20-sources/
 ```
 
@@ -61,7 +61,7 @@ For findings that require judgment (broken links, schema mismatches, orphaned no
 
 **7. Run a health report** to check cross-cutting system status:
 
-```bash
+```text
 /health-report
 ```
 
@@ -71,7 +71,7 @@ This checks profile install drift, policy MCP connectivity, audit log rotation, 
 
 Run the scan again after fixes:
 
-```bash
+```text
 /lint --dry-run
 ```
 

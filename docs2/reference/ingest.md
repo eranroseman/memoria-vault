@@ -67,24 +67,13 @@ Fields the Librarian populates on the new note at creation:
 
 ---
 
-## Command
+## Card states during ingest
 
-```bash
-hermes -p memoria-librarian chat -s llm-wiki
-# then in the session:
-/llm-wiki ingest --source {citekey}
-```
+| Card state | Trigger | Notes |
+| --- | --- | --- |
+| `ready` | Watcher fires on `.bib` change or file-system event; watcher-triggered cards skip `triage` | — |
+| `running` | Dispatcher claims card (within 60 s of `ready`) | Librarian profile executes |
+| `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
+| `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
----
-
-## Card lifecycle
-
-```
-intake:source card created (file-system watcher or .bib change)
-  → ready       (watcher-triggered cards skip triage)
-  → running     (Librarian claims within 60 s)
-  → done        (review_status: requested; _proposed_classification proposed)
-  → [human advances to Classify]
-```
-
-A failed metadata fetch is retried on the same card. After `max_retries` (default: 3), card moves to `blocked`.
+For the step-by-step ingest procedure see [how-to/workflows/upstream/ingest.md](../../docs/how-to/workflows/upstream/ingest.md).

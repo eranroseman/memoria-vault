@@ -14,7 +14,7 @@ Scaffold the workbench folder structure for a new paper, chapter, or long-form o
 
 In Obsidian's file explorer, navigate to `40-workbench/` and create a new folder:
 
-```
+```text
 40-workbench/<project-slug>/
 ```
 
@@ -24,7 +24,7 @@ Use a short, descriptive slug — `jitai-receptivity-review`, not `project1`. Th
 
 Inside `40-workbench/<project-slug>/`, create:
 
-```
+```text
 00-framing/
 01-corpus-map/
 02-outline/

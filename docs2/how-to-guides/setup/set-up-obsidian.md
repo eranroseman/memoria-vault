@@ -1,7 +1,7 @@
 
 # How to set up Obsidian
 
-Open the vault in Obsidian, install the required plugins, and configure the REST API key. Obsidian is the primary day-to-day interface for Memoria — all source review, discussion, drafting, and claim authoring happens here.
+Open the vault in Obsidian, install the required plugins, and configure the REST API key.
 
 ## Prerequisites
 
@@ -57,13 +57,13 @@ The required plugins ship with their settings pre-configured in `.obsidian/plugi
 
 The Obsidian Linter plugin must never run on agent-maintained folders. Settings → Obsidian Linter → Folders to ignore — add:
 
-```
+```text
 10-inbox/
 20-sources/
 30-synthesis/02-reference/
 ```
 
-This prevents the Linter from stripping `_proposed_classification` HTML comment blocks that the Librarian writes. See [failure-modes](../../memoria-vault/docs/how-to/operations/failure-modes.md) for what goes wrong if you skip this.
+This prevents the Linter from stripping `_proposed_classification` HTML comment blocks the Librarian writes. See [failure-modes](../../memoria-vault/docs/how-to/operations/failure-modes.md) for the failure mode if you skip this.
 
 ## Verify
 

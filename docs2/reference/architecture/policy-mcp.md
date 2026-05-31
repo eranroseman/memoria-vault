@@ -48,7 +48,7 @@ Each MCP decision appends one JSON object to `00-meta/02-logs/audit.jsonl`:
 
 | Field | Notes |
 | --- | --- |
-| `ts` | ISO datetime of the decision. |
+| `timestamp` | ISO datetime of the decision (UTC, `...Z`). |
 | `profile` | `memoria-<name>` |
 | `action` | One of the eight actions above. |
 | `path` | Vault path the action targeted. |
@@ -102,6 +102,27 @@ The `before_hash` / `after_hash` chain must remain unbroken. `vault-hash-drift` 
 ```json
 { "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "..." }
 ```
+
+## Enforcement: the pre/post_tool_call hook
+
+`check_permission` only *decides* — by itself it does not stop a write. Vault writes go through the `obsidian` MCP server (`mcp-obsidian`), which has no knowledge of the policy MCP. The bridge that actually routes those writes through `check_permission` is a Hermes shell hook, `.memoria/mcp/policy_hook.py`, registered per profile in each `config.yaml` (`install.ps1` substitutes `{{VAULT_PATH}}` in `config.yaml` as well as `mcp.json`):
+
+```yaml
+hooks:
+  pre_tool_call:
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
+      timeout: 10
+  post_tool_call:
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
+      timeout: 10
+```
+
+- **`pre_tool_call`** maps the obsidian tool to a policy action, calls `check_permission`, and **blocks** `deny`/`dry_run` (printing `{"decision":"block","reason":...}`); reads pass through. On an allowed write it stashes the `before_hash`.
+- **`post_tool_call`** reads that stash, computes the `after_hash`, and appends the paired `write_complete` audit record — completing the reversibility chain.
+
+**Caveat — best-effort, not fail-closed.** Hermes fails *open* on hook errors (a crashing hook is logged but never aborts the loop), so this gate cannot be fully fail-closed at the hook layer; it fails closed only on its *own* decisions (an unidentifiable write is blocked). Hard enforcement that survives a broken hook would need a custom obsidian bridge that calls `check_permission` internally before each write.
 
 ## Relationship to Hermes Tirith
 

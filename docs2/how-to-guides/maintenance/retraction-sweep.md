@@ -1,6 +1,6 @@
-# Run a retraction sweep
+# How to run a retraction sweep
 
-**Goal:** Identify papers in your vault that have been retracted, corrected, or flagged since you ingested them, and update any claim notes that cite them.
+This guide shows you how to identify papers in your vault that have been retracted, corrected, or flagged since you ingested them, and update any claim notes that cite them.
 
 ## When to run it
 
@@ -16,7 +16,7 @@ Monthly, or whenever you're about to cite a cluster of older papers in a draft. 
 
 2. **Run the sweep:**
 
-   ```
+   ```text
    /retraction-sweep
    ```
 

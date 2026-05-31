@@ -28,7 +28,7 @@ OPENALEX_EMAIL=you@example.com        # required polite-pool header — any work
 SEMANTIC_SCHOLAR_API_KEY=...          # optional but recommended
 PUBMED_API_KEY=...                    # optional but recommended
 GITHUB_TOKEN=ghp_...                  # optional, for repo enrichment
-MEMORIA_OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
+OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
 ```
 
 **2. Fill the remaining profiles' `.env` files.**
@@ -37,7 +37,7 @@ The other six profiles share a common minimum set. Open each `.env` and set at m
 
 ```env
 ANTHROPIC_API_KEY=sk-ant-...
-MEMORIA_OBSIDIAN_API_KEY=<same 64-char hex token>
+OBSIDIAN_API_KEY=<same 64-char hex token>
 ```
 
 The profiles with their `.env` paths:
@@ -71,7 +71,7 @@ The status command queries the Obsidian REST API. A successful response shows th
 
 Pick a citekey from `.memoria/library.bib` and run:
 
-```bash
+```text
 /llm-wiki ingest --source <citekey> --dry-run
 ```
 

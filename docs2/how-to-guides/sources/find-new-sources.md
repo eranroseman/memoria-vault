@@ -20,19 +20,19 @@ hermes -p memoria-librarian chat -s find
 
 **Forward citations** — papers that *cite* your seed (what built on this work):
 
-```bash
+```text
 /find --source <citekey> --depth 1
 ```
 
 **Backward citations** — papers *cited by* your seed (what this work builds on):
 
-```bash
+```text
 /find --source <citekey> --direction backward --depth 1
 ```
 
 **Concept search** — papers matching a research question (uses query rewrite + hybrid retrieval):
 
-```bash
+```text
 /find --query "just-in-time adaptive interventions receptivity" --limit 20
 ```
 

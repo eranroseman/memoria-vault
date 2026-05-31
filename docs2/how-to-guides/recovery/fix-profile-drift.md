@@ -7,7 +7,7 @@ Resolve a mismatch where the deployed profile in `~/.hermes/profiles/` doesn't m
 
 The Linter's `profile-install-drift` detector reports a SHA-256 mismatch:
 
-```
+```yaml
 MEDIUM: profile-install-drift — memoria-linter/SOUL.md hash mismatch
   vault source:   8f4a...
   deployed copy:  3b2c...

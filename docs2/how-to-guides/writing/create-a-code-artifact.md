@@ -26,7 +26,7 @@ hermes -p memoria-coder chat
 ```
 
 For example:
-```bash
+```text
 /scaffold --project jitai-receptivity-review --name figure-3-receptivity-curve --claim receptivity-decreases-under-high-cognitive-load
 ```
 
@@ -42,7 +42,7 @@ The Coder generates the scaffold but the *purpose* is yours to state. Write 2–
 
 Open the code-note in a split pane alongside your preferred coding tool. Give the coding agent the code-note as context:
 
-```
+```text
 # In Claude Code (or equivalent):
 Read 40-workbench/<project-slug>/06-code/figure-3-receptivity-curve.md, 
 then implement the code described in the Purpose section.

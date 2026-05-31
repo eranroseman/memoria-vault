@@ -7,6 +7,7 @@ Surfaces the Linter's eight structural-detector findings as one consolidated vie
 The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight M-detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
 
 **Verdict band:**
+
 - `PASS` — no HIGH or CRITICAL findings
 - `REVIEW` — MEDIUM findings present, no HIGH
 - `FAIL` — any HIGH or CRITICAL finding; scheduled work pauses until resolved
@@ -21,12 +22,11 @@ Schema migration progress also appears here — per-template `schema_version` ro
 
 **Not for data hygiene.** Orphan notes, stale enrichment, and broken wikilinks surface in weekly-review and the lint report, not here. The M-detectors are reserved for structural drift between vault source, deployed Hermes profiles, and working vault state — the "silent" failures the human wouldn't notice by reading content.
 
-## When to open it
+## When drift-watch becomes relevant
 
-- During the weekly Friday review
-- After accepting a plugin upgrade
-- After editing a profile's SOUL.md or a lane-override file and re-running the installer
-- When an audit-log anomaly suggests a configuration problem
+Drift-watch is most useful after changes that could desynchronize the working vault from the deployed configuration: plugin upgrades, edits to profile `SOUL.md` files or lane-override files, or any event that appears in the audit log as an anomaly. The M-detectors exist precisely because these desynchronizations are invisible at the content level — the vault looks clean because the content is unchanged, but the structural alignment between source, deployed profiles, and working vault has shifted.
+
+The Friday weekly review includes a drift-watch pass because a week of ordinary operation also accumulates small drift signals that are not individually urgent but benefit from regular review.
 
 ## Before it has real data
 

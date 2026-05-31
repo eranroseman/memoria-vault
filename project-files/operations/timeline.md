@@ -4,7 +4,7 @@ topic: roadmap
 
 # Timeline and phases
 
-The week-by-week ramp from [Memoria v0.1](README.md#memoria-v01) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly. A third, parallel track — [Publication instrumentation](#publication-instrumentation-parallel-track-from-day-1) — runs from day 1 for anyone keeping the publication paths open.
+The week-by-week ramp from [Memoria v0.1](README.md#memoria-v01) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
 
 ## Phases
 
@@ -28,16 +28,19 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../explanation/vault/README.md).
 2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
-4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian-ui/README.md](../../explanation/obsidian-ui/README.md)).
+4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../explanation/obsidian/README.md)).
 5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-4](../decisions/04-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
+6. Resolve the callout-manager configuration: copy `.obsidian/plugins/callout-manager/data.json.TODO` → `data.json` and fill in callout styling. Until resolved, `[!brief]`, `[!suggestions]`, and `[!verification]` callouts do not render correctly.
 
 **Profiles, skills, and plugins**
 
-1. For each of the seven profiles (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter), drop its `SOUL.md` (plus `config.yaml`, `mcp.json`, optional `cron/` and `skills/`) into `.memoria/profiles/memoria-<name>/`. The design summaries in [profiles/](../../explanation/profiles/) describe the contract each SOUL.md must satisfy.
-2. Attach the commands, skills, and MCPs each profile needs (see [profiles/README.md](../../explanation/profiles/README.md)).
-3. Install all **ACP plugins** and the **K-Dense scientific-agent-skills** set.
-4. Test each profile in isolation with a small task that exercises its lane.
-5. Confirm permission boundaries hold: Librarian cannot write to `30-synthesis/01-claims/`; Socratic cannot write anywhere; Mapper can only write to project-scratch corpus-map paths; Linter cannot silently move files.
+1. **Run the installer** — `install.ps1` (Windows) or `install.sh` (macOS/Linux/WSL2). The installer stages all seven profiles, substitutes `{{VAULT_PATH}}` in every `mcp.json` and `config.yaml`, pip-installs MCP requirements (`mcp>=1.2.0`, `PyYAML>=6.0`), and registers profiles via `hermes profile install`. Do not drop files manually — the path substitution is what makes the policy gate and MCP wiring functional. The design contracts each `SOUL.md` must satisfy are in [profiles/](../../explanation/profiles/).
+2. **Version every profile prompt in git from this first commit.** Prompt history cannot be reconstructed after the fact — it is the prerequisite for any retrospective analysis of suggestion quality, Chain-of-Evidence typing, or regression harness work. A profile whose prompt history has gaps cannot be audited.
+3. **Install the five pending Obsidian plugins** as post-clone steps via Community Plugins — see [reference/plugins.md](../../reference/plugins.md) for exact names and required configuration. The five are: `dataview` (every dashboard query depends on it), a template runner (template insertion), a quick-capture plugin (fleeting-note intake), `obsidian-git` (vault commits and prompt versioning), and `obsidian-homepage` (auto-opens `Home.md` on startup). None ship in `.obsidian/plugins/`; no dashboard, template, or capture workflow functions without them.
+4. Install all **ACP plugins** and the **K-Dense scientific-agent-skills** set (`hermes skills install`). K-Dense skills ship as empty `.keep` placeholders in each profile's `skills/` directory — `hermes skills install` must run before any profile can invoke them.
+5. **Verify the policy gate:** run `python .memoria/mcp/policy_mcp.py --self-test` (34 checks) and `python .memoria/mcp/policy_hook.py --self-test` (18 checks, including pre→post roundtrip). Both must pass before any profile is allowed to run against the production vault.
+6. Test each profile in isolation with a small task that exercises its lane.
+7. Confirm permission boundaries hold: Librarian cannot write to `30-synthesis/01-claims/`; Socratic cannot write anywhere; Mapper can only write to project-scratch corpus-map paths; Linter cannot silently move files.
 
 **Kanban board**
 
@@ -47,9 +50,12 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 4. Configure dispatch logic so cards in `triage`, `done` (awaiting review), or `blocked` are not claimable by non-review workers.
 5. Configure retry behavior so recoverable failures reuse the same card (returned to `ready`) within `max_retries`.
 6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_verdict` recommendations the human promotes to `review_status: approved`.
-7. *If pursuing publication optionality:* turn on the [five-signal log](#publication-instrumentation-parallel-track-from-day-1) from the first ingest — the disposition and decision-time signals cannot be backfilled.
+7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `00-meta/board/<task_id>.md` and `00-meta/02-logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
+8. **Enable the five-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact. The five signals are: (1) suggestion disposition (accept : edit : reject) per profile; (2) operator decision time per `awaiting-review` card; (3) per-card state-transition timestamps; (4) API cost per card; (5) policy deny-reasons. Defined in [success-metrics.md](success-metrics.md).
+9. Configure the review-gate mode per [ADR-31](../decisions/31-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
+10. Do not prune session `state.db`. It is small, and it preserves the reasoning-trace data needed for any retrospective analysis.
 
-**Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. All dashboards open and show real data. All seven profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch.
+**Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. All five pending Obsidian plugins are installed and dashboard queries return real data. Policy gate self-tests pass (34 + 18 checks). `board_export.py` is running and `00-meta/board/` is populating. All seven profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch. **The five-signal log is running and emitting all five signals. Every profile prompt is committed to git.**
 
 ### Phase 2 — Seed and synthesize · Weeks 3–8
 
@@ -65,10 +71,12 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 6. Run `find-duplicates` (`hermes -p memoria-verifier chat -s find-duplicates`) for the first time — establish the merge routine.
 7. Confirm all schema fields are populated consistently (`pub_status`, `full_text_reviewed`, `_proposed_classification`, `_enrichment`).
 8. For each card during the pilot run, exercise the review gate explicitly. Watch for any state that "leaks" past review.
-9. Note handoff friction (where did the next worker re-derive context?) and routing friction (where did dispatch rules misfire?). Improve summaries and lane-override rules accordingly.
-10. Refine the `metadata` overlay if a field is missing or unused (the Hermes `status`/built-in fields are fixed).
+9. **Check suggestion disposition ratios per profile** (accept : edit : reject) after the first 10–20 cards per lane. A high rejection rate signals the profile's proposals are poorly calibrated; a near-zero rejection rate signals rubber-stamping. Both warrant a prompt revision.
+10. **Track operator decision time on `awaiting-review` cards.** Outliers reveal where the review ritual stalls — either the card's context summary is insufficient or the review criteria are unclear. Improve the relevant `SOUL.md` summary section accordingly.
+11. Note handoff friction (where did the next worker re-derive context?) and routing friction (where did dispatch rules misfire?). Improve summaries and lane-override rules accordingly.
+12. Refine the `metadata` overlay if a field is missing or unused (the Hermes `status`/built-in fields are fixed).
 
-**Exit criteria.** A new source moves through the pipeline without surprises. Classification feels routine. The claim note layer is dense enough to start linking across papers. The weekly dashboard meaningfully reflects state.
+**Exit criteria.** A new source moves through the pipeline without surprises. Classification feels routine. The claim note layer is dense enough to start linking across papers. The weekly dashboard meaningfully reflects state. Suggestion disposition ratios per lane are in a reasonable range (not near 0% or 100% rejection).
 
 ### Phase 3 — Activate, scale, and automate · Month 3+
 
@@ -76,45 +84,33 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 **Steps.**
 
-1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking-patterns.md](../../reference/linking-patterns.md#moc-creation-thresholds)).
+1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking.md](../../reference/linking.md#moc-creation-thresholds)).
 2. Activate lag metrics in the weekly dashboard (once `triage_completed` is populated).
 3. Begin Canvas sessions for chapter planning.
 4. Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for active scoping work.
-5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [linking-patterns.md](../../reference/linking-patterns.md#moc-creation-thresholds)).
+5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [linking.md](../../reference/linking.md#moc-creation-thresholds)).
 6. Begin drafting from the reference layer.
 7. Migrate the existing corpus into the new structure (one folder at a time, with Linter dry-runs at each stage).
-8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check.
-9. Set up Pandoc export pipeline for `40-workbench/*/04-drafts/`.
-10. Configure session logging to write to `00-meta/02-logs/` and commit weekly.
-11. **Migrate to multi-device** when a second device enters regular use or batch ingest needs to run overnight. See [Deployment options](deployment-options.md) for the `local-mesh` and `always-on` patterns. When adding a secondary device: install only what that device's role can safely run (`memoria-socratic` as the baseline; Mapper / Writer / Verifier per justified use case; never Librarian / Coder / Linter); the primary retains all seven and owns all dispatch. Developer secondaries are the one exception — all seven, but only with `HERMES_HOME` isolation pointed at a test vault.
+8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check. Also wire `metrics_aggregate.py` on a weekly cadence — it needs real run volume before trust-score bands are meaningful, so Phase 3 is the right trigger for this one (unlike `board_export.py`, which runs from Phase 1).
+9. Activate the **skill-lifecycle dashboard** once skill-governance is stood up (`00-meta/07-skills/` is a placeholder until this phase).
+10. Set up Pandoc export pipeline for `40-workbench/*/04-drafts/`.
+11. Configure session logging to write to `00-meta/02-logs/` and commit weekly.
+12. **Retain the raw audit log and board history indefinitely.** Do not rotate or prune `00-meta/02-logs/audit.jsonl` or session `state.db`. Fleet observability and static reports are pure backfill from these logs — they have no value if the logs are gone.
+13. **Keep approved drafts** through the [ADR-3](../decisions/03-answer-draft-retention.md) 90-day sweep. They seed the vault-CiteME fixture and cannot be reconstructed.
+14. **Run the comparison arm** if you have accumulated enough review data: switch the review-gate mode to `advisory` on a comparable project (same operator), keep the same logger, and compare false-promotion rate and decision time against the `blocking` baseline. Add a promotion-reversal event so false-promotion is measurable. See [ADR-31](../decisions/31-configurable-review-gate-mode.md).
 
-**Exit criteria.** The vault stops being a place you build and becomes a place you write from. The system runs without daily babysitting. The human shows up for review and synthesis; everything else flows.
+**Exit criteria.** The vault stops being a place you build and becomes a place you write from. The system runs without daily babysitting. The human shows up for review and synthesis; everything else flows. Three months of five-signal log data is available for retrospective analysis.
 
-## Publication instrumentation (parallel track, from day 1)
+### Phase 4 — Multi-device · When a second device enters regular use
 
-> **Scope.** This track applies only if keeping the [publication paths](evaluation.md) open is a goal. Since Memoria v0.1 is the full system, this is not an exception to a lean default — it is an additional logging discipline layered on top of the standard setup. The five signals below are **non-backfillable**: they must be captured live from the first ingest or the data is lost. If publication is not a goal, ignore this section.
+**Goal.** Extend Memoria to a second machine without fragmenting dispatch ownership or violating profile permission boundaries. This phase is triggered by need — a second device entering regular use, or batch ingest needing to run overnight — not by a calendar milestone.
 
-**Why day 1.** Every publication path routes through a running system producing operator *time-series* — and the load-bearing signals (suggestion disposition, per-review decision time, policy deny-reasons) cannot be reconstructed after the fact. Everything backfillable from git (link density, FAMA exposure, classification debt) can wait; these cannot.
+**Steps.**
 
-**The instrument — minimal, but running from the first ingest.** The Memoria v0.1 vault + the seven profiles + the Policy MCP + a minimal *timed* board ([Phase 1](#phase-1--full-system-setup--weeks-12)) + the supersession wiring ([ADR-22](../decisions/22-claim-supersession.md)). "Minimal" is load-bearing: manual card advancement is fine, and auto-dispatch / retry automation still defer — what matters is that the mechanisms *emit events*, not that they run at production scale.
+1. **Choose a deployment pattern.** See [Deployment options](deployment-options.md) for the full comparison. `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
+2. **Determine the secondary device's role.** Install only the profiles that device's role justifies. `memoria-socratic` is the safe baseline for any secondary. Add Mapper, Writer, or Verifier only for explicit, justified use cases. Never install Librarian, Coder, or Linter on a secondary — these profiles own state that must not be duplicated across devices.
+3. **Keep all seven profiles and dispatch ownership on the primary.** The primary is the single source of truth for card dispatch. A secondary that runs Librarian or issues dispatch commands creates split ownership and audit gaps.
+4. **For developer secondaries only:** install all seven profiles, but isolate with `HERMES_HOME` pointed at a test vault — never the production vault. This is the one exception to the rule above, and the isolation is what makes it safe.
+5. **Verify sync before running any profile on the secondary.** Confirm vault files are in sync (Syncthing status: up-to-date), audit log is intact, and board state matches the primary before the first card is claimed on the secondary device.
 
-**The five-signal log** (the actual day-1 deliverable; small — defined in [success-metrics.md](success-metrics.md) and [evaluation.md](evaluation.md)):
-
-1. Suggestion disposition — accept : edit : reject, **per profile** *(non-backfillable)*.
-2. Operator decision time per `awaiting-review` card *(non-backfillable)*.
-3. Per-card state-transition timestamps.
-4. API cost per card.
-5. Policy deny-reasons.
-
-**Retention / versioning disciplines** (cheap to keep, impossible to recover if skipped):
-
-- **Version every profile prompt in git** — the only way the [CiteME-style Verifier harness](future-directions.md#citeme-style-verifier-regression-harness) and Chain-of-Evidence typing can be rebuilt retroactively.
-- **Retain the raw audit log + board history** indefinitely — [Fleet observability](future-directions.md#fleet-observability) and static reports then become pure backfill.
-- **Keep approved drafts** through the [ADR-3](../decisions/03-answer-draft-retention.md) 90-day sweep — they seed the vault-CiteME fixture; do not discard them.
-- **Do not prune session `state.db`** — cheap, and it preserves reasoning-trace analysis for later.
-
-**Paths 2/3 — the comparison arm.** The thesis "structurally blocking review is correct" is unfalsifiable without an advisory baseline. Run the comparison via the configurable review-gate mode ([ADR-31](../decisions/31-configurable-review-gate-mode.md)): `blocking` (default) vs `advisory`, **the same logger in both arms**, with `review_mode` stamped per card. Prefer a within-subject design (same operator, comparable projects) to blunt n=1 skepticism, and add a promotion-reversal event so false-promotion rate is measurable.
-
-**Single-user / single-machine.** Nothing in Paths 1–3 needs a second machine or always-on infrastructure — those are Path-4 and [future-directions](future-directions.md) concerns. The only structural limit is single-*user* → n=1, mitigated by the logging above and the within-subject comparison.
-
-**Exit** (ongoing — a discipline, not a one-time gate). From the first ingest: every card emits the five signals, every profile prompt is versioned in git, and approved drafts plus the audit log are retained. The binding constraint is calendar time, not capability — three months of this data is worth more than three months of further design.
+**Exit criteria.** The secondary device runs its assigned profiles without touching dispatch. Vault state stays in sync across devices. The audit log shows no gaps or duplicate card claims. The primary remains the sole dispatch owner.

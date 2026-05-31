@@ -11,14 +11,6 @@
 
 ---
 
-## What you're about to do
-
-You're going to write one section of prose — maybe 200 words — from your committed outline. Then you'll run the Verifier on it. The Verifier will trace every substantive claim in your draft back to a claim note in your vault. Claims that trace successfully get a green check. Claims that don't trace — meaning you wrote something you don't actually have grounded in your notes — get flagged.
-
-This is the feedback loop that makes Memoria a research engine rather than a storage system: downstream writing diagnoses what's missing upstream.
-
----
-
 ## Step 1 — Create the draft file
 
 Navigate to `40-workbench/first-synthesis/04-drafts/`.
@@ -31,9 +23,9 @@ Create a new file named `draft-01.md`. Open it.
 
 Look at `CHOSEN.md`. Find the first section of your outline — the introduction, or the first substantive argument, depending on your framing.
 
-Write 150–250 words of prose from that section. Not a perfect draft — just real sentences that make real claims. Use your claim notes as the raw material: open them in a split pane and write from what they say, in your own voice.
+Write 150–250 words of prose from that section. Not a perfect draft — just real sentences that make real claims. Open your claim notes in a split pane and write from what they say, in your own voice.
 
-**The discipline:** write from your notes, not from memory. Every substantive claim in the prose should trace back to a claim note you've written. If you find yourself writing something you believe but haven't noted — pause and add a `[need to check]` marker. You'll handle those after verification.
+Write from your notes, not from memory. If you find yourself writing something you believe but haven't noted, add a `[need to check]` marker and keep going.
 
 **Example prose you might write:**
 
@@ -49,7 +41,7 @@ With `draft-01.md` open:
 
 Press `Cmd+P` → type `verify this draft` → select **Memoria: verify this draft**.
 
-**What happens:** A card goes to the Verifier lane. Verifier reads the draft, parses it into discrete claims, and for each claim traces back to claim notes in `30-synthesis/01-claims/` that support it. 
+**What happens:** A card goes to the Verifier lane. Verifier reads the draft, parses it into discrete claims, and for each claim traces back to claim notes in `30-synthesis/01-claims/` that support it.
 
 This takes 1–3 minutes. Watch the board-state dashboard for the Verifier card to advance from `running` to `done`.
 
@@ -61,7 +53,7 @@ Open `40-workbench/first-synthesis/05-verification/`.
 
 You'll find a verification report. It looks like this:
 
-```
+```text
 draft-01.md verification report
 
 ✓ TRACED: "receptivity varies with cognitive load" → [[receptivity-decreases-under-high-cognitive-load]]
@@ -76,35 +68,25 @@ The report also adds a `[!verification]` callout at the top of your draft with a
 
 ---
 
-## Step 5 — Address the gap
+## Step 5 — Soften the untraced claim
 
 Find the untraced claim in the report. In this example: "predicted availability rather than measured interruption is the key variable."
 
-You have two choices.
+Go to `draft-01.md`, find that sentence, and rewrite it with appropriate hedging:
 
-**Choice A — Soften the claim (do this now).**
-If you're not sure this claim is actually supported, hedge the prose: "Some researchers have suggested that predicted availability, rather than measured interruption, may be the key variable — though the evidence base here is thinner."
+> "Some researchers have suggested that predicted availability, rather than measured interruption, may be the key variable — though the evidence base here is thinner."
 
-Go to `draft-01.md`, find the sentence, and rewrite it with appropriate hedging. Save.
-
-**Choice B — Add to the reading queue (do this when the claim matters).**
-If this claim is important and you want to ground it properly, you need a paper that makes it. Press `Cmd+P` → type `capture source from URL` → select **Memoria: capture source from URL**. Paste the URL of a paper that makes this claim. The Librarian will bring it in as usual.
-
-This is the feedback loop: downstream writing has just told upstream reading what it needs.
-
-**For this tutorial, use Choice A.** Soften the claim — you don't need to find a new paper right now.
+Save the file.
 
 ---
 
 ## Step 6 — Re-verify
 
-After softening the untraced claim:
-
 Press `Cmd+P` → type `verify this draft` → select **Memoria: verify this draft** again.
 
-Wait for the new report. This time, the verification callout at the top of the draft should show:
+Wait for the new report. The verification callout at the top of the draft should now show:
 
-```
+```text
 [!verification]
 Verdict: CLEAN — all claims traced
 ```
@@ -129,11 +111,11 @@ When you commit, a git hook fires automatically and creates a Verify card on the
 - `40-workbench/first-synthesis/05-verification/` — the verification report
 - A `[!verification] CLEAN` callout at the top of the draft
 - A committed revision in git
-- One gap addressed (either softened or queued for reading)
+- One untraced claim softened with appropriate hedging
 
-**You've experienced the complete research loop.** Upstream: you brought in papers and wrote claim notes. Downstream: you scoped, framed, wrote, and verified. The verification found a gap. The gap pointed you back to upstream.
+**You've experienced the complete research loop.** Upstream: you brought in papers and wrote claim notes. Downstream: you scoped, framed, wrote, and verified. The verification found a gap. You addressed it.
 
-This loop — writing reveals gaps, gaps direct reading, reading produces notes, notes enable writing — is what the Zettelkasten method calls the "antilibrary principle": your knowledge of what you don't know is as useful as your knowledge of what you do.
+**See also:** [The Verifier](../explanation/profiles/verifier.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the upstream loop.
 
 ---
 

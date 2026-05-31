@@ -26,7 +26,7 @@ Shows lightweight findings from the last lint pass: schema validity, broken link
 | --- | --- |
 | **Active** | Cards in `running` state across all lanes |
 | **Waiting** | Cards in `blocked` state |
-| **Review** | Cards in `done` with `review_status: unreviewed` (awaiting human review) |
+| **Review** | Cards in `done` with `review_status: requested` (handed off, awaiting human review) |
 | **Retries** | Cards returned to `ready` after a recoverable failure |
 
 Click anywhere in the Kanban counts to open `board-state.md` for the full view.

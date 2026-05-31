@@ -17,7 +17,7 @@ Navigate to `20-sources/01-papers/<citekey>.md` (or `20-sources/02-items/<citeke
 
 It appears as an HTML comment below the frontmatter, containing:
 
-```
+```text
 <!-- _proposed_classification
 study_design: ...
 methods: [...]

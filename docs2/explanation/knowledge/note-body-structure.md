@@ -1,101 +1,57 @@
 # Note body structure
 
-What goes inside the three most important note types — paper-notes, claim-notes, and MOCs — and why each section exists. For the frontmatter fields see [reference/note-types.md](../../reference/note-types.md); this document covers the *body*.
+The three most important note types — paper-notes, claim-notes, and MOCs — have distinct body structures because they answer different questions and serve different epistemic purposes. Understanding why each section exists helps explain what makes a note function as knowledge rather than as accumulated text.
+
+For the frontmatter fields, templates, and field-by-field reference, see [reference/note-types.md](../../reference/note-types.md).
 
 ---
 
-## Paper-note body
+## Why paper-notes are split between Librarian and human
 
-A paper-note has six body sections. The Librarian populates three at ingest; you fill the remaining three at triage.
+A paper-note has two authorship layers, and the split between them is intentional, not a convenience.
 
-**Sections the Librarian populates at ingest:**
+The Librarian populates the bibliographic and relational sections at ingest: citation connections (`## Cites (in vault)`, `## Cited by (in vault)`) and discovery candidates. These are derivable from the paper's metadata and the existing corpus without reading comprehension — they are structural facts about the source's relationship to the graph. The Librarian produces them deterministically and cheaply.
 
-`## Cites (in vault)` — papers this note cites that are already in your vault, linked by citekey. These are proposals; review them at triage.
+The human fills the interpretive sections: the Summary, the Critique, and the Open questions. These require reading comprehension and judgment. The Summary in particular is load-bearing — it is what the human will read six months later when they need to cite the paper without re-reading it. A Summary that merely paraphrases the abstract has failed this purpose; it needs to capture the thesis, the key findings that will actually be cited, and the paper's relevance to the specific research direction.
 
-`## Cited by (in vault)` — vault papers that cite this one. Same caveat.
-
-`## Discover candidates` — related papers flagged by the Librarian's citation graph and semantic search for your review. Each candidate shows a brief reason ("cited by three of your existing notes," "0.87 semantic similarity to mamykina2010sense"). Review and add the useful ones to Zotero.
-
-**Sections you fill at triage:**
-
-`## Summary` — five prompts, in order:
-1. The thesis in one sentence — the strongest claim the paper makes
-2. The research question or design challenge the paper addresses
-3. Key methods or design choices (what makes this study what it is, not just what it found)
-4. Key findings (what you will actually cite)
-5. Relation to your project — why this paper matters to what you are building
-
-These are the most important part of a paper-note. In six months, when you need to cite this paper in a draft, the Summary is what you will read. If it is empty or vague, you will have to re-read the paper.
-
-`## Critique and questions` — your critical response: what is missing, what is methodologically weak, what you would push back on. This is where a literature note earns its place in a knowledge system rather than a reading list. A paper note without critique is a summary, not synthesis.
-
-`## Open questions` — what this paper raises but does not answer. These feed the `open-questions` dashboard, which surfaces them for research planning.
+The Critique section is where a paper-note earns its place in a knowledge system rather than a bibliography. A paper note without critical engagement — what is missing, what is methodologically weak, what you would push back on — is storage, not synthesis. The Open questions section completes the loop by recording what the paper raises but doesn't answer, feeding the synthesis agenda.
 
 ---
 
-## Claim-note body
+## Why claim-notes have a required Connections section
 
-A claim-note has three required sections and one optional.
+The three required sections of a claim-note correspond to three epistemic commitments.
 
-**Required:**
+The `## Claim` section states the single durable idea. Atomicity is the constraint here — one claim per note, not one topic. The discipline matters because wikilinks citing a multi-claim note become ambiguous: does the link support claim A or claim B? And when evidence changes, which part of the note gets superseded?
 
-`## Claim` — the single durable idea, stated in one sentence. If you need two sentences, split the note. This section is usually the same as the note title, stated with slightly more context.
+The `## Evidence and argument` section is what distinguishes a claim from an assertion. A claim note with no evidence is an opinion. A claim note with citekeys pointing to supporting sources is an argument that can be verified, updated, and superseded as evidence accumulates.
 
-`## Evidence and argument` — why you believe the claim: supporting sources (citekeys), key findings from those sources, and any tension with alternative views. This is where the intellectual work goes. A claim note without evidence is an assertion; a claim note with citekeys is an argument.
-
-`## Connections` — links to related claim notes: notes this one supports, notes this one contradicts, notes this one extends or qualifies. This section is what builds the knowledge graph. A claim note with no connections has not made it into the system.
-
-**Optional:**
-
-`## Open questions` — what this claim does not resolve; where synthesis should go next.
+The `## Connections` section is the most structurally significant. A claim note with no connections to other claim notes has not made it into the knowledge graph — it exists in isolation, where it cannot compound. Connections are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without connections has not.
 
 ---
 
-## MOC body
+## Why MOCs answer three distinct questions
 
-Each MOC answers three questions. Structure the body around them.
+A MOC is not an index. The failure mode of a MOC-as-index is that it becomes a flat list no one opens because the Dataview query already does it faster. What a MOC adds over a Dataview query is perspective: a framing of what a cluster is about, a curation of what matters most in it, and a diagnosis of where the cluster needs work.
 
-**1. What is this area about?** (one paragraph) — the scope and frame of the cluster. What kinds of notes belong here, and what kinds don't. This is not a definition; it is the lens through which you are looking at the topic.
-
-**2. What belongs here right now?** (curated note list with brief annotations) — a selective list of the most important member notes, each with a one-sentence annotation explaining why it matters to the cluster. Do not list every note — curate. The Dataview query below handles volume; the static list handles meaning.
-
-Include a live Dataview query for the fast-changing parts:
-
-```dataview
-TABLE file.link AS Note, maturity, lifecycle
-FROM "30-synthesis/01-claims"
-WHERE contains(moc, this.file.link)
-SORT maturity DESC
-```
-
-**3. What needs review, synthesis, or splitting?** — open questions the cluster raises, thin sub-topics, claims that have no counterpart yet, branches that may have grown large enough to become their own child MOC. This section is what makes a MOC useful for planning rather than just navigation.
-
-Keep the static sections scannable in 30 seconds. The Dataview queries handle scale.
+The three questions a MOC body should answer — what is this area about, what belongs here right now, and what needs review or synthesis — correspond to three distinct cognitive operations: framing, curating, and planning. A MOC that only does the first two (framing and curating) is a static artifact. One that also does the third (diagnosing open questions and thin branches) is a living planning tool.
 
 ---
 
-## What makes the distinction matter
+## The epistemic separation between note types
 
-The note types exist because they answer different questions:
+The note types enforce a separation that is easy to violate under time pressure:
 
-| Note type | Question answered | Written by |
-| --- | --- | --- |
-| `paper-note` | What does this source say? | Librarian (skeleton) + human (synthesis sections) |
-| `claim-note` | What do I think, and why? | Human only |
-| `moc` | What is known in this cluster, and how does it connect? | Human only |
+A `paper-note` records what a source says, from an external perspective. A `claim-note` records what the human thinks, in their own words. A `moc` is a navigational and planning hub, not a synthesis destination.
 
-Mixing these produces notes that are useful for neither purpose. A paper note that contains your personal claims is a hybrid you cannot cite or link reliably. A claim note that summarizes a paper rather than stating your own claim is not a claim note.
+Mixing these produces notes that serve neither purpose well. A paper-note that contains the human's claims makes citation tracing ambiguous — did the citekey in a draft point to what the paper says, or to what the human concluded? A claim-note that summarizes a paper rather than asserting the human's own position is not a claim note; it is a misplaced source note.
+
+The separation is what allows agent permissions to be cleanly scoped: the Librarian can write paper-notes because recording what a source says is mechanical. It cannot write claim-notes because asserting the human's synthesis is not.
 
 ---
 
-## Questions to ask during synthesis
+## Related
 
-These questions help identify whether a reading session should generate a claim note and which existing note it connects to:
-
-1. What is the strongest claim this paper makes?
-2. What changes in my current understanding if this claim is true?
-3. Which existing claim note does this support, contradict, or extend?
-4. Is this evidence, theory, method, a contradiction, or an implication?
-5. Does this belong in a new claim note or strengthen an existing one?
-
-A literature note should generate at most 2–3 claim notes. More than that usually means the reading session was a summary pass rather than a synthesis pass.
+- Note-type reference (templates, fields, lifecycle tables): [reference/note-types.md](../../reference/note-types.md)
+- The three epistemic roles explained: [note-types.md](note-types.md)
+- How to use the paper-note workflow: [how-to-guides/sources/discuss-a-paper.md](../../how-to-guides/sources/discuss-a-paper.md)

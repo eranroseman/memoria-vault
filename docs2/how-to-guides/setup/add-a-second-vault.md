@@ -40,7 +40,7 @@ Obsidian supports multiple vaults. File → Open Another Vault → Open folder a
 
 **5. Copy the REST API key.**
 
-The second vault's Obsidian instance generates a different `apiKey`. Copy it from Settings → Local REST API and update the `MEMORIA_OBSIDIAN_API_KEY` in each second-vault profile's `.env`.
+The second vault's Obsidian instance generates a different `apiKey`. Copy it from Settings → Local REST API and update the `OBSIDIAN_API_KEY` in each second-vault profile's `.env`.
 
 **6. Set up Zotero for the second vault.**
 
