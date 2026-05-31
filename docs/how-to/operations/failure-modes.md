@@ -110,7 +110,7 @@ hermes -p memoria-linter chat -s health-report   # then: /health-report --detect
 
 ```bash
 hermes kanban show <card-id>   # full state: status, retry count, blocker reason, handoff summary
-hermes lane status <lane>      # is the lane's queue backing up behind one card?
+hermes kanban list             # the lane's queue — is it backing up behind one card?
 ```
 
 **Fix.** Depends on where it's wedged:

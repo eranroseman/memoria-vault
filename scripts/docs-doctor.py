@@ -11,7 +11,9 @@ Checks:
   2. Link integrity   — every relative Markdown link resolves to a real file,
                         and every #anchor resolves to a heading in the target
                         (GitHub does not auto-heal links when files move).
-  3. Frontmatter policy — no file still carries a dropped key (`mode:`, `audience:`).
+  3. Frontmatter policy — no file carries a disallowed key (`mode:`/`audience:`
+                        dropped in the refactor; `tags:` unsanctioned). Enforced on
+                        docs and on the vault note templates' fenced frontmatter.
   4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
                         relative Markdown link (GitHub does not render wikilinks).
 
@@ -26,7 +28,7 @@ import re
 import sys
 from pathlib import Path
 
-DROPPED_KEYS = ("mode", "audience")
+DROPPED_KEYS = ("mode", "audience", "tags")  # mode/audience dropped in the refactor; tags unsanctioned (use the controlled topic/methods vocabularies)
 
 # [text](target) — but NOT images ![alt](src). Reference-style/wikilinks unused.
 LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
@@ -34,6 +36,7 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
+YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 
 
 def read(path: Path) -> str:
@@ -56,7 +59,7 @@ def check_frontmatter(md: Path, errors: list[str]) -> None:
     block = m.group(1)
     for key in DROPPED_KEYS:
         if re.search(rf"^{key}\s*:", block, re.MULTILINE):
-            errors.append(f"{md}: frontmatter still carries dropped key '{key}:'")
+            errors.append(f"{md}: frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
 
 
 _slug_cache: dict[Path, set[str]] = {}
@@ -126,6 +129,17 @@ def check_wikilinks(md: Path, errors: list[str], doc_md_names: set[str]) -> None
             errors.append(f"{md}: wikilink [[{inner}]] -> use a relative Markdown link to {name}")
 
 
+def check_template_frontmatter(md: Path, errors: list[str]) -> None:
+    # A note template documents its frontmatter inside a ```yaml fence rather than as
+    # the file's own leading frontmatter, so check_frontmatter (leading-only) misses
+    # it. Scan the fenced YAML for disallowed keys — a banned key here propagates to
+    # every note created from the template.
+    for block in YAML_FENCE_RE.findall(read(md)):
+        for key in DROPPED_KEYS:
+            if re.search(rf"^\s*{key}\s*:", block, re.MULTILINE):
+                errors.append(f"{md}: template frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -143,6 +157,13 @@ def main() -> int:
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_wikilinks(md, errors, doc_md_names)
+
+    # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
+    # and a banned key there propagates to every note created from the template.
+    tmpl_dir = root.parent / "vault" / "00-meta" / "03-templates"
+    if tmpl_dir.is_dir():
+        for md in sorted(tmpl_dir.glob("*.md")):
+            check_template_frontmatter(md, errors)
 
     if errors:
         print(f"docs-doctor: {len(errors)} issue(s)\n")

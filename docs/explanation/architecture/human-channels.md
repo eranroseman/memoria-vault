@@ -41,11 +41,11 @@ Six use case categories cover what the CLI is for:
 
 **1. Card inspection.** When a card has been retried repeatedly over two days, the human wants to know why. `hermes kanban show card-<id>` returns full state, retry count, blocker reason, and handoff summary in one screen — faster than navigating to the board dashboard and clicking through.
 
-**2. Lane health checks.** `hermes lane status librarian` shows [trust score](../../reference/glossary.md#observability-and-verdicts), recent deny rate, last successful task, current queue depth. Run when something feels off but the dashboards haven't flagged anything yet.
+**2. Lane health checks.** `hermes kanban list` shows the lane's queue depth and what's in flight; the [trust score](../../reference/glossary.md#observability-and-verdicts), deny rate, and last-successful-task metrics live on the [fleet-health dashboard](../dashboards/fleet-health.md). Reach for the CLI when something feels off but the dashboards haven't flagged it yet.
 
-**3. Audit forensics.** `hermes audit --card <id>` or `hermes audit --lane mapper --since 24h` walks the audit log filtered to the slice the human cares about. Faster than opening the audit-log dashboard for narrow queries; the dashboard is for trends, the CLI is for specific traces.
+**3. Audit forensics.** The audit log is `00-meta/02-logs/audit.jsonl` — `hermes kanban tail <card-id>` follows one card's event stream, and `jq` / `grep` over the JSONL slices it by lane or time. Faster than opening the audit-log dashboard for narrow queries; the dashboard is for trends, the CLI (or `jq`) for specific traces.
 
-**4. Manual dispatch.** `hermes dispatch --lane mapper --task scope-project --project jitai-review` creates a card without waiting for a file-system trigger or cron. Useful when the human wants to invoke something on demand outside the normal flow — for example, re-running a scope when new sources have been added mid-project.
+**4. Manual dispatch.** `hermes kanban create --lane mapper --task scope-project --project jitai-review` files a card without waiting for a file-system trigger or cron — the dispatcher then claims it (`hermes kanban dispatch` forces a pass immediately). Useful when the human wants to invoke something on demand outside the normal flow — for example, re-running a scope when new sources have been added mid-project.
 
 **5. Profile administration.** Update lane-override files in `.memoria/lane-overrides/`, reload the policy MCP, edit profile sources in `.memoria/profiles/memoria-<name>/` and re-run `install.ps1` to deploy them, install new skills. All CLI operations, not dashboard ones, because they're rare and consequential — exactly the kind of operation that should require typing.
 
@@ -57,22 +57,22 @@ Example commands across the categories:
 # 1. Card inspection
 hermes kanban show card-2026-05-26-042
 
-# 2. Lane health
-hermes lane status librarian
+# 2. Lane health (queue depth; trust/deny metrics live on the fleet-health dashboard)
+hermes kanban list
 
-# 3. Audit forensics
-hermes audit --card card-2026-05-26-042
-hermes audit --lane verifier --since 7d
+# 3. Audit forensics — follow a card's events; jq the JSONL for lane/time slices
+hermes kanban tail card-2026-05-26-042
+jq 'select(.lane=="verifier")' 00-meta/02-logs/audit.jsonl
 
-# 4. Manual dispatch
-hermes dispatch --lane mapper --task scope-project --project jitai-review
+# 4. Manual dispatch (file a card; the dispatcher claims it)
+hermes kanban create --lane mapper --task scope-project --project jitai-review
 
 # 5. Profile administration
 ./install.ps1    # re-deploy all seven profiles from .memoria/profiles/
 hermes profile reload memoria-linter
 
 # 6. Backup / migration
-hermes audit export --since 2026-01-01 --to logs/2026-archive.jsonl
+cp 00-meta/02-logs/audit.jsonl logs/2026-archive.jsonl   # archive the audit log (a vault file)
 ```
 
 These are examples, not an authoritative catalog. The full Hermes CLI surface is upstream of Memoria (documented at [hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com/)); Memoria pins specific commands only as illustrations. When the Hermes CLI changes between versions, Memoria docs may lag — the principle (CLI for forensic work) stays true even when the specific flag names shift.
