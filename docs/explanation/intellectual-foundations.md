@@ -41,11 +41,11 @@ Memoria's vault is the Memex made operational: the graph of wikilinks, typed rel
 
 ---
 
-## The AI-research systems survey
+## AI-research systems survey
 
-A broad survey of contemporary agent-driven research systems (AI Scientist, AI co-scientist, MetaGPT, PARNESS, AgentRxiv, and dozens more) grounds the design in what the field has actually tried.
+A broad survey of over 50 contemporary agent-driven research systems, which was conducted in May 2026, grounds the design in what the field has actually tried.
 
-The patterns Memoria adopts:
+Key patterns adopted by Memoria include the following:
 
 **Stage-gated pipelines** appear across nearly every end-to-end system surveyed (LitSearch, ResearchArena, MLR-Copilot, Agent Laboratory). Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape.
 

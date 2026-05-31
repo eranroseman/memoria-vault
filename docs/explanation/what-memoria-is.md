@@ -67,7 +67,7 @@ Two 2026 perspectives anchor this positioning. Feng & Liu 2026 describe "vibe re
 
 **Memoria** — because the heart of the design is memory: not just collecting information, but building a memory architecture that compounds. The name signals continuity, durability, and the act of remembering as deliberate practice.
 
-**Hermes** — the agent runtime. Hermes is the messenger: it carries work between states, between profiles, and between the human and the vault. Memoria is what you keep; Hermes is who moves things.
+**Hermes** — the agent runtime. [Hermes Agent](https://hermes-agent.nousresearch.com/) is the messenger: it carries work between states, between profiles, and between the human and the vault. Memoria is what you keep; Hermes is who moves things.
 
 ---
 
