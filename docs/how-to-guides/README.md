@@ -35,6 +35,12 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | [Set up the messaging gateway](setup/set-up-messaging.md) | Telegram capture for mobile fleeting notes |
 | [Add a second vault](setup/add-a-second-vault.md) | Fork the starter for a separate project |
 
+### Using Obsidian
+
+| Guide | What it covers |
+| --- | --- |
+| [Command palette](command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
+
 ### Using Hermes Agent
 
 Operational guides for the Hermes CLI — profile management, chat sessions, and configuration. These cover the tasks that happen in the terminal, not in Obsidian.

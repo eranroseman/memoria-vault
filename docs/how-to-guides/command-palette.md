@@ -20,6 +20,7 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 Settings → QuickAdd → Add choice → name it exactly as it appears in the catalog (e.g., `Memoria: capture fleeting`). Set the type and implementation per the catalog's Implementation column.
 
 Repeat for each command you want. Start with the five most-used:
+
 - `Memoria: capture fleeting`
 - `Memoria: ask about this note`
 - `Memoria: new project`

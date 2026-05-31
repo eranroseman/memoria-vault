@@ -1,6 +1,6 @@
 # Plugins
 
-Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For the plugin model and reasoning see [explanation/obsidian-plugins/](../../docs/explanation/obsidian-plugins/).
+Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For the plugin model and reasoning see [explanation/obsidian-plugins/](../../docs/explanation/obsidian/).
 
 ---
 
@@ -88,7 +88,7 @@ Documented but not in the install set. Evaluated alternatives and future-migrati
 
 ## Load-bearing settings per plugin
 
-Settings with a fixed required value. All others are personal preference. See [explanation/obsidian-plugins/](../../docs/explanation/obsidian-plugins/) for rationale.
+Settings with a fixed required value. All others are personal preference. See [explanation/obsidian-plugins/](../../docs/explanation/obsidian/) for rationale.
 
 ### obsidian-local-rest-api
 

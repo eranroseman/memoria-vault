@@ -27,7 +27,7 @@ exclusion_reason: ""
 projects: []                # plural list, matches other templates
 ```
 
-These are the candidate-specific fields; every note also carries the global required fields (`schema_version`, `created`, `updated`, `lifecycle`) — see [vault/frontmatter-schema.md](../../reference/frontmatter-schema.md) <!-- TODO: reorg link — no unique new target for reference/frontmatter-schema.md -->.
+These are the candidate-specific fields; every note also carries the global required fields (`schema_version`, `created`, `updated`, `lifecycle`) — see [vault/frontmatter.md](../../docs/reference/frontmatter.md).
 
 `candidate-note` is not in the 15 note types in [vault/note-types.md](../../reference/note-types.md#note-types); adopting this ADR means adding it as the 16th type with its own template (`00-meta/03-templates/candidate-note.md`) and updating the list.
 

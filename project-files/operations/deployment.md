@@ -108,7 +108,7 @@ Requirements: SSH always reachable (Tailscale or local network), primary awake, 
 
 Under SSH-spawned ACP you can talk to *any* profile remotely, not just Socratic — the spawned Hermes is the authoritative one on the primary with the full profile suite. This matters because it removes the "what's installed locally?" question: nothing's installed locally, so the device can use whichever profile is appropriate for the moment.
 
-Concrete `customAgents` configuration examples for both the SSH-spawn path and the local-install path are in [obsidian-plugins/required/agent-client.md — Configuring the laptop for non-Socratic ACP](../../reference/plugins/agent-client.md#configuring-the-laptop-for-non-socratic-acp) <!-- TODO: reorg link — no unique new target for reference/plugins/agent-client.md -->. That section also has the deployment-option-specific recommendations table for which path to pick.
+Concrete `customAgents` configuration examples for both the SSH-spawn path and the local-install path are in [obsidian-plugins/required/agent-client.md — Configuring the laptop for non-Socratic ACP](../../docs/reference/plugins.md#configuring-the-laptop-for-non-socratic-acp). That section also has the deployment-option-specific recommendations table for which path to pick.
 
 ### Pattern selection by option
 

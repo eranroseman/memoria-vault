@@ -75,5 +75,5 @@ This prevents the Linter from stripping `_proposed_classification` HTML comment 
 
 - Next step: [Set up Zotero](set-up-zotero.md)
 - Plugin reference: [reference/plugins/](../../reference/plugins.md)
-- Callout types: [reference/obsidian-callouts](../../reference/obsidian/)
+- Callout types: [reference/obsidian-callouts](../../reference/obsidian-callouts.md)
 - Workspaces reference: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)

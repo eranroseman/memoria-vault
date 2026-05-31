@@ -9,4 +9,4 @@ topic: plugins
 Memoria holds it on record but **does not use it**:
 
 - **Switch to this if** the annotation workflow ever moves *out* of Obsidian and *into* Zotero — color-coded highlights pulled from Zotero into structured paper notes is the use case it wins on.
-- **Don't switch while** Memoria's design assumes PDF annotation happens in Obsidian via [pdf-plus](../../reference/plugins/pdf-plus.md) <!-- TODO: reorg link — no unique new target for reference/plugins/pdf-plus.md -->. Flipping the annotation direction changes the human's daily rhythm — a bigger decision than a plugin swap.
+- **Don't switch while** Memoria's design assumes PDF annotation happens in Obsidian via [pdf-plus](../../docs/reference/plugins.md). Flipping the annotation direction changes the human's daily rhythm — a bigger decision than a plugin swap.
