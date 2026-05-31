@@ -26,7 +26,7 @@ Mapper is the lens on what the human already has. It produces scope reports, gap
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (full command list, deterministic/hybrid annotations per command, exit conditions) lives in the SOUL.md.
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (full command list, deterministic/hybrid annotations per command, exit conditions) lives in the SOUL.md.
 
 ## Related
 

@@ -15,7 +15,7 @@ First downstream stage; precondition for [Frame](frame.md).
 
 1. The human creates a project folder: `40-workbench/<project>/` with a `brief.md` describing the deliverable, audience, length, and framing constraints.
 2. A `scope-project` card opens on the project. Mapper claims it.
-3. Mapper runs `scope-project` (see [profiles/README.md](../../../reference/profile-matrices.md#lane-permissions-matrix)): retrieves all claim and reference notes matching the brief topic; computes cluster density, recency distribution, source diversity; identifies adjacent topics with thin coverage.
+3. Mapper runs `scope-project` (see [profile-matrices.md](../../../reference/profile-matrices.md#lane-permissions-matrix)): retrieves all claim and reference notes matching the brief topic; computes cluster density, recency distribution, source diversity; identifies adjacent topics with thin coverage.
 4. The output is written to `40-workbench/<project>/01-map/corpus-map.md` as a structured report.
 5. The card completes to `done` (`review_status: requested`). Human reads the corpus map and decides: proceed to [Frame](frame.md), or pause to read more (loops back to [Zotero Capture](../upstream/zotero-capture.md) / [Find](../upstream/find.md)).
 
@@ -29,7 +29,7 @@ Mapper executes the `scope-project` retrieval (read-only across the vault, write
 
 ## Command
 
-`hermes -p memoria-mapper run scope-project --project <project-name>`.
+In a `memoria-mapper` session (`hermes -p memoria-mapper chat -s scope-project`): `/scope-project --project <project-name>`.
 
 ## Why not skip straight to drafting
 

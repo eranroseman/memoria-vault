@@ -54,7 +54,7 @@ Promoting a skill from `intake` to `active` follows this 7-step checklist. Each 
 2. **Scaffold** (`proposed → scaffolded`). Create `~/.hermes/skills/<skill-name>/` with the standard subfolder set: `SKILL.md` (required), `scripts/` (executables), `references/` (contracts and docs the skill depends on), `templates/` (example payloads and prompts), `assets/` (static files and test fixtures). Subfolders may be empty initially but the structure is uniform across all skills.
 3. **Write `SKILL.md`**. YAML frontmatter, when-to-use, inputs, procedure, output contract, pitfalls, references.
 4. **Validate** (`scaffolded → testing`). Run a minimal happy-path example. Run a failure case. Confirm timeouts and that secrets are read from env vars, not hardcoded.
-5. **Register permissions** (`testing → needs-review`). Add to the appropriate lane-override file's `policy.allow.skills` list. Add to the lane permissions matrix in [profiles/README.md](../../reference/profile-matrices.md#lane-permissions-matrix).
+5. **Register permissions** (`testing → needs-review`). Add to the appropriate lane-override file's `policy.allow.skills` list. Add to the lane permissions matrix in [profile-matrices.md](../../reference/profile-matrices.md#lane-permissions-matrix).
 6. **Document** (`needs-review → approved`). Create the skill-note in `00-meta/07-skills/`. Add an example invocation. Note any endpoint or schema references.
 7. **Activate** (`approved → active`). Run once for real; set the skill-note's `stage: active`. Schedule a 4-week review checkpoint.
 

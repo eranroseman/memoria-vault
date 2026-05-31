@@ -24,7 +24,7 @@ Load-bearing settings:
 The picker contains four agents but they're used in two architecturally distinct ways, which the `data.json` configuration must respect:
 
 - **Persistent ACP pane.** Socratic. The human opens the ACP pane in the Reading & Processing workspace and has a long conversation while working in adjacent panes. The session has its own lifecycle, persists in `savedSessions[]`, can be resumed later. This is the standard setup for [workflow Discuss](../../how-to/workflows/README.md).
-- **Transient ACP session.** Mapper, Writer, Verifier. The human invokes the profile via the command palette for one specific question. The agent-client plugin opens a fresh session, the agent responds, the session closes. No persistent pane to manage; no savedSessions entry to accumulate. See [command-palette.md](../command-catalog.md) for the specific commands.
+- **Transient ACP session.** Mapper, Writer, Verifier. The human invokes the profile via the command palette for one specific question. The agent-client plugin opens a fresh session, the agent responds, the session closes. No persistent pane to manage; no savedSessions entry to accumulate. See [command-catalog.md](../command-catalog.md) for the specific commands.
 
 The distinction matters for `savedSessions[]` hygiene: persistent Socratic sessions accumulate (the closing note covers pruning); transient sessions auto-close and don't build up.
 

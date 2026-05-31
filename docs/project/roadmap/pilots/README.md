@@ -1,3 +1,7 @@
+---
+topic: roadmap
+---
+
 # Pilots
 
 Concrete pilot plans referenced by the [roadmap](../README.md).

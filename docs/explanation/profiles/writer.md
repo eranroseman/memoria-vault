@@ -26,7 +26,7 @@ Writer turns evidence into structured prose — answer drafts, reference-ready c
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract lives in the SOUL.md.
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract lives in the SOUL.md.
 
 ## Related
 

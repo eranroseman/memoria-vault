@@ -39,7 +39,7 @@ The translation is human judgment, not automatic. Verifier never closes the card
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (the five sub-checks, threshold values, hybrid-band rationale) lives in the SOUL.md. The command catalog is in [profiles/profile-commands.md](../../reference/profile-commands.md).
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (the five sub-checks, threshold values, hybrid-band rationale) lives in the SOUL.md. The command catalog is in [profiles/profile-commands.md](../../reference/profile-commands.md).
 
 ## Related
 

@@ -62,7 +62,7 @@ Workflows are listed in execution order within each pipeline. Refer to a workflo
 
 The board state machine, profile contracts, and lane policies are all *passive* — they describe what *can* happen. Workflows still need a *trigger*. For the daily human, that trigger is the Obsidian Command Palette.
 
-The authoritative catalog of `Memoria:` commands (capture, processing, interactive retrieval, project, maintenance, lens-reading) and their implementation lives in [obsidian-ui/command-palette.md](../../reference/command-catalog.md). This section describes the control flow that fires whenever any command is invoked.
+The authoritative catalog of `Memoria:` commands (capture, processing, interactive retrieval, project, maintenance, lens-reading) and their implementation lives in [command-catalog.md](../../reference/command-catalog.md). This section describes the control flow that fires whenever any command is invoked.
 
 ### Control flow
 
@@ -75,7 +75,7 @@ Every command follows the same six-step shape:
 5. **MCP servers** validate, record, and dispatch. Policy MCP checks permissions; tasks MCP updates the board.
 6. **Audit log is appended.** The decision and result are durable.
 
-See [architecture/control-plane.md](../../explanation/architecture/control-plane.md) for the layer architecture, and [obsidian-ui/command-palette.md](../../reference/command-catalog.md) for per-command implementation (QuickAdd / Templater / Hermes API / agent-client).
+See [architecture/control-plane.md](../../explanation/architecture/control-plane.md) for the layer architecture, and [command-catalog.md](../../reference/command-catalog.md) for per-command implementation (QuickAdd / Templater / Hermes API / agent-client).
 
 If a step fails, the failure is visible at exactly one layer — the plugin shows a status notice, the Hermes API returns an HTTP error, or the MCP returns a `deny` / `dry_run` payload. There is no place for a silent failure to hide.
 
@@ -148,7 +148,7 @@ Memoria runs on rhythms layered by frequency. The skeleton cadence: **daily** ca
 
 **Pre-morning, on phone over coffee (optional).** If overnight cron produced anything worth pushing — a retry threshold hit, a drift alarm, a substantive ingest summary — Telegram pushed a notification before the human opened the vault. Example: *"Overnight: 3 sources ingested, 12 link suggestions ready, 1 retry threshold hit on card-2026-05-26-042 (Librarian timeout fetching DOI for Tanaka 2024)."* The human glances, notes anything blocking, deals with it at the desk. If nothing pushed, nothing demands attention before opening the vault — that's the design.
 
-**Morning glance (5–10 minutes).** Open the vault. The Human workspace appears by default (`Cmd-1`). Glance at [Daily Health](../../explanation/dashboards/daily-health.md): is any section red? Today's queue, drift signals, lane health, cron status. Most days nothing is red, and Daily Health closes again. If link suggestions accumulated overnight from Librarian's enrichment work, bulk-approve the ones that look right via `Memoria: approve all link suggestions` (see [command-palette.md](../../reference/command-catalog.md#maintenance-3-commands)). For retries flagged in the Telegram push, drop to CLI: `hermes kanban show <card-id>` to inspect, fix the underlying issue, `hermes kanban unblock <card-id>` to release it back to `ready` (re-dispatch resets the retry count). Total time: under ten minutes unless something demands attention.
+**Morning glance (5–10 minutes).** Open the vault. The Human workspace appears by default (`Cmd-1`). Glance at [Daily Health](../../explanation/dashboards/daily-health.md): is any section red? Today's queue, drift signals, lane health, cron status. Most days nothing is red, and Daily Health closes again. If link suggestions accumulated overnight from Librarian's enrichment work, bulk-approve the ones that look right via `Memoria: approve all link suggestions` (see [command-catalog.md](../../reference/command-catalog.md#maintenance-3-commands)). For retries flagged in the Telegram push, drop to CLI: `hermes kanban show <card-id>` to inspect, fix the underlying issue, `hermes kanban unblock <card-id>` to release it back to `ready` (re-dispatch resets the retry count). Total time: under ten minutes unless something demands attention.
 
 **Reading session (1–2 hours, when scheduled).** Switch to the Reading & Processing workspace (`Cmd-2`). Open [`discuss-queue.md`](../../explanation/dashboards/discuss-queue.md): which paper note is ripest for processing? Read the source with the `[!brief]` callout in mind. When ready to process, ask Socratic about the active note (`Cmd-P → Memoria: ask about this note`) — the ACP pane opens on the right with the Socratic profile, which is architecturally write-denied. The conversation runs; the human writes the claim note themselves in `30-synthesis/01-claims/` (in their own words, in the left pane) as the conversation progresses. Save. The git hook fires; Librarian's enrichment runs overnight; the link suggestions appear in tomorrow's morning glance.
 

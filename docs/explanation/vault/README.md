@@ -75,7 +75,7 @@ The split inside `30-synthesis/` (`claims/`, `reference/`, `moc/`) is especially
 
 ### Folder roles and access
 
-Coarse access summary. The authoritative per-profile permissions live in [profiles/README.md](../../reference/profile-matrices.md#lane-permissions-matrix); per-write policy is enforced by the [policy MCP](../../reference/architecture/policy-mcp.md) via the [lane-override files](../profiles/README.md#lane-override-files).
+Coarse access summary. The authoritative per-profile permissions live in [profile-matrices.md](../../reference/profile-matrices.md#lane-permissions-matrix); per-write policy is enforced by the [policy MCP](../../reference/architecture/policy-mcp.md) via the [lane-override files](../profiles/README.md#lane-override-files).
 
 | Folder | Role | Human | Agent |
 | --- | --- | --- | --- |

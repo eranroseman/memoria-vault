@@ -77,7 +77,7 @@ hermes audit export --since 2026-01-01 --to logs/2026-archive.jsonl
 
 These are examples, not an authoritative catalog. The full Hermes CLI surface is upstream of Memoria (documented at [hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com/)); Memoria pins specific commands only as illustrations. When the Hermes CLI changes between versions, Memoria docs may lag — the principle (CLI for forensic work) stays true even when the specific flag names shift.
 
-**What CLI is NOT for.** Daily operations (capture, processing, drafting) go through the command palette inside Obsidian — see [`obsidian-ui/command-palette.md`](../../reference/command-catalog.md). Triage of approval queues belongs in the dashboards plus inline callout buttons, not the terminal. Reading content belongs in Obsidian; opening files in a terminal is hostile.
+**What CLI is NOT for.** Daily operations (capture, processing, drafting) go through the command palette inside Obsidian — see [`command-catalog.md`](../../reference/command-catalog.md). Triage of approval queues belongs in the dashboards plus inline callout buttons, not the terminal. Reading content belongs in Obsidian; opening files in a terminal is hostile.
 
 **Mental model.** CLI is the surgical tool. Sharp, precise, occasional. If the human finds themselves using the CLI more than a few times a week, something else (the dashboards, inline UI, or command palette) needs improving — the friction of dropping to a terminal is a signal that a more frequent operation lacks its proper channel.
 

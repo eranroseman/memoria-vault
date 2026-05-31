@@ -33,7 +33,7 @@ The bindings are human-side configuration, not part of Memoria's shipped vault. 
 1. **Install [QuickAdd](../../reference/plugins/quickadd.md)**.
 2. **For each command in the [catalog](../../reference/command-catalog.md), create a QuickAdd entry** with the same name (preserving the `Memoria:` prefix).
 3. **Configure the underlying mechanism** per the Implementation column of the catalog — Templater templates for capture commands, Hermes API calls for Kanban interactions, agent-client commands for ACP invocations.
-4. **Optionally pin the top 5 to Commander** for physical-button access. The recommended Commander set (see [`obsidian-plugins.md`](../../explanation/obsidian-plugins/cmdr.md)):
+4. **Optionally pin the top 5 to Commander** for physical-button access. The recommended Commander set (see [`cmdr.md`](../../explanation/obsidian-plugins/cmdr.md)):
    - `Memoria: capture fleeting`
    - `Memoria: ask about this note`
    - `Memoria: new project`

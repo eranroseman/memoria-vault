@@ -133,7 +133,7 @@ Memoria's components, classified by method:
 | `counter-outline` | Creative diversity in outline alternatives | [profiles/writer.md](../profiles/writer.md) |
 | `[!brief]` prose composition (within the hybrid) | Comparative narrative requires natural language | [profiles/mapper.md](../profiles/mapper.md) |
 | `cite-check` ambiguous-band judgment (within the hybrid) | Semantic judgment when similarity is in the 0.4–0.75 middle | [profiles/verifier.md](../profiles/verifier.md) |
-| Open-design rendering | Aesthetic and layout judgment over content | [profiles/why-coder-external-agent.md](../../how-to/coder/external-agent-workspace.md) |
+| Open-design rendering | Aesthetic and layout judgment over content | [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md) |
 
 ## Candidate displacements: where the LLM can still recede
 

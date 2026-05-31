@@ -1,3 +1,7 @@
+---
+topic: general
+---
+
 # Templates
 
 Authoring schemas — placeholder skeletons that pages (or vault notes) are filled from. The schema lives here; filled instances live in the docs or the vault.

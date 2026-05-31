@@ -1,3 +1,7 @@
+---
+topic: workflows
+---
+
 # Downstream workflows
 
 Task recipes for the downstream pipeline — turning synthesized knowledge into written output. For the pipeline design and stage matrices, see [explanation/workflows/pipeline-design.md](../../../explanation/workflows/pipeline-design.md).

@@ -26,7 +26,7 @@ Librarian is the system's intake layer — the profile that decides what enters 
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (full command list, allowed/disallowed folders, exit conditions) lives in the SOUL.md.
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (full command list, allowed/disallowed folders, exit conditions) lives in the SOUL.md.
 
 ## Related
 

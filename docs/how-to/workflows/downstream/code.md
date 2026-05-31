@@ -26,6 +26,6 @@ A chapter needs a reproducible figure → the Coder scaffolds `40-workbench/<pro
 ## Related
 
 - **Profile:** [profiles/coder.md](../../../explanation/profiles/coder.md)
-- **External coding agent pattern:** [profiles/why-coder-external-agent.md](../../coder/external-agent-workspace.md)
+- **External coding agent pattern:** [external-agent-workspace.md](../../coder/external-agent-workspace.md)
 - **Code agent attachment:** [ADR-6 code agent attachment](../../../project/decisions/06-code-agent-attachment.md) — delegate to external agent (Claude Code, Aider, Codex, Kilocode).
 - **Autopilot policy:** [ADR-10 code-artifact autopilot](../../../project/decisions/10-code-artifact-autopilot.md) — deferred.

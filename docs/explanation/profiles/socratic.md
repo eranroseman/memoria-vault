@@ -25,7 +25,7 @@ Socratic is the interlocutor for the human's thinking. It asks questions about a
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract lives in the SOUL.md. Notably brief on both fronts: Socratic has read access everywhere and write access nowhere.
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract lives in the SOUL.md. Notably brief on both fronts: Socratic has read access everywhere and write access nowhere.
 
 ## Related
 

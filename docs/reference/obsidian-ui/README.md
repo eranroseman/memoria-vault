@@ -1,3 +1,7 @@
+---
+topic: obsidian-ui
+---
+
 # Obsidian UI reference
 
 Lookup tables for the Obsidian UI surfaces. For the component model and visual-discipline rationale, see [explanation/obsidian-ui/](../../explanation/obsidian-ui/); for usage, see [how-to/obsidian-ui/](../../how-to/obsidian-ui/).

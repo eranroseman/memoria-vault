@@ -2,15 +2,15 @@
 
 The human-facing starter vault for **Memoria** — a research operating system that turns sources into durable knowledge through explicit Kanban states, specialized Hermes agent profiles, and a discipline of human-owned synthesis.
 
-> **Status: v0.1 scaffold.** The vault skeleton, the 10 dashboards, the 15 note templates, the 13 human-facing reference notes, the 5 plugin configs, and the 7 profile `SOUL.md` prompts ship in this repo. The wiring around them — `install.ps1`, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE`, the lane-override YAML, the policy and tasks MCP server source — is still being authored. **Clones today are for review, not running.**
+> **Status: v0.1 scaffold.** The vault skeleton, the 10 dashboards plus the `index.md` entry point, the 15 note templates, the 11 human-facing reference notes, the 5 plugin configs, and the 7 profile `SOUL.md` prompts ship in this repo. The wiring around them — `install.ps1`, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE`, the lane-override YAML, the policy and tasks MCP server source — is still being authored. **Clones today are for review, not running.**
 
 ## What's here
 
 - `00-meta/` — vault skeleton
-  - `01-dashboards/` — 9 Obsidian dashboards (Daily Health, board-state, drift-watch, audit-log, weekly-review, discuss-queue, reading-pipeline, loose-ends, open-questions)
+  - `01-dashboards/` — 10 dashboards + `index.md` (Daily Health is `index.md`; plus audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review)
   - `02-logs/` — populated Day 1 by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
   - `03-templates/` — 15 note templates (claim-note, paper-note, fleeting-note, …)
-  - `04-reference/` — 10 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist)
+  - `04-reference/` — 11 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist, screening-protocol)
   - `index.md` — vault landing page (pin in sidebar)
   - `research-directions.md` — Librarian's session-start input (populate this)
   - `system-status.md` — runtime health snapshot
@@ -38,7 +38,7 @@ Clone with any folder name — Memoria is agnostic to it:
 git clone https://github.com/eranroseman/memoria-vault.git my-research-vault
 ```
 
-Open the folder in Obsidian as a vault. You'll see the numbered folders and templates; tooling stays out of the way. You can read the seven `.memoria/profiles/memoria-*/SOUL.md` prompts and the 10 dashboards (`00-meta/01-dashboards/*.md`) to understand the system. Start with `00-meta/index.md` as the landing page.
+Open the folder in Obsidian as a vault. You'll see the numbered folders and templates; tooling stays out of the way. You can read the seven `.memoria/profiles/memoria-*/SOUL.md` prompts and the 10 dashboards + `index.md` (`00-meta/01-dashboards/*.md`) to understand the system. Start with `00-meta/index.md` as the landing page.
 
 You **can't** run Memoria yet — `install.ps1` doesn't exist, the per-profile `config.yaml` / `mcp.json` / `.env.EXAMPLE` files aren't authored, the MCP servers aren't written.
 

@@ -1,3 +1,7 @@
+---
+topic: workflows
+---
+
 # Maintenance workflows
 
 Task recipes for keeping the vault healthy. For the pipeline design, see [explanation/workflows/pipeline-design.md](../../../explanation/workflows/pipeline-design.md).

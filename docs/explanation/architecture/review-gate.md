@@ -24,7 +24,7 @@ Four vault folders require human approval before any agent write is committed:
 | `30-synthesis/03-moc/` | Maps of Content; navigation hubs. |
 | `50-deliverables/` | Final manuscripts, slides, and submission-ready exports. |
 
-Every write to any of these paths degrades to `dry_run` at the policy MCP, for every profile. The policy MCP's `review_gated.dry_run` rule sits above lane-override configuration — no lane can grant itself write access to a review-gated zone. See [profiles/README.md](../../reference/profile-matrices.md#lane-permissions-matrix) for the per-profile view of this constraint.
+Every write to any of these paths degrades to `dry_run` at the policy MCP, for every profile. The policy MCP's `review_gated.dry_run` rule sits above lane-override configuration — no lane can grant itself write access to a review-gated zone. See [profile-matrices.md](../../reference/profile-matrices.md#lane-permissions-matrix) for the per-profile view of this constraint.
 
 ## The `review_status` overlay
 

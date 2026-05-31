@@ -15,7 +15,7 @@ For *why* Home is a thin, note-based consumer rather than a plugin UI — the de
 
 - **Lead glance:** the Daily Health red signals, linked (or a block-embedded) so opening Home *is* the morning health check.
 - **Navigate:** links to the board and the knowledge dashboards ([open-questions](../../explanation/dashboards/open-questions.md), [contradictions](../../explanation/dashboards/contradictions.md), [reading-pipeline](../../explanation/dashboards/reading-pipeline.md)).
-- **Quick actions:** command-palette entries (`Memoria: …`) for the common moves (new paper, find, discuss) — see [command-palette.md](../../reference/command-catalog.md).
+- **Quick actions:** command-palette entries (`Memoria: …`) for the common moves (new paper, find, discuss) — see [command-catalog.md](../../reference/command-catalog.md).
 - **Recent activity:** a short Dataview list of recently-touched notes.
 
 ## Runtime scaffold

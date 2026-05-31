@@ -17,7 +17,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Decision
 
-**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [profiles/why-coder-external-agent.md](../../how-to/coder/external-agent-workspace.md).
+**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md).
 
 ## Consequences
 
@@ -33,4 +33,4 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 ## Related
 
 - **Workflows affected:** [Code](../../how-to/workflows/downstream/code.md)
-- **Files affected:** [profiles/coder.md](../../explanation/profiles/coder.md), [profiles/why-coder-external-agent.md](../../how-to/coder/external-agent-workspace.md), `00-meta/03-templates/code-note.md` (in the starter vault)
+- **Files affected:** [profiles/coder.md](../../explanation/profiles/coder.md), [external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md), `00-meta/03-templates/code-note.md` (in the starter vault)

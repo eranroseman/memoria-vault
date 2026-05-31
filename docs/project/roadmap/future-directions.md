@@ -485,7 +485,7 @@ The pattern: a thin Hermes skill that mirrors substantive gap cards to Todoist v
 
 Most admin tasks are retrospective: weekly audit review, monthly drift analysis, quarterly trust-score retrospectives. Real-time inspection (the [Memoria Inspector plugin](#memoria-inspector-obsidian-plugin) above) is the wrong shape for these — what's needed is a snapshot rendered on a schedule that can be archived, diffed, and read on any device.
 
-The pattern: a Hermes cron skill (`hermes run admin-report`) that renders static HTML pages from the audit log, board history, and trust-score time series. Outputs land in `00-meta/05-reports/<period>/` — version-controllable, archivable, openable in Obsidian directly or served via a simple HTTP server when remote viewing is needed. No runtime infrastructure, no auth surface, no failure mode beyond "stale report" (which the underlying system survives).
+The pattern: a Hermes cron skill (`admin-report`, scheduled via `hermes cron`) that renders static HTML pages from the audit log, board history, and trust-score time series. Outputs land in `00-meta/05-reports/<period>/` — version-controllable, archivable, openable in Obsidian directly or served via a simple HTTP server when remote viewing is needed. No runtime infrastructure, no auth surface, no failure mode beyond "stale report" (which the underlying system survives).
 
 **When to implement.** This is the smallest of the three admin-surface entries and the most defensible to build first. A reasonable trigger: the first time the human wants to read the audit log on a phone over a train ride. Until then, dashboards + CLI cover the use case.
 
@@ -499,7 +499,7 @@ The pattern: a Hermes cron skill (`hermes run admin-report`) that renders static
 
 **What's already in the design** (ready to use as soon as open-design is installed locally):
 
-- **Render-agent pattern** ([profiles/why-coder-external-agent.md](../../how-to/coder/external-agent-workspace.md#the-pattern-generalizes-external-rendering-agents)). Memoria scaffolds the rendering task in a `deliverable` note; open-design reads the note + vault content + `design-system.md`; the human reviews the rendered artifact in `50-deliverables/`. Same review gate, same audit log, same lane policy as code work — only the artifact type differs.
+- **Render-agent pattern** ([external-agent-workspace.md](../../how-to/coder/external-agent-workspace.md#the-pattern-generalizes-external-rendering-agents)). Memoria scaffolds the rendering task in a `deliverable` note; open-design reads the note + vault content + `design-system.md`; the human reviews the rendered artifact in `50-deliverables/`. Same review gate, same audit log, same lane policy as code work — only the artifact type differs.
 - **Design-system source** ([obsidian-ui/design-system.md](../../reference/templates/design-system.md)). The authoritative visual-style file lives at `00-meta/04-reference/design-system.md` in open-design's portable DESIGN.md format (9 sections: color, typography, spacing, layout, components, motion, voice, brand, anti-patterns). One vault, one design system, multiple consumers (open-design renders, Pandoc exports, CSS snippets).
 
 **Operationally valuable next steps** (worth doing once open-design is installed and the render-agent pattern has been exercised once or twice):

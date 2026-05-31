@@ -1,3 +1,7 @@
+---
+topic: workflows
+---
+
 # Workflows (explanation)
 
 The design behind Memoria's workflows. For the task recipes themselves, see [how-to/workflows/](../../how-to/workflows/).

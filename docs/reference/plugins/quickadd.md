@@ -13,7 +13,7 @@ Setup pattern: a QuickAdd "Macro" per Memoria command. The macro composes:
 3. An [`agent-client`](agent-client.md) plugin command invocation (for ACP profile switches), OR
 4. Combinations of the above.
 
-The standard Memoria commands and their implementation patterns are in [command-palette.md](../command-catalog.md). QuickAdd doesn't ship a `data.json` template here — human setup varies enough that one standard config would constrain rather than help.
+The standard Memoria commands and their implementation patterns are in [command-catalog.md](../command-catalog.md). QuickAdd doesn't ship a `data.json` template here — human setup varies enough that one standard config would constrain rather than help.
 
 Load-bearing settings:
 

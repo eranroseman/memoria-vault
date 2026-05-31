@@ -1,3 +1,7 @@
+---
+topic: workflows
+---
+
 # Upstream workflows
 
 Task recipes for the upstream pipeline — turning sources into durable knowledge. For the pipeline design and stage matrices, see [explanation/workflows/pipeline-design.md](../../../explanation/workflows/pipeline-design.md).

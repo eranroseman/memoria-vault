@@ -94,7 +94,7 @@ This keeps Linter's fix surface small (one delegation pattern) and uses a battle
 
 ## Permissions and commands
 
-Folder permission matrix lives in [profiles/README.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (lint check table, full M-detector specs, threshold values) lives in the SOUL.md and M-detectors.md alongside it. The command catalog is in [profiles/profile-commands.md](../../reference/profile-commands.md).
+Folder permission matrix lives in [profile-matrices.md](../../reference/profile-matrices.md#folder-permission-matrix); the runtime contract (lint check table, full M-detector specs, threshold values) lives in the SOUL.md and M-detectors.md alongside it. The command catalog is in [profiles/profile-commands.md](../../reference/profile-commands.md).
 
 ## Related
 
