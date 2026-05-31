@@ -12,6 +12,8 @@ Checks:
                         and every #anchor resolves to a heading in the target
                         (GitHub does not auto-heal links when files move).
   3. Frontmatter policy — no file still carries a dropped key (`mode:`, `audience:`).
+  4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
+                        relative Markdown link (GitHub does not render wikilinks).
 
 Exit 0 if clean, 1 if any error.
 Usage: python scripts/docs-doctor.py [docs_root]   (default: docs)
@@ -31,6 +33,7 @@ LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
+WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
 
 def read(path: Path) -> str:
@@ -108,6 +111,21 @@ def check_links(md: Path, errors: list[str]) -> None:
             errors.append(f"{md}: broken anchor -> {target}")
 
 
+def check_wikilinks(md: Path, errors: list[str], doc_md_names: set[str]) -> None:
+    # Docs render on GitHub, where [[wikilinks]] do not resolve; the convention is
+    # "relative Markdown links only." Flag a wikilink only when it resolves to a real
+    # docs file (the signature of a cross-link that should be Markdown) — illustrative
+    # tokens like [[citekey]] that match no doc are vault-syntax examples, left alone.
+    text = read(md)
+    text = FENCE_RE.sub("", text)
+    text = INLINE_CODE_RE.sub("", text)
+    for inner in WIKILINK_RE.findall(text):
+        base = re.split(r"[|#]", inner)[0].strip().split("/")[-1]
+        name = base if base.endswith(".md") else base + ".md"
+        if name.lower() in doc_md_names:
+            errors.append(f"{md}: wikilink [[{inner}]] -> use a relative Markdown link to {name}")
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -119,10 +137,12 @@ def main() -> int:
         return 1
 
     errors: list[str] = []
+    doc_md_names = {p.name.lower() for p in root.rglob("*.md")}
     check_readmes(root, errors)
     for md in sorted(root.rglob("*.md")):
         check_frontmatter(md, errors)
         check_links(md, errors)
+        check_wikilinks(md, errors, doc_md_names)
 
     if errors:
         print(f"docs-doctor: {len(errors)} issue(s)\n")

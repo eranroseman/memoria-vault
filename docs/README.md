@@ -8,6 +8,8 @@ Memoria is a research operating system that turns sources into durable knowledge
 
 > **Designed vs. built.** These docs describe the intended system; the starter vault is an early scaffold that implements part of it. [project/implementation-status.md](project/implementation-status.md) is the source of truth for what ships today versus what is *accepted-pending* or *deferred*. A documented artifact that is missing from the vault is a known status — check the ledger before assuming an error.
 
+**Repository layout.** This `docs/` tree and the Obsidian starter vault are siblings in the repo: documentation under `docs/`, and the vault — the `00-meta/`…`95-archive/` skeleton plus `.obsidian/`, `.memoria/`, and `install.ps1` — under `vault/`. Setup commands (clone, `install.ps1`) run from inside `vault/`.
+
 ## How these docs are organized
 
 The four top-level folders follow the [Diátaxis][diataxis] convention — each holds one *kind* of writing, answering a different question:
@@ -25,13 +27,13 @@ A fifth folder, [project/](project/), holds **out-of-compass records** — decis
 
 ## Reading paths
 
-### Running Memoria — you want to operate the system
+### Running Memoria — operate the system
 
 1. Start with [tutorials/](tutorials/) — set up from zero, ingest a batch, run the Linter, promote a claim, add a profile.
 2. Move to [how-to/](how-to/) for task recipes once you know the shape of the system.
 3. Keep [reference/](reference/) open for lookups — the [glossary](reference/glossary.md), [frontmatter schema](reference/frontmatter-schema.md), [note types](reference/note-types.md), and [command catalog](reference/command-catalog.md).
 
-### Extending Memoria — you want to understand or change the design
+### Extending Memoria — understand or change the design
 
 1. Start with [explanation/architecture/](explanation/architecture/) — the three-layer model (board, workers, vault) and why each layer exists.
 2. Read [project/decisions/](project/decisions/) — the ADRs record *why* each non-trivial choice was made (and which were deferred).
@@ -46,4 +48,4 @@ A fifth folder, [project/](project/), holds **out-of-compass records** — decis
 
 ## Core idea, in one paragraph
 
-The board (Kanban) is the control plane. The workers (Hermes profiles) are the execution layer. The vault (Obsidian folders) is the durable knowledge store. Cards on the board carry state; profiles claim cards within their lane and execute work; outputs land in the vault only after the human review state changes to `approved`. This keeps workflow state, execution, and final knowledge separate but connected through explicit handoffs.
+The board (Kanban) is the control plane. The workers (Hermes profiles) are the execution layer. The vault (Obsidian folders) is the durable knowledge store. Cards on the board carry state; profiles claim cards within their lane and execute work; outputs land in **review-gated** vault folders only after the human sets `review_status: approved` (inbox and source writes land before approval). This keeps workflow state, execution, and final knowledge separate but connected through explicit handoffs.

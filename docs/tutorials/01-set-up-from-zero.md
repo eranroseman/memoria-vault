@@ -41,14 +41,14 @@ git clone https://github.com/<your-handle>/memoria-vault.git
 
 # …or pick your own. Both work.
 git clone https://github.com/<your-handle>/memoria-vault.git my-research-vault
-cd my-research-vault
+cd my-research-vault/vault   # the Obsidian vault + install.ps1 live in the vault/ subfolder
 ```
 
-You should see the vault skeleton (`00-meta/`, `10-inbox/`, `20-sources/`, `30-synthesis/`, …) plus `.obsidian/` (plugin configs + snippets) and `.memoria/` at the root. Inside `.memoria/` the seven profile directories each currently ship their `SOUL.md` prompt (plus `cron/` and `skills/`); the `mcp/` and `lane-overrides/` directories are placeholders (`.keep` only) until the v0.2 wiring lands (see [implementation-status.md](../project/implementation-status.md)). The starter vault ships pre-populated — no skeleton-creation step needed.
+The repo's `vault/` subfolder **is** the Obsidian vault: inside it you'll see the skeleton (`00-meta/`, `10-inbox/`, `20-sources/`, `30-synthesis/`, …) plus `.obsidian/` (plugin configs + snippets), `.memoria/`, and `install.ps1`. (`docs/` and `scripts/` sit beside `vault/` at the repo root — they are not part of the Obsidian vault.) Inside `.memoria/` the seven profile directories each ship their `SOUL.md` prompt, `cron/`, and `skills/`, and the seven `lane-overrides/*.yaml` ship alongside; only the `mcp/` directory is a placeholder (`.keep` only) until the v0.2 wiring lands (see [implementation-status.md](../project/implementation-status.md)). The starter vault ships pre-populated — no skeleton-creation step needed.
 
 ## Step 2 — Open the vault in Obsidian
 
-In Obsidian, **Open vault → Open folder as vault**, point at the folder you cloned into. The vault name Obsidian shows is whatever your folder is called.
+In Obsidian, **Open vault → Open folder as vault**, point at the `vault/` subfolder of the repo you cloned (that folder *is* the Obsidian vault). The vault name Obsidian shows is whatever that folder is called.
 
 Install the required community plugins (Settings → Community plugins → Browse):
 
@@ -84,6 +84,7 @@ Drag one PDF you've been meaning to read into Zotero. Better BibTeX assigns it a
 The seven Memoria profile directories are already in the vault at `.memoria/profiles/memoria-<name>/`. **In the current v0.1 scaffold each ships only its `SOUL.md` prompt** (plus `cron/` and `skills/`); the `config.yaml`, `mcp.json`, and `distribution.yaml` that `hermes profile install` requires are the v0.2 wiring and are not authored yet. Running the installer is safe and idempotent, but it will **detect the missing files and skip each profile** with an explanatory message — no profile registers until its wiring exists (see [implementation-status.md](../project/implementation-status.md)):
 
 ```powershell
+# from the vault/ folder (where Step 1 left you)
 ./install.ps1
 ```
 

@@ -65,7 +65,7 @@ already does better.
 
 | Capability | Why rejected |
 | --- | --- |
-| **External memory providers** (Mem0, Honcho, …) | The clearest reject: an auto-extracting, auto-injecting "memory" store is a second, *un-gated* knowledge layer competing with the vault — exactly the unreviewed accumulation Memoria exists to replace. The vault is the knowledge store; built-in `MEMORY.md` holds operational facts only. |
+| **External memory providers** (Mem0, Honcho, …) | The clearest reject: an auto-extracting, auto-injecting "memory" store is a second, *un-gated* knowledge layer competing with the vault — exactly the unreviewed accumulation Memoria exists to replace. The vault is the knowledge store; built-in `MEMORY.md` holds operational facts only. **Scope:** rejected as a *knowledge store* — a cross-machine *operational-memory* sync (`MEMORY.md` / `USER.md` shared across devices) is a separate, deferred question, see [future-directions: Hermes memory server](future-directions.md#hermes-memory-server-shared-memory-provider). |
 | **Image generation** | Generated images are the opposite of sourced evidence; they would pollute the vault's "everything is traceable" invariant. If ever needed for a deliverable, the asset lives outside the canonical layers. |
 | **Voice mode** | Conflicts with the deliberate, auditable, review-gated model — voice is for fast conversational loops, not a slow path through explicit states. |
 | **TTS** | Marginal — at most an optional audio digest on top of the cron `--deliver` path; not a capability. |

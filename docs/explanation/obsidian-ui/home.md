@@ -2,8 +2,8 @@
 topic: obsidian-ui
 ---
 
-> [!warning] Status: Accepted-Pending (ADR-25)
-> `Home.md` does not yet exist at the vault root. Create it manually or wait for the post-clone setup step to be documented.
+> [!note] Status: Shipped (ADR-25)
+> `Home.md` ships at the vault root. The obsidian-homepage auto-open wiring is a post-clone setup step — see [the Home how-to](../../how-to/obsidian-ui/home.md).
 
 # Home — why a thin, note-based front door
 

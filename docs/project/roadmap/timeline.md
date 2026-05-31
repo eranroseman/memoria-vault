@@ -69,7 +69,7 @@ The migration path always points the same direction: **start narrow, expand when
 1. Rename the system in the vault documentation and any AGENTS-style schema files. Keep `research-wiki` as an alias for migration.
 2. Define the card states, the worker lanes (one per profile), and the review gate rules in one schema document so Hermes and the board share the same contract.
 3. Confirm note-type names match the defined set in [vault/README.md](../../explanation/vault/README.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total — the three entity types are separate, not a single `entity-*`). Keep any older names as deprecated aliases during transition.
-4. Commit the design document set (`developer-guide/`) as the shared source of truth.
+4. Commit the design document set (`docs/`) as the shared source of truth.
 
 **Exit criteria.** The schema is the single source of truth. Anyone (including the agent) can read it and know what the states, types, and folders mean.
 

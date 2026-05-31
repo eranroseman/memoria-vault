@@ -24,7 +24,7 @@ The starter vault is the **single distributable artifact**. Cloning it gives the
 - **`.memoria/` scaffold** — Memoria's tooling directory, also dot-prefixed and therefore invisible to Obsidian's vault scanner. Contains:
   - `profiles/` — seven hand-authored Hermes profile directories (`memoria-librarian/` through `memoria-linter/`), each with a `SOUL.md` system prompt and (in v0.2) `config.yaml`, `mcp.json`, `skills/`, and `cron/`.
   - `mcp/` — Python sources for `policy_mcp.py` and `tasks_mcp.py` (v0.2; not yet authored in v0.1).
-  - `lane-overrides/` — one YAML file per lane that the policy MCP reads at startup (v0.2).
+  - `lane-overrides/` — seven YAML files (one per lane) the policy MCP reads at startup; the files **ship**, the MCP that reads them is v0.2.
   - `csl/` — Pandoc citation styles.
 
 See [architecture/on-disk-layout.md](on-disk-layout.md) for the full annotated tree.
@@ -42,7 +42,7 @@ Steps:
 What `install.ps1` does **not** do in v0.1:
 - No YAML wiring (`config.yaml`, `mcp.json`, `distribution.yaml` are v0.2 artifacts; profiles missing these files are skipped with a clear message).
 - No MCP setup (policy and task MCP servers are not yet authored).
-- No lane-override installation (the YAML files are v0.2).
+- No lane-override installation — the seven YAML files ship in the vault (`.memoria/lane-overrides/`); the policy MCP that consumes them is v0.2.
 
 After the script runs, the human opens the vault in Obsidian, fills in `.env` credentials, and starts a session with `hermes -p memoria-librarian chat`.
 
@@ -57,7 +57,7 @@ After the script runs, the human opens the vault in Obsidian, fills in `.env` cr
 | `install.ps1` (Windows) | Shipped | `install.sh` (macOS / Linux) |
 | `config.yaml`, `mcp.json`, `distribution.yaml` | Not authored | Required for `hermes profile install` |
 | `policy_mcp.py`, `tasks_mcp.py` | Not authored | Runtime enforcement |
-| Lane-override YAML files | Not authored | Policy MCP reads at startup |
+| Lane-override YAML files | Shipped (vault-side) | Policy MCP reads + enforces them |
 | Kanban board | Not authored | Phase 4 |
 
 ## Profile compiler vision (deferred, Phase 2)

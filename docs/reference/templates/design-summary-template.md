@@ -12,8 +12,6 @@ It is the same template-vs-instance split the rest of the repo uses ([vault/note
 
 ```md
 ---
-mode: reference            # reference for spec-like pages; explanation for conceptual ones
-audience: operator
 topic: dashboards          # or: profiles
 ---
 

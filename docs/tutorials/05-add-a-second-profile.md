@@ -19,6 +19,7 @@ By the end you will have installed a second lane (Mapper is the usual next one) 
 1. **Install the profile.** It already ships at `.memoria/profiles/memoria-mapper/`; register it with:
 
    ```bash
+   # from the repo's vault/ folder (where install.ps1 lives)
    ./install.ps1 -Only memoria-mapper
    ```
 

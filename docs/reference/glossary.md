@@ -44,7 +44,7 @@ Terms used across the Memoria design docs. Pulled from the README to keep the do
 ## Profile management and configuration
 
 - **Profile source** — under direct profile management, the seven hand-authored profile directories under `.memoria/profiles/memoria-<name>/` in the starter vault. The installer (`install.ps1`) copies these verbatim (with `{{VAULT_PATH}}` substitution in `mcp.json`) into `~/.hermes/profiles/memoria-<name>/`. The deferred [profile-compilation design](../project/roadmap/profile-compilation.md) describes the alternative compile-time-merge model that Memoria does not currently use.
-- **`.env.EXAMPLE`** — per-profile manifest of required and optional env vars, commented out, shipped with every profile. Human copies to `.env` and fills in. Excluded from `hermes profile install`/`update` so secrets never travel between machines.
+- **`.env.EXAMPLE`** — per-profile manifest of required and optional env vars, commented out, **designed to ship with every profile** (deferred — see [implementation-status](../project/implementation-status.md)). Human copies to `.env` and fills in. Excluded from `hermes profile install`/`update` so secrets never travel between machines.
 - **Automation tier** — the system-wide autonomy *setting* in profile config: `strict` (default; propose-only), `standard` (safe auto-fixes + low-stakes triage), or `minimal` (also scheduled answer drafting). Each tier is an explicit unlock from the previous. Controls how much the system acts without human confirmation — analogous to SAE L0–L5 autonomy levels, applied to knowledge-work tasks. **Distinct from two other scales** the docs also use: the per-profile **invocation level** (1–3, a cadence label — background / pulled / interactive — see [profiles/README.md](profile-matrices.md#invocation-levels-cadence)) and Chen 2026's **L1–L5** field taxonomy (Memoria's position overall — see [vision.md](../explanation/vision.md#position-on-the-autonomy-spectrum)). In short: *tier* = how much the system may act; *invocation level* = how a profile is invoked; *L-level* = where Memoria sits in the field. Only *tier* and *L-level* are named with the word "autonomy."
 
 ## Policy MCP and audit
@@ -111,10 +111,10 @@ Terms used across the Memoria design docs. Pulled from the README to keep the do
 - **Fleeting note** — raw capture awaiting promotion or discard; lives in `10-inbox/01-fleeting/`.
 - **Answer note** (`answer-note`) — an agent-drafted, cited answer to a research question; lives in `10-inbox/02-answers/`. An unreviewed inbox draft awaiting human approval; promoted to a `claim-note` if accepted, not durable knowledge itself.
 - **Deliverable** — finished manuscript, presentation, media asset, or release; lives in `50-deliverables/`.
-- **canvas** — spatial arrangement view backed by a `.canvas` JSON file. Lives in `40-workbench/*/03-canvas/`. See [[vault/note-types]].
-- **code-note** — record of a code artifact produced in a Coder-lane experiment. See [[vault/note-types]].
-- **draft** — pipeline output assembled from claim notes, headed to export via Pandoc. See [[vault/note-types]].
-- **project-note** — hub note for a downstream writing project at `40-workbench/<project>/`. See [[vault/note-types]].
+- **canvas** — spatial arrangement view backed by a `.canvas` JSON file. Lives in `40-workbench/*/03-canvas/`. See [note-types.md](note-types.md).
+- **code-note** — record of a code artifact produced in a Coder-lane experiment. See [note-types.md](note-types.md).
+- **draft** — pipeline output assembled from claim notes, headed to export via Pandoc. See [note-types.md](note-types.md).
+- **project-note** — hub note for a downstream writing project at `40-workbench/<project>/`. See [note-types.md](note-types.md).
 
 ## Disambiguations
 

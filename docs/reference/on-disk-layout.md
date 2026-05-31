@@ -24,8 +24,10 @@ The **vault root folder is human-defined**: the human clones the distribution in
 │   ├── 02-logs/                        # audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl
 │   ├── 03-templates/                   # 15 note templates (claim-note, paper-note, …)
 │   ├── 04-reference/                   # human-facing reference notes (design-system, schema-reference, …)
-│   ├── 05-eval/                        # vault-eval gold tasks (per-workflow gold sets) — ADR-23
-│   ├── 08-metrics/                     # fleet + eval metrics (telemetry rollups, eval/ run results) — Post-MVS
+│   ├── 05-eval/                        # vault-eval gold tasks (per-workflow gold sets) — ADR-23 (ships empty: .keep)
+│   ├── 07-skills/                      # skill-governance registry — ships empty (.keep); overlay deferred
+│   ├── 08-metrics/                     # fleet + eval metrics (telemetry rollups, eval/ run results) — Post-MVS (ships empty: .keep)
+│   ├── board/                          # markdown board export — ships empty (.keep); Phase-4 export deferred
 │   ├── index.md                        # vault landing page (pinned in sidebar)
 │   ├── research-directions.md          # Librarian's session-start input
 │   └── system-status.md                # runtime health snapshot
@@ -83,14 +85,14 @@ The **vault root folder is human-defined**: the human clones the distribution in
     │   ├── policy_mcp.py               # not yet authored (v0.2)
     │   ├── tasks_mcp.py               # not yet authored (v0.2)
     │   └── requirements.txt
-    ├── lane-overrides/                 # YAML files the policy MCP reads at startup (named {lane}.yaml)
-    │   ├── librarian.yaml              # not yet authored (v0.2)
-    │   ├── mapper.yaml                 # not yet authored (v0.2)
-    │   ├── socratic.yaml               # not yet authored (v0.2)
-    │   ├── writer.yaml                 # not yet authored (v0.2)
-    │   ├── verifier.yaml               # not yet authored (v0.2)
-    │   ├── coder.yaml                  # not yet authored (v0.2)
-    │   └── linter.yaml                 # not yet authored (v0.2)
+    ├── lane-overrides/                 # 7 YAML files (one per lane); all ship — the policy MCP that reads them is v0.2
+    │   ├── librarian.yaml
+    │   ├── mapper.yaml
+    │   ├── socratic.yaml
+    │   ├── writer.yaml
+    │   ├── verifier.yaml
+    │   ├── coder.yaml
+    │   └── linter.yaml
     ├── csl/                            # Pandoc citation style files
     ├── library.bib                     # Zotero BibTeX export
     └── tool-registry.yaml              # machine-read tool config
