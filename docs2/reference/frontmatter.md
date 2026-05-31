@@ -94,6 +94,8 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 | `pub_status` | string (enum) | `preprint` · `published` · `retracted` · `unknown` | Human / agent | `paper-note` |
 | `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` | Human sets to `true` after reviewing the full text. Dashboards query this. |
 | `enriched_date` | date (`YYYY-MM-DD`) | — | Agent | Top-level (not inside `_enrichment`) — dashboards and the Linter's stale-enrichment check query it directly. |
+| `triage_completed` | date (`YYYY-MM-DD`) | — | Human | `paper-note` | Set when classification is complete (`lifecycle: current`). Used to measure ingest-to-triage latency and to surface stale items in the discuss-queue dashboard. |
+| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` | Set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: canonical`. Used to measure triage-to-promotion latency. |
 
 ---
 
