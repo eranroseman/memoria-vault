@@ -34,12 +34,15 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | [Set up Hermes](setup/set-up-hermes.md) | Install profiles and fill `.env` secrets |
 | [Set up the messaging gateway](setup/set-up-messaging.md) | Telegram capture for mobile fleeting notes |
 | [Add a second vault](setup/add-a-second-vault.md) | Fork the starter for a separate project |
+| [Set up a VPS for always-on operation](setup/set-up-vps.md) | Move Hermes to a persistent server with systemd + Syncthing |
 
 ### Using Obsidian
 
 | Guide | What it covers |
 | --- | --- |
 | [Command palette](command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
+| [Agent-client pane](use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
+| [Navigate the dashboards](navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
 
 ### Using Hermes Agent
 
@@ -61,6 +64,7 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Find new sources](sources/find-new-sources.md) | Forward/backward citation search, concept queries, candidate queue | Find |
 | [Triage fleeting notes](sources/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Fleeting triage |
 | [Capture and ingest a source](sources/capture-and-ingest.md) | Zotero → vault: the complete intake path | Zotero capture + Ingest |
+| [Pin a citekey](sources/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Zotero capture |
 | [Classify a source](sources/classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
 | [Discuss a paper](sources/discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
 | [Write a claim note](sources/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
@@ -77,6 +81,7 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 | [Start a writing project](writing/start-a-writing-project.md) | Scaffold a workbench project folder | — |
 | [Assess your corpus](writing/assess-your-corpus.md) | Mapper corpus map: dense clusters, thin coverage, gaps | Assess |
 | [Frame a project](writing/frame-a-project.md) | Generate competing outlines, choose one framing | Frame |
+| [Use canvas for argument mapping](writing/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Frame |
 | [Draft with the Writer](writing/draft-with-writer.md) | Use the Writer profile for prose and outlines | Write |
 | [Verify and revise a draft](writing/verify-and-revise.md) | Run Verify, read the callout, close gaps | Verify + Revise |
 | [Export a draft](writing/export-a-draft.md) | Pandoc export to Word, PDF, or plain Markdown | Export |
@@ -88,11 +93,15 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 
 | Guide | What it covers |
 | --- | --- |
+| [Return to work](maintenance/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
 | [Run the weekly review](maintenance/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
 | [Run the Linter](maintenance/run-the-linter.md) | On-demand or scheduled structural health check |
 | [Rebuild the search index](maintenance/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
 | [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
 | [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
+| [Build a Map of Content](maintenance/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
+| [Refactor claim notes](maintenance/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
+| [Run a retraction sweep](maintenance/retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
 
 ### Recovery
 
@@ -100,6 +109,7 @@ Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one f
 
 | Guide | What it covers |
 | --- | --- |
+| [Safe mode](recovery/safe-mode.md) | Minimal working paths for ingest, triage, and export when optional tooling is down |
 | [Fix a stale `.bib`](recovery/fix-stale-bib.md) | Citekey not found at ingest |
 | [Fix broken frontmatter](recovery/fix-broken-frontmatter.md) | YAML parse error; note missing from Dataview queries |
 | [Fix a stuck card](recovery/fix-stuck-card.md) | Card won't advance on the Kanban board |

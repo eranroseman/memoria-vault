@@ -12,6 +12,7 @@ Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you
 | [04](04-build-a-reading-batch.md) | Build a reading batch | Ingest 5 papers, classify them, write 3 linked claim notes | Your first connected knowledge cluster |
 | [05](05-start-a-writing-project.md) | Start a writing project | Create a project, read the corpus map, commit a framing | A project folder with corpus map and a chosen outline |
 | [06](06-verify-and-address-gaps.md) | Verify and address a gap | Write a draft paragraph, run verification, address one failed trace | A verified draft with a complete citation trail |
+| [07](07-find-new-sources.md) | Find new sources | Run forward-citation and concept searches, triage the candidates queue, ingest one result | A populated candidates queue and one new paper-note ready to classify |
 
 ---
 

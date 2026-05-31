@@ -1,0 +1,101 @@
+
+# How to navigate the dashboards
+
+Ten dashboards in `00-meta/01-dashboards/`. Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
+
+For what each dashboard shows in detail, see [explanation/dashboards/](../explanation/dashboards/).
+
+## Dashboards pre-loaded by workspace
+
+Switch workspace (`Ctrl+1/2/3`) to get the dashboards most relevant to your current mode:
+
+| Workspace | Hotkey | Left pane | Right pane |
+| --- | --- | --- | --- |
+| Human | `Ctrl+1` | Daily Health | Board State |
+| Reading & Processing | `Ctrl+2` | Discuss Queue (top) + Reading Pipeline (bottom) | Socratic ACP pane |
+| Drafting | `Ctrl+3` | Project folder | Backlinks |
+
+For other dashboards, open manually: `Cmd/Ctrl+P` → Omnisearch → type the dashboard name.
+
+---
+
+## Situation → dashboard
+
+### "What needs attention right now?"
+**Daily Health** — opens in the Human workspace left pane (`Ctrl+1`).
+
+Glance at the start of every session. Shows today's HIGH and CRITICAL lint findings, overdue Kanban cards, and anything the system flagged since your last session. Empty means nothing urgent. Under 30 seconds to read.
+
+### "What work is in flight? What's stuck?"
+**Board State** — Human workspace right pane (`Ctrl+1`).
+
+Kanban lane counts and oldest card per lane. If a card has sat in one lane more than 3 days, it's likely stuck. See [recovery/fix-stuck-card.md](recovery/fix-stuck-card.md).
+
+### "What papers are waiting for me to classify?"
+**Reading Pipeline** — Reading & Processing workspace, left pane bottom (`Ctrl+2`).
+
+All sources with `lifecycle: proposed`. Sort is oldest-first — clear the oldest items first. See [sources/classify-a-source.md](sources/classify-a-source.md).
+
+### "Which papers should I be reading and discussing?"
+**Discuss Queue** — Reading & Processing workspace, left pane top (`Ctrl+2`).
+
+Paper notes that are `lifecycle: current` but haven't had a Socratic discussion pass. Sort is oldest-first. Open a paper from this queue, then open the ACP pane with **Memoria: ask about this note**. See [sources/discuss-a-paper.md](sources/discuss-a-paper.md).
+
+### "What open questions has my synthesis raised?"
+**Open Questions** — open manually.
+
+Aggregates questions from MOC gap sections and notes tagged `has_open_question: true`. Review during the weekly review or when starting a new topic cluster. These questions are things your existing notes flag but can't answer — they're discovery prompts.
+
+### "Are any of my claims contradicted by other claims?"
+**Contradictions** — open manually.
+
+The Verifier writes `[!contradiction]` callouts when two claim notes conflict. This dashboard aggregates them. Check before promoting a claim to canonical reference or submitting a draft — unresolved contradictions mean the argument isn't settled.
+
+### "Something seems wrong but I can't see why"
+**Drift Watch** — open manually.
+
+Verdict band at the top: PASS / REVIEW / FAIL. FAIL means structural desynchronization between the vault source, deployed Hermes profiles, and working vault state. Open when profiles behave unexpectedly or when commands fire but produce wrong results. See [recovery/fix-profile-drift.md](recovery/fix-profile-drift.md).
+
+### "Are my agents performing well? Is API cost increasing?"
+**Fleet Health** — open manually.
+
+Operational metrics per profile: success rate, latency, token cost. Check monthly or when a profile seems slow or returning degraded responses. Not for daily use — meaningful only after a week or more of accumulated data.
+
+### "What did the policy MCP allow or deny?"
+**Audit Log** — open manually.
+
+Per-decision forensics. Open when a write operation didn't happen as expected — the audit log shows whether it was denied and why. Also useful after any profile configuration change to confirm the new policy is behaving as intended.
+
+### "What do I need to do this week?"
+**Weekly Review** — open on Fridays.
+
+Consolidated weekly agenda: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [maintenance/run-the-weekly-review.md](maintenance/run-the-weekly-review.md) guide walks through it step by step.
+
+### "What orphan or noise files are in the vault?"
+**Loose Ends** — open during the weekly review or after a lint pass.
+
+Files named `TODO`, `tmp`, `untitled`, or matching other noise patterns. More than five is a cleanup signal.
+
+---
+
+## Quick reference
+
+| Dashboard | When to open | Workspace shortcut |
+| --- | --- | --- |
+| Daily Health | Start of session | `Ctrl+1`, left |
+| Board State | Check for stuck cards | `Ctrl+1`, right |
+| Reading Pipeline | Classify backlog | `Ctrl+2`, left bottom |
+| Discuss Queue | Reading session | `Ctrl+2`, left top |
+| Open Questions | Weekly review / new topic | Manual |
+| Contradictions | Before claim promotion or filing | Manual |
+| Drift Watch | When something seems off | Manual |
+| Fleet Health | Monthly check | Manual |
+| Audit Log | After unexpected write failure | Manual |
+| Weekly Review | Fridays | Manual |
+| Loose Ends | Weekly review or lint pass | Manual |
+
+## Related
+
+- Dashboard design rationale: [explanation/dashboards/README.md](../explanation/dashboards/README.md)
+- Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../reference/obsidian-workspaces.md)
+- Weekly review procedure: [maintenance/run-the-weekly-review.md](maintenance/run-the-weekly-review.md)
