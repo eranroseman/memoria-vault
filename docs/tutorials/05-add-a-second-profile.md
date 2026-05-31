@@ -2,17 +2,17 @@
 topic: tutorials
 ---
 
-# Tutorial: Add a second profile
+# Tutorial: Verify and activate a profile
 
-By the end you will have installed a second lane (Mapper is the usual next one) and exercised it. The graduated-start principle: add a profile when you *feel* the absence of what it does, not before.
+By the end you will have confirmed a profile lane is active and exercised it. All seven profiles are installed by `install.ps1` in Tutorial 01; this tutorial covers confirming the installation, filling in per-profile secrets, and running a first task for each lane.
 
 > **Status.** See [implementation status](../project/implementation-status.md).
 
-**Prerequisite:** [Tutorial 01](01-set-up-from-zero.md) (Librarian installed) and a corpus worth mapping ([Tutorial 02](02-ingest-and-classify-a-batch.md)).
+**Prerequisite:** [Tutorial 01](01-set-up-from-zero.md) (all seven profiles installed by `install.ps1`) and a corpus worth mapping ([Tutorial 02](02-ingest-and-classify-a-batch.md)).
 
-## Which profile next?
+## Which profile to exercise first?
 
-[roadmap/README.md (graduated start)](../project/roadmap/README.md#implementation-paths-graduated-start) sequences them by felt need. **Mapper** is the common second lane — once the corpus is large enough that "what do I already have on X?" is a real question, the Mapper's `scope-project` and `[!brief]` earn their place.
+All seven are already installed. **Mapper** is the natural first profile to exercise after Librarian — once the corpus has 5+ papers, the Mapper's `scope-project` and `[!brief]` comparative-brief start producing real comparisons. See [configuration tiers](../project/roadmap/README.md#implementation-paths-configuration-tiers) for profile activation order.
 
 ## Steps
 

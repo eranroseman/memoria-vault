@@ -6,12 +6,13 @@ topic: tutorials
 
 By the end of this tutorial you will have:
 
-- A working vault with the minimum-viable folder structure
-- One Hermes profile (Librarian) installed and registered
+- A working vault with the complete folder structure
+- All seven Hermes profiles installed and registered
+- The Kanban board and all dashboards active
 - One research source ingested from Zotero into the vault, carrying its `[!brief]` comparative-read callout
 - One audit-log entry proving the policy MCP gated the write
 
-This is the **minimum viable system** ([roadmap/README.md](../project/roadmap/README.md#minimum-viable-system)) path. You can grow from here. Don't worry about the full seven-profile setup yet; it earns its place once your review queue is a bottleneck.
+This is the **Memoria v0.1** ([roadmap/README.md](../project/roadmap/README.md#memoria-v01)) setup path — Memoria ships as a complete system from day 1. All components (board, profiles, templates, dashboards) are load-bearing and are stood up together.
 
 > **Status.** See [implementation status](../project/implementation-status.md).
 
@@ -57,7 +58,7 @@ Install the required community plugins (Settings → Community plugins → Brows
 - `obsidian-citation-plugin` — reads `library.bib` for in-note citations
 - `callout-manager` — renders the `[!brief]` and other Memoria callout types with correct icons and colors
 
-`dataview` and `templater-obsidian` are optional enhancements (not load-bearing for the v0.1 core path).
+`dataview` and `templater-obsidian` are required for the dashboards and templates — install them as part of this step.
 
 After install, copy the example REST API config so Hermes can authenticate (this is the only plugin whose `data.json` is gitignored because it contains generated secrets — every other plugin's settings ship in place):
 
@@ -161,17 +162,19 @@ In Obsidian (or with `Get-Content`), open `00-meta/02-logs/audit.jsonl` inside t
 
 ```json
 {
-  "ts": "2026-05-27T14:32:18Z",
+  "timestamp": "2026-05-27T14:32:18Z",
   "profile": "memoria-librarian",
-  "decision": "allow_with_log",
-  "path": "20-sources/01-papers/mamykina2010sense.md",
   "action": "write",
-  "before_hash": null,
-  "after_hash": "8f4a..."
+  "path": "20-sources/01-papers/mamykina2010sense.md",
+  "task_id": "TASK-2026-05-27-001",
+  "decision": "allow_with_log",
+  "policy_rule": "Librarian.write.20-sources",
+  "before_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "after_hash": "sha256:8f4a..."
 }
 ```
 
-The presence of `before_hash`, `after_hash`, and `decision` is the proof: the policy MCP saw the write and gated it. If the file changes outside this audit trail, the Linter's `vault-hash-drift` detector ([profiles/linter.md](../explanation/profiles/linter.md)) will flag it.
+This shape matches the contract in [architecture/policy-mcp.md](../reference/architecture/policy-mcp.md): `timestamp` (not `ts`), a required `task_id`, the matched `policy_rule`, and a `before_hash` that for a freshly-created file is the SHA-256 of the empty byte string (`e3b0c442…`), never `null`. The presence of `before_hash`, `after_hash`, and `decision` is the proof: the policy MCP saw the write and gated it. If the file changes outside this audit trail, the Linter's `vault-hash-drift` detector ([profiles/linter.md](../explanation/profiles/linter.md)) will flag it.
 
 Open the paper-note (`20-sources/01-papers/<citekey>.md`) in Obsidian. The top should show a `[!brief]` callout — the Mapper-defined comparative read against your existing corpus. Since you only have one source, the callout will note that there's nothing to compare against yet; that's correct, and it fills out with genuine comparisons as the corpus grows.
 
@@ -193,7 +196,7 @@ Now that one source is in the vault:
 2. **Run the Linter once.** In a Linter session (`hermes -p memoria-linter chat -s lint`), `/lint --target 20-sources/` will report any structural issues (frontmatter shape, link health). The Linter profile was already installed by `install.ps1` in Step 4 — fill in its `~/.hermes/profiles/memoria-linter/.env` the first time you run it, exactly as you did for the Librarian.
 3. **Open the [weekly-review](../explanation/dashboards/weekly-review.md)** once a week (Friday afternoon is the recommended ritual). Decide what to promote from `10-inbox/` and classify outstanding paper-notes.
 
-When you start to feel the absence of capabilities — comparative scope reports, claim verification, drafting assistance — that's when to add more profiles. The [graduated start path](../project/roadmap/README.md#implementation-paths-graduated-start) describes when each one is worth adding.
+All seven profiles are already installed. As the corpus grows, more profile lanes activate naturally — comparative scope (Mapper), claim verification (Verifier), drafting assistance (Writer). The [configuration tiers](../project/roadmap/README.md#implementation-paths-configuration-tiers) section explains when mode-based fallback applies.
 
 ## If something goes wrong
 

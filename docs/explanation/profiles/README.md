@@ -274,7 +274,7 @@ Linter can act at any point, on any card, with a dry-run report attached as a co
 
 ## Scaling
 
-The seven-profile design is the full Memoria design, but the system supports graduated starts: a **mode-based** single Hermes for the simplest setup, a **four-profile** minimal configuration (Librarian + Writer + Verifier + Linter) when seven is too much, and the full seven when volume warrants it. The trade-offs and the migration path are documented in [roadmap/README.md](../../project/roadmap/README.md#implementation-paths-graduated-start) — they belong with the implementation timeline, not the profile contracts.
+The seven-profile design is the complete Memoria design and the Memoria v0.1 baseline — all seven ship and are installed from day 1. Mode-based single-Hermes is a temporary fallback for cases where the v0.2 profile wiring (config.yaml, mcp.json) is not yet available, not a long-term operating mode. The configuration tier details are in [roadmap/README.md](../../project/roadmap/README.md#implementation-paths-configuration-tiers) — they belong with the implementation timeline, not the profile contracts.
 
 ## Anti-patterns
 

@@ -51,10 +51,11 @@ The **Resolution / location** column records the one-line outcome for every deci
 | 28 | [Frozen-evaluator checklist](28-frozen-evaluator-deferred.md) | `proposed` | Defer. Per-note-type acceptance checklists; revisit at 50+ claim-notes. Pairs with ADR-27. |
 | 29 | [Admin/forensic GUI surface](29-admin-gui-surface.md) | `proposed` | Defer/watch. The admin-forensic gap is real, but `hermes-workspace` (v0.1.0, single-contributor) is too immature to adopt or document; the CLI fills the gap. |
 | 30 | [Project-membership auto-proposal](30-project-auto-classification.md) | `accepted` (2026-05) | Librarian proposes `projects` from a lightweight per-project `primary_topics` hint (`.memoria/project-hints.yaml`), human-confirmed; the full corpus-profile matrix is rejected. |
+| 31 | [Configurable review-gate mode (blocking \| advisory)](31-configurable-review-gate-mode.md) | `proposed` | A `review_mode: blocking\|advisory` gate setting as comparison-study instrumentation for Paths 2/3. Default `blocking`; `advisory` is opt-in, time-boxed, study-scoped; the same logger fires in both arms so the data is commensurable. Distinct from ADR-26's "advisor-review" exports. |
 
 ## Numbering gaps and the graveyard
 
-The index above is gap-free — every number 1–30 has a row — but the *directory* is not, and a reader browsing the files will notice the missing numbers. They are accounted for here so the gaps read as intentional, not as lost work:
+The index above is gap-free — every number 1–31 has a row — but the *directory* is not, and a reader browsing the files will notice the missing numbers. They are accounted for here so the gaps read as intentional, not as lost work:
 
 - **No `01.md`, `08.md`, `11.md`.** ADRs 1, 8, and 11 are recorded **index-only**: `accepted`, but small enough to resolve in the Resolution column without a standalone file. The missing files are deliberate.
 - **Retired ADRs keep their files.** ADRs 5, 7, and 13 reached `retired` (withdrawn without replacement) but their files remain as history — see the `retired` rows above and the grouped view in [by-topic.md](by-topic.md).

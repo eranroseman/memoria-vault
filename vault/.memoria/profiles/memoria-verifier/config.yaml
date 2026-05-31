@@ -1,0 +1,10 @@
+# memoria-verifier — verify claims, citations, duplicates, retractions.
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: high  (judgment at the correctness gate).
+#   hermes -p memoria-verifier config set agent.reasoning_effort high
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-opus-latest

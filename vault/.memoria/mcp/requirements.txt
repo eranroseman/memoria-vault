@@ -1,0 +1,15 @@
+# Python dependencies for Memoria's MCP servers.
+# Installed by install.ps1 (`pip install -r .memoria/mcp/requirements.txt`)
+# before profile registration. Keep this list minimal -- the policy MCP's
+# decision core is dependency-light by design (see policy_mcp.py).
+
+# Model Context Protocol SDK -- provides mcp.server.fastmcp.FastMCP, the thin
+# server wrapper around the policy decision engine.
+mcp>=1.2.0
+
+# Lane-override (.memoria/lane-overrides/*.yaml) parsing. The decision core and
+# its --self-test run without PyYAML; only the live server's lane loading needs it.
+PyYAML>=6.0
+
+# NOTE: tasks_mcp.py is not yet authored (it fronts the Hermes Kanban, which is
+# Phase-4 / deferred). When it lands, add its dependencies here.

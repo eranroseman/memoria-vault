@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "policy": {
+      "command": "python",
+      "args": [
+        "{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py",
+        "--vault",
+        "{{VAULT_PATH}}"
+      ],
+      "enabled": true,
+      "timeout": 30
+    }
+  }
+}

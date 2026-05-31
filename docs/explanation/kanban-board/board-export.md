@@ -18,7 +18,7 @@ For the [status line](../../reference/obsidian-ui/status-line.md) (a glanceable 
 
 ## Metrics aggregation → `00-meta/08-metrics/`
 
-A scheduled aggregator rolls run history into `lane-metric` / `skill-metric` notes under `00-meta/08-metrics/` (also deferred), which the [fleet-health dashboard](../dashboards/fleet-health.md) reads for the trust score. Aggregation is post-MVS — it only earns its place once the fleet runs real weekly volume.
+A scheduled aggregator rolls run history into `lane-metric` / `skill-metric` notes under `00-meta/08-metrics/` (also deferred — not yet built), which the [fleet-health dashboard](../dashboards/fleet-health.md) reads for the trust score. The aggregator is required by Memoria v0.1 but not yet implemented; it activates meaningfully once the fleet has accumulated real weekly volume.
 
 ## Ownership
 

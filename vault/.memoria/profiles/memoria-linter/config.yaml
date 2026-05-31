@@ -1,0 +1,11 @@
+# memoria-linter — validate, report, and log (deterministic detectors; cron Level 1).
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: low  (detectors.py is zero-LLM; mostly runs scripts + reports).
+#   hermes -p memoria-linter config set agent.reasoning_effort low
+# Cheapest capable tier — Haiku.
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-haiku-latest

@@ -1,0 +1,35 @@
+
+# The Daily Health dashboard
+
+Daily Health is the always-on system-health view, opened every morning. Four sections, each a one-decision query: today's blocked cards and those awaiting review, last 24-hour HIGH/CRITICAL drift signals, lane-health trust scores, and cron status. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+
+---
+
+## What this dashboard is not
+
+**Not a vault audit.** Folder counts, orphan notes, stale literature — those are the weekly-review's job. Daily Health is *system health*, not *knowledge health*. Mixing them would make a 30-second daily glance into a 20-minute triage session.
+
+**Not a task list.** It shows decisions waiting on the human; the human chooses which to address. The board, not this dashboard, is where state changes happen.
+
+**Not a substitute for the deeper dashboards.** Daily Health summarizes red signals; the full views live in `drift-watch`, `fleet-health`, and `audit-log`. It is a dashboard-of-dashboards: three of its four sections are filtered subsets of those deeper views.
+
+---
+
+## Why it's designed this way
+
+**The dashboard-of-dashboards pattern.** Drift signals filter `drift-watch` to last 24 hours HIGH/CRITICAL only. Lane health filters `fleet-health` to current-lane trust scores only. Today's queue filters `board-state` to blocked and awaiting-review only. No data is duplicated; both layers read the same underlying files. Daily Health is the entry point; the deeper dashboards are reached by clicking through.
+
+**Cron status is unique to Daily Health.** No other dashboard shows cron run history. This is the one Daily Health section without a deeper counterpart — it has nowhere else to live. If the overnight lint job didn't fire, the human needs to know before proceeding with the day's work.
+
+**Graceful degradation.** Until the metrics aggregator, board markdown files, lint-findings feed, and cron-history feed are wired, the four sections return empty. Empty reads as "feature not yet wired," not "nothing is wrong" — each section's placeholder states what would populate it.
+
+**30 seconds is a constraint, not a aspiration.** A daily ritual that consistently takes more than 30 seconds stops being daily. Daily Health is designed so that a healthy vault produces four empty or near-empty sections and the human closes it immediately. Length is a signal: a long Daily Health means something needs attention, not that the ritual needs more time allocated.
+
+---
+
+## Related
+
+- The weekly-ritual companion: [weekly-review](weekly-review.md)
+- What populates the drift signals: `drift-watch`
+- What populates the trust scores: `fleet-health`
+- What populates today's queue: [board-state](board-state.md)

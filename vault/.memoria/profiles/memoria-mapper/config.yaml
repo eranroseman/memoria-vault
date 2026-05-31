@@ -1,0 +1,11 @@
+# memoria-mapper — map the corpus (corpus-map, gap-report, cluster-map, comparative-brief).
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: high  (cartography/gap-analysis is reasoning-dense).
+#   hermes -p memoria-mapper config set agent.reasoning_effort high
+# Opus is the upgrade for hard gap-analysis: default ~anthropic/claude-opus-latest.
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-sonnet-latest

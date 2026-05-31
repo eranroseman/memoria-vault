@@ -117,7 +117,7 @@ This guards against four failure modes: **duplicate cards** for the same work, *
 
 ### Board implementation: Hermes built-in Kanban
 
-Memoria uses the **Hermes built-in Kanban board** — once a board is adopted, this is mandated, not one option among several. (The [minimum-viable system](../../project/roadmap/README.md#minimum-viable-system) can run Hermes terminal-only and defer the board until volume justifies it; what's mandated is *which* board, not that one exists from day one.) Refs: [Kanban feature](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban) · [tutorial](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban-tutorial) · [worker lanes](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban-worker-lanes).
+Memoria uses the **Hermes built-in Kanban board** — once a board is adopted, this is mandated, not one option among several. (The board is part of Memoria v0.1 and ships from day one — see [roadmap/README.md](../../project/roadmap/README.md#memoria-v01); what's mandated here is *which* board.) Refs: [Kanban feature](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban) · [tutorial](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban-tutorial) · [worker lanes](https://hermes-agent.nousresearch.com/docs/user-guide/features/kanban-worker-lanes).
 
 Why native: the architecture already assumes Hermes profiles, so a lane *is* a card's `assignee` with no bridging; worker-lane contracts, cross-session persistence (`kanban.db`), and retry semantics (`max_retries`) are built in; and the one thing Hermes lacks — a human review gate — layers cleanly onto `metadata` without forking the fixed schema.
 

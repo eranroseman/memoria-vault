@@ -10,11 +10,11 @@ The roadmap is ordered so each phase produces a working, useful slice. You shoul
 
 ## How this folder is organized
 
-The narrative spine (minimum viable system, graduated start, expansion-threshold rule, what to defer, success metrics) stays here. The substantive content — timeline, decisions, deployment, future directions, pilots — lives in dedicated files alongside this README.
+The narrative spine (Memoria v0.1, configuration tiers, expansion-threshold rule, what to defer, success metrics) stays here. The substantive content — timeline, decisions, deployment, future directions, pilots — lives in dedicated files alongside this README.
 
 | File | What it covers |
 |---|---|
-| [timeline.md](timeline.md) | Week-by-week ramp from MVS to production; the six implementation phases (naming, vault structure, profiles, board, pilot corpus, scale) |
+| [timeline.md](timeline.md) | Week-by-week ramp from Memoria v0.1 to production; the six implementation phases (naming, vault structure, profiles, board, pilot corpus, scale) |
 | [deployment-options.md](deployment-options.md) | Four deployment patterns (`local-only`, `local-mesh`, `obsidian-sync`, `always-on`); secondary-device patterns; per-device install sets |
 | [secret-management.md](secret-management.md) | `.env` vs Bitwarden Secrets Manager; when not to centralize |
 | [sync-and-coordination.md](sync-and-coordination.md) | The 5–15 second sync window; `.agent-lock` write-coordination; bib watcher |
@@ -32,33 +32,33 @@ The narrative spine (minimum viable system, graduated start, expansion-threshold
 | [pilots/](pilots/) | Active pilots with explicit rollback criteria. Currently: [E1 — Open Notebook as comparative-brief back-end](pilots/01-open-notebook.md) |
 | [non-llm-tools.md](non-llm-tools.md) | The non-LLM tools that Memoria uses to do its job, and the jobs they do |
 
-## Minimum viable system
+## Memoria v0.1
 
-If the full setup feels heavy, start with this subset. It delivers most of the long-term value with a fraction of the configuration overhead.
+Memoria v0.1 is the full system on a **single device** (`local-only` deployment) — board, all profiles, all folders, all templates, all schema fields, all workflows, all dashboards. Stand it up completely from day 1. Every component below is load-bearing; omitting any of them creates gaps that are harder to backfill than to wire up correctly at the start. Multi-device is a Phase 3 expansion — see [deployment-options.md](deployment-options.md).
 
-| Layer | Minimum viable | Defer until needed |
-| --- | --- | --- |
-| **Tools** | Zotero + Better BibTeX, Obsidian, Hermes (terminal only), Git | Kanban board, ACP plugins, Scite, ASReview, K-Dense skills |
-| **Folders** | `00-meta/`, `10-inbox/`, `20-sources/01-papers/`, `30-synthesis/01-claims/`, `30-synthesis/02-reference/` | items, entities, projects, drafts, deliverables, archive |
-| **Templates** | `paper-note.md`, `claim-note.md` | All others (13 more) |
-| **Schema fields** | `type`, `lifecycle`, `maturity`, `topic`, `projects`, `added` | `pub_status`, `full_text_reviewed`, `_proposed_classification`, `_enrichment`, MOCs |
-| **Workflow** | Ingest → classify → claim note | find, enrich, MOCs, code artifacts, Canvas, deliverables |
-| **Dashboard** | One Dataview query for classification debt | The full weekly dashboard |
-| **Profile** | Mode-based Hermes (one tool, per-run mode) | Four-profile, seven-profile |
+| Layer | Standard (Memoria v0.1) |
+| --- | --- |
+| **Deployment** | Single device, `local-only` |
+| **Tools** | Zotero + Better BibTeX, Obsidian, Hermes (terminal), Git, Kanban board, ACP plugins, K-Dense skills |
+| **Folders** | All: `00-meta/`, `10-inbox/`, `20-sources/` (papers, items, entities), `30-synthesis/` (claims, reference, MOCs), `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` |
+| **Templates** | All 15: answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue |
+| **Schema fields** | All: `type`, `lifecycle`, `maturity`, `topic`, `projects`, `added`, `pub_status`, `full_text_reviewed`, `_proposed_classification`, `_enrichment`, MOC fields |
+| **Workflow** | Full pipeline: ingest → classify → enrich → claim note → find → MOCs → code artifacts → Canvas → deliverables |
+| **Dashboards** | Full suite: all 10 dashboards + `index.md` |
+| **Profiles** | Seven-profile (full): Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter |
 
-**The rule:** add complexity only when you feel the absence of the missing piece. If you're not running into a problem, you don't need the solution yet.
+**The rule:** stand up the complete system on one machine first, then let corpus density drive which workflows activate and device count drive whether you expand. Don't pre-activate MOCs or advanced workflows without corpus density, and don't add a second device before the single-device system is stable.
 
-## Implementation paths: graduated start
+## Implementation paths: configuration tiers
 
-Don't start with seven profiles if seven profiles will block you from starting. The system supports three graduated configurations:
+The system ships as a single, complete configuration. The only axis that varies is how much of the Kanban board and automation you activate during initial weeks:
 
 | Path | Profiles | When to use |
 | --- | --- | --- |
-| **Mode-based** | One Hermes, with per-run `mode: ingest \| synthesize \| verify \| maintain`. | Single tool, single config. Simplest start. Good for exploration; weakest safety properties. |
-| **Four-profile minimal** | Librarian + Writer + Verifier + Linter (see [profiles/README.md](../../explanation/profiles/README.md)). | Solo workflow at low volume. Mapper and Socratic capabilities fold into Librarian and Writer respectively, with care. |
-| **Seven-profile (full)** | The full design: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. | When volume makes the human's review queue a bottleneck, or you want strong architectural separation between thinking (Socratic, write-denied) and producing (Writer, review-gated). |
+| **Seven-profile (standard)** | Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter — all installed from day 1. | The default. All permission boundaries and review gates active from the first ingest. |
+| **Mode-based (fallback)** | One Hermes, with per-run `mode: ingest \| synthesize \| verify \| maintain`. | Only if Hermes profile wiring is blocked (e.g., v0.2 config files not yet shipped). Weakest safety properties; migrate to seven-profile as soon as the wiring lands. |
 
-The migration path is *up*: start with mode-based or four-profile; promote to the full seven once the bottleneck makes the cost worth paying.
+The target is always seven-profile. Mode-based is a temporary fallback while the v0.2 install wiring is being completed, not a long-term operating mode.
 
 ## Expansion threshold discipline
 

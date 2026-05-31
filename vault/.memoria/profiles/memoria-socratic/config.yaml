@@ -1,0 +1,10 @@
+# memoria-socratic — question without producing (interactive; hard write-denied).
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: high  (pure reasoning, low volume, zero write-risk).
+#   hermes -p memoria-socratic config set agent.reasoning_effort high
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-opus-latest

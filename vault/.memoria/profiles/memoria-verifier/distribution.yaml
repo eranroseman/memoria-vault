@@ -1,0 +1,22 @@
+# Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
+name: memoria-verifier
+version: 0.2.0
+description: "Memoria Verifier — checks claims, citations, duplicates, and retractions; writes reports to 40-workbench/*/05-verification/."
+author: "Memoria"
+hermes_requires: ">=0.12.0"
+env_requires:
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key (model access for provider: anthropic)."
+    required: true
+  - name: OBSIDIAN_API_KEY
+    description: "Obsidian Local REST API key (64-char hex) — vault read + verification-report writes via the `obsidian` MCP server."
+    required: true
+  - name: OPENALEX_EMAIL
+    description: "Contact email for the OpenAlex polite pool — cross-checks during cite-check / retraction-check."
+    required: false
+    default: ""
+  - name: SCITE_API_KEY
+    description: "Scite API key — citation-context and retraction signals for retraction-check."
+    required: false
+    default: ""

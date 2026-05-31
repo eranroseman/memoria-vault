@@ -1,0 +1,30 @@
+# Hermes profile manifest. Read by `hermes profile install`; its env_requires
+# block is what Hermes writes out as .env.EXAMPLE (install.ps1 then copies that
+# to .env on first install). Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
+name: memoria-librarian
+version: 0.2.0
+description: "Memoria Librarian — finds, ingests, enriches, and draft-classifies evidence into 10-inbox/ and 20-sources/."
+author: "Memoria"
+hermes_requires: ">=0.12.0"
+env_requires:
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key (model access for provider: anthropic)."
+    required: true
+  - name: OBSIDIAN_API_KEY
+    description: "Obsidian Local REST API key (64-char hex from the plugin) — vault read/write via the `obsidian` MCP server."
+    required: true
+  - name: OPENALEX_EMAIL
+    description: "Contact email for the OpenAlex polite pool — enrichment (citation count, abstract, OA status) at ingest."
+    required: true
+  - name: OPENROUTER_API_KEY
+    description: "OpenRouter key for Hermes auxiliary/fallback models. Optional when provider: anthropic handles the primary model."
+    required: false
+    default: ""
+  - name: SEMANTIC_SCHOLAR_API_KEY
+    description: "Semantic Scholar API key — higher rate limits for paper lookup (CrossRef/arXiv/OpenAlex need no key)."
+    required: false
+    default: ""
+  - name: ZOTERO_API_KEY
+    description: "Zotero Web API key — only if syncing via the web API instead of a local Better BibTeX export."
+    required: false
+    default: ""

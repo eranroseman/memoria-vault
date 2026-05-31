@@ -26,7 +26,7 @@ The **vault root folder is human-defined**: the human clones the distribution in
 │   ├── 04-reference/                   # human-facing reference notes (design-system, schema-reference, …)
 │   ├── 05-eval/                        # vault-eval gold tasks (per-workflow gold sets) — ADR-23 (ships empty: .keep)
 │   ├── 07-skills/                      # skill-governance registry — ships empty (.keep); overlay deferred
-│   ├── 08-metrics/                     # fleet + eval metrics (telemetry rollups, eval/ run results) — Post-MVS (ships empty: .keep)
+│   ├── 08-metrics/                     # fleet + eval metrics (telemetry rollups, eval/ run results) — ships empty (.keep); metrics aggregator deferred (Phase 6, not yet built)
 │   ├── board/                          # markdown board export — ships empty (.keep); Phase-4 export deferred
 │   ├── index.md                        # vault landing page (pinned in sidebar)
 │   ├── research-directions.md          # Librarian's session-start input
@@ -82,9 +82,9 @@ The **vault root folder is human-defined**: the human clones the distribution in
     ├── profile-memory/                 # learned MEMORY.md/USER.md, junctioned into ~/.hermes (opt-in multi-machine sync) — created on first multi-machine sync opt-in
     │   └── memoria-<name>/
     ├── mcp/                            # Memoria-specific MCP servers (Python)
-    │   ├── policy_mcp.py               # not yet authored (v0.2)
-    │   ├── tasks_mcp.py               # not yet authored (v0.2)
-    │   └── requirements.txt
+    │   ├── policy_mcp.py               # shipped — write-gate; `--self-test` + `--decide`
+    │   ├── tasks_mcp.py               # not yet authored (Phase 4 — fronts Hermes Kanban)
+    │   └── requirements.txt            # shipped — mcp + PyYAML
     ├── lane-overrides/                 # 7 YAML files (one per lane); all ship — the policy MCP that reads them is v0.2
     │   ├── librarian.yaml
     │   ├── mapper.yaml

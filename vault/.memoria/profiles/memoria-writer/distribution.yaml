@@ -1,0 +1,14 @@
+# Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
+name: memoria-writer
+version: 0.2.0
+description: "Memoria Writer — drafts answers and synthesis into 10-inbox/02-answers/ and 40-workbench/ drafts (review-gated)."
+author: "Memoria"
+hermes_requires: ">=0.12.0"
+env_requires:
+  - name: ANTHROPIC_API_KEY
+    description: "Anthropic API key (model access for provider: anthropic)."
+    required: true
+  - name: OBSIDIAN_API_KEY
+    description: "Obsidian Local REST API key (64-char hex) — vault read/write via the `obsidian` MCP server."
+    required: true

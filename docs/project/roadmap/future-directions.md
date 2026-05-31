@@ -105,7 +105,7 @@ nightly (2am):
 
 **Cons.** Always-on infrastructure cost; first-month tuning friction; bad criteria flood the inbox; silent cron failures.
 
-**When to implement.** After: (1) MVS is stable, (2) `research-directions.md` has been maintained for ≥ 4 weeks, (3) [the always-on option](deployment-options.md) is deployed, (4) inclusion criteria are written down. Not before.
+**When to implement.** After: (1) Memoria v0.1 is stable, (2) `research-directions.md` has been maintained for ≥ 4 weeks, (3) [the always-on option](deployment-options.md) is deployed, (4) inclusion criteria are written down. Not before.
 
 ### Coder lane experiment loop
 

@@ -217,4 +217,4 @@ The cumulative shift: from "review every candidate, approve every triage, manual
 - The autonomy boundary that this progression respects: [architecture/why-no-autonomous-synthesis.md](../../explanation/architecture/why-no-autonomous-synthesis.md).
 - The pattern-by-pattern borrow / adapt / ignore mapping: [architecture/why-pattern-provenance.md](../../explanation/architecture/why-pattern-provenance.md).
 - The per-entry "when / why not earlier / prerequisites" detail: [future-directions.md](future-directions.md).
-- The MVS implementation phases (a different axis — *building* the system, not *expanding agent autonomy*): [timeline.md](timeline.md).
+- The Memoria v0.1 implementation phases (a different axis — *building* the system, not *expanding agent autonomy*): [timeline.md](timeline.md).

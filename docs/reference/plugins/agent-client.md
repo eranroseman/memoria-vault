@@ -47,7 +47,7 @@ Setup: in QuickAdd, register four entries of type **Command**, each pointing at 
 
 ## Per-device install discipline
 
-Under the [per-device install discipline](../../project/roadmap/timeline.md#per-device-install-sets), secondary devices may have only some profiles installed. The `customAgents` array should match what's locally installed:
+Under the [per-device install discipline](../../project/roadmap/timeline.md), secondary devices may have only some profiles installed. The `customAgents` array should match what's locally installed:
 
 - **Primary device** (all seven profiles installed): all four ACP-suitable entries above.
 - **Secondary, reader role** (typically only Socratic installed): just the `memoria-socratic` entry. Configuring Mapper / Writer / Verifier would let the picker show them, but invoking would fail with "profile not found" on that device.
@@ -63,7 +63,7 @@ Try the [transient command-palette commands](../command-catalog.md#interactive-r
 
 ### Path 1 — Local install with discipline (the local-mesh option default)
 
-Under [the local-mesh option](../../project/roadmap/deployment-options.md) (desktop + laptop, no VPS), the desktop sleeps; SSH-spawn into it is unreliable. The right path is to install the additional profile(s) locally on the laptop with the [discipline obligations from Phase 3](../../project/roadmap/timeline.md#per-device-install-sets):
+Under [the local-mesh option](../../project/roadmap/deployment-options.md) (desktop + laptop, no VPS), the desktop sleeps; SSH-spawn into it is unreliable. The right path is to install the additional profile(s) locally on the laptop with the [discipline obligations from Phase 3](../../project/roadmap/timeline.md):
 
 1. Clone the same starter vault on the laptop and run `./install.ps1`. Under direct profile management, profile parity follows from cloning the same vault — same `.memoria/profiles/memoria-<name>/` source on every device produces the same deployed copy at `~/.hermes/profiles/memoria-<name>/`.
 2. The installer registers each profile with `--alias`, so `memoria-<name>` works as a command shortcut on the laptop the same way it does on the desktop.

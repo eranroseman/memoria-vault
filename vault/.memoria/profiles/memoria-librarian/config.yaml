@@ -1,0 +1,16 @@
+# memoria-librarian — find and ingest evidence.
+# Per-profile override of ~/.hermes/config.yaml. Hermes replaces a section
+# WHOLESALE (no deep merge), so this file sets ONLY the full model block —
+# everything else (agent, terminal, toolsets, ...) inherits from your global config.
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: medium  (mostly scripts/APIs; one Sonnet synthesis call)
+#   Apply per-profile if you want it distinct from your global default:
+#   hermes -p memoria-librarian config set agent.reasoning_effort medium
+#
+# provider/base_url restated so the wholesale replace keeps your KiloCode gateway.
+# Distributing to others? Swap these for your own provider (e.g. anthropic + claude-sonnet-4-6).
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-sonnet-latest

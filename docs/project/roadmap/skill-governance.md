@@ -72,4 +72,4 @@ Below those thresholds, stay on the passthrough.
 
 ## Why this lives in the roadmap
 
-Skill governance is operational bookkeeping that matters most once the system is past MVS and accumulating tooling. A fresh install has a fixed set of K-Dense skills and the generic passthrough — no governance needed. The state machine and registry become load-bearing only when passthrough-graduations, retirements, and lane-permission changes start happening regularly. Treat the governance system as something to stand up around Phase 6, not Phase 1.
+Skill governance is operational bookkeeping that becomes load-bearing only when the corpus is accumulating tooling at scale — passthrough-graduations, retirements, and lane-permission changes. The K-Dense skills ship with Memoria v0.1 and are installed from day 1; the governance state machine and registry activate when those skills start evolving. Stand up the governance overlay around Phase 6, once the skill set is no longer static.

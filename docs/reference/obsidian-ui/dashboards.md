@@ -25,9 +25,9 @@ Every dashboard except `skill-lifecycle` (deferred) exists in the vault. The que
 | **Planning** | [`open-questions`](../../explanation/dashboards/open-questions.md) | Research agenda view — surface all explicit Open Questions sections. |
 | **Planning** | [`contradictions`](../../explanation/dashboards/contradictions.md) | Surface claim notes that disagree (human-set `relations.contradicts`) — a synthesis starting point. |
 | **Scale-dependent** | [`skill-lifecycle`](../../explanation/dashboards/skill-lifecycle.md) | Hermes skill registry view. Deferred — maybe later if needed; see [roadmap/future-directions.md](../../project/roadmap/future-directions.md#skill-governance). |
-| **Scale-dependent** | [`fleet-health`](../../explanation/dashboards/fleet-health.md) | Cost and reliability trends for the worker fleet. Phase 6 (post-MVS) — see [roadmap/future-directions.md](../../project/roadmap/future-directions.md). |
+| **Scale-dependent** | [`fleet-health`](../../explanation/dashboards/fleet-health.md) | Cost and reliability trends for the worker fleet. Ships in vault; activates with meaningful data once weekly volume accumulates — see [roadmap/future-directions.md](../../project/roadmap/future-directions.md). |
 
-The "scale-dependent" dashboards are designed to be present from day one but only carry meaningful data once the corpus is large enough that human eyes stop noticing slow regressions. Until then they're inert.
+The "scale-dependent" dashboards are present from day one (part of Memoria v0.1) but carry meaningful data only once the corpus is large enough that human eyes stop noticing slow regressions. Until then they're inert but installed.
 
 ## Design rules for dashboards
 

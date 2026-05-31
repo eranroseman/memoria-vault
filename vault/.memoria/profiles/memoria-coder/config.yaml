@@ -1,0 +1,10 @@
+# memoria-coder — code artifacts (thin wrappers; substantive coding is the external agent).
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: medium  (scaffold/coordinate/commit; heavy coding is delegated).
+#   hermes -p memoria-coder config set agent.reasoning_effort medium
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-sonnet-latest

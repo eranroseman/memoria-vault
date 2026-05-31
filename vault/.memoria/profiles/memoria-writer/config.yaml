@@ -1,0 +1,10 @@
+# memoria-writer — draft and synthesize (answers, drafts, framing, canvas).
+# Per-profile override: sets ONLY the full model block (Hermes replaces sections wholesale).
+# Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
+#
+# Recommended agent.reasoning_effort: medium  (drafting workhorse, higher volume).
+#   hermes -p memoria-writer config set agent.reasoning_effort medium
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-sonnet-latest
