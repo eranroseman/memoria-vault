@@ -10,22 +10,22 @@ Memoria ships with four standard scheduled tasks. Each is declared in the releva
 cron:
   - schedule: "0 2 * * *"          # nightly 02:00
     skill: hygiene-sweep
-    lane: linter
+    assignee: memoria-linter
     creates_card: {task: nightly-hygiene, state: ready}
 
   - schedule: "0 3 * * MON"        # weekly Monday 03:00
     skill: cluster-mapping-scan
-    lane: mapping
+    assignee: memoria-mapper
     creates_card: {task: weekly-cluster-report, state: ready}
 
   - schedule: "0 4 * * MON"        # weekly Monday 04:00
     skill: drift-detector
-    lane: linter
+    assignee: memoria-linter
     creates_card: {task: weekly-drift-report, state: ready}
 
   - schedule: "0 5 * * *"          # nightly 05:00
     skill: stale-fleeting-check
-    lane: linter
+    assignee: memoria-linter
     creates_card: {task: fleeting-staleness-report, state: ready}
 ```
 

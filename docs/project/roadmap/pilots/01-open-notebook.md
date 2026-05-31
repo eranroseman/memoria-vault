@@ -152,7 +152,7 @@ If the human wants to abandon earlier, they can: rollback at the human's discret
 
 ## Pilot tracking
 
-The dispatcher counts `comparative-brief` invocations where `llm_backend: open-notebook` was active and surfaces the count on the [drift-watch dashboard](../../../explanation/dashboards/drift-watch.md). When the count crosses 50, a card is automatically created on the human's queue with `task: review-pilot-e1` and `lane: linter` (since the Linter does pilot-tracking metadata). The card carries a link to the pilot-quality log for review.
+The dispatcher counts `comparative-brief` invocations where `llm_backend: open-notebook` was active and surfaces the count on the [drift-watch dashboard](../../../explanation/dashboards/drift-watch.md). When the count crosses 50, a card is automatically created on the human's queue with `task: review-pilot-e1` and `assignee: memoria-linter` (since the Linter does pilot-tracking metadata). The card carries a link to the pilot-quality log for review.
 
 ## What this pilot doesn't decide
 

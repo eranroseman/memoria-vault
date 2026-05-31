@@ -33,7 +33,7 @@ One markdown note per active skill, kept in `00-meta/07-skills/`. The note carri
 ---
 type: skill-note
 skill_name: paper-lookup
-lane: library
+lane: memoria-librarian
 stage: active
 networked: true
 owner: memoria-librarian

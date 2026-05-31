@@ -45,7 +45,7 @@ Six use case categories cover what the CLI is for:
 
 **3. Audit forensics.** The audit log is `00-meta/02-logs/audit.jsonl` — `hermes kanban tail <card-id>` follows one card's event stream, and `jq` / `grep` over the JSONL slices it by lane or time. Faster than opening the audit-log dashboard for narrow queries; the dashboard is for trends, the CLI (or `jq`) for specific traces.
 
-**4. Manual dispatch.** `hermes kanban create --lane mapper --task scope-project --project jitai-review` files a card without waiting for a file-system trigger or cron — the dispatcher then claims it (`hermes kanban dispatch` forces a pass immediately). Useful when the human wants to invoke something on demand outside the normal flow — for example, re-running a scope when new sources have been added mid-project.
+**4. Manual dispatch.** `hermes kanban create "scope-project jitai-review" --assignee memoria-mapper` files a card without waiting for a file-system trigger or cron — the dispatcher then claims it (`hermes kanban dispatch` forces a pass immediately). Useful when the human wants to invoke something on demand outside the normal flow — for example, re-running a scope when new sources have been added mid-project.
 
 **5. Profile administration.** Update lane-override files in `.memoria/lane-overrides/`, reload the policy MCP, edit profile sources in `.memoria/profiles/memoria-<name>/` and re-run `install.ps1` to deploy them, install new skills. All CLI operations, not dashboard ones, because they're rare and consequential — exactly the kind of operation that should require typing.
 
@@ -62,10 +62,10 @@ hermes kanban list
 
 # 3. Audit forensics — follow a card's events; jq the JSONL for lane/time slices
 hermes kanban tail card-2026-05-26-042
-jq 'select(.lane=="verifier")' 00-meta/02-logs/audit.jsonl
+jq 'select(.assignee=="memoria-verifier")' 00-meta/02-logs/audit.jsonl
 
 # 4. Manual dispatch (file a card; the dispatcher claims it)
-hermes kanban create --lane mapper --task scope-project --project jitai-review
+hermes kanban create "scope-project jitai-review" --assignee memoria-mapper
 
 # 5. Profile administration
 ./install.ps1    # re-deploy all seven profiles from .memoria/profiles/

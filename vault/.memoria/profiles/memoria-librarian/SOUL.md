@@ -64,7 +64,7 @@ See rationale/computational-methods.md for the boundary between deterministic an
 
 ## Hermes skills (lane-allowed)
 
-These are the skills the policy MCP grants to the library lane. See profiles/README.md and architecture/capability-stack.md for the full catalog.
+These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`). See profiles/README.md and architecture/capability-stack.md for the full catalog.
 
 - `paper-lookup` — K-Dense unified search across 10 databases (PubMed, PMC, bioRxiv, medRxiv, arXiv, OpenAlex, Crossref, Semantic Scholar, CORE, Unpaywall). Wraps the underlying APIs listed below.
 - `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field.

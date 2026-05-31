@@ -46,7 +46,7 @@ A lane is a board-level contract about *who can claim a card*. The lane tells th
 
 The two work together:
 
-- If a card is in the library lane, only Librarian-class workers may claim it.
+- If a card is assigned to the Librarian lane (`memoria-librarian`), only Librarian-class workers may claim it.
 - If a card is `done` and awaiting review (`review_status: requested`), only the human may clear it (no Reviewer profile to do so).
 - When a worker finishes its slice, it completes the card to `done` with `review_status: requested` — it does not mark the work approved.
 
@@ -86,10 +86,9 @@ The folder permission matrix above is the human-readable summary. The machine-re
 
 ### File shape
 
-Each lane-override has the same four blocks. Example for the library lane:
+Each lane-override has the same four blocks. Example for the Librarian lane:
 
 ```yaml
-lane: library
 profile: memoria-librarian
 
 policy:
@@ -118,6 +117,8 @@ routing:
     - "10-inbox/"
     - "20-sources/"
 ```
+
+The top-level `profile:` is the lane's identity — the `assignee` the dispatcher routes by; there is **no separate `lane:` key** (the lane *is* the assignee — see [lane-naming.md](../../reference/lane-naming.md)).
 
 The four blocks:
 
@@ -198,7 +199,7 @@ Each profile's core verbs are listed in the [Lane permissions matrix](../../refe
 
 Routing — "which profile picks up this card?" — is rule-encoded, not reasoned. Three mechanisms together:
 
-1. **The card's `assignee` (its lane)** determines which profile is eligible to claim it. A card assigned to the mapping lane can only be claimed by a worker whose lane-override file declares it on that lane. There is no separate `lane` field — the lane *is* the `assignee`.
+1. **The card's `assignee` (its lane)** determines which profile is eligible to claim it. A card assigned to the Mapper lane (`memoria-mapper`) can only be claimed by a worker whose lane-override file declares it. There is no separate `lane` field — the lane *is* the `assignee` (see [lane-naming.md](../../reference/lane-naming.md)).
 2. **The lane-override file's `routing.write_scope`** declares where that worker's output should land by default, so the worker doesn't have to decide.
 3. **The Kanban dispatcher** picks the highest-priority eligible card from each lane's queue when a worker becomes available. Priority is set at card creation (cron-triggered work is usually low-priority; human-initiated is high).
 

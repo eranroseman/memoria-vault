@@ -19,6 +19,7 @@ Lookup material: exact fields, values, commands, and schemas, with no narrative.
 
 - [board-states.md](board-states.md) — the Kanban state machine, lanes, and review gate.
 - [card-schema.md](card-schema.md) — Hermes card fields, metadata overlay, and handoff payload.
+- [lane-naming.md](lane-naming.md) — the single lane identifier (the `memoria-<name>` assignee) and the profile ↔ override-file ↔ assignee table.
 
 ## Commands
 

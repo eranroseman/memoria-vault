@@ -2,5 +2,5 @@
 cron:
   - schedule: "0 3 * * MON"        # weekly Monday 03:00
     skill: cluster-mapping-scan
-    lane: mapping
+    assignee: memoria-mapper
     creates_card: {task: weekly-cluster-report, state: ready}
