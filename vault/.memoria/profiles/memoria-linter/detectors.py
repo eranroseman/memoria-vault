@@ -11,7 +11,7 @@ deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
 
 Detectors needing external context (profile-install-drift, skeleton-drift,
 command-vocab-drift, plugin-config-drift, vault-hash-drift) are intentionally
-out of scope here -- they require ~/.hermes, the design repo, or git/audit-log
+out of scope here -- they require ~/.hermes, the docs/ tree, or git/audit-log
 state and belong in the runtime Linter that has them.
 """
 from __future__ import annotations

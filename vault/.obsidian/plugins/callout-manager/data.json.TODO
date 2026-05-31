@@ -1,5 +1,5 @@
 {
-  "_status": "TODO — schema not yet verified against an installed Callout Manager version. See memoria-docs/references/obsidian-plugins.md#callout-manager for what this file should encode.",
+  "_status": "TODO — schema not yet verified against an installed Callout Manager version. See https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/plugins/callout-manager.md for what this file should encode.",
 
   "_intended_content": "Definitions for Memoria's three inline-callout types: [!brief], [!suggestions], [!verification]. Each entry needs: id, icon (Lucide name), color (hex or theme variable), and default-collapsed flag.",
 
