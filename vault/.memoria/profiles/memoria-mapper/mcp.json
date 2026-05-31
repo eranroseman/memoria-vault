@@ -1,5 +1,5 @@
 {
-  "mcpServers": {
+  "mcp_servers": {
     "policy": {
       "command": "python",
       "args": [
@@ -9,6 +9,17 @@
       ],
       "enabled": true,
       "timeout": 30
+    },
+    "obsidian": {
+      "command": "uvx",
+      "args": ["mcp-obsidian"],
+      "enabled": true,
+      "timeout": 30,
+      "env": {
+        "OBSIDIAN_API_KEY": "${OBSIDIAN_API_KEY}",
+        "OBSIDIAN_HOST": "127.0.0.1",
+        "OBSIDIAN_PORT": "27124"
+      }
     }
   }
 }

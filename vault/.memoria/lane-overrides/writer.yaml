@@ -14,15 +14,15 @@ policy:
       - "40-workbench/*/04-drafts/**"
       - "40-workbench/*/03-canvas/**"
       - "40-workbench/*/02-framing/**"
+      - "30-synthesis/02-reference/**"   # review-gated → policy MCP degrades to dry_run (human-approved)
+      - "50-deliverables/**"             # review-gated export → degrades to dry_run
   deny:
     skills:
       - rest-passthrough
     write:
       - "20-sources/**"
-      - "30-synthesis/01-claims/**"    # review-gated → degrades to dry_run
-      - "30-synthesis/02-reference/**" # review-gated → degrades to dry_run
-      - "30-synthesis/03-moc/**"       # review-gated → degrades to dry_run
-      - "50-deliverables/**"           # review-gated → degrades to dry_run
+      - "30-synthesis/01-claims/**"    # claims are human-owned — hard deny (not Writer's to propose)
+      - "30-synthesis/03-moc/**"       # MOCs are human-owned — hard deny (Writer suggests via comment, not write)
   require:
     - audit_log
     - timeout_required

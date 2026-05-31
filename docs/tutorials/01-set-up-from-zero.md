@@ -108,7 +108,7 @@ notepad ~/.hermes/profiles/memoria-librarian/.env
 ANTHROPIC_API_KEY=sk-ant-...
 OPENROUTER_API_KEY=sk-or-...
 OPENALEX_EMAIL=you@example.com
-MEMORIA_OBSIDIAN_API_KEY=<the 64-char hex apiKey from Step 2>
+OBSIDIAN_API_KEY=<the 64-char hex apiKey from Step 2>   # read by the `obsidian` MCP server (mcp-obsidian)
 ```
 
 Confirm the install succeeded:

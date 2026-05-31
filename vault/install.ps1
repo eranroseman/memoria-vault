@@ -162,14 +162,18 @@ try {
         $dst = Join-Path $StagingDir $p
         Copy-Item -Path $src -Destination $dst -Recurse -Force
 
-        # Substitute {{VAULT_PATH}} in mcp.json. Write UTF-8 no-BOM because
-        # JSON parsers can choke on a BOM.
-        $mcpJson = Join-Path $dst 'mcp.json'
-        if (Test-Path $mcpJson) {
-            $content = Get-Content -Path $mcpJson -Raw
-            $vaultPathForward = $VaultPath -replace '\\', '/'
-            $content = $content -replace '\{\{VAULT_PATH\}\}', $vaultPathForward
-            [System.IO.File]::WriteAllText($mcpJson, $content, $utf8NoBom)
+        # Substitute {{VAULT_PATH}} in the files that reference the vault by
+        # absolute path: mcp.json (MCP server commands) and config.yaml (the
+        # pre_tool_call policy-gate hook command). Write UTF-8 no-BOM because
+        # JSON/YAML parsers can choke on a BOM.
+        $vaultPathForward = $VaultPath -replace '\\', '/'
+        foreach ($fname in @('mcp.json', 'config.yaml')) {
+            $f = Join-Path $dst $fname
+            if (Test-Path $f) {
+                $content = Get-Content -Path $f -Raw
+                $content = $content -replace '\{\{VAULT_PATH\}\}', $vaultPathForward
+                [System.IO.File]::WriteAllText($f, $content, $utf8NoBom)
+            }
         }
 
         Write-Host "Installing $p..."

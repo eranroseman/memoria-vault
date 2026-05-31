@@ -151,4 +151,4 @@ canvas         draft          deliverable
 
 ## Frontmatter not for notes
 
-`status` is a **board card field** (Hermes built-in). It is not a note field. The value sets for `status` (execution lifecycle) and `lifecycle` (note lifecycle) are deliberately disjoint — never use one in place of the other. See [board.md](board.md#execution-lifecycle).
+`status` is a **board card field** (Hermes built-in). It is not a note field. The value sets for `status` (execution lifecycle) and `lifecycle` (note lifecycle) are deliberately disjoint — never use one in place of the other. See [kanban-board.md](kanban-board.md#execution-lifecycle).

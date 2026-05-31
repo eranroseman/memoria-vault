@@ -7,7 +7,7 @@ Lookup material for Memoria — fields, values, commands, schemas, folder paths.
 | --- | --- |
 | [frontmatter.md](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
 | [note-types.md](note-types.md) | The 15 note types: folder, template, lifecycle, promotion map |
-| [board.md](board.md) | Kanban state machine, card schema, review overlay, WIP limits |
+| [kanban-board.md](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [profiles.md](profiles.md) | Lane identifiers, capability table, folder permissions, Linter severity |
 | [commands.md](commands.md) | Hermes CLI commands and Obsidian command-palette entries |
 | [on-disk-layout.md](on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions |

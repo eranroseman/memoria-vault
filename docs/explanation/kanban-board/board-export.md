@@ -4,7 +4,7 @@ topic: board
 
 # Board export and aggregation
 
-> **Status: deferred (Phase 4).** The Hermes Kanban board and these export/aggregation steps do not exist in the starter vault yet — see [implementation-status.md](../../project/implementation-status.md). This documents the intended mechanism that [card-schema.md](card-schema.md), [board-state](../dashboards/board-state.md), and [status-line.md](../../reference/obsidian-ui/status-line.md) reference.
+> **Status: Phase 1 (ships with v0.1).** The board is the Hermes-native Kanban (`~/.hermes/kanban.db`). The **board export** described below is implemented in `.memoria/mcp/board_export.py` (shipped — writes the `00-meta/board/` markdown projection and the `board-state.jsonl` snapshot from `hermes kanban list --json`). The **metrics aggregator** (`00-meta/08-metrics/`) is still pending. The earlier "Phase 4" tag was a misclassification. See [implementation-status.md](../../project/implementation-status.md).
 
 The authoritative board lives in the Hermes built-in Kanban (`kanban.db`). Two read-only projections make it visible to Obsidian's Dataview-based surfaces, since Dataview cannot query the database directly.
 

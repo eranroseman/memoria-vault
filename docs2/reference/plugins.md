@@ -125,11 +125,24 @@ Settings the human must not change without understanding the consequences. All o
 
 ### obsidian-git
 
-| Setting | Notes |
-| --- | --- |
-| `autoPush` | Deployment-conditional. On for `local-mesh` / `always-on`; off for `local-only`. |
-| Commit message template | Keep the default or align with the vault's commit-message convention. |
-| `post-commit` hook | Load-bearing — fires Verify/Revise workflows. Do not disable. |
+| Setting | Value | Why |
+| --- | --- | --- |
+| `commitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` is diagnostic — a 200-file auto-commit is unusual and the human should notice. |
+| `autoBackupAfterFileChange` | `false` | Auto-committing on every file change fights with Hermes writes and produces hundreds of commits per session. Use scheduled commits instead (`autoSaveInterval: 30` minutes). |
+| `pullBeforeCommit` | `true` | Catches divergence before the local commit creates a conflict. |
+| `pullBeforePush` | `true` | Same defense at push time. The pair is what makes multi-machine setups survive without daily merge conflicts. |
+| `autoPullOnBoot` | `true` | Catches "opened the vault on a different machine without thinking about sync." |
+| `post-commit` hook | enabled | Load-bearing — fires Verify workflow. Do not disable. |
+
+**Deployment-conditional:**
+
+| Deployment | `autoPush` | Notes |
+| --- | --- | --- |
+| `local-only` | `false` | Single machine; push manually for offsite-backup checkpoints. |
+| `local-mesh` | `false` | Syncthing handles sync; Git is history. Push manually. |
+| `obsidian-sync` | `false` | Obsidian Sync handles sync; Git is history. |
+| `always-on` (desktop) | `true` | Desktop auto-pushes as backup. Syncthing handles sync; this push is backup, not sync path. |
+| `always-on` (VPS) | — | Set `disablePush: true` on the VPS. VPS should only pull — allowing it to push would create writes that bypass the desktop's policy MCP review. |
 
 ### dataview
 
@@ -137,6 +150,8 @@ Settings the human must not change without understanding the consequences. All o
 | --- | --- | --- |
 | Enable JavaScript queries | `true` | Several dashboards use `dataviewjs` blocks. |
 | Inline queries | `true` | Used in some reference notes for live field display. |
+| `refreshEnabled` | `true` | Queries must update as notes change. |
+| `refreshInterval` | `2500` (ms) | Default; lower values cause performance issues on large vaults. |
 
 ### agent-client
 

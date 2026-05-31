@@ -8,3 +8,14 @@ model:
   provider: kilocode
   base_url: https://api.kilo.ai/api/gateway
   default: ~anthropic/claude-sonnet-latest
+
+# Route obsidian-MCP vault writes through the policy gate.
+hooks:
+  pre_tool_call:
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
+      timeout: 10
+  post_tool_call:                       # completes the audit record with after_hash (reversibility)
+    - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
+      timeout: 10

@@ -2,8 +2,8 @@
 topic: board
 ---
 
-> [!warning] Status: Deferred (Phase 4)
-> The Kanban board does not exist in the starter vault. This document describes the planned design. See `board-export.md` for implementation notes.
+> [!note] Status: Phase 1 (ships with v0.1).
+> The board is the **Hermes-native Kanban** (`~/.hermes/kanban.db`), created at runtime by `hermes kanban` — not a file authored in the starter vault. Memoria adds the `metadata` review overlay (convention) and the read-only Dataview projections written by `.memoria/mcp/board_export.py` (shipped). The earlier "Phase 4" tag was a misclassification.
 
 # Board, states, and the review gate
 
