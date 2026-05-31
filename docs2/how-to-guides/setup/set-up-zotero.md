@@ -60,6 +60,26 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 - The citekey in `.bib` matches the `mamykina2010sense` shape.
 - The key is pinned (shown with a lock icon in Zotero's item list, and `extra: bibtex: mamykina2010sense` in the item's Extra field).
 
+## Close the loop: install MarkDB-Connect (recommended)
+
+MarkDB-Connect is a Zotero plugin (not an Obsidian plugin). It scans your vault, finds notes that contain a citekey, and tags the corresponding Zotero item — so you can see at a glance which items have notes and jump from Zotero directly to the vault note.
+
+**7. Install MarkDB-Connect in Zotero.**
+
+Download from the [MarkDB-Connect releases page](https://github.com/daeh/zotero-markdb-connect/releases) (`.xpi` file) → Zotero → Tools → Add-ons → gear icon → Install Add-on From File.
+
+**8. Configure the note folder.**
+
+After install: Tools → MarkDB-Connect Settings → set the **note folder path** to your vault's `20-sources/01-papers/` absolute path (e.g., `C:\Users\{USERNAME}\memoria-vault\vault\20-sources\01-papers`).
+
+MarkDB-Connect detects citekeys from the note filename by default, which matches Memoria's naming convention (`mamykina2010sense.md` → citekey `mamykina2010sense`).
+
+**9. Run the initial sync.**
+
+Tools → MarkDB-Connect Sync Tags. Zotero items with matching vault notes get an `ObsCite` tag (shown as a colored dot in the library). Right-click any tagged item → Open in Obsidian to jump to the note.
+
+Re-run the sync periodically (or after ingesting a batch) to keep the tags current. It is not automatic.
+
 ## API keys for enrichment (optional but recommended)
 
 Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited:

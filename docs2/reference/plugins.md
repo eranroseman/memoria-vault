@@ -52,14 +52,44 @@ Install when the friction is felt. Not required for core function.
 
 ---
 
+## Zotero-side add-ons
+
+Plugins that install in Zotero (not Obsidian). Required or recommended alongside the Obsidian plugin set.
+
+| Add-on | Install in | Status | Purpose |
+| --- | --- | --- | --- |
+| Better BibTeX | Zotero | **Required** | Stable citekeys; auto-export `.bib` to vault; `zotero.lua` Lua filter for live Word export. |
+| MarkDB-Connect | Zotero | Recommended | Tags Zotero items that have a vault note; right-click → jump to note. Setup: [set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md). |
+| RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
+
+### Zotero ↔ Obsidian plugin comparison
+
+Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-citation-plugin`; the others are documented for evaluation.
+
+| Plugin | Connects via | Zotero must run | Annotation import | Bulk import | Stability |
+| --- | --- | --- | --- | --- | --- |
+| **obsidian-citation-plugin** (hans) | `.bib` / CSL-JSON file | No | No | No | High — Memoria default |
+| **zotero-integration** (mgmeyers) | BBT HTTP API | Yes | Yes | No | High — breaks on major updates |
+| **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
+| **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
+
+**Choosing a plugin:**
+
+- **Capture-only workflow** (Memoria's default): `obsidian-citation-plugin` — works offline, no Zotero dependency, stable.
+- **PDF annotation import needed**: `zotero-integration` — most mature; requires Zotero running at import time.
+- **Bulk import of many papers at once**: `zotlit` — evaluate once Zotero 9 stability is confirmed; do not migrate a working setup until release notes confirm it.
+- **Custom automation scripts**: `zotero-bridge` — developer-oriented middleware; not a standalone solution.
+
+---
+
 ## Reference plugins (4)
 
 Documented but not in the install set. Evaluated alternatives and future-migration targets.
 
 | Plugin | Status | Notes |
 | --- | --- | --- |
-| zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. |
-| zotero-integration | Not in use | Imports Zotero items via HTTP API; Memoria annotates in Obsidian, not Zotero. |
+| zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. See comparison table above. |
+| zotero-integration | Not in use | Imports Zotero items via HTTP API; useful if PDF annotation workflow is adopted. |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
 | obsidian-linter | Deferred (ADR-24) | Frontend formatter; writes outside the policy MCP audit trail; second frontmatter authority. |
 
