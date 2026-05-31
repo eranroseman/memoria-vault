@@ -13,7 +13,7 @@ When an agent finishes a task that writes to a review-gated zone (`30-synthesis/
 
 **1. Open the review queue.**
 
-From `Home.md` — the front-door note that opens on startup — go to the **board-state dashboard** (`00-meta/01-dashboards/board-state.md`). The review queue is every card in `done` whose `review_status` is `requested`; the dashboard surfaces them under the review-queue count. For dashboard navigation see [Navigate the dashboards](../navigate-the-dashboards.md).
+From `Home.md` — the front-door note that opens on startup — go to the **board-state dashboard** (`00-meta/01-dashboards/board-state.md`). The review queue is every card in `done` whose `review_status` is `requested`; the dashboard surfaces them under the review-queue count. For dashboard navigation see [Navigate the dashboards](../interface/navigate-the-dashboards.md).
 
 **2. Inspect one card.**
 
@@ -51,5 +51,5 @@ The `done-awaiting-review` queue has a cap. When it fills, the dispatcher slows 
 - Why review is a state, not a convention: [Review as a first-class state](../../explanation/workflows/review-as-state.md)
 - Why the gate is structural: [Why a human gate](../../explanation/architecture/why-human-gate.md)
 - The write-gate that enforces it: [Policy MCP reference](../../reference/policy.md)
-- Where the queue is surfaced: [Navigate the dashboards](../navigate-the-dashboards.md), [board-state dashboard](../../explanation/dashboards/board-state.md)
+- Where the queue is surfaced: [Navigate the dashboards](../interface/navigate-the-dashboards.md), [board-state dashboard](../../explanation/dashboards/board-state.md)
 - Decisions: [ADR-03 structural review gate](../../../project-files/decisions/03-structural-review-gate.md), [ADR-14 advisor review](../../../project-files/decisions/14-advisor-review-vs-frozen-deliverable.md), [ADR-16 adopt-on-demand](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)

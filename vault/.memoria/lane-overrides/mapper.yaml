@@ -1,14 +1,17 @@
 profile: memoria-mapper
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
     skills:
-      - scope-project
-      - gap-report
-      - cluster-mapping
-      - comparative-brief
+      # scope-project / gap-report / cluster-mapping / comparative-brief are SOUL.md
+      # procedures composing these real skills:
+      - obsidian            # vault query + write corpus-map / gap-report / briefs / cluster-maps
+      - vector-databases    # similarity for gap-report + comparative-brief
+      - scikit-learn        # HDBSCAN clustering + topic modeling (K-Dense)
+      - umap-learn          # cluster-map dimensionality reduction (K-Dense)
     write:
       - "40-workbench/*/01-map/corpus-map.md"
       - "40-workbench/*/01-map/gap-report.md"

@@ -1,17 +1,21 @@
 profile: memoria-librarian
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
     skills:
-      - paper-lookup
-      - arxiv-search
-      - pyzotero
-      - citation-management
-      - literature-review
-      - obsidian-paper-note
-      - rest-passthrough
+      - paper-lookup           # K-Dense
+      - arxiv                  # was arxiv-search (official research/arxiv)
+      - pyzotero               # K-Dense
+      - citation-management    # K-Dense
+      - literature-review      # K-Dense
+      - obsidian-paper-note    # authored skill: ingest pipeline (ocr-and-documents + pyzotero + obsidian)
+      - ocr-and-documents      # PDF/OCR extraction for ingest (official productivity/)
+      - obsidian               # vault read/write for ingest
+      - vector-databases       # the `query` command (embedding/keyword vault search)
+      - rest-passthrough       # capability token (REST passthrough), not a skill
     write:
       - "10-inbox/**"
       - "20-sources/**"

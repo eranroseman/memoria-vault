@@ -1,14 +1,16 @@
 profile: memoria-writer
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
     skills:
-      - llm-wiki-draft
-      - note-refactor
-      - scientific-writing
-      - counter-outline
+      - llm-wiki             # was llm-wiki-draft (official research/llm-wiki)
+      - obsidian-markdown    # note-refactor (kepano obsidian-skills)
+      - obsidian             # vault read/write for drafts / answers / framing
+      - scientific-writing   # K-Dense
+      # counter-outline is a SOUL.md behavior (produce 2–3 competing outlines), not a tool skill.
     write:
       - "10-inbox/02-answers/**"
       - "40-workbench/*/04-drafts/**"

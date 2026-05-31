@@ -60,6 +60,27 @@ Read from the inside out: start with what the system is, then how it's structure
 
 ---
 
+## All topics in this section
+
+The curated path above is a reading order, not a full index. Everything in `explanation/` is listed here.
+
+**Top-level**
+
+- [what-memoria-is.md](what-memoria-is.md) · [intellectual-foundations.md](intellectual-foundations.md) — the entry points (start here)
+- [design-principles.md](design-principles.md) — the cross-cutting principles the design returns to
+
+**Sub-folders** (each has its own README)
+
+- [architecture/](architecture/README.md) — the three-layer model and its rationale: control-plane, memory-tiers, human-channels, distribution-model, vault, session-logging, and the `why-*` files (why-three-layers, why-specialist-profiles, why-human-gate, why-not-autonomous, why-pattern-provenance, why-computational-methods)
+- [knowledge/](knowledge/README.md) — how durable knowledge is organized: lifecycle-over-topic, note-types, promotion-model, knowledge-cycle, note-body-structure, vocabulary-discipline, common-pitfalls
+- [workflows/](workflows/README.md) — how work moves through the system: board-as-state-machine, review-as-state, verify-on-commit
+- [kanban-board/](kanban-board/README.md) — the board as coordination layer: card-schema, states
+- [dashboards/](dashboards/README.md) — the eleven Dataview dashboards: daily-health, weekly-review, board-state, fleet-health, drift-watch, audit-log, contradictions, loose-ends, open-questions, reading-pipeline, discuss-queue
+- [profiles/](profiles/README.md) — the seven specialist profiles: librarian, mapper, socratic, writer, verifier, coder, linter
+- [obsidian/](obsidian/README.md) — how the human interacts through Obsidian: obsidian-ui, callouts, agent-client-picker
+
+---
+
 ## For decisions and direction
 
 The *why* behind a specific choice lives in an ADR. The forward plan lives in the timeline. Both are in [project-files/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [operations/](../../project-files/operations/) for direction and timeline.

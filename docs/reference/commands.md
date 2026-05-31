@@ -1,6 +1,6 @@
 # Commands
 
-All commands available in Memoria: Obsidian command palette entries (registered by QuickAdd) and Hermes CLI commands per profile. For invocation patterns and hotkey discipline see [how-to-guides/command-palette.md](../how-to-guides/command-palette.md).
+All commands available in Memoria: Obsidian command palette entries (registered by QuickAdd) and Hermes CLI commands per profile. For invocation patterns and hotkey discipline see [how-to-guides/command-palette.md](../how-to-guides/interface/command-palette.md).
 
 ---
 

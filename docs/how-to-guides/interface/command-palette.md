@@ -6,14 +6,14 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 ## Prerequisites
 
 - Obsidian open with the vault
-- QuickAdd ships bundled and enabled with the starter vault — no install needed (see [set-up-obsidian.md](setup/set-up-obsidian.md))
-- The Memoria command catalog open for reference: [reference/commands.md](../reference/commands.md)
+- QuickAdd ships bundled and enabled with the starter vault — no install needed (see [set-up-obsidian.md](../setup/set-up-obsidian.md))
+- The Memoria command catalog open for reference: [reference/commands.md](../../reference/commands.md)
 
 ## Steps
 
 **1. Open the palette and confirm the Memoria commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Mem`. Two commands ship pre-wired in the starter vault: `Memoria: capture fleeting` and `Memoria: write claim note` (both backed by Templater templates). The remaining commands in the catalog are not yet wired — they require QuickAdd Macros and user scripts that POST to the Hermes API, which are tracked as a build gap (see [implementation-status.md](../../project-files/operations/implementation-status.md)). Add the ones you need per step 2.
+`Cmd-P` (or `Ctrl-P`) → type `Mem`. Two commands ship pre-wired in the starter vault: `Memoria: capture fleeting` and `Memoria: write claim note` (both backed by Templater templates). The remaining commands in the catalog are not yet wired — they require QuickAdd Macros and user scripts that POST to the Hermes API, which are tracked as a build gap (see [implementation-status.md](../../../project-files/operations/implementation-status.md)). Add the ones you need per step 2.
 
 **2. Create a QuickAdd entry for each command you use.**
 
@@ -47,6 +47,6 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Related
 
-- Full command catalog: [reference/commands.md](../reference/commands.md)
-- ACP pane and profile switching: [obsidian-workspaces.md](../reference/obsidian-workspaces.md)
-- QuickAdd plugin reference: [plugins.md](../reference/plugins.md)
+- Full command catalog: [reference/commands.md](../../reference/commands.md)
+- ACP pane and profile switching: [obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
+- QuickAdd plugin reference: [plugins.md](../../reference/plugins.md)

@@ -1,13 +1,17 @@
 profile: memoria-coder
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
     skills:
-      - scaffold-code-note
-      - workspace-coordinate
-      - commit-and-document      # thin Hermes-side wrappers; substantive coding in external agent
+      # was scaffold-code-note / workspace-coordinate / commit-and-document (coined wrappers).
+      # scaffold-code-note's human path is a QuickAdd command; the agent scaffolds via `obsidian` + template.
+      - obsidian                 # vault read/write for the code-note
+      - codex                    # external coding agent (autonomous-ai-agents)
+      - claude-code              # external coding agent (use whichever is configured; opencode also available)
+      - github-repo-management   # per-task git commit / repo APIs
     write:
       - "40-workbench/*/06-code/**"
   deny:

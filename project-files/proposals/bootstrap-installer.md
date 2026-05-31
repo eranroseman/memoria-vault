@@ -396,13 +396,14 @@ need authoring as skills**.
 | `note-refactor` | kepano `obsidian-markdown` |
 | `workspace-coordinate` | `autonomous-ai-agents/{claude-code,codex,opencode}` |
 | `commit-and-document` | `github/github-repo-management` |
-| `cluster-mapping` | K-Dense `networkx` + `umap-learn` |
+| `cluster-mapping` | K-Dense `scikit-learn` (HDBSCAN) + `umap-learn` |
 | `similarity-check` | `mlops/vector-databases` (or the smart-connections index) |
 | `find-duplicates` | same vector backbone as `similarity-check` |
 
-**Different mechanism, not a Hermes skill (2):** `scaffold-code-note` → a **QuickAdd**
-Template command (like capture-fleeting / write-claim); `graph-analyze` → a new
-**`detectors.py`** function (uses `networkx`; `broken_wikilinks` already gives partial data).
+**Different mechanism, not a Hermes skill (2) — both now done:** `scaffold-code-note` →
+a **QuickAdd** Template command (`Memoria: scaffold code note`, like capture-fleeting /
+write-claim); `graph-analyze` → a new **`detectors.py`** function (`graph_analyze`,
+**pure stdlib** — orphan-synthesis-note detection over the wikilink graph; no `networkx`).
 
 **Already in `detectors.py` (2):** `schema-check` (= `frontmatter_schema_check`) and
 `health-report` (= `run_all()` + `verdict()`) — confirmed by the audit below. No authoring.
@@ -422,9 +423,10 @@ because they are deterministic multi-step pipelines where prompt orchestration i
 > **`detectors.py` audit (2026-05-31).** The Linter is **not a set of skills — it's the
 > already-shipped `detectors.py`** (7 deterministic, report-only detectors + a
 > `verdict()` PASS/REVIEW/FAIL band + `--self-test`). Two of its four lane-override "skills"
-> are **already implemented** there (`schema-check`, `health-report`); the only missing
-> Linter pieces are `graph-analyze` (one new `networkx` detector) and `session-log`. The
-> Linter's allowlist should grant the `detectors.py` tool + `networkx`, not four coined skills.
+> are **already implemented** there (`schema-check`, `health-report`); `graph-analyze` has
+> since been **added to `detectors.py`** (`graph_analyze`, pure stdlib — no `networkx`), so
+> only `session-log` remains. The Linter's allowlist grants **no Hermes skills**
+> (`allow.skills: []`) — `detectors.py` runs via the profile's terminal capability.
 
 Net: **3 + 6 + 2 + 2 + 5 + 2 = 20.** What actually gets *authored as a skill* is **2**
 (`obsidian-paper-note`, `retraction-check`); plus **1 new `detectors.py` function**

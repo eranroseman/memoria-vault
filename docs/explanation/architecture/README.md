@@ -64,4 +64,6 @@ Collapsing any two creates problems. Board + workers collapsed means work state 
 - **[why-human-gate.md](why-human-gate.md)** — why the review gate is structural, not advisory.
 - **[why-not-autonomous.md](why-not-autonomous.md)** — the autonomy ceiling: why Memoria doesn't pursue L4/L5 autonomy for synthesis.
 
+Structural topics in this section also include **[control-plane.md](control-plane.md)**, **[memory-tiers.md](memory-tiers.md)**, **[human-channels.md](human-channels.md)**, **[distribution-model.md](distribution-model.md)**, **[why-pattern-provenance.md](why-pattern-provenance.md)**, **[why-computational-methods.md](why-computational-methods.md)**, **[vault.md](vault.md)** (the vault as a knowledge structure), and **[session-logging.md](session-logging.md)** (what each session records).
+
 For operational reference (permission matrices, command lists, config formats), see [reference/](../../reference/).

@@ -43,15 +43,16 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - Artifact generation.
 - Git workflow.
 
-**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent (Aider, Kilocode, Claude Code, Codex) via the external coding agent pattern. The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats the external agent as an opaque tool with a shared filesystem. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See rationale/computational-methods.md.
+**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent invoked through Hermes's **`autonomous-ai-agents` skills** (`codex`, `claude-code`, `opencode` — use whichever is configured). The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats it as an opaque tool with a shared filesystem, reached via the Hermes skill rather than a bespoke integration. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See rationale/computational-methods.md.
 
 ## Tooling / MCPs
 
-- Git.
-- Filesystem access.
-- Repo APIs.
-- IDE-facing MCPs.
-- Aider / Kilocode / Claude Code-style tools if attached.
+These are the real Hermes skills the lane-override grants (see `lane-overrides/coder.yaml`):
+
+- `obsidian` (Hermes skill) — read/write the code-note in the vault. (Human scaffold path is a QuickAdd command.)
+- `github-repo-management` (Hermes skill) — per-task git commits and repo APIs.
+- `codex` / `claude-code` (Hermes `autonomous-ai-agents` skills) — the external coding agent; `opencode` also available.
+- Filesystem access to `40-workbench/*/06-code/` and connected repos.
 
 ## Rules
 

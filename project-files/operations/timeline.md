@@ -16,12 +16,12 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 1. Establish Memoria as the official name in vault documentation and any AGENTS-style schema files. Keep `research-wiki` as an alias for migration.
 2. Define the card states, the worker lanes (one per profile), and the review gate rules in one schema document so Hermes and the board share the same contract.
-3. Confirm note-type names match the defined set in [vault/README.md](../../docs/explanation/vault.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total). Keep any older names as deprecated aliases during transition.
+3. Confirm note-type names match the defined set in [vault/README.md](../../docs/explanation/architecture/vault.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total). Keep any older names as deprecated aliases during transition.
 4. Commit the design document set (`docs/`) as the shared source of truth.
 
 **Vault structure**
 
-1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../docs/explanation/vault.md).
+1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../docs/explanation/architecture/vault.md).
 2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../docs/reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
 4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../docs/explanation/obsidian/README.md)).

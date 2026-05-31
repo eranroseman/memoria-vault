@@ -1,14 +1,16 @@
 profile: memoria-verifier
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
     skills:
-      - cite-check
-      - similarity-check
-      - find-duplicates
-      - retraction-check
+      - vector-databases    # similarity-check + find-duplicates (both are direct vector queries)
+      - retraction-check    # authored skill: open-retractions API + crossref + pyzotero
+      - pyzotero            # retraction-check + cite-check: resolve citekeys / Zotero items
+      - obsidian            # read vault + write verification reports / candidate cards
+      # cite-check is a SOUL.md procedure: resolve every citekey against .bib + paper notes.
     write:
       - "40-workbench/*/05-verification/**"
       - "10-inbox/03-candidates/**"   # gap-candidate cards only

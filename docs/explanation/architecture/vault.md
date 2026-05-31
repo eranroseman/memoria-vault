@@ -2,7 +2,7 @@
 
 The vault is where durable knowledge lives. Everything else in Memoria — the board, the profiles, the dashboards — exists to serve it. This document explains the vault's structure: what the folders mean, how notes move through it, and the conventions that keep it navigable.
 
-For the conceptual model behind the design choices (why lifecycle folders, what note types represent, why promotion is gated), see [knowledge/](knowledge/).
+For the conceptual model behind the design choices (why lifecycle folders, what note types represent, why promotion is gated), see [knowledge/](../knowledge/).
 
 ---
 
@@ -56,11 +56,11 @@ The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 
 ## Why the structure is this way
 
-**Lifecycle over topic** — a paper about attention lives in `20-sources/01-papers/`, not `cognitive-science/`. Topics live in frontmatter where they can be many-to-many; lifecycle stage lives in the folder where it is one-to-one. See [../knowledge/lifecycle-over-topic.md](knowledge/lifecycle-over-topic.md).
+**Lifecycle over topic** — a paper about attention lives in `20-sources/01-papers/`, not `cognitive-science/`. Topics live in frontmatter where they can be many-to-many; lifecycle stage lives in the folder where it is one-to-one. See [../knowledge/lifecycle-over-topic.md](../knowledge/lifecycle-over-topic.md).
 
 **`30-synthesis/` is human territory** — claim notes and MOCs are human-authored. Agents draft candidates that land in `10-inbox/`; the human writes the canonical synthesis. The review-gated-zone deny rule enforces this structurally.
 
-**`40-workbench/` is the one exception** — its unit is the project, not the lifecycle stage. A project folder holds all working artifacts for one effort (map, framing, drafts, verification, code) and archives as a unit when it ships. See [../knowledge/lifecycle-over-topic.md#the-workbench-exception](knowledge/lifecycle-over-topic.md).
+**`40-workbench/` is the one exception** — its unit is the project, not the lifecycle stage. A project folder holds all working artifacts for one effort (map, framing, drafts, verification, code) and archives as a unit when it ships. See [../knowledge/lifecycle-over-topic.md#the-workbench-exception](../knowledge/lifecycle-over-topic.md).
 
 **`90-assets/` does not hold PDFs** — PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`. `90-assets/` holds Marker-extracted markdown and binary attachments.
 
@@ -98,19 +98,19 @@ draft         ──► deliverable       (on export)
 
 Rules: a `paper-note` never becomes a `claim-note` directly — the distinction between "what the source says" and "what the human thinks" is preserved. Archived notes stay in place for provenance. Only humans move notes to `95-archive/`.
 
-See [../knowledge/promotion-model.md](knowledge/promotion-model.md) for the full reasoning.
+See [../knowledge/promotion-model.md](../knowledge/promotion-model.md) for the full reasoning.
 
 ---
 
 ## Common pitfalls
 
-See [../knowledge/common-pitfalls.md](knowledge/common-pitfalls.md) for the recurring failure modes: unpinned citekeys, inbox accumulation, summaries masquerading as synthesis, and promotion anti-patterns.
+See [../knowledge/common-pitfalls.md](../knowledge/common-pitfalls.md) for the recurring failure modes: unpinned citekeys, inbox accumulation, summaries masquerading as synthesis, and promotion anti-patterns.
 
 ---
 
 ## Related reference
 
-- Frontmatter fields: [../../reference/frontmatter.md](../reference/frontmatter.md)
-- Note types (all 15, with templates): [../../reference/note-types.md](../reference/note-types.md)
-- Linking patterns: [../../reference/linking.md](../reference/linking.md)
-- On-disk layout (full tree): [../../reference/on-disk-layout.md](../reference/on-disk-layout.md)
+- Frontmatter fields: [../../reference/frontmatter.md](../../reference/frontmatter.md)
+- Note types (all 15, with templates): [../../reference/note-types.md](../../reference/note-types.md)
+- Linking patterns: [../../reference/linking.md](../../reference/linking.md)
+- On-disk layout (full tree): [../../reference/on-disk-layout.md](../../reference/on-disk-layout.md)

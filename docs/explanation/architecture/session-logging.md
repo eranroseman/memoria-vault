@@ -13,7 +13,7 @@ These are different artifacts written by different components with different lif
 | **Per-session summaries** | `00-meta/02-logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (summarizes Hermes raw activity) | One file per session; never rotated; accumulate indefinitely |
 | **Policy MCP audit log** | `00-meta/02-logs/audit.jsonl` | Policy MCP | Append-only; rotated weekly by the Linter |
 
-The audit log is what the [audit-log dashboard](dashboards/) and [fleet-health dashboard](dashboards/) read. The per-session summaries are the narrative record of what happened in a session — which skills ran, what decisions were made, which cards were advanced.
+The audit log is what the [audit-log dashboard](../dashboards/) and [fleet-health dashboard](../dashboards/) read. The per-session summaries are the narrative record of what happened in a session — which skills ran, what decisions were made, which cards were advanced.
 
 ---
 
@@ -27,7 +27,7 @@ Combining them would make the audit log verbose (session narrative) and would ma
 
 ## Why the sessions directory is not pre-created
 
-The `00-meta/02-logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [how-to-guides/setup/set-up-the-vault.md](../how-to-guides/setup/set-up-the-vault.md) covers this.
+The `00-meta/02-logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [how-to-guides/setup/set-up-the-vault.md](../../how-to-guides/setup/set-up-the-vault.md) covers this.
 
 ---
 
@@ -39,6 +39,6 @@ Per-session files are named by `YYYY-MM-DD-HHMM`, so files from different machin
 
 ## Related
 
-- Session-log granularity (per-session files, not per-action): [memory.md](../reference/memory.md)
-- Audit log (the other log): [reference/policy.md](../reference/policy.md)
-- Linter (owns `00-meta/02-logs/` and rotates the audit log): [explanation/profiles/linter.md](profiles/linter.md)
+- Session-log granularity (per-session files, not per-action): [memory.md](../../reference/memory.md)
+- Audit log (the other log): [reference/policy.md](../../reference/policy.md)
+- Linter (owns `00-meta/02-logs/` and rotates the audit log): [explanation/profiles/linter.md](../profiles/linter.md)

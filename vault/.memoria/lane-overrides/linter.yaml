@@ -1,14 +1,16 @@
 profile: memoria-linter
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 
 policy:
   allow:
-    skills:
-      - schema-check
-      - graph-analyze
-      - health-report
-      - session-log
+    # The Linter invokes NO Hermes skills: every check is the shipped detectors.py tool
+    # (zero-LLM, pure-stdlib, report-only), run via the profile's terminal capability.
+    # schema-check, the health-report verdict, and graph-analyze (orphan detection) are
+    # all implemented in detectors.py; session-log writes the per-session log. No external
+    # skill deps. (Advanced graph community-detection could reintroduce networkx later.)
+    skills: []
     write:
       - "00-meta/02-logs/**"     # audit logs, session logs, and rotation archive
     auto_fix:

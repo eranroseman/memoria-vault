@@ -1,6 +1,7 @@
 profile: memoria-socratic
 
-# stub — wire fully in v0.1
+# Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
+# See project-files/proposals/bootstrap-installer.md § skills.
 # ARCHITECTURAL NOTE: Socratic is hard write-denied across the entire vault.
 # policy.allow.write: [] is load-bearing — do not add write paths.
 # routing.invocation: interactive_only prevents queue dispatch.
@@ -8,8 +9,9 @@ profile: memoria-socratic
 policy:
   allow:
     skills:
-      - socratic-processing
-      - lens-reading             # parameterized: mamykina-sensemaking, veinot-informational-justice, etc.
+      # socratic-processing and lens-reading are SOUL.md behaviors (question-only,
+      # read-through-lens), not tool skills. Read-only vault access only:
+      - obsidian                 # read the note(s) under discussion (write hard-denied below)
     write: []                   # hard write-denial — architectural wall
   deny:
     skills:

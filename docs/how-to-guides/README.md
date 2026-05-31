@@ -40,9 +40,9 @@ One-time configuration tasks. Run once per machine or after a major system chang
 
 | Guide | What it covers |
 | --- | --- |
-| [Command palette](command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
-| [Agent-client pane](use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
-| [Navigate the dashboards](navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
+| [Command palette](interface/command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
+| [Agent-client pane](interface/use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
+| [Navigate the dashboards](interface/navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
 
 ### Using Hermes Agent
 
@@ -101,7 +101,7 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Build a Map of Content](maintenance/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
 | [Refactor claim notes](maintenance/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
-| [Run a retraction sweep](maintenance/retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
+| [Run a retraction sweep](maintenance/run-a-retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
 
 ### Recovery
 
@@ -114,9 +114,3 @@ Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one f
 | [Fix broken frontmatter](recovery/fix-broken-frontmatter.md) | YAML parse error; note missing from Dataview queries |
 | [Fix a stuck card](recovery/fix-stuck-card.md) | Card won't advance on the Kanban board |
 | [Fix profile drift](recovery/fix-profile-drift.md) | Deployed profile doesn't match vault source |
-
----
-
-## If you're looking for the old how-to folder
-
-The `memoria-vault/docs/how-to/` folder contains the previous generation of guides — one recipe per named workflow, useful as detailed reference. These guides supersede that structure and are organized around user tasks rather than system workflows.

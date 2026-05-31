@@ -35,6 +35,8 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 
 `lint` and `health-report` accept severity and detector filters: `--min-severity {critical|high|medium|low|info}` to suppress lower bands, `--detectors profile-install-drift,skeleton-drift` to scope to a subset of the structural detectors below. Both flags compose; both default to "all severities, all detectors."
 
+**Implementation.** These commands are the shipped `detectors.py`, not coined skills. `schema-check`, the `health-report` verdict band, and `graph-analyze` (orphan-synthesis-note detection) all live there now; `session-log` writes the per-session summary. The drift checks that need runtime context (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `command-vocab-drift`, `plugin-config-drift`) run in the live Linter rather than `detectors.py` — see [M-detectors.md](M-detectors.md).
+
 ## Core skills
 
 - Structural validation.
@@ -44,10 +46,9 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 
 ## Tooling / MCPs
 
-- Read-only vault scan.
-- File indexer.
-- Git.
-- Scheduled checks.
+- **`detectors.py`** (shipped in this profile dir) — the deterministic, zero-LLM, **pure-stdlib** detector engine. Run with `--vault <path>`; `--self-test` runs synthetic-fixture unit tests. It implements every self-contained check below, **including `schema-check` (`frontmatter_schema_check`), the `health-report` verdict band (`run_all()` + `verdict()`), and `graph-analyze` (`graph_analyze` — orphan-synthesis-note detection over the wikilink graph)** — none need a separate skill. Executed via the profile's terminal capability, not a Hermes skill.
+- **No external skills.** The Linter invokes no Hermes skills — `graph-analyze` uses stdlib in-degree arithmetic, not `networkx`. (Advanced graph community-detection could reintroduce `networkx` later; orphans/density don't need it.)
+- Read-only vault scan + file indexer; Git (for the drift checks); scheduled (cron) checks.
 
 ## Rules
 

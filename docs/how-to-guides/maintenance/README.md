@@ -12,4 +12,4 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Build a MOC](build-a-moc.md) | Create a map-of-content when a cluster reaches critical mass |
 | [Refactor a note](refactor-a-note.md) | Split, merge, or retype a note without breaking links |
 | [Return to work](return-to-work.md) | Re-orient after an absence and pick up where you left off |
-| [Run a retraction sweep](retraction-sweep.md) | Check for retracted papers and flag affected claims |
+| [Run a retraction sweep](run-a-retraction-sweep.md) | Check for retracted papers and flag affected claims |

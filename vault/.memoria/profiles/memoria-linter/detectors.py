@@ -300,13 +300,48 @@ def dashboard_field_drift(vault: Path) -> list[Finding]:
     return out
 
 
+def graph_analyze(vault: Path) -> list[Finding]:
+    """Knowledge-graph health: orphan synthesis notes (zero inlinks).
+
+    Pure-stdlib graph metrics over the wikilink graph -- in-degree is simple dict
+    arithmetic, so no networkx is needed (keeping detectors.py dependency-free).
+    Reports claim / reference notes with no incoming wikilinks (excluding MOCs):
+    they are unreachable in the graph until something links to them. A self-link
+    counts as an inlink -- a minor false-negative accepted for v0.1.
+
+    Hubs, clusters, and link-density are descriptive rather than actionable, so
+    they are left out of the report to keep findings to things a human can act on;
+    extend here if a graph-stats summary is wanted later."""
+    notes = [p for p in iter_notes(vault)
+             if not relpath(vault, p).startswith(("00-meta/", "90-assets/"))]
+    indeg = {p.stem: 0 for p in notes}
+    link_re = re.compile(r"\[\[([^\]|#]+)")
+    for p in notes:
+        for m in link_re.finditer(read(p)):
+            tgt = Path(m.group(1).strip()).stem
+            if tgt in indeg:
+                indeg[tgt] += 1
+    out = []
+    synth = ("30-synthesis/01-claims/", "30-synthesis/02-reference/")
+    for p in notes:
+        rp = relpath(vault, p)
+        if not rp.startswith(synth):
+            continue
+        if parse_frontmatter(read(p)).get("type") == "moc":
+            continue
+        if indeg.get(p.stem, 0) == 0:
+            out.append(Finding("graph-analyze", "LOW", rp,
+                               "orphan synthesis note (0 inlinks) -- link it or it stays unreachable"))
+    return out
+
+
 def out_empty() -> list[Finding]:
     return []
 
 
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
-    frontmatter_schema_check, broken_wikilinks, dashboard_field_drift,
+    frontmatter_schema_check, broken_wikilinks, dashboard_field_drift, graph_analyze,
 ]
 
 
@@ -393,9 +428,11 @@ def self_test() -> int:
         check("broken-wikilink ignores valid [[good]]", not any("[[good]]" in x.message for x in by("broken-wikilink")))
         check("dashboard-field-drift flags 'projct'", any("projct" in x.message for x in by("dashboard-field-drift")))
         check("dashboard-field-drift ignores 'maturity'", not any("'maturity'" in x.message for x in by("dashboard-field-drift")))
+        check("graph-analyze flags orphan bad.md", any("bad.md" in x.path for x in by("graph-analyze")))
+        check("graph-analyze ignores linked good.md", not any("good.md" in x.path for x in by("graph-analyze")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-    print(f"\n{11 - failures}/11 detector checks passed.")
+    print(f"\n{13 - failures}/13 detector checks passed.")
     return failures
 
 

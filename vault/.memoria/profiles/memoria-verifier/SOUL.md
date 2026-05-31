@@ -38,17 +38,18 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 
 - Claim tracing (claim → paper note) — hybrid: regex citation extraction + embedding similarity for matching, with LLM fallback only on the ambiguous middle band.
 - Citation verification (citekey → resolved note) — deterministic regex extraction + lookup against `.memoria/library.bib`.
-- Similarity retrieval — cosine similarity over sentence-transformer embeddings, indexed via `qmd` or hnswlib. Used for duplicate detection (`similarity-check`, `find-duplicates`) and for claim-source matching.
-- Retraction lookup — Zotero alerts API + CrossRef API + DOI matching.
+- Similarity retrieval — cosine similarity over sentence-transformer embeddings via the Hermes `vector-databases` skill. Used for duplicate detection (`similarity-check`, `find-duplicates`) and for claim-source matching.
+- Retraction lookup — the `retraction-check` authored skill (open-retractions API + CrossRef) with `pyzotero` resolving Zotero items / DOIs.
 
 These are **deterministic by design** with one explicit hybrid step (the ambiguous-band claim-source match). See rationale/computational-methods.md for the boundary rules and why Memoria avoids LLM-as-similarity-judge.
 
 ## Tooling / MCPs
 
-- Read-only vault access (everywhere except verification reports).
-- `qmd` for similarity search.
-- Zotero local API for retraction alerts.
-- CrossRef API for retraction status.
+These are the real Hermes skills the lane-override grants (see `lane-overrides/verifier.yaml`):
+
+- `obsidian` (Hermes skill) — read-only vault access (everywhere except verification reports).
+- `vector-databases` (Hermes skill) — embedding similarity for `similarity-check` + `find-duplicates`.
+- `retraction-check` (authored skill) — open-retractions API + CrossRef; `pyzotero` resolves Zotero items / DOIs.
 - No drafting tools.
 
 ## Rules
@@ -103,4 +104,4 @@ The verification card moves to one of three exit states. **Verifier sets the sta
 
 ## Delegation
 
-Very low. Your value depends on independence from the worker who produced the draft (Writer). Delegating verification back to Writer defeats the point of a separate Verifier. You may delegate mechanical retrieval to `qmd` (a tool, not a profile), but the trace judgment is yours.
+Very low. Your value depends on independence from the worker who produced the draft (Writer). Delegating verification back to Writer defeats the point of a separate Verifier. You may delegate mechanical retrieval to the `vector-databases` skill (a tool, not a profile), but the trace judgment is yours.
