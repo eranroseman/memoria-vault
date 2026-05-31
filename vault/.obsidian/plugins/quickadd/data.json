@@ -1,5 +1,44 @@
 {
-  "choices": [],
+  "choices": [
+    {
+      "id": "7c9406c9-ba8a-454f-a813-1f420795ed07",
+      "name": "Memoria: capture fleeting",
+      "type": "Template",
+      "command": true,
+      "templatePath": "00-meta/03-templates/fleeting-note.md",
+      "fileNameFormat": { "enabled": true, "format": "{{DATE:YYYY-MM-DD-HHmmss}}-fleeting" },
+      "folder": {
+        "enabled": true,
+        "folders": ["10-inbox/01-fleeting"],
+        "chooseWhenCreatingNote": false,
+        "createInSameFolderAsActiveFile": false,
+        "chooseFromSubfolders": false
+      },
+      "appendLink": false,
+      "openFile": true,
+      "fileOpening": { "location": "tab", "direction": "vertical", "mode": "default", "focus": true },
+      "fileExistsBehavior": { "kind": "prompt" }
+    },
+    {
+      "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
+      "name": "Memoria: write claim note",
+      "type": "Template",
+      "command": true,
+      "templatePath": "00-meta/03-templates/claim-note.md",
+      "fileNameFormat": { "enabled": true, "format": "{{VALUE:claim title}}" },
+      "folder": {
+        "enabled": true,
+        "folders": ["30-synthesis/01-claims"],
+        "chooseWhenCreatingNote": false,
+        "createInSameFolderAsActiveFile": false,
+        "chooseFromSubfolders": false
+      },
+      "appendLink": false,
+      "openFile": true,
+      "fileOpening": { "location": "tab", "direction": "vertical", "mode": "default", "focus": true },
+      "fileExistsBehavior": { "kind": "prompt" }
+    }
+  ],
   "inputPrompt": "single-line",
   "persistInputPromptDrafts": true,
   "useSelectionAsCaptureValue": true,

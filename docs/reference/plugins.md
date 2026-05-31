@@ -6,7 +6,7 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ## Required plugins (8)
 
-Memoria breaks without these. Install before first use.
+Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [set-up-obsidian.md](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -110,20 +110,24 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| BibTeX file | `.memoria/library.bib` | Single source of bib data; Better BibTeX auto-exports here. |
-| Literature note folder | `20-sources/01-papers/` | Notes must land in the canonical papers folder. |
-| Template | `00-meta/03-templates/paper.md` | Must use the Memoria paper-note template. |
+| BibTeX file (`citationExportPath`) | `.memoria/library.bib` | Single source of bib data; Better BibTeX auto-exports here. |
+| Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
+| Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
+| Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
+| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. It is hand-kept in sync with `00-meta/03-templates/paper-note.md` (the human-facing copy); edit both together. |
 
 ### obsidian-git
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `commitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large auto-commits visible. |
-| `autoBackupAfterFileChange` | `false` | Produces hundreds of commits per session when Hermes is writing; use scheduled commits (`autoSaveInterval: 30` min). |
-| `pullBeforeCommit` | `true` | Required to catch divergence before the local commit. |
+| `commitMessage` / `autoCommitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large auto-commits visible. Set both keys so timed and manual commits match. |
+| `autoBackupAfterFileChange` | `false` | Produces hundreds of commits per session when Hermes is writing; use scheduled commits instead. |
+| `autoSaveInterval` | `30` | Scheduled commit every 30 min (the replacement for per-change backup). `0` disables it. |
 | `pullBeforePush` | `true` | Required; prevents conflicts on multi-machine setups. |
 | `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
-| `post-commit` hook | enabled | Load-bearing — fires Verify workflow. Do not disable. |
+| `post-commit` hook | enabled | Load-bearing — fires Verify workflow. Lives in `.githooks/`, not `data.json`. Do not disable. |
+
+> **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps deployments onto those keys.
 
 **`autoPush` by deployment:**
 
@@ -153,9 +157,10 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 ### callout-manager
 
-| Setting | Status |
-| --- | --- |
-| `data.json` | Ships as `data.json.TODO` — callout styling requires manual configuration after clone. |
+| Setting | Required value | Constraint |
+| --- | --- | --- |
+| `callouts.custom` | `["brief", "suggestions", "verification"]` | The three Memoria callout types must be registered as custom callouts. |
+| `callouts.settings` | per-callout `color` (RGB triplet) + `icon` (Lucide id) | `brief` = `74, 144, 226` / `lucide-info`; `suggestions` = `123, 74, 226` / `lucide-list-plus`; `verification` = `226, 164, 74` / `lucide-shield-check`. Colors are stored as comma-separated RGB strings (not hex) — that is the format Callout Manager writes to `--callout-color`. |
 
 ---
 
@@ -171,4 +176,5 @@ Settings with a fixed required value. All others are personal preference. See [e
 | Constraint | Rule |
 | --- | --- |
 | `data.json` edits | Only edit while Obsidian is not running; Obsidian overwrites it on every settings change. |
-| `main.js` / `styles.css` | Do not commit; add `.obsidian/plugins/**/main.js` and `.obsidian/plugins/**/styles.css` to `.gitignore`. |
+| `main.js` / `styles.css` / `manifest.json` | **Committed.** The starter vault ships every required plugin pre-installed, so the plugin build files are part of the distribution and are tracked in git. Do not add them to `.gitignore`. |
+| Private `data.json` | Any plugin `data.json` that holds secrets or per-machine data is **gitignored and ships as `data.json.example`**. Two qualify: `obsidian-local-rest-api/data.json` (apiKey + TLS cert + RSA private key, regenerated on first launch) and `agent-client/data.json` (per-machine agent command paths + any provider apiKeys). Every other plugin's `data.json` carries no private data and is committed, configured to spec. Rule: a new secret-bearing config gets **both** a `.gitignore` line and a `.example` sibling. |

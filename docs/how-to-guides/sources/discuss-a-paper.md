@@ -36,10 +36,9 @@ Answer each in the pane. Write in your own words, not the paper's.
 
 **5. Follow where the dialogue leads.**
 
-<!-- TODO: Add 3-5 sentences here describing how you personally navigate the Socratic dialogue — 
-     what you do when the questions feel too abstract, how you handle papers where you disagree 
-     with the framing, and when you decide the conversation is "done enough" to move on to 
-     writing the claim note. This is your practice, not a generic prescription. -->
+Don't treat the questions as a checklist. When a question feels too abstract, ask the Socratic agent to ground it in a specific passage or a concrete example from the paper. When you disagree with the paper's framing, say so directly — the dialogue exists to surface *your* position, not to defend the author's. Let one answer pull the next question; the turns that matter are usually the ones you didn't plan.
+
+The conversation is "done enough" when you can state the paper's core claim in your own words and name where you stand on it — agree, disagree, or agree-with-a-caveat. That is the signal to stop and move to the outcome below.
 
 **6. Decide the outcome.**
 

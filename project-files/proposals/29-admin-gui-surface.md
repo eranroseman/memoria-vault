@@ -65,4 +65,4 @@ narrow, and the CLI + dashboards already cover the daily path. Not worth a bespo
 
 - **Existing surfaces:** the CLI (forensic), dashboards (state visibility), Telegram (push) — see [human-channels.md](../../explanation/architecture/human-channels.md)
 - **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../reference/policy.md)
-- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](../roadmap/future-directions.md#memoria-inspector-obsidian-plugin) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md --> covers part of the same forensic need from inside Obsidian
+- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](integrations.md) covers part of the same forensic need from inside Obsidian

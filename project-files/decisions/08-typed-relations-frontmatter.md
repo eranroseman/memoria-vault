@@ -24,7 +24,7 @@ Adopt a **`relations:` frontmatter block** on claim-notes for *associative* type
 - Unblocks [ADR-9](09-contradictions-dashboard.md): the contradictions dashboard now has `relations.contradicts` to query.
 - Adopting the *namespace* costs nothing when unused — opt-in means that below the density where typed links pay off they simply stay sparse; there is no "populate every link" burden. This is what made the earlier deferral unnecessary: the cost had been modeled as mandatory.
 - Adds a small schema obligation: a `relations` controlled vocabulary in the [schema reference](../../docs/reference/frontmatter.md), a `schema_version` bump on the claim-note template, and a Linter check that flags `relations:` keys outside the vocabulary.
-- Richer link semantics (a `relation_type:`-per-link list, an expanded PARNESS-style vocabulary — PARNESS: a typed-relation scheme covering supports, refutes, extends, uses, and similar rhetorical moves between claims) and an **NLI candidate-proposer** for `contradicts` remain future work — see [future-directions §scenario-typed retrieval](../roadmap/future-directions.md#scenario-typed-retrieval) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md --> and [§NLI-based contradiction detection](../roadmap/future-directions.md#nli-based-contradiction-detection) <!-- TODO: reorg link — no unique new target for roadmap/future-directions.md -->. v1 is human-noticed, human-typed.
+- Richer link semantics (a `relation_type:`-per-link list, an expanded PARNESS-style vocabulary — PARNESS: a typed-relation scheme covering supports, refutes, extends, uses, and similar rhetorical moves between claims) and an **NLI candidate-proposer** for `contradicts` remain future work — see [schema-and-retrieval.md](../proposals/schema-and-retrieval.md) and [classical-method-displacements.md](../proposals/classical-method-displacements.md). v1 is human-noticed, human-typed.
 
 ## Alternatives considered
 
@@ -38,7 +38,7 @@ Adopt a **`relations:` frontmatter block** on claim-notes for *associative* type
 
 ## Related
 
-- **Workflows affected:** [Distill](../../how-to/workflows/upstream/distill.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/upstream/distill.md --> (where `contradicts` / `supports` are set), [Promote](../../how-to/workflows/upstream/promote.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/upstream/promote.md -->, [Query](../../how-to/workflows/downstream/query.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/query.md --> (relation-aware retrieval).
+- **Workflows affected:** [Distill](../../docs/how-to-guides/sources/write-a-claim-note.md) (where `contradicts` / `supports` are set), [Promote](../../docs/how-to-guides/sources/promote-a-claim.md), [Query](../../docs/how-to-guides/writing/query-the-vault.md) (relation-aware retrieval).
 - **Files affected:** [vault/frontmatter.md](../../docs/reference/frontmatter.md) (the `relations:` namespace + vocabulary), [vault/note-types.md](../../docs/reference/note-types.md) + `00-meta/03-templates/claim-note.md`, the Linter's `M-detectors.md` (vocabulary check), [dashboards/contradictions.md](../../docs/explanation/dashboards/contradictions.md) (consumer).
 - **Required by:** [ADR-9 (Contradictions dashboard)](09-contradictions-dashboard.md) — now unblocked.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (the temporal relation kept top-level; this generalizes the associative rest).

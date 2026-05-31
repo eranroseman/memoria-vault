@@ -105,6 +105,16 @@ When you commit, a git hook fires automatically and creates a Verify card on the
 
 ---
 
+## Step 8 — Meet the review gate
+
+So far every write in this tutorial landed in the workbench (`40-workbench/`), which is yours to edit freely. The moment an agent proposes a write to a **review-gated zone** — promoting a claim into the reference layer (`30-synthesis/02-reference/`) or producing a deliverable (`50-deliverables/`) — it does **not** land automatically. The card stops in the **review queue** (`done` with `review_status: requested`), and the policy MCP holds the write in `dry_run` until you approve it.
+
+To see where these land: open `Home.md` — the front-door note that opens on startup — and go to the **board-state dashboard**. Any card waiting on you appears under the review-queue count. When you start promoting claims, you'll clear them here: **approve** to let the write land, **reject** to send it back as a fresh task.
+
+This is the human gate that makes Memoria safe to run unattended — agents propose, you dispose; nothing reaches synthesis or deliverables without passing through you. Full procedure when you get there: [Work the review queue](../how-to-guides/writing/work-the-review-queue.md).
+
+---
+
 ## What you have
 
 - `40-workbench/first-synthesis/04-drafts/draft-01.md` — a verified draft section
@@ -127,6 +137,7 @@ You now know the complete Memoria workflow. The daily rhythm from here is:
 - **Ingest** papers from Zotero when you add them (`Cmd+P → Memoria: capture from Zotero selection`)
 - **Classify** and **discuss** new paper-notes during reading sessions
 - **Write claim notes** after Socratic discussions
+- **Clear the review queue** (open `Home.md` → board-state dashboard; approve or reject any card waiting at the gate)
 - **Run the weekly review** (open `weekly-review.md` every Friday, process link suggestions, address any Linter findings)
 
 The [how-to guides](../how-to-guides/) cover individual workflows in more depth. The [reference section](../reference/) is what you reach for when you need the exact name of a field or command.

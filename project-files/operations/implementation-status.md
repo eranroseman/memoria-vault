@@ -64,7 +64,7 @@ Authoritative runtime signal: `install.ps1` requires `SOUL.md` + `config.yaml` +
 
 | Artifact | Status | Notes |
 | --- | --- | --- |
-| 10 dashboards + `index.md` (`00-meta/01-dashboards/`) | shipped | Files present: audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review. Cannot be approved until Dataview is installed and queries verified against a live corpus. |
+| 10 dashboards + `index.md` (`00-meta/01-dashboards/`) | shipped | Files present: audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review. Dataview is now bundled and configured (dataviewjs enabled); approval still pending query verification against a live corpus. |
 | `daily-health.md` | n/a | The entry point is `index.md`. Any doc naming `daily-health.md` is wrong. |
 | `skill-lifecycle` dashboard | deferred | Out of v0.1 scope. Ships when skill-governance is stood up (Phase 3). |
 | `00-meta/05-eval/` | shipped | `.keep` placeholder present. Eval task content (ADR-11 — vault-eval-integration) is pending. |
@@ -85,15 +85,19 @@ Authoritative runtime signal: `install.ps1` requires `SOUL.md` + `config.yaml` +
 
 | Plugin | Status | Notes |
 | --- | --- | --- |
-| obsidian-local-rest-api | shipped | Installed. HTTPS port 27124; insecure HTTP port 27123 off by default. |
-| agent-client | shipped | Installed. Not independently verified end-to-end without a registered profile. |
-| callout-manager | shipped | Installed. Config ships as `data.json.TODO` — callout styling unverified until the TODO is resolved. **Phase 1 manual step: copy `data.json.TODO` → `data.json` and configure callout styling before the dashboard and agent callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) will render.** |
-| obsidian-citation-plugin | shipped | Installed. Requires `.memoria/library.bib` (pending) to function. |
-| dataview | pending | Required for all dashboard queries. Not in `.obsidian/plugins/`; must be installed as a post-clone step before any dashboard query runs. **Phase 1 prerequisite.** |
-| templater | pending | Required for template insertion. Post-clone step. **Phase 1 prerequisite.** |
-| quickadd | pending | Required for quick-capture flows. Post-clone step. **Phase 1 prerequisite.** |
-| obsidian-git | pending | Required for version-controlled vault commits and profile prompt versioning. Post-clone step. **Phase 1 prerequisite.** |
-| obsidian-homepage | pending | Required to auto-open `Home.md` on startup (ADR-13). Post-clone step. **Phase 1 prerequisite.** |
+All eight required plugins are now **bundled** in `vault/.obsidian/plugins/` (build files committed) and configured to spec — the distribution model changed from post-clone install to a batteries-included starter vault. Per-machine secrets/paths still need a manual pass (see notes).
+
+| Plugin | Status | Notes |
+| --- | --- | --- |
+| obsidian-local-rest-api | shipped | Bundled. HTTPS port 27124; insecure HTTP port 27123 off. Real `data.json` (apiKey + TLS cert + RSA key) is **gitignored**; ships as `data.json.example`. Per-machine: regenerated on first launch. |
+| agent-client | shipped | Bundled. Real `data.json` is **gitignored** (per-machine agent command paths via `{{HOME}}`, provider apiKeys); ships as `data.json.example`. `defaultAgentId: memoria-socratic`, `autoMentionActiveNote: true`. Not verified end-to-end without a registered profile. |
+| callout-manager | shipped | Bundled and **configured** — `data.json` defines the three custom callouts (`brief`, `suggestions`, `verification`) with RGB color + Lucide icon. `data.json.TODO` retired. Rendering unverified against a live theme. |
+| obsidian-citation-plugin | shipped | Bundled and configured. Uses an **inline** `literatureNoteContentTemplate` (this plugin has no external-template setting); kept in sync with `00-meta/03-templates/paper-note.md`. Requires `.memoria/library.bib` (pending) to produce notes. |
+| dataview | shipped | Bundled and **configured**: `enableDataviewJs` + `enableInlineDataviewJs` set `true` (off by default), `refreshInterval` 2500. Dashboards now have their prerequisite. Queries unverified against a live corpus. |
+| templater-obsidian | shipped | Bundled and **configured**: `templates_folder` = `00-meta/03-templates`, `trigger_on_file_creation` + `enable_system_commands` `false`. |
+| quickadd | shipped (partial) | Bundled. **2 of ~20 catalog commands wired** as Template choices (`Memoria: capture fleeting`, `Memoria: write claim note`). The rest are a **build gap (pending)**: they need QuickAdd Macros + user `.js` scripts that POST to the Hermes API (none exist yet) and, for lens reads, a Hermes profile arg `agent-client:open-chat-view` can't pass. See [reference/commands.md](../../docs/reference/commands.md) for the full catalog. |
+| obsidian-git | shipped | Bundled and **configured**: `commitMessage`/`autoCommitMessage` = `vault: {{date}} {{numFiles}} files`, `autoSaveInterval` 30, `autoPullOnBoot` true, `autoBackupAfterFileChange` false, `pullBeforePush` true. |
+| obsidian-homepage | pending | **Recommended, not bundled.** Auto-opens `Home.md` on startup (ADR-13). `Home.md` ships at vault root; the auto-open plugin is an optional post-clone install. |
 
 ## How to use this ledger
 

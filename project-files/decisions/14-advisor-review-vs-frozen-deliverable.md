@@ -35,7 +35,7 @@ An **advisor-review export** — a live-citation `.docx`/`.odt` carrying editabl
 is a **separate, explicitly non-deliverable working artifact.** It does **not** live in
 `50-deliverables/`, is not subject to the "never edit in place" rule, and is regenerated from
 the same draft whenever a new round is needed. The routes and their failure modes are
-documented in [export-targets.md](../../how-to/workflows/downstream/export-targets.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/export-targets.md -->; the
+documented in [export a draft](../../docs/how-to-guides/writing/export-a-draft.md); the
 human chooses the target editor **before drafting**.
 
 ## Consequences
@@ -66,6 +66,6 @@ not reimplement citation-field injection.
 
 ## Related
 
-- **Workflows affected:** [export-targets.md](../../how-to/workflows/downstream/export-targets.md) <!-- TODO: reorg link — no unique new target for how-to/workflows/downstream/export-targets.md --> (companion how-to, added with this ADR), [export.md](../../docs/reference/export.md) (the existing static path)
+- **Workflows affected:** [export a draft](../../docs/how-to-guides/writing/export-a-draft.md) (companion how-to, added with this ADR), [export.md](../../docs/reference/export.md) (the existing static path)
 - **Files affected:** the `deliverable` note type — [note-types.md](../../docs/reference/note-types.md)
 - **Profiles:** [Coder](../../docs/explanation/profiles/coder.md) runs the Pandoc mechanics

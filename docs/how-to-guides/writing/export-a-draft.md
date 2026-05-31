@@ -124,7 +124,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 
 ## Known issues
 
-- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [failure-modes](../../how-to-guides/recovery/) — "Pandoc + BBT DOCX corrupt."
+- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [failure-modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
 - **Obsidian wiki-links in draft:** Pandoc does not understand `[[wikilink]]` syntax. Convert links to standard Markdown `[text](path)` before export, or use a Pandoc Lua filter.
 
 ## Verify

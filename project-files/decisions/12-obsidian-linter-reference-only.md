@@ -13,11 +13,11 @@ superseded_by: []
 
 ## Context
 
-The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdown formatter — superficially aligned with Memoria's "bookkeeping, not intelligence" thesis, and previously carried in the `recommended/` plugin set with a carefully de-fanged config (agent/canonical folders excluded, frontmatter timestamp/insert/remove rules off, schema-aligned key sort, no HTML-comment rules). The question is whether a vault that already runs the **Memoria Linter** (deterministic structural validation under the Policy MCP, with an audit trail) and **markdownlint** (Markdown hygiene) should also ship a third formatter. Two prior commitments frame it: the Policy MCP makes every canonical write audited and hash-chained, and frontmatter has a single declared authority ([frontmatter-schema.md](../../reference/frontmatter-schema.md) <!-- TODO: reorg link — no unique new target for reference/frontmatter-schema.md -->).
+The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdown formatter — superficially aligned with Memoria's "bookkeeping, not intelligence" thesis, and previously carried in the `recommended/` plugin set with a carefully de-fanged config (agent/canonical folders excluded, frontmatter timestamp/insert/remove rules off, schema-aligned key sort, no HTML-comment rules). The question is whether a vault that already runs the **Memoria Linter** (deterministic structural validation under the Policy MCP, with an audit trail) and **markdownlint** (Markdown hygiene) should also ship a third formatter. Two prior commitments frame it: the Policy MCP makes every canonical write audited and hash-chained, and frontmatter has a single declared authority ([frontmatter.md](../../docs/reference/frontmatter.md)).
 
 ## Decision
 
-Memoria treats obsidian-linter as **reference-only**: documented for the record, **not installed and not recommended**. It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved in [obsidian-plugins/reference/obsidian-linter.md](../rejected/obsidian-linter.md) in case a human chooses to run it anyway or the decision is revisited.
+Memoria treats obsidian-linter as **reference-only**: documented for the record, **not installed and not recommended**. It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved in [obsidian-linter.md](../rejected/obsidian-linter.md) in case a human chooses to run it anyway or the decision is revisited.
 
 ## Consequences
 
@@ -37,7 +37,7 @@ Memoria treats obsidian-linter as **reference-only**: documented for the record,
 
 ## Related
 
-- **Files affected:** [obsidian-plugins/reference/obsidian-linter.md](../rejected/obsidian-linter.md) (moved from `recommended/`), [plugins.md](../../docs/reference/plugins.md) (recommended 11→10, reference 3→4).
+- **Files affected:** [obsidian-linter.md](../rejected/obsidian-linter.md) (moved from `recommended/` to `rejected/`), [plugins.md](../../docs/reference/plugins.md) (recommended 11→10, reference 3→4).
 - **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) — owns the formatting/validation concern obsidian-linter would otherwise touch.
 - **Related decisions:** the frontmatter namespace discipline this protects ([frontmatter.md](../../docs/reference/frontmatter.md)).
 - **Source discussion:** the control-plane-authority analysis — a deterministic tool still fails the architecture if it writes outside the Policy MCP / audit trail.

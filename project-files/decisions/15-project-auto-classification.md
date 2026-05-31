@@ -90,4 +90,4 @@ explicit and auditable.
 - **Profile:** [Librarian](../../docs/explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
 - **Schema:** [frontmatter.md](../../docs/reference/frontmatter.md) (`projects`, `_proposed_classification`).
 - **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../../docs/reference/frontmatter.md#controlled-vocabularies); a project hint is not a controlled vocabulary.
-- **Worked vocabulary example:** [vocabulary-example.md](../../reference/vocabulary-example.md) <!-- TODO: reorg link — no unique new target for reference/vocabulary-example.md --> references this ADR for the project-hints linkage.
+- **Worked vocabulary example:** the worked vocabulary example references this ADR for the project-hints linkage.
