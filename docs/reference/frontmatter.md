@@ -7,7 +7,7 @@ parent: Reference
 
 Every YAML field Memoria uses, its type, allowed values, who owns it, and which note types carry it. For the field-namespace model see [Namespace ownership](#namespace-ownership). For per-type lifecycle refinements see [note-types.md](note-types.md).
 
-**Precedence.** When a runtime template (`00-meta/03-templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, [implementation-status.md](../../project-files/operations/implementation-status.md) tracks build state.
+**Precedence.** When a runtime template (`00-meta/03-templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, [implementation-status.md](../../project-files/plans/implementation-status.md) tracks build state.
 
 ---
 

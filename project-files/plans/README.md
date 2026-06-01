@@ -1,6 +1,6 @@
-# Operations
+# Plans
 
-Project logistics: what's built, what to do next, and how to run the system.
+Forward-looking project logistics: the release gate, current build state, and the timeline to production use.
 
 | File | What it covers |
 |---|---|

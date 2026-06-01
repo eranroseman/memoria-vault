@@ -18,7 +18,7 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 
 **1. Open the palette and confirm the Memoria commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Mem`. Two commands ship pre-wired in the starter vault: `Memoria: capture fleeting` and `Memoria: write claim note` (both backed by Templater templates). The remaining commands in the catalog are not yet wired — they require QuickAdd Macros and user scripts that POST to the Hermes API, which are tracked as a build gap (see [implementation-status.md](../../../project-files/operations/implementation-status.md)). Add the ones you need per step 2.
+`Cmd-P` (or `Ctrl-P`) → type `Mem`. Two commands ship pre-wired in the starter vault: `Memoria: capture fleeting` and `Memoria: write claim note` (both backed by Templater templates). The remaining commands in the catalog are not yet wired — they require QuickAdd Macros and user scripts that POST to the Hermes API, which are tracked as a build gap (see [implementation-status.md](../../../project-files/plans/implementation-status.md)). Add the ones you need per step 2.
 
 **2. Create a QuickAdd entry for each command you use.**
 
