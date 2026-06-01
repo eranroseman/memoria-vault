@@ -2,6 +2,7 @@
 title: How-to guides
 nav_order: 3
 has_children: true
+permalink: /how-to-guides/
 ---
 
 # How-to guides
