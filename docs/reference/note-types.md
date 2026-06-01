@@ -1,6 +1,6 @@
 # Note types
 
-The 15 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/vault/](../explanation/architecture/vault.md).
+The 15 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).
 
 ---
 
@@ -100,3 +100,10 @@ Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim note
 ## Template locations
 
 Templates ship at `00-meta/03-templates/<type>.md`. The Templater plugin reads them; QuickAdd commands invoke them. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
+
+---
+
+## Related
+
+- The conceptual model behind the types: [note-types.md](../explanation/knowledge/note-types.md)
+- The promotion rules referenced here: [promotion-model.md](../explanation/knowledge/promotion-model.md)

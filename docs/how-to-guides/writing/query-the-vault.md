@@ -75,3 +75,5 @@ Same result, different surface.
 
 - Promote to claim note: [write-a-claim-note.md](../sources/write-a-claim-note.md)
 - Weekly review (step 2 — unreviewed synthesis): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
+- The profile running the query: [writer.md](../../explanation/profiles/writer.md)
+- Query vs Socratic discussion: [socratic.md](../../explanation/profiles/socratic.md)

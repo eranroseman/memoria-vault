@@ -83,3 +83,10 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 ## Export gate
 
 A `deliverable` note is `current` immediately on creation; it is never edited after creation (terminal). Promotion into `50-deliverables/` is a review-gated zone write — human-gated; agents can only write there in `dry_run` mode.
+
+---
+
+## Related
+
+- The export how-to: [export-a-draft.md](../how-to-guides/writing/export-a-draft.md)
+- The bibliography rendering depends on: [bibliography.md](bibliography.md)

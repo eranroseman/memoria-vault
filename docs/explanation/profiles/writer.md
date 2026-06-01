@@ -34,3 +34,4 @@ The Writer turns evidence into structured prose — answer drafts, reference-rea
 - The profile that provides Writer's corpus maps: [Mapper](mapper.md)
 - Workflows: [draft with the Writer](../../how-to-guides/writing/draft-with-writer.md), [frame a project](../../how-to-guides/writing/frame-a-project.md)
 - Why canonical synthesis belongs to the human: [why not autonomous](../architecture/why-not-autonomous.md)
+- Why the Writer must not produce canonical claims: [note-body-structure.md](../knowledge/note-body-structure.md)

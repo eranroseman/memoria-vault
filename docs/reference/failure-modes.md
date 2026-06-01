@@ -51,3 +51,10 @@ When multiple failures occur simultaneously:
 3. HIGH that's visible — active breakage with obvious symptoms.
 4. MEDIUM — address during the weekly review ritual.
 5. LOW — batch and address monthly.
+
+---
+
+## Related
+
+- The recovery how-to guides: [recovery/README.md](../how-to-guides/recovery/README.md)
+- Why the CRITICAL self-review failure can't happen: [why-human-gate.md](../explanation/architecture/why-human-gate.md)

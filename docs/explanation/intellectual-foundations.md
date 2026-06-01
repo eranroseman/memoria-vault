@@ -87,3 +87,4 @@ The design is not a novel invention — it is an integration of patterns that al
 - The three-layer architecture (structural form of thin-control-thick-state): [architecture/README.md](architecture/README.md)
 - Why the autonomy boundary is where it is: [architecture/why-not-autonomous.md](architecture/why-not-autonomous.md)
 - Full borrow/adapt/ignore breakdown: [architecture/why-pattern-provenance.md](architecture/why-pattern-provenance.md)
+- What the foundations produced: [design-principles.md](design-principles.md)

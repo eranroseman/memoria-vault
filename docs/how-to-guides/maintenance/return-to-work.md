@@ -52,3 +52,5 @@ See [safe-mode.md](../recovery/safe-mode.md) — the three core workflows (inges
 - Safe mode (when tools are broken): [recovery/safe-mode.md](../recovery/safe-mode.md)
 - Rebuild search index: [rebuild-the-search-index.md](rebuild-the-search-index.md)
 - Fix a stale .bib: [recovery/fix-stale-bib.md](../recovery/fix-stale-bib.md)
+- Reinstall missing profiles: [set-up-hermes.md](../setup/set-up-hermes.md)
+- The comprehensive failure catalog: [failure-modes.md](../../reference/failure-modes.md)

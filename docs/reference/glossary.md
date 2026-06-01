@@ -122,3 +122,12 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 **Verify stage** — downstream stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
 
 **Revise stage** — downstream stage between verify and export. Human addresses verification findings until the verify→revise loop closes.
+
+---
+
+## Related
+
+- Frontmatter fields these terms name: [frontmatter.md](frontmatter.md)
+- The note types referenced throughout: [note-types.md](note-types.md)
+- Lane and profile terms: [profiles.md](profiles.md)
+- Board and review-overlay terms: [kanban-board.md](kanban-board.md)

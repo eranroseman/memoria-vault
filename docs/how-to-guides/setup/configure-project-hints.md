@@ -60,3 +60,4 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 - Where the proposed project is confirmed: [Classify a source](../sources/classify-a-source.md)
 - Topic vocabulary discipline: [linking.md — Vocabulary discipline](../../reference/linking.md#vocabulary-discipline)
 - The profile that reads it: [The Librarian](../../explanation/profiles/librarian.md)
+- The ~30-term topic vocabulary discipline: [vocabulary-discipline.md](../../explanation/knowledge/vocabulary-discipline.md)

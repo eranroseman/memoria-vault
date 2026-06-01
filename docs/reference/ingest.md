@@ -73,3 +73,10 @@ Fields the Librarian populates on the new note at creation:
 | `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
 For the step-by-step ingest procedure see [how-to-guides/sources/capture-and-ingest.md](../how-to-guides/sources/capture-and-ingest.md).
+
+---
+
+## Related
+
+- The profile running the pipeline: [librarian.md](../explanation/profiles/librarian.md)
+- The note types routing dispatches to: [note-types.md](../explanation/knowledge/note-types.md)

@@ -118,3 +118,10 @@ The handoff payload is **forward-looking**: it provisions the *next* worker with
 | `dispatch_in_gateway` | `true` | Dispatcher runs in the Hermes gateway process. |
 | `dispatch_interval_seconds` | `60` | Dispatcher polls every 60 seconds. Mandated Memoria default. |
 | Retry threshold | `max_retries: 3` (default) | After 3 recoverable failures, card moves to `blocked`. Per-lane configurable. |
+
+---
+
+## Related
+
+- The review-overlay explanation: [review-as-state.md](../explanation/workflows/review-as-state.md)
+- Recovering stuck cards: [fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)

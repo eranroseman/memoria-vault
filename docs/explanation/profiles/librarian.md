@@ -35,3 +35,5 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 - Directional counterpart on retrieval: [Mapper](mapper.md)
 - Workflows the Librarian drives: [capture and ingest](../../how-to-guides/sources/capture-and-ingest.md), [find new sources](../../how-to-guides/sources/find-new-sources.md)
 - Why intake is separated from synthesis: [why specialist profiles](../architecture/why-specialist-profiles.md)
+- External APIs the Librarian calls: [integrations.md](../../reference/integrations.md)
+- The ingest routing and enrichment table: [ingest.md](../../reference/ingest.md)

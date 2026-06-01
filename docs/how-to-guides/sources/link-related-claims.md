@@ -60,3 +60,4 @@ For a `contradicts` link, open the [contradictions dashboard](../../explanation/
 - Syntax and vocabulary: [linking.md — Typed relations](../../reference/linking.md#typed-relations-relations-block), [frontmatter.md](../../reference/frontmatter.md)
 - Why typed links are human-set and opt-in: [ADR-08](../../../project-files/decisions/08-typed-relations-frontmatter.md)
 - The consumer: [contradictions dashboard](../../explanation/dashboards/contradictions.md)
+- Why the Connections section is required: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)

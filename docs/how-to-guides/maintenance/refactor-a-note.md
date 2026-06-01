@@ -44,3 +44,12 @@ The Verifier returns pairs with similarity scores. It never auto-merges.
 ## Owners
 
 The Verifier surfaces candidates. You make every structural decision — merge, split, or leave.
+
+---
+
+## Related
+
+- The compound-note failure refactoring fixes: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
+- The note structure you are refactoring toward: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
+- Note types and their boundaries: [note-types.md](../../explanation/knowledge/note-types.md)
+- Run the Linter after structural edits: [run-the-linter.md](run-the-linter.md)

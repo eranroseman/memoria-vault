@@ -69,3 +69,5 @@ Review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30
 - How the worker layer is structured: [why-specialist-profiles.md](why-specialist-profiles.md)
 - Why the vault's review gate is structural: [why-human-gate.md](why-human-gate.md)
 - How the knowledge model is organized: [../knowledge/README.md](../knowledge/README.md)
+- The guard layer in detail: [policy-mcp.md](../../reference/policy-mcp.md)
+- The thick-state substrate: [memory.md](../../reference/memory.md)

@@ -33,3 +33,5 @@ The Verifier interrupts the publish-then-regret loop. It traces every substantiv
 - The structural counterpart: [Linter](linter.md)
 - The profile that handles gaps Verifier surfaces: [Librarian](librarian.md)
 - Workflow: [verify and revise a draft](../../how-to-guides/writing/verify-and-revise.md)
+- How gap cards close the ingest loop: [ingest.md](../../reference/ingest.md)
+- The failure mode the Verifier catches: [common-pitfalls.md](../knowledge/common-pitfalls.md)

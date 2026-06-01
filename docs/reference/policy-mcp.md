@@ -230,3 +230,4 @@ An unexpected `deny` is a Memoria-side question: check the lane-override YAML, t
 - Why the gate is structural: [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md)
 - Profile permission tables: [profiles.md](profiles.md)
 - Audit log substrate and rotation: [memory.md](memory.md)
+- The guard layer in the three-layer model: [why-three-layers.md](../explanation/architecture/why-three-layers.md)

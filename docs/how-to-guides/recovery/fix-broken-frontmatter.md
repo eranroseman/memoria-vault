@@ -78,3 +78,4 @@ If Obsidian re-introduces the error after saving, a plugin or Obsidian's Propert
 - Why the frontend Obsidian Linter is incompatible: [set-up-obsidian.md § Step 7](../setup/set-up-obsidian.md)
 - Frontmatter schema reference: [frontmatter.md](../../reference/frontmatter.md)
 - Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)
+- Related YAML-corruption pitfalls: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)

@@ -74,3 +74,4 @@ The Verifier will not flag accepted gaps on subsequent commits.
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
+- Conceptual background on the Verifier: [verifier.md](../../explanation/profiles/verifier.md)

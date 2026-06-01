@@ -112,3 +112,10 @@ This makes the architecture more reliable (errors surface at stage gates), easie
 **Runtime and orchestration substrates:** AutoGen (Wu et al. 2023), OpenHands (Wang et al. 2025), CycleResearcher (Weng et al. 2025).
 
 **Surveys, positions, and evaluations:** Gridach et al. (ICLR 2025), Chen 2026 (*From Copilots to Colleagues*), Huang et al. 2025 (*Deep Research Agents*), Ren et al. 2025 (*Scientific Intelligence*), Xu & Peng 2025 (*Deep Research Systems*), MASSW (Zhang et al. 2024), Qi et al. 2023, Bisht et al. 2026 (*Not built for autonomous discovery*), Feng & Liu 2026 (*Vibe Researching*), Yue et al. 2026 (*MCP-native ecosystems*), Zhang et al. 2026 (*How Far Are We From True Auto-Research*), AutoResearchBench (Xiong et al. 2026).
+
+---
+
+## Related
+
+- The principles this survey operationalizes: [design-principles.md](../design-principles.md)
+- What Memoria is, in system terms: [what-memoria-is.md](../what-memoria-is.md)

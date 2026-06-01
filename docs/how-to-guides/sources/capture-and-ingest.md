@@ -72,3 +72,4 @@ For multiple sources, run `/obsidian-paper-note --source <citekey>` once per sou
 - Ingest reference (routing table, per-type enrichment): [ingest.md](../../reference/ingest.md)
 - If the citekey isn't found: [Fix a stale .bib](../recovery/fix-stale-bib.md)
 - Source types and note formats: [reference/note-types.md](../../reference/note-types.md)
+- Pin the citekey (step 2): [pin-a-citekey.md](pin-a-citekey.md)

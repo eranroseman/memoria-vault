@@ -142,3 +142,12 @@ The `topic`, `study_design`, and `methods` fields are open — Memoria does not 
 | All others | Descriptive kebab-case | `ema-best-practices` |
 
 Slugs are permanent — renaming a note breaks all wikilinks pointing to the old slug. Rename sparingly and run the Linter's `graph-analyze` check after any rename.
+
+---
+
+## Related
+
+- Why the Connections section is load-bearing: [note-body-structure.md](../explanation/knowledge/note-body-structure.md)
+- Why notes are filed by lifecycle, not topic: [lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)
+- How links keep the vault compounding: [knowledge-cycle.md](../explanation/knowledge/knowledge-cycle.md)
+- How-to for setting typed relations: [link-related-claims.md](../how-to-guides/sources/link-related-claims.md)

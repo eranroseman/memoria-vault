@@ -35,3 +35,10 @@ This is why pinning before ingest is the discipline: changes after wikilinks exi
 Memoria expects the BBT key format: `auth.lower + year + shorttitle(1,0)`
 
 This produces `mamykina2010sense`, `chen2021pipeline`, `klasnja2019microrandomized`. Confirm this is your BBT setting under **Edit → Preferences → Better BibTeX → Citation keys → Citation key formula**.
+
+---
+
+## Related
+
+- The unpinned-citekey pitfall this fixes: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
+- Pinning is step 2 of ingest: [capture-and-ingest.md](capture-and-ingest.md)

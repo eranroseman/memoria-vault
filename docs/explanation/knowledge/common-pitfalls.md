@@ -53,3 +53,12 @@ The failures above share a root, and naming it directly is the best defense. A r
 Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Classification promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the human. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate exists to prevent.
 
 For the explicit mapping of tasks to their appropriate owner, see [reference/profiles.md](../../reference/profiles.md).
+
+---
+
+## Related
+
+- The fix for compound notes: [refactor-a-note.md](../../how-to-guides/maintenance/refactor-a-note.md)
+- Catching unverified agent output: [run-a-retraction-sweep.md](../../how-to-guides/maintenance/run-a-retraction-sweep.md)
+- Why promotion is gated: [promotion-model.md](promotion-model.md)
+- Lane permissions referenced here: [profiles.md](../../reference/profiles.md)

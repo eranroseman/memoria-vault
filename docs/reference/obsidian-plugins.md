@@ -153,3 +153,9 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `data.json` edits | Only edit while Obsidian is not running; Obsidian overwrites it on every settings change. |
 | `main.js` / `styles.css` / `manifest.json` | **Committed.** The starter vault ships every required plugin pre-installed, so the plugin build files are part of the distribution and are tracked in git. Do not add them to `.gitignore`. |
 | Private `data.json` | Any plugin `data.json` that holds secrets or per-machine data is **gitignored and ships as `data.json.example`**. Two qualify: `obsidian-local-rest-api/data.json` (apiKey + TLS cert + RSA private key, regenerated on first launch) and `agent-client/data.json` (per-machine agent command paths + any provider apiKeys). Every other plugin's `data.json` carries no private data and is committed, configured to spec. Rule: a new secret-bearing config gets **both** a `.gitignore` line and a `.example` sibling. |
+
+---
+
+## Related
+
+- How a new user enables these plugins: [quickstart.md](../how-to-guides/setup/quickstart.md)

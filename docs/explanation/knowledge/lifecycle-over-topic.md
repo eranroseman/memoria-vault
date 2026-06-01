@@ -75,3 +75,5 @@ Putting topics in links rather than folders is itself a **Zettelkasten** inherit
 - What the stages mean for note types: [note-types.md](note-types.md)
 - How notes move between stages: [promotion-model.md](promotion-model.md)
 - How agent permissions map to stages: [../architecture/why-specialist-profiles.md](../architecture/why-specialist-profiles.md)
+- The folders this rationale structures: [vault.md](../architecture/vault.md)
+- The frontmatter fields involved: [frontmatter.md](../../reference/frontmatter.md)

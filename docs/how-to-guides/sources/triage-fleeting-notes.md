@@ -59,3 +59,5 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 - Weekly review (step 2 — unreviewed synthesis): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
 - Messaging gateway (how fleeting notes arrive): [set-up-messaging.md](../setup/set-up-messaging.md)
 - Note types: [reference/note-types.md](../../reference/note-types.md)
+- The fleeting note's role: [note-types.md](../../explanation/knowledge/note-types.md)
+- Triage as the first promotion decision: [promotion-model.md](../../explanation/knowledge/promotion-model.md)

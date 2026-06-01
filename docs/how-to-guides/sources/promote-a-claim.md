@@ -56,3 +56,5 @@ If no MOC exists yet and this is the third or fourth note on this topic, conside
 - Previous step: [Write a claim note](write-a-claim-note.md) (maturity accumulates there)
 - Weekly review (step 5 — promote evergreen claims): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
 - MOC creation thresholds: [linking.md](../../reference/linking.md#moc-thresholds)
+- The rules promotion enforces: [promotion-model.md](../../explanation/knowledge/promotion-model.md)
+- Add the MOC entry (step 5): [build-a-moc.md](../maintenance/build-a-moc.md)

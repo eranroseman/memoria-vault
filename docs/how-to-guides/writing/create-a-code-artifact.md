@@ -79,3 +79,5 @@ git commit -m "code: figure-3 receptivity curve — <project-slug>"
 
 - Coder profile design: [explanation/profiles/coder.md](../../explanation/profiles/coder.md)
 - ADR-07 (external coding agent boundary): [07-code-agent-attachment.md](../../../project-files/decisions/07-code-agent-attachment.md)
+- Why code is a research output (principle 8): [design-principles.md](../../explanation/design-principles.md)
+- The Coder autonomous-loop exception: [why-not-autonomous.md](../../explanation/architecture/why-not-autonomous.md)

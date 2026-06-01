@@ -44,3 +44,12 @@ Open the canvas in a split pane. Draft section by section from the outline, citi
 ## When a canvas gap can't be filled
 
 If a text card can't be grounded in a claim note, either soften the outline claim or queue the missing source via `Cmd+P → Memoria: capture source from URL`. See [find-new-sources.md](../sources/find-new-sources.md) for the full candidate triage flow.
+
+---
+
+## Related
+
+- Drafting from a committed outline: [draft-with-writer.md](draft-with-writer.md)
+- Producing the outline the canvas maps: [frame-a-project.md](frame-a-project.md)
+- Triage candidates for gaps the canvas exposes: [find-new-sources.md](../sources/find-new-sources.md)
+- Why claim notes (not canvas cards) are the knowledge unit: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)

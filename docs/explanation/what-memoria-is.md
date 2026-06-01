@@ -77,3 +77,5 @@ Two 2026 perspectives anchor this positioning. [Feng and Liu 2026](../reference/
 - The three-layer architecture: [architecture/README.md](architecture/README.md)
 - Why the human gate is structural: [architecture/why-human-gate.md](architecture/why-human-gate.md)
 - Why L3 is the ceiling: [architecture/why-not-autonomous.md](architecture/why-not-autonomous.md)
+- The principles this framing produces: [design-principles.md](design-principles.md)
+- Term lookup for the jargon used here: [glossary.md](../reference/glossary.md)

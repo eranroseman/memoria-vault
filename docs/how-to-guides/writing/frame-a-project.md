@@ -55,3 +55,5 @@ The `CHOSEN.md` file is required before the project card can advance to drafting
 
 - Previous step: [Assess your corpus](assess-your-corpus.md)
 - Next step: [Draft with the Writer](draft-with-writer.md)
+- Socratic lens-reading and write-denial: [socratic.md](../../explanation/profiles/socratic.md)
+- The Writer's counter-outline: [writer.md](../../explanation/profiles/writer.md)

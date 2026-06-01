@@ -44,3 +44,10 @@ The default state — nothing to review, everything healthy — should produce a
 Sort direction follows the decision type. Queues sort oldest-first because the oldest unreviewed item has waited the longest and should be acted on first. Logs sort newest-first because the most recent event is most actionable — investigating a log means starting from what just happened.
 
 When a dependency is missing (a plugin not installed, a log file not yet created, fleet volume too low for meaningful statistics), dashboards show explanatory text rather than an error or a blank table. The graceful degradation is intentional: a new vault should not look broken just because data is still accumulating.
+
+---
+
+## Related
+
+- How to operate the dashboards: [navigate-the-dashboards.md](../../how-to-guides/interface/navigate-the-dashboards.md)
+- The primary weekly entry point: [run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md)

@@ -162,3 +162,9 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 | `CRITICAL` | System integrity at risk. Blocks dispatch until acknowledged. | Always pushed to Telegram. |
 
 **Verdict band rollup:** `PASS` if no HIGH or CRITICAL findings. `REVIEW` if any MEDIUM but no HIGH. `FAIL` if any HIGH or CRITICAL.
+
+---
+
+## Related
+
+- Conceptual grouping and rationale: [profiles/README.md](../explanation/profiles/README.md)

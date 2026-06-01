@@ -88,3 +88,5 @@ A scheduled metrics aggregator rolls run history into `00-meta/08-metrics/` note
 - Dashboard that reads the board export: [dashboards/board-state](../dashboards/board-state.md)
 - Why review is structural: [architecture/why-human-gate](../architecture/why-human-gate.md)
 - Profiles that interact with the board: [profiles/README.md](../profiles/README.md)
+- Pipelines that run on the board: [workflows/README.md](../workflows/README.md)
+- The board as control plane: [why-three-layers.md](../architecture/why-three-layers.md)

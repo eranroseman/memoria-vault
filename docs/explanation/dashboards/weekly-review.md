@@ -33,3 +33,5 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 - Reading-stage companion: [reading-pipeline](reading-pipeline.md)
 - Structural drift companion: `drift-watch`
 - How to run the ritual: [run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- Why the ritual matters: [knowledge-cycle.md](../knowledge/knowledge-cycle.md)
+- The dashboards overview: [README.md](README.md)

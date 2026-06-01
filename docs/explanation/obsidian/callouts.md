@@ -40,3 +40,10 @@ Each callout is written once by the producing agent and then owned by the human.
 The collapsed/expanded default follows the volume of the callout type. `[!suggestions]` starts collapsed because it contains a list of candidate links — seeing a wall of suggestions encourages rubber-stamping rather than review. `[!brief]` and `[!verification]` start expanded because they provide one-shot context that is always relevant when the note is open.
 
 Callout writes pass through the policy MCP like any other vault write — logged, hashed, and reversible from the audit log. This means the callout mechanism cannot be used to bypass the review gate, and the audit trail captures when and by whom each callout was written.
+
+---
+
+## Related
+
+- The hybrid pattern behind callouts: [why-computational-methods.md](../architecture/why-computational-methods.md)
+- Callout field reference: [obsidian-callouts.md](../../reference/obsidian-callouts.md)

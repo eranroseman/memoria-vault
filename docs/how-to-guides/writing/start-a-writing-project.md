@@ -80,3 +80,4 @@ Open `01-corpus-map/corpus-map.md`. If there are major gaps (a claim you need bu
 
 - Next step: [Draft with the Writer](draft-with-writer.md)
 - The rest of the downstream pipeline: [Assess your corpus](assess-your-corpus.md) → [Frame a project](frame-a-project.md) → [Draft with the Writer](draft-with-writer.md)
+- The workbench subfolder structure: [vault.md](../../explanation/architecture/vault.md)

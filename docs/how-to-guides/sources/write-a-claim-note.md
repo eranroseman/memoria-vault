@@ -99,3 +99,5 @@ The Writer can suggest links to existing claim notes but cannot author the claim
 - When the claim reaches `evergreen`: [Promote a claim](promote-a-claim.md)
 - Linking patterns: [linking.md](../../reference/linking.md)
 - Frontmatter schema: [frontmatter.md](../../reference/frontmatter.md)
+- Why each section functions as knowledge: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
+- The summary-without-synthesis pitfall: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)

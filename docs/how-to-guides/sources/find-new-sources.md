@@ -62,3 +62,4 @@ Don't leave candidates undecided indefinitely. The weekly review surfaces the co
 - Gap candidates from Verify also land here: [Verify and revise a draft](../writing/verify-and-revise.md)
 - Weekly review (step 3 — process discovery candidates): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
 - Pre-ingest screening (now part of adopt-on-demand): [ADR-16](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)
+- The profile running the find: [librarian.md](../../explanation/profiles/librarian.md)
