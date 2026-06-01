@@ -1,5 +1,5 @@
 ---
-title: Linter: detectors and auto-fix
+title: "Linter: detectors and auto-fix"
 parent: Reference
 ---
 

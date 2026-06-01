@@ -75,6 +75,21 @@ def check_frontmatter(md: Path, errors: list[str]) -> None:
     for key in DROPPED_KEYS:
         if re.search(rf"^{key}\s*:", block, re.MULTILINE):
             errors.append(f"{md}: frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
+    # Unquoted colon-space in a scalar value breaks Jekyll's YAML loader, which
+    # silently drops the page from the nav (it parses as a nested mapping).
+    # e.g.  title: Linter: detectors  →  must be  title: "Linter: detectors"
+    for ln in block.split("\n"):
+        m2 = re.match(r"^(\w[\w-]*):\s+(.*)$", ln)
+        if not m2:
+            continue
+        value = m2.group(2).strip()
+        if value.startswith(('"', "'")):
+            continue  # already quoted — safe
+        if re.search(r":\s", value):
+            errors.append(
+                f"{md}: frontmatter value for '{m2.group(1)}:' contains an unquoted "
+                f"colon — quote it (\"{value}\") or Jekyll drops the page from the nav"
+            )
 
 
 _slug_cache: dict[Path, set[str]] = {}
