@@ -4,7 +4,7 @@
 Profile permissions and lane scopes are not just documentation; they are
 enforced here. Every vault action goes through ``check_permission`` and gets
 one of four decisions -- ``allow`` / ``allow_with_log`` / ``deny`` / ``dry_run``
--- per the contract in docs/reference/policy.md.
+-- per the contract in docs/reference/policy-mcp.md.
 
 Design (mirrors .memoria/profiles/memoria-linter/detectors.py): a dependency-
 light, unit-testable *core* (the decision engine, the glob matcher, the SHA-256
