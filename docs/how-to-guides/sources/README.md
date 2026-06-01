@@ -1,6 +1,7 @@
 ---
 title: Sources
 parent: How-to guides
+nav_order: 4
 has_children: true
 permalink: /how-to-guides/sources/
 ---

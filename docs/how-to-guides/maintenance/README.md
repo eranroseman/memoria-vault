@@ -1,6 +1,7 @@
 ---
 title: Maintenance
 parent: How-to guides
+nav_order: 6
 has_children: true
 permalink: /how-to-guides/maintenance/
 ---

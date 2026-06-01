@@ -1,6 +1,7 @@
 ---
 title: Setup
 parent: How-to guides
+nav_order: 1
 has_children: true
 permalink: /how-to-guides/setup/
 ---

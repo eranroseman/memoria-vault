@@ -1,6 +1,7 @@
 ---
 title: Using Hermes Agent
 parent: How-to guides
+nav_order: 3
 has_children: true
 permalink: /how-to-guides/using-hermes-agent/
 ---
