@@ -1,7 +1,7 @@
 profile: memoria-socratic
 
 # Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
-# See project-files/proposals/bootstrap-installer.md § skills.
+# See https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/installer.md § skills.
 # ARCHITECTURAL NOTE: Socratic is hard write-denied across the entire vault.
 # policy.allow.write: [] is load-bearing — do not add write paths.
 # routing.invocation: interactive_only prevents queue dispatch.

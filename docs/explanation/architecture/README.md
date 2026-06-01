@@ -84,6 +84,7 @@ The pages here come in three kinds: **rationale** (`why-*` — a design choice a
 - **[memory-tiers.md](memory-tiers.md)** — the six memory substrates and their scopes.
 - **[human-channels.md](human-channels.md)** — the human interaction surfaces (Obsidian, CLI, Telegram).
 - **[distribution-model.md](distribution-model.md)** — how profiles and the vault are packaged and installed.
+- **[bootstrap-installer.md](bootstrap-installer.md)** — the one-command installer's design and decided rules (WSL2-only, one bash implementation, inspect-first). Inventories live in [reference/installer.md](../../reference/installer.md).
 - **[vault.md](vault.md)** — the vault as a knowledge structure (lifecycle folders, promotion overview).
 - **[session-logging.md](session-logging.md)** — what each agent session records, and why one file per session.
 
