@@ -5,11 +5,13 @@ on:
     paths:
       - "install.sh"
       - "install.ps1"
+      - "PSScriptAnalyzerSettings.psd1"
       - ".github/workflows/lint-installers.yml"
   pull_request:
     paths:
       - "install.sh"
       - "install.ps1"
+      - "PSScriptAnalyzerSettings.psd1"
       - ".github/workflows/lint-installers.yml"
 
 jobs:
@@ -36,7 +38,7 @@ jobs:
       - name: Analyze install.ps1
         shell: pwsh
         run: |
-          $results = Invoke-ScriptAnalyzer -Path install.ps1 -Severity Warning,Error
+          $results = Invoke-ScriptAnalyzer -Path install.ps1 -Severity Warning,Error -Settings ./PSScriptAnalyzerSettings.psd1
           if ($results) {
             $results | Format-Table -AutoSize
             exit 1

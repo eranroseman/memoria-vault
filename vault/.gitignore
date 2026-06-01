@@ -28,6 +28,10 @@
 __pycache__/
 *.pyc
 
+# MCP server dependencies live in a vault-local venv the installer creates
+# (.memoria/.venv). Per-machine, regenerable, never committed.
+.memoria/.venv/
+
 # OS junk
 .DS_Store
 Thumbs.db

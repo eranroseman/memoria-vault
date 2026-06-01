@@ -67,6 +67,7 @@ ONLY=""
 REPO_DIR=""
 VAULT_PATH=""
 PYTHON=""
+VENV_PYTHON=""    # interpreter the MCP deps land in; wired into mcp.json/config.yaml at deploy
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
 
 # --- helpers -----------------------------------------------------------------
@@ -291,19 +292,44 @@ copy_vault() {
 # =============================================================================
 # Step 5 — MCP server dependencies
 # =============================================================================
+# Deps go into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
+# modern Ubuntu/Debian's PEP-668 "externally-managed-environment" pip block, keeps
+# Memoria's deps off the system site-packages, and gives a stable interpreter path
+# that install_profiles wires into mcp.json/config.yaml (see PYTHON_BIN below).
 install_mcp_deps() {
   hdr "MCP server dependencies"
   detect_python
   local reqs="$VAULT_PATH/.memoria/mcp/requirements.txt"
   # In --dry-run the vault was not actually copied, so reqs won't exist yet —
   # report what WOULD happen rather than a misleading "missing file" skip.
-  if [ "$DRY_RUN" -eq 1 ] && [ ! -f "$reqs" ]; then
-    warn "(dry-run) vault not copied yet; would pip install from $reqs"; return
+  if [ "$DRY_RUN" -eq 1 ]; then
+    VENV_PYTHON="$VAULT_PATH/.memoria/.venv/bin/python"
+    warn "(dry-run) would create venv at $VAULT_PATH/.memoria/.venv and pip install from $reqs"
+    return
   fi
   if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
-  if [ -z "$PYTHON" ]; then warn "No Python found — skipping MCP deps (install later: pip install -r $reqs)."; return; fi
-  run "$PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps failed."
-  ok "MCP dependencies installed"
+  if [ -z "$PYTHON" ]; then warn "No Python found — skipping MCP deps (install later into a venv)."; return; fi
+
+  local venv="$VAULT_PATH/.memoria/.venv"
+  # Create the venv if missing. If the stdlib venv module is unavailable (Debian
+  # splits it into python3-venv), fall back to a plain pip install and warn.
+  if [ ! -x "$venv/bin/python" ]; then
+    if "$PYTHON" -m venv "$venv" 2>/dev/null; then
+      ok "Created venv at $venv"
+    else
+      warn "Could not create a venv ('$PYTHON -m venv' failed — install python3-venv)."
+      warn "Falling back to: $PYTHON -m pip install --user -r $reqs"
+      run "$PYTHON" -m pip install --user --quiet -r "$reqs" \
+        || die "pip --user install failed. Install python3-venv, then re-run."
+      VENV_PYTHON="$PYTHON"   # runtime uses the same interpreter the deps landed in
+      ok "MCP dependencies installed (user site-packages)"
+      return
+    fi
+  fi
+  VENV_PYTHON="$venv/bin/python"
+  run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
+  run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
+  ok "MCP dependencies installed into $venv"
 }
 
 # =============================================================================
@@ -350,12 +376,22 @@ install_profiles() {
     say "  staging $p"
     dst="$staging/$p"
     run cp -R "$src" "$dst"
-    # Substitute {{VAULT_PATH}} in the files that reference the vault by absolute
+    # Substitute placeholders in the files that reference the vault by absolute
     # path: mcp.json (server commands) + config.yaml (policy-gate hook). POSIX
     # paths are already forward-slash, so no conversion is needed.
+    #   - python launcher -> the venv interpreter, so the policy server/hook import
+    #     mcp+PyYAML from where install_mcp_deps put them (not bare system python).
+    #   - {{VAULT_PATH}} -> the real vault path.
+    # The python swap runs FIRST and targets only the two launcher forms
+    # (mcp.json's "command": "python" and config.yaml's command: "python {{...}}"),
+    # so it never touches the word "python" elsewhere.
+    local pybin="${VENV_PYTHON:-python}"
     for fname in mcp.json config.yaml; do
       [ -f "$dst/$fname" ] || continue
-      run_sh "sed 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$dst/$fname\" > \"$dst/$fname.tmp\" && mv \"$dst/$fname.tmp\" \"$dst/$fname\""
+      run_sh "sed -e 's|\"command\": \"python\"|\"command\": \"$pybin\"|g' \
+                  -e 's|command: \"python |command: \"$pybin |g' \
+                  -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
+                  \"$dst/$fname\" > \"$dst/$fname.tmp\" && mv \"$dst/$fname.tmp\" \"$dst/$fname\""
     done
 
     say "  installing $p"
