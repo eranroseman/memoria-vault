@@ -19,6 +19,9 @@
 *.bib   text eol=lf
 *.canvas text eol=lf
 
+# Git hooks are extensionless shell scripts — a CRLF would break `#!/bin/sh`.
+.githooks/* text eol=lf
+
 # Windows launcher — PowerShell is fine with either, keep CRLF to match the OS.
 *.ps1   text eol=crlf
 
