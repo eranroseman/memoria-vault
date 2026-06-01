@@ -120,6 +120,7 @@ These checks are **required** by the branch ruleset and must all pass:
 | `shellcheck (install.sh)` | shell lint |
 | `PSScriptAnalyzer (install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` of the vault Python tooling (policy gate, board export, metrics, detectors) |
+| `docs-links` | every `docs/` reference under `vault/` resolves (Pages URLs map to a real doc; no banned blob URLs) — `scripts/check-vault-links.sh` |
 
 **CI invariant — do not break this:** a workflow that backs a *required* status
 check must **not** have a `paths:` filter. A path-filtered required check never
