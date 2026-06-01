@@ -1,3 +1,8 @@
+---
+title: The agent-client pane
+parent: Obsidian
+---
+
 # The agent-client pane
 
 The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile, and a picker — driven by its `customAgents` array — for switching which profile is active. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, why switching profiles clears the conversation, and why Memoria labels its profiles by identity rather than by action.

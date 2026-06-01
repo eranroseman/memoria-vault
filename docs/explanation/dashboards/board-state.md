@@ -1,3 +1,8 @@
+---
+title: The board-state dashboard
+parent: Dashboards
+---
+
 
 # The board-state dashboard
 

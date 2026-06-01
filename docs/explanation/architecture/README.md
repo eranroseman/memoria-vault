@@ -1,3 +1,10 @@
+---
+title: Architecture
+parent: Explanation
+has_children: true
+permalink: /explanation/architecture/
+---
+
 # Architecture
 
 Memoria has three layers — a Kanban board that orchestrates work, seven Hermes profiles that execute it, and an Obsidian vault that stores durable knowledge. The layers are connected through explicit handoffs but never collapsed into one.

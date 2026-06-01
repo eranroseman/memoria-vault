@@ -1,3 +1,8 @@
+---
+title: Linking
+parent: Reference
+---
+
 # Linking
 
 Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([note-body-structure.md](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([knowledge-cycle.md](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).

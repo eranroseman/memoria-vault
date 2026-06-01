@@ -1,3 +1,8 @@
+---
+title: How to run a retraction sweep
+parent: Maintenance
+---
+
 # How to run a retraction sweep
 
 This guide shows you how to identify papers in your vault that have been retracted, corrected, or flagged since you ingested them, and update any claim notes that cite them.

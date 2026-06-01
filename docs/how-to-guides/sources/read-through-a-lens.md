@@ -1,3 +1,8 @@
+---
+title: How to read a paper through a Socratic lens
+parent: Sources
+---
+
 
 # How to read a paper through a Socratic lens
 

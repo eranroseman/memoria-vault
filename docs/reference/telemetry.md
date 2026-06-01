@@ -1,3 +1,8 @@
+---
+title: Telemetry & logs
+parent: Reference
+---
+
 
 # Telemetry & logs
 

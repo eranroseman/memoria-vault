@@ -1,3 +1,8 @@
+---
+title: Obsidian plugins
+parent: Reference
+---
+
 # Obsidian plugins
 
 Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [zotero-plugins.md](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).

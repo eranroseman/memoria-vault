@@ -1,3 +1,8 @@
+---
+title: The Coder
+parent: Profiles
+---
+
 
 # The Coder
 

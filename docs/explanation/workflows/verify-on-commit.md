@@ -1,3 +1,8 @@
+---
+title: Verify-on-commit
+parent: Workflows
+---
+
 # Verify-on-commit
 
 Committing a draft to `40-workbench/<project>/04-drafts/` automatically creates a verification card in the Verifier's lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.

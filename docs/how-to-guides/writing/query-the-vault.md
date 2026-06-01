@@ -1,3 +1,8 @@
+---
+title: How to query the vault
+parent: Writing
+---
+
 
 # How to query the vault
 

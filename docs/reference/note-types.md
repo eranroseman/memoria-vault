@@ -1,3 +1,8 @@
+---
+title: Note types
+parent: Reference
+---
+
 # Note types
 
 The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).

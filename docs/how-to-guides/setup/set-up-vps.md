@@ -1,3 +1,8 @@
+---
+title: How to set up a VPS for always-on operation
+parent: Setup
+---
+
 # How to set up a VPS for always-on operation
 
 Move Hermes from local WSL2 to a persistent VPS so the system runs overnight batch jobs, handles scheduled tasks, and stays reachable from any device. This is the always-on deployment option.

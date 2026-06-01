@@ -1,3 +1,8 @@
+---
+title: "Tutorial 02: Your first note"
+parent: Tutorials
+---
+
 
 # Tutorial 02: Your first note
 

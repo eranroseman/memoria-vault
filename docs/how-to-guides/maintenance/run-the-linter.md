@@ -1,3 +1,8 @@
+---
+title: How to run the Linter
+parent: Maintenance
+---
+
 
 # How to run the Linter
 

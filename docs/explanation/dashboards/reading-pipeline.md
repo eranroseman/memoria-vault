@@ -1,3 +1,8 @@
+---
+title: The reading-pipeline dashboard
+parent: Dashboards
+---
+
 
 # The reading-pipeline dashboard
 

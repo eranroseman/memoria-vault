@@ -1,3 +1,8 @@
+---
+title: Bibliography
+parent: Reference
+---
+
 # Bibliography
 
 Works cited across the Memoria documentation. Formatted in ACM author-date style. In-text citations elsewhere in the docs (e.g. "Chen et al. 2026") link here.

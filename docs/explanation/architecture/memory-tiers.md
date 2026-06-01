@@ -1,3 +1,8 @@
+---
+title: Memory tiers
+parent: Architecture
+---
+
 # Memory tiers
 
 "Memory" in Memoria is not one thing. It operates across six substrates with different lifespans, backing stores, and owners. Confusing the scopes is the source of most "the agent forgot" and "the agent remembered something it shouldn't" problems.

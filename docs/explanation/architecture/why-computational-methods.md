@@ -1,3 +1,8 @@
+---
+title: Why Memoria uses deterministic methods alongside LLMs
+parent: Architecture
+---
+
 # Why Memoria uses deterministic methods alongside LLMs
 
 Every task Memoria performs is classified as deterministic, hybrid, or generative. The class determines which method to use, what the cost looks like, and what can be audited. Without this classification, every task gets routed to an LLM "because it's text" — and the system becomes expensive, slow, and untestable.

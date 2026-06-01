@@ -1,3 +1,10 @@
+---
+title: Dashboards
+parent: Explanation
+has_children: true
+permalink: /explanation/dashboards/
+---
+
 # Dashboards
 
 Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped here by the kind of attention they demand. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)

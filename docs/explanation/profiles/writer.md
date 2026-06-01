@@ -1,3 +1,8 @@
+---
+title: The Writer
+parent: Profiles
+---
+
 
 # The Writer
 

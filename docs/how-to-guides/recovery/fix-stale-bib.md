@@ -1,3 +1,8 @@
+---
+title: How to fix a stale .bib
+parent: Recovery
+---
+
 
 # How to fix a stale `.bib`
 

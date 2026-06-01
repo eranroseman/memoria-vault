@@ -1,3 +1,8 @@
+---
+title: How to set up the messaging gateway
+parent: Setup
+---
+
 
 # How to set up the messaging gateway
 

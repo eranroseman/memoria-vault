@@ -1,3 +1,8 @@
+---
+title: How to build a Map of Content
+parent: Maintenance
+---
+
 # How to build a Map of Content
 
 This guide shows you how to create a navigational hub note that gives a dense claim cluster a stable entry point.

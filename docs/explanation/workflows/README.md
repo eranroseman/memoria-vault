@@ -1,3 +1,10 @@
+---
+title: Workflows
+parent: Explanation
+has_children: true
+permalink: /explanation/workflows/
+---
+
 # The workflow model
 
 Memoria's workflows are **state-machine paths on the board**, not scripted procedures. Understanding this distinction is the key to understanding why the system behaves the way it does — and why it's more resilient than a procedural approach.

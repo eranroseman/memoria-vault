@@ -1,3 +1,8 @@
+---
+title: Policy MCP
+parent: Reference
+---
+
 # Policy MCP
 
 The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md).

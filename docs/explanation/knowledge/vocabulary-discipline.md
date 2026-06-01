@@ -1,3 +1,8 @@
+---
+title: Vocabulary discipline
+parent: Knowledge
+---
+
 # Vocabulary discipline
 
 A vault that grows without vocabulary discipline accumulates a silent failure: the same concept gets different names in different notes, and Dataview queries return half the corpus on a topic while the human believes coverage is thin. This document explains why the three classification fields are separate, how vocabulary drift happens, and why the stabilization happens in stages.

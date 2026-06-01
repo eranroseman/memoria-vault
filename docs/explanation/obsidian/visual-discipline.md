@@ -1,3 +1,8 @@
+---
+title: Visual-style discipline
+parent: Obsidian
+---
+
 # Visual-style discipline
 
 Plugin choice is only half of how the vault feels to use. The other half is **restraint** about how the vault looks and behaves. A vault that becomes a cockpit of indicators is a vault that gets abandoned. The defaults below are deliberate, and the reasoning behind each is the point — any deviation should be equally deliberate.

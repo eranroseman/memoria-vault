@@ -1,3 +1,8 @@
+---
+title: The knowledge cycle
+parent: Knowledge
+---
+
 # The knowledge cycle
 
 Every note in the vault is somewhere in a long-term progression from ingested source to written output. Understanding the cycle as a whole — what it is for, where it gets stuck, and what makes it compound — is the conceptual foundation for understanding why the vault is structured the way it is.

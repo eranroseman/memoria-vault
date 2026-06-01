@@ -1,3 +1,8 @@
+---
+title: Kanban board
+parent: Reference
+---
+
 # Kanban board
 
 Lookup tables for the Hermes Kanban board: the execution lifecycle, review overlay, card schema, WIP limits, and dispatch settings. For the conceptual model see [explanation/kanban-board/](../../docs/explanation/kanban-board/).

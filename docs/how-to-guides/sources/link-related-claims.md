@@ -1,3 +1,8 @@
+---
+title: How to link related claims (typed relations)
+parent: Sources
+---
+
 
 # How to link related claims (typed relations)
 

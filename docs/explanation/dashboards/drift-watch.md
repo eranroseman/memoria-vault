@@ -1,3 +1,8 @@
+---
+title: drift-watch dashboard
+parent: Dashboards
+---
+
 # `drift-watch` dashboard
 
 Surfaces the Linter's eight structural-detector findings as one consolidated view. Open it when something feels wrong but the system looks clean — a lint pass came back clear yet things still seem off. The verdict band at the top (PASS / REVIEW / FAIL) is the headline; the per-detector findings below are the diagnosis.

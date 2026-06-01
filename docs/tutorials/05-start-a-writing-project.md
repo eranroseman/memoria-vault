@@ -1,3 +1,8 @@
+---
+title: "Tutorial 05: Start a writing project"
+parent: Tutorials
+---
+
 
 # Tutorial 05: Start a writing project
 

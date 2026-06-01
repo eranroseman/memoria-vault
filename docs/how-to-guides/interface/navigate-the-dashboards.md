@@ -1,3 +1,8 @@
+---
+title: How to navigate the dashboards
+parent: Interface
+---
+
 
 # How to navigate the dashboards
 

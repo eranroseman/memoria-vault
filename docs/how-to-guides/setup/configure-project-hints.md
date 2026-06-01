@@ -1,3 +1,8 @@
+---
+title: How to configure project hints
+parent: Setup
+---
+
 
 # How to configure project hints
 

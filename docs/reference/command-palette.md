@@ -1,3 +1,8 @@
+---
+title: Command palette
+parent: Reference
+---
+
 # Command palette
 
 Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [hermes-cli.md](hermes-cli.md). For invocation patterns and hotkey discipline see [how-to-guides/command-palette.md](../how-to-guides/interface/command-palette.md).

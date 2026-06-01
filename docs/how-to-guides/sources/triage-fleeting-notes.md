@@ -1,3 +1,8 @@
+---
+title: How to triage fleeting notes
+parent: Sources
+---
+
 
 # How to triage fleeting notes
 

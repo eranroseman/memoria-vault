@@ -1,3 +1,8 @@
+---
+title: How to classify a source
+parent: Sources
+---
+
 
 # How to classify a source
 

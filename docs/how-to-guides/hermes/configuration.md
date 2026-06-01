@@ -1,3 +1,8 @@
+---
+title: How to configure a Hermes profile
+parent: Hermes
+---
+
 
 # How to configure a Hermes profile
 

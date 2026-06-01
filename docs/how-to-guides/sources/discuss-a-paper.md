@@ -1,3 +1,8 @@
+---
+title: How to discuss a paper
+parent: Sources
+---
+
 
 # How to discuss a paper
 

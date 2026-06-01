@@ -1,3 +1,8 @@
+---
+title: "Tutorial 06: Verify and address a gap"
+parent: Tutorials
+---
+
 
 # Tutorial 06: Verify and address a gap
 

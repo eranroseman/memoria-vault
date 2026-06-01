@@ -1,3 +1,8 @@
+---
+title: Why folders encode lifecycle, not topic
+parent: Knowledge
+---
+
 # Why folders encode lifecycle, not topic
 
 The vault's top-level folders (`00-meta`, `10-inbox`, `20-sources`, `30-synthesis`, `40-workbench`, `50-deliverables`) encode where a note is in its lifecycle, not what it's about. A paper on cognitive load lives in `20-sources/01-papers/`, not in `cognitive-science/`. This principle is not a stylistic choice; it is the organizational decision that makes the vault's structure stable and the agent's permissions enforceable.

@@ -1,3 +1,8 @@
+---
+title: How to start a writing project
+parent: Writing
+---
+
 
 # How to start a writing project
 
