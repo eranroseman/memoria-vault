@@ -1,6 +1,6 @@
 ---
 title: How to use the agent-client pane
-parent: Interface
+parent: Using Obsidian
 ---
 
 
@@ -18,12 +18,12 @@ Drive Memoria's conversational profiles from inside Obsidian without switching t
 
 Four profiles appear in the ACP picker. Choose based on what you're about to do:
 
-| Profile | Use it for | Session type |
+| Profile | Use it for | Pattern |
 | --- | --- | --- |
-| **Socratic** | Thinking through a paper or claim in conversation | Persistent — stays open across notes |
-| **Mapper** | Asking what's ready, thin, or missing in your corpus | Transient — one question, then done |
-| **Writer** | Drafting a claim note or outline section | Transient — one task, then done |
-| **Verifier** | Checking if a draft claim duplicates an existing note | Transient — one check, then done |
+| **Socratic** | Thinking through a paper or claim in conversation | Sustained — keep open across notes |
+| **Mapper** | Asking what's ready, thin, or missing in your corpus | One-shot — clear after each task |
+| **Writer** | Drafting a claim note or outline section | One-shot — clear after each task |
+| **Verifier** | Checking if a draft claim duplicates an existing note | One-shot — clear after each task |
 
 Start with Socratic by default. Switch to the others only when you have a specific one-shot task.
 

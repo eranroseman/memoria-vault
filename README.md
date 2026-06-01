@@ -45,7 +45,7 @@ Each agent runs inside Hermes and communicates with Obsidian through the [obsidi
 
 One line. Inspect the script first if you like — that's the recommended path.
 
-**Linux / WSL2:**
+**Linux (Ubuntu/Debian) or WSL2:**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
@@ -69,7 +69,7 @@ bash install.sh            # or  .\install.ps1  on Windows
 
 ### Requirements
 
-- **Git** on your `PATH`; on **Windows**, WSL2 enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — the installer installs nothing if WSL2 is absent. macOS is not supported.
+- **Git** on your `PATH`; on **Windows**, WSL2 enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — the installer installs nothing if WSL2 is absent. **Supported platforms:** Ubuntu/Debian (native Linux), WSL2 on Windows 11. macOS is not supported.
 - A **`KILOCODE_API_KEY`** — get one at [kilo.ai](https://kilo.ai). The shipped model provider is `kilocode`; other providers can be swapped in the profile configs.
 - The installer provisions **Hermes** (+ the ACP extra) and **guides** the Obsidian/Zotero installs — you don't need them beforehand.
 

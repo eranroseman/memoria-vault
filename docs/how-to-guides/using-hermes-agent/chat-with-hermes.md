@@ -1,6 +1,6 @@
 ---
 title: How to chat with a Hermes profile
-parent: Hermes
+parent: Using Hermes Agent
 ---
 
 

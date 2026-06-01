@@ -58,7 +58,7 @@ A lens is a named frame the `lens-reading` skill provides. Add your framing to t
 
 **7. Register one palette entry.**
 
-Add a single QuickAdd entry, `Memoria: read through <X> lens`, mapped to the new slug — adding a lens is adding exactly one palette entry. See [Use the command palette](../interface/command-palette.md) for the QuickAdd mechanics.
+Add a single QuickAdd entry, `Memoria: read through <X> lens`, mapped to the new slug — adding a lens is adding exactly one palette entry. See [Use the command palette](../using-obsidian/obsidian-command-palette.md) for the QuickAdd mechanics.
 
 **8. Redeploy and test.**
 
@@ -75,5 +75,5 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Redeploy after adding a lens: [Redeploy profiles](../maintenance/redeploy-profiles.md)
-- Command catalog: [command-palette.md](../../reference/command-palette.md); palette setup: [command-palette.md](../interface/command-palette.md)
+- Command catalog: [obsidian-command-palette.md](../../reference/obsidian-command-palette.md); palette setup: [obsidian-command-palette.md](../using-obsidian/obsidian-command-palette.md)
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)

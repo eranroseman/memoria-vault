@@ -6,7 +6,7 @@ parent: Recovery
 
 # How to fix profile drift
 
-Resolve a mismatch where the deployed profile in `~/.hermes/profiles/` doesn't match the vault source in `vault/.memoria/profiles/`.
+Resolve a mismatch where the deployed profile in `~/.using-hermes-agent/profiles/` doesn't match the vault source in `vault/.memoria/profiles/`.
 
 ## Symptom
 
@@ -83,6 +83,6 @@ No drift reported for any profile.
 ## Related
 
 - Redeploy profiles (normal workflow): [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Profile configuration: [configuration.md](../hermes/configuration.md)
+- Profile configuration: [configuration.md](../using-hermes-agent/configuration.md)
 - Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)
 - The idempotency mechanism behind the fix: [distribution-model.md](../../explanation/architecture/distribution-model.md)

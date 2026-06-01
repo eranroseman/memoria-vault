@@ -5,7 +5,7 @@ parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [command-palette.md](command-palette.md).
+Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [obsidian-command-palette.md](obsidian-command-palette.md).
 
 Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `mcp.json`. Per-profile research commands run as `hermes -p memoria-<name> chat -s <command> [args]`.
 
@@ -142,13 +142,13 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 **Reference**
 
-- In-Obsidian command palette (`Memoria:` entries): [command-palette.md](command-palette.md)
+- In-Obsidian command palette (`Memoria:` entries): [obsidian-command-palette.md](obsidian-command-palette.md)
 - Lane identifiers the commands map to: [profiles.md](profiles.md)
 
 **How-to**
 
-- How to start a chat session: [how-to-guides/hermes/chat-with-hermes.md](../how-to-guides/hermes/chat-with-hermes.md)
-- How to configure a profile: [how-to-guides/hermes/configuration.md](../how-to-guides/hermes/configuration.md)
+- How to start a chat session: [how-to-guides/using-hermes-agent/chat-with-hermes.md](../how-to-guides/using-hermes-agent/chat-with-hermes.md)
+- How to configure a profile: [how-to-guides/using-hermes-agent/configuration.md](../how-to-guides/using-hermes-agent/configuration.md)
 - Kanban how-to (stuck cards, unblocking): [how-to-guides/recovery/fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)
 
 **Explanation**

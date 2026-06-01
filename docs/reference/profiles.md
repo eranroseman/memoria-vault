@@ -39,7 +39,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
-| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`); the other five ship as `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
+| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`); the other five ship as `.keep`. Shared skills (K-Dense, official) live in `~/.using-hermes-agent/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
 
 ---
 
@@ -123,7 +123,7 @@ Eight deterministic, zero-LLM checks. Full per-detector procedures live in [stru
 
 | Slug | Severity | Implementation | Catches |
 | --- | --- | --- | --- |
-| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
+| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.using-hermes-agent/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
 | `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
 | `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
 | `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |

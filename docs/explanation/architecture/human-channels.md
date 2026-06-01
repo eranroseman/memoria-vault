@@ -1,9 +1,9 @@
 ---
-title: Human channels
+title: Interaction channels
 parent: Architecture
 ---
 
-# Human channels
+# Interaction channels
 
 Memoria's primary UI is Obsidian. Beyond it are two secondary channels for reaching the system when Obsidian isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
 

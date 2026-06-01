@@ -1,6 +1,6 @@
 ---
 title: How to navigate the dashboards
-parent: Interface
+parent: Using Obsidian
 ---
 
 

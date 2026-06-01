@@ -1,9 +1,9 @@
 ---
-title: Computational toolbox
+title: Retrieval and analysis methods
 parent: Reference
 ---
 
-# Computational toolbox
+# Retrieval and analysis methods
 
 Deterministic and hybrid methods Memoria uses, organized by purpose. The first seven are in active use; the last two (NLI, learning-to-rank) are catalogued candidates not yet shipped.
 
