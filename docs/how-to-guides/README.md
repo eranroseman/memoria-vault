@@ -103,7 +103,7 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Run the weekly review](maintenance/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
 | [Run the Linter](maintenance/run-the-linter.md) | On-demand or scheduled structural health check |
 | [Rebuild the search index](maintenance/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
-| [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.using-hermes-agent/profiles/` |
+| [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
 | [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Build a Map of Content](maintenance/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
 | [Refactor claim notes](maintenance/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |

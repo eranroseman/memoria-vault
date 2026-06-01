@@ -195,7 +195,7 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 │   │   ├── cron/
 │   │   │   └── .keep               # empty placeholder
 │   │   └── skills/
-│   │       └── obsidian-paper-note/  # authored skill (shared skills are global: ~/.using-hermes-agent/skills/)
+│   │       └── obsidian-paper-note/  # authored skill (shared skills are global: ~/.hermes/skills/)
 │   ├── memoria-mapper/
 │   │   ├── SOUL.md
 │   │   ├── cron/

@@ -31,7 +31,7 @@ bash install.sh --vault ~/my-second-vault
 # duplicate each deployed profile under a project2-* alias (its mcp.json already
 # has the substituted second-vault path):
 for role in librarian mapper socratic writer verifier coder linter; do
-  hermes profile install ~/.using-hermes-agent/profiles/memoria-$role --alias project2-$role --force --yes
+  hermes profile install ~/.hermes/profiles/memoria-$role --alias project2-$role --force --yes
 done
 
 # restore the memoria-* profiles to your primary vault:

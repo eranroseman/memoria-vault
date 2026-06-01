@@ -6,7 +6,7 @@ parent: Recovery
 
 # How to fix profile drift
 
-Resolve a mismatch where the deployed profile in `~/.using-hermes-agent/profiles/` doesn't match the vault source in `vault/.memoria/profiles/`.
+Resolve a mismatch where the deployed profile in `~/.hermes/profiles/` doesn't match the vault source in `vault/.memoria/profiles/`.
 
 ## Symptom
 

@@ -14,8 +14,8 @@ Where each type of state lives across the Memoria + Hermes stack: tier, backing 
 | Tier | Provider | Scope | Lifespan | Backing store | What it holds |
 | --- | --- | --- | --- | --- | --- |
 | **Working context** | Hermes native | One profile session | Session-bound; cleared on `/clear` | In-context (live conversation) | Current goal, recent tool results, in-flight reasoning. |
-| **Profile memory** (`MEMORY.md` + `USER.md`) | Hermes native | One profile, all sessions | Durable; frozen snapshot at session start | `~/.using-hermes-agent/profiles/memoria-<name>/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected into system prompt at session start as a frozen snapshot. |
-| **Session search** | Hermes native | One profile, all past sessions | Indefinite; unlimited capacity | SQLite at `~/.using-hermes-agent/state.db` (full-text) | Searchable history of prior conversations. Retrieved on demand — costs no tokens until queried. |
+| **Profile memory** (`MEMORY.md` + `USER.md`) | Hermes native | One profile, all sessions | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-<name>/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected into system prompt at session start as a frozen snapshot. |
+| **Session search** | Hermes native | One profile, all past sessions | Indefinite; unlimited capacity | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations. Retrieved on demand — costs no tokens until queried. |
 | **Board memory** (handoff payload) | Memoria — Kanban | One card; travels across profiles | Card-bound | Card `metadata` field | Handoff goal, context, allowed paths, expected outputs, working set of paper notes. |
 | **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `40-workbench/<project>/` | `research-directions`, open questions, decisions log. Shared across all profiles touching the project. |
 | **Vault audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `00-meta/02-logs/` + `00-meta/08-metrics/` | Audit trail, board snapshots, weekly summaries, fleet metrics. |
@@ -55,8 +55,8 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 
 | File | Location | Token cap (approx.) | Injected as |
 | --- | --- | --- | --- |
-| `MEMORY.md` | `~/.using-hermes-agent/profiles/memoria-<name>/memories/MEMORY.md` | ~800 tokens | Frozen snapshot in system prompt slot |
-| `USER.md` | `~/.using-hermes-agent/profiles/memoria-<name>/memories/USER.md` | ~500 tokens | Frozen snapshot in system prompt slot |
+| `MEMORY.md` | `~/.hermes/profiles/memoria-<name>/memories/MEMORY.md` | ~800 tokens | Frozen snapshot in system prompt slot |
+| `USER.md` | `~/.hermes/profiles/memoria-<name>/memories/USER.md` | ~500 tokens | Frozen snapshot in system prompt slot |
 
 `SOUL.md` is **not** memory — it is the profile's identity prompt (stable across sessions by design).
 
