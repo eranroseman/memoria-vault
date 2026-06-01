@@ -3,7 +3,8 @@ topic: decisions
 id: 03
 title: Review gate is structural, enforced by the policy MCP
 status: accepted
-date: 2026-05-01
+date_proposed: 2026-05-01
+date_resolved: 2026-05-01
 supersedes: []
 superseded_by: []
 ---

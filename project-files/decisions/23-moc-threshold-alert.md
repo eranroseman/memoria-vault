@@ -1,7 +1,12 @@
 ---
 topic: decisions
-status: accepted  # Tier 1 accepted/implemented in v0.1 2026-06-01; Tier 2 still deferred
-created: 2026-05-31
+id: 23
+title: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
+status: accepted
+date_proposed: 2026-05-31
+date_resolved: 2026-06-01
+supersedes: []
+superseded_by: []
 ---
 
 # ADR-23: Agent-proposed MOCs (threshold alert; Mapper stub deferred)

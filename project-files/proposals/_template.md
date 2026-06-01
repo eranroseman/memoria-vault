@@ -1,5 +1,7 @@
 ---
 topic: proposals
+id: PROP-NN  # next available PROP number; a separate sequence from ADR ids
+title: <short phrase, e.g. "Cross-run skill-insights memory">
 status: deferred  # deferred | under-consideration | adopted | rejected
 created: YYYY-MM-DD
 ---
