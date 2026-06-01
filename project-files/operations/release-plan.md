@@ -5,16 +5,17 @@ status: draft
 
 # v0.1 release plan
 
-**Current status: pre-release — v0.1.0 has _not_ shipped.** Despite the
-`CHANGELOG.md` `[0.1.0]` entry, nothing is released yet: the build ledger lists
-*nothing* as `approved` (everything is `shipped` = built-but-unverified), and a
+**Current status: pre-release — v0.1.0 has _not_ shipped.** No `v0.1.0` tag or
+GitHub release exists; the build ledger lists nothing as `approved`; and a
 release-blocking bug is open ([#39](https://github.com/eranroseman/memoria-vault/issues/39)).
-This document defines what "released" means, what blocks it, how it's validated,
-and how it gets cut.
+This document defines what "released" means, how it's validated, and how it gets
+cut. It does **not** track per-artifact status or the blocker inventory — that
+lives in [implementation-status.md](implementation-status.md), the single source
+of truth for build state; this plan points to it rather than restating it.
 
-> **The core reframing.** [implementation-status.md](implementation-status.md)
-> counts ~48 artifacts as `shipped`, but its own legend defines `shipped` as *in
-> the vault, **not** verified end-to-end*. So v0.1 is overwhelmingly **built but
+> **The core reframing.** Per [implementation-status.md](implementation-status.md),
+> most artifacts are `shipped` — but its own legend defines `shipped` as *in the
+> vault, **not** verified end-to-end*. So v0.1 is overwhelmingly **built but
 > unverified**. The release gate is therefore **verification, not construction** —
 > turning `shipped` rows into `approved` ones. The Tier 0–5 install testing
 > (`notes/install-test-checklist.md`) is that verification work.
@@ -46,24 +47,21 @@ v0.1.0 ships when **all** gates are green. Each maps to a validation tier
 | G5 | Six-signal telemetry emits (board-state/transitions/disposition/cost + audit + fama) once the board-export cron is wired | Tier 4–5 + cron | ⏳ partial (emitters exist; cron unwired) |
 | G6 | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | ✅ enforced (required checks) |
 | G7 | No open **P0** (release-blocking) issues | issue tracker | ❌ #39 open |
-| G8 | `CHANGELOG.md` `[0.1.0]` entry is accurate; version `0.1.0` consistent across the 7 `distribution.yaml` | manual | ⚠️ changelog entry currently wrong (see §7) |
+| G8 | `CHANGELOG.md` `[0.1.0]` entry written at cut; version `0.1.0` consistent across the 7 `distribution.yaml` | manual | ⏳ changelog now under `[Unreleased]`; cut the `[0.1.0]` section at release (§7) |
 
 ## 3. Release blockers
 
-**P0 — must fix before cut:**
+Not enumerated here — a second list would drift from the ledger. **By definition,
+the blockers are:**
 
-- **[#39](https://github.com/eranroseman/memoria-vault/issues/39) — obsidian bridge never receives `OBSIDIAN_API_KEY`.** Agents can't write to the vault (G3). The policy gate and REST transport are proven; only key delivery is broken. Fix the shipped `mcp.json` ×7 + the installer.
+- the **`pending`** and **`shipped (… broken)`** rows in
+  [implementation-status.md](implementation-status.md) (the single source of truth
+  for build state), plus
+- any open **P0** issue in the [tracker](https://github.com/eranroseman/memoria-vault/issues).
 
-**P1 — should fix or consciously waive:**
-
-- **Board-export cron unwired.** `board_export.py` must run (~60 s cadence) for board markdown + telemetry to populate (G5, and dashboards that read board state). Phase-1 task in [timeline.md](timeline.md).
-- **`quickadd` command surface incomplete.** 2 of ~20 catalog commands wired; the rest need QuickAdd macros + user `.js` that POST to the Hermes API.
-- **Skills availability.** The lane-overrides name 28 skills; only ~7 are installable from K-Dense + the official Hermes registry today. Decide which the v0.1 profiles actually require vs. degrade-gracefully.
-
-**Not blockers (runtime-created / optional):**
-
-- `00-meta/02-logs/audit.jsonl` — created by the policy MCP on first logged decision; absence pre-run is expected.
-- `obsidian-homepage` — recommended, optional post-clone install.
+Consult those two for the live, authoritative set. (At time of writing the P0 is
+[#39](https://github.com/eranroseman/memoria-vault/issues/39) — obsidian bridge
+key delivery, gate G3.)
 
 ## 4. Validation plan
 
@@ -85,11 +83,10 @@ clone before cut).
 
 ## 5. Explicitly **not** in v0.1 (deferred)
 
-Per the `deferred` rows in [implementation-status.md](implementation-status.md):
-`tasks_mcp.py` (the native Hermes Kanban covers it), `.obsidian/workspaces.json`,
-the `skill-lifecycle` dashboard, the profile-compilation build step, and the
-analysis harnesses in the proposals (CiteME fixture, fleet dashboard, etc.).
-Multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
+The per-artifact deferred set lives in the `deferred` rows of
+[implementation-status.md](implementation-status.md) and in [proposals/](../proposals/) —
+not duplicated here. At the scope level: multi-device (Phase 4) and density-gated
+automation (Phase 3) are post-v0.1.
 
 ## 6. Known limitations to state in the release notes
 
@@ -103,13 +100,6 @@ Multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 1. **All §2 gates green; no P0 issues open** (currently: #39 blocks).
 2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green.
 3. **Confirm version `0.1.0`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
-4. **Rewrite the `CHANGELOG.md` `[0.1.0]` entry** to be accurate. The current entry is wrong — it lists nonexistent profiles ("researcher, developer, analyst, strategist, educator, operator") instead of the real seven, and asserts a 2026-05-25 release that didn't happen. Set the real date and contents at cut time; move the `[Unreleased]` items in.
+4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links. (The earlier fictional `[0.1.0]` entry was already removed; the changelog now accumulates under `[Unreleased]`.)
 5. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
 6. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](implementation-status.md) once the candidate passes.
-
-## 8. Snapshot
-
-Build ledger at time of writing: **~48 shipped (unverified) · 4 pending · 3
-deferred · 0 approved.** Authoritative per-artifact state lives in
-[implementation-status.md](implementation-status.md); this plan tracks the gate to
-turn that into a release.
