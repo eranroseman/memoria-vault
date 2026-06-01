@@ -90,6 +90,6 @@ WHERE length(file.inlinks) = 0
 
 ---
 
-**For depth:** [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/). obsidian-ui/dashboards.md#performance-discipline for query-shape rules.
+**For depth:** [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/). [Dashboards — explanation](https://eranroseman.github.io/memoria-vault/explanation/dashboards/) for query-shape rules.
 
 **Promotion bar.** When a new query pattern proves useful across two or more dashboards, add it here. The cheatsheet is the operational complement to the dashboard discipline doc.

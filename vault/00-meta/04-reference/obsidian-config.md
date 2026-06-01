@@ -55,4 +55,4 @@ Which Obsidian community plugins Memoria uses and the load-bearing settings you 
 
 ---
 
-**For depth:** plugins/README.md — per-plugin design rationale and full configuration.
+**For depth:** [Obsidian plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/) — per-plugin design rationale and full configuration.

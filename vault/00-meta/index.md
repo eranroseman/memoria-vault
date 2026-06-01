@@ -35,6 +35,10 @@ The pinned landing page. Open it in the morning; close it when the system looks 
 - `Memoria: find related notes` — Mapper transient query
 - `Memoria: similarity-check this claim` — Verifier transient query
 
+## Documentation
+
+→ [Full documentation](https://eranroseman.github.io/memoria-vault/) — tutorials, how-to guides, reference, and architecture explanation.
+
 ## Mode-switching hotkeys (in ACP chat)
 
 - `Ctrl+Shift+1` → Ask (Socratic)

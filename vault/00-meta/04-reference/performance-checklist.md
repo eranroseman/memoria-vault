@@ -41,4 +41,4 @@ A query that returns zero rows because **the data doesn't exist yet** is correct
 
 ---
 
-**For depth:** obsidian-ui/dashboards.md — full performance discipline and graceful-degradation guidance.
+**For depth:** [Dashboards — explanation](https://eranroseman.github.io/memoria-vault/explanation/dashboards/) — full performance discipline and graceful-degradation guidance.

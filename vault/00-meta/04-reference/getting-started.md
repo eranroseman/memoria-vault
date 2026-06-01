@@ -54,4 +54,4 @@ Open the vault root directly. Pin [[../index|the vault index]] in the sidebar. S
 
 ---
 
-**For depth:** tutorials/01-set-up-from-zero.md — the authoritative setup walkthrough with troubleshooting notes.
+**For depth:** [Tutorial 01 — Set up from zero](https://eranroseman.github.io/memoria-vault/tutorials/01-set-up-from-zero/) — the authoritative setup walkthrough with troubleshooting notes.
