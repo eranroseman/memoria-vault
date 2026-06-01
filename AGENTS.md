@@ -232,3 +232,7 @@ created: YYYY-MM-DD
 ## Alternatives considered
 ## Related
 ```
+
+### `project-files/plans/` — planning docs (living, no fixed template)
+
+Forward-looking project logistics: the release gate (`release-plan.md`), the implementation timeline (`timeline.md`), and current build state (`implementation-status.md`). These are living documents — keep them current as the build progresses; they take `topic: plans` frontmatter but have no per-file template. (Folder renamed from `operations/` on 2026-06-01.)

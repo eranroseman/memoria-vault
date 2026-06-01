@@ -15,7 +15,7 @@ This guide uses the audit log to tell them apart and find the reason.
 
 ## Prerequisites
 
-- The policy MCP wired and running — it writes `00-meta/02-logs/audit.jsonl`. Until the gate runs live, that log does not exist (see [implementation-status](../../../project-files/operations/implementation-status.md)); a missing *file* is a wiring problem, not a denial.
+- The policy MCP wired and running — it writes `00-meta/02-logs/audit.jsonl`. Until the gate runs live, that log does not exist (see [implementation-status](../../../project-files/plans/implementation-status.md)); a missing *file* is a wiring problem, not a denial.
 - The [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md) available in Obsidian
 
 ## Steps

@@ -7,7 +7,7 @@ parent: Reference
 
 Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [hermes-cli.md](hermes-cli.md). For invocation patterns and hotkey discipline see [how-to-guides/obsidian-command-palette.md](../how-to-guides/using-obsidian/obsidian-command-palette.md).
 
-> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **three** so far — `Memoria: capture fleeting`, `Memoria: write claim note`, `Memoria: scaffold code note` (all Templater-backed). The rest (API-POST, ACP-pane, and macro choices) are added as the system fills in; see [implementation-status.md](../../project-files/operations/implementation-status.md).
+> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **three** so far — `Memoria: capture fleeting`, `Memoria: write claim note`, `Memoria: scaffold code note` (all Templater-backed). The rest (API-POST, ACP-pane, and macro choices) are added as the system fills in; see [implementation-status.md](../../project-files/plans/implementation-status.md).
 
 Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds the top five to physical ribbon buttons.
 

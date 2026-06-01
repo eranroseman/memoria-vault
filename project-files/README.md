@@ -7,7 +7,7 @@ Four folders. One job each.
 | [decisions/](decisions/) | Accepted architectural decisions | You want to know *why* something is the way it is |
 | [proposals/](proposals/) | Deferred capabilities and ideas under consideration | You want to add a feature or understand what's been considered |
 | [rejected/](rejected/) | Tools and approaches evaluated and not adopted | You want to avoid re-evaluating something already considered |
-| [operations/](operations/) | Timeline, implementation status, deployment | You want to know what's built and what to do next |
+| [plans/](plans/) | Timeline, implementation status, release plan | You want to know what's built and what to do next |
 
 ---
 

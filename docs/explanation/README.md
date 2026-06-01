@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR. The forward plan lives in the timeline. Both are in [project-files/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [operations/](../../project-files/operations/) for direction and timeline.
+The *why* behind a specific choice lives in an ADR. The forward plan lives in the timeline. Both are in [project-files/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [plans/](../../project-files/plans/) for direction and timeline.

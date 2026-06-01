@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [operations/timeline.md](../../project-files/operations/timeline.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [plans/timeline.md](../../project-files/plans/timeline.md).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 

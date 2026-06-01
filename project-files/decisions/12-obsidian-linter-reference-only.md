@@ -39,7 +39,7 @@ Memoria treats obsidian-linter as **reference-only**: documented for the record,
 
 ## Related
 
-- **Files affected:** [obsidian-linter.md](../rejected/obsidian-linter.md) (moved from `recommended/` to `rejected/`), [plugins.md](../../docs/reference/plugins.md) (recommended 11→10, reference 3→4).
+- **Files affected:** [obsidian-linter.md](../rejected/obsidian-linter.md) (moved from `recommended/` to `rejected/`), [obsidian-plugins.md](../../docs/reference/obsidian-plugins.md) (recommended 11→10, reference 3→4).
 - **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) — owns the formatting/validation concern obsidian-linter would otherwise touch.
 - **Related decisions:** the frontmatter namespace discipline this protects ([frontmatter.md](../../docs/reference/frontmatter.md)).
 - **Source discussion:** the control-plane-authority analysis — a deterministic tool still fails the architecture if it writes outside the Policy MCP / audit trail.
