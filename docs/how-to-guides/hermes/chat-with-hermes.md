@@ -20,7 +20,7 @@ hermes -p <profile-alias> chat -s <skill-name>
 ```
 
 - `-p <profile-alias>` — which profile to invoke (e.g., `memoria-librarian`)
-- `-s <skill-name>` — load a specific skill at session start (e.g., `llm-wiki`, `lint`, `draft`)
+- `-s <skill-name>` — load a specific skill at session start (e.g., `obsidian-paper-note`, `lint`, `draft`)
 
 If `-s` is omitted, the profile starts with no skill loaded — useful for exploratory sessions.
 
@@ -28,7 +28,7 @@ If `-s` is omitted, the profile starts with no skill loaded — useful for explo
 
 | Goal | Command |
 | --- | --- |
-| Ingest a source | `hermes -p memoria-librarian chat -s llm-wiki` |
+| Ingest a source | `hermes -p memoria-librarian chat -s obsidian-paper-note` |
 | Lint the vault | `hermes -p memoria-linter chat -s lint` |
 | Check vault health | `hermes -p memoria-linter chat -s health-report` |
 | Run a similarity check | `hermes -p memoria-verifier chat -s similarity-check` |
@@ -41,7 +41,7 @@ If `-s` is omitted, the profile starts with no skill loaded — useful for explo
 Once in a session, type `/skill-command [args]` to invoke the loaded skill:
 
 ```text
-/llm-wiki ingest --source mamykina2010sense
+/obsidian-paper-note --source mamykina2010sense
 /lint --dry-run
 /lint --target 20-sources/
 /draft "outline the argument on JITAI receptivity"
@@ -57,7 +57,7 @@ Type `exit` or Ctrl-C to end the session cleanly.
 Most write-producing commands accept `--dry-run`. This reports what would be written without touching the vault:
 
 ```text
-/llm-wiki ingest --source mamykina2010sense --dry-run
+/obsidian-paper-note --source mamykina2010sense --dry-run
 ```
 
 Use dry-run when testing a new profile configuration or checking a command's behavior before committing.

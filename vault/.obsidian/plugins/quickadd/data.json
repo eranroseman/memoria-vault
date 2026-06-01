@@ -37,6 +37,25 @@
       "openFile": true,
       "fileOpening": { "location": "tab", "direction": "vertical", "mode": "default", "focus": true },
       "fileExistsBehavior": { "kind": "prompt" }
+    },
+    {
+      "id": "e4bb809f-db7f-439f-9f79-9419dbba3552",
+      "name": "Memoria: scaffold code note",
+      "type": "Template",
+      "command": true,
+      "templatePath": "00-meta/03-templates/code-note.md",
+      "fileNameFormat": { "enabled": true, "format": "{{VALUE:code-note title}}" },
+      "folder": {
+        "enabled": true,
+        "folders": ["40-workbench"],
+        "chooseWhenCreatingNote": true,
+        "createInSameFolderAsActiveFile": false,
+        "chooseFromSubfolders": true
+      },
+      "appendLink": false,
+      "openFile": true,
+      "fileOpening": { "location": "tab", "direction": "vertical", "mode": "default", "focus": true },
+      "fileExistsBehavior": { "kind": "prompt" }
     }
   ],
   "inputPrompt": "single-line",

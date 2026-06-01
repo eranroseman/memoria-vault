@@ -71,10 +71,10 @@ No YAML errors reported for this note.
 
 ## If the fix doesn't hold
 
-If Obsidian re-introduces the error after saving, a plugin or Obsidian's Properties panel is auto-formatting the YAML. Check which plugins have "format on save" behavior and disable it for this file type. The Obsidian Linter plugin is the most common culprit — confirm it's excluded from `20-sources/`.
+If Obsidian re-introduces the error after saving, a plugin or Obsidian's Properties panel is auto-formatting the YAML. Check which plugins have "format on save" behavior and disable it for this file type. The frontend Obsidian Linter plugin is the most common culprit — it is incompatible with Memoria and should be uninstalled (see [ADR-12](../../../project-files/decisions/12-obsidian-linter-reference-only.md)), not merely excluded from folders.
 
 ## Related
 
-- Obsidian Linter plugin exclusions: [set-up-obsidian.md § Step 7](../setup/set-up-obsidian.md)
+- Why the frontend Obsidian Linter is incompatible: [set-up-obsidian.md § Step 7](../setup/set-up-obsidian.md)
 - Frontmatter schema reference: [frontmatter.md](../../reference/frontmatter.md)
 - Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)

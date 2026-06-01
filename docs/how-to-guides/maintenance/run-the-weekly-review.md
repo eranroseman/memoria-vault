@@ -6,7 +6,7 @@ Walk through the Friday ritual: clear classification debt, process the discuss q
 ## Prerequisites
 
 - Obsidian open with the vault
-- The `weekly-review.md` dashboard open (Cmd-P → Memoria: open weekly review, or navigate to `00-meta/01-dashboards/weekly-review.md`)
+- The `weekly-review.md` dashboard open (navigate to `00-meta/01-dashboards/weekly-review.md`, or open it from the dashboard index)
 
 ## Steps
 
@@ -27,7 +27,7 @@ These are usually Writer-session drafts or claim notes you started but didn't fi
 
 **Step 3 — Process discovery candidates (5–10 min).**
 
-The `10-inbox/` queue surfaces notes flagged as discovery candidates — sources that appeared in the Librarian's comparative-brief but aren't in your vault yet. For each:
+The `10-inbox/` queue surfaces notes flagged as discovery candidates — sources that appeared in the Mapper's `comparative-brief` but aren't in your vault yet. For each:
 
 - Add to Zotero and queue for ingest, or
 - Mark `excluded: true` with a reason (out of scope, already have equivalent, etc.)
@@ -47,7 +47,7 @@ Target: zero notes in this queue by end of session. If you can't finish all, acc
 Claim notes at `maturity: evergreen` that haven't been promoted to `30-synthesis/02-reference/`. For each qualifying note:
 
 - Move to `30-synthesis/02-reference/`
-- Set `lifecycle: canonical`
+- Set `lifecycle: current`
 
 A claim qualifies for evergreen when it has cross-links from at least three distinct sources or claim notes.
 
@@ -63,7 +63,7 @@ Notes with no inbound or outbound links. For each:
 
 Source notes whose enrichment timestamp is more than 90 days old. For each:
 
-- Run `/llm-wiki ingest --source <citekey>` to refresh enrichment, or
+- Run `/obsidian-paper-note --source <citekey>` to refresh enrichment, or
 - Archive if the source is no longer active
 
 **Step 8 — Run lint dry-run (1 min + review).**
@@ -81,7 +81,7 @@ Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM
 - Classification debt queue is empty or has a known acceptable residual
 - No CRITICAL or HIGH lint findings outstanding
 - The `weekly-review.md` dashboard shows all queue sections at zero or explicitly deferred
-- A new entry in `00-meta/02-logs/session-log.md` records the date and any decisions made
+- A new per-session log file in `00-meta/02-logs/sessions/` (named `YYYY-MM-DD-HHMM.jsonl`) records the date and any decisions made
 
 ## Related
 

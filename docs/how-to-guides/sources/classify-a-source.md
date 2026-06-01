@@ -15,16 +15,16 @@ Navigate to `20-sources/01-papers/<citekey>.md` (or `20-sources/02-items/<citeke
 
 **2. Find the `_proposed_classification` block.**
 
-It appears as an HTML comment below the frontmatter, containing:
+It is an agent-owned namespace in the note's YAML frontmatter — a nested block the Librarian wrote, separate from the main (human-owned) fields:
 
-```text
-<!-- _proposed_classification
-study_design: ...
-methods: [...]
-topic: [...]
-projects: [...]
--->
+```yaml
+_proposed_classification:
+  study_design: ...
+  methods: [...]
+  topic: [...]
 ```
+
+`projects` is human-owned and is **not** proposed here — you set it yourself in step 4.
 
 **3. Review each field.**
 
@@ -33,7 +33,8 @@ Compare the proposed values against the paper itself. The Librarian extracts the
 - **topic:** Is this the right concept vocabulary term? If the paper is about JITAI receptivity, `receptivity-detection` is correct; `jitai` alone is too broad.
 - **methods:** Is `field-study` accurate, or was it also a `qualitative-interview` study? Add precision.
 - **study_design:** `observational` vs. `experimental` — confirm from the methods section.
-- **projects:** Which active project does this feed? Add or remove as appropriate.
+
+(`projects` is yours to set, not the agent's — decide which active project this feeds when you fill in the main frontmatter below.)
 
 **4. Promote accepted fields to main frontmatter.**
 
@@ -52,7 +53,7 @@ projects:
 
 **5. Delete the `_proposed_classification` block.**
 
-Remove the entire `<!-- _proposed_classification ... -->` comment from the file.
+Remove the entire `_proposed_classification:` block from the frontmatter once you've promoted the fields you accept. The block is transient — it exists only until classification is complete.
 
 **6. Set `lifecycle: current` and `triage_completed`.**
 
@@ -70,7 +71,7 @@ Scroll to the "Key findings" section in the note body. Write 2–3 sentences sum
 ## Verify
 
 - The note appears in the "classification complete" Dataview query on the `weekly-review.md` dashboard
-- `lifecycle: current` is set and `_proposed_classification` is gone
+- `lifecycle: current` is set and the `_proposed_classification` frontmatter block is gone
 - The note does not appear in the "classification debt" queue on `weekly-review.md`
 
 ## Related

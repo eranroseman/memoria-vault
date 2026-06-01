@@ -32,11 +32,11 @@ telegram:
   token: "1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ"
   allowed_users:
     - <your numeric user ID>
-  inbox_path: "vault/.memoria/inbox/"
+  inbox_path: "vault/10-inbox/01-fleeting/"
   profile: memoria-librarian
 ```
 
-Adjust `inbox_path` to the absolute path for your vault's inbox directory.
+Adjust `inbox_path` to the absolute path for your vault's fleeting-note inbox (`10-inbox/01-fleeting/`). Do **not** route captures into `.memoria/` — that directory is dot-hidden from Obsidian's scanner, so notes landing there are invisible in the vault.
 
 **4. Start the gateway.**
 
@@ -55,12 +55,12 @@ systemctl --user start hermes-gateway
 
 **6. Test the connection.**
 
-Send any message to your bot in Telegram. Within a few seconds, a `.md` file should appear in `vault/.memoria/inbox/` with the message text as its body.
+Send any message to your bot in Telegram. Within a few seconds, a `.md` file should appear in `vault/10-inbox/01-fleeting/` with the message text as its body.
 
 ## Verify
 
-- Sending a Telegram message to your bot creates a file in `.memoria/inbox/`
-- The file has the message text in the body and `lifecycle: fleeting` in frontmatter
+- Sending a Telegram message to your bot creates a file in `10-inbox/01-fleeting/`
+- The file has the message text in the body and `lifecycle: proposed` in frontmatter (the value all fleeting notes carry)
 - `systemctl --user status hermes-gateway` shows `active (running)` if you set it up as a service
 
 ## Related

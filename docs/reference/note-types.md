@@ -8,18 +8,18 @@ The 15 note types, their canonical folders, templates, lifecycle, and ownership.
 
 | Type | Folder | Template | Created by | Promoted by | Lifecycle |
 | --- | --- | --- | --- | --- | --- |
-| `fleeting-note` | `10-inbox/01-fleeting/` | `fleeting.md` | Human | Human (or discard) | `proposed` → `archived` |
-| `answer-note` | `10-inbox/02-answers/` | `answer.md` | Writer | Writer until review; then human | Human → `claim-note` |
-| `paper-note` | `20-sources/01-papers/` | `paper.md` | Librarian | Human (classification) | `proposed` → `current` |
-| `item-note` | `20-sources/02-items/` | `item.md` | Librarian | Human (classification) | `proposed` → `current` |
-| `person-note` | `20-sources/03-entities/01-people/` | `person.md` | Librarian | Human (classification) | `proposed` → `current` |
-| `organization-note` | `20-sources/03-entities/02-organizations/` | `organization.md` | Librarian | Human (classification) | `proposed` → `current` |
-| `venue-note` | `20-sources/03-entities/03-venues/` | `venue.md` | Librarian | Human (classification) | `proposed` → `current` |
-| `claim-note` | `30-synthesis/01-claims/` | `claim.md` | Human | Human | `current` (+ `maturity`) |
-| `reference-note` | `30-synthesis/02-reference/` | `reference.md` | Writer (draft) | Human (finalizes) | `proposed` → `current` |
+| `fleeting-note` | `10-inbox/01-fleeting/` | `fleeting-note.md` | Human | Human (or discard) | `proposed` → `archived` |
+| `answer-note` | `10-inbox/02-answers/` | `answer-note.md` | Writer | Writer until review; then human | Human → `claim-note` |
+| `paper-note` | `20-sources/01-papers/` | `paper-note.md` | Librarian | Human (classification) | `proposed` → `current` |
+| `item-note` | `20-sources/02-items/` | `item-note.md` | Librarian | Human (classification) | `proposed` → `current` |
+| `person-note` | `20-sources/03-entities/01-people/` | `person-note.md` | Librarian | Human (classification) | `proposed` → `current` |
+| `organization-note` | `20-sources/03-entities/02-organizations/` | `organization-note.md` | Librarian | Human (classification) | `proposed` → `current` |
+| `venue-note` | `20-sources/03-entities/03-venues/` | `venue-note.md` | Librarian | Human (classification) | `proposed` → `current` |
+| `claim-note` | `30-synthesis/01-claims/` | `claim-note.md` | Human | Human | `current` (+ `maturity`) |
+| `reference-note` | `30-synthesis/02-reference/` | `reference-note.md` | Writer (draft) | Human (finalizes) | `proposed` → `current` |
 | `moc` | `30-synthesis/03-moc/` | `moc.md` | Human | Human | `current` / `dormant` / `archived` |
-| `project-note` | `40-workbench/` | `project.md` | Human | Human | `proposed` → `current` (+ `project_phase`) |
-| `code-note` | `40-workbench/*/06-code/` | `code.md` | Coder or human | Human (review gate) | `proposed` → `current` → `archived` |
+| `project-note` | `40-workbench/` | `project-note.md` | Human | Human | `proposed` → `current` (+ `project_phase`) |
+| `code-note` | `40-workbench/*/06-code/` | `code-note.md` | Coder or human | Human (review gate) | `proposed` → `current` → `archived` |
 | `canvas` | `40-workbench/*/03-canvas/` | `canvas.md` | Human | Human | `proposed` → `current` |
 | `draft` | `40-workbench/*/04-drafts/` | `draft.md` | Human | Human → `deliverable` on export | `proposed` → `current` (+ `draft_stage`) |
 | `deliverable` | `50-deliverables/` | `deliverable.md` | Human / Coder (export task) | Terminal | `current` |
@@ -30,7 +30,7 @@ All 15 templates live in `00-meta/03-templates/`.
 
 ## `-note` suffix rule
 
-The `-note` suffix marks a **knowledge node** — an authoritative record of one unit of knowledge that carries its own content. Eleven of the 15 types are knowledge nodes.
+The `-note` suffix marks a **knowledge node** — an authoritative record of one unit of knowledge that carries its own content. Eleven of the 15 types are knowledge nodes, and their templates carry the suffix too (`paper-note.md`, `claim-note.md`, …). The four bare-name views use bare template filenames (`moc.md`, `canvas.md`, `draft.md`, `deliverable.md`).
 
 The four **bare names** (`moc`, `canvas`, `draft`, `deliverable`) are not knowledge nodes:
 
@@ -50,7 +50,7 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 | Type | Lifecycle notes |
 | --- | --- |
 | `fleeting-note` | Terminal is `archived` (discarded) or promoted (converted to another type and then archived). |
-| `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `evergreen` → `retired`). |
+| `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `budding` → `evergreen`). |
 | `moc` | Can be `dormant` (topic has gone quiet; not archived yet). |
 | `deliverable` | Created as `current`; never promoted or archived in normal flow. |
 | `project-note` | Refines `current` with `project_phase` (`active` · `paused` · `complete` · `abandoned`). |

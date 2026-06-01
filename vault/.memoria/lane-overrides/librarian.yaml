@@ -14,7 +14,7 @@ policy:
       - obsidian-paper-note    # authored skill: ingest pipeline (ocr-and-documents + pyzotero + obsidian)
       - ocr-and-documents      # PDF/OCR extraction for ingest (official productivity/)
       - obsidian               # vault read/write for ingest
-      - vector-databases       # the `query` command (embedding/keyword vault search)
+      - qmd                    # the `query` command (hybrid BM25+vector vault search; skills.sh skill)
       - rest-passthrough       # capability token (REST passthrough), not a skill
     write:
       - "10-inbox/**"

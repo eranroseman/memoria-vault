@@ -82,7 +82,7 @@ Documented but not in the install set. Evaluated alternatives and future-migrati
 | zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. See comparison table above. |
 | zotero-integration | Not in use | Imports Zotero items via HTTP API; useful if PDF annotation workflow is adopted. |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
-| obsidian-linter | Deferred (ADR-12) | Frontend formatter; writes outside the policy MCP audit trail; second frontmatter authority. |
+| obsidian-linter | **Incompatible — do not install** (ADR-12) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
 
 ---
 
@@ -114,7 +114,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
 | Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
-| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. It is hand-kept in sync with `00-meta/03-templates/paper-note.md` (the human-facing copy); edit both together. |
+| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `00-meta/03-templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
 
 ### obsidian-git
 

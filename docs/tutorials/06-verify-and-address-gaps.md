@@ -64,7 +64,7 @@ draft-01.md verification report
 Verdict: NEEDS REVISION — 1 untraced claim
 ```
 
-The report also adds a `[!verification]` callout at the top of your draft with a summary verdict.
+The report also adds a `[!verification]` callout at the top of your draft with a summary verdict. (The human-readable `NEEDS REVISION` / `CLEAN` labels shown here correspond to the formal trace-result slugs `verify-needs-revision` / `verify-clean` in the [glossary](../reference/glossary.md) — same states, display vs. slug.)
 
 ---
 

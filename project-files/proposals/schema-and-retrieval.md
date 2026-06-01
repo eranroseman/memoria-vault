@@ -12,7 +12,7 @@ Capabilities that make the vault's knowledge graph richer and more queryable.
 
 ## 1. Scenario-typed retrieval (relation type expansion)
 
-**Status.** Base is adopted: ADR-9 added `supports` and `contradicts` as first-class frontmatter fields; ADR-16 added the contradictions dashboard. This proposal covers the *expansion* beyond that base.
+**Status.** Base is adopted: ADR-8 added `supports` and `contradicts` as first-class frontmatter fields; ADR-9 added the contradictions dashboard. This proposal covers the *expansion* beyond that base.
 
 **What.** Extend the typed-relation vocabulary beyond `supports` / `contradicts` to include `similar` (structural resemblance, not evidential support), and potentially `cross-domain` or `counter-intuitive`. Enables precise queries like "show me claims structurally similar to X" that the current base can't answer.
 

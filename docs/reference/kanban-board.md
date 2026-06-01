@@ -90,15 +90,15 @@ Written to `metadata` on the Hermes card. Human-set fields that the policy MCP g
 
 ### Handoff payload
 
-Workers write a structured `summary` on `kanban_complete`. Standard fields:
+The handoff payload is **forward-looking**: it provisions the *next* worker with everything needed to begin, and is self-contained (the receiver needs nothing beyond it — see [why the payload is self-contained](../explanation/kanban-board/card-schema.md#why-the-handoff-payload-must-be-self-contained)). It is distinct from the backward-looking `summary` field above (the completing worker's "what I did" report).
 
 | Field | Notes |
 | --- | --- |
-| `task` | One-sentence restatement of what the card asked for. |
-| `result` | What was produced. |
-| `allowed_paths` | Input vault paths the worker read from. |
-| `promote_target` | Output path the next worker or human should look at. |
-| `context_notes` | Anything the next worker needs to re-derive the task context. |
+| `goal` | One sentence: what the receiving worker must achieve. |
+| `context` | Structured key-value context the receiver works from (the working set of notes, prior decisions). |
+| `allowed_paths` | **Write scope** for this card. The policy MCP cross-checks it against the lane override: a payload can *narrow* but never *widen* the lane's permissions (lane = ceiling, payload = floor). |
+| `expected_outputs` | What the receiver should produce, and where (pairs with the `promote_target` metadata field above). |
+| `review_checks` | What the human or Verifier should check before approving — feeds the review gate. |
 
 ---
 

@@ -23,6 +23,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 | `Memoria: ask about this note` | Opens Socratic ACP pane (session-resident). No note writes. | QuickAdd → `open-chat-view` (agent: `memoria-socratic`; `autoMentionActiveNote: true`) |
 | `Memoria: discuss this fleeting note` | `discuss` card + Socratic ACP pane. Fleeting → claim transition path. | QuickAdd composing two commands |
 | `Memoria: write claim note` | New note from claim template in `30-synthesis/01-claims/`; `maturity: seedling`. | QuickAdd → Templater (claim template) |
+| `Memoria: scaffold code note` | New note from the code-note template in a chosen `40-workbench/<project>/06-code/` folder. | QuickAdd → Templater (code-note template) |
 
 ### Interactive retrieval (transient ACP — no file artifact, no card)
 

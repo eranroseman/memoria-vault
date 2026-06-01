@@ -42,13 +42,15 @@ Each profile lives at `.memoria/profiles/memoria-<name>/`:
 
 | Profile | Primary role | Core commands | Allowed skills | Invocation level |
 | --- | --- | --- | --- | --- |
-| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query` | `paper-lookup`, `arxiv-search`, `pyzotero`, `citation-management`, `literature-review`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
-| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map`, `comparative-brief` | `scope-project`, `gap-report`, `cluster-mapping`, `comparative-brief` | Level 2 (Kanban) |
-| **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `socratic-processing`, `lens-reading` (parameterized: `mamykina-sensemaking`, `veinot-informational-justice`, …) | Level 3 (interactive only) |
-| **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki-draft`, `note-refactor`, `scientific-writing`, `counter-outline` | Level 2 (Kanban) with review gate |
-| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | Level 2 (Kanban) |
-| **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `scaffold-code-note`, `workspace-coordinate`, `commit-and-document` | Level 2 (external dispatch) |
-| **Linter** | Validate and report | `lint`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | `schema-check`, `graph-analyze`, `health-report`, `session-log` | Level 1 (cron) |
+| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query` | `paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `obsidian`, `qmd`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
+| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map`, `comparative-brief` | `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 2 (Kanban) |
+| **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `obsidian` (read-only) | Level 3 (interactive only) |
+| **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
+| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
+| **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
+| **Linter** | Validate and report | `lint`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | *(none — runs `detectors.py` via terminal)* | Level 1 (cron) |
+
+> **Commands vs. skills.** The **Core commands** are the profile's command surface (CLI / palette). The **Allowed skills** are the real Hermes/K-Dense skill IDs the lane-override grants (the policy gate). Per the [adapt-not-wrap decision](../../project-files/proposals/bootstrap-installer.md), the commands are mostly `SOUL.md` procedures composing these skills — only `obsidian-paper-note` and `retraction-check` are authored as skills; `qmd` is a skills.sh skill; the Linter runs the shipped `detectors.py`. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
 

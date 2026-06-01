@@ -43,7 +43,7 @@ Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC cr
 
 ## Typed relations (`relations:` block)
 
-Opt-in on `claim-note` only (ADR-9). Human-set; agent never writes to this block.
+Opt-in on `claim-note` only (ADR-8). Human-set; agent never writes to this block.
 
 ```yaml
 relations:
@@ -68,7 +68,7 @@ No other relation types are currently defined. Adding a new type requires updati
 
 Expected link graph by note type:
 
-```
+```text
 paper-note ({citekey})
   ↔ person-note           (author)
   ↔ venue-note            (published in)

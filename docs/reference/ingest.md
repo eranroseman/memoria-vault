@@ -51,7 +51,7 @@ Fields the Librarian populates on the new note at creation:
 | --- | --- | --- |
 | `type` | Detected type (see table above) | Set once; never changed. |
 | `lifecycle` | `proposed` | Promoted to `current` by the human at [Classify](../how-to-guides/sources/classify-a-source.md). |
-| `added` | Today's date | |
+| `created` | Today's date | `updated` is set to the same date at creation. |
 | `citekey` | From `.bib` | Paper notes only. |
 | `doi` | From `.bib` or OpenAlex | Promoted from `_enrichment` once verified. |
 | `extract_path` | `90-assets/extracts/<citekey>.md` | Paper notes only; populated after Marker runs. |

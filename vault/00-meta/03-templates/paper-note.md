@@ -23,7 +23,7 @@ arxiv_id: ""
 pub_status: active           # active | preprint | retracted | deprecated | expression-of-concern
 lifecycle: proposed          # proposed | current
 full_text_reviewed: false    # has the human read past the abstract?
-added:
+created:
 updated:
 enriched_date:               # last time enrichment ran; surfaces in Linter's "stale enrichment" check
 study_design: ""             # research architecture — one value, controlled vocabulary
@@ -33,6 +33,27 @@ moc: []
 projects: []
 schema_version: 1
 type: paper-note
+
+# Agent-managed namespaces (see frontmatter.md). Librarian writes these; the human
+# promotes fields up to the main frontmatter above, then they are removed/maintained.
+_proposed_classification:    # proposal at ingest; removed once the human classifies
+  study_design:              # see study_design vocabulary
+  methods: []                # see methods vocabulary
+  topic: []                  # see topic vocabulary
+  projects: []
+  moc: []
+_enrichment:                 # Librarian-maintained; never edit manually (enriched_date is top-level above)
+  citation_count:
+  influential_citation_count:
+  scite_supporting:
+  scite_contrasting:
+  scite_mentioning:
+  scite_checked_date:
+  mesh_terms: []
+  acm_concepts: []
+  openalex_concepts: []
+  oa_pdf_url:
+  related_papers: []
 ---
 ```
 

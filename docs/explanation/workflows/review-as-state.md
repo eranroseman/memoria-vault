@@ -26,9 +26,9 @@ A card in `done` state carries three simultaneous assessments that are kept sepa
 
 **Review state** (`review_status: requested`) says: "The human has not yet decided whether to accept the output."
 
-**Agent recommendation** (`agent_verdict`) says: "The checking agent assessed the output as clean/issues/blocked."
+**Agent recommendation** (`agent_verdict`) says: "The checking agent assessed the output as clean/issues-found/inconclusive."
 
-These three can disagree, and they frequently do. A worker finishes (`status: done`); the Verifier finds no issues (`agent_verdict: clean`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
+These three can disagree, and they frequently do. A worker finishes (`status: done`); the Verifier finds no issues (`agent_verdict: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
 
 Keeping them separate makes each one useful. If `agent_verdict` folded into `review_status`, you couldn't ask "how often does a clean agent verdict correlate with human approval?" If `status` and `review_status` were collapsed, "worker finished" and "human approved" would be the same event — which is exactly the collapse that makes the system unreliable.
 

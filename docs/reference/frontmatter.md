@@ -34,7 +34,7 @@ Present on every note.
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |
 | `lifecycle` | string (enum) | `proposed` · `current` · `dormant` · `archived` | Human | Every note |
-| `maturity` | string (enum) | `seedling` · `evergreen` · `retired` | Human | `claim-note` only |
+| `maturity` | string (enum) | `seedling` · `budding` · `evergreen` | Human | `claim-note` only |
 | `project_phase` | string (enum) | `active` · `paused` · `complete` · `abandoned` | Human | `project-note` only |
 | `draft_stage` | string (enum) | `outline` · `rough` · `polished` · `submitted` | Human | `draft` only |
 
@@ -52,8 +52,10 @@ Present on every note.
 | Value | Meaning |
 | --- | --- |
 | `seedling` | First draft; connections sparse. Default at creation. |
-| `evergreen` | Well-connected, tested against the corpus, stable. |
-| `retired` | Superseded by another claim-note (see `superseded_by`). |
+| `budding` | Supported by multiple sources; linked from at least one other note. |
+| `evergreen` | Well-connected, tested against the corpus, stable. Ready for promotion to `reference-note`. |
+
+A superseded claim is not tracked by `maturity` — it carries `superseded_by` and `lifecycle: archived` (see [Claim-note fields](#claim-note-fields)).
 
 ---
 
@@ -62,7 +64,8 @@ Present on every note.
 | Field | Type | Owner | Present on | Notes |
 | --- | --- | --- | --- | --- |
 | `title` | string | Human | Every note | Human-set; authoritative. Do not let agents overwrite. |
-| `added` | date (`YYYY-MM-DD`) | Human / system | Every note | Date the note entered the vault. |
+| `created` | date (`YYYY-MM-DD`) | Human / system | Every note | Date the note entered the vault. Set once at creation. |
+| `updated` | date (`YYYY-MM-DD`) | Human / system | Every note | Last substantive edit. The Linter's `skeleton-drift` check compares this against the design file it mirrors. |
 | `citekey` | string | Zotero via Better BibTeX | `paper-note` | Format: `auth.lower + year + shorttitle(1,0)`. Zotero is the source of truth. |
 | `doi` | string | Zotero / agent (promoted from `_enrichment`) | `paper-note` | Promote from `_enrichment` once verified. |
 | `projects` | list of strings | Human | Most notes | Project slugs this note belongs to. Links a note to `40-workbench/<project>/`. |
@@ -90,8 +93,10 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 | `pub_status` | string (enum) | `preprint` · `published` · `retracted` · `unknown` | Human / agent | `paper-note` |
 | `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` | Human sets to `true` after reviewing the full text. Dashboards query this. |
 | `enriched_date` | date (`YYYY-MM-DD`) | — | Agent | Top-level (not inside `_enrichment`) — dashboards and the Linter's stale-enrichment check query it directly. |
+
+> **Note on `added`.** Earlier schema revisions used a single `added` field; the canonical pair is now `created` + `updated`. Any lingering `added` in an old note should be read as an alias for `created`.
 | `triage_completed` | date (`YYYY-MM-DD`) | — | Human | `paper-note` | Set when classification is complete (`lifecycle: current`). Used to measure ingest-to-triage latency and to surface stale items in the discuss-queue dashboard. |
-| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` | Set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: canonical`. Used to measure triage-to-promotion latency. |
+| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` | Set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: current`. Used to measure triage-to-promotion latency. |
 
 ---
 
@@ -99,8 +104,8 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 
 | Field | Type | Owner | Notes |
 | --- | --- | --- | --- |
-| `superseded_by` | wikilink | Human | Points to the claim-note that replaces this one. Sets `lifecycle: archived` implicitly. See ADR-22. |
-| `relations` | block | Human | Opt-in typed relations block (ADR-9). Structure: `supports: [...]` / `contradicts: [...]`. Human-set only. |
+| `superseded_by` | wikilink | Human | Points to the claim-note that replaces this one. Sets `lifecycle: archived` implicitly. See ADR-10. |
+| `relations` | block | Human | Opt-in typed relations block (ADR-8). Structure: `supports: [...]` / `contradicts: [...]`. Human-set only. |
 
 ---
 
@@ -138,7 +143,7 @@ Agent-maintained; refreshed on schedule. Values drift over time; keep in `_enric
 
 The complete set of valid `type` values. Each maps to exactly one note type in [note-types.md](note-types.md).
 
-```
+```text
 fleeting-note  answer-note    paper-note    item-note
 person-note    organization-note  venue-note  claim-note
 reference-note  moc           project-note  code-note

@@ -10,6 +10,7 @@ policy:
       - obsidian-markdown    # note-refactor (kepano obsidian-skills)
       - obsidian             # vault read/write for drafts / answers / framing
       - scientific-writing   # K-Dense
+      - qmd                  # the `query` step (hybrid BM25+vector vault search; skills.sh skill)
       # counter-outline is a SOUL.md behavior (produce 2–3 competing outlines), not a tool skill.
     write:
       - "10-inbox/02-answers/**"

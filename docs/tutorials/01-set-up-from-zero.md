@@ -80,14 +80,16 @@ Obsidian opens. You'll see the vault in Safe Mode because community plugins aren
 
 ---
 
-## Step 5 — Install the required plugins
+## Step 5 — Enable the bundled plugins
 
-Memoria requires eight plugins. Install them in this order:
+The starter vault **ships all eight required plugins pre-installed and configured** in `.obsidian/plugins/` — you do not browse or install them. The only action is to let Obsidian load them:
 
-1. **Settings → Community plugins → Browse**
-2. Search for and install each of these:
+1. **Settings → Community plugins → turn off Restricted mode.**
+2. Restart Obsidian. The eight bundled plugins activate on restart.
 
-| Plugin name (search for this) | Plugin ID |
+The eight that ship and should now be active:
+
+| Plugin name | Plugin ID |
 | --- | --- |
 | Local REST API | `obsidian-local-rest-api` |
 | Agent Client | `agent-client` |
@@ -98,20 +100,18 @@ Memoria requires eight plugins. Install them in this order:
 | Callout Manager | `callout-manager` |
 | Obsidian Git | `obsidian-git` |
 
-For each plugin: find it, click **Install**, then click **Enable**.
-
-After enabling all eight, close Settings.
+Confirm all eight appear as enabled under Settings → Community plugins, then close Settings.
 
 ---
 
 ## Step 6 — Configure the Citation Plugin
 
-The Citation Plugin needs to know where your BibTeX file lives.
+The Citation Plugin needs to know where your BibTeX file lives. Most of this is pre-configured in the bundled `data.json`; confirm these values:
 
 1. **Settings → Community plugins → Obsidian Citation Plugin → Options** (the gear icon next to it).
-2. Set **Citation database path** to: `.memoria/library.bib`
-3. Set **Literature note folder** to: `20-sources/01-papers`
-4. Set **Literature note template** to the path of your paper template: `00-meta/03-templates/paper.md`
+2. Confirm **Citation database path** is: `.memoria/library.bib`
+3. Confirm **Literature note folder** is: `20-sources/01-papers`
+4. The note body is **not** an external template file — this plugin stores it inline in `literatureNoteContentTemplate` (kept in sync with `00-meta/03-templates/paper-note.md`). There is no template-path setting to set here.
 5. Close Settings.
 
 ---

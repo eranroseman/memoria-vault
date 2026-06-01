@@ -59,19 +59,11 @@ The required plugins ship with their settings pre-configured in `.obsidian/plugi
 - Local REST API: HTTPS on port **27124**, loopback-only, insecure HTTP server **off**
 - Obsidian Citation Plugin: bibliography path set to `.memoria/library.bib`
 
-**7. (Only if you add the frontend Obsidian Linter) set its exclusions.**
+**7. Do not install the frontend Obsidian Linter.**
 
-Memoria does **not** ship the frontend `obsidian-linter` plugin — it is deferred per [ADR-12](../../../project-files/decisions/12-obsidian-linter-reference-only.md) because it writes outside the policy MCP audit trail. Memoria's linting is the `memoria-linter` Hermes profile, not this plugin.
+Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../../project-files/decisions/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `40-workbench/` drafts are both human-edited and agent-written, so no exclusion list is safe.
 
-If you choose to install it anyway, it must never run on agent-maintained folders. Settings → Obsidian Linter → Folders to ignore — add:
-
-```text
-10-inbox/
-20-sources/
-30-synthesis/02-reference/
-```
-
-This prevents the Linter from stripping the `_proposed_classification` HTML comment blocks the Librarian writes. See [recovery guides](../../how-to-guides/recovery/) for the failure mode if you skip this.
+Memoria's linting is the `memoria-linter` Hermes profile (structural validation under the policy MCP); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 
 ## Verify
 

@@ -57,8 +57,8 @@ Both the primary (`memoria-*`) and second vault (`project2-*`) profiles appear.
 Test ingest on the second vault:
 
 ```bash
-hermes -p project2-librarian chat -s llm-wiki
-/llm-wiki ingest --source <citekey> --dry-run
+hermes -p project2-librarian chat -s obsidian-paper-note
+/obsidian-paper-note --source <citekey> --dry-run
 ```
 
 The dry-run output should show paths inside `my-second-vault/vault/`, not your primary vault.

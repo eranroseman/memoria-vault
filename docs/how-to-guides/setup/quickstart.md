@@ -21,9 +21,9 @@ cd memoria-vault\vault
 ./install.ps1
 ```
 
-**2. Open the vault in Obsidian.** Open vault → Open folder as vault → select the `vault/` subfolder. Install the four required community plugins when prompted: `obsidian-local-rest-api`, `agent-client`, `obsidian-citation-plugin`, `callout-manager`. Add `dataview` and `templater-obsidian`. Restart Obsidian.
+**2. Open the vault in Obsidian.** Open vault → Open folder as vault → select the `vault/` subfolder. All eight required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
-**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][title:lower:condense:6]`. Enable auto-export to `vault/.memoria/library.bib`.
+**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][shorttitle1_0]` (the ADR-6 canonical formula — first significant title word, not a fixed char count). Enable auto-export to `vault/.memoria/library.bib`.
 
 **4. Fill the Librarian's secrets.** Copy the Obsidian REST API key from Settings → Local REST API, then:
 
@@ -36,9 +36,9 @@ Set `KILOCODE_API_KEY`, `OPENALEX_EMAIL`, and `OBSIDIAN_API_KEY`.
 **5. Ingest your first source.** Drag one PDF into Zotero. Note the citekey Better BibTeX assigned. Then:
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
+hermes -p memoria-librarian chat -s obsidian-paper-note
 # in the session:
-/llm-wiki ingest --source <your-citekey>
+/obsidian-paper-note --source <your-citekey>
 ```
 
 ## Verify

@@ -24,12 +24,14 @@ In Obsidian: right-click the note → Move file → `30-synthesis/02-reference/`
 
 If you rename, update any `[[wikilinks]]` to this note elsewhere in the vault. Obsidian can do this automatically: right-click → Rename → confirm "Update links."
 
-**4. Set `lifecycle: canonical` and `promoted_date` in frontmatter.**
+**4. Set `lifecycle: current` and `promoted_date` in frontmatter.**
 
 ```yaml
-lifecycle: canonical
+lifecycle: current
 promoted_date: 2026-05-31
 ```
+
+(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [frontmatter.md](../../reference/frontmatter.md#lifecycle-values).)
 
 **5. Add a MOC entry** (if a relevant MOC exists).
 
@@ -39,7 +41,7 @@ If no MOC exists yet and this is the third or fourth note on this topic, conside
 
 ## Verify
 
-- The note is in `30-synthesis/02-reference/` with `lifecycle: canonical`
+- The note is in `30-synthesis/02-reference/` with `lifecycle: current`
 - The "Promotion queue" on `weekly-review.md` no longer lists this note
 - All existing `[[wikilinks]]` to this note still resolve (check Obsidian's backlinks panel)
 

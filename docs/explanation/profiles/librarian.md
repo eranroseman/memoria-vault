@@ -15,7 +15,7 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 
 **Not Mapper.** Librarian and Mapper share retrieval tooling but face opposite directions: Librarian reaches outward to new sources; Mapper maps what already exists in the corpus. Giving them the same tooling without the same mission keeps the distinction sharp.
 
-**Not autonomous about classification.** The `_proposed_classification` block Librarian writes lives in an HTML comment — invisible until the human or Verifier reviews it. This is not a limitation; it's what makes optimistic proposals safe to ship without human attention on every one.
+**Not autonomous about classification.** The `_proposed_classification` block Librarian writes lives in its own agent-owned frontmatter namespace, never in the main human-owned fields — a proposal the human or Verifier promotes on review. This is not a limitation; it's what makes optimistic proposals safe to ship without human attention on every one.
 
 ---
 

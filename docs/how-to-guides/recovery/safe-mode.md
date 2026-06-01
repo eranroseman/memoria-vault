@@ -7,9 +7,9 @@ When optional tooling is unavailable, these three workflows must still function.
 **Must work:**
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
+hermes -p memoria-librarian chat -s obsidian-paper-note
 # in session:
-/llm-wiki ingest --source <citekey>
+/obsidian-paper-note --source <citekey>
 ```
 
 **If the ACP pane is unresponsive** — the terminal is always the fallback. ACP is a convenience layer over the same Hermes operations.
@@ -17,8 +17,8 @@ hermes -p memoria-librarian chat -s llm-wiki
 **If enrichment APIs are unreachable** — ingest still creates the note with Zotero metadata. Run enrichment separately once connectivity is restored:
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
-/llm-wiki ingest --source <citekey> --skip-enrichment
+hermes -p memoria-librarian chat -s obsidian-paper-note
+/obsidian-paper-note --source <citekey> --skip-enrichment
 ```
 
 A note without enrichment is better than a deferred ingest.
@@ -66,7 +66,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   -o /tmp/<output>.docx
 ```
 
-**If the Enhancing Export plugin fails** — run Pandoc directly from the terminal. Enhancing Export is a UI wrapper around the command above.
+**If an Obsidian export plugin fails** — run Pandoc directly from the terminal; it is the authoritative export route (any plugin is just a UI wrapper over the same command). See [export.md](../../reference/export.md).
 
 **If `zotero.lua` live citations are broken** — fall back to static `--citeproc`. Do not debug `zotero.lua` mid-draft. Finish the draft with static citations, then investigate using the failure-modes guide.
 

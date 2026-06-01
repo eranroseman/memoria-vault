@@ -19,8 +19,8 @@ Sorted by severity, then topic.
 
 | Symptom | Severity | Cause | Fix |
 | --- | --- | --- | --- |
-| **Obsidian Linter corrupts frontmatter** | CRITICAL | Obsidian Linter plugin running on agent-maintained folders | Exclude `10-inbox/`, `20-sources/`, `30-synthesis/02-reference/` in Obsidian Linter's `foldersToIgnore`. |
-| **`_proposed_classification` or `_enrichment` deleted** | CRITICAL | Plugin that strips HTML comments ran on save | Never enable any rule that strips HTML comments. Diff the rule registry before accepting any Obsidian Linter upgrade. |
+| **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it is incompatible with Memoria (ADR-12) | Uninstall it. It reorders/rewrites the agent-owned `_proposed_classification` / `_enrichment` frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
+| **`_proposed_classification` or `_enrichment` overwritten** | CRITICAL | A frontend formatter reordered or stripped agent-owned frontmatter namespaces on save | Exclude agent-maintained folders from any frontend formatter; let the Memoria Linter own frontmatter. |
 | Enrichment block empty after ingest | HIGH | `OPENALEX_EMAIL` missing in per-profile `.env` (silent — ingest "succeeded" with degraded data) | Check `echo $OPENALEX_EMAIL`; populate the per-profile `.env`. |
 | Dataview queries returning nothing | HIGH | `study_design` or `topic` field value doesn't match the schema vocabulary exactly — looks like "nothing to do" | Check values in notes match [frontmatter.md](frontmatter.md) vocabulary exactly. |
 | `qmd` search index stale — `draft` finds no notes | HIGH | Index not rebuilt after notes changed (silent) | `cd {vault-path} && qmd embed` — full rebuild (1–5 min for 500+ notes, 10–15 min for 2000+). |
@@ -35,7 +35,7 @@ Sorted by severity, then topic.
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
 | Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [how-to-guides/recovery/fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md). |
 | Citekey not found at ingest | LOW | `.bib` not updated or not pulled | Export from Zotero (File → Export Library → Keep Updated); `git add .memoria/library.bib && git commit && git push`. |
-| `_enrichment` fields not queryable | LOW | `_enrichment` is a YAML comment block, not real frontmatter (by design) | Use `file.mtime` as a proxy, or promote specific fields (e.g., `enriched_date`) to main frontmatter. |
+| `_enrichment` fields not queryable | LOW | `_enrichment` is a nested frontmatter namespace; Dataview can't query nested keys directly | Promote specific fields (e.g., `enriched_date`) to main frontmatter, or query the parent key. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
 | Profile install drift after edit | LOW | Vault source changed but `install.ps1` not re-run | Re-run `./install.ps1`. |
 | Bitwarden bootstrap token rejected | LOW | Wrong region or revoked token | Re-run `hermes secrets bitwarden setup` and pick the correct region. |

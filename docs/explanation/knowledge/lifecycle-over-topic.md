@@ -55,8 +55,10 @@ The durable knowledge from a project still migrates to the lifecycle layers: the
 With lifecycle folders handling the organizational dimension that folders can uniquely carry, topics are encoded in frontmatter:
 
 - `topic: [cognitive-science, attention]` on a paper note
-- `domain: neuroscience` on an entity note
-- `keywords: [working-memory, cognitive-load]` on a claim note
+- `study_design: observational` on a paper note
+- `topic: [working-memory, cognitive-load]` on a claim note
+
+(`topic`, `study_design`, and `methods` are the schema's domain fields — see [frontmatter.md](../../reference/frontmatter.md#domain-fields). There is no `domain` or `keywords` field.)
 
 This makes topic queries Dataview queries: `WHERE contains(topic, "cognitive-science")`. It makes cross-topic connections explicit: a claim note about HCI that cites cognitive science papers is connected to both topics through its links, not through its folder location.
 

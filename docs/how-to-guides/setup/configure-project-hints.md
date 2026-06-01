@@ -7,7 +7,7 @@ It is deliberately *not* a scoring matrix — there are no weights and no expect
 
 ## Prerequisites
 
-- The starter vault (ships `.memoria/project-hints.yaml.EXAMPLE`)
+- The starter vault (ships `.memoria/project-hints.yaml.example`)
 - The auto-proposal takes effect once the Librarian's `classify` step runs; the file is editable any time before that
 
 ## Steps
@@ -15,10 +15,10 @@ It is deliberately *not* a scoring matrix — there are no weights and no expect
 **1. Copy the example into place.**
 
 ```bash
-cp .memoria/project-hints.yaml.EXAMPLE .memoria/project-hints.yaml
+cp .memoria/project-hints.yaml.example .memoria/project-hints.yaml
 ```
 
-Copy-on-first-use, like `.env.EXAMPLE`. An absent `project-hints.yaml` simply means manual project tagging — nothing breaks without it.
+Copy-on-first-use. (Memoria-authored examples use lowercase `.example`; Hermes-generated ones like `.env.EXAMPLE` stay uppercase.) An absent `project-hints.yaml` simply means manual project tagging — nothing breaks without it.
 
 **2. Declare one entry per active project.**
 
@@ -50,7 +50,7 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 
 ## Verify
 
-- `.memoria/project-hints.yaml` exists (not just the `.EXAMPLE`).
+- `.memoria/project-hints.yaml` exists (not just the `.example`).
 - Each project entry has an `id` and a non-empty `primary_topics` list.
 - After the next ingest + classify, the note's `_proposed_classification` proposes a `projects` value you can confirm at triage.
 

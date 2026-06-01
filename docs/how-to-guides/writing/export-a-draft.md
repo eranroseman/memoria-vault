@@ -33,7 +33,7 @@ Adjust the relative path to `.memoria/library.bib` based on your draft's depth i
 pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to docx \
-  --output 40-workbench/<project>/05-deliverables/<output>.docx \
+  --output 50-deliverables/01-manuscripts/<output>.docx \
   --citeproc
 ```
 
@@ -46,7 +46,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to pdf \
   --pdf-engine=lualatex \
-  --output 40-workbench/<project>/05-deliverables/<output>.pdf \
+  --output 50-deliverables/01-manuscripts/<output>.pdf \
   --citeproc
 ```
 
@@ -56,7 +56,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to gfm \
-  --output 40-workbench/<project>/05-deliverables/<output>.md \
+  --output 50-deliverables/01-manuscripts/<output>.md \
   --citeproc
 ```
 
@@ -68,15 +68,15 @@ hermes -p memoria-writer chat -s export
 /export --project <project-slug> --format docx
 ```
 
-This runs the same Pandoc command via the Writer profile and writes the output to `05-deliverables/`.
+This runs the same Pandoc command via the Writer profile and writes the output to `50-deliverables/01-manuscripts/`. Because `50-deliverables/` is a review-gated zone, the Writer's write lands in `dry_run` until you approve it (see [Work the review queue](work-the-review-queue.md)).
 
-**6. Move the deliverable to `50-deliverables/`** when finalized.
+**6. Version the deliverable** when finalized.
 
-Deliverables at submission-ready status move to the top-level `50-deliverables/` folder:
+`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [export.md](../../reference/export.md)). Add a version suffix in place:
 
 ```powershell
-Move-Item "vault\40-workbench\<project>\05-deliverables\<output>.docx" `
-          "vault\50-deliverables\<output>-v1.docx"
+Move-Item "vault\50-deliverables\01-manuscripts\<output>.docx" `
+          "vault\50-deliverables\01-manuscripts\<output>-v1.docx"
 ```
 
 ## Live Word citations via `zotero.lua` (optional)
@@ -129,7 +129,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 
 ## Verify
 
-- The output file exists in `05-deliverables/` or `50-deliverables/`
+- The output file exists in `50-deliverables/01-manuscripts/` (the canonical manuscript target)
 - Bibliography entries render correctly (check the last section of the output)
 - All `[@citekey]` citations are resolved — none appear as bare `[@...]` in the output
 

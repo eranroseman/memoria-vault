@@ -101,11 +101,11 @@ Per-field progress for the v1 → v2 migration that added `pdf_uri` and `extract
 TABLE WITHOUT ID
   file.link AS Source,
   citekey AS Citekey,
-  added AS Added,
+  created AS Created,
   schema_version AS Version
 FROM "20-sources/01-papers"
 WHERE type = "paper-note" AND (pdf_uri = "" OR !pdf_uri OR extract_path = "" OR !extract_path)
-SORT added ASC
+SORT created ASC
 LIMIT 30
 ```
 

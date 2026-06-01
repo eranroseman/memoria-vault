@@ -318,6 +318,29 @@ breadth for much less shell to build and maintain.
   exist today** (see explanation below).
 - Decision on the open questions below.
 
+### Pinned skill install IDs
+
+Resolved against the live sources (2026-05-31). The official Hermes skills ship with the
+Hermes install (bundled / `official/<area>/<name>`); the lane-override allows them by name.
+External skills are installed by the bootstrap; the two Memoria skills ship in the vault.
+
+| Skill(s) | Source | How it's provisioned |
+|---|---|---|
+| `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`, `scikit-learn`, `umap-learn` | K-Dense | `git clone https://github.com/K-Dense-AI/scientific-agent-skills` → `~/.hermes/skills/` (auto-discovered) |
+| `arxiv` | official Hermes | `official/research/arxiv` (bundled with Hermes; allow by name) |
+| `llm-wiki` | official Hermes | `official/research/llm-wiki` |
+| `obsidian` | official Hermes | `official/note-taking/obsidian` |
+| `ocr-and-documents` | official Hermes | `official/productivity/ocr-and-documents` |
+| `github-repo-management` | official Hermes | `official/github/github-repo-management` |
+| `codex`, `claude-code` | official Hermes | `official/autonomous-ai-agents/{codex,claude-code}` |
+| `obsidian-markdown` | kepano/obsidian-skills | `hermes skills install kepano/obsidian-skills/skills/obsidian-markdown` (or clone + `external_dirs`) |
+| `qmd` | skills.sh / `tobi/qmd` | `hermes skills install skills-sh/moltbot/skills/qmd`; CLI is Node ([tobi/qmd](https://github.com/tobi/qmd)). **Packaging is fragmented — confirm the exact skill at build.** |
+| `obsidian-paper-note`, `retraction-check` | **Memoria-authored** | ship as `SKILL.md` in the profile `skills/` dirs (authored 2026-05-31) |
+| `rest-passthrough` | policy capability | not a skill — a lane-override capability token |
+
+Two confirm-at-build items remain: whether the official skills are bundled vs. need
+`hermes skills install official/…`, and the exact `qmd` skill packaging.
+
 ### What `.memoria/mcp/requirements.txt` is
 
 The Python dependency list for Memoria's MCP servers, installed by step 5
@@ -397,8 +420,8 @@ need authoring as skills**.
 | `workspace-coordinate` | `autonomous-ai-agents/{claude-code,codex,opencode}` |
 | `commit-and-document` | `github/github-repo-management` |
 | `cluster-mapping` | K-Dense `scikit-learn` (HDBSCAN) + `umap-learn` |
-| `similarity-check` | `mlops/vector-databases` (or the smart-connections index) |
-| `find-duplicates` | same vector backbone as `similarity-check` |
+| `similarity-check` | `qmd` (hybrid BM25+vector vault search; skills.sh skill — the documented search backbone) |
+| `find-duplicates` | same `qmd` backbone as `similarity-check` |
 
 **Different mechanism, not a Hermes skill (2) — both now done:** `scaffold-code-note` →
 a **QuickAdd** Template command (`Memoria: scaffold code note`, like capture-fleeting /
@@ -414,11 +437,24 @@ write-claim); `graph-analyze` → a new **`detectors.py`** function (`graph_anal
 / [hallucinator](https://github.com/gianlucasb/hallucinator) are references for the pattern).
 *If one later proves to need determinism it can be promoted to a real skill — but the default stays a procedure.*
 
-**Authored as a real (thin) skill — the only two (2):** `obsidian-paper-note` (ingest:
-`productivity/ocr-and-documents` + `pyzotero` + `note-taking/obsidian`) and `retraction-check`
-([open-retractions](https://github.com/open-retractions/open-retractions) API +
-[crossref-cli](https://github.com/open-retractions/crossref-cli) + `pyzotero`). Kept as skills
-because they are deterministic multi-step pipelines where prompt orchestration is less reliable.
+**Authored as a real (thin) skill — the only two (2).** Kept as skills because they are
+deterministic multi-step pipelines where prompt orchestration is less reliable. Pre-authoring
+search (2026-05-31) found no drop-in skill but clear components + prior art to compose:
+
+- **`obsidian-paper-note`** (ingest: Zotero metadata → PDF extraction → literature note).
+  Compose **K-Dense `pyzotero`** (metadata) + **K-Dense `pdf`** *or* official
+  `productivity/ocr-and-documents` (extraction) + **`note-taking/obsidian`** (write to
+  `20-sources/01-papers/` using the paper-note template). Starting point: the archived
+  research-wiki **`obsidian-paper-note` SKILL.md** ([setup-hermes-research-wiki.sh](../../../_archived/research-wiki/80-docs/setup-hermes-research-wiki.sh), lines ~324-368). Prior art:
+  [zotero-obsidian-claude](https://github.com/AmandaWuMMMqq/zotero-obsidian-claude) (a
+  Claude-based Zotero→Obsidian pipeline, close to the Librarian's ingest). Note the bundled
+  **obsidian-citation-plugin already creates these notes from `.bib` on the human side** — the
+  skill is the *agent* path with PDF extraction + enrichment.
+- **`retraction-check`** (DOI → retracted?). The [open-retractions](https://github.com/open-retractions/open-retractions)
+  API is the core: `GET https://openretractions.com/api/doi/{doi}/data.json` → `retracted`
+  boolean (wraps Retraction Watch); optionally cross-check CrossRef retraction metadata.
+  `pyzotero` resolves vault DOIs; compare against each paper note's `pub_status`. Pure
+  HTTP + boolean compare — deterministic, matching the Verifier SOUL.md spec.
 
 > **`detectors.py` audit (2026-05-31).** The Linter is **not a set of skills — it's the
 > already-shipped `detectors.py`** (7 deterministic, report-only detectors + a
@@ -429,9 +465,9 @@ because they are deterministic multi-step pipelines where prompt orchestration i
 > (`allow.skills: []`) — `detectors.py` runs via the profile's terminal capability.
 
 Net: **3 + 6 + 2 + 2 + 5 + 2 = 20.** What actually gets *authored as a skill* is **2**
-(`obsidian-paper-note`, `retraction-check`); plus **1 new `detectors.py` function**
-(`graph-analyze`) and **1 QuickAdd choice** (`scaffold-code-note`). Everything else is
-lane-override + `SOUL.md` edits — no wrapper files.
+(`obsidian-paper-note`, `retraction-check` — still to author); the **`graph_analyze`
+`detectors.py` function** and the **`Memoria: scaffold code note` QuickAdd choice** are
+**done** (2026-05-31). Everything else is lane-override + `SOUL.md` edits — no wrapper files.
 
 ### What "per-profile wiring" means
 
@@ -473,14 +509,18 @@ from the walkthrough). Profiles also carry `skills/` and `cron/` directories.
 
 ## Still open (before/while building)
 
+- **Author the 2 remaining skills** — `obsidian-paper-note` and `retraction-check` (the only
+  two of the 20 that stay real authored skills; pre-authoring search done, components
+  identified above). `graph-analyze` (`detectors.py`) and `scaffold-code-note` (QuickAdd) are
+  **done (2026-05-31)**; the rest are direct-use / `SOUL.md` procedures.
+- **Write the `SOUL.md` procedures** for the 5 Memoria-logic items (`session-log`,
+  `scope-project`, `gap-report`, `comparative-brief`, `cite-check`) and confirm the
+  prompt-only behaviors (`socratic-processing`, `lens-reading`, `counter-outline`).
+- **Skill install IDs pinned** — see [Pinned skill install IDs](#pinned-skill-install-ids).
+  Two confirm-at-build residuals: official-skills bundled-vs-`install`, and the exact `qmd`
+  skill packaging.
 - **Hosting** — confirm the public repo + raw URL for the one-liner.
-- **Author the 20 custom skills** — verification (below) showed only 7 of the 28
-  lane-override skills exist (5 K-Dense + `arxiv`/`llm-wiki`); the other 20 are Memoria-coined
-  and must be written as `SKILL.md` files in the profile `skills/` dirs before those profiles
-  work. This is the **largest remaining v0.1 build item**, not a build-time lookup.
-- **Reconcile skill-name drift** — `arxiv-search`→`arxiv`, `llm-wiki-draft`→`llm-wiki`,
-  `cluster-mapping`→`cluster-map`; pin names across lane-overrides, `commands.md`, and the
-  skills to be authored.
+- **Write the bootstrap scripts** (`install.sh` + thin `install.ps1`) per this design, once the above are settled.
 
-(The KiloCode auth / `env_requires` reconciliation is **resolved** — see the Secrets
-section note.)
+(Resolved: KiloCode auth = `KILOCODE_API_KEY`; `qmd` kept as the search skill (skills.sh);
+skill-name drift reconciled in the lane-overrides + `profiles.md`.)

@@ -60,19 +60,19 @@ The `policy` server's `args` should point at an absolute path ending in `.memori
 **4. Test the Librarian can reach Obsidian.**
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
+hermes -p memoria-librarian chat -s obsidian-paper-note
 # in the session:
-/llm-wiki status
+/obsidian-paper-note --check
 ```
 
-The status command queries the Obsidian REST API. A successful response shows the vault name and note count. A connection error means the API key is wrong or Obsidian isn't running.
+The `--check` query exercises the Obsidian REST API without writing. A successful response shows the vault name and note count. A connection error means the API key is wrong or Obsidian isn't running.
 
 **5. Test ingest on a real source.**
 
 Pick a citekey from `.memoria/library.bib` and run:
 
 ```text
-/llm-wiki ingest --source <citekey> --dry-run
+/obsidian-paper-note --source <citekey> --dry-run
 ```
 
 `--dry-run` reports what the Librarian *would* write without actually writing anything. Confirm the output shows the expected note path and metadata fields.

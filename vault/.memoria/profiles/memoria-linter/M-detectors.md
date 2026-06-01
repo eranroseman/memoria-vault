@@ -173,7 +173,7 @@ Procedure:
 1. For each note under `20-sources/01-papers/` (and any other folder that produces paper-notes), read the `extract_path` frontmatter field.
 2. Skip notes where `extract_path` is empty, missing, or null — those are pre-migration notes covered by the schema-version-mismatch check, not by `extract-path-broken`.
 3. For each non-empty `extract_path`, resolve it against the vault root and check the file exists (`Test-Path` on Windows, `os.path.exists` on Unix).
-4. If the file is missing: report the paper-note path, the broken `extract_path` value, the citekey (from frontmatter), and the paper-note's `added` or `enriched_date` timestamp (so the human can correlate with ingest runs).
+4. If the file is missing: report the paper-note path, the broken `extract_path` value, the citekey (from frontmatter), and the paper-note's `created` or `enriched_date` timestamp (so the human can correlate with ingest runs).
 
 This action is `report` only. Never auto-clear the field, never auto-trigger Marker re-extraction. The remediation is a per-note human decision with three usual paths:
 

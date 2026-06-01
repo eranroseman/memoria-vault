@@ -16,8 +16,8 @@ sources: []          # [[source notes]] this claim draws on — paper-note / ite
 moc: []
 projects: []
 lifecycle: current
-superseded_by:       # [[newer-claim]] once overturned; currency derives from this field (ADR-22). Human-set.
-relations:           # opt-in typed associative links (ADR-9). Human-set; the agent proposes only.
+superseded_by:       # [[newer-claim]] once overturned; currency derives from this field (ADR-10). Human-set.
+relations:           # opt-in typed associative links (ADR-8). Human-set; the agent proposes only.
   supports: []       # [[claim]] this claim supports (directional)
   contradicts: []    # [[claim]] this claim disagrees with (symmetric)
 ---

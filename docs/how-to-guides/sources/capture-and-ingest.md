@@ -35,9 +35,9 @@ The timestamp should be recent. If it's stale, manually trigger: File → Export
 **5. Run ingest in a Librarian session.**
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
+hermes -p memoria-librarian chat -s obsidian-paper-note
 # then, in the session:
-/llm-wiki ingest --source <citekey>
+/obsidian-paper-note --source <citekey>
 ```
 
 Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sense`). The Librarian will:
@@ -51,7 +51,7 @@ Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sens
 
 **6. Open the note in Obsidian.**
 
-After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top and a `_proposed_classification` HTML comment block below the frontmatter.
+After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
 
 The note is now at `lifecycle: proposed`. The next step is [classify it](classify-a-source.md).
 
@@ -60,11 +60,11 @@ The note is now at `lifecycle: proposed`. The next step is [classify it](classif
 - The note exists in the correct folder
 - `00-meta/02-logs/audit.jsonl` shows a new `allow_with_log` entry with this citekey's path
 - The `[!brief]` callout is present
-- The `_proposed_classification` comment block is present with `topic`, `methods`, and `study_design` fields
+- The `_proposed_classification` frontmatter block is present with `topic`, `methods`, and `study_design` fields
 
 ## Batch ingest
 
-For multiple sources, run `/llm-wiki ingest --source <citekey>` once per source in the same session, or run separate sessions. Don't try to pass multiple citekeys in one command — type detection and enrichment run per-source.
+For multiple sources, run `/obsidian-paper-note --source <citekey>` once per source in the same session, or run separate sessions. Don't try to pass multiple citekeys in one command — type detection and enrichment run per-source.
 
 ## Related
 

@@ -5,7 +5,7 @@ Resolve "citekey not found" errors at ingest caused by Zotero's auto-export not 
 
 ## Symptom
 
-Running `/llm-wiki ingest --source <citekey>` returns `"citekey not found"` or `"not in library.bib"`.
+Running `/obsidian-paper-note --source <citekey>` returns `"citekey not found"` or `"not in library.bib"`.
 
 ## Detect
 
@@ -50,8 +50,8 @@ git log --oneline vault/.memoria/library.bib | head -3   # recent commit timesta
 Then retry the ingest:
 
 ```bash
-hermes -p memoria-librarian chat -s llm-wiki
-/llm-wiki ingest --source <citekey> --dry-run
+hermes -p memoria-librarian chat -s obsidian-paper-note
+/obsidian-paper-note --source <citekey> --dry-run
 ```
 
 `--dry-run` should complete without a "not found" error.

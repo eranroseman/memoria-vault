@@ -1,19 +1,20 @@
 # Distribution model
 
-Memoria ships as a single repo (`memoria-vault`) with two top-level folders that serve different audiences and can be used independently.
+Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit** — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
 
-| Folder | Contents | Audience |
+| Path | Contents | Audience |
 | --- | --- | --- |
+| `install.sh` / `install.ps1` (repo root) | The **bootstrap installer**: provisions the stack and deploys the vault. `install.sh` is the real implementation; `install.ps1` is a thin WSL2 launcher. | End users (run once). |
+| `vault/` | The starter vault — folder skeleton, Obsidian config, and the `.memoria/` scaffold. The **runtime artifact**. | End users (opened in Obsidian after install). |
 | `docs/` | Architecture, workflow, profile, and decision documents. Not needed at runtime. | Developers and contributors. |
-| `vault/` | The starter vault: folder skeleton, Obsidian config, `.memoria/` scaffold, and `install.ps1`. | End users. |
 
-The human opens `vault/` directly in Obsidian. The engineering docs explain how the system works but are not required for it to function. Because a user may use only one folder, any cross-folder reference is a GitHub URL, never a relative path.
+The bootstrap copies `vault/` to a working location (off OneDrive on Windows); the human opens **that deployed copy** in Obsidian. The deployed vault is self-contained — it does not carry `docs/`, so any reference from a vault-resident file (e.g. `vault/README.md`) to `docs/` or `project-files/` is a **GitHub URL, never a relative path**. The installers live at the repo root (not inside `vault/`) because the bootstrap is the clone/entry point; consequently **`vault/` is no longer independently installable** — installing requires the whole repo. See [bootstrap-installer.md](../../../project-files/proposals/bootstrap-installer.md) for the full installer design.
 
 ---
 
 ## What ships in the starter vault
 
-The starter vault is the single distributable artifact. Cloning it gives the human:
+`vault/` is the runtime artifact the bootstrap deploys. It contains:
 
 **Vault skeleton** — numbered top-level folders (`00-meta/` through `95-archive/`) encoding lifecycle stage, with note templates, dashboards, and human-facing reference notes pre-populated.
 
@@ -28,11 +29,11 @@ The starter vault is the single distributable artifact. Cloning it gives the hum
 
 ---
 
-## Why `install.ps1` is idempotent
+## Why the profile install is idempotent
 
-`install.ps1` is designed to be re-run after every `git pull` without requiring care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
+The bootstrap's profile-install step (the function in `install.sh`, also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
 
-The idempotency matters because the install script is the mechanism that keeps deployed profiles synchronized with the vault source. Without it, the seven profile directories under `~/.hermes/profiles/` would drift from their vault source over time — a drift the Linter's `profile-install-drift` detector catches but cannot fix. The script is the fix; making it safe to re-run is what makes the fix actionable.
+The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with the vault source. Without it, the seven profile directories under `~/.hermes/profiles/` would drift from their vault source over time — a drift the Linter's `profile-install-drift` detector catches but cannot fix. The re-run is the fix; making it safe to re-run is what makes the fix actionable.
 
 ---
 

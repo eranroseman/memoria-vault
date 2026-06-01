@@ -20,10 +20,10 @@ In Zotero 9: Tools → Better BibTeX Preferences (in Zotero 5/6 this was Edit �
 Citation Keys tab → Citation key formula:
 
 ```text
-[auth.lower][year][title:lower:condense:6]
+[auth.lower][year][shorttitle1_0]
 ```
 
-This produces keys in the `mamykina2010sense` shape — lowercase author, year, first six characters of condensed title — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect.
+This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula in [ADR-6](../../../project-files/decisions/06-citekey-naming-convention.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
 
 **3. Enable automatic export.**
 
@@ -96,6 +96,6 @@ Register these now; you'll add them to the Librarian's `.env` in [set-up-hermes.
 ## Related
 
 - Next step: [Set up Hermes](set-up-hermes.md)
-- Citekey naming convention: [ADR-04](../../../project-files/decisions/06-citekey-naming-convention.md)
+- Citekey naming convention: [ADR-6](../../../project-files/decisions/06-citekey-naming-convention.md)
 - What ingest does with the `.bib`: [capture-and-ingest.md](../sources/capture-and-ingest.md)
 - Fixing a stale `.bib`: [fix-stale-bib.md](../recovery/fix-stale-bib.md)

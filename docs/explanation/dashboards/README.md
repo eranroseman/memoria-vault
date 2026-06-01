@@ -1,12 +1,12 @@
 # Dashboards
 
-Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped here by the kind of attention they demand.
+Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped here by the kind of attention they demand. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)
 
 ## Daily glance
 
 | Dashboard | Question it answers |
 | --- | --- |
-| [daily-health.md](daily-health.md) | Is anything broken right now? What needs attention today? |
+| [daily-health.md](daily-health.md) | Is anything broken right now? What needs attention today? (implemented as `index.md`) |
 | [board-state.md](board-state.md) | What work is in flight? Where are cards stuck? |
 
 ## Synthesis agenda

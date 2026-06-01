@@ -25,10 +25,15 @@ curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scri
 hermes --version   # confirm
 ```
 
-Install Python tools:
+Install the document/search tools:
 
 ```bash
-pip install markitdown qmd --break-system-packages
+pip install markitdown --break-system-packages   # PDF / Office → markdown
+
+# qmd (hybrid BM25 + vector search) is a Node CLI, NOT a pip package. Install it
+# via npm (the Hermes installer already provides Node), or as a Hermes skill:
+#   hermes skills install skills-sh/moltbot/skills/qmd
+# See github.com/tobi/qmd for the exact npm package + GGUF embedding-model setup.
 ```
 
 **2. Set up passwordless SSH.**
@@ -83,7 +88,7 @@ cd ~/memoria-vault/vault
 
 **6. Configure the VPS profiles — remove the Obsidian MCP server.**
 
-The VPS has no running Obsidian instance. Edit each profile's `mcp.json` under `~/.hermes/profiles/memoria-<name>/mcp.json` and remove the `obsidian` server entry. The `policy` and `tasks` servers remain.
+The VPS has no running Obsidian instance. Edit each profile's `mcp.json` under `~/.hermes/profiles/memoria-<name>/mcp.json` and remove the `obsidian` server entry. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
 
 **7. Set environment variables on the VPS.**
 
@@ -166,9 +171,9 @@ The agent-client plugin URL in Obsidian stays `http://localhost:8642` regardless
 cd ~/memoria-vault/vault
 qmd embed
 git pull --ff-only
-hermes -p memoria-librarian chat -s llm-wiki
+hermes -p memoria-librarian chat -s obsidian-paper-note
 # in session:
-/llm-wiki ingest --source <a-known-citekey> --dry-run
+/obsidian-paper-note --source <a-known-citekey> --dry-run
 ```
 
 Verify in Obsidian: dry-run output appears and the Syncthing sync completes within ~15 seconds.

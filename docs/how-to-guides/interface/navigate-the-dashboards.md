@@ -1,7 +1,7 @@
 
 # How to navigate the dashboards
 
-Ten dashboards in `00-meta/01-dashboards/`. Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
+Ten dashboards in `00-meta/01-dashboards/`, plus the `index.md` home page (the Daily Health view). Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
 
 For what each dashboard shows in detail, see [explanation/dashboards/](../../explanation/dashboards/).
 
@@ -44,7 +44,7 @@ Paper notes that are `lifecycle: current` but haven't had a Socratic discussion 
 ### "What open questions has my synthesis raised?"
 **Open Questions** — open manually.
 
-Aggregates questions from MOC gap sections and notes tagged `has_open_question: true`. Review during the weekly review or when starting a new topic cluster. These questions are things your existing notes flag but can't answer — they're discovery prompts.
+Collects every claim note and paper note that contains an explicit `## Open questions` section (read from `30-synthesis/01-claims/` and `20-sources/01-papers/`), newest first. It shows *which* notes carry questions — you open the note to read them in context. Review during the weekly review or when starting a new topic cluster. These are things your existing notes flag but can't answer — discovery prompts.
 
 ### "Are any of my claims contradicted by other claims?"
 **Contradictions** — open manually.

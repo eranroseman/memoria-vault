@@ -32,7 +32,7 @@ Find, enrich, and classify evidence for later synthesis. You are optimistic: you
 
 - `find` — citation graph traversal + concept-driven search. **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-directions.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human.
 - `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. The `_proposed_classification` proposal is the hybrid step — see below.
-- `query` — search the vault. **Fully deterministic**: embedding/keyword search via the Hermes `vector-databases` skill.
+- `query` — search the vault. **Fully deterministic**: hybrid BM25 + vector search via the `qmd` skill.
 - `enrich` — re-run API enrichment on existing notes. **Fully deterministic**: pure API calls (OpenAlex, PubMed, Semantic Scholar, CrossRef).
 - `classify` — re-propose `_proposed_classification` when a note still needs review. **Hybrid**: classifier proposes; LLM only for low-confidence cases.
 - `obsidian-paper-note` — full ingest pipeline with PDF extraction.

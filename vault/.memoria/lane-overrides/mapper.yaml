@@ -9,7 +9,7 @@ policy:
       # scope-project / gap-report / cluster-mapping / comparative-brief are SOUL.md
       # procedures composing these real skills:
       - obsidian            # vault query + write corpus-map / gap-report / briefs / cluster-maps
-      - vector-databases    # similarity for gap-report + comparative-brief
+      - qmd                 # hybrid BM25+vector retrieval for gap-report + comparative-brief (skills.sh skill)
       - scikit-learn        # HDBSCAN clustering + topic modeling (K-Dense)
       - umap-learn          # cluster-map dimensionality reduction (K-Dense)
     write:

@@ -34,7 +34,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Escalation threshold** — `max_retries` (default `3`): after this many recoverable failures, a card auto-moves to `blocked`. Per-lane configurable.
 
-**Handoff payload** — the structured `summary` a worker writes on `kanban_complete`, containing: `task`, `result`, `allowed_paths`, `promote_target`, `context_notes`. Self-contained so the next worker needs nothing else.
+**Handoff payload** — the forward-looking `metadata` block that provisions the next worker, containing: `goal`, `context`, `allowed_paths` (write-scope floor), `expected_outputs`, `review_checks`. Self-contained so the next worker needs nothing else. Distinct from the backward-looking `summary` (the completing worker's report).
 
 **Lane** — a profile's execution path on the board. A lane *is* an `assignee` value (`memoria-<name>`); there is no separate `lane` field. Socratic is a profile but not a lane — it runs synchronously, off the board.
 

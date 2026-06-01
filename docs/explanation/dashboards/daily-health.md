@@ -1,7 +1,7 @@
 
 # The Daily Health dashboard
 
-Daily Health is the always-on system-health view, opened every morning. Four sections, each a one-decision query: today's blocked cards and those awaiting review, last 24-hour HIGH/CRITICAL drift signals, lane-health trust scores, and cron status. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+Daily Health is the always-on system-health view, opened every morning. It is implemented as the dashboards' `index.md` home page (`00-meta/01-dashboards/index.md`) — there is no separate `daily-health.md` in the vault. Four sections, each a one-decision query: today's blocked cards and those awaiting review, last 24-hour HIGH/CRITICAL drift signals, lane-health trust scores, and cron status. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
 ---
 
