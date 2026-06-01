@@ -191,6 +191,6 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 
 ## Related
 
-- [Linter SOUL.md](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the M-detectors), the severity scale, and the verdict band rollup.
+- [Linter SOUL.md](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
 - [docs/reference/policy.md](https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/policy.md) — the audit log that `vault-hash-drift` verifies against.
 - [project-files/proposals/profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).

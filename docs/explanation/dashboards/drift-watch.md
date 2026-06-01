@@ -24,7 +24,7 @@ Schema migration progress also appears here — per-template `schema_version` ro
 
 ## When drift-watch becomes relevant
 
-Drift-watch is most useful after changes that could desynchronize the working vault from the deployed configuration: plugin upgrades, edits to profile `SOUL.md` files or lane-override files, or any event that appears in the audit log as an anomaly. The M-detectors exist precisely because these desynchronizations are invisible at the content level — the vault looks clean because the content is unchanged, but the structural alignment between source, deployed profiles, and working vault has shifted.
+Drift-watch is most useful after changes that could desynchronize the working vault from the deployed configuration: plugin upgrades, edits to profile `SOUL.md` files or lane-override files, or any event that appears in the audit log as an anomaly. The structural detectors exist precisely because these desynchronizations are invisible at the content level — the vault looks clean because the content is unchanged, but the structural alignment between source, deployed profiles, and working vault has shifted.
 
 The Friday weekly review includes a drift-watch pass because a week of ordinary operation also accumulates small drift signals that are not individually urgent but benefit from regular review.
 
