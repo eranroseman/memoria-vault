@@ -1,3 +1,8 @@
+---
+title: Home
+nav_order: 1
+---
+
 # Memoria documentation
 
 Seven AI agents that read, enrich, map, verify, and write inside your Obsidian vault — under a policy gate that audits every proposed change before it lands.

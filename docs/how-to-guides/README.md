@@ -1,3 +1,8 @@
+---
+title: How-to guides
+nav_order: 3
+has_children: true
+---
 
 # How-to guides
 

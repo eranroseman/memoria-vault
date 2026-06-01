@@ -1,3 +1,9 @@
+---
+title: Tutorials
+nav_order: 2
+has_children: true
+---
+
 # Tutorials
 
 Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you follow concrete steps in Obsidian and end with something real in your vault. Work through them in order — each builds on the last.
