@@ -39,14 +39,14 @@ Files originally written as ADR candidates — real decisions that didn't get ma
 
 | File | What it proposes |
 |---|---|
-| [10-code-artifact-autopilot.md](10-code-artifact-autopilot.md) | Autonomous keep/revert loop in Coder lane |
-| [14-cross-run-skill-insights.md](14-cross-run-skill-insights.md) | Cross-run skill-insights memory |
-| [15-dedicated-review-note-type.md](15-dedicated-review-note-type.md) | Dedicated review-note type |
-| [17-retriever-scout-profile.md](17-retriever-scout-profile.md) | Split Librarian into Retriever + Librarian |
-| [27-ratchet-duplicate-gate.md](27-ratchet-duplicate-gate.md) | Similarity gate before filing synthesis notes |
-| [28-frozen-evaluator-deferred.md](28-frozen-evaluator-deferred.md) | Per-note-type acceptance checklists |
-| [29-admin-gui-surface.md](29-admin-gui-surface.md) | Admin/forensic GUI surface |
-| [31-configurable-review-gate-mode.md](31-configurable-review-gate-mode.md) | Configurable review-gate mode for comparison studies |
+| [PROP-01-code-artifact-autopilot.md](PROP-01-code-artifact-autopilot.md) | Autonomous keep/revert loop in Coder lane |
+| [PROP-02-cross-run-skill-insights.md](PROP-02-cross-run-skill-insights.md) | Cross-run skill-insights memory |
+| [PROP-03-dedicated-review-note-type.md](PROP-03-dedicated-review-note-type.md) | Dedicated review-note type |
+| [PROP-04-retriever-scout-profile.md](PROP-04-retriever-scout-profile.md) | Split Librarian into Retriever + Librarian |
+| [PROP-05-ratchet-duplicate-gate.md](PROP-05-ratchet-duplicate-gate.md) | Similarity gate before filing synthesis notes |
+| [PROP-06-frozen-evaluator-deferred.md](PROP-06-frozen-evaluator-deferred.md) | Per-note-type acceptance checklists |
+| [PROP-07-admin-gui-surface.md](PROP-07-admin-gui-surface.md) | Admin/forensic GUI surface |
+| [PROP-08-configurable-review-gate-mode.md](PROP-08-configurable-review-gate-mode.md) | Configurable review-gate mode for comparison studies |
 
 ### Capability proposals
 

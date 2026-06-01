@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 31
+id: PROP-08
 title: Configurable review-gate mode (blocking | advisory) for comparison studies
-status: proposed
-date_proposed: 2026-05-31
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-31
 ---
 
-# Proposal 31: Configurable review-gate mode (blocking | advisory) for comparison studies
+# PROP-08: Configurable review-gate mode (blocking | advisory) for comparison studies
 
 ## Context
 
