@@ -424,8 +424,12 @@ install_profiles() {
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
       env_file="$HERMES_PROFILES_DIR/$p/.env"
       if [ "$DRY_RUN" -eq 0 ] && [ -f "$env_example" ] && [ ! -f "$env_file" ]; then
-        cp "$env_example" "$env_file"
-        say "    created .env from .env.EXAMPLE (fill in real values)"
+        # Copy the template but DROP empty-valued lines (`FOO=`). An empty value
+        # in a profile .env SHADOWS the same key in the global ~/.hermes/.env, so a
+        # profile run reports "no API key was found" even when the global key is
+        # set. Keys without a per-profile override fall through to the global env.
+        grep -vE '^[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*$' "$env_example" > "$env_file" || :
+        say "    created .env from .env.EXAMPLE (put shared keys in $HERMES_HOME/.env)"
       fi
     else
       skipped="$skipped\n    [-] $p: hermes profile install failed"
@@ -535,12 +539,13 @@ zotero_plugins() {
 # =============================================================================
 print_secrets_guidance() {
   hdr "API keys (you add these — never commit them)"
-  say "Each profile has a .env at  $HERMES_PROFILES_DIR/<profile>/.env"
-  say "The Librarian needs the most; the rest share a minimum set. Set at least:"
+  say "Put shared keys in the GLOBAL  $HERMES_HOME/.env  — one place, all profiles:"
   say "    KILOCODE_API_KEY=...        # model access (shipped provider: kilocode / kilo.ai)"
   say "    OBSIDIAN_API_KEY=...        # 64-char hex from the Obsidian REST API plugin"
-  say "    OPENALEX_EMAIL=you@x.com    # Librarian only — polite-pool header"
-  say "Full guide: docs/how-to-guides/setup/set-up-hermes.md"
+  say "    OPENALEX_EMAIL=you@x.com    # Librarian — polite-pool header"
+  say "Per-profile overrides (rare) go in  $HERMES_PROFILES_DIR/<profile>/.env"
+  say "  — but an EMPTY key line there shadows the global one, so leave it out."
+  say "Full guide: https://eranroseman.github.io/memoria-vault/how-to-guides/setup/set-up-hermes/"
 }
 
 print_next_steps() {
