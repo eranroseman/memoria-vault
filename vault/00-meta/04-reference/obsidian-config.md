@@ -1,6 +1,6 @@
 # Obsidian configuration
 
-Which Obsidian community plugins Memoria uses and the load-bearing settings you shouldn't change. Companion to plugins/README.md.
+Which Obsidian community plugins Memoria uses and the load-bearing settings you shouldn't change. Companion to [Obsidian plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/).
 
 ## Required plugins
 
