@@ -93,7 +93,7 @@ Ok "WSL2 ready (kernel: $kernel)"
 # ============================================================================
 # 2. Windows GUI apps via winget (guided). install.sh runs with --no-apps.
 # ============================================================================
-function Ensure-WingetApp {
+function Install-WingetApp {
     param([string]$Id, [string]$Name, [string]$Fallback)
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
         Warn "winget not found -- install $Name manually: $Fallback"
@@ -114,8 +114,8 @@ function Ensure-WingetApp {
 
 if (-not $ProfilesOnly) {
     Hdr 'Windows GUI apps'
-    Ensure-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
-    Ensure-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
+    Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
+    Install-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
     Say ''
     Say 'Zotero add-ons (install from Zotero -> Tools -> Add-ons -> Install From File):'
     Say '  - Better BibTeX (REQUIRED): https://github.com/retorquere/zotero-better-bibtex/releases/latest'
