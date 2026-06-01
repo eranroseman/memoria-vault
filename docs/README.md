@@ -48,7 +48,7 @@ Step-by-step recipes for specific tasks. Pick the one that matches what you need
 
 Exact values, schemas, commands, and field names.
 
-| | |
+| Topic | What it covers |
 |---|---|
 | [Frontmatter fields](reference/frontmatter.md) | Every YAML field: type, allowed values, owner |
 | [Note types](reference/note-types.md) | The 16 note types: folder, template, lifecycle, promotion map |

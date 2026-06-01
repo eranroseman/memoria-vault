@@ -18,12 +18,26 @@ work, and the **branch protection** rejecting direct pushes.
 git fetch origin && git switch -c fix/<thing> origin/main
 ```
 
-**Why this is non-negotiable here:** an editor auto-backup (obsidian-git style)
-periodically commits the working tree on a timer — you'll see commits titled
-`vault: <timestamp> N files`. If you edit while on `main` or on a branch the user
-is also touching, that hook bundles your in-progress edits together with the
-user's unrelated work into one commit, and can spawn phantom branches that orphan
-work. A dedicated branch keeps your change isolated and reviewable.
+**Why this is non-negotiable here:** the **obsidian-git** plugin's auto-backup
+(`autoSaveInterval: 30` in `vault/.obsidian/plugins/obsidian-git/data.json`)
+commits the whole git working tree every ~30 min — you'll see commits titled
+`vault: <timestamp> N files`. That config ships *for the end-user's runtime vault*
+(`~/Memoria`), where auto-backup is a wanted feature. It becomes hostile only when
+someone **opens this dev repo (`memoria-vault/`) itself as an Obsidian vault** —
+then the timer auto-commits the entire source tree (`install.sh`, `project-files/`,
+`docs/`…), bundling your in-progress edits with the user's unrelated work and
+sometimes spawning phantom branches that orphan work.
+
+**Two defenses:**
+
+1. **Don't open `memoria-vault/` as an Obsidian vault.** Edit the source repo with
+   a normal editor; open the *runtime* vault (`~/Memoria`) in Obsidian instead.
+2. **Always create your own branch before editing** (above). A dedicated branch
+   keeps your change isolated and reviewable even if a stray auto-commit fires.
+
+Do **not** "fix" this by editing the shipped `data.json` — it is correct for
+deployment (see `docs/reference/obsidian-plugins.md`); the problem is *where*
+Obsidian is pointed, not the config.
 
 ## 2. Stage by explicit path — never `git add -A`
 
