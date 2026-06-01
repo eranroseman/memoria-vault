@@ -64,6 +64,7 @@ ONLY=""
 REPO_DIR=""
 VAULT_PATH=""
 PYTHON=""
+STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
 
 # --- helpers -----------------------------------------------------------------
 say()  { printf '%s\n' "$*"; }
@@ -101,6 +102,11 @@ confirm() {
 }
 
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# Remove the temp/staging clone on exit (only the one we created — never the
+# user's own clone when run inspect-first). The runtime vault is the copy.
+cleanup() { [ -n "$STAGING_REPO" ] && [ -d "$STAGING_REPO" ] && rm -rf "$STAGING_REPO"; }
+trap cleanup EXIT
 
 detect_python() {
   if have python3; then PYTHON=python3
@@ -189,9 +195,10 @@ resolve_repo() {
   if [ -d "./vault/.memoria" ]; then
     REPO_DIR="$(pwd)"; ok "Using the clone in the current directory: $REPO_DIR"; return
   fi
-  # Piped (curl | bash): clone fresh into a staging dir.
+  # Piped (curl | bash): clone fresh into a temp/staging dir (removed on exit).
   REPO_DIR="$(mktemp -d "${TMPDIR:-/tmp}/memoria-repo-XXXXXXXX")"
-  say "Not run from a clone — fetching the repo."
+  STAGING_REPO="$REPO_DIR"
+  say "Not run from a clone — fetching the repo to a staging dir."
   run git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$REPO_DIR"
   [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/vault/.memoria" ] || die "Clone did not contain vault/.memoria."
   ok "Cloned to $REPO_DIR"
@@ -259,13 +266,14 @@ copy_vault() {
   fi
   ok "Vault deployed to $VAULT_PATH"
 
-  # Make the deployed vault its own git repo so obsidian-git works (the repo's
-  # .git is at the repo root, not inside vault/). Initial commit only on first init.
+  # The runtime vault is the user's own repo — they set up git themselves, with
+  # their own identity and remote. We don't `git init`/commit under a synthetic
+  # author. obsidian-git needs a repo to commit into, so point the way:
   if [ ! -d "$VAULT_PATH/.git" ]; then
-    if confirm "Initialize a git repo in the vault (recommended — obsidian-git needs one)?"; then
-      run_sh "cd \"$VAULT_PATH\" && git init -q && git add -A && git -c user.name=Memoria -c user.email=memoria@localhost commit -q -m 'Initial Memoria vault' || true"
-      say "    Add your own remote later:  git -C \"$VAULT_PATH\" remote add origin <url>"
-    fi
+    say "  This folder is your vault — set up your own git here (obsidian-git needs a repo):"
+    say "      cd \"$VAULT_PATH\""
+    say "      git init && git add -A && git commit -m \"Initial Memoria vault\""
+    say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
   fi
 }
 

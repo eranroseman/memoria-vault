@@ -12,7 +12,7 @@ Open the vault in Obsidian, install the required plugins, and configure the REST
 
 **1. Open the vault.**
 
-In Obsidian: Open vault → Open folder as vault → navigate to the `vault/` subfolder of the cloned repo. The vault name shown is whatever that folder is called on disk.
+In Obsidian: Open vault → Open folder as vault → navigate to the folder the installer copied the vault to (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk.
 
 **2. Enable community plugins.**
 

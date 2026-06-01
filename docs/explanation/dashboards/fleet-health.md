@@ -1,8 +1,10 @@
 # `fleet-health` dashboard
 
-Tracks whether the Hermes agent fleet is performing well over time: cost per task, success rate, retry frequency, latency, and per-lane trust scores. The headline number is the **trust score** per lane (0–100). This dashboard matters once the fleet is doing enough work per week that one stuck card or one runaway loop is hard to spot by eye.
+Tracks whether the Hermes agent fleet is performing well over time. This dashboard matters once the fleet is doing enough work per week that one stuck card or one runaway loop is hard to spot by eye.
 
-## The trust score
+## What it shows
+
+Operational health per lane over time: cost per task, success rate, retry frequency, latency, and the headline **trust score** (0–100). The trust score is the number to read first; the rest are the signals it rolls up.
 
 The trust score for each lane is a composite of several signals: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and — for lanes that produce `[!suggestions]` callouts — accept/reject ratios on those suggestions.
 

@@ -19,7 +19,7 @@ Always edit the vault source. Re-deploy with `bash install.sh --profiles-only` (
 | File | Controls | Who edits |
 | --- | --- | --- |
 | `SOUL.md` | Profile identity, persona, behavioral constraints | Author (you) |
-| `config.yaml` | Model routing, temperature, context window | Author |
+| `config.yaml` | Model routing, temperature, context window | Author (installer substitutes `{{VAULT_PATH}}` in the `hooks` command) |
 | `mcp.json` | Which MCP servers the profile connects to | Author (installer substitutes `{{VAULT_PATH}}`) |
 | `skills/` | Skill definitions the profile can load | Author |
 | `cron/` | Scheduled task definitions | Author |

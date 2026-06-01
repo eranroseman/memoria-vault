@@ -46,7 +46,7 @@ Then ingest.
 1. Open the paper note in `20-sources/01-papers/`
 2. Copy fields from the `_proposed_classification` comment block into main frontmatter
 3. Delete the comment block
-4. Set `lifecycle: current` and `triage_completed: YYYY-MM-DD`
+4. Set `lifecycle: current` (the "classified" marker; triage completion is a board state, not a note field)
 
 **If Dataview is not rendering** — search manually in Obsidian for `lifecycle: proposed` to find unclassified notes.
 

@@ -1,7 +1,13 @@
 
 # The board-state dashboard
 
-The board-state dashboard is the human's Obsidian window into the Hermes Kanban board: active cards, review queue, retry watch, and claim-note maturity histogram. Open it when you're already in Obsidian and want to see card state without switching to the Hermes workspace view.
+The board-state dashboard is the human's Obsidian window into the Hermes Kanban board. Open it when you're already in Obsidian and want to see card state without switching to the Hermes workspace view.
+
+---
+
+## What it shows
+
+Four sections, each answering a different question about work in flight: **active cards** (what's running, per lane), the **review queue** (`done` cards awaiting the human's `review_status` decision), **retry watch** (cards accumulating retries — the signal that something is broken, not just slow), and the **claim-note maturity histogram** (`seedling → budding → evergreen`, the downstream output of the board's work). It reads the markdown card projections in `00-meta/board/` via Dataview.
 
 ---
 

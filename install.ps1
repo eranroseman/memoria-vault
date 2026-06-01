@@ -128,6 +128,14 @@ if (-not $ProfilesOnly) {
 # ============================================================================
 Hdr 'Handing off to WSL2'
 
+# Confirm or override the target folder (unless -Vault was given, or -Yes).
+# Default %USERPROFILE%\Memoria is deliberately OUTSIDE OneDrive.
+if (-not $PSBoundParameters.ContainsKey('Vault') -and -not $Yes) {
+    Say 'Pick a folder OUTSIDE OneDrive (it corrupts the Obsidian index and fights Hermes file locks).'
+    $ans = Read-Host "Vault folder [$Vault]"
+    if ($ans) { $Vault = $ans }
+}
+
 # Windows path -> /mnt/c/... so Windows-Obsidian and WSL-Hermes share one vault.
 New-Item -ItemType Directory -Path $Vault -Force | Out-Null
 $wslVault = (& wsl.exe wslpath -a "$Vault").Trim()

@@ -81,7 +81,7 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 **Steps.**
 
 1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [linking.md](../../docs/reference/linking.md#moc-thresholds)).
-2. Activate lag metrics in the weekly dashboard (once `triage_completed` is populated).
+2. Activate ingest-to-triage lag metrics once board-state transition history accrues (triage completion is a Kanban board state, not a note field).
 3. Begin Canvas sessions for chapter planning.
 4. Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for active scoping work.
 5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [linking.md](../../docs/reference/linking.md#moc-thresholds)).

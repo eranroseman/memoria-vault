@@ -37,6 +37,6 @@ Memoria ships a **`Home.md` front-door note** at the vault root and opens it on 
 
 ## Related
 
-- **Files affected:** [obsidian-ui.md](../../docs/explanation/obsidian/obsidian-ui.md) (the front-door design + runtime scaffold), [plugins.md](../../docs/reference/plugins.md) (the obsidian-homepage plugin; recommended 10→11).
+- **Files affected:** [home.md](../../docs/explanation/obsidian/home.md) (the front-door design + runtime scaffold), [plugins.md](../../docs/reference/plugins.md) (the obsidian-homepage plugin; recommended 10→11).
 - **Related decisions:** [ADR-12 obsidian-linter reference-only](12-obsidian-linter-reference-only.md) — same control-plane test, opposite verdict (homepage opens a view and writes nothing; the linter wrote on save).
 - **Surfaces:** [dashboards/daily-health.md](../../docs/explanation/dashboards/daily-health.md) (Home leads with it), [obsidian/README.md](../../docs/explanation/obsidian/README.md).

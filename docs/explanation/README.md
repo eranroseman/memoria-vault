@@ -77,7 +77,7 @@ The curated path above is a reading order, not a full index. Everything in `expl
 - [kanban-board/](kanban-board/README.md) — the board as coordination layer: card-schema, states
 - [dashboards/](dashboards/README.md) — the eleven Dataview dashboards: daily-health, weekly-review, board-state, fleet-health, drift-watch, audit-log, contradictions, loose-ends, open-questions, reading-pipeline, discuss-queue
 - [profiles/](profiles/README.md) — the seven specialist profiles: librarian, mapper, socratic, writer, verifier, coder, linter
-- [obsidian/](obsidian/README.md) — how the human interacts through Obsidian: obsidian-ui, callouts, agent-client-picker
+- [obsidian/](obsidian/README.md) — how the human interacts through Obsidian: home (front door), visual-discipline, the-status-line, callouts, agent-client-picker
 
 ---
 

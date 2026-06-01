@@ -170,7 +170,7 @@ The agent-client plugin URL in Obsidian stays `http://localhost:8642` regardless
 
 ```bash
 # on VPS
-cd ~/memoria-vault/vault
+cd ~/Memoria          # the runtime vault the installer copied to (or your --vault path)
 qmd embed
 git pull --ff-only
 hermes -p memoria-librarian chat -s obsidian-paper-note

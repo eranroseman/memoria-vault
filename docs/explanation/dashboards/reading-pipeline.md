@@ -1,7 +1,13 @@
 
 # The reading-pipeline dashboard
 
-The reading-pipeline dashboard shows what is actively in flight through the upstream pipeline and what has come out the other side. It answers two questions at once: "what should I read next?" (papers in active processing) and "what came out of my recent reading?" (claim notes by maturity). Open it during a reading session when the inbox feels full and you need to decide what to process next.
+Open the reading-pipeline dashboard during a reading session when the inbox feels full and you need to decide what to process next.
+
+---
+
+## What it shows
+
+It shows what is actively in flight through the upstream pipeline and what has come out the other side — answering two questions at once: "what should I read next?" (papers in active processing, by lifecycle stage) and "what came out of my recent reading?" (claim notes grouped by maturity). The two halves together make visible whether reading is converting into synthesis.
 
 ---
 

@@ -1,7 +1,13 @@
 
 # The discuss-queue dashboard
 
-The discuss-queue dashboard lists every fully-classified paper note that hasn't yet had a Socratic processing pass. It is the **upstream-cognitive-discipline dashboard**: a long queue means the human's processing is falling behind their ingest rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
+It is the **upstream-cognitive-discipline dashboard**: a long queue means the human's processing is falling behind their ingest rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
+
+---
+
+## What it shows
+
+Every fully-classified paper note (`lifecycle: current`) that hasn't yet had a Socratic processing pass, oldest first. The queue length *is* the signal: it measures the gap between how fast sources come in and how fast the human actually thinks them through.
 
 ---
 

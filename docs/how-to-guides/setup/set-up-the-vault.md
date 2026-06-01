@@ -40,14 +40,17 @@ bash install.sh            # or .\install.ps1 on Windows
 
 It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
 
-**4. Set up a Git remote** (recommended).
+**4. Set up your own git in the vault** (recommended).
+
+The installer copies the vault but does **not** initialize git — the runtime vault is your repo, under your identity. From the runtime folder (default `~/Memoria`):
 
 ```bash
-git remote add origin git@github.com:<your-handle>/memoria-vault.git
-git push -u origin main
+git init && git add -A && git commit -m "Initial Memoria vault"
+git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # optional — your own repo
+git push -u origin main                                                    # if you added a remote
 ```
 
-This enables the `.bib` distribution and version history that the Librarian and Linter depend on.
+obsidian-git needs a repo to commit into; the remote (your own, not the starter repo) enables backup, multi-machine sync, and the version history the Librarian and Linter depend on.
 
 ## Verify
 

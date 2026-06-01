@@ -55,13 +55,12 @@ projects:
 
 Remove the entire `_proposed_classification:` block from the frontmatter once you've promoted the fields you accept. The block is transient — it exists only until classification is complete.
 
-**6. Set `lifecycle: current` and `triage_completed`.**
+**6. Set `lifecycle: current`.**
 
-In frontmatter:
+In frontmatter — this state *is* the "classified" marker (triage completion is tracked as a Kanban board state, not a note field):
 
 ```yaml
 lifecycle: current
-triage_completed: 2026-05-31
 ```
 
 **7. Write a brief Key Findings entry.**

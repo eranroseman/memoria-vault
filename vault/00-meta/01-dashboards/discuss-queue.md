@@ -13,12 +13,12 @@ Sources that are fully classified but haven't had a Socratic pass yet. The `disc
 ```dataview
 TABLE
   file.link AS Source,
-  triage_completed AS "Triaged",
+  created AS Created,
   topic AS Topic,
   methods AS Methods
 FROM "20-sources/01-papers"
 WHERE lifecycle = "current" AND !contains(file.tasks.text, "processed:")
-SORT triage_completed ASC
+SORT created ASC
 LIMIT 20
 ```
 
@@ -33,14 +33,14 @@ Sources that have been waiting longer than two weeks for a Socratic pass. These 
 ```dataview
 TABLE
   file.link AS Source,
-  triage_completed AS "Triaged",
-  date(today) - date(triage_completed) AS Age,
+  created AS Created,
+  date(today) - date(created) AS Age,
   topic AS Topic
 FROM "20-sources/01-papers"
 WHERE lifecycle = "current"
   AND !contains(file.tasks.text, "processed:")
-  AND date(triage_completed) < date(today) - dur(14 days)
-SORT triage_completed ASC
+  AND date(created) < date(today) - dur(14 days)
+SORT created ASC
 LIMIT 10
 ```
 

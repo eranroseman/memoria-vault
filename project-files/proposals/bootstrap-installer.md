@@ -275,7 +275,13 @@ Memoria's per-profile `config.yaml` only overrides the `model` block (Hermes rep
   idempotent) is **reused — refactored from a top-to-bottom script into a function** the
   bootstrap calls. A `--profiles-only` flag exposes just that function for the "re-run
   after `git pull`" redeploy path
-  ([redeploy-profiles](../../docs/how-to-guides/maintenance/redeploy-profiles.md)).
+  ([redeploy-profiles](../../docs/how-to-guides/maintenance/redeploy-profiles.md)). An
+  `--only NAME[,NAME]` filter restricts that step to named profiles (forwarded from
+  `install.ps1` as `-Only`) — **decision 2026-06-01: kept**, because per-profile redeploy is
+  the high-frequency move during profile authoring; it carries over from the old
+  profile-installer and pairs with `--profiles-only`. (It is the one flag beyond the
+  minimal `--dry-run`/`--yes`/`--profiles-only` surface plus the `--no-apps`/`--vault`
+  bootstrap controls.)
 - **`install.ps1` (PowerShell)** is a **thin launcher only**: gate on WSL2 → ensure the
   two GUI apps (Obsidian, Zotero) Windows-side → `wsl bash install.sh` (forwarding
   flags). It contains **no install logic**. The existing PowerShell *profile* logic is

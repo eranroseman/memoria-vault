@@ -60,12 +60,29 @@ Collapsing any two creates problems. Board + workers collapsed means work state 
 
 ## Documents in this section
 
+The pages here come in three kinds: **rationale** (`why-*` — a design choice and its reasoning), **structural** (what a given layer or surface *is*), and **methodology** (how the design was arrived at).
+
+**Rationale — why the design is shaped this way**
+
 - **[why-three-layers.md](why-three-layers.md)** — the thin-control-thick-state principle and what breaks without separation.
 - **[why-specialist-profiles.md](why-specialist-profiles.md)** — why seven specialists instead of one generalist, and why there is no Orchestrator.
 - **[why-human-gate.md](why-human-gate.md)** — why the review gate is structural, not advisory.
 - **[why-not-autonomous.md](why-not-autonomous.md)** — the autonomy ceiling: why Memoria doesn't pursue L4/L5 autonomy for synthesis.
+- **[why-hermes.md](why-hermes.md)** — why the execution layer is the Hermes runtime, what it provides, and where the API/programmatic surface fits.
+- **[why-computational-methods.md](why-computational-methods.md)** — why deterministic methods are preferred over LLM calls wherever correctness matters.
 
-Structural topics in this section also include **[control-plane.md](control-plane.md)**, **[memory-tiers.md](memory-tiers.md)**, **[human-channels.md](human-channels.md)**, **[distribution-model.md](distribution-model.md)**, **[why-pattern-provenance.md](why-pattern-provenance.md)**, **[why-computational-methods.md](why-computational-methods.md)**, **[vault.md](vault.md)** (the vault as a knowledge structure), and **[session-logging.md](session-logging.md)** (what each session records).
+**Structural — what each layer or surface is**
+
+- **[control-plane.md](control-plane.md)** — the board as the system's control plane.
+- **[memory-tiers.md](memory-tiers.md)** — the six memory substrates and their scopes.
+- **[human-channels.md](human-channels.md)** — the human interaction surfaces (Obsidian, CLI, Telegram).
+- **[distribution-model.md](distribution-model.md)** — how profiles and the vault are packaged and installed.
+- **[vault.md](vault.md)** — the vault as a knowledge structure (lifecycle folders, promotion overview).
+- **[session-logging.md](session-logging.md)** — what each agent session records, and why one file per session.
+
+**Methodology — how the design was arrived at**
+
+- **[why-pattern-provenance.md](why-pattern-provenance.md)** — the borrow / adapt / reference / ignore judgment table against ~47 surveyed AI-research systems. This is the evidence base the rationale pages above lean on.
 
 ## `why-*` explanations vs. ADRs
 

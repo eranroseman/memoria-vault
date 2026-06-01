@@ -187,7 +187,7 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 │   │   ├── cron/
 │   │   │   └── .keep               # empty placeholder
 │   │   └── skills/
-│   │       └── .keep               # empty placeholder; K-Dense installed here
+│   │       └── obsidian-paper-note/  # authored skill (shared skills are global: ~/.hermes/skills/)
 │   ├── memoria-mapper/
 │   │   ├── SOUL.md
 │   │   ├── cron/
@@ -195,11 +195,11 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 │   │   └── skills/ (.keep)
 │   ├── memoria-socratic/   (SOUL.md + cron/.keep + skills/.keep)
 │   ├── memoria-writer/     (SOUL.md + cron/.keep + skills/.keep)
-│   ├── memoria-verifier/   (SOUL.md + cron/.keep + skills/.keep)
+│   ├── memoria-verifier/   (SOUL.md + cron/.keep + skills/retraction-check/)
 │   ├── memoria-coder/      (SOUL.md + cron/.keep + skills/.keep)
 │   └── memoria-linter/
 │       ├── SOUL.md
-│       ├── detectors.py            # shipped (8 structural detectors)
+│       ├── detectors.py            # shipped (8 deterministic stdlib checks; 3 are structural detectors)
 │       ├── M-detectors.md          # shipped
 │       ├── cron/
 │       │   └── scheduled.yaml      # shipped (actual task definitions)

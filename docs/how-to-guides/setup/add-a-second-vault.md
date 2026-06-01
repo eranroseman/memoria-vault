@@ -39,7 +39,7 @@ This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second
 
 **3. Open the second vault in Obsidian.**
 
-Obsidian supports multiple vaults. File → Open Another Vault → Open folder as vault → select `my-second-vault/vault/`.
+Obsidian supports multiple vaults. File → Open Another Vault → Open folder as vault → select `~/my-second-vault` (the folder the installer copied the vault to).
 
 **4. Install the same set of required plugins** in this vault (same as step 2 of [set-up-obsidian.md](set-up-obsidian.md)). Each vault has its own `.obsidian/` config.
 
