@@ -52,6 +52,9 @@ REQUIRED_FILES="SOUL.md config.yaml mcp.json distribution.yaml"
 # We attempt the install and warn-not-fail, so a bundled Hermes is also fine.
 OFFICIAL_SKILLS="official/research/arxiv official/research/llm-wiki official/note-taking/obsidian official/productivity/ocr-and-documents official/github/github-repo-management official/autonomous-ai-agents/codex official/autonomous-ai-agents/claude-code"
 
+# Official Hermes installer (Linux/WSL2) — provisions uv-Python, Node, git-bash, ripgrep, ffmpeg.
+HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
+
 # --- flags -------------------------------------------------------------------
 DRY_RUN=0
 ASSUME_YES=0
@@ -142,7 +145,7 @@ print_plan() {
   say "This will, with your confirmation at each external step:"
   say "  1. ensure prerequisites (git, pandoc)"
   say "  2. fetch the Memoria vault repo"
-  say "  3. install Hermes + the ACP extra ('hermes-agent[acp]')"
+  say "  3. install Hermes (official installer) + verify ACP"
   say "  4. copy the runtime vault to your chosen folder"
   say "  5. install MCP server dependencies (pip)"
   say "  6. deploy the seven memoria-* Hermes profiles"
@@ -214,23 +217,28 @@ ensure_hermes() {
     ok "Hermes found at $(command -v hermes)"
   else
     warn "Hermes is not on PATH."
-    say "Official install + toolchain (uv/python/node/ripgrep/ffmpeg): $HERMES_DOCS"
-    # TODO(confirm-at-build): prefer the official installer script once its URL is
-    # pinned. The pip path below installs the agent but not the extra system tools.
-    if [ -n "$PYTHON" ] && confirm "Install Hermes now via pip ('hermes-agent[acp]')?"; then
-      run "$PYTHON" -m pip install --user 'hermes-agent[acp]'
+    say "Installing via the official installer (provisions uv-Python, Node, git-bash, ripgrep, ffmpeg)."
+    say "Docs: $HERMES_DOCS"
+    if confirm "Install Hermes now (curl $HERMES_INSTALL_URL | bash)?"; then
+      run_sh "curl -fsSL '$HERMES_INSTALL_URL' | bash"
+      detect_python
+      if [ "$DRY_RUN" -eq 0 ] && ! have hermes; then
+        warn "Hermes installed, but not on PATH in this shell (the installer edits PATH)."
+        warn "Open a NEW shell, then finish with:  bash install.sh --profiles-only --vault \"${VAULT_OVERRIDE:-~/Memoria}\""
+      fi
     else
-      die "Install Hermes (see the docs link), then re-run with --profiles-only to finish."
+      die "Install Hermes (see $HERMES_DOCS), then re-run with --profiles-only to finish."
     fi
   fi
-  # Ensure the ACP extra regardless (the agent-client Obsidian pane needs `hermes acp`).
-  if [ -n "$PYTHON" ]; then
-    say "Ensuring the ACP extra (Obsidian chat pane). Docs: $ACP_DOCS"
-    if ! run "$PYTHON" -m pip install --user 'hermes-agent[acp]'; then
-      warn "Could not install the ACP extra automatically — run: pip install 'hermes-agent[acp]'"
+  # The agent-client Obsidian pane needs `hermes acp`. The official installer may already
+  # include it; verify rather than pip-install into the wrong (uv-managed) environment.
+  # TODO(confirm-at-build): exact way to add the [acp] extra to the official install.
+  if [ "$DRY_RUN" -eq 0 ] && have hermes; then
+    if hermes acp --help >/dev/null 2>&1; then
+      ok "ACP available (hermes acp)"
+    else
+      warn "hermes acp not available — add the ACP extra to Hermes's env (pip install 'hermes-agent[acp]'). Docs: $ACP_DOCS"
     fi
-  else
-    warn "No Python found; skipping the ACP extra. Install it later: pip install 'hermes-agent[acp]'"
   fi
 }
 
