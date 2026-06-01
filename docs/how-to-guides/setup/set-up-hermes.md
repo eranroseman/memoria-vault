@@ -93,21 +93,21 @@ hermes -p memoria-socratic acp
 
 It should start an ACP stdio server (it logs to stderr; stdout is reserved for JSON-RPC). In Obsidian, the `agent-client` picker then offers Socratic / Mapper / Writer / Verifier. ACP reuses the same `~/.hermes/{.env,config.yaml,skills/}` you configured above — no separate credentials.
 
-**7. Route the auxiliary models to Haiku (cost efficiency).**
+**7. Route the auxiliary models to cheap flash tiers (cost efficiency).**
 
-Hermes runs cheap, high-frequency bookkeeping tasks (title generation, context compression, command approval, MCP routing, skills-hub search) through *auxiliary* model slots that default to the profile's main model — so a Verifier or Socratic compression call would otherwise burn **Opus**. These are set **globally** (not per-profile — Hermes replaces a config section wholesale). Add this block to your **global** `~/.hermes/config.yaml`:
+Hermes runs cheap, high-frequency bookkeeping tasks (title generation, context compression, command approval, MCP routing, skills-hub search) through *auxiliary* model slots that default to the profile's main model — so a Verifier or Socratic compression call would otherwise burn **Opus**. These are set **globally** (not per-profile — Hermes replaces a config section wholesale). Use a split: GLM 4.7 Flash for the light slots (cheapest input), DeepSeek V4 Flash for compression (its 1M context safely holds the conversation being summarized). Add this block to your **global** `~/.hermes/config.yaml`:
 
 ```yaml
 auxiliary:
-  title_generation: { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  compression:      { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  approval:         { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  mcp:              { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  skills_hub:       { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  # vision / web_extract: add a cheap multimodal model only if you use image/page analysis
+  title_generation: { provider: kilocode, model: z-ai/glm-4.7-flash }
+  approval:         { provider: kilocode, model: z-ai/glm-4.7-flash }
+  mcp:              { provider: kilocode, model: z-ai/glm-4.7-flash }
+  skills_hub:       { provider: kilocode, model: z-ai/glm-4.7-flash }
+  compression:      { provider: kilocode, model: deepseek/deepseek-v4-flash }
+  # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
 ```
 
-Restart Hermes after editing the global config. Full rationale: [configuration.md § Auxiliary models](../hermes/configuration.md#auxiliary-models-set-globally-not-per-profile).
+Restart Hermes after editing the global config. Full rationale (split reasoning, the GLM-context caveat, the GLM-5-turbo cost trap): [configuration.md § Auxiliary models](../hermes/configuration.md#auxiliary-models-set-globally-not-per-profile).
 
 ## Verify
 

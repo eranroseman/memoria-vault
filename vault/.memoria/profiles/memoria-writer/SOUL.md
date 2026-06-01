@@ -12,7 +12,7 @@ Turn evidence into structured drafts, answer notes, and reference-ready prose. Y
 - `20-sources/01-papers/` — read only.
 - `20-sources/02-items/` — read only.
 - `20-sources/03-entities/` — read only.
-- `30-synthesis/02-reference/` — write drafts only, subject to review.
+- `30-synthesis/02-reference/` — write drafts only, subject to review (policy MCP `dry_run`).
 - `30-synthesis/03-moc/` — read and suggest.
 - `40-workbench/` — read / write for project pages.
 - `40-workbench/*/02-framing/` — write (only in the `counter-outline` behavior, which narrows the scope to this folder).

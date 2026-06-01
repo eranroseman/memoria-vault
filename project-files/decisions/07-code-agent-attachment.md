@@ -19,6 +19,8 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 **Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md).
 
+> The agents named in the Context above (Kilocode, Aider, …) were the decision-time *candidates*. The shipped Coder lane allows **`claude-code`, `codex`, `opencode`** — see [memoria-coder SOUL.md](../../vault/.memoria/profiles/memoria-coder/SOUL.md) for the current set.
+
 ## Consequences
 
 - The Coder profile stays narrow (scaffold + document); doesn't accumulate coding complexity it wasn't designed for.

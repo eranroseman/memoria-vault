@@ -45,19 +45,21 @@ The key is `default` (not `name`). For direct Anthropic instead, use `provider: 
 
 Hermes runs several cheap, high-frequency tasks through *auxiliary* model slots — title generation, context compression, command approval, MCP tool routing, skills-hub search. Each defaults to `provider: auto`, meaning it **reuses the profile's main model**. For Memoria that's wasteful: a Verifier or Socratic compression/title call would burn **Opus**.
 
-Set these once in your **global** `~/.hermes/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Point the bookkeeping tasks at the Haiku tier:
+Set these once in your **global** `~/.hermes/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Use a **split**: the trivial, input-heavy slots go to **GLM 4.7 Flash** ($0.07/$0.40 per 1M — cheapest input), and `compression` goes to **DeepSeek V4 Flash** because its summary model must hold at least the main model's context window (DeepSeek's **1M** context gives headroom; GLM's 202K barely clears Claude's ~200K):
 
 ```yaml
 auxiliary:
-  title_generation: { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  compression:      { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  approval:         { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  mcp:              { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  skills_hub:       { provider: kilocode, model: ~anthropic/claude-haiku-latest }
-  # vision / web_extract: point at a cheap multimodal model only if you use image/page analysis
+  title_generation: { provider: kilocode, model: z-ai/glm-4.7-flash }            # cheapest input
+  approval:         { provider: kilocode, model: z-ai/glm-4.7-flash }
+  mcp:              { provider: kilocode, model: z-ai/glm-4.7-flash }
+  skills_hub:       { provider: kilocode, model: z-ai/glm-4.7-flash }
+  compression:      { provider: kilocode, model: deepseek/deepseek-v4-flash }     # 1M ctx — safe summarizer
+  # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
 ```
 
-This keeps the expensive tiers (Sonnet/Opus) for actual agent work and routes the high-frequency bookkeeping calls to Haiku. Restart Hermes after editing the global config.
+> **Model-id format.** `z-ai/glm-4.7-flash` and `deepseek/deepseek-v4-flash` are **pinned** kilo ids (bare `provider/model`). The profiles' main models use the **rolling-alias** form `~anthropic/claude-<tier>-latest` (the `~` prefix denotes a rolling alias). Both are valid kilo gateway ids — browse them at `GET https://api.kilo.ai/api/gateway/models` (no auth). Two cost traps to avoid: `z-ai/glm-5-turbo` is **not** budget ($1.2/$4.0 per 1M), and GLM 4.7 Flash's 202K context is too tight for `compression` — hence DeepSeek there.
+
+This keeps the expensive tiers (Sonnet/Opus) for actual agent work and routes the high-frequency bookkeeping calls to models that cost cents. Restart Hermes after editing the global config.
 
 ## Change write permissions (lane overrides)
 

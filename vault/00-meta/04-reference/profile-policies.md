@@ -13,10 +13,10 @@ Who can write where. Companion to the lane-override YAML files at `.memoria/lane
 | `30-synthesis/01-claims/` | — | — | — | — | — | — | — |
 | `30-synthesis/02-reference/` | — | — | dry-run | — | — | — | — |
 | `30-synthesis/03-moc/` | — | — | — | — | — | — | — |
-| `40-workbench/` | — | corpus-maps, gap-reports | framing/ via counter-outline | verification/ | — | project notes | — |
+| `40-workbench/` | — | corpus-maps, gap-reports, comparative-briefs, cluster-maps | framing/ via counter-outline | verification/ | — | project notes | — |
 | `40-workbench/*/04-drafts/` | — | — | ✓ | — | — | — | — |
 | `40-workbench/*/06-code/` | — | — | — | — | — | ✓ | — |
-| `40-workbench/*/03-canvas/` | — | — | — | — | — | — | — |
+| `40-workbench/*/03-canvas/` | — | — | argument mapping | — | — | — | — |
 | `50-deliverables/` | — | — | export tasks | — | — | export tasks | — |
 | `00-meta/02-logs/` | — | — | — | — | — | — | audit + session logs |
 

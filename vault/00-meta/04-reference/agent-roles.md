@@ -6,7 +6,7 @@ What each Hermes profile does. Companion to the per-profile contracts at `.memor
 
 | Profile | In picker? | What it does |
 | --- | --- | --- |
-| **Socratic** | Yes (default) | Think a source through in conversation before you distill it. Write-denied across the vault. |
+| **Socratic** | Yes (default) | Sharpen your thinking through questions and lens-based reading — think a source through before you distill it. Write-denied across the vault. |
 | **Mapper** | Yes | Map a project's corpus — what's ready, thin, missing — before writing. Read-only across vault. |
 | **Writer** | Yes | Distill sources into claim notes; turn framings into drafts. |
 | **Verifier** | Yes | Trace a draft's claims back to their sources; flag the gaps. Verification reports only. |

@@ -17,6 +17,8 @@ Canonical list of every frontmatter field used in this vault. The source of trut
 
 Templates for each in `03-templates/`.
 
+> **Transient candidate files are not among the 15.** Pre-ingest scratch in `10-inbox/03-candidates/` — e.g. `type: gap-candidate` (Verifier gap-cards) and Librarian discovery candidates — are not durable knowledge nodes, so they sit **outside** the 15-type registry and are exempt from the Linter's note-type validation. [proposal-21](../../../project-files/proposals/21-shared-candidate-frontmatter.md) will unify them as `type: candidate-note` once it lands.
+
 ### What the `-note` suffix means
 
 The `-note` suffix marks a **knowledge node** — a note that is the authoritative record of one thing (an idea, source, entity, concept, project, code artifact, or answer) and carries its own content. Eleven of the fifteen types are nodes and carry it.
@@ -51,6 +53,15 @@ Every note carries `lifecycle` — its durability phase. (`status` is reserved f
 
 Orthogonal status fields (describe the *thing*, not the note's lifecycle): `pub_status` (paper), `maintenance_status` + `role_in_stack` (item), `outreach_status` (person).
 
+### Claim-note relations and supersession
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `relations` | block (`supports: []` / `contradicts: []`) | Typed relations between claim-notes ([ADR-08](../../../project-files/decisions/08-typed-relations-frontmatter.md)). Human-set; opt-in. |
+| `superseded_by` | wikilink | Points to the claim-note that replaces this one; implies `lifecycle: archived` ([ADR-10](../../../project-files/decisions/10-claim-supersession.md)). |
+
+Both are **additive, optional** fields, so `schema_version` stays `1` — per the versioning rule a bump is only for *breaking* changes, and adding optional fields doesn't break backward compatibility. (ADR-08/10 noted a possible bump; the additive-compat rule governs, so no bump is taken.)
+
 ## Controlled vocabularies
 
 | Field | Where defined | Allowed values |
@@ -80,6 +91,6 @@ Frontmatter has three namespaces with different ownership:
 
 ---
 
-**For depth:** vault/frontmatter-schema.md — the authoritative schema design.
+**For depth:** [docs/reference/frontmatter.md](../../../docs/reference/frontmatter.md) — the authoritative schema design (this note is the in-vault human-facing mirror; the `relations` vocabulary lives there too, per ADR-08).
 
 **Drift discipline.** When the design schema changes, update this file to match. The Linter's structural-drift check flags this file if `updated` is older than the corresponding design doc.

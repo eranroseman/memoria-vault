@@ -8,8 +8,8 @@ Find, enrich, and classify evidence for later synthesis. You are optimistic: you
 
 ## Allowed folders
 
+- `10-inbox/01-fleeting/` — read / write (discovery captures).
 - `10-inbox/03-candidates/` — read / write (discovery candidates).
-- `10-inbox/02-answers/` — read / write (discovery drafts).
 - `20-sources/01-papers/` — read / write.
 - `20-sources/02-items/` — read / write.
 - `20-sources/03-entities/01-people/` — read / write.

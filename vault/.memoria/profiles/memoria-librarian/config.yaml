@@ -4,7 +4,7 @@
 # everything else (agent, terminal, toolsets, ...) inherits from your global config.
 # Schema: hermes-agent.nousresearch.com/docs/user-guide/configuration
 #
-# Recommended agent.reasoning_effort: medium  (mostly scripts/APIs; one Sonnet synthesis call)
+# Recommended agent.reasoning_effort: medium  (mostly scripts/APIs; only light Haiku classification/synthesis)
 #   Apply per-profile if you want it distinct from your global default:
 #   hermes -p memoria-librarian config set agent.reasoning_effort medium
 #
@@ -13,7 +13,7 @@
 model:
   provider: kilocode
   base_url: https://api.kilo.ai/api/gateway
-  default: ~anthropic/claude-sonnet-latest
+  default: ~anthropic/claude-haiku-latest
 
 # Route obsidian-MCP vault writes through the policy gate. {{VAULT_PATH}} is
 # substituted by install.ps1. Matcher "obsidian" catches every obsidian_* tool;

@@ -4,7 +4,7 @@ topic: decisions
 
 # ADR-16: Adopt-on-demand — systematic-review tooling
 
-Four feature clusters — **systematic-review mode**, **evidence-quality fields**, **pre-ingest screening**, and the **dual-rater workflow** — all add schema, fields, or workflow whose only purpose is to serve **formal scoping reviews and systematic reviews**. They share one rationale and are consolidated into this single decision; the table below records what is unique to each. (In an earlier draft these were four separate ADRs — 12 / 18 / 19 / 20 — now folded together here.)
+Four feature clusters — **systematic-review mode**, **evidence-quality fields**, **pre-ingest screening**, and the **dual-rater workflow** — all add schema, fields, or workflow whose only purpose is to serve **formal scoping reviews and systematic reviews**. They share one rationale and are consolidated into this single decision; the table below records what is unique to each. (In an earlier draft these were four separate ADRs, now folded together here — the original draft numbers are not used, to avoid collision with the accepted ADR set.)
 
 ## The shared decision
 
@@ -20,10 +20,10 @@ The reasoning is identical across all four:
 
 | Member | Unique contribution | Activation trigger |
 |---|---|---|
-| **Systematic-review mode** (was ADR-12) | `review_mode: systematic-review` flag + PRISMA fields (inclusion/exclusion, vote traces, multi-reviewer agreement) | A systematic review is actively running |
-| **Evidence-quality fields** (was ADR-18) | Evidence-quality fields (`funding`, `coi`, `risk_of_bias`, `population`, `intervention_type`) on empirical papers | A project protocol or target journal requires them |
-| **Pre-ingest screening** (was ADR-19) | A separate pre-ingest PRISMA + ASReview screening pipeline (200–5000 candidates) | Starting a formal scoping or systematic review |
-| **Dual-rater workflow** (was ADR-20) | Dual-rater fields (`rater_1`, `rater_2`, `rater_agreement`) for inter-rater reliability | The chapter or paper requires reported agreement *and* a second human rater exists |
+| **Systematic-review mode** | `review_mode: systematic-review` flag + PRISMA fields (inclusion/exclusion, vote traces, multi-reviewer agreement) | A systematic review is actively running |
+| **Evidence-quality fields** | Evidence-quality fields (`funding`, `coi`, `risk_of_bias`, `population`, `intervention_type`) on empirical papers | A project protocol or target journal requires them |
+| **Pre-ingest screening** | A separate pre-ingest PRISMA + ASReview screening pipeline (200–5000 candidates) | Starting a formal scoping or systematic review |
+| **Dual-rater workflow** | Dual-rater fields (`rater_1`, `rater_2`, `rater_agreement`) for inter-rater reliability | The chapter or paper requires reported agreement *and* a second human rater exists |
 
 ## Relationship to proposal-21
 

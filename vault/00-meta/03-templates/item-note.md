@@ -13,7 +13,7 @@ repo_url: ""
 package_name: ""
 vendor: ""
 license: ""
-lifecycle: proposed                  # proposed | current
+lifecycle: proposed                  # proposed | current | dormant | archived
 maintenance_status: active           # active | deprecated | archived | unmaintained
 role_in_stack: primary-tool          # primary-tool | dependency | alternative | reference-only
 relevance_to_projects: []

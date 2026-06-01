@@ -85,10 +85,10 @@ tp.hooks.on_all_templates_executed(async () => {
   await app.fileManager.processFrontMatter(file, (fm) => {
     // Fill required keys without overwriting existing values.
     if (!fm.type) fm.type = "note";
-    if (!fm.created_at) fm.created_at = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
+    if (!fm.created) fm.created = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
 
-    // Touch updated_at on every run.
-    fm.updated_at = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
+    // Touch updated on every run.
+    fm.updated = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
 
     // Coerce tags to a deduplicated list. Coerce, never invent.
     if (typeof fm.tags === "string") fm.tags = [fm.tags];
@@ -103,7 +103,7 @@ Rules for what this script may do:
 - **Add missing keys with defaults.** Only keys defined as required in the authoritative schema.
 - **Coerce types.** String → list when the schema expects a list. Never the reverse (don't collapse lists).
 - **Deduplicate list values.** Tags, aliases, links.
-- **Touch `updated_at`.**
+- **Touch `updated`.**
 
 Rules for what it must not do:
 
@@ -134,7 +134,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 | Stale literature | Paper note with `file.mtime` older than 180 days and `lifecycle: current` | Report. |
 | Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file (SOUL.md, config.yaml, mcp.json, anything under skills/ or cron/) has a different SHA-256 than its source at `.memoria/profiles/memoria-<name>/` (mcp.json compared after `{{VAULT_PATH}}` substitution) | Report — surface the affected profile and file; the human must either re-run `install.ps1` to refresh the deployed copy or revert the hand-edit. Never auto-install. |
 | Vault hash drift | A vault file's current SHA-256 doesn't match the last `after_hash` recorded for that path in `audit.jsonl` | Report — file was modified outside the policy MCP. Surface in the [audit-log dashboard](../../../00-meta/01-dashboards/audit-log.md). |
-| Skeleton note drift | A vault-skeleton human note in `00-meta/` (e.g., `agent-roles.md`, `profile-policies.md`) has `updated_at` older than the corresponding file's last commit in this repo's `docs/` | Report — surface as a "skeleton out of sync" item. Never auto-update; the human note's wording is human-owned. |
+| Skeleton note drift | A vault-skeleton human note in `00-meta/` (e.g., `agent-roles.md`, `profile-policies.md`) has `updated` older than the corresponding file's last commit in this repo's `docs/` | Report — surface as a "skeleton out of sync" item. Never auto-update; the human note's wording is human-owned. |
 | Dashboard field drift | A field referenced in a Dataview query under `00-meta/01-dashboards/` does not appear in any template's frontmatter | Report — surface the dashboard, the query, and the missing field. The query is silently broken (returns zero rows in a real vault) until either the field is added to the relevant template or the query is corrected. Never auto-rewrite the query. |
 | Command vocabulary drift | A command name in `docs/how-to-guides/` or `docs/reference/commands.md` does not appear in the Core commands section of its owner profile's `.memoria/profiles/memoria-<profile>/SOUL.md` (or vice versa) | Report — surface the command name, the source file, and the owner-profile's SOUL.md. Never auto-add commands to SOUL.md files; command surface changes are a design decision. |
 | Plugin-config drift | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD for the same path. Human-extra keys (e.g., `agent-client`'s `savedSessions`) are ignored. Variant files with `.example` or `.TODO` suffixes (e.g., `data.json.example`, `data.json.TODO`) follow modified rules — see the `data.json` conventions in `docs/reference/plugins.md`. | Report — surface the plugin, the key, and the expected vs actual value. Never auto-update either side; either the human's choice is deliberate (commit the change) or it's drift (revert the working file to git HEAD). |

@@ -252,16 +252,18 @@ standard `~/.hermes/{.env,config.yaml,skills/}` ([ACP docs](https://hermes-agent
 > four-agent picker design holds. Live smoke-test once ACP is installed: `hermes -p memoria-socratic acp`.
 
 **Models — per profile (done, aliases confirmed 2026-05-31).** Each profile `config.yaml` sets
-the tier: Linter → `~anthropic/claude-haiku-latest`; Librarian/Mapper/Writer/Coder →
+the tier: Linter/Librarian/Coder → `~anthropic/claude-haiku-latest`; Mapper/Writer →
 `…sonnet-latest`; Socratic/Verifier → `…opus-latest` (`provider: kilocode`). Alias strings
-confirmed against the KiloCode catalog. **Auxiliary models** are set globally (Haiku tier for
-the cheap tasks) — see [hermes/configuration.md](../../docs/how-to-guides/hermes/configuration.md).
+confirmed against the KiloCode catalog. **Auxiliary models** are set globally (split: GLM 4.7 Flash
+for light slots + DeepSeek V4 Flash for compression) — see [hermes/configuration.md](../../docs/how-to-guides/hermes/configuration.md).
 
 **Auxiliary models — set in the *global* `~/.hermes/config.yaml`.** Auxiliary slots default to
 `provider: auto` (reuse the profile's main model) — so a Verifier title-gen/compression call
-would burn Opus. Point the cheap-task slots at a cheap model: `title_generation`, `compression`,
-`approval`, `mcp`, `skills_hub` → `~anthropic/claude-haiku-latest` (or a flash model);
-`vision`/`web_extract` → a cheap multimodal if used. This is global config the human owns —
+would burn Opus. Split the cheap-task slots: `title_generation`, `approval`, `mcp`, `skills_hub`
+→ `z-ai/glm-4.7-flash` ($0.07/$0.40 per 1M, cheapest input); `compression` → `deepseek/deepseek-v4-flash`
+(1M ctx — GLM's 202K is too tight to safely summarize a near-full conversation). Cost traps:
+`z-ai/glm-5-turbo` is *not* budget ($1.2/$4.0). `vision`/`web_extract` → a cheap multimodal
+(e.g. `google/gemini-2.5-flash`) if used. This is global config the human owns —
 Memoria's per-profile `config.yaml` only overrides the `model` block (Hermes replaces config
 *sections* wholesale, so a per-profile `auxiliary:` block would clobber the global one).
 

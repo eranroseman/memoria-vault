@@ -17,7 +17,8 @@ policy:
       - qmd                    # the `query` command (hybrid BM25+vector vault search; skills.sh skill)
       - rest-passthrough       # capability token (REST passthrough), not a skill
     write:
-      - "10-inbox/**"
+      - "10-inbox/01-fleeting/**"      # discovery captures
+      - "10-inbox/03-candidates/**"    # discovery candidates (02-answers is the Writer's)
       - "20-sources/**"
   deny:
     skills:
@@ -36,5 +37,6 @@ routing:
   invocation: dispatched
   external_api_policy: explicit_only    # blocked | explicit_only | open
   write_scope:
-    - "10-inbox/"
+    - "10-inbox/01-fleeting/"
+    - "10-inbox/03-candidates/"
     - "20-sources/"
