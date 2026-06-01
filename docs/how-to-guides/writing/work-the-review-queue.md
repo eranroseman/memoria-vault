@@ -53,8 +53,8 @@ The `done-awaiting-review` queue has a cap. When it fills, the dispatcher slows 
 
 ## Related
 
-- Where the queue is surfaced: [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md), [board-state dashboard](../../explanation/dashboards/board-state.md)
+- Where the queue is surfaced: [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md), [board-state dashboard](../../explanation/dashboards/daily-glance/board-state.md)
 - The write-gate that enforces it: [Policy MCP reference](../../reference/policy-mcp.md)
 - Why review is a state, not a convention: [Review as a first-class state](../../explanation/workflows/review-as-state.md)
-- Why the gate is structural: [Why a human gate](../../explanation/architecture/why-human-gate.md)
+- Why the gate is structural: [Why a human gate](../../explanation/rationale/why-human-gate.md)
 - Decisions: [ADR-03 structural review gate](../../../project-files/decisions/03-structural-review-gate.md), [ADR-14 advisor review](../../../project-files/decisions/14-advisor-review-vs-frozen-deliverable.md), [ADR-16 adopt-on-demand](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)

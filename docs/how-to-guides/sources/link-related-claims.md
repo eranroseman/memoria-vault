@@ -6,7 +6,7 @@ parent: Sources
 
 # How to link related claims (typed relations)
 
-Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. A `relations:` block records `supports` / `contradicts` as machine-queryable, **human-set** links — and a `contradicts` link is the data the [contradictions dashboard](../../explanation/dashboards/contradictions.md) reads. This guide is for adding a typed relation between two claims that **already exist**. To set one at the moment you write a claim, use Step 7 of [Write a claim note](write-a-claim-note.md) instead.
+Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. A `relations:` block records `supports` / `contradicts` as machine-queryable, **human-set** links — and a `contradicts` link is the data the [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md) reads. This guide is for adding a typed relation between two claims that **already exist**. To set one at the moment you write a claim, use Step 7 of [Write a claim note](write-a-claim-note.md) instead.
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ The Verifier or Mapper may surface a candidate contradiction into the proposal n
 
 **6. Confirm it surfaced.**
 
-For a `contradicts` link, open the [contradictions dashboard](../../explanation/dashboards/contradictions.md). The pair should now appear there — that visibility is the whole payoff of typing the link rather than leaving it untyped.
+For a `contradicts` link, open the [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md). The pair should now appear there — that visibility is the whole payoff of typing the link rather than leaving it untyped.
 
 ## Verify
 
@@ -71,7 +71,7 @@ For a `contradicts` link, open the [contradictions dashboard](../../explanation/
 
 **Explanation**
 
-- The consumer: [contradictions dashboard](../../explanation/dashboards/contradictions.md)
+- The consumer: [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md)
 - Why the Connections section is required: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
 
 **Background**

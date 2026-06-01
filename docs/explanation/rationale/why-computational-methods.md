@@ -1,6 +1,6 @@
 ---
 title: Why Memoria uses deterministic methods alongside LLMs
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why Memoria uses deterministic methods alongside LLMs

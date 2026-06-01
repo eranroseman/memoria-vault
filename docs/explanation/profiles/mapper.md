@@ -38,7 +38,7 @@ The Mapper is the lens on what the human already has. It produces scope reports,
 
 - Directional counterpart: [Librarian](librarian.md)
 - Content counterpart: [Writer](writer.md)
-- Why the map/argument split matters: [why specialist profiles](../architecture/why-specialist-profiles.md)
+- Why the map/argument split matters: [why specialist profiles](../rationale/why-specialist-profiles.md)
 - The [!brief] callout the Mapper produces: [callouts.md](../obsidian/callouts.md)
 
 **How-to**

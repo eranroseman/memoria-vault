@@ -62,4 +62,4 @@ When multiple failures occur simultaneously:
 ## Related
 
 - The recovery how-to guides: [recovery/README.md](../how-to-guides/recovery/README.md)
-- Why the CRITICAL self-review failure can't happen: [why-human-gate.md](../explanation/architecture/why-human-gate.md)
+- Why the CRITICAL self-review failure can't happen: [why-human-gate.md](../explanation/rationale/why-human-gate.md)

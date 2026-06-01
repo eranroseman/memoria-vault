@@ -27,13 +27,13 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [why-computational-methods.md](../../docs/explanation/architecture/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([measurement-and-verification.md](../proposals/measurement-and-verification.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [why-computational-methods.md](../../docs/explanation/rationale/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([measurement-and-verification.md](../proposals/measurement-and-verification.md)) independently confirms LLM memory/similarity judgments are unreliable.
 
-**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods.md](../../docs/explanation/architecture/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
+**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([why-computational-methods.md](../../docs/explanation/rationale/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
 ## Related
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies `relations.contradicts`) — now adopted.
-- **Files affected:** [dashboards/contradictions.md](../../docs/explanation/dashboards/contradictions.md) (new), [dashboards/README.md](../../docs/explanation/dashboards/README.md) (index).
+- **Files affected:** [dashboards/contradictions.md](../../docs/explanation/dashboards/synthesis-agenda/contradictions.md) (new), [dashboards/README.md](../../docs/explanation/dashboards/README.md) (index).
 - **Future proposer:** [classical-method-displacements.md](../proposals/classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

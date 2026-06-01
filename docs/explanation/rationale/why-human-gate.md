@@ -1,6 +1,6 @@
 ---
 title: Why the review gate is structural
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why the review gate is structural

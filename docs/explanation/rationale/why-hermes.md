@@ -1,6 +1,6 @@
 ---
 title: Why Hermes
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why Hermes
@@ -38,11 +38,11 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 Hermes exposes an **API server** (port 8642) — the surface where *programs*, not humans, connect to Memoria. File-system watchers, Zotero/Better BibTeX hooks, git `post-commit` hooks, calendar integrations, and cross-machine dispatch all enter here.
 
-**Why a separate surface at all.** Programmatic integration needs a different interface than human operation. A file-system watcher that fires on a PDF drop cannot use the command palette; a Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; Obsidian, the CLI, and Telegram (see [human-channels.md](human-channels.md)) are the interaction surfaces for humans. The same operations available through the API are exposed to humans through the palette and CLI with better affordances — so humans never need to touch the API directly.
+**Why a separate surface at all.** Programmatic integration needs a different interface than human operation. A file-system watcher that fires on a PDF drop cannot use the command palette; a Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; Obsidian, the CLI, and Telegram (see [human-channels.md](../architecture/human-channels.md)) are the interaction surfaces for humans. The same operations available through the API are exposed to humans through the palette and CLI with better affordances — so humans never need to touch the API directly.
 
 **It grants no extra power.** Every write through the API still passes through the policy MCP. A program calling the API has exactly the permissions of the profile it acts as — no elevation. The API is a different *door*, not a different *key*. See [reference/policy-mcp.md](../../reference/policy-mcp.md) for enforcement details.
 
-This is why the API server lives here, with Hermes, rather than in [human-channels.md](human-channels.md): it is a Hermes integration surface that humans never operate, not a human channel.
+This is why the API server lives here, with Hermes, rather than in [human-channels.md](../architecture/human-channels.md): it is a Hermes integration surface that humans never operate, not a human channel.
 
 ---
 
@@ -69,7 +69,7 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 - What Hermes coordinates — the three layers: [why-three-layers.md](why-three-layers.md)
 - The board as a state machine: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
 - The card-schema overlay Memoria adds on top of Hermes: [../kanban-board/card-schema.md](../kanban-board/card-schema.md)
-- The human interaction surfaces (Obsidian, CLI, Telegram): [human-channels.md](human-channels.md)
+- The human interaction surfaces (Obsidian, CLI, Telegram): [human-channels.md](../architecture/human-channels.md)
 
 **Reference**
 

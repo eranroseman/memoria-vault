@@ -104,8 +104,8 @@ See [../knowledge/common-pitfalls.md](../knowledge/common-pitfalls.md) for the r
 **Explanation**
 
 - Why notes move through the folders: [knowledge-cycle.md](../knowledge/knowledge-cycle.md)
-- Why review-gated zones exist: [why-human-gate.md](why-human-gate.md)
-- How the vault ships and deploys: [distribution-model.md](distribution-model.md)
+- Why review-gated zones exist: [why-human-gate.md](../rationale/why-human-gate.md)
+- How the vault ships and deploys: [distribution-model.md](../deployment/distribution-model.md)
 
 **Reference**
 

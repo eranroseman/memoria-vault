@@ -1,6 +1,7 @@
 ---
 title: fleet-health dashboard
-parent: Dashboards
+parent: Operational health
+grand_parent: Dashboards
 ---
 
 # `fleet-health` dashboard
@@ -17,7 +18,7 @@ The score is designed so that no single signal dominates, which means a lane can
 
 The suggestion-ratio signal is worth understanding in both directions. A very high accept rate (above ~90%) indicates the human is approving suggestions without reading them — the signal has become noise. A very low accept rate (below ~20%) indicates the candidate scoring algorithm is producing poor candidates that need tuning. Both extremes down-weight the lane score, because both represent a failure of the suggestions mechanism to do useful work.
 
-For the exact band thresholds and the score formula, see [reference/glossary.md](../../reference/glossary.md).
+For the exact band thresholds and the score formula, see [reference/glossary.md](../../../reference/glossary.md).
 
 ## What it is not
 
@@ -34,5 +35,5 @@ The dashboard and its metrics aggregator ship with the starter vault. It shows m
 ## Related
 
 - [explanation/dashboards/audit-log.md](audit-log.md) — per-decision forensics that feed the deny-rate input
-- [explanation/dashboards/drift-watch.md](drift-watch.md) — structural complement; verdict band is the structural sibling of trust score
-- [reference/glossary.md](../../reference/glossary.md) — trust score formula and band definitions
+- [explanation/dashboards/drift-watch.md](../structural-health/drift-watch.md) — structural complement; verdict band is the structural sibling of trust score
+- [reference/glossary.md](../../../reference/glossary.md) — trust score formula and band definitions

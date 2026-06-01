@@ -1,6 +1,7 @@
 ---
 title: The reading-pipeline dashboard
-parent: Dashboards
+parent: Synthesis agenda
+grand_parent: Dashboards
 ---
 
 
@@ -20,9 +21,9 @@ It shows what is actively in flight through the upstream pipeline and what has c
 
 **Not [discuss-queue](discuss-queue.md).** The discuss-queue is narrowly scoped to fully-classified paper notes that haven't had a Socratic pass — one specific upstream debt. Reading-pipeline is the broader working surface: papers still in active processing plus downstream claim-note maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
 
-**Not [weekly-review](weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
+**Not [weekly-review](../structural-health/weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
 
-**Not a board view.** This dashboard queries note state — paper-note `lifecycle` and claim-note `maturity` — not card state. The [board-state](board-state.md) dashboard is the card view.
+**Not a board view.** This dashboard queries note state — paper-note `lifecycle` and claim-note `maturity` — not card state. The [board-state](../daily-glance/board-state.md) dashboard is the card view.
 
 ---
 
@@ -39,6 +40,6 @@ It shows what is actively in flight through the upstream pipeline and what has c
 ## Related
 
 - Narrower upstream-discipline sibling: [discuss-queue](discuss-queue.md)
-- Weekly entry point that links to this: [weekly-review](weekly-review.md)
-- Lifecycle stages explained: [knowledge/lifecycle-over-topic](../knowledge/lifecycle-over-topic.md)
-- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
+- Weekly entry point that links to this: [weekly-review](../structural-health/weekly-review.md)
+- Lifecycle stages explained: [knowledge/lifecycle-over-topic](../../knowledge/lifecycle-over-topic.md)
+- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)

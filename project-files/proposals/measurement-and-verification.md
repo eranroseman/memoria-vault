@@ -42,7 +42,7 @@ Capabilities that make the Verifier measurable, the claim layer richer, and the 
 
 ## 3. Fleet observability dashboard
 
-**What.** Per-lane and per-skill metrics (cost, success rate, retry rate, latency) on daily/weekly/monthly cadence. Materializes the [fleet-health dashboard](../../docs/explanation/dashboards/fleet-health.md) design.
+**What.** Per-lane and per-skill metrics (cost, success rate, retry rate, latency) on daily/weekly/monthly cadence. Materializes the [fleet-health dashboard](../../docs/explanation/dashboards/operational-health/fleet-health.md) design.
 
 **Trade-offs.** Requires a scheduled aggregator that reads the audit log and board history. Until the aggregator exists, the dashboard is empty.
 

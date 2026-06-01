@@ -1,6 +1,7 @@
 ---
 title: Kanban board
 parent: Explanation
+nav_order: 6
 has_children: true
 permalink: /explanation/kanban-board/
 ---
@@ -78,7 +79,7 @@ There is no implicit return to the queue. Every rework is a new card with a new 
 
 The authoritative board lives in `kanban.db` — a database Dataview cannot query directly. Two read-only projections bridge the gap.
 
-**Board export → `00-meta/board/`** — a `board_export.py` job writes each live card to a markdown file on a **~60-second cadence** (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). The [board-state dashboard](../dashboards/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
+**Board export → `00-meta/board/`** — a `board_export.py` job writes each live card to a markdown file on a **~60-second cadence** (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). The [board-state dashboard](../dashboards/daily-glance/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
 
 **Board-state snapshot → `board-state.jsonl`** — the same ~60s pass appends a compact JSONL line with per-lane running/ready/blocked counts and review-queue depth. The status-line widget reads this instead of re-querying the database, keeping its refresh lightweight.
 
@@ -94,8 +95,8 @@ A scheduled metrics aggregator rolls run history into `00-meta/08-metrics/` note
 
 - State machine detail: [states.md](states.md)
 - Schema design: [card-schema.md](card-schema.md)
-- Dashboard that reads the board export: [dashboards/board-state](../dashboards/board-state.md)
-- Why review is structural: [architecture/why-human-gate](../architecture/why-human-gate.md)
+- Dashboard that reads the board export: [board-state](../dashboards/daily-glance/board-state.md)
+- Why review is structural: [why-human-gate](../rationale/why-human-gate.md)
 - Profiles that interact with the board: [profiles/README.md](../profiles/README.md)
 - Pipelines that run on the board: [workflows/README.md](../workflows/README.md)
-- The board as control plane: [why-three-layers.md](../architecture/why-three-layers.md)
+- The board as control plane: [why-three-layers.md](../rationale/why-three-layers.md)

@@ -76,5 +76,5 @@ The Socratic profile's lane policy is `policy.allow.write: []` — it cannot edi
 **Explanation**
 
 - Socratic profile design: [explanation/profiles/socratic.md](../../explanation/profiles/socratic.md)
-- Discuss queue dashboard: [explanation/dashboards/discuss-queue.md](../../explanation/dashboards/discuss-queue.md)
+- Discuss queue dashboard: [explanation/dashboards/discuss-queue.md](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)
 - Paper-note structure used as context: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)

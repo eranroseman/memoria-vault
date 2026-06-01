@@ -1,6 +1,7 @@
 ---
 title: loose-ends dashboard
-parent: Dashboards
+parent: Structural health
+grand_parent: Dashboards
 ---
 
 # `loose-ends` dashboard
@@ -30,5 +31,5 @@ Unlike most dashboards, loose-ends has no dependencies — no plugin, no log fil
 ## Related
 
 - [explanation/dashboards/weekly-review.md](weekly-review.md) — the Friday ritual that includes a loose-ends pass
-- [explanation/profiles/linter.md](../profiles/linter.md) — `orphan-working-files` detector, the structural counterpart
-- Archiving surfaced sources: [archive-a-source.md](../../how-to-guides/sources/archive-a-source.md)
+- [explanation/profiles/linter.md](../../profiles/linter.md) — `orphan-working-files` detector, the structural counterpart
+- Archiving surfaced sources: [archive-a-source.md](../../../how-to-guides/sources/archive-a-source.md)

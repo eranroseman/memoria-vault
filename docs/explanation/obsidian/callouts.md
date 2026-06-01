@@ -50,5 +50,5 @@ Callout writes pass through the policy MCP like any other vault write — logged
 
 ## Related
 
-- The hybrid pattern behind callouts: [why-computational-methods.md](../architecture/why-computational-methods.md)
+- The hybrid pattern behind callouts: [why-computational-methods.md](../rationale/why-computational-methods.md)
 - Callout field reference: [obsidian-callouts.md](../../reference/obsidian-callouts.md)

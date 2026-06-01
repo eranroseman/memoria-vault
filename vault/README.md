@@ -45,7 +45,7 @@ The installers live at the **repository root** (one level above this `vault/` fo
 
 They stage each profile, substitute `{{VAULT_PATH}}`, and register the seven profiles with Hermes (`hermes profile install … --force`), then bootstrap each profile's `.env` from its `.env.EXAMPLE` if absent. They are idempotent — safe to re-run after a `git pull`. Prerequisites (Hermes, Python) and the full setup of Obsidian, Zotero + Better BibTeX, and secrets are covered in [docs/how-to-guides/setup/](https://github.com/eranroseman/memoria-vault/tree/main/docs/how-to-guides/setup).
 
-A **one-line full-stack bootstrap installer** (which also installs Obsidian, Hermes, and Zotero) is implemented — see [docs: bootstrap installer](https://eranroseman.github.io/memoria-vault/explanation/architecture/bootstrap-installer/) (design) and [reference/installer.md](https://eranroseman.github.io/memoria-vault/reference/installer/) (inventories).
+A **one-line full-stack bootstrap installer** (which also installs Obsidian, Hermes, and Zotero) is implemented — see [docs: bootstrap installer](https://eranroseman.github.io/memoria-vault/explanation/deployment/bootstrap-installer/) (design) and [reference/installer.md](https://eranroseman.github.io/memoria-vault/reference/installer/) (inventories).
 
 Useful installer flags:
 

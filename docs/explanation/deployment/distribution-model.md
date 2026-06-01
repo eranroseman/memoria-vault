@@ -1,6 +1,6 @@
 ---
 title: Distribution model
-parent: Architecture
+parent: Deployment
 ---
 
 # Distribution model

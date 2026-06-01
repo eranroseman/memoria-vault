@@ -5,7 +5,7 @@ parent: Reference
 
 # Policy MCP
 
-The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md).
+The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/rationale/why-human-gate.md).
 
 ---
 
@@ -234,5 +234,5 @@ An unexpected `deny` is a Memoria-side question: check the lane-override YAML, t
 
 - Profile permission tables: [profiles.md](profiles.md)
 - Audit log substrate and rotation: [memory.md](memory.md)
-- Why the gate is structural: [explanation/architecture/why-human-gate.md](../explanation/architecture/why-human-gate.md)
-- The guard layer in the three-layer model: [why-three-layers.md](../explanation/architecture/why-three-layers.md)
+- Why the gate is structural: [explanation/architecture/why-human-gate.md](../explanation/rationale/why-human-gate.md)
+- The guard layer in the three-layer model: [why-three-layers.md](../explanation/rationale/why-three-layers.md)
