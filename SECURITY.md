@@ -15,13 +15,13 @@ Before running either:
 1. **Inspect first (recommended).** Download and read the script, then run the
    local copy:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o scripts/install.sh
-   less scripts/install.sh        # read it
-   bash scripts/install.sh        # then run it
+   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
+   less install.sh        # read it
+   bash install.sh        # then run it
    ```
-2. **Or clone and run locally** — the README shows how.
-3. **Preview with `--dry-run`.** `bash scripts/install.sh --dry-run` (or
-   `scripts/install.ps1 -DryRun`) prints every command the installer *would* run and
+2. **Or clone and run locally** — the README shows how (`bash scripts/install.sh`).
+3. **Preview with `--dry-run`.** `bash install.sh --dry-run` (or
+   `.\install.ps1 -DryRun`) prints every command the installer *would* run and
    changes nothing.
 
 What the installer does and does not do, by design:

@@ -15,7 +15,7 @@
 
     There is intentionally NO install logic here -- install.sh is the single
     source of truth. Inspect it first:
-      https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh
+      https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh
 
 .PARAMETER Vault
     Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
@@ -36,7 +36,7 @@
     Non-interactive: accept defaults, no prompts.
 
 .EXAMPLE
-    irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 
 .EXAMPLE
     .\install.ps1 -Vault D:\Memoria
@@ -51,7 +51,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$RawUrl  = 'https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh'
+$RawUrl  = 'https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh'
 $WslDoc  = 'https://learn.microsoft.com/windows/wsl/install'
 
 function Say  { param($m) Write-Host $m }

@@ -7,12 +7,12 @@
 # the GUI apps (Obsidian, Zotero). macOS is not supported.
 #
 # Inspect-first (recommended):
-#   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh -o install.sh
+#   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
 #   less install.sh        # read it
 #   bash install.sh        # then run it
 #
 # Convenience one-liner:
-#   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 #
 # Flags:
 #   --vault DIR       install the runtime vault here (default: ~/Memoria; prompted otherwise)
@@ -237,7 +237,7 @@ ensure_hermes() {
       detect_python
       if [ "$DRY_RUN" -eq 0 ] && ! have hermes; then
         warn "Hermes installed, but not on PATH in this shell (the installer edits PATH)."
-        warn "Open a NEW shell, then finish with:  bash install.sh --profiles-only --vault \"${VAULT_OVERRIDE:-~/Memoria}\""
+        warn "Open a NEW shell, then finish with:  bash scripts/install.sh --profiles-only --vault \"${VAULT_OVERRIDE:-~/Memoria}\""
       fi
     else
       die "Install Hermes (see $HERMES_DOCS), then re-run with --profiles-only to finish."
@@ -362,7 +362,7 @@ install_profiles() {
     die "No profiles at $profiles_src."
   fi
   if ! have hermes; then
-    warn "Hermes not on PATH — cannot deploy profiles. Install Hermes, then: bash install.sh --profiles-only --vault \"$VAULT_PATH\""
+    warn "Hermes not on PATH — cannot deploy profiles. Install Hermes, then: bash scripts/install.sh --profiles-only --vault \"$VAULT_PATH\""
     return
   fi
 
@@ -573,7 +573,7 @@ print_next_steps() {
   say "  4. Smoke-test the ACP pane:    hermes -p memoria-socratic acp"
   say "  5. Try a session:              hermes -p $first chat"
   say ""
-  say "Re-deploy after editing the vault source:  bash install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
+  say "Re-deploy after editing the vault source:  bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
   # NB: trailing `&&` test must not become the function's (and script's) exit
   # status — on a real run [ "$DRY_RUN" -eq 1 ] is false and would exit 1.
   [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
