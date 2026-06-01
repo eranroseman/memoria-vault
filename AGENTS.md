@@ -3,11 +3,40 @@
 Conventions for any AI agent (Claude Code, Hermes, etc.) making changes to
 `eranroseman/memoria-vault`. Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-This file encodes hazards learned the hard way. Following it avoids the two
-failure modes that bite agents here: the **auto-commit hook** entangling your
-work, and the **branch protection** rejecting direct pushes.
+This file encodes hazards learned the hard way. Following it avoids the failure
+modes that bite agents here: **concurrent sessions** sharing one working tree, the
+**auto-commit hook** entangling your work, and **branch protection** rejecting
+direct pushes.
 
 ---
+
+## 0. Isolate your session in a git worktree
+
+**If more than one agent/session may touch this repo, each must work in its own
+[git worktree](https://git-scm.com/docs/git-worktree) — never the same checkout.**
+
+Two sessions sharing one working directory **corrupt each other**: they run
+`git switch` / `git reset --hard origin/main` and (with the obsidian-git
+auto-backup) commit the tree, so one session's `checkout`/`reset` silently moves
+the other's HEAD and reverts its uncommitted edits mid-task. This is not
+hypothetical — it happened repeatedly (HEAD jumping branches, edits vanishing,
+one session's work bundled into another's PR).
+
+A worktree shares the same `.git` history but has its own HEAD, branch, and files,
+so sessions can't trample each other:
+
+```bash
+# one-time per session, OUTSIDE OneDrive (OneDrive sync fights git):
+git worktree add ~/mv-<session> -b agent/<session> origin/main
+cd ~/mv-<session>          # do ALL your work here
+# ... branch, edit, commit, PR from here ...
+git worktree remove ~/mv-<session>   # when done (or leave it for next time)
+```
+
+`core.hooksPath` and `.gitattributes` are inherited, so the pre-commit guard and
+LF rules apply in the worktree too. The shared canonical checkout
+(`…/OneDrive/…/memoria-vault`) is **also inside OneDrive** — a second reason to
+do real work in a worktree outside it.
 
 ## 1. Branch before you edit — always
 
