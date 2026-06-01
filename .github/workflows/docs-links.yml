@@ -1,0 +1,22 @@
+name: docs-links
+
+# Verifies every docs/ reference under vault/ resolves (Pages URLs map to a real
+# docs file; no banned github blob URLs). This is the unbypassable CI backstop for
+# the per-diff .githooks/pre-commit guard — programmatic commits (obsidian-git
+# auto-backup) and --no-verify skip the hook, but cannot skip a required check.
+#
+# Required status check, so it must run on EVERY push/PR (no `paths:` filter) or
+# path-unrelated PRs would be permanently blocked on a check that never reports.
+# See AGENTS.md §4.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docs-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check vault/ docs references resolve
+        run: bash scripts/check-vault-links.sh
