@@ -1,12 +1,12 @@
 # Profiles
 
-Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../../docs/explanation/profiles/).
+Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../explanation/profiles/).
 
 ---
 
 ## Lane identifiers
 
-One token governs routing. The Kanban dispatcher matches `task.assignee` to this string — nothing else. Use it in every machine-read slot: card `assignee`, `hermes kanban create --assignee`, cron `assignee:`, skill-note `lane:`.
+One token governs routing. The Kanban dispatcher matches `task.assignee` to this string. The lane id appears in: card `assignee`, `hermes kanban create --assignee`, cron `assignee:`, skill-note `lane:`.
 
 | Profile (prose) | Assignee = lane id | Lane-override file |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ One token governs routing. The Kanban dispatcher matches `task.assignee` to this
 | Coder | `memoria-coder` | `.memoria/lane-overrides/coder.yaml` |
 | Linter | `memoria-linter` | `.memoria/lane-overrides/linter.yaml` |
 
-**Three forms, one token.** Prose uses the short name ("the Librarian lane"). Config, overrides, board, and cron always use `memoria-<name>`. The override file is keyed by its `profile:` field, not the filename.
+**Three forms, one token.** Prose uses the short name ("the Librarian lane"). Config, overrides, board, and cron use `memoria-<name>`. The override file is keyed by its `profile:` field, not the filename. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ---
 
@@ -50,11 +50,9 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
 | **Linter** | Validate and report | `lint`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | *(none — runs `detectors.py` via terminal)* | Level 1 (cron) |
 
-> **Commands vs. skills.** The **Core commands** are the profile's command surface (CLI / palette). The **Allowed skills** are the real Hermes/K-Dense skill IDs the lane-override grants (the policy gate). Per the [adapt-not-wrap decision](../../project-files/proposals/bootstrap-installer.md), the commands are mostly `SOUL.md` procedures composing these skills — only `obsidian-paper-note` and `retraction-check` are authored as skills; `qmd` is a skills.sh skill; the Linter runs the shipped `detectors.py`. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
+> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). Only `obsidian-paper-note` and `retraction-check` are authored as skills; `qmd` is a skills.sh skill; the Linter runs the shipped `detectors.py`. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
-
-A profile's **invocation level** is *how it gets started* — what triggers it to run. It's a routing property (set by `routing.invocation` in the lane-override plus whether the profile ships a cron schedule), not a permission. Three levels, by who or what pulls the trigger:
 
 | Level | Cadence | Description |
 | --- | --- | --- |
@@ -82,21 +80,19 @@ A profile's **invocation level** is *how it gets started* — what triggers it t
 
 ## Folder permission matrix
 
-`W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the *exact subfolder*, *what note types* land there, and *which command/skill* does the writing.
+`W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the exact subfolder, note types, and command/skill responsible.
+
+Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [why-specialist-profiles.md](../explanation/architecture/why-specialist-profiles.md) for the design rationale.
 
 | Profile | `00-meta` | `10-inbox` | `20-sources` | `30-synthesis/01-claims` | `30-synthesis/02-reference` | `30-synthesis/03-moc` | `40-workbench` | `50-deliverables` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Librarian** | R | W (discovery, candidates) | W (create, enrich) | R | R | R | R | R |
+| **Librarian** | R | W (`01-fleeting`, `03-candidates`) | W (create, enrich) | R | R | R | R | R |
 | **Mapper** | R | R | R | R | R | R | W (`*/01-map/` only) | R |
 | **Socratic** | R | R | R | R | R | R | R | R |
 | **Writer** | R | W (`02-answers/`) | R | R | W drafts (review-gated) | R (suggest only) | W (drafts, framing, canvas) | R (export = dry-run) |
 | **Verifier** | R | W (`03-candidates/` only) | R | R | R | R | W (`*/05-verification/*`) | R |
 | **Coder** | R | R | R | R | R | R | W (`*/06-code/`) | R (export = dry-run) |
 | **Linter** | W (`02-logs/` only) | R | R | R | R | R | R | R |
-
-### Why every profile has read-everywhere
-
-Read access is universal by design — agents must *ground* on the whole vault to do narrow work well. The Writer drafts from claim notes it may never write to; the Verifier traces a draft's citations back to `20-sources/`; the Mapper surveys the entire corpus. Restricting reads would force each profile to re-fetch context it's allowed to see anyway, with no safety gain: **the trust boundary is the *write* gate, not the read.** A profile that reads a claim note and a profile that *writes* one are categorically different acts, and only the second can corrupt canonical state. (Socratic is the apparent exception — it reads everything but writes nothing — which is exactly the point: read-broad, write-none is a safe combination.) The one read that *is* withheld is secrets: `.env` and `auth.json` are outside the vault and never exposed to any profile.
 
 ### Per-profile write detail — where, what, why
 
@@ -110,15 +106,15 @@ Read access is universal by design — agents must *ground* on the whole vault t
 | **Coder** | `40-workbench/*/06-code/` | `code-note`, code artifacts | `code`, `scaffold`, `commit`, `revert` |
 | **Linter** | `00-meta/02-logs/` only | audit/session logs, rotation archive | `session-log`, log rotation (auto-fix class `authorized-targeted`) |
 
-**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/` except logs) remain human-owned.** Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are *allowed in the lane-override* but the policy MCP degrades them to `dry_run` until a human approves — that's why the Writer's reference/deliverable writes are marked review-gated above. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
+**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/` except logs) remain human-owned.** Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are allowed in the lane-override but the policy MCP degrades them to `dry_run` until a human approves. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
 
 ---
 
 ## Linter: the eight structural detectors
 
-Deterministic, zero-LLM structural checks. "Structural detectors" is the canonical name (see [linter.md](../explanation/profiles/linter.md) for the design rationale); **"M-detectors" is just shorthand for the file that documents them** — `M-detectors.md` — not an acronym, and "M" expands to nothing. Full per-detector procedures live in [M-detectors.md](../../vault/.memoria/profiles/memoria-linter/M-detectors.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [M-detectors.md](../../vault/.memoria/profiles/memoria-linter/M-detectors.md). For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md).
 
-The **Implementation** column distinguishes only *where each runs*, never LLM-vs-not — all eight are deterministic and use no LLM. Three are functions in the shipped `detectors.py` (pure Python stdlib). The other five run as **live-Linter agent procedures** (not in `detectors.py`) because they need runtime context the script lacks: a git diff, a SHA-256 pass over the audit log, or commit timestamps.
+**Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 
 | Slug | Severity | Implementation | Catches |
 | --- | --- | --- | --- |
@@ -137,9 +133,7 @@ The defining property of all eight: **silent** — each failure looks like "noth
 
 ## Linter: auto-fix classes
 
-Every proposed fix is classified into one of four classes. The class determines whether the fix applies automatically or requires human action. The policy MCP enforces the class gate at the tool layer.
-
-**How a fix gets its class.** The class is a **fixed property of the fix *type*, decided in the detector's own logic — not a runtime judgment.** Each detector that proposes a fix tags it with one of the four classes from a hard-coded mapping (trailing-whitespace → `safe-and-unambiguous`, audit-log rotation → `authorized-targeted`, frontmatter field rename → `schema-content`, and so on). There is no LLM and no per-case discretion: a given fix type always carries the same class. Two of the four classes are then *granted* to the Linter lane (`policy.allow.auto_fix.classes` in `lane-overrides/linter.yaml`); the other two are denied, so the policy MCP forces them to `dry_run` or blocks them regardless of what the detector proposed. So assignment is two-step: the detector *tags* the class deterministically, and the lane policy *gates* which tagged classes may auto-apply.
+Every proposed fix carries a class, hard-coded by the detector. The class determines whether the fix applies automatically or requires human action; the policy MCP enforces the gate at the tool layer.
 
 | Class | Examples | Default behavior |
 | --- | --- | --- |
@@ -168,3 +162,4 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 ## Related
 
 - Conceptual grouping and rationale: [profiles/README.md](../explanation/profiles/README.md)
+- Linter detectors, auto-fix classes, and severity scale: [linter.md](linter.md)

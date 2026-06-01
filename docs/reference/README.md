@@ -19,7 +19,8 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 
 | File | What it covers |
 | --- | --- |
-| [profiles.md](profiles.md) | Lane identifiers, capability table, folder permissions, Linter severity |
+| [profiles.md](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
+| [linter.md](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
 | [command-palette.md](command-palette.md) | Obsidian `Memoria:` command-palette entries (the in-Obsidian UI surface) |
 | [hermes-cli.md](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
 | [policy-mcp.md](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |

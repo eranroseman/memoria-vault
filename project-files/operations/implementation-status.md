@@ -48,7 +48,7 @@ Authoritative runtime signal: `install.ps1` requires `SOUL.md` + `config.yaml` +
 | Artifact | Status | Notes |
 | --- | --- | --- |
 | Folder skeleton `00-meta`…`95-archive` | shipped | Complete structure ships with `.keep` placeholders. Matches design spec. Includes `10-inbox/03-candidates/` (see note below). |
-| `10-inbox/03-candidates/` | shipped | Folder ships as `.keep`. The `candidate-note.md` template that would populate it is **deferred** (proposal-21 *shared-candidate-frontmatter*, still `proposed`) — the folder is ahead of its template. |
+| `10-inbox/03-candidates/` | shipped | Folder ships as `.keep`. The `candidate-note.md` template that would populate it is **deferred** (proposal-21 *shared-candidate-frontmatter*, still `proposed`) — the folder ships as an empty placeholder, waiting on that template. |
 | `00-meta/02-logs/` and `00-meta/02-logs/sessions/` | shipped | Both dirs ship as `.keep` placeholders. `audit.jsonl` is created at runtime by the policy MCP (pending). |
 | 15 note templates (`00-meta/03-templates/`) | shipped | All 15 present: answer/canvas/claim/code/deliverable/draft/fleeting/item/moc/organization/paper/person/project/reference/venue. |
 | `candidate-note.md` template (16th type) | deferred | proposal-21 (*shared-candidate-frontmatter*) is still `proposed` — slated for baseline adoption but not yet landed (see ADR-16). Not part of v0.1. |

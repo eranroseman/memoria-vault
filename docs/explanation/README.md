@@ -75,7 +75,7 @@ The curated path above is a reading order, not a full index. Everything in `expl
 - [knowledge/](knowledge/README.md) — how durable knowledge is organized: lifecycle-over-topic, note-types, promotion-model, knowledge-cycle, note-body-structure, vocabulary-discipline, common-pitfalls
 - [workflows/](workflows/README.md) — how work moves through the system: board-as-state-machine, review-as-state, verify-on-commit
 - [kanban-board/](kanban-board/README.md) — the board as coordination layer: card-schema, states
-- [dashboards/](dashboards/README.md) — the eleven Dataview dashboards: daily-health, weekly-review, board-state, fleet-health, drift-watch, audit-log, contradictions, loose-ends, open-questions, reading-pipeline, discuss-queue
+- [dashboards/](dashboards/README.md) — the ten Dataview dashboards plus the `index.md` Daily Health home page (there is no separate `daily-health.md`): weekly-review, board-state, fleet-health, drift-watch, audit-log, contradictions, loose-ends, open-questions, reading-pipeline, discuss-queue
 - [profiles/](profiles/README.md) — the seven specialist profiles: librarian, mapper, socratic, writer, verifier, coder, linter
 - [obsidian/](obsidian/README.md) — how the human interacts through Obsidian: home (front door), visual-discipline, the-status-line, callouts, agent-client-picker
 

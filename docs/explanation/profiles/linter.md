@@ -42,4 +42,5 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 **Reference**
 
-- Structural detectors and auto-fix classes: [profiles.md](../../reference/profiles.md)
+- Structural detectors, auto-fix classes, severity scale: [linter.md](../../reference/linter.md)
+- Profile identity, permissions, invocation level: [profiles.md](../../reference/profiles.md)
