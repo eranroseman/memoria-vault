@@ -9,7 +9,7 @@ The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](S
 | `skeleton-drift` | Skeleton note drift | MEDIUM | The human-facing notes lag the engineering spec. Won't break anything immediately but erodes trust over weeks. |
 | `dashboard-field-drift` | Dashboard field drift | HIGH | Silent-failure mode: a query returns zero rows in a real vault because a field name is wrong. The human sees "nothing to do" when there's something to do. |
 | `command-vocab-drift` | Command vocabulary drift | MEDIUM | A command named in the design isn't declared in the owning SOUL.md file (or vice versa). The system runs but inconsistencies accumulate. |
-| `plugin-config-drift` | Plugin-config drift | MEDIUM | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. Usually means a settings change through the plugin UI hasn't been committed, or a `git pull` brought in changes the human hasn't reviewed. Suffix conventions (`data.json` / `.example` / `.TODO`) are in the [plugins reference](https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/plugins.md#datajson-conventions); per-plugin enforcement specifics are below. |
+| `plugin-config-drift` | Plugin-config drift | MEDIUM | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. Usually means a settings change through the plugin UI hasn't been committed, or a `git pull` brought in changes the human hasn't reviewed. Suffix conventions (`data.json` / `.example` / `.TODO`) are in the [plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/#datajson-conventions); per-plugin enforcement specifics are below. |
 | `orphan-working-files` | Orphan working files | LOW | Editor backups, manual-rename leftovers, or `.tmp.*` working files have accumulated outside transient zones. Recoverable in one human decision per file (keep, archive, delete). Severity is LOW because no canonical state is at risk — but pattern-matching is cheap and the signal is reliable, so detection earns its place even if remediation is mundane. |
 | `extract-path-broken` | Extract path broken link | HIGH | A paper-note's `extract_path` points at a Marker output file that doesn't exist. Silent-failure mode: the human clicks the wikilink expecting text, gets nothing, doesn't know that ingest was incomplete. Catches aborted ingest runs, citekey renames mid-flight, and deleted extracts. Severity matches `dashboard-field-drift` — the same "field references something missing, query returns empty silently" failure class. |
 
@@ -30,7 +30,7 @@ This action is `report` only. Never re-run `install.ps1` automatically — a dri
 
 ## `vault-hash-drift` — Vault hash drift
 
-You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [policy.md](https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/policy.md) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
+You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [policy.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
 
 Procedure:
 
@@ -43,7 +43,7 @@ This action is `report` only. Never overwrite the file to "restore" its previous
 
 ## `skeleton-drift` — Skeleton drift
 
-You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [docs/explanation/vault.md](https://github.com/eranroseman/memoria-vault/blob/main/docs/explanation/vault.md)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
+You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [docs/explanation/architecture/vault.md](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault/)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
 
 Procedure:
 
@@ -78,15 +78,15 @@ The check should run as part of the regular lint sweep but can also be triggered
 
 ## `command-vocab-drift` — Command vocabulary drift
 
-You own consistency between the command vocabulary as declared in three places: the workflows that *use* commands (`docs/how-to-guides/`), the per-profile and extended-command summaries that *catalog* them (`docs/explanation/profiles/README.md` lane matrix and `docs/reference/commands.md`), and the SOUL.md prompts that *declare* them (`.memoria/profiles/memoria-<profile>/SOUL.md` in the vault). The QA pass that motivated this check caught three real drifts in one sweep: `schema-migrate` and `graph-analyze` were in the summaries but missing from the Linter's SOUL.md; `similarity-check` was in the Extended command reference but missing from the per-profile table for the (then-existing) reviewer profile.
+You own consistency between the command vocabulary as declared in three places: the workflows that *use* commands (`docs/how-to-guides/`), the per-profile and extended-command summaries that *catalog* them (`docs/explanation/profiles/README.md` lane matrix and `docs/reference/command-palette.md`), and the SOUL.md prompts that *declare* them (`.memoria/profiles/memoria-<profile>/SOUL.md` in the vault). The QA pass that motivated this check caught three real drifts in one sweep: `schema-migrate` and `graph-analyze` were in the summaries but missing from the Linter's SOUL.md; `similarity-check` was in the Extended command reference but missing from the per-profile table for the (then-existing) reviewer profile.
 
 Procedure:
 
-1. **Extract referenced commands.** From `docs/how-to-guides/` docs, pull every skill invocation (`/<skill>` slash-commands and `hermes -p memoria-<profile> chat -s <skill>` forms) and every backticked `<command>` in a workflow context. From `docs/explanation/profiles/README.md` (lane matrix) and `docs/reference/commands.md`, pull every backticked `<command>` in the Core commands column and the command catalog table. Each reference carries its declared owner profile.
+1. **Extract referenced commands.** From `docs/how-to-guides/` docs, pull every skill invocation (`/<skill>` slash-commands and `hermes -p memoria-<profile> chat -s <skill>` forms) and every backticked `<command>` in a workflow context. From `docs/explanation/profiles/README.md` (lane matrix) and `docs/reference/command-palette.md`, pull every backticked `<command>` in the Core commands column and the command catalog table. Each reference carries its declared owner profile.
 2. **Extract declared commands.** From each `.memoria/profiles/memoria-<profile>/SOUL.md` in the vault, pull every backticked entry under the `## Core commands` section.
 3. **Cross-reference both directions.**
    - For each *referenced* command: it must appear in the SOUL.md of its owner profile.
-   - For each *declared* command in a SOUL.md: it should appear in at least one of the `docs/` profile command tables (`docs/explanation/profiles/README.md` lane matrix or `docs/reference/commands.md`), unless explicitly noted as private to that profile.
+   - For each *declared* command in a SOUL.md: it should appear in at least one of the `docs/` profile command tables (`docs/explanation/profiles/README.md` lane matrix or `docs/reference/command-palette.md`), unless explicitly noted as private to that profile.
 4. **Report each mismatch.** Include the command name, the source file, the owner profile, and which side is missing.
 
 Heuristics for what counts as a "command":
@@ -101,7 +101,7 @@ This action is `report` only. Never auto-add a command to a SOUL.md or any summa
 
 ## `plugin-config-drift` — Plugin-config drift
 
-Under direct profile management the "shipped template" for each plugin's `data.json` lives at the same path the human's working file lives — `.obsidian/plugins/<plugin>/data.json` — distinguished only by git state. The shipped version is what's committed at git HEAD; the human's working version is what's currently on disk. Drift is the difference between the two. The [plugins reference](https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/plugins.md#datajson-conventions) covers the rationale for each suffix; the per-plugin enforcement specifics are detailed below.
+Under direct profile management the "shipped template" for each plugin's `data.json` lives at the same path the human's working file lives — `.obsidian/plugins/<plugin>/data.json` — distinguished only by git state. The shipped version is what's committed at git HEAD; the human's working version is what's currently on disk. Drift is the difference between the two. The [plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/#datajson-conventions) covers the rationale for each suffix; the per-plugin enforcement specifics are detailed below.
 
 The detector handles three filename variants, plus one transition case. Suffix determines which procedure applies:
 
@@ -192,5 +192,5 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 ## Related
 
 - [Linter SOUL.md](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
-- [docs/reference/policy.md](https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/policy.md) — the audit log that `vault-hash-drift` verifies against.
+- [docs/reference/policy-mcp.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the audit log that `vault-hash-drift` verifies against.
 - [project-files/proposals/profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).
