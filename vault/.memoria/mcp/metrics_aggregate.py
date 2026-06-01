@@ -20,7 +20,7 @@ repeated-run data per task and is a TODO (noted in the dashboard design).
     python metrics_aggregate.py --vault <path> --from-json cards.json
     python metrics_aggregate.py --self-test
 
-[fleet-health dashboard]: docs/explanation/dashboards/fleet-health.md
+[fleet-health dashboard]: docs/explanation/dashboards/operational-health/fleet-health.md
 """
 from __future__ import annotations
 
