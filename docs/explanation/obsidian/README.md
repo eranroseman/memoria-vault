@@ -25,6 +25,7 @@ One principle runs through every page below: **the architecture is invisible dur
 | Page | What it explains |
 |---|---|
 | [visual-discipline.md](visual-discipline.md) | The restraint that makes the above work — single-accent callouts, hidden chrome, three cognitive-mode workspaces, and why each default is deliberate. |
+| [design-system.md](design-system.md) | The cross-context visual and voice spec — why a portable design system exists, and why the specific choices (single accent, system fonts, 4pt grid, voice guidelines) are what they are. |
 
 The **dashboards** are also an Obsidian surface, but they have their own section: [explanation/dashboards/](../dashboards/README.md).
 
