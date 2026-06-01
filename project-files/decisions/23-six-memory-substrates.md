@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 34
+id: 23
 title: Memory is six scoped substrates, not one store
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-34: Memory is six scoped substrates, not one store
+# ADR-23: Memory is six scoped substrates, not one store
 
 ## Context
 
@@ -33,7 +33,7 @@ The governing test: **memory is read back as recall; configuration is read as ru
 - "Where does X live?" becomes answerable by lifespan and scope, which is what makes cross-profile handoffs reliable: the Writer inherits the Librarian's *handoff payload* (board memory), never its session context.
 - Profile memory's token caps are load-bearing, not advisory — anything that needs to hold in-flight task state must use board memory instead, and anything durable and project-scoped must use vault project memory, not profile memory.
 - The vault is ground truth: a session-search result that contradicts a vault note loses. This keeps recall convenience from quietly overriding canonical knowledge.
-- Vault audit memory's append-only constraint is enforced, not merely intended — the Linter's `vault-hash-drift` detector flags files modified outside the trail ([ADR-36](36-session-logging-two-logs.md)), and audit capture must start from day one because cost and human-loop trends cannot be reconstructed retroactively.
+- Vault audit memory's append-only constraint is enforced, not merely intended — the Linter's `vault-hash-drift` detector flags files modified outside the trail ([ADR-25](25-session-logging-two-logs.md)), and audit capture must start from day one because cost and human-loop trends cannot be reconstructed retroactively.
 - Adding any new place to "remember" something must map onto one of these six (or be reclassified as configuration); a seventh substrate is a schema change that would supersede this ADR.
 
 ## Alternatives considered
@@ -45,6 +45,6 @@ The governing test: **memory is read back as recall; configuration is read as ru
 ## Related
 
 - **Supporting rationale:** [memory-tiers.md](../../docs/explanation/architecture/memory-tiers.md) (the substrate table, per-scope reasoning, and the memory-vs-configuration test).
-- **Related decisions:** [ADR-01 three-layer architecture](01-three-layer-architecture.md) and [ADR-33 build on Hermes](33-build-on-hermes-runtime.md) (substrates 1–3 are Hermes-native); [ADR-36 session logging](36-session-logging-two-logs.md) (the append-only audit substrate's enforcement).
+- **Related decisions:** [ADR-01 three-layer architecture](01-three-layer-architecture.md) and [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (substrates 1–3 are Hermes-native); [ADR-25 session logging](25-session-logging-two-logs.md) (the append-only audit substrate's enforcement).
 - **Reference:** [reference/memory.md](../../docs/reference/memory.md) (the substrate table as lookup).
 - **Source discussion:** retroactively records the substrate split already embedded in `memory-tiers.md`. The per-substrate detail evolves there; the six-way split and the recall-vs-rules boundary are what this ADR fixes.

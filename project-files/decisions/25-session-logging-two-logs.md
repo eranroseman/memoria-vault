@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 36
+id: 25
 title: Two separate session logs — hash-chained audit vs. narrative summaries
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-36: Two separate session logs — hash-chained audit vs. narrative summaries
+# ADR-25: Two separate session logs — hash-chained audit vs. narrative summaries
 
 ## Context
 
@@ -27,10 +27,10 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 ## Consequences
 
 - The audit log stays terse, append-only, and queryable for tamper detection; mixing narrative into it would make it verbose and harder to verify, while mixing per-write events into summaries would make them harder to read.
-- Tamper-evidence is structural but **detective, not preventive**: because the audit log is SHA-256 hash-chained and append-only, modification is *detectable* — the Linter's `vault-hash-drift` detector fires when a `before`/`after` link fails ([ADR-34](34-six-memory-substrates.md), vault audit memory). Enforcement is best-effort, not fail-closed: Hermes fails open on hook errors, so the chain catches tampering after the fact rather than preventing it.
-- Per-session file naming by `YYYY-MM-DD-HHMM` makes the narrative log multi-machine-safe: one researcher's machines each write their own session files and the vault accumulates them without collision (consistent with the single-researcher scope of [ADR-35](35-single-researcher-scope.md)).
+- Tamper-evidence is structural but **detective, not preventive**: because the audit log is SHA-256 hash-chained and append-only, modification is *detectable* — the Linter's `vault-hash-drift` detector fires when a `before`/`after` link fails ([ADR-23](23-six-memory-substrates.md), vault audit memory). Enforcement is best-effort, not fail-closed: Hermes fails open on hook errors, so the chain catches tampering after the fact rather than preventing it.
+- Per-session file naming by `YYYY-MM-DD-HHMM` makes the narrative log multi-machine-safe: one researcher's machines each write their own session files and the vault accumulates them without collision (consistent with the single-researcher scope of [ADR-24](24-single-researcher-scope.md)).
 - A missing `sessions/` directory causes session logging to silently fail, so vault setup must create it — an operational obligation this decision imposes on the installer and the setup guide.
-- Capture must start from first run: the audit and session record cannot be reconstructed retroactively, which is also why the publication telemetry of [ADR-24](24-publication-path.md) depends on logging existing early.
+- Capture must start from first run: the audit and session record cannot be reconstructed retroactively, which is also why the publication telemetry of [ADR-20](20-publication-path.md) depends on logging existing early.
 
 ## Alternatives considered
 
@@ -41,7 +41,7 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 ## Related
 
 - **Supporting rationale:** [session-logging.md](../../docs/explanation/architecture/session-logging.md) (the two-log table and the not-pre-created rationale).
-- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-34 memory substrates](34-six-memory-substrates.md) (vault audit memory is the append-only substrate); [ADR-35 single-researcher scope](35-single-researcher-scope.md) (multi-machine, single-user safety).
+- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-23 memory substrates](23-six-memory-substrates.md) (vault audit memory is the append-only substrate); [ADR-24 single-researcher scope](24-single-researcher-scope.md) (multi-machine, single-user safety).
 - **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) (owns `00-meta/02-logs/`, writes session summaries, rotates the audit log, runs `vault-hash-drift`).
 - **Reference:** [reference/policy-mcp.md](../../docs/reference/policy-mcp.md) (audit log format and enforcement).
 - **Source discussion:** retroactively records the two-log separation already embedded in `session-logging.md`.

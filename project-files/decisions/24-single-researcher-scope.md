@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 35
+id: 24
 title: Single-researcher scope — multi-user semantics are out of scope
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-35: Single-researcher scope — multi-user semantics are out of scope
+# ADR-24: Single-researcher scope — multi-user semantics are out of scope
 
 ## Context
 
@@ -22,9 +22,9 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 ## Consequences
 
 - The review gate stays simple: one reviewer, one verdict, no reconciliation of competing human judgments. This is a feature, not a limitation, at the target scale.
-- *Multi-machine* is not *multi-user*: one researcher operating Memoria across several machines is in scope (session files are named to avoid sync collisions — [ADR-36](36-session-logging-two-logs.md)); several humans sharing one vault is not. The distinction is owner-of-judgment count, not device count.
+- *Multi-machine* is not *multi-user*: one researcher operating Memoria across several machines is in scope (session files are named to avoid sync collisions — [ADR-25](25-session-logging-two-logs.md)); several humans sharing one vault is not. The distinction is owner-of-judgment count, not device count.
 - Any proposal that introduces a second judgment-owner must be treated as superseding this ADR, not extending the current design — it would touch the gate, the audit model, classification confirmation, and permissions at once.
-- Team-tool framing is off the table for v0.x, which keeps the novelty surface and the publication path ([ADR-24](24-publication-path.md)) honestly scoped to n=1 operator data.
+- Team-tool framing is off the table for v0.x, which keeps the novelty surface and the publication path ([ADR-20](20-publication-path.md)) honestly scoped to n=1 operator data.
 
 ## Alternatives considered
 
@@ -35,6 +35,6 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 ## Related
 
 - **Supporting rationale:** [what-memoria-is.md](../../docs/explanation/overview/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
-- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-auto-classification.md) (one human confirms); [ADR-24 publication path](24-publication-path.md) (n=1 operator data accepted as a known weakness).
+- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-auto-classification.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
 - **Proposals bounded by this ADR:** [multi-vault-and-multi-machine.md](../proposals/multi-vault-and-multi-machine.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
 - **Source discussion:** retroactively records the scope boundary already stated in `what-memoria-is.md`.

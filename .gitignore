@@ -18,3 +18,8 @@ desktop.ini
 
 # Editor local settings
 .vscode/settings.json
+
+# Other
+_archived/
+_notes/
+_paper/

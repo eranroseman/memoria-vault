@@ -4,7 +4,7 @@ A transient lead awaiting a human include/exclude decision (the **discovery inbo
 capture whose ingestion gave up (the **ingestion dead-letter**). Lives in
 `10-inbox/03-candidates/`. Never lingers: an `included` candidate proceeds to ingestion and
 becomes a `paper-note`/`item-note`; an `excluded` one is archived. See
-[ADR — shared candidate frontmatter](../../../project-files/decisions/21-shared-candidate-frontmatter.md).
+[ADR — shared candidate frontmatter](../../../project-files/decisions/17-shared-candidate-frontmatter.md).
 
 ## Frontmatter
 

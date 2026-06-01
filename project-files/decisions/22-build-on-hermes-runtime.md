@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 33
+id: 22
 title: Build on the Hermes Agent runtime rather than a bespoke one
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-33: Build on the Hermes Agent runtime rather than a bespoke one
+# ADR-22: Build on the Hermes Agent runtime rather than a bespoke one
 
 ## Context
 

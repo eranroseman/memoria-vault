@@ -25,10 +25,10 @@ Rules:
 | [03](03-structural-review-gate.md) | Review gate is structural, enforced by the policy MCP |
 | [04](04-lifecycle-over-topic-folders.md) | Folders encode lifecycle stage, not subject area |
 | [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone |
-| [32](32-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (Coder-lane exception) |
-| [33](33-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime, not a bespoke one |
-| [34](34-six-memory-substrates.md) | Memory is six scoped substrates, not one store |
-| [35](35-single-researcher-scope.md) | Single-researcher scope; multi-user out of scope |
+| [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (Coder-lane exception) |
+| [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime, not a bespoke one |
+| [23](23-six-memory-substrates.md) | Memory is six scoped substrates, not one store |
+| [24](24-single-researcher-scope.md) | Single-researcher scope; multi-user out of scope |
 
 ### Vault and schema
 
@@ -39,7 +39,7 @@ Rules:
 | [09](09-contradictions-dashboard.md) | Contradictions dashboard |
 | [10](10-claim-supersession.md) | Claim supersession relation |
 | [15](15-project-auto-classification.md) | Project membership is agent-proposed, human-confirmed |
-| [21](21-shared-candidate-frontmatter.md) | Shared candidate frontmatter (`candidate-note`, the 16th type) |
+| [17](17-shared-candidate-frontmatter.md) | Shared candidate frontmatter (`candidate-note`, the 16th type) |
 
 ### Tooling and integrations
 
@@ -48,8 +48,8 @@ Rules:
 | [07](07-code-agent-attachment.md) | External coding agent boundary |
 | [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not control-plane |
 | [13](13-homepage-front-door.md) | Homepage front-door note |
-| [36](36-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
-| [37](37-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
+| [25](25-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
+| [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
 
 ### Workflows
 
@@ -58,6 +58,6 @@ Rules:
 | [11](11-vault-eval-integration.md) | vault-eval as a maintenance capability |
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts |
 | [16](16-adopt-on-demand-for-reviews.md) | Adopt-on-demand: systematic-review tooling cluster |
-| [22](22-rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
-| [23](23-moc-threshold-alert.md) | Agent-proposed MOC threshold alert (Tier 1, report-only) |
-| [24](24-publication-path.md) | Publication path: vault-eval benchmark first, capture-now |
+| [18](18-rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
+| [19](19-moc-threshold-alert.md) | Agent-proposed MOC threshold alert (Tier 1, report-only) |
+| [20](20-publication-path.md) | Publication path: vault-eval benchmark first, capture-now |

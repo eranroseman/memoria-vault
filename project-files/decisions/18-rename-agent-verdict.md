@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 22
+id: 18
 title: Rename `agent_verdict` → `agent_recommendation`
 status: accepted
 date_proposed: 2026-05-31
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-22: Rename `agent_verdict` → `agent_recommendation`
+# ADR-18: Rename `agent_verdict` → `agent_recommendation`
 
 > **Accepted / implemented in v0.1 (2026-06-01).** Renamed across the card schema, dashboards, the Linter SOUL.md, and the docs in one coordinated pass (verified by grep — only this ADR retains the old name as historical reference).
 

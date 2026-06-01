@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 24
+id: 20
 title: Publication path — vault-eval benchmark first, capture-now
 status: accepted
 date_proposed: 2026-05-27
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-24: Publication path — vault-eval benchmark first, capture-now
+# ADR-20: Publication path — vault-eval benchmark first, capture-now
 
 ## Context
 
