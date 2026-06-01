@@ -1,0 +1,13 @@
+title: Memoria
+description: Personal knowledge management documentation
+baseurl: ""
+url: ""
+
+theme: jekyll-theme-minimal
+
+markdown: kramdown
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md

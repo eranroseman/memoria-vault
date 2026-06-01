@@ -22,9 +22,9 @@ One token governs routing. The Kanban dispatcher matches `task.assignee` to this
 
 ---
 
-## Profile directory layout
+## Profile distribution packages
 
-Each profile lives at `.memoria/profiles/memoria-<name>/`:
+Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 | File | Status | Notes |
 | --- | --- | --- |

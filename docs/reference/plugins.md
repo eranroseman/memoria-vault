@@ -4,7 +4,7 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required plugins (8)
+## Required Obsidian plugins (8)
 
 Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [set-up-obsidian.md](../how-to-guides/setup/set-up-obsidian.md).
 
@@ -21,7 +21,7 @@ Memoria breaks without these. The starter vault **ships all eight bundled and co
 
 ---
 
-## Recommended plugins (11)
+## Recommended Obsidian plugins (11)
 
 Install when the friction is felt. Not required for core function.
 
@@ -48,7 +48,7 @@ Install when the friction is felt. Not required for core function.
 
 ---
 
-## Zotero-side add-ons
+## Zotero plugins
 
 Plugins that install in Zotero (not Obsidian). Required or recommended alongside the Obsidian plugin set.
 

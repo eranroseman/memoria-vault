@@ -2,5 +2,9 @@
 __pycache__/
 *.pyc
 
+# Jekyll build artifacts (published via GitHub Pages from /docs)
+docs/_site/
+docs/.jekyll-cache/
+
 # Vault-internal secrets and per-machine files are gitignored in vault/.gitignore
 # (alongside the existing REST-API / workspace / .env entries).
