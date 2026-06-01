@@ -32,4 +32,4 @@ The seven-profile design exists because **specialists are safer than generalists
 
 ---
 
-**For depth:** profiles/README.md — the authoritative per-profile contracts and the seven-profile design rationale.
+**For depth:** [Profiles — explanation](https://eranroseman.github.io/memoria-vault/explanation/profiles/) — the authoritative per-profile contracts and the seven-profile design rationale.
