@@ -8,27 +8,34 @@ created: 2026-05-15
 
 # PROP-03: Dedicated review-note type
 
-## Context
+## What
 
-Add a `review-note` type for storing reviewer judgments with provenance, separate from the reviewed note itself? This would give every review decision a durable, queryable home.
+A `review-note` type that stores reviewer judgments with provenance, separate from the note being reviewed — giving every review decision a durable, queryable home.
 
-## Decision
+## Why
 
-**Defer.** The board card's `review_status`, `reviewed_at`, and handoff `summary` carry enough provenance for the current single-user workflow. Add a review-note type only if audit history needs to outlive the card.
+Review provenance today lives on the board card (`review_status`, `reviewed_at`, handoff `summary`) and in the audit log. Once a card closes, its review history is not directly browsable as notes.
 
-## Consequences
+## Trade-offs
 
-- Review provenance lives on the card, not in a parallel note tree.
-- Once a card closes, its review history is in the audit log — not directly browsable as notes.
-- If a future audit requirement demands persistent review records, adopting the type is straightforward (the card fields already carry the data).
+- Adds another note type to the schema for a benefit not currently felt.
+- A parallel review-note tree to maintain alongside the card/audit record.
+
+## Adoption trigger
+
+An audit requirement emerges that needs persistent, browsable review records outliving the board card.
+
+## Guard
+
+Do not add the type speculatively: the card fields plus the audit log already carry the data for the current single-user workflow, so adoption is cheap to defer and straightforward later (the data is already captured).
 
 ## Alternatives considered
 
-**Adopt now**: rejected — adds a note type to the 15 ([vault/note-types.md](../../docs/reference/note-types.md#note-types)) for a benefit that isn't currently felt.
+**Adopt now.** Rejected: adds a note type for an unfelt benefit.
 
-**Use the audit log directly** (no new type, but query the JSONL more): the current approach. Works for now.
+**Query the audit-log JSONL directly** (no new type). The current approach; works for now.
 
 ## Related
 
-- **See also:** [kanban-board/README.md](../../docs/explanation/kanban-board/README.md) for the existing review_status semantics
-- **Files affected:** none currently
+- **See also:** [kanban-board/README.md](../../docs/explanation/kanban-board/README.md) (existing `review_status` semantics).
+- **Files:** none currently.
