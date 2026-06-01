@@ -155,7 +155,6 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 
 - **Coverage.** This list holds works *cited in the documentation*, not Memoria's full reading corpus (the working bibliography lives in Zotero / `notes/papers.md`).
 - **Preprints.** Most contemporary entries are arXiv preprints (`pubstate: prepublished`); the `arXiv:ID` is the stable identifier.
-- **Adding a citation.** When a doc cites a new work, add its ACM author-date entry here with an `<a id="…"></a>` anchor, and link the in-text mention to `[bibliography.md#anchor]`.
 
 ---
 

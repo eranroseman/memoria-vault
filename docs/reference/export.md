@@ -1,9 +1,9 @@
 ---
-title: Export
+title: Export routes and formats
 parent: Reference
 ---
 
-# Export
+# Export routes and formats
 
 Citation states, export routes, editor feature comparison, and deliverable folder targets. For choosing between routes and failure modes see [how-to-guides/writing/export-a-draft.md](../how-to-guides/writing/export-a-draft.md).
 

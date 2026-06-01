@@ -38,7 +38,7 @@ The bootstrap copies `vault/` to a working location (off OneDrive on Windows); t
 
 The bootstrap's profile-install step (the function in `install.sh`, also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
 
-The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with the vault source. Without it, the seven profile directories under `~/.hermes/profiles/` would drift from their vault source over time — a drift the Linter's `profile-install-drift` detector catches but cannot fix. The re-run is the fix; making it safe to re-run is what makes the fix actionable.
+The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with the vault source. Without it, the seven profile directories under `~/.using-hermes-agent/profiles/` would drift from their vault source over time — a drift the Linter's `profile-install-drift` detector catches but cannot fix. The re-run is the fix; making it safe to re-run is what makes the fix actionable.
 
 ---
 

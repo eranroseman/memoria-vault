@@ -18,7 +18,7 @@ echo $KILOCODE_API_KEY $OPENALEX_EMAIL
 Both should return non-empty values. If either is blank, the corresponding Hermes operations will fail silently or with cryptic errors. Source your env file:
 
 ```bash
-source ~/.hermes/profiles/memoria-librarian/.env
+source ~/.using-hermes-agent/profiles/memoria-librarian/.env
 ```
 
 **2. Confirm Hermes is reachable.**

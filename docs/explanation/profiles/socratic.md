@@ -1,5 +1,5 @@
 ---
-title: The Socratic profile
+title: The Socratic
 parent: Profiles
 ---
 

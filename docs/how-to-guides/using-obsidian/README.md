@@ -1,8 +1,8 @@
 ---
-title: Interface
+title: Using Obsidian
 parent: How-to guides
 has_children: true
-permalink: /how-to-guides/interface/
+permalink: /how-to-guides/using-obsidian/
 ---
 
 # Using Obsidian
@@ -11,6 +11,6 @@ Driving Memoria from inside Obsidian — the command palette, the agent-client (
 
 | Guide | What it covers |
 | --- | --- |
-| [Command palette](command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
+| [Command palette](obsidian-command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
 | [Agent-client pane](use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
 | [Navigate the dashboards](navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |

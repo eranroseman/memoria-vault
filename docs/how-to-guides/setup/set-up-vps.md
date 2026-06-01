@@ -95,13 +95,13 @@ Hermes is already installed (step 1), so the installer detects it, copies the va
 
 **6. Configure the VPS profiles — remove the Obsidian MCP server.**
 
-The VPS has no running Obsidian instance. Edit each profile's `mcp.json` under `~/.hermes/profiles/memoria-<name>/mcp.json` and remove the `obsidian` server entry. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
+The VPS has no running Obsidian instance. Edit each profile's `mcp.json` under `~/.using-hermes-agent/profiles/memoria-<name>/mcp.json` and remove the `obsidian` server entry. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
 
 **7. Set environment variables on the VPS.**
 
 ```bash
 # Copy from local machine
-scp ~/.hermes/profiles/memoria-librarian/.env user@your-vps-ip:~/.hermes/profiles/memoria-librarian/.env
+scp ~/.using-hermes-agent/profiles/memoria-librarian/.env user@your-vps-ip:~/.using-hermes-agent/profiles/memoria-librarian/.env
 # Repeat for other profiles that need keys
 ```
 
@@ -109,7 +109,7 @@ Confirm:
 
 ```bash
 # on VPS
-cat ~/.hermes/profiles/memoria-librarian/.env | grep KILOCODE_API_KEY
+cat ~/.using-hermes-agent/profiles/memoria-librarian/.env | grep KILOCODE_API_KEY
 ```
 
 **8. Start Hermes as a persistent systemd service.**
@@ -126,7 +126,7 @@ Type=simple
 WorkingDirectory=/home/user/memoria-vault/vault
 ExecStart=hermes gateway run
 Restart=on-failure
-EnvironmentFile=/home/user/.hermes/profiles/memoria-librarian/.env
+EnvironmentFile=/home/user/.using-hermes-agent/profiles/memoria-librarian/.env
 
 [Install]
 WantedBy=default.target
@@ -199,7 +199,7 @@ hermes cron list
 Once the VPS is running reliably, the desktop only needs: Obsidian, Zotero, Syncthing. Keep a local fallback config in case the VPS is unreachable:
 
 ```bash
-cp ~/.hermes/config.yaml ~/.hermes/config.local.yaml
+cp ~/.using-hermes-agent/config.yaml ~/.using-hermes-agent/config.local.yaml
 ```
 
 If the VPS goes down, start Hermes locally and point the agent-client at `http://localhost:8642`.
@@ -223,6 +223,6 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 ## Related
 
 - Local install prerequisite: [quickstart.md](quickstart.md)
-- Profile configuration: [hermes/configuration.md](../hermes/configuration.md)
+- Profile configuration: [using-hermes-agent/configuration.md](../using-hermes-agent/configuration.md)
 - Redeploying profiles after vault changes: [maintenance/redeploy-profiles.md](../maintenance/redeploy-profiles.md)
 - Tunnel drops on restart: [failure-modes.md](../../reference/failure-modes.md) — see `VPS tunnel drops`

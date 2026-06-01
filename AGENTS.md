@@ -186,6 +186,8 @@ reading it. Before opening a PR:
 
 **Indexing.** Every new page must be added to its section README. New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`.
 
+**Adding a citation to `reference/bibliography.md`.** When a doc cites a new work, add its ACM author-date entry with an `<a id="…"></a>` anchor and link the in-text mention to `[bibliography.md#anchor](../reference/bibliography.md#anchor)` (relative path from the citing file).
+
 ### `project-files/decisions/` — ADR template
 
 ```markdown

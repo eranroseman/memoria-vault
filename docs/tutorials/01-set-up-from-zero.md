@@ -53,7 +53,7 @@ The installer (with your confirmation at each external step):
 - Installs Hermes + the ACP extra
 - Copies `vault/` to your runtime folder (default `~/Memoria`, off OneDrive)
 - Substitutes your vault path into each profile's `mcp.json` and `config.yaml`
-- Registers the seven profiles into `~/.hermes/profiles/` and provisions skills
+- Registers the seven profiles into `~/.using-hermes-agent/profiles/` and provisions skills
 
 It ends with a **Next steps** summary, including the path it copied the vault to (it asks before each external action; `--dry-run` previews without changing anything).
 
@@ -148,7 +148,7 @@ Click **Dashboard index** to open `00-meta/01-dashboards/index.md`. The dashboar
 
 - ✓ Vault open in Obsidian
 - ✓ All eight required plugins installed and enabled
-- ✓ All seven profiles installed in `~/.hermes/profiles/`
+- ✓ All seven profiles installed in `~/.using-hermes-agent/profiles/`
 - ✓ Zotero auto-exporting to `.memoria/library.bib`
 - ✓ Dashboards loading (empty, ready for content)
 

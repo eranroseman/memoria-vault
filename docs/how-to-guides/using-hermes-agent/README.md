@@ -1,8 +1,8 @@
 ---
-title: Hermes
+title: Using Hermes Agent
 parent: How-to guides
 has_children: true
-permalink: /how-to-guides/hermes/
+permalink: /how-to-guides/using-hermes-agent/
 ---
 
 # Using Hermes Agent
