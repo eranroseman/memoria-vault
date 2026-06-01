@@ -7,7 +7,7 @@ Memoria is built on three converging ideas and informed by a broad survey of con
 
 ## Karpathy's LLM-Wiki pattern
 
-Andrej Karpathy proposed an AI agent that compiles raw sources into a persistent, interlinked Markdown wiki. The key move is replacing *retrieval from scratch at query time* with a *persistent wiki that grows with use*.
+[Andrej Karpathy](../reference/bibliography.md#karpathy-llm-wiki) proposed an AI agent that compiles raw sources into a persistent, interlinked Markdown wiki. The key move is replacing *retrieval from scratch at query time* with a *persistent wiki that grows with use*.
 
 In standard retrieval-augmented generation, every question triggers a fresh search over raw documents. Useful synthesis is never stored; nothing compounds. The LLM-wiki pattern inverts this: the agent builds durable pages, and each new source improves those pages rather than sitting in isolation. The agent is a **compiler**, not just a retriever.
 
@@ -19,7 +19,7 @@ What Memoria doesn't take from this pattern: Karpathy's framing implies an agent
 
 ## Luhmann's Zettelkasten
 
-Niklas Luhmann's slip-box method enforces three disciplines that prevent a wiki from becoming an undifferentiated pile:
+[Niklas Luhmann](../reference/bibliography.md#luhmann-zettelkasten)'s slip-box method enforces three disciplines that prevent a wiki from becoming an undifferentiated pile:
 
 **Atomicity** — each note captures one idea, not a topic dump. An atomic note can be moved, cited, and linked without carrying irrelevant context.
 
@@ -33,7 +33,7 @@ Zettelkasten's weakness in modern workflows is that it is entirely human-maintai
 
 ## Bush's Memex
 
-Vannevar Bush's 1945 vision: a personal interconnected knowledge machine where *associations* are first-class objects. The device would let a researcher leave "trails" through a document collection — associative links that persist and can be revisited.
+[Vannevar Bush](../reference/bibliography.md#bush1945)'s 1945 vision: a personal interconnected knowledge machine where *associations* are first-class objects. The device would let a researcher leave "trails" through a document collection — associative links that persist and can be revisited.
 
 What Bush identified is that memory is associative, not taxonomic. A subject-area folder structure doesn't model how thinking actually works. What makes a knowledge base useful is not whether items are correctly classified, but whether the associations between them are preserved.
 
@@ -47,15 +47,15 @@ A broad survey of over 50 contemporary agent-driven research systems, which was 
 
 Key patterns adopted by Memoria include the following:
 
-**Stage-gated pipelines** appear across nearly every end-to-end system surveyed (LitSearch, ResearchArena, MLR-Copilot, Agent Laboratory). Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape.
+**Stage-gated pipelines** appear across nearly every end-to-end system surveyed ([LitSearch](../reference/bibliography.md#ajith2024litsearch), [ResearchArena](../reference/bibliography.md#kang2024researcharena), [MLR-Copilot](../reference/bibliography.md#li2025mlrcopilot), [Agent Laboratory](../reference/bibliography.md#schmidgall2025agentlaboratory)). Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape.
 
-**Thin control over thick state** (Chen 2026, AgentRxiv 2025, PARNESS 2026) is the finding that agents fail when state lives in chat and succeed when state lives in files. Three independent systems reach the same conclusion. Memoria's three-layer split is the structural form of that finding.
+**Thin control over thick state** ([Chen et al. 2026](../reference/bibliography.md#chen2026autonomous), [Schmidgall and Moor 2025](../reference/bibliography.md#schmidgall2025agentrxiv), [Wang and Luan 2026](../reference/bibliography.md#wang2026parness)) is the finding that agents fail when state lives in chat and succeed when state lives in files. Three independent systems reach the same conclusion. Memoria's three-layer split is the structural form of that finding.
 
-**Explicit agent roles** (AI co-scientist, MetaGPT, Agent Laboratory) — separate specialists over a generalist — reduce permission ambiguity and make quality responsibility traceable.
+**Explicit agent roles** ([AI co-scientist](../reference/bibliography.md#gottweis2025aicoscientist), [MetaGPT](../reference/bibliography.md#hong2024metagpt), [Agent Laboratory](../reference/bibliography.md#schmidgall2025agentlaboratory)) — separate specialists over a generalist — reduce permission ambiguity and make quality responsibility traceable.
 
-**Structured outputs at handoffs** (MetaGPT, PARNESS) — agents produce typed outputs at inter-agent boundaries, not free text. Memoria's frontmatter schema and handoff payload.
+**Structured outputs at handoffs** ([MetaGPT](../reference/bibliography.md#hong2024metagpt), [PARNESS](../reference/bibliography.md#wang2026parness)) — agents produce typed outputs at inter-agent boundaries, not free text. Memoria's frontmatter schema and handoff payload.
 
-**Persistent knowledge graphs** (AI co-scientist's Memory module, AI-Supervisor's Research World Model, OmegaWiki) — typed relationships as primary memory, not RAG-only.
+**Persistent knowledge graphs** ([AI co-scientist](../reference/bibliography.md#gottweis2025aicoscientist)'s Memory module, AI-Supervisor's Research World Model, OmegaWiki) — typed relationships as primary memory, not RAG-only.
 
 What the survey revealed about the field's dominant approach that Memoria declines:
 

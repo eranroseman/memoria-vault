@@ -33,11 +33,11 @@ Task history pollutes the knowledge graph. In-flight notes get confused with set
 
 The three-layer design follows a principle that three independent research systems identified from different starting points:
 
-**Chen et al. 2026** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
+**[Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
 
-**AgentRxiv** (Schmidgall & Moor 2025) shows that agents reading prior agent-generated reports gain ~11% over isolated agents on MATH-500. Cross-session knowledge persistence is the mechanism; agents that can't read prior work start from scratch every time.
+**AgentRxiv** ([Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv)) shows that agents reading prior agent-generated reports gain ~11% over isolated agents on MATH-500. Cross-session knowledge persistence is the mechanism; agents that can't read prior work start from scratch every time.
 
-**PARNESS** (Wang & Luan 2026) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The architecture is near-identical to Memoria's three-layer split; the defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
+**PARNESS** ([Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The architecture is near-identical to Memoria's three-layer split; the defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
 
 Three unrelated systems, three architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files.
 

@@ -6,7 +6,7 @@ Memoria targets L3 on the autonomy spectrum — multi-step autonomous execution 
 
 ## The three preconditions for autonomous loops
 
-Karpathy's Autoresearch pattern — an agent that runs overnight, modifies code, tests against a fixed evaluator, and keeps or reverts — works because three conditions hold simultaneously:
+[Karpathy](../../reference/bibliography.md#karpathy-llm-wiki)'s Autoresearch pattern — an agent that runs overnight, modifies code, tests against a fixed evaluator, and keeps or reverts — works because three conditions hold simultaneously:
 
 1. **The metric is monotonic.** Validation loss either improves or it doesn't.
 2. **Changes are reversible.** Git reverts the diff; the next experiment starts clean.
@@ -18,7 +18,7 @@ An autonomous keep/revert loop is only safe when all three conditions hold. The 
 
 ## Why knowledge work fails the test
 
-**Synthesis quality is not scalar.** Every autonomous research system (AI Scientist, AI co-scientist, CORAL, SciMON, Karpathy Autoresearch, Chen 2026) uses one number as the keep/revert signal. That number is plausible for its target task. None of these numbers is plausible for "is this synthesis a faithful, well-cited, non-redundant addition to a research vault." The proxy metrics that exist — citation count, relevance score, Scite support count — can inform triage priority, but they don't measure synthesis correctness.
+**Synthesis quality is not scalar.** Every autonomous research system (AI Scientist, [AI co-scientist](../../reference/bibliography.md#gottweis2025aicoscientist), CORAL, [SciMON](../../reference/bibliography.md#wang2024scimon), Karpathy Autoresearch, [Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)) uses one number as the keep/revert signal. That number is plausible for its target task. None of these numbers is plausible for "is this synthesis a faithful, well-cited, non-redundant addition to a research vault." The proxy metrics that exist — citation count, relevance score, Scite support count — can inform triage priority, but they don't measure synthesis correctness.
 
 **Synthesis errors compound.** In ML benchmarking, a wrong experiment is a wasted run. In knowledge work, a wrong claim persists in the vault and gets cited by downstream notes that build on it. The cost model is inverted: errors don't stay local; they accumulate. This asymmetry means the tolerance for autonomous keep/revert is much lower for knowledge work than for code experiments.
 
@@ -28,7 +28,7 @@ An autonomous keep/revert loop is only safe when all three conditions hold. The 
 
 ## Why confidence-routing doesn't help
 
-One tempting refinement: route to the human only when the agent's self-assessed confidence is low (SmartPause, as in AutoResearchClaw Liu et al. 2026). Their ablation finds targeted gating beats both full autonomy and dense step-by-step oversight.
+One tempting refinement: route to the human only when the agent's self-assessed confidence is low (SmartPause, as in AutoResearchClaw — [Liu et al. 2026](../../reference/bibliography.md#liu2026autoresearchclaw)). Their ablation finds targeted gating beats both full autonomy and dense step-by-step oversight.
 
 Memoria declines this approach for two reasons:
 

@@ -55,11 +55,11 @@ Memoria addresses both: the agent handles the maintenance discipline that humans
 
 ## Where it sits on the autonomy spectrum
 
-Chen 2026's five-level taxonomy runs: L1 (code autocomplete) → L2 (multi-step with human approval per step) → L3 (multi-step autonomous under human-set strategy with per-batch review) → L4 (self-directed within a bounded domain) → L5 (fully self-directed).
+[Chen et al. 2026](../reference/bibliography.md#chen2026autonomous)'s five-level taxonomy runs: L1 (code autocomplete) → L2 (multi-step with human approval per step) → L3 (multi-step autonomous under human-set strategy with per-batch review) → L4 (self-directed within a bounded domain) → L5 (fully self-directed).
 
 **Memoria targets L3 with a structurally enforced ceiling.** Profiles execute multi-step work unattended within a card, but the human sets the strategy and the review gate blocks every promotion. L4 and L5 require autonomous keep/revert on synthesis, which fails for knowledge work — the reasoning is in [architecture/why-not-autonomous.md](architecture/why-not-autonomous.md).
 
-Two 2026 perspectives anchor this positioning. Feng & Liu 2026 describe "vibe researching" — the human keeps the intellectual steering wheel while agents handle labor — as the appropriate posture for research. Bisht et al. 2026 argue current systems are co-scientists, not autonomous scientists, for structural reasons that sit upstream of capability. Memoria is vibe researching made durable (the vault) and gated (blocking review).
+Two 2026 perspectives anchor this positioning. [Feng and Liu 2026](../reference/bibliography.md#feng2026visionary) describe "vibe researching" — the human keeps the intellectual steering wheel while agents handle labor — as the appropriate posture for research. [Bisht et al. 2026](../reference/bibliography.md#bisht2026agentic) argue current systems are co-scientists, not autonomous scientists, for structural reasons that sit upstream of capability. Memoria is vibe researching made durable (the vault) and gated (blocking review).
 
 ---
 

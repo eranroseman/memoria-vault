@@ -88,14 +88,23 @@ def gh_slug(text: str) -> str:
     return text
 
 
+ID_ATTR_RE = re.compile(r"""<[a-zA-Z][^>]*\bid\s*=\s*["']([^"']+)["']""")
+
+
 def heading_slugs(path: Path) -> set[str]:
     if path not in _slug_cache:
         s: set[str] = set()
         try:
-            for ln in read(path).split("\n"):
+            content = read(path)
+            for ln in content.split("\n"):
                 m = re.match(r"^#{1,6}\s+(.*?)\s*#*\s*$", ln)
                 if m:
                     s.add(gh_slug(m.group(1)))
+            # Explicit HTML anchors. GitHub honors <a id="x"> (and any id= attribute)
+            # as a #x link target, so a doc that gives list items per-entry anchors
+            # — e.g. the bibliography's one-<a id>-per-reference — links correctly.
+            # The slug is the literal id value, not gh_slug'd.
+            s.update(ID_ATTR_RE.findall(content))
         except OSError:
             pass
         _slug_cache[path] = s
