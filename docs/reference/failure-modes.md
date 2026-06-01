@@ -1,3 +1,8 @@
+---
+title: Failure modes
+parent: Reference
+---
+
 # Failure modes
 
 All known failure modes, sorted by severity. Each entry: symptom, severity, cause, and fix. For full Detect / Fix / Verify recipes on the most common failures see [how-to-guides/recovery/](../how-to-guides/recovery/).

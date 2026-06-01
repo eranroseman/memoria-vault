@@ -1,3 +1,8 @@
+---
+title: How to add a second vault
+parent: Setup
+---
+
 
 # How to add a second vault
 

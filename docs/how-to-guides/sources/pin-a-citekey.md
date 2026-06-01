@@ -1,3 +1,8 @@
+---
+title: How to pin a citekey in Zotero
+parent: Sources
+---
+
 # How to pin a citekey in Zotero
 
 This guide shows you how to lock a paper's Better BibTeX citekey so it never regenerates when metadata changes.

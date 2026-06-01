@@ -1,3 +1,8 @@
+---
+title: Zotero plugins
+parent: Reference
+---
+
 # Zotero plugins
 
 Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [obsidian-plugins.md](obsidian-plugins.md). For setup steps see [set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md).

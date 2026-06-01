@@ -1,3 +1,8 @@
+---
+title: Why Hermes
+parent: Architecture
+---
+
 # Why Hermes
 
 Memoria's entire execution layer is [Hermes Agent](https://hermes-agent.nousresearch.com/) (Nous Research). The board is Hermes's Kanban, the workers are Hermes profiles, the dispatcher is Hermes's, and the integration endpoint is Hermes's API server. This page explains why Memoria builds *on* a runtime rather than building its own, what Hermes provides, and where the Memoria/Hermes boundary falls.

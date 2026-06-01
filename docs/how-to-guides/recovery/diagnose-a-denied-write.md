@@ -1,3 +1,8 @@
+---
+title: How to diagnose a denied or blocked write
+parent: Recovery
+---
+
 
 # How to diagnose a denied or blocked write
 

@@ -1,3 +1,8 @@
+---
+title: Note body structure
+parent: Knowledge
+---
+
 # Note body structure
 
 The three most important note types — paper-notes, claim-notes, and MOCs — have distinct body structures because they answer different questions and serve different epistemic purposes. Understanding why each section exists helps explain what makes a note function as knowledge rather than as accumulated text.

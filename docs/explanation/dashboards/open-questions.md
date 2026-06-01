@@ -1,3 +1,8 @@
+---
+title: open-questions dashboard
+parent: Dashboards
+---
+
 # `open-questions` dashboard
 
 Turns the vault into a research agenda by collecting every note that contains an explicit `## Open questions` section. Open it when planning the next reading direction — what questions has past synthesis raised that still haven't been answered?

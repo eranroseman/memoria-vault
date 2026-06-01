@@ -1,3 +1,8 @@
+---
+title: The Librarian
+parent: Profiles
+---
+
 
 # The Librarian
 

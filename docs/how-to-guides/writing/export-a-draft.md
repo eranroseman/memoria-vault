@@ -1,3 +1,8 @@
+---
+title: How to export a draft
+parent: Writing
+---
+
 
 # How to export a draft
 

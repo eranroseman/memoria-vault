@@ -1,3 +1,8 @@
+---
+title: Why the review gate is structural
+parent: Architecture
+---
+
 # Why the review gate is structural
 
 Memoria's review gate is **structural**: the policy MCP blocks writes to canonical zones regardless of which profile requests them. It is not advisory (a suggestion the agent could override), not configurable (a setting the human could relax), and not prompt-based (an instruction the agent is expected to follow). This document explains why.

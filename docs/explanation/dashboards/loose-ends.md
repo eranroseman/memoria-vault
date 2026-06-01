@@ -1,3 +1,8 @@
+---
+title: loose-ends dashboard
+parent: Dashboards
+---
+
 # `loose-ends` dashboard
 
 Catches leftover files with names that signal unfinished work: anything containing `TODO`, `tmp`, or `untitled`. Run it after ingest batches or whenever something feels incomplete. The dashboard flags; you decide the action per file — rename, finish, archive, or delete.

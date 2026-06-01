@@ -1,3 +1,8 @@
+---
+title: Linter reference
+parent: Reference
+---
+
 # Linter reference
 
 Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [profiles.md](profiles.md).

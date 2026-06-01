@@ -1,3 +1,10 @@
+---
+title: Profiles
+parent: Explanation
+has_children: true
+permalink: /explanation/profiles/
+---
+
 # Profiles
 
 Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [why-specialist-profiles.md](../architecture/why-specialist-profiles.md).)

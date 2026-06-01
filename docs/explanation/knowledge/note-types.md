@@ -1,3 +1,8 @@
+---
+title: Note types and epistemic roles
+parent: Knowledge
+---
+
 # Note types and epistemic roles
 
 The vault distinguishes sixteen note types. But the types are not arbitrary — they map onto three fundamental epistemic roles that define what a note *is* in terms of who created it, from whose perspective, and what status it has in the knowledge system.

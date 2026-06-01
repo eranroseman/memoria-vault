@@ -1,3 +1,8 @@
+---
+title: fleet-health dashboard
+parent: Dashboards
+---
+
 # `fleet-health` dashboard
 
 Tracks whether the Hermes agent fleet is performing well over time. This dashboard matters once the fleet is doing enough work per week that one stuck card or one runaway loop is hard to spot by eye.

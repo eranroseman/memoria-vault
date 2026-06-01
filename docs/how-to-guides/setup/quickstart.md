@@ -1,3 +1,8 @@
+---
+title: "How to install Memoria: quickstart"
+parent: Setup
+---
+
 
 # How to install Memoria: quickstart
 

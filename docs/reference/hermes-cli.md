@@ -1,3 +1,8 @@
+---
+title: Hermes CLI
+parent: Reference
+---
+
 # Hermes CLI
 
 Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [command-palette.md](command-palette.md).

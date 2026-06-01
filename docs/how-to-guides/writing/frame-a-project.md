@@ -1,3 +1,8 @@
+---
+title: How to frame a writing project
+parent: Writing
+---
+
 
 # How to frame a writing project
 

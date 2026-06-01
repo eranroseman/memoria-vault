@@ -1,3 +1,8 @@
+---
+title: Export
+parent: Reference
+---
+
 # Export
 
 Citation states, export routes, editor feature comparison, and deliverable folder targets. For choosing between routes and failure modes see [how-to-guides/writing/export-a-draft.md](../how-to-guides/writing/export-a-draft.md).

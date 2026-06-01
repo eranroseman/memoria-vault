@@ -1,3 +1,8 @@
+---
+title: The Daily Health dashboard
+parent: Dashboards
+---
+
 
 # The Daily Health dashboard
 

@@ -1,3 +1,8 @@
+---
+title: The discuss-queue dashboard
+parent: Dashboards
+---
+
 
 # The discuss-queue dashboard
 

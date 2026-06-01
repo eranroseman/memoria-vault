@@ -1,3 +1,8 @@
+---
+title: How to fix a stuck card
+parent: Recovery
+---
+
 
 # How to fix a stuck card
 

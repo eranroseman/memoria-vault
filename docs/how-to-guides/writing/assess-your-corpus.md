@@ -1,3 +1,8 @@
+---
+title: How to assess your corpus for a project
+parent: Writing
+---
+
 
 # How to assess your corpus for a project
 

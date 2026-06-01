@@ -1,3 +1,8 @@
+---
+title: Callouts
+parent: Obsidian
+---
+
 
 # Callouts
 

@@ -1,3 +1,8 @@
+---
+title: "Tutorial 04: Build a reading batch"
+parent: Tutorials
+---
+
 
 # Tutorial 04: Build a reading batch
 

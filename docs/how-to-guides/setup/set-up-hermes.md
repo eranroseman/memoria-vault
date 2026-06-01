@@ -1,3 +1,8 @@
+---
+title: How to set up Hermes
+parent: Setup
+---
+
 
 # How to set up Hermes
 

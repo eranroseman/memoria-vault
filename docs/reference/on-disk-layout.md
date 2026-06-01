@@ -1,3 +1,8 @@
+---
+title: On-disk layout
+parent: Reference
+---
+
 # On-disk layout
 
 Where every file lives across the two filesystem roots: the starter vault (versioned, distributable) and `.memoria/` (tooling layer). For the design rationale see [explanation/architecture/](../explanation/architecture/).

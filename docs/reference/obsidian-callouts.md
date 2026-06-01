@@ -1,3 +1,8 @@
+---
+title: Obsidian callouts
+parent: Reference
+---
+
 # Obsidian callouts
 
 Three inline callout types written by agent profiles into vault notes. Defined via the [Callout Manager](obsidian-plugins.md) plugin.

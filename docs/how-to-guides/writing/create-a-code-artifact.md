@@ -1,3 +1,8 @@
+---
+title: How to create a code artifact
+parent: Writing
+---
+
 
 # How to create a code artifact
 

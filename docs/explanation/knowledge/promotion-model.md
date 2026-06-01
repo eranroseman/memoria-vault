@@ -1,3 +1,8 @@
+---
+title: Why promotion is gated
+parent: Knowledge
+---
+
 # Why promotion is gated
 
 Promotion is the act of moving a note from one lifecycle stage to a more canonical one — from inbox to sources, from draft to synthesis, from synthesis to deliverable. In Memoria, promotion at the synthesis boundary requires explicit human approval. This is not a safeguard bolted onto the system; it is the mechanism that keeps the vault trustworthy.

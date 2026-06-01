@@ -1,3 +1,8 @@
+---
+title: The status line
+parent: Obsidian
+---
+
 # The status line
 
 The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows Linter findings and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.

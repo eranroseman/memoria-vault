@@ -1,3 +1,8 @@
+---
+title: The control plane
+parent: Architecture
+---
+
 # The control plane
 
 The board defines what state a card is in. The policy MCP defines where a worker may write. The control plane is the third concern: how a human request reaches Hermes in the first place. It has three thin layers:

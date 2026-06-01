@@ -1,3 +1,8 @@
+---
+title: How to set up the vault
+parent: Setup
+---
+
 
 # How to set up the vault
 

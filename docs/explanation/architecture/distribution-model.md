@@ -1,3 +1,8 @@
+---
+title: Distribution model
+parent: Architecture
+---
+
 # Distribution model
 
 Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit** — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:

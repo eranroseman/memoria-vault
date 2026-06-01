@@ -1,3 +1,8 @@
+---
+title: How to use the Memoria command palette
+parent: Interface
+---
+
 
 # How to use the Memoria command palette
 

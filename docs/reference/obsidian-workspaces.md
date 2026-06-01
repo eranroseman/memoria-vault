@@ -1,3 +1,8 @@
+---
+title: Obsidian workspaces
+parent: Reference
+---
+
 
 # Obsidian workspaces
 

@@ -1,3 +1,8 @@
+---
+title: The weekly-review dashboard
+parent: Dashboards
+---
+
 
 # The weekly-review dashboard
 

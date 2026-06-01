@@ -1,3 +1,8 @@
+---
+title: Memory substrates
+parent: Reference
+---
+
 # Memory substrates
 
 Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [explanation/architecture/memory-tiers.md](../explanation/architecture/memory-tiers.md).

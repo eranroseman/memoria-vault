@@ -1,3 +1,8 @@
+---
+title: How to promote a claim to canonical reference
+parent: Sources
+---
+
 
 # How to promote a claim to canonical reference
 
