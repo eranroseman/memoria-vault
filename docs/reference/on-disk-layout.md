@@ -66,10 +66,13 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── open-questions.md
 │   ├── reading-pipeline.md
 │   └── weekly-review.md
-├── 02-logs/
+├── 02-logs/                        # see reference/telemetry.md for every schema
 │   ├── audit.jsonl                 # pending (created by policy MCP at first run)
 │   ├── sessions/                   # per-session logs from Linter
-│   ├── board-state.jsonl           # pending
+│   ├── board-state.jsonl           # pending (board_export.py — per-lane queue snapshot)
+│   ├── board-transitions.jsonl     # pending (board_export.py — card status/review changes)
+│   ├── disposition.jsonl           # pending (board_export.py — accept : edit : reject, un-backfillable)
+│   ├── cost.jsonl                  # pending (board_export.py — API spend + tokens per card)
 │   ├── lint-findings.jsonl         # pending
 │   └── cron-history.jsonl          # pending
 ├── 03-templates/                   # 16 note templates (see note-types.md)
@@ -199,7 +202,7 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 │   ├── memoria-coder/      (SOUL.md + cron/.keep + skills/.keep)
 │   └── memoria-linter/
 │       ├── SOUL.md
-│       ├── detectors.py            # shipped (8 deterministic stdlib checks; 3 are structural detectors)
+│       ├── detectors.py            # shipped (9 deterministic stdlib checks; 3 are structural detectors)
 │       ├── M-detectors.md          # shipped
 │       ├── cron/
 │       │   └── scheduled.yaml      # shipped (actual task definitions)
@@ -215,7 +218,7 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 ├── mcp/
 │   ├── policy_mcp.py               # shipped (policy write-gate MCP server)
 │   ├── policy_hook.py              # shipped (pre/post_tool_call gate; routes obsidian writes through policy)
-│   ├── board_export.py             # shipped (board → 00-meta/board/ + board-state.jsonl)
+│   ├── board_export.py             # shipped (board → 00-meta/board/ + board-state/transitions/disposition/cost.jsonl)
 │   ├── metrics_aggregate.py        # shipped (board+audit → 08-metrics/ trust-score notes)
 │   └── requirements.txt            # shipped (mcp, PyYAML)
 │       # tasks_mcp.py — deferred, not needed (native Hermes kanban tools cover it)

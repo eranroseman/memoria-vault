@@ -123,6 +123,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 | Stale enrichment (literature) | `enriched_date` older than 90 days | Report — flag for `enrich` re-run. |
 | Classification debt per project | > 30% of notes with `lifecycle: proposed` | Report — surface in weekly dashboard. |
 | Broken wikilinks | Any `[[name]]` that doesn't resolve | Report. Auto-fix only if explicitly authorized for a scoped folder. |
+| FAMA exposure (obsolete-memory reuse) | A downstream note (`draft` / `answer-note` / `reference-note` / …) wikilinks a claim that is `lifecycle: archived` or carries `superseded_by` | Report the citing note + the superseded claim; the human re-points or drops the citation. Never auto-edit. The `fama_exposure` function in `detectors.py` ([ADR-10](../../../project-files/decisions/10-claim-supersession.md) supersession makes it measurable — a publication-grade signal). |
 | Author entity gaps | A paper note's author exists but has no `person-note` note | Report — proposal to create. |
 | `pub_status` anomalies | Zotero retraction alert disagrees with vault `pub_status` | Report — never silently update. |
 | Scite contrast | `> 15%` contrasting citations on a paper | Report — surface for human attention. |

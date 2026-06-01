@@ -33,6 +33,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [ingest.md](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [export.md](export.md) | Citation states, export routes, editor comparison, deliverable targets |
 | [memory.md](memory.md) | Memory substrate table, audit log schema, log rotation spec |
+| [telemetry.md](telemetry.md) | Every operational log under `00-meta/02-logs/`: exact JSONL schema, cadence, join keys |
 
 ## System and infrastructure
 

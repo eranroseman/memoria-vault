@@ -1,0 +1,50 @@
+---
+topic: decisions
+id: 24
+title: Publication path — vault-eval benchmark first, capture-now
+status: accepted
+date_proposed: 2026-05-27
+date_resolved: 2026-06-01
+supersedes: []
+superseded_by: []
+---
+
+# ADR-24: Publication path — vault-eval benchmark first, capture-now
+
+## Context
+
+Memoria is, as of v0.1, a design artifact — rigorous and internally consistent, but it has not yet run a system, produced a benchmark, or surveyed the field. A 20-paper system survey plus a ~51-paper capability-mapped benchmark review established that no surveyed paper published on design alone; every one ran a system and measured something, shipped a benchmark, or organized the field. The strategic question — which publication shape to aim at, and what to do *first* — was open and blocking: it determines what gets built, what gets instrumented, and in what order. It is live now (not later) because the binding constraint is calendar time on data collection: publications need time series, and the un-backfillable signals (suggestion disposition, operator decision time) are lost forever if capture does not start at first ingest. The full analysis behind this decision — four candidate paths, evidence requirements, and the honest negative space — lives in the source report linked below.
+
+## Decision
+
+Memoria commits to a **two-part publication strategy**:
+
+1. **Target Path 1 first: a vault-eval benchmark paper** (NeurIPS Datasets & Benchmarks track), instantiated via the tractable vault-CiteME within-corpus citation-attribution cell and grounded in the broader "does the vault compound?" framing of [ADR-11 vault-eval](11-vault-eval-integration.md). This is chosen over a system paper (Path 2), a position paper (Path 3), or an open-artifact release (Path 4) because it is the only path tractable in months rather than years, has the lowest coupling to a finished system (it needs the Verifier profile and a public fixture, not the whole stack), and forces the measurement layer every downstream path depends on into existence. The system/position papers are explicitly **deferred** until Path 1 has produced data; *which* of them follows is decided by the data, not now.
+
+2. **Start the six-signal instrumented capture now** — the single highest-leverage action, independent of when paper-writing begins. The capture is minimal and adopted in v0.1 (the *analysis* harnesses in [measurement-and-verification.md](../proposals/measurement-and-verification.md) stay deferred): state-transition timestamps, operator decision time, per-card cost, policy deny-reasons, suggestion disposition (accept : edit : reject), and FAMA exposure. Schemas are pinned in [reference/telemetry.md](../../docs/reference/telemetry.md). Capture precedes analysis because capture cannot be back-filled.
+
+## Consequences
+
+- **Build order is now ordered by the paper, not by feature appeal.** The Verifier profile and a public vault-CiteME fixture are the critical path; everything else is downstream. The board-export cron (Phase 1 in the [timeline](../operations/timeline.md)) becomes a publication prerequisite, not just an observability nicety — without it the six-signal logs never populate.
+- **The de-risking is deliberate.** If within-vault citation-attribution numbers come out *worse* than public CiteME, the Verifier-as-gate thesis weakens — and we learn that before staking a system paper on it.
+- **n=1 operator data is accepted as a known weakness** of the later system-paper path, to be mitigated by detailed logging and a within-subject comparison arm (blocking vs. advisory review, see [proposal-31](../proposals/31-configurable-review-gate-mode.md)) rather than by more operators.
+- **The novelty surface is fixed to a triad** — policy-MCP-enforced zone permissions, structurally blocking review state, and structural human-set claim supersession ([ADR-10](10-claim-supersession.md)) as the answer to the FAMA failure mode — plus the measurable knowledge-work consequences that only data can supply. We explicitly will **not** anchor a paper on the seven-profile design, the LLM-Wiki/Zettelkasten/Memex synthesis, or Obsidian-as-substrate; each is prior art or operational, not contributory.
+- A higher-novelty framing (Path 1′, vault-eval as the contribution rather than vault-CiteME as an instance) remains available and costs more fixture work; the choice between the two framings is left to paper-drafting time and does not change this decision.
+
+## Alternatives considered
+
+**Lead with a system paper (Path 2).** Rejected as the *first* move: 6–9 months, requires the full MVS + Librarian + Verifier + Linter stack and a comparison study, and needs a defensible "operator hours saved per unit of vault growth" metric that does not yet exist in the field. It is the natural *second* paper once Path 1 has produced data.
+
+**Lead with a position paper (Path 3).** Rejected as first: position papers without empirical work get rejected, and with strong empirical work they compete with full system papers — a narrow sweet spot. Its field-survey prerequisite is largely satisfied by the ~51-paper taxonomy, but it still needs the same empirical evidence as Path 2.
+
+**Open-artifact release (Path 4).** Rejected as first: longest horizon — needs a real implementation, adopter-facing docs, and external adoption stories that take time to accumulate.
+
+**Defer instrumentation until the system is "finished."** Rejected outright: disposition and decision-time signals cannot be reconstructed after the fact, so waiting discards the most valuable data permanently. Capture is decoupled from paper-writing and starts at first ingest.
+
+## Related
+
+- **Files affected:** [reference/telemetry.md](../../docs/reference/telemetry.md) (the six-signal schemas), [operations/timeline.md](../operations/timeline.md) (step 8, six-signal capture; board-export cron is the prerequisite), [operations/implementation-status.md](../operations/implementation-status.md) (six-signal capture row).
+- **Related decisions / Depends on:** [ADR-11 vault-eval](11-vault-eval-integration.md) (the eval program this paper instantiates); [ADR-10 claim supersession](10-claim-supersession.md) (the FAMA-exposure signal and a novelty-triad pillar); [ADR-03 structural review gate](03-structural-review-gate.md) (the blocking-review thesis the later system/position paper would test).
+- **Proposals:** [measurement-and-verification.md](../proposals/measurement-and-verification.md) (analysis harnesses, deferred); [proposal-31](../proposals/31-configurable-review-gate-mode.md) (the comparison arm).
+- **Supporting rationale:** [why-not-autonomous.md](../../docs/explanation/architecture/why-not-autonomous.md), [why-pattern-provenance.md](../../docs/explanation/architecture/why-pattern-provenance.md), [why-human-gate.md](../../docs/explanation/architecture/why-human-gate.md), [intellectual-foundations.md](../../docs/explanation/intellectual-foundations.md).
+- **Source discussion:** [publication-strategy.md](../proposals/publication-strategy.md) (the full four-path analysis, shapes, and sequence behind this decision — informs the deferred Path 2 vs. Path 3 choice). Originally distilled from the working report `notes/publication-path-report.md` (retained outside the repo for provenance).

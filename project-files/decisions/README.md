@@ -54,3 +54,4 @@ Rules:
 | [16](16-adopt-on-demand-for-reviews.md) | Adopt-on-demand: systematic-review tooling cluster |
 | [22](22-rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
 | [23](23-moc-threshold-alert.md) | Agent-proposed MOC threshold alert (Tier 1, report-only) |
+| [24](24-publication-path.md) | Publication path: vault-eval benchmark first, capture-now |

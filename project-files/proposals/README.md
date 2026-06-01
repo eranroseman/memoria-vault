@@ -56,6 +56,7 @@ Thematic groups from the future-directions survey.
 |---|---|
 | [discovery-loop.md](discovery-loop.md) | Proactive nightly discovery; Coder experiment loop; agent-proposed claim candidates |
 | [measurement-and-verification.md](measurement-and-verification.md) | CiteME harness, chain-of-evidence taxonomy, fleet observability, propagation debts |
+| [publication-strategy.md](publication-strategy.md) | Four publication paths + shapes + sequence; the deferred analysis behind ADR-24 (Path 2/3 selection) |
 | [classical-method-displacements.md](classical-method-displacements.md) | NLI contradiction detection, learning-to-rank, claim-sentence classification |
 | [triage-improvements.md](triage-improvements.md) | Semi-autonomous triage, consensus pre-filter, tournament ranking |
 | [schema-and-retrieval.md](schema-and-retrieval.md) | Scenario-typed retrieval extensions, MASSW aspects, exploration-trace capture |

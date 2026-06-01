@@ -335,6 +335,39 @@ def graph_analyze(vault: Path) -> list[Finding]:
     return out
 
 
+def fama_exposure(vault: Path) -> list[Finding]:
+    """FAMA exposure -- a downstream note that wikilinks a *superseded* claim
+    (lifecycle: archived, or carrying superseded_by). Reusing obsolete memory is
+    the FAMA failure mode the supersession mechanism (ADR-10 / ADR-21) makes
+    measurable -- the report's headline novelty turned into a deterministic check."""
+    notes = list(iter_notes(vault))
+    superseded: dict[str, str] = {}    # claim stem -> its relpath
+    for p in notes:
+        if not relpath(vault, p).startswith("30-synthesis/01-claims/"):
+            continue
+        fm = parse_frontmatter(read(p))
+        sup = fm.get("superseded_by")
+        archived = str(fm.get("lifecycle", "")).strip() == "archived"
+        if archived or sup not in (None, "", [], "[]"):
+            superseded[p.stem] = relpath(vault, p)
+    if not superseded:
+        return out_empty()
+    link_re = re.compile(r"\[\[([^\]|#]+)")
+    out = []
+    for p in notes:
+        rp = relpath(vault, p)
+        # Exposure matters in downstream synthesis; skip scaffolding and the claim
+        # graph itself (claim->claim links are the supersession / relations graph).
+        if rp.startswith(("00-meta/", "90-assets/", "30-synthesis/01-claims/")):
+            continue
+        for m in link_re.finditer(read(p)):
+            stem = Path(m.group(1).strip()).stem
+            if stem in superseded:
+                out.append(Finding("fama-exposure", "HIGH", rp,
+                                   f"cites superseded claim [[{stem}]] ({superseded[stem]}) -- reuse of obsolete memory"))
+    return out
+
+
 def out_empty() -> list[Finding]:
     return []
 
@@ -342,6 +375,7 @@ def out_empty() -> list[Finding]:
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
     frontmatter_schema_check, broken_wikilinks, dashboard_field_drift, graph_analyze,
+    fama_exposure,
 ]
 
 
@@ -408,6 +442,13 @@ def self_test() -> int:
         (v / "20-sources/01-papers/p.md").write_text(
             "---\ntype: paper-note\ncitekey: smith2020\nextract_path: 90-assets/extracts/missing.md\n---\n",
             encoding="utf-8")
+        # superseded claim + a draft that cites it -> fama-exposure finding
+        (v / "30-synthesis/01-claims/oldclaim.md").write_text(
+            "---\ntype: claim-note\nlifecycle: archived\nsuperseded_by: newclaim\n---\nOld claim.\n",
+            encoding="utf-8")
+        dft = v / "40-workbench/proj/04-drafts/draft.md"
+        dft.parent.mkdir(parents=True, exist_ok=True)
+        dft.write_text("---\ntype: draft\n---\nWe still rely on [[oldclaim]] here.\n", encoding="utf-8")
         # template + dashboard referencing an unknown field -> dashboard finding
         (v / "00-meta/03-templates/claim-note.md").write_text(
             "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n", encoding="utf-8")
@@ -430,9 +471,11 @@ def self_test() -> int:
         check("dashboard-field-drift ignores 'maturity'", not any("'maturity'" in x.message for x in by("dashboard-field-drift")))
         check("graph-analyze flags orphan bad.md", any("bad.md" in x.path for x in by("graph-analyze")))
         check("graph-analyze ignores linked good.md", not any("good.md" in x.path for x in by("graph-analyze")))
+        check("fama-exposure flags draft citing superseded claim", any("oldclaim" in x.message for x in by("fama-exposure")))
+        check("fama-exposure ignores live claim good", not any("good" in x.message for x in by("fama-exposure")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-    print(f"\n{13 - failures}/13 detector checks passed.")
+    print(f"\n{15 - failures}/15 detector checks passed.")
     return failures
 
 
