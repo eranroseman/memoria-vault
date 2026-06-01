@@ -36,4 +36,4 @@ The **policy MCP** intercepts every vault write. Each lane has a YAML file at `.
 
 ---
 
-**For depth:** docs/reference/profiles.md#folder-permission-matrix — the authoritative matrix. docs/reference/policy.md — the runtime gate.
+**For depth:** [Folder permission matrix](https://eranroseman.github.io/memoria-vault/reference/profiles/#folder-permission-matrix) — the authoritative matrix. [Policy MCP reference](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the runtime gate.

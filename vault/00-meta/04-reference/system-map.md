@@ -44,4 +44,4 @@ Promotion to review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 
 ---
 
-**For depth:** architecture/README.md — the authoritative architecture explainer. vision.md — the design philosophy.
+**For depth:** [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) — the authoritative architecture explainer and design philosophy.

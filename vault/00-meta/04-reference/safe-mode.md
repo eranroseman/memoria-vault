@@ -63,4 +63,4 @@ The installer is idempotent and always-overwrite — it rewrites author-owned fi
 
 ---
 
-**For depth:** operations/failure-modes.md — Detect / Fix / Verify recipes for every documented failure mode.
+**For depth:** [Failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes/) — Detect / Fix / Verify recipes for every documented failure mode.
