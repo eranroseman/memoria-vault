@@ -83,13 +83,14 @@ If a PR shows `BEHIND` (strict checks require an up-to-date branch), run
 
 ## 4. Required status checks
 
-Three checks are **required** by the branch ruleset and must all pass:
+These checks are **required** by the branch ruleset and must all pass:
 
 | Check | Runs |
 | --- | --- |
 | `docs-doctor` | structural lint of `docs/` (broken links, misfiled files) |
 | `shellcheck (install.sh)` | shell lint |
 | `PSScriptAnalyzer (install.ps1)` | PowerShell lint |
+| `python-selftest` | `--self-test` of the vault Python tooling (policy gate, board export, metrics, detectors) |
 
 **CI invariant — do not break this:** a workflow that backs a *required* status
 check must **not** have a `paths:` filter. A path-filtered required check never
