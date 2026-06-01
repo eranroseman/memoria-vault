@@ -48,7 +48,7 @@ The three core workflows (ingest, review, export) with minimal commands and fall
 - [ ] Check `.memoria/` is intact (`profiles/`, `mcp/`, `lane-overrides/`)
 - [ ] Check `00-meta/02-logs/` for recent error entries
 - [ ] `git status` — has anything unexpectedly changed?
-- [ ] If still broken: see operations/failure-modes.md
+- [ ] If still broken: see [Failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes/)
 
 ## Last-resort: re-install
 

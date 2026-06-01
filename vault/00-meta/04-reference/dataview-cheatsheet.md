@@ -1,6 +1,6 @@
 # Dataview cheatsheet
 
-Reference patterns for dashboard authors. Companion to obsidian-ui/dashboards.md.
+Reference patterns for dashboard authors. Companion to [Dashboards — explanation](https://eranroseman.github.io/memoria-vault/explanation/dashboards/).
 
 ## TABLE — the most common
 

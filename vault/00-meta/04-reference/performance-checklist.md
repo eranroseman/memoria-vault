@@ -1,6 +1,6 @@
 # Dashboard performance checklist
 
-Discipline for keeping dashboards responsive as the vault grows. Companion to obsidian-ui/dashboards.md#performance-discipline.
+Discipline for keeping dashboards responsive as the vault grows. Companion to [Dashboards — explanation](https://eranroseman.github.io/memoria-vault/explanation/dashboards/).
 
 ## Before writing a new dashboard query
 
