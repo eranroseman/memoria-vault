@@ -25,6 +25,10 @@ Rules:
 | [03](03-structural-review-gate.md) | Review gate is structural, enforced by the policy MCP |
 | [04](04-lifecycle-over-topic-folders.md) | Folders encode lifecycle stage, not subject area |
 | [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone |
+| [32](32-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (Coder-lane exception) |
+| [33](33-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime, not a bespoke one |
+| [34](34-six-memory-substrates.md) | Memory is six scoped substrates, not one store |
+| [35](35-single-researcher-scope.md) | Single-researcher scope; multi-user out of scope |
 
 ### Vault and schema
 
@@ -44,6 +48,8 @@ Rules:
 | [07](07-code-agent-attachment.md) | External coding agent boundary |
 | [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not control-plane |
 | [13](13-homepage-front-door.md) | Homepage front-door note |
+| [36](36-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
+| [37](37-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
 
 ### Workflows
 

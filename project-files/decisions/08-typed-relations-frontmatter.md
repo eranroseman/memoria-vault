@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-Plain wikilinks record *that* two claims relate, not *how*. Graph queries and argument-construction operations need — "what contradicts X", "what supports X", "what methods feed this lineage" — can't be answered from untyped links. [ADR-10](10-claim-supersession.md) already carved out the one correctness-critical typed relation (`superseded_by`, top-level) as a correctness-critical slice of this namespace, and [ADR-9](09-contradictions-dashboard.md)'s contradictions dashboard needs `contradicts` to have data to read. The original deferral assumed typed links would be a per-link maintenance burden; the question is whether that cost is real once the relation is *opt-in*.
+Plain wikilinks record *that* two claims relate, not *how*. Graph queries and argument-construction operations — "what contradicts X", "what supports X", "what methods feed this lineage" — can't be answered from untyped links. [ADR-10](10-claim-supersession.md) already carved out the one correctness-critical typed relation (`superseded_by`, top-level) as a slice of this namespace, and [ADR-9](09-contradictions-dashboard.md)'s contradictions dashboard needs `contradicts` to have data to read. The original deferral assumed typed links would be a per-link maintenance burden; the question is whether that cost is real once the relation is *opt-in*.
 
 ## Decision
 

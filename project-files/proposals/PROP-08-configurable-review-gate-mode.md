@@ -16,7 +16,7 @@ But that thesis — **"for knowledge work, structurally blocking human review is
 
 No current ADR provides a non-gating mode. The system can measure *itself*, but it cannot measure itself *against the alternative it claims to beat*. This is the one decision-layer gap between the existing design and a completable Path 2/3.
 
-> **Naming.** This is **not** ADR-26's "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This ADR concerns the *agent review gate* and exists purely as measurement infrastructure.
+> **Naming.** This is **not** [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 
 ## Decision
 
@@ -49,7 +49,7 @@ Three invariants make the mode useful as evidence rather than just a weaker syst
 
 **Run Path 2/3 single-arm (n=1, blocking only, no comparison).** Rejected: the claim "blocking beats advisory" cannot be supported by observing the blocking arm alone. A single-arm study can describe the blocking experience but cannot make the comparative argument the papers rest on.
 
-**Stay blocking-only and defer the question.** Rejected as the standing answer because it leaves the system unable to ever produce the comparative evidence; recorded here as `proposed` precisely so the decision is explicit rather than implicit.
+**Stay blocking-only and defer the question.** Rejected as the standing answer because it leaves the system unable to ever produce the comparative evidence; recorded here as a deferred proposal precisely so the decision is explicit rather than implicit.
 
 ## Related
 
