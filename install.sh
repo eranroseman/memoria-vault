@@ -156,7 +156,8 @@ print_plan() {
   say "  7. provision skills (K-Dense clone + official/kepano/qmd)"
   say "  8. guide the Obsidian and Zotero installs"
   say "  9. print where to put your API keys + next steps"
-  [ "$DRY_RUN" -eq 1 ] && say "" && warn "DRY RUN — nothing will be changed."
+  [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
+  return 0
   say ""
 }
 
@@ -413,7 +414,11 @@ install_profiles() {
     done
 
     say "  installing $p"
-    if run hermes profile install "$dst" --alias "$p" --force --yes; then
+    # `hermes profile install` takes the name from the manifest (or --name to
+    # override); --alias is a BARE flag (create a shell wrapper), NOT --alias NAME.
+    # Passing `--alias "$p"` made Hermes treat "$p" as a stray positional and the
+    # whole install errored out ("unrecognized arguments"). Use --name explicitly.
+    if run hermes profile install "$dst" --name "$p" --alias --force --yes; then
       installed="$installed $p"
       # Bootstrap .env from .env.EXAMPLE on FIRST install only (never clobber creds).
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
@@ -453,17 +458,20 @@ install_skills() {
     run git clone --depth 1 "$KDENSE_URL" "$kdense_dir" || warn "K-Dense clone failed — clone it manually into $HERMES_SKILLS_DIR"
   fi
 
-  # B. Official Hermes skills. TODO(confirm-at-build): bundled vs install — warn-not-fail.
+  # B. Official Hermes skills. --yes skips the per-skill confirm prompt (the
+  # installer is non-interactive; without it Hermes auto-cancels with no tty).
+  # We deliberately do NOT pass --force: a skill the scanner flags DANGEROUS
+  # (e.g. claude-code) should stay blocked — warn-not-fail and move on.
   if have hermes; then
     local s
     for s in $OFFICIAL_SKILLS; do
-      run hermes skills install "$s" || warn "skill '$s' not installed (may already be bundled with Hermes)"
+      run hermes skills install "$s" --yes || warn "skill '$s' not installed (may already be bundled, or blocked by the security scan)"
     done
     # kepano obsidian-markdown
-    run hermes skills install kepano/obsidian-skills/skills/obsidian-markdown \
+    run hermes skills install kepano/obsidian-skills/skills/obsidian-markdown --yes \
       || warn "kepano obsidian-markdown not installed — see the design doc for the clone fallback"
     # qmd — TODO(confirm-at-build): packaging is fragmented (skills.sh vs tobi/qmd CLI).
-    run hermes skills install skills-sh/moltbot/skills/qmd \
+    run hermes skills install skills-sh/moltbot/skills/qmd --yes \
       || warn "qmd skill not installed — confirm packaging (skills.sh 'skills-sh/moltbot/skills/qmd'; CLI: github.com/tobi/qmd)"
   else
     warn "Hermes not on PATH — skipped official/kepano/qmd skill installs."
@@ -545,7 +553,10 @@ print_next_steps() {
   say "  5. Try a session:              hermes -p $first chat"
   say ""
   say "Re-deploy after editing the vault source:  bash install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
+  # NB: trailing `&&` test must not become the function's (and script's) exit
+  # status — on a real run [ "$DRY_RUN" -eq 1 ] is false and would exit 1.
   [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
+  return 0
 }
 
 # =============================================================================
