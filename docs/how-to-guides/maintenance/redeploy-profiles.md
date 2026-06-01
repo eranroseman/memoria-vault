@@ -6,7 +6,7 @@ parent: Maintenance
 
 # How to redeploy profiles
 
-Push vault source edits — to `SOUL.md`, `config.yaml`, `mcp.json`, skills, or cron tasks — out to the installed copies in `~/.using-hermes-agent/profiles/`.
+Push vault source edits — to `SOUL.md`, `config.yaml`, `mcp.json`, skills, or cron tasks — out to the installed copies in `~/.hermes/profiles/`.
 
 ## When to redeploy
 
