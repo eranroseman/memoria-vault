@@ -48,7 +48,7 @@ This is why the API server lives here, with Hermes, rather than in [human-channe
 | Board state machine, dispatcher, retries | Hermes |
 | Profile mechanism (identity, model routing, lanes) | Hermes |
 | Native memory tiers, MCP host, API server | Hermes |
-| Review-gate overlay (`review_status`, `agent_verdict`) | Memoria (card `metadata`) |
+| Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
 | Write-gating policy MCP | Memoria (plugs into Hermes's MCP interface) |
 | The seven specialist `SOUL.md`s and lane-overrides | Memoria |
 | The vault, schema, and note types | Memoria |

@@ -2,14 +2,14 @@
 
 The human-facing starter vault for **Memoria** — a research operating system that turns sources into durable knowledge through explicit Kanban states, specialized Hermes agent profiles, and a discipline of human-owned synthesis.
 
-> **Status: Memoria v0.1.** The v0.1 system is the complete system (see the glossary) and ships in this repo: the vault skeleton, the 10 dashboards plus the `index.md` entry point, the 15 note templates, the 11 human-facing reference notes, the **8 bundled, pre-configured Obsidian plugins**, and the **7 Hermes profiles with full wiring** (`SOUL.md` + `config.yaml` + `mcp.json` + `distribution.yaml`), plus the policy MCP servers under `.memoria/mcp/` and the lane-override policy YAML. Profiles install today via the repo-root `install.ps1` / `install.sh`. **Not yet verified end-to-end** — a few v0.1 pieces are still pending (e.g. K-Dense skills); see the [implementation status ledger](https://github.com/eranroseman/memoria-vault/blob/main/project-files/operations/implementation-status.md) for exact build state.
+> **Status: Memoria v0.1.** The v0.1 system is the complete system (see the glossary) and ships in this repo: the vault skeleton, the 10 dashboards plus the `index.md` entry point, the 16 note templates, the 11 human-facing reference notes, the **8 bundled, pre-configured Obsidian plugins**, and the **7 Hermes profiles with full wiring** (`SOUL.md` + `config.yaml` + `mcp.json` + `distribution.yaml`), plus the policy MCP servers under `.memoria/mcp/` and the lane-override policy YAML. Profiles install today via the repo-root `install.ps1` / `install.sh`. **Not yet verified end-to-end** — a few v0.1 pieces are still pending (e.g. K-Dense skills); see the [implementation status ledger](https://github.com/eranroseman/memoria-vault/blob/main/project-files/operations/implementation-status.md) for exact build state.
 
 ## What's here
 
 - `00-meta/` — vault skeleton
   - `01-dashboards/` — 10 dashboards + `index.md` (Daily Health is `index.md`; plus audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review)
   - `02-logs/` — populated at runtime by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
-  - `03-templates/` — 15 note templates (claim-note, paper-note, fleeting-note, …)
+  - `03-templates/` — 16 note templates (claim-note, paper-note, fleeting-note, …)
   - `04-reference/` — 11 human-facing reference notes (agent-roles, profile-policies, schema-reference, system-map, design-system, getting-started, safe-mode, obsidian-config, dataview-cheatsheet, performance-checklist, screening-protocol)
   - `index.md` — vault landing page (pin in sidebar)
   - `research-directions.md` — Librarian's session-start input (populate this)

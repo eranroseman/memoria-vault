@@ -1,0 +1,92 @@
+name: Bug Report
+description: Report a broken or unexpected behavior in Memoria
+labels: ["bug", "needs-triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the sections below
+        so we can reproduce and fix the issue quickly.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of Memoria is affected?
+      options:
+        - Install script (install.sh / install.ps1)
+        - Profile (specify below)
+        - Vault structure / templates
+        - Hermes integration (AGENTS.md / SOUL.md)
+        - Obsidian plugin / local REST API
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: profile
+    attributes:
+      label: Profile (if applicable)
+      description: "Which profile? e.g. researcher, writer, developer…"
+      placeholder: researcher
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: When I run install.sh, the researcher profile is not copied to ~/.hermes/profiles/.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: The profile directory should appear at ~/.hermes/profiles/researcher/.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Clone the repo
+        2. Run `bash install.sh`
+        3. Check `~/.hermes/profiles/`
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux (native)
+        - WSL2 (Windows 11)
+        - macOS
+        - Windows (PowerShell only)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: hermes_version
+    attributes:
+      label: Hermes Agent version
+      placeholder: "e.g. 0.4.2  (hermes --version)"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      render: shell
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, related issues, workarounds you found.

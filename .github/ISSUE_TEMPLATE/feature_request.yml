@@ -1,0 +1,68 @@
+name: Feature Request
+description: Propose a new profile, workflow, or capability for Memoria
+labels: ["enhancement", "needs-triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for new features, new profiles, documentation improvements,
+        or any change that goes beyond fixing a bug.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New profile
+        - Existing profile improvement
+        - Install / setup experience
+        - Vault templates or structure
+        - Hermes / AGENTS.md integration
+        - Documentation (docs/)
+        - Tooling / scripts
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What gap or friction does this address?
+      placeholder: |
+        There is no profile for legal/contract work. When I try to use the researcher
+        profile for contracts it lacks citation-free SOUL directives.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like to see added or changed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other approaches you thought about?
+
+  - type: dropdown
+    id: willing_to_contribute
+    attributes:
+      label: Are you willing to open a PR for this?
+      options:
+        - "Yes"
+        - "Yes, with guidance"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Links, mockups, related issues, prior art.

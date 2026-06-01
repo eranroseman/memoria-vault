@@ -1,10 +1,12 @@
 ---
 topic: proposals
-status: deferred  # deferred | under-consideration | adopted | rejected
+status: adopted  # Tier 1 adopted into v0.1 2026-06-01; Tier 2 still deferred
 created: 2026-05-31
 ---
 
 # Agent-proposed MOCs (threshold alert, then optional stub)
+
+> **Tier 1 adopted into v0.1 (2026-06-01).** The report-only "MOC threshold crossed" check ships in the Linter's lint-checks table — surfaces "consider a MOC for topic X" in the weekly dashboard, never auto-creates. **Tier 2 (Mapper stub) remains deferred** per the Guard below. Formal move to `decisions/` pending.
 
 ## What
 

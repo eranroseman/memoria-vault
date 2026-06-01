@@ -17,11 +17,11 @@ From `Home.md` — the front-door note that opens on startup — go to the **boa
 
 **2. Inspect one card.**
 
-Each card shows the **assignee** (which lane produced it), the **`agent_verdict`** (`clean` / `issues-found` / `inconclusive`), and a summary of the proposed write. For a synthesis or deliverable write, open the target zone and read the proposed change — the policy MCP keeps the write in `dry_run` until you approve, so nothing has landed yet and there is no risk in reading first.
+Each card shows the **assignee** (which lane produced it), the **`agent_recommendation`** (`clean` / `issues-found` / `inconclusive`), and a summary of the proposed write. For a synthesis or deliverable write, open the target zone and read the proposed change — the policy MCP keeps the write in `dry_run` until you approve, so nothing has landed yet and there is no risk in reading first.
 
 **3. Weigh the agent verdict — but decide for yourself.**
 
-`agent_verdict` is a *recommendation*, not the decision. You can reject a card the Verifier marked `clean`, or approve one it flagged after reading the flag and judging it minor. Approval means "good enough to move forward" — not "every claim in this output is verified."
+`agent_recommendation` is a *recommendation*, not the decision. You can reject a card the Verifier marked `clean`, or approve one it flagged after reading the flag and judging it minor. Approval means "good enough to move forward" — not "every claim in this output is verified."
 
 **4. Approve.**
 

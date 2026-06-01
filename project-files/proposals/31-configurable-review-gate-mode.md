@@ -26,7 +26,7 @@ No current ADR provides a non-gating mode. The system can measure *itself*, but 
 Add a single configurable setting, `review_mode`, with two values:
 
 - **`blocking`** (default, and the only recommended operating mode). The current behavior, unchanged: dispatch refuses to advance a card out of `done`/awaiting-review without human `review_status: approved`. This is the production posture and the thesis under test.
-- **`advisory`** (study-only). The `agent_verdict` is still written and surfaced, but it does **not** structurally block: a card may advance/promote without `review_status: approved`. This deliberately removes the safety property — so it is **opt-in, time-boxed, and study-scoped**, never a default and never the production posture.
+- **`advisory`** (study-only). The `agent_recommendation` is still written and surfaced, but it does **not** structurally block: a card may advance/promote without `review_status: approved`. This deliberately removes the safety property — so it is **opt-in, time-boxed, and study-scoped**, never a default and never the production posture.
 
 Three invariants make the mode useful as evidence rather than just a weaker system:
 

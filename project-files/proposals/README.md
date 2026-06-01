@@ -22,6 +22,17 @@ A proposal is not a to-do list item. It won't be scheduled until its trigger fir
 
 ## Index
 
+### Adopted into v0.1 (2026-06-01)
+
+Implemented; formal move to `decisions/` with ADR numbers is pending bookkeeping.
+
+| File | What it added |
+|---|---|
+| [21-shared-candidate-frontmatter.md](21-shared-candidate-frontmatter.md) | `candidate-note` (16th type) — discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters |
+| [rename-agent-verdict.md](rename-agent-verdict.md) | `agent_verdict` → `agent_recommendation` across schema / dashboards / docs |
+| [moc-threshold-alert.md](moc-threshold-alert.md) | **Tier 1 only** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
+| [bootstrap-installer.md](bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) |
+
 ### Deferred from decisions
 
 Files originally written as ADR candidates — real decisions that didn't get made yet or features that need conditions to be met first.
@@ -32,7 +43,7 @@ Files originally written as ADR candidates — real decisions that didn't get ma
 | [14-cross-run-skill-insights.md](14-cross-run-skill-insights.md) | Cross-run skill-insights memory |
 | [15-dedicated-review-note-type.md](15-dedicated-review-note-type.md) | Dedicated review-note type |
 | [17-retriever-scout-profile.md](17-retriever-scout-profile.md) | Split Librarian into Retriever + Librarian |
-| [21-shared-candidate-frontmatter.md](21-shared-candidate-frontmatter.md) | Shared candidate frontmatter format |
+| [21-shared-candidate-frontmatter.md](21-shared-candidate-frontmatter.md) | Shared candidate frontmatter format — **adopted into v0.1** |
 | [27-ratchet-duplicate-gate.md](27-ratchet-duplicate-gate.md) | Similarity gate before filing synthesis notes |
 | [28-frozen-evaluator-deferred.md](28-frozen-evaluator-deferred.md) | Per-note-type acceptance checklists |
 | [29-admin-gui-surface.md](29-admin-gui-surface.md) | Admin/forensic GUI surface |
@@ -53,9 +64,9 @@ Thematic groups from the future-directions survey.
 | [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
 | [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
 | [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
-| [bootstrap-installer.md](bootstrap-installer.md) | One-line full-stack installer (Obsidian + Hermes + Zotero + vault); **user-requested, under review** |
-| [moc-threshold-alert.md](moc-threshold-alert.md) | Agent-proposed MOCs: threshold alert (report-only), then optional bare-stub draft |
-| [rename-agent-verdict.md](rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
+| [bootstrap-installer.md](bootstrap-installer.md) | One-line full-stack installer (Obsidian + Hermes + Zotero + vault) — **adopted into v0.1** |
+| [moc-threshold-alert.md](moc-threshold-alert.md) | Agent-proposed MOCs: threshold alert (report-only), then optional bare-stub draft — **Tier 1 adopted into v0.1** |
+| [rename-agent-verdict.md](rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` — **adopted into v0.1** |
 
 ### Rejected alternatives
 

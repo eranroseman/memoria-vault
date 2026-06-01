@@ -72,7 +72,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | **Mapper** | All write tools outside its scratch paths, external APIs, drafting |
 | **Socratic** | All write tools (`policy.allow.write: []`); all external APIs; queue dispatch |
 | **Writer** | `rest-passthrough`; external-API skills; publish without review gate |
-| **Verifier** | All write tools except verification reports and gap-candidate cards; drafting |
+| **Verifier** | All write tools except verification reports and gap candidate-notes (`source: gap`); drafting |
 | **Coder** | Review-gated-zone edits; prose ownership |
 | **Linter** | Review-gated-zone edits; schema-content auto-fixes; work spawning |
 
@@ -98,7 +98,7 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 
 | Profile | Where (exact subfolder) | What (note types) | Why (command / skill) |
 | --- | --- | --- | --- |
-| **Librarian** | `10-inbox/03-candidates/`, `20-sources/01-papers/`, `20-sources/02-items/`, `20-sources/03-entities/` | `candidate-note` (deferred), `paper-note`, `item-note`, entity notes | `find` (candidates), `ingest` / `obsidian-paper-note` skill (sources), `enrich` |
+| **Librarian** | `10-inbox/03-candidates/`, `20-sources/01-papers/`, `20-sources/02-items/`, `20-sources/03-entities/` | `candidate-note`, `paper-note`, `item-note`, entity notes | `find` (candidates), `ingest` / `obsidian-paper-note` skill (sources), `enrich` |
 | **Mapper** | `40-workbench/*/01-map/` only | `corpus-map.md`, `gap-report.md` | `scope-project`, `gap-report`, `cluster-map` |
 | **Socratic** | *(none — `policy.allow.write: []`)* | — | write-denied by design |
 | **Writer** | `10-inbox/02-answers/`; `40-workbench/*/{02-framing,03-canvas,04-drafts}/`; `30-synthesis/02-reference/**` and `50-deliverables/**` (both review-gated → `dry_run`) | `answer-note`, framing/canvas/`draft`; proposed `reference-note`, `deliverable` | `draft`, `query`, `promote` (handoff); `llm-wiki` / `obsidian-markdown` / `scientific-writing` skills |

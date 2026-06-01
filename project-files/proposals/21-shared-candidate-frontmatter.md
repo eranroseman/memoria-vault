@@ -2,14 +2,16 @@
 topic: proposals
 id: 21
 title: Shared candidate frontmatter format
-status: proposed
+status: adopted
 date_proposed: 2026-05-15
-date_resolved:
+date_resolved: 2026-06-01
 supersedes: []
 superseded_by: []
 ---
 
 # Proposal 21: Shared candidate frontmatter format
+
+> **Adopted into v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `schema-reference.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`. (Formal move to `decisions/` with an ADR number is pending bookkeeping.)
 
 ## Context
 

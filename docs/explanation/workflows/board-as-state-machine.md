@@ -26,13 +26,13 @@ A card is not just a task title. It carries:
 
 **Review state** — `review_status` (a Memoria overlay on `done` cards: `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
 
-**Agent recommendation** — `agent_verdict` (optional, from Verifier or Linter). This answers "what does the checking agent advise?" — separate from the human's decision.
+**Agent recommendation** — `agent_recommendation` (optional, from Verifier or Linter). This answers "what does the checking agent advise?" — separate from the human's decision.
 
 **Handoff payload** — `summary`, `metadata.allowed_paths`, `metadata.expected_outputs`, `metadata.promote_target`. The context the next worker needs to continue without re-reading the conversation.
 
 **History** — retry count, blocked reason, who worked on it. The card survives retries without losing its identity.
 
-The three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree. A card can be execution-`done`, review-`requested`, and `agent_verdict: clean`. It can be execution-`done`, review-`rejected`, and `agent_verdict: issues-found`. Keeping them distinct makes each state queryable and avoids conflation.
+The three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree. A card can be execution-`done`, review-`requested`, and `agent_recommendation: clean`. It can be execution-`done`, review-`rejected`, and `agent_recommendation: issues-found`. Keeping them distinct makes each state queryable and avoids conflation.
 
 ---
 

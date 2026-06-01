@@ -13,7 +13,7 @@ A card carries three independent dimensions, and keeping them separate is the ce
 | --- | --- | --- | --- |
 | **Execution** | `status` — Hermes built-in enum | Dispatcher + workers | *Where is the work?* |
 | **Review** | `metadata.review_status` — Memoria overlay | The human | *Has the human accepted this as canonical?* |
-| **Agent recommendation** | `metadata.agent_verdict` — Memoria overlay | Verifier or Linter | *What does the checking agent advise?* |
+| **Agent recommendation** | `metadata.agent_recommendation` — Memoria overlay | Verifier or Linter | *What does the checking agent advise?* |
 
 **Why three dimensions, not one?** `status` is a fixed Hermes enum with no "human-approved" value — Memoria cannot extend it. Overloading `done` to mean both "worker finished" and "human accepted" would erase the review gate. And the agent recommendation must be separate from the human decision because they can legitimately disagree: an agent may recommend approval while the human rejects, or vice versa. Merging them would let an agent's view masquerade as a human judgment.
 
@@ -26,7 +26,7 @@ Every card follows the same arc:
 1. **Created** by a trigger: a command-palette action, a cron job, or a file-watcher event. Human-initiated cards start in `triage` (spec not yet finalized); automated cards start directly in `ready`.
 2. **Specified and released.** A `triage` card waits for the human to shape its spec and release it to `ready`. Automated cards skip this step entirely.
 3. **Dispatched.** The dispatcher atomically claims a `ready` card matching an available profile and moves it to `running`.
-4. **Completed.** The worker finishes its slice, moves the card to `done`, and writes a handoff summary plus structured metadata. If the card produced a checkable artifact, Verifier or Linter attaches a recommendation in `agent_verdict`.
+4. **Completed.** The worker finishes its slice, moves the card to `done`, and writes a handoff summary plus structured metadata. If the card produced a checkable artifact, Verifier or Linter attaches a recommendation in `agent_recommendation`.
 5. **Human review.** The human reads the output, and either approves (then archives) or rejects (then archives with a reason, and optionally spawns a successor card).
 
 The worker reaching `done` is not the same as the work being accepted. That distinction — execution state versus review state — is the whole reason these dimensions are kept separate.
@@ -41,7 +41,7 @@ A **card is work** — transient, board-resident, and archived when done. A **no
 
 ## Why no Reviewer and no Orchestrator
 
-**No Reviewer profile.** Review is a human action on `metadata.review_status`, enforced by the policy MCP. Agents only *recommend* via `agent_verdict`; no profile can self-approve or rubber-stamp work into canonical. The consequence is that the human is the review bottleneck — but that is the design's core guarantee. An unbounded review queue is made visible by the review-queue WIP cap, which applies back-pressure before the backlog becomes invisible.
+**No Reviewer profile.** Review is a human action on `metadata.review_status`, enforced by the policy MCP. Agents only *recommend* via `agent_recommendation`; no profile can self-approve or rubber-stamp work into canonical. The consequence is that the human is the review bottleneck — but that is the design's core guarantee. An unbounded review queue is made visible by the review-queue WIP cap, which applies back-pressure before the backlog becomes invisible.
 
 **No Orchestrator profile.** Routing is encoded in lane-override files and Kanban dispatch rules, not decided by a reasoning agent. Once a reasoning orchestrator exists, every routing decision becomes hard to audit and potentially self-modifying. Routing by rule is less flexible but far more trustworthy.
 

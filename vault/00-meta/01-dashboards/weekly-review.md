@@ -17,12 +17,12 @@ SORT file.mtime ASC
 
 ## Discovery candidates
 
-Include or exclude candidates from the corpus. Requires the candidate frontmatter format from Proposal 21 — until that proposal is adopted and a `candidate-note` template is added, this query returns no results.
+Include or exclude discovery candidates from the corpus (the `candidate-note` type — see [note-types.md](../04-reference/schema-reference.md)).
 
 ```dataview
-TABLE file.link AS Candidate, candidate_status, file.mtime AS Modified
+TABLE file.link AS Candidate, source, candidate_status, file.mtime AS Modified
 FROM "10-inbox/03-candidates"
-WHERE candidate_status = "pending"
+WHERE type = "candidate-note" AND candidate_status = "pending-screen"
 SORT file.mtime ASC
 ```
 

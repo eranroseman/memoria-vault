@@ -1,10 +1,12 @@
 ---
 topic: proposals
-status: deferred  # deferred | under-consideration | adopted | rejected
+status: adopted  # adopted into v0.1 2026-06-01
 created: 2026-05-31
 ---
 
 # Rename `agent_verdict` → `agent_recommendation`
+
+> **Adopted into v0.1 (2026-06-01).** Renamed across the card schema, dashboards, the Linter SOUL.md, and the docs in one coordinated pass (verified by grep — only this proposal and the README index retain the old name as historical reference). Formal move to `decisions/` pending.
 
 ## What
 

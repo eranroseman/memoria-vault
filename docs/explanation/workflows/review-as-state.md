@@ -26,11 +26,11 @@ A card in `done` state carries three simultaneous assessments that are kept sepa
 
 **Review state** (`review_status: requested`) says: "The human has not yet decided whether to accept the output."
 
-**Agent recommendation** (`agent_verdict`) says: "The checking agent assessed the output as clean/issues-found/inconclusive."
+**Agent recommendation** (`agent_recommendation`) says: "The checking agent assessed the output as clean/issues-found/inconclusive."
 
-These three can disagree, and they frequently do. A worker finishes (`status: done`); the Verifier finds no issues (`agent_verdict: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
+These three can disagree, and they frequently do. A worker finishes (`status: done`); the Verifier finds no issues (`agent_recommendation: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
 
-Keeping them separate makes each one useful. If `agent_verdict` folded into `review_status`, you couldn't ask "how often does a clean agent verdict correlate with human approval?" If `status` and `review_status` were collapsed, "worker finished" and "human approved" would be the same event — which is exactly the collapse that makes the system unreliable.
+Keeping them separate makes each one useful. If `agent_recommendation` folded into `review_status`, you couldn't ask "how often does a clean agent verdict correlate with human approval?" If `status` and `review_status` were collapsed, "worker finished" and "human approved" would be the same event — which is exactly the collapse that makes the system unreliable.
 
 ---
 
@@ -64,7 +64,7 @@ This is different from a **retry**, which is automatic re-dispatch of the same c
 
 **Review does not mean approval of everything the agent produced.** A human can approve a card while noting that one citation needs to be checked later. Approval means "this is good enough to move forward"; it doesn't mean "every claim in this output is verified."
 
-**Review does not mean the Verifier checked it.** The Verifier's `agent_verdict` is a recommendation that informs human review, not a replacement for it. The human might reject something the Verifier found clean, or approve something the Verifier flagged (after reading the flag and deciding it's not significant).
+**Review does not mean the Verifier checked it.** The Verifier's `agent_recommendation` is a recommendation that informs human review, not a replacement for it. The human might reject something the Verifier found clean, or approve something the Verifier flagged (after reading the flag and deciding it's not significant).
 
 **Review does not happen in the vault.** Review happens on the board card, not on the note itself. A note that has been produced by a reviewed and approved card is not individually marked "reviewed" — the review happened at the card level. This is why it's important to understand cards and notes as distinct things.
 

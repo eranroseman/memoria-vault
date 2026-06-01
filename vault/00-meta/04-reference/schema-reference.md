@@ -6,22 +6,22 @@ Canonical list of every frontmatter field used in this vault. The source of trut
 
 | Field | Type | Allowed values | Notes |
 | --- | --- | --- | --- |
-| `type` | string | one of the 15 note types | Required. |
+| `type` | string | one of the 16 note types | Required. |
 | `schema_version` | int | current: `1` | Required. |
 | `created` | datetime | ISO 8601 | Auto-set by Templater. |
 | `updated` | datetime | ISO 8601 | Linter refreshes on touch. |
 
-## Note types (15)
+## Note types (16)
 
-`claim-note`, `paper-note`, `answer-note`, `reference-note`, `moc`, `project-note`, `code-note`, `canvas`, `person-note`, `organization-note`, `venue-note`, `fleeting-note`, `item-note`, `deliverable`, `draft`.
+`claim-note`, `paper-note`, `answer-note`, `reference-note`, `moc`, `project-note`, `code-note`, `canvas`, `person-note`, `organization-note`, `venue-note`, `fleeting-note`, `item-note`, `deliverable`, `draft`, `candidate-note`.
 
 Templates for each in `03-templates/`.
 
-> **Transient candidate files are not among the 15.** Pre-ingest scratch in `10-inbox/03-candidates/` — e.g. `type: gap-candidate` (Verifier gap-cards) and Librarian discovery candidates — are not durable knowledge nodes, so they sit **outside** the 15-type registry and are exempt from the Linter's note-type validation. [proposal-21](../../../project-files/proposals/21-shared-candidate-frontmatter.md) will unify them as `type: candidate-note` once it lands.
+> **`candidate-note` is the transient lead / dead-letter type** ([ADR — shared candidate frontmatter](../../../project-files/proposals/21-shared-candidate-frontmatter.md)). Files in `10-inbox/03-candidates/` carry `type: candidate-note` with a `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), a `candidate_status` (`pending-screen` / `pending-ingest` / `included` / `excluded`), and `exclusion_reason`. This **one type unifies** the Librarian's discovery candidates and the Verifier's gap-cards (`source: gap`). It is transient — promoted to a durable type on `included`, archived on `excluded` — so unlike the other 15 it isn't a permanent knowledge node.
 
 ### What the `-note` suffix means
 
-The `-note` suffix marks a **knowledge node** — a note that is the authoritative record of one thing (an idea, source, entity, concept, project, code artifact, or answer) and carries its own content. Eleven of the fifteen types are nodes and carry it.
+The `-note` suffix marks a **knowledge node** — a note that is the authoritative record of one thing (an idea, source, entity, concept, project, code artifact, or answer) and carries its own content. Twelve of the sixteen types carry the suffix — the durable knowledge nodes plus the transient `fleeting-note` and `candidate-note`.
 
 Four types are **bare** because they are not records:
 

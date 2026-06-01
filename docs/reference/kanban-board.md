@@ -52,7 +52,7 @@ A rejected card does **not** automatically return to the lane queue. Every rewor
 
 A third dimension, separate from review. Agents (Verifier, Linter) attach recommendations; the human makes the final decision.
 
-| `metadata.agent_verdict` | Meaning |
+| `metadata.agent_recommendation` | Meaning |
 | --- | --- |
 | `clean` | Checking agent found no issues. |
 | `issues-found` | Checking agent found one or more issues; details in the card summary. |
@@ -80,7 +80,7 @@ Written to `metadata` on the Hermes card. Human-set fields that the policy MCP g
 | Field | Type | Owner | Notes |
 | --- | --- | --- | --- |
 | `review_status` | enum | Worker / Human | `unreviewed` · `requested` · `approved` · `rejected`. |
-| `agent_verdict` | enum | Verifier / Linter | `clean` · `issues-found` · `inconclusive`. |
+| `agent_recommendation` | enum | Verifier / Linter | `clean` · `issues-found` · `inconclusive`. |
 | `review_owner` | string | Human / system | Who owes the next review decision. |
 | `review_requested_at` | datetime | System | When the card entered `done`. |
 | `reviewed_at` | datetime | Human | When `review_status` was last changed. |

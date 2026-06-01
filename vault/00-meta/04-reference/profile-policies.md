@@ -8,7 +8,7 @@ Who can write where. Companion to the lane-override YAML files at `.memoria/lane
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `10-inbox/01-fleeting/` | — | — | — | — | ✓ | — | — |
 | `10-inbox/02-answers/` | — | — | ✓ | — | — | — | — |
-| `10-inbox/03-candidates/` | — | — | — | gap-candidate cards | ✓ | — | — |
+| `10-inbox/03-candidates/` | — | — | — | gap candidate-notes | ✓ | — | — |
 | `20-sources/` | — | — | — | — | ✓ | — | — |
 | `30-synthesis/01-claims/` | — | — | — | — | — | — | — |
 | `30-synthesis/02-reference/` | — | — | dry-run | — | — | — | — |

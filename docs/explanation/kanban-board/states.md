@@ -23,7 +23,7 @@ The review lifecycle only becomes meaningful once `status` reaches `done`. This 
 
 The review lifecycle rests on five design commitments that are worth understanding together rather than in isolation.
 
-**Agent recommendation and human acceptance are distinct dimensions.** `agent_verdict: clean` (from Verifier or Linter) and `review_status: approved` (from the human) are not the same thing and cannot substitute for each other. This separation is the mechanism that prevents an agent's recommendation from becoming a rubber stamp — the two assessments can legitimately disagree, and each remains meaningful only if they are kept separate.
+**Agent recommendation and human acceptance are distinct dimensions.** `agent_recommendation: clean` (from Verifier or Linter) and `review_status: approved` (from the human) are not the same thing and cannot substitute for each other. This separation is the mechanism that prevents an agent's recommendation from becoming a rubber stamp — the two assessments can legitimately disagree, and each remains meaningful only if they are kept separate.
 
 **Review is a state, not a convention.** A card becomes canonical only when `review_status: approved` is set as a field. A worker claiming to be finished, or a comment saying "looks fine," carries no weight. This matters because field values can be queried, enforced, and audited; comments and claims cannot.
 

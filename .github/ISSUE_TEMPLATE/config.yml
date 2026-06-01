@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/eranroseman/memoria-vault/tree/main/docs
+    about: Read the Memoria docs before opening an issue.
+  - name: Hermes Agent docs
+    url: https://hermes-agent.nousresearch.com/docs
+    about: Runtime questions often belong in the Hermes Agent documentation.

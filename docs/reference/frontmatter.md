@@ -146,8 +146,18 @@ The complete set of valid `type` values. Each maps to exactly one note type in [
 fleeting-note  answer-note    paper-note    item-note
 person-note    organization-note  venue-note  claim-note
 reference-note  moc           project-note  code-note
-canvas         draft          deliverable
+canvas         draft          deliverable    candidate-note
 ```
+
+### Candidate-note fields
+
+Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — shared candidate frontmatter](../../project-files/proposals/21-shared-candidate-frontmatter.md)).
+
+| Field | Type | Allowed values | Owner | Present on |
+| --- | --- | --- | --- | --- |
+| `source` | string (enum) | `find` · `database-search` · `manual` · `capture-timeout` · `gap` | Agent / human | `candidate-note` |
+| `candidate_status` | string (enum) | `pending-screen` · `pending-ingest` · `included` · `excluded` | Human | `candidate-note` |
+| `exclusion_reason` | string | — | Human | `candidate-note` (set only when `excluded`) |
 
 ---
 

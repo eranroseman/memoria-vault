@@ -72,7 +72,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── board-state.jsonl           # pending
 │   ├── lint-findings.jsonl         # pending
 │   └── cron-history.jsonl          # pending
-├── 03-templates/                   # 15 note templates (see note-types.md)
+├── 03-templates/                   # 16 note templates (see note-types.md)
 ├── 04-reference/                   # 10 human-facing reference notes (shipped)
 ├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
 ├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred

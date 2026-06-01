@@ -1,6 +1,6 @@
 # Note types
 
-The 15 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).
+The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).
 
 ---
 
@@ -23,14 +23,17 @@ The 15 note types, their canonical folders, templates, lifecycle, and ownership.
 | `canvas` | `40-workbench/*/03-canvas/` | `canvas.md` | Human | Human | `proposed` → `current` |
 | `draft` | `40-workbench/*/04-drafts/` | `draft.md` | Human | Human → `deliverable` on export | `proposed` → `current` (+ `draft_stage`) |
 | `deliverable` | `50-deliverables/` | `deliverable.md` | Human / Coder (export task) | Terminal | `current` |
+| `candidate-note` | `10-inbox/03-candidates/` | `candidate-note.md` | Librarian (`find`) / Verifier (`gap`) / human | Human (include → ingest; exclude → archive) | `proposed` → `archived` |
 
-All 15 templates live in `00-meta/03-templates/`.
+All 16 templates live in `00-meta/03-templates/`.
+
+> **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/proposals/21-shared-candidate-frontmatter.md).
 
 ---
 
 ## `-note` suffix rule
 
-The `-note` suffix marks a **knowledge node** — an authoritative record of one unit of knowledge that carries its own content. Eleven of the 15 types are knowledge nodes, and their templates carry the suffix too (`paper-note.md`, `claim-note.md`, …). The four bare-name views use bare template filenames (`moc.md`, `canvas.md`, `draft.md`, `deliverable.md`).
+The `-note` suffix marks a **knowledge node** — an authoritative record of one unit of knowledge that carries its own content. Twelve of the 16 types carry the `-note` suffix — the durable knowledge nodes plus the transient `fleeting-note` and `candidate-note` — and their templates carry it too (`paper-note.md`, `claim-note.md`, …). The four bare-name views use bare template filenames (`moc.md`, `canvas.md`, `draft.md`, `deliverable.md`).
 
 The four **bare names** (`moc`, `canvas`, `draft`, `deliverable`) are not knowledge nodes:
 

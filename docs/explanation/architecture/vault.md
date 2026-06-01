@@ -105,6 +105,6 @@ See [../knowledge/common-pitfalls.md](../knowledge/common-pitfalls.md) for the r
 **Reference**
 
 - Frontmatter fields: [../../reference/frontmatter.md](../../reference/frontmatter.md)
-- Note types (all 15, with templates): [../../reference/note-types.md](../../reference/note-types.md)
+- Note types (all 16, with templates): [../../reference/note-types.md](../../reference/note-types.md)
 - Linking patterns: [../../reference/linking.md](../../reference/linking.md)
 - On-disk layout (full tree): [../../reference/on-disk-layout.md](../../reference/on-disk-layout.md)

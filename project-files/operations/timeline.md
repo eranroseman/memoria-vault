@@ -16,13 +16,13 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 1. Establish Memoria as the official name in vault documentation and any AGENTS-style schema files. Keep `research-wiki` as an alias for migration.
 2. Define the card states, the worker lanes (one per profile), and the review gate rules in one schema document so Hermes and the board share the same contract.
-3. Confirm note-type names match the defined set in [vault/README.md](../../docs/explanation/architecture/vault.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable` (15 in total). Keep any older names as deprecated aliases during transition.
+3. Confirm note-type names match the defined set in [vault/README.md](../../docs/explanation/architecture/vault.md): `fleeting-note`, `answer-note`, `paper-note`, `item-note`, `person-note`, `organization-note`, `venue-note`, `claim-note`, `moc`, `reference-note`, `project-note`, `code-note`, `canvas`, `draft`, `deliverable`, `candidate-note` (16 in total). Keep any older names as deprecated aliases during transition.
 4. Commit the design document set (`docs/`) as the shared source of truth.
 
 **Vault structure**
 
 1. Create the **complete folder structure** (`00-meta/` through `95-archive/`, including items, entities, workbench, and deliverables) — confirm it matches [vault/README.md](../../docs/explanation/architecture/vault.md).
-2. Drop all **15 templates** into `00-meta/03-templates/` (answer, canvas, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../docs/reference/note-types.md)).
+2. Drop all **16 templates** into `00-meta/03-templates/` (answer, canvas, candidate, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../docs/reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
 4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../docs/explanation/obsidian/README.md)).
 5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-6](../decisions/06-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
@@ -42,10 +42,10 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 
 1. Stand up the **Hermes built-in Kanban** (see [kanban-board/README.md](../../docs/explanation/kanban-board/README.md) for the mandated choice and the alternatives considered).
 2. Adopt the Hermes Kanban's fixed `status` enum — `triage`, `todo`, `ready`, `running`, `blocked`, `done`, `archived` — and map Memoria's lifecycle onto them (see [kanban-board/states.md](../../docs/explanation/kanban-board/states.md)).
-3. Define the review overlay in card `metadata`: `review_status`, `agent_verdict`, `review_owner`, `review_requested_at`, `reviewed_at`, `promote_target`, `supersedes`. (The execution fields — `status`, `assignee`, `reason`, `max_retries` — are Hermes built-ins.)
+3. Define the review overlay in card `metadata`: `review_status`, `agent_recommendation`, `review_owner`, `review_requested_at`, `reviewed_at`, `promote_target`, `supersedes`. (The execution fields — `status`, `assignee`, `reason`, `max_retries` — are Hermes built-ins.)
 4. Configure dispatch logic so cards in `triage`, `done` (awaiting review), or `blocked` are not claimable by non-review workers.
 5. Configure retry behavior so recoverable failures reuse the same card (returned to `ready`) within `max_retries`.
-6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_verdict` recommendations the human promotes to `review_status: approved`.
+6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_recommendation` recommendations the human promotes to `review_status: approved`.
 7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `00-meta/board/<task_id>.md` and `00-meta/02-logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
 8. **Enable the five-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact. The five signals are: (1) suggestion disposition (accept : edit : reject) per profile; (2) operator decision time per `awaiting-review` card; (3) per-card state-transition timestamps; (4) API cost per card; (5) policy deny-reasons. Defined in [measurement-and-verification.md](../proposals/measurement-and-verification.md).
 9. Configure the review-gate mode per [proposal-31](../proposals/31-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.

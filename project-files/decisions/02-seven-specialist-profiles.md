@@ -32,7 +32,7 @@ No Orchestrator because routing encoded in rules is auditable; routing decided b
 
 - Each profile's permissions are declared in a lane-override YAML file that the policy MCP reads at startup.
 - Routing is deterministic: a card's `assignee` field determines which profile can claim it; no reasoning agent makes routing decisions.
-- The review gate is a human action on `review_status`; agents recommend via `agent_verdict` but never approve.
+- The review gate is a human action on `review_status`; agents recommend via `agent_recommendation` but never approve.
 - Profile count is fixed at seven for Memoria v0.1. Adding an eighth profile requires a new lane-override file, SOUL.md, and policy MCP registration.
 
 ## Alternatives considered

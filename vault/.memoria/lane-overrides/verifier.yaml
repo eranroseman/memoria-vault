@@ -13,7 +13,7 @@ policy:
       # cite-check is a SOUL.md procedure: resolve every citekey against .bib + paper notes.
     write:
       - "40-workbench/*/05-verification/**"
-      - "10-inbox/03-candidates/**"   # gap-candidate cards only
+      - "10-inbox/03-candidates/**"   # gap candidate-notes only (type: candidate-note, source: gap)
   deny:
     skills:
       - review_gated_publish
