@@ -1,6 +1,7 @@
 ---
 title: Writing
 parent: How-to guides
+nav_order: 5
 has_children: true
 permalink: /how-to-guides/writing/
 ---
