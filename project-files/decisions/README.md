@@ -35,6 +35,7 @@ Rules:
 | [09](09-contradictions-dashboard.md) | Contradictions dashboard |
 | [10](10-claim-supersession.md) | Claim supersession relation |
 | [15](15-project-auto-classification.md) | Project membership is agent-proposed, human-confirmed |
+| [21](21-shared-candidate-frontmatter.md) | Shared candidate frontmatter (`candidate-note`, the 16th type) |
 
 ### Tooling and integrations
 
@@ -51,3 +52,5 @@ Rules:
 | [11](11-vault-eval-integration.md) | vault-eval as a maintenance capability |
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts |
 | [16](16-adopt-on-demand-for-reviews.md) | Adopt-on-demand: systematic-review tooling cluster |
+| [22](22-rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
+| [23](23-moc-threshold-alert.md) | Agent-proposed MOC threshold alert (Tier 1, report-only) |

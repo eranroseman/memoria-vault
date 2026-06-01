@@ -25,9 +25,9 @@ The reasoning is identical across all four:
 | **Pre-ingest screening** | A separate pre-ingest PRISMA + ASReview screening pipeline (200–5000 candidates) | Starting a formal scoping or systematic review |
 | **Dual-rater workflow** | Dual-rater fields (`rater_1`, `rater_2`, `rater_agreement`) for inter-rater reliability | The chapter or paper requires reported agreement *and* a second human rater exists |
 
-## Relationship to proposal-21
+## Relationship to ADR-21
 
-[proposal-21 (shared candidate frontmatter)](../proposals/21-shared-candidate-frontmatter.md) is adjacent but **not** part of this deferred cluster. It is slated for **baseline** adoption (independent of any formal review), because the shared `type: candidate-note` schema pays off for everyday `find` on its own — but it has **not landed yet**: its status is `proposed`, and the `candidate-note` template is not in the starter vault (see [implementation-status.md](../operations/implementation-status.md)). The pre-ingest screening pipeline consumes that schema once both activate.
+[ADR-21 (shared candidate frontmatter)](21-shared-candidate-frontmatter.md) is adjacent but **not** part of this deferred cluster — it was **adopted into baseline v0.1** (independent of any formal review), because the shared `type: candidate-note` schema pays off for everyday `find` on its own. The `candidate-note` template ships and the type is registered (see [implementation-status.md](../operations/implementation-status.md)). This cluster's pre-ingest screening pipeline consumes that schema once *it* activates.
 
 ## See also
 

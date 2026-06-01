@@ -1,0 +1,12 @@
+# Default owner for everything
+*                               @eranroseman
+
+# Install scripts — high blast radius, always needs owner review
+install.sh                      @eranroseman
+install.ps1                     @eranroseman
+
+# Agent profiles — core product
+project-files/                  @eranroseman
+
+# CI workflows
+.github/workflows/              @eranroseman

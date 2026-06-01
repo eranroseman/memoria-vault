@@ -1,0 +1,43 @@
+name: Lint installers
+
+on:
+  push:
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/lint-installers.yml"
+  pull_request:
+    paths:
+      - "install.sh"
+      - "install.ps1"
+      - ".github/workflows/lint-installers.yml"
+
+jobs:
+  shellcheck:
+    name: shellcheck (install.sh)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "."
+          additional_files: "install.sh"
+          severity: warning
+
+  psscriptanalyzer:
+    name: PSScriptAnalyzer (install.ps1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+      - name: Analyze install.ps1
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path install.ps1 -Severity Warning,Error
+          if ($results) {
+            $results | Format-Table -AutoSize
+            exit 1
+          }

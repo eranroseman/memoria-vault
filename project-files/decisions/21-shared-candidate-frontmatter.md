@@ -1,21 +1,21 @@
 ---
-topic: proposals
+topic: decisions
 id: 21
 title: Shared candidate frontmatter format
-status: adopted
+status: accepted
 date_proposed: 2026-05-15
 date_resolved: 2026-06-01
 supersedes: []
 superseded_by: []
 ---
 
-# Proposal 21: Shared candidate frontmatter format
+# ADR-21: Shared candidate frontmatter format
 
-> **Adopted into v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `schema-reference.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`. (Formal move to `decisions/` with an ADR number is pending bookkeeping.)
+> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `schema-reference.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
 
 ## Context
 
-Candidate notes can arrive from four pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-16](../decisions/16-adopt-on-demand-for-reviews.md) (pre-ingest screening, in the systematic-review cluster)), manual (human-typed lead), or **capture-timeout** (a Zotero capture whose ingestion gave up — see *Ingestion dead-letter* below). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run separate queries.
+Candidate notes can arrive from four pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-16](16-adopt-on-demand-for-reviews.md) (pre-ingest screening, in the systematic-review cluster)), manual (human-typed lead), or **capture-timeout** (a Zotero capture whose ingestion gave up — see *Ingestion dead-letter* below). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run separate queries.
 
 ### Two roles, one type: discovery inbox + ingestion dead-letter
 
@@ -32,7 +32,7 @@ Adopt the unified frontmatter schema for candidate notes:
 
 ```yaml
 type: candidate-note
-source: find                     # find | database-search | manual | capture-timeout
+source: find                     # find | database-search | manual | capture-timeout | gap
 candidate_status: pending-screen # pending-screen | pending-ingest | included | excluded
 exclusion_reason: ""
 projects: []                     # plural list, matches other templates
@@ -40,7 +40,7 @@ projects: []                     # plural list, matches other templates
 
 `candidate_status` distinguishes the two roles:
 
-- `pending-screen` — discovery lead awaiting a human include/exclude decision (`find` / database-search / manual).
+- `pending-screen` — discovery lead awaiting a human include/exclude decision (`find` / database-search / manual / `gap` — a Verifier gap-card unified into this type at adoption).
 - `pending-ingest` — a `capture-timeout` note whose ingestion gave up; awaiting a pipeline retry or discard.
 - `included` / `excluded` — terminal screening outcomes; an `included` discovery candidate proceeds to ingestion, a successfully re-ingested `pending-ingest` note becomes a `paper-note`/`item-note` and the candidate is archived.
 
@@ -60,11 +60,11 @@ These are the candidate-specific fields; every note also carries the global requ
 
 **Per-pipeline schemas**: rejected — duplicates effort and forces three parallel queries in every candidate dashboard.
 
-**Hold off until [ADR-16](../decisions/16-adopt-on-demand-for-reviews.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
+**Hold off until [ADR-16](16-adopt-on-demand-for-reviews.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
 
 **Candidate-gate every capture** (route all Zotero captures through `candidate-note` first): rejected — a deliberate single capture *is* the screening decision, so a mandatory candidate stage adds redundant friction to the common path. The candidate-note earns its place at the *edges* (un-screened discovery leads, failed-ingest dead letters), not as the default front door.
 
 ## Related
 
-- **Consumed by:** [ADR-16 pre-ingest screening](../decisions/16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
+- **Consumed by:** [ADR-16 pre-ingest screening](16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
 - **Files affected:** [vault/README.md](../../docs/explanation/architecture/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/weekly-review.md)

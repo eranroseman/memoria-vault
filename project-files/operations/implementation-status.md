@@ -48,10 +48,10 @@ Authoritative runtime signal: `install.ps1` requires `SOUL.md` + `config.yaml` +
 | Artifact | Status | Notes |
 | --- | --- | --- |
 | Folder skeleton `00-meta`…`95-archive` | shipped | Complete structure ships with `.keep` placeholders. Matches design spec. Includes `10-inbox/03-candidates/` (see note below). |
-| `10-inbox/03-candidates/` | shipped | Folder **and** its `candidate-note.md` template both ship (proposal-21 adopted 2026-06-01). Populated by the Librarian (`find`/dead-letter) and Verifier (`gap`). |
+| `10-inbox/03-candidates/` | shipped | Folder **and** its `candidate-note.md` template both ship (ADR-21 adopted 2026-06-01). Populated by the Librarian (`find`/dead-letter) and Verifier (`gap`). |
 | `00-meta/02-logs/` and `00-meta/02-logs/sessions/` | shipped | Both dirs ship as `.keep` placeholders. `audit.jsonl` is created at runtime by the policy MCP (pending). |
 | 16 note templates (`00-meta/03-templates/`) | shipped | All 16 present: answer/canvas/claim/code/deliverable/draft/fleeting/item/moc/organization/paper/person/project/reference/venue/candidate. |
-| `candidate-note.md` template (16th type) | shipped | **proposal-21 adopted 2026-06-01** — part of v0.1. Unifies discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters; registered in note-types / schema-reference / frontmatter; `weekly-review` query wired. |
+| `candidate-note.md` template (16th type) | shipped | **ADR-21 adopted 2026-06-01** — part of v0.1. Unifies discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters; registered in note-types / schema-reference / frontmatter; `weekly-review` query wired. |
 | `relations:` block on `claim-note` | shipped | ADR-8 (typed-relations-frontmatter); opt-in `supports`/`contradicts` block in template (human-set). |
 | `superseded_by:` on `claim-note` | shipped | ADR-10 (claim-supersession); top-level field in template (human-set; currency derives from it). |
 | `Home.md` (vault-root front door) | shipped | ADR-13 (homepage-front-door); ships at vault root. obsidian-homepage auto-open is a post-clone step (see plugins). |

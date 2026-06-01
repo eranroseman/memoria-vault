@@ -27,7 +27,7 @@ The 16 note types, their canonical folders, templates, lifecycle, and ownership.
 
 All 16 templates live in `00-meta/03-templates/`.
 
-> **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/proposals/21-shared-candidate-frontmatter.md).
+> **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/decisions/21-shared-candidate-frontmatter.md).
 
 ---
 

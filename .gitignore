@@ -8,3 +8,13 @@ docs/.jekyll-cache/
 
 # Vault-internal secrets and per-machine files are gitignored in vault/.gitignore
 # (alongside the existing REST-API / workspace / .env entries).
+
+# OS noise (root-level catches; vault/.gitignore handles vault subtree)
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Editor local settings
+.vscode/settings.json
