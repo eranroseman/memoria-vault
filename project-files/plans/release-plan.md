@@ -6,10 +6,13 @@ status: draft
 # v0.1 release plan
 
 **Current status: pre-release — v0.1.0 has _not_ shipped.** No `v0.1.0` tag or
-GitHub release exists; the build ledger lists nothing as `approved`; and a
-release-blocking bug is open ([#39](https://github.com/eranroseman/memoria-vault/issues/39)).
-This document defines what "released" means, how it's validated, and how it gets
-cut. It does **not** track per-artifact status or the blocker inventory — that
+GitHub release exists, and the build ledger lists nothing as `approved`. The two
+open tracker issues ([#39](https://github.com/eranroseman/memoria-vault/issues/39),
+[#51](https://github.com/eranroseman/memoria-vault/issues/51)) are now **verification
+gates, not code defects**: #39's env-substitution root cause was reversed (the
+shipped config is correct) and #51's two-layer fix has landed — both await a live
+Tier-4 re-run, not a fix. This document defines what "released" means, how it's
+validated, and how it gets cut. It does **not** track per-artifact status — that
 lives in [implementation-status.md](implementation-status.md), the single source
 of truth for build state; this plan points to it rather than restating it.
 
@@ -74,9 +77,9 @@ tier set, with this session's results recorded inline.
 
 | Tier | What it proves | Result this session |
 | --- | --- | --- |
-| 0 | Static: parse, LF endings, profile files present | ✅ pass |
-| 1 | Python `--self-test` (policy_mcp 34, policy_hook 32, board_export 26, metrics 20, detectors 15) | ✅ pass |
-| 2 | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution | ✅ pass (fixed 4 bugs) |
+| 0 | Static: parse, LF endings, profile files present | ✅ pass (re-verified post-#39/#51) |
+| 1 | Python `--self-test` (policy_mcp 34, policy_hook 32, board_export 26, metrics 20, detectors 15) | ✅ pass (re-verified — 127/127 checks green after the #51 hook changes) |
+| 2 | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution | ✅ pass (fixed 4 bugs; re-run after the `scripts/` move found + fixed stale installer self-references — remote-bootstrap URLs and `bash install.sh` hints) |
 | 3 | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run | ✅ pass (fixed venv + profile-install bugs) |
 | 4 | Live: model connectivity, REST bridge, **policy gate enforcement** | ✅ mostly — **G3 re-test pending #39** (reframed: not a config defect; re-run on a confirmed Hermes version). Tier-4 also surfaced the gate-scope gap **#51** (terminal/file writes ungated) — capability-layer fix landed (`disabled_toolsets` ×7 + file-write hook on Coder/Linter); needs live re-verify. |
 | 5 | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export | ⏳ not yet run |
