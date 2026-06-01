@@ -1,0 +1,31 @@
+name: python-selftest
+
+# Runs the --self-test suites of the vault's Python tooling (policy gate, board
+# exporter, metrics, Linter detectors). These are pure-stdlib and need no deps,
+# so the job is fast and hermetic.
+#
+# This backs a REQUIRED status check, so — like docs-doctor and lint-installers —
+# it must run on EVERY push/PR (no `paths:` filter), or path-unrelated PRs would
+# be permanently blocked on a check that never reports. See AGENTS.md §4.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python-selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run all --self-test suites
+        run: |
+          set -e
+          P=vault/.memoria
+          python "$P/mcp/policy_mcp.py" --self-test
+          python "$P/mcp/policy_hook.py" --self-test
+          python "$P/mcp/board_export.py" --self-test
+          python "$P/mcp/metrics_aggregate.py" --self-test
+          python "$P/profiles/memoria-linter/detectors.py" --self-test
