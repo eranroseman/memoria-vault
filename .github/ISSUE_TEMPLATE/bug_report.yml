@@ -29,8 +29,8 @@ body:
     id: profile
     attributes:
       label: Profile (if applicable)
-      description: "Which profile? e.g. researcher, writer, developer…"
-      placeholder: researcher
+      description: "Which profile? e.g. librarian, mapper, socratic, writer, verifier, coder, linter"
+      placeholder: librarian
 
   - type: textarea
     id: description
@@ -67,7 +67,7 @@ body:
       options:
         - Linux (native)
         - WSL2 (Windows 11)
-        - macOS
+        - macOS (unsupported)
         - Windows (PowerShell only)
         - Other
     validations:

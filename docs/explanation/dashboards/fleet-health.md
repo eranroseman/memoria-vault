@@ -20,7 +20,7 @@ For the exact band thresholds and the score formula, see [reference/glossary.md]
 
 **Not board-state.** Board-state shows what work is currently in flight. Fleet-health shows the quality and cost of completed work over time.
 
-**Not drift-watch.** Fleet-health is operational (cost, latency, success rates). Drift-watch is structural (Linter M-detector findings). They are complementary: trust score is the operational headline; verdict band is the structural headline. Both are reproduced from logs without LLM judgment.
+**Not drift-watch.** Fleet-health is operational (cost, latency, success rates). Drift-watch is structural (Linter structural-detector findings). They are complementary: trust score is the operational headline; verdict band is the structural headline. Both are reproduced from logs without LLM judgment.
 
 ## When it shows real data
 

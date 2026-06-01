@@ -1,13 +1,45 @@
 # Memoria
 
-A research operating system: the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime
-wired to an [Obsidian](https://obsidian.md) vault so a fleet of seven specialized agents —
-Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter — read, enrich, map, verify, and
-write alongside you inside your notes, under a policy gate that audits every write.
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2-blue)
+![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-> **Status: v0.1.** The installer is validated (`bash -n` + a full `--dry-run` pass) but has not
-> yet been run end-to-end against a live Hermes on Ubuntu. See
-> [implementation-status.md](project-files/operations/implementation-status.md) for build state.
+Memoria turns your Obsidian vault into an active research workspace — seven AI agents that read your notes, surface connections, pull in papers, and write alongside you, with a human approval gate before any change lands.
+
+Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A policy gate audits every proposed write; nothing reaches your notes without your confirmation.
+
+<!-- SCREENSHOT: Add a screenshot or GIF here showing the vault in action — e.g. an agent's audit callout in Obsidian.
+     Suggested path: assets/screenshot.png
+     To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
+     ![Memoria vault](assets/screenshot.png)                                                          -->
+
+> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See [implementation-status.md](project-files/operations/implementation-status.md) for current build state before installing.
+
+---
+
+## The seven agents
+
+| Agent | Role |
+|---|---|
+| **Librarian** | Intake layer — fetches sources, enriches metadata, extracts PDF text, and proposes draft classifications for new items entering the vault |
+| **Mapper** | Read-only lens on your corpus — produces scope reports, gap reports, cluster density maps, and comparative briefs over what you already have |
+| **Socratic** | Interlocutor for your thinking — asks questions about a source, claim, or framing; architecturally write-denied so it can never touch your notes |
+| **Writer** | Turns evidence into draft prose (answer drafts, outlines, manuscript sections) that lands in review state, never directly into canonical synthesis |
+| **Verifier** | Traces claims back to sources, validates every `[@citekey]`, surfaces near-duplicates, and catches retracted sources before you publish |
+| **Coder** | Scaffolds handoffs to an external coding agent (Aider, Kilocode, Claude Code) and records provenance in the vault |
+| **Linter** | Zero-LLM structural validator — frontmatter shape, link health, schema versions, and audit-log rotation; same result every run |
+
+Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles/)
+
+---
+
+## How it works
+
+The installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the seven `memoria-*` profiles, provisions skills, and prints where to put your API keys.
+
+Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. A policy MCP layer intercepts every proposed write — you confirm or reject before anything lands in your vault.
+
+---
 
 ## Install
 
@@ -38,33 +70,44 @@ bash install.sh            # or  .\install.ps1  on Windows
 ### Requirements
 
 - **Git** on your `PATH`; on **Windows**, WSL2 enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — the installer installs nothing if WSL2 is absent. macOS is not supported.
-- A **`KILOCODE_API_KEY`** (the shipped model provider is `kilocode` — kilo.ai).
+- A **`KILOCODE_API_KEY`** — get one at [kilo.ai](https://kilo.ai). The shipped model provider is `kilocode`; other providers can be swapped in the profile configs.
 - The installer provisions **Hermes** (+ the ACP extra) and **guides** the Obsidian/Zotero installs — you don't need them beforehand.
 
-### What it does
-
-With your confirmation at each external step, the installer copies `vault/` to your chosen runtime
-folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys
-the seven `memoria-*` profiles, provisions skills, and prints where to put your API keys.
+---
 
 ## After install
 
 1. Open the runtime folder (default `~/Memoria`) in Obsidian → **Open folder as vault**, then turn off **Restricted mode** to activate the eight bundled plugins.
 2. **Set up your own git** in the vault — the installer copies it but doesn't `git init` (it's your repo, your identity): `cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"`, then optionally add your own remote. obsidian-git needs a repo to commit into.
 3. Fill the per-profile `.env` secrets — see [set-up-hermes.md](docs/how-to-guides/setup/set-up-hermes.md).
-4. Re-deploy after editing the vault source: `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows; add `--only memoria-<name>` for one profile).
+
+---
 
 ## Repo layout
 
 | Path | What |
 | --- | --- |
-| `install.sh` / `install.ps1` | The bootstrap (`install.sh`) + thin Windows WSL2 launcher. |
-| `vault/` | The Obsidian vault — the runtime artifact the installer copies out. |
-| `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/`. |
-| `project-files/` | Decisions, proposals, and operations notes. |
+| `install.sh` / `install.ps1` | The bootstrap (`install.sh`) + thin Windows WSL2 launcher |
+| `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
+| `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/` |
+| `project-files/` | Decisions, proposals, and operations notes |
 
 ## Documentation
 
 Start in [`docs/`](docs/). New here? Begin with
 [tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md), or jump to the
 [quickstart](docs/how-to-guides/setup/quickstart.md).
+
+## Development
+
+After editing vault source, re-deploy without reinstalling:
+
+```bash
+bash install.sh --profiles-only                   # redeploy all seven profiles
+bash install.sh --profiles-only --only memoria-librarian  # one profile
+.\install.ps1 -ProfilesOnly                       # Windows equivalent
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run locally, code conventions, and the PR process.

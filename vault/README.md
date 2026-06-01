@@ -20,7 +20,7 @@ The human-facing starter vault for **Memoria** — a research operating system t
   - `snippets/memoria-link-colors.css` — the Memoria visual-style snippet
 - `.memoria/` — Memoria tooling, dot-prefixed and auto-hidden by Obsidian
   - `profiles/memoria-<name>/` — the seven Hermes profiles (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter), each with `SOUL.md` + `config.yaml` + `mcp.json` + `distribution.yaml`, plus `skills/` and `cron/`
-  - `profiles/memoria-linter/M-detectors.md` — the Linter's structural-detector reference
+  - `profiles/memoria-linter/structural-detectors.md` — the Linter's structural-detector reference
   - `mcp/` — the policy MCP servers (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`) + `requirements.txt`
   - `lane-overrides/` — per-lane policy YAML the policy MCP reads at startup
   - `csl/`, `library.bib`, `tool-registry.yaml` — machine-read config (populated as needed)

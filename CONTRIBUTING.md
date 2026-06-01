@@ -39,7 +39,7 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 
 - **Shell:** `install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
 - **PowerShell:** `install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
-- **Profiles:** Agent profiles live under `vault/.hermes/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the other seven profiles.
+- **Profiles:** Agent profiles live under `vault/.memoria/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the other seven profiles.
 - **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
 - **Markdown:** Enforced by `.markdownlint.jsonc` at the repo root. Run `markdownlint '**/*.md'` before pushing.
 

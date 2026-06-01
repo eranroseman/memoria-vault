@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Deterministic vault detectors (zero-LLM) for the Memoria Linter.
 
-Reference implementation of the *self-contained* checks from M-detectors.md and
+Reference implementation of the *self-contained* checks from structural-detectors.md and
 the non-LLM toolkit -- the ones that need only the vault tree (no ~/.hermes
 deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
 

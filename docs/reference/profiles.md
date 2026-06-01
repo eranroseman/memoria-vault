@@ -112,7 +112,7 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 
 ## Linter: the eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [M-detectors.md](../../vault/.memoria/profiles/memoria-linter/M-detectors.md). For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 

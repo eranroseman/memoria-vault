@@ -6,7 +6,7 @@ Structural detectors, auto-fix classes, and severity scale for the Memoria Linte
 
 ## The eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [M-detectors.md](../../vault/.memoria/profiles/memoria-linter/M-detectors.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 

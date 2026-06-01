@@ -85,7 +85,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Skill-conditional policy** — a skill's `SKILL.md` frontmatter can declare additive `policy.deny` rules that tighten the host lane's policy for that session. Cannot be loosened from inside the session.
 
-**Structural detector** — one of the Linter's eight deterministic, zero-LLM drift checks. Named by descriptive slug: `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, `extract-path-broken`. See `.memoria/profiles/memoria-linter/M-detectors.md`.
+**Structural detector** — one of the Linter's eight deterministic, zero-LLM checks for *silent* structural failures: drift or breakage that looks like "nothing to do" while something is actually wrong. Named by descriptive slug: `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, `extract-path-broken`. See `.memoria/profiles/memoria-linter/structural-detectors.md`.
 
 ---
 

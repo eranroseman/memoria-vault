@@ -4,7 +4,7 @@ Surfaces the Linter's eight structural-detector findings as one consolidated vie
 
 ## What it shows
 
-The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight M-detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
+The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight structural detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
 
 **Verdict band:**
 
@@ -20,7 +20,7 @@ Schema migration progress also appears here — per-template `schema_version` ro
 
 **Not fleet-health.** Fleet-health is operational (cost, latency, success rate). Drift-watch is structural (source-vs-deployed-profile-vs-working-vault alignment). They are complementary: verdict band is the structural headline; trust score is the operational headline.
 
-**Not for data hygiene.** Orphan notes, stale enrichment, and broken wikilinks surface in weekly-review and the lint report, not here. The M-detectors are reserved for structural drift between vault source, deployed Hermes profiles, and working vault state — the "silent" failures the human wouldn't notice by reading content.
+**Not for data hygiene.** Orphan notes, stale enrichment, and broken wikilinks surface in weekly-review and the lint report, not here. The structural detectors are reserved for structural drift between vault source, deployed Hermes profiles, and working vault state — the "silent" failures the human wouldn't notice by reading content.
 
 ## When drift-watch becomes relevant
 

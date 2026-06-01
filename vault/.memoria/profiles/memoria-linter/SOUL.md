@@ -35,7 +35,7 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 
 `lint` and `health-report` accept severity and detector filters: `--min-severity {critical|high|medium|low|info}` to suppress lower bands, `--detectors profile-install-drift,skeleton-drift` to scope to a subset of the structural detectors below. Both flags compose; both default to "all severities, all detectors."
 
-**Implementation.** These commands are the shipped `detectors.py`, not coined skills. `schema-check`, the `health-report` verdict band, and `graph-analyze` (orphan-synthesis-note detection) all live there now; `session-log` writes the per-session summary. The drift checks that need runtime context (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `command-vocab-drift`, `plugin-config-drift`) run in the live Linter rather than `detectors.py` — see [M-detectors.md](M-detectors.md).
+**Implementation.** These commands are the shipped `detectors.py`, not coined skills. `schema-check`, the `health-report` verdict band, and `graph-analyze` (orphan-synthesis-note detection) all live there now; `session-log` writes the per-session summary. The drift checks that need runtime context (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `command-vocab-drift`, `plugin-config-drift`) run in the live Linter rather than `detectors.py` — see [structural-detectors.md](structural-detectors.md).
 
 ## Core skills
 
@@ -147,7 +147,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 
 The eight drift checks at the bottom of the table above are **structural detectors** with descriptive slug IDs. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single verdict band that gates scheduled work.
 
-**See [M-detectors.md](M-detectors.md)** for the per-detector severity table and the procedural detail (procedure, false-positive rules, remediation paths) for `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, and `extract-path-broken`.
+**See [structural-detectors.md](structural-detectors.md)** for the per-detector severity table and the procedural detail (procedure, false-positive rules, remediation paths) for `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, and `extract-path-broken`.
 
 #### Severity scale
 

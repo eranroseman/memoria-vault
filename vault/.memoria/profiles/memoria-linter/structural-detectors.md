@@ -1,4 +1,4 @@
-# M-detectors: structural drift checks
+# Structural detectors: silent-failure checks
 
 The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
 

@@ -8,7 +8,7 @@
 
 ## The eight detectors
 
-For the full definitions, severities, and remediation paths, see [the Linter's M-detectors reference](../../.memoria/profiles/memoria-linter/M-detectors.md). At a glance:
+For the full definitions, severities, and remediation paths, see [the Linter's structural-detectors reference](../../.memoria/profiles/memoria-linter/structural-detectors.md). At a glance:
 
 | ID | Detector | What it catches | Severity |
 | --- | --- | --- | --- |
@@ -129,7 +129,7 @@ Three ways to pay down what this query surfaces, in increasing effort:
 
 - **Until the Linter is implemented end-to-end**, this dashboard is largely empty (or filled with placeholder rows from `lint-findings/` if the human is manually entering test findings). That's expected — see docs/explanation/dashboards/README.md for the discipline.
 - **Until `plugin-config-drift` is wired**, the `plugin-config-drift` row in the active findings query won't fire even if `data.json` files drift. Under direct profile management `plugin-config-drift` compares the human's working `.obsidian/plugins/<plugin>/data.json` against the version at the latest git HEAD; the `data.json` suffix conventions are in `docs/reference/plugins.md`.
-- **Until `extract-path-broken` is wired**, the `extract-path-broken` row won't fire even if `extract_path` values point at missing files. Until then the "Paper-notes missing the new reach fields" query above gives partial coverage — it surfaces empty `extract_path` values, but doesn't catch the silent-failure case where the path is populated but the file is gone. `extract-path-broken` in the [Linter's M-detectors reference](../../.memoria/profiles/memoria-linter/M-detectors.md) covers that case explicitly.
+- **Until `extract-path-broken` is wired**, the `extract-path-broken` row won't fire even if `extract_path` values point at missing files. Until then the "Paper-notes missing the new reach fields" query above gives partial coverage — it surfaces empty `extract_path` values, but doesn't catch the silent-failure case where the path is populated but the file is gone. `extract-path-broken` in the [Linter's structural-detectors reference](../../.memoria/profiles/memoria-linter/structural-detectors.md) covers that case explicitly.
 
 ## Related
 
