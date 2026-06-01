@@ -1,6 +1,6 @@
 # System map
 
-Plain-language summary of how Memoria fits together. The in-vault counterpart to architecture/README.md.
+Plain-language summary of how Memoria fits together. The in-vault counterpart to [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/).
 
 ## Three layers
 
