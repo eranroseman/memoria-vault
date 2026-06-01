@@ -55,13 +55,27 @@ if staged | grep -qE '\.py$'; then
   fi
 fi
 
-# --- 4. {{VAULT_PATH}} leak guard -------------------------------------------
-# The placeholder belongs only in templates the installer substitutes (mcp.json,
-# config.yaml) and in docs prose. Flag it leaking into other staged non-doc files.
-for f in $(staged | grep -vE '\.(json|ya?ml|md)$'); do
+# --- 4. docs/ reference resolution (staged .md / .py / .yaml) ----------------
+# vault/ ships WITHOUT the docs/ tree, so vault files reference Memoria's docs
+# only via absolute GitHub Pages URLs — and those, plus any bare docs/<path>.md a
+# file names (e.g. a drift-detector's input), must resolve to a real file. This
+# catches stale filenames before they ship. External Hermes docs (the
+# nousresearch.com host) carry no `.md` and are skipped.
+for f in $(staged | grep -E '\.(md|py|ya?ml)$'); do
   [ -f "$f" ] || continue
-  if grep -q '{{VAULT_PATH}}' "$f"; then
-    echo "pre-commit: '{{VAULT_PATH}}' placeholder leaked into $f" >&2; fail=1
+  # 4a. bare repo-relative docs/<path>.md must exist
+  for ref in $(grep -oE 'docs/[A-Za-z0-9/_.-]+\.md' "$f" | sort -u); do
+    [ -f "$ref" ] || { echo "pre-commit: $f -> missing $ref" >&2; fail=1; }
+  done
+  # 4b. GitHub Pages URL must map to a real docs file (strip #anchor, trailing /)
+  for url in $(grep -oE 'https://eranroseman\.github\.io/memoria-vault/[A-Za-z0-9/_-]+' "$f" | sort -u); do
+    rel=${url#https://eranroseman.github.io/memoria-vault/}; rel=${rel%/}
+    [ -f "docs/$rel.md" ] || [ -f "docs/$rel/index.md" ] || [ -f "docs/$rel/README.md" ] \
+      || { echo "pre-commit: $f -> Pages URL with no docs target: $url" >&2; fail=1; }
+  done
+  # 4c. github blob URLs for docs/ are banned — convention is Pages URLs only
+  if grep -q 'github.com/eranroseman/memoria-vault/blob/main/docs/' "$f"; then
+    echo "pre-commit: $f uses a github blob URL for docs/ — use the Pages URL instead" >&2; fail=1
   fi
 done
 
