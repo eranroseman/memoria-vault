@@ -49,7 +49,7 @@ Claim notes at `maturity: evergreen` that haven't been promoted to `30-synthesis
 - Move to `30-synthesis/02-reference/`
 - Set `lifecycle: current`
 
-A claim qualifies for evergreen when it has cross-links from at least three distinct sources or claim notes.
+For the rule on when a claim qualifies as evergreen, see [frontmatter.md — `maturity` values](../../reference/frontmatter.md#maturity-values-claim-notes-only).
 
 **Step 6 — Review orphan notes (5 min).**
 

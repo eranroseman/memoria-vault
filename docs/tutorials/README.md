@@ -20,9 +20,3 @@ Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you
 
 - [What Memoria is](../explanation/what-memoria-is.md) — system identity, what it is and isn't, upstream/downstream directions
 - [How work moves through the system](../explanation/workflows/README.md) — the Zettelkasten model, the agent division of labour, and the board as coordination layer
-
----
-
-## Implementation status
-
-Tutorials 02–06 exercise the agent pipeline, which requires the profile wiring (`config.yaml`, `mcp.json`, `policy_mcp.py`, lane-overrides) — part of v0.1, now shipped. See [implementation-status.md](../../project-files/operations/implementation-status.md) for what's shipped. Tutorial 02 (claim authoring) is mostly human-driven and works today without the full pipeline.

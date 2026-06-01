@@ -53,7 +53,7 @@ Present on every note.
 | --- | --- |
 | `seedling` | First draft; connections sparse. Default at creation. |
 | `budding` | Supported by multiple sources; linked from at least one other note. |
-| `evergreen` | Well-connected, tested against the corpus, stable. Ready for promotion to `reference-note`. |
+| `evergreen` | Well-connected, tested against the corpus, stable. Qualifies when it has cross-links from at least three distinct sources or claim notes. Ready for promotion to `reference-note`. |
 
 A superseded claim is not tracked by `maturity` — it carries `superseded_by` and `lifecycle: archived` (see [Claim-note fields](#claim-note-fields)).
 
