@@ -31,7 +31,7 @@ Three were accepted and **moved to `decisions/`** as ADRs; the bootstrap install
 | [decisions/ADR-21](../decisions/21-shared-candidate-frontmatter.md) | `candidate-note` (16th type) — discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters |
 | [decisions/ADR-22](../decisions/22-rename-agent-verdict.md) | `agent_verdict` → `agent_recommendation` across schema / dashboards / docs |
 | [decisions/ADR-23](../decisions/23-moc-threshold-alert.md) | **Tier 1** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
-| [docs: bootstrap installer](../../docs/explanation/architecture/bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) — implemented; design now in docs ([reference inventories](../../docs/reference/installer.md)) |
+| [docs: bootstrap installer](../../docs/explanation/deployment/bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) — implemented; design now in docs ([reference inventories](../../docs/reference/installer.md)) |
 
 ### Deferred from decisions
 

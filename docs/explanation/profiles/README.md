@@ -1,13 +1,14 @@
 ---
 title: Profiles
 parent: Explanation
+nav_order: 8
 has_children: true
 permalink: /explanation/profiles/
 ---
 
 # Profiles
 
-Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [why-specialist-profiles.md](../architecture/why-specialist-profiles.md).)
+Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [why-specialist-profiles.md](../rationale/why-specialist-profiles.md).)
 
 The profiles aren't seven equals — they group by where they sit in the knowledge cycle:
 
@@ -39,6 +40,6 @@ Each profile page follows the same shape: its mission, *why it's designed this w
 
 ## Related
 
-- Why seven specialists, not one generalist: [why-specialist-profiles.md](../architecture/why-specialist-profiles.md)
+- Why seven specialists, not one generalist: [why-specialist-profiles.md](../rationale/why-specialist-profiles.md)
 - How profiles pick up and hand off work: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
 - Permission matrices — who can write where (lookup tables): [reference/profiles.md](../../reference/profiles.md)

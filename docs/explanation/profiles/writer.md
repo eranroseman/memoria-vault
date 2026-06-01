@@ -39,7 +39,7 @@ The Writer turns evidence into structured prose — answer drafts, reference-rea
 - The profile Writer relies on for pre-writing thinking: [Socratic](socratic.md)
 - The profile that checks Writer's output: [Verifier](verifier.md)
 - The profile that provides Writer's corpus maps: [Mapper](mapper.md)
-- Why canonical synthesis belongs to the human: [why not autonomous](../architecture/why-not-autonomous.md)
+- Why canonical synthesis belongs to the human: [why not autonomous](../rationale/why-not-autonomous.md)
 - Why the Writer must not produce canonical claims: [note-body-structure.md](../knowledge/note-body-structure.md)
 
 **How-to**

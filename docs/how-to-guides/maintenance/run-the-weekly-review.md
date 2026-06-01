@@ -92,4 +92,4 @@ Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM
 
 - Classify a source: [classify-a-source.md](../sources/classify-a-source.md)
 - Run the Linter: [run-the-linter.md](run-the-linter.md)
-- Dashboard explanation: [explanation/dashboards/weekly-review.md](../../explanation/dashboards/weekly-review.md)
+- Dashboard explanation: [explanation/dashboards/weekly-review.md](../../explanation/dashboards/structural-health/weekly-review.md)

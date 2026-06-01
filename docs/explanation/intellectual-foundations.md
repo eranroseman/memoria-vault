@@ -90,6 +90,6 @@ The design is not a novel invention — it is an integration of patterns that al
 
 - What Memoria is: [what-memoria-is.md](what-memoria-is.md)
 - The three-layer architecture (structural form of thin-control-thick-state): [architecture/README.md](architecture/README.md)
-- Why the autonomy boundary is where it is: [architecture/why-not-autonomous.md](architecture/why-not-autonomous.md)
-- Full borrow/adapt/ignore breakdown: [architecture/why-pattern-provenance.md](architecture/why-pattern-provenance.md)
+- Why the autonomy boundary is where it is: [why-not-autonomous.md](rationale/why-not-autonomous.md)
+- Full borrow/adapt/ignore breakdown: [why-pattern-provenance.md](rationale/why-pattern-provenance.md)
 - What the foundations produced: [design-principles.md](design-principles.md)

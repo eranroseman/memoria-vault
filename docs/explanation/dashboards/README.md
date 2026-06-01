@@ -1,44 +1,21 @@
 ---
 title: Dashboards
 parent: Explanation
+nav_order: 9
 has_children: true
 permalink: /explanation/dashboards/
 ---
 
 # Dashboards
 
-Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped here by the kind of attention they demand. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)
+Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)
 
-## Daily glance
-
-| Dashboard | Question it answers |
-| --- | --- |
-| [daily-health.md](daily-health.md) | Is anything broken right now? What needs attention today? (implemented as `index.md`) |
-| [board-state.md](board-state.md) | What work is in flight? Where are cards stuck? |
-
-## Synthesis agenda
-
-| Dashboard | Question it answers |
-| --- | --- |
-| [reading-pipeline.md](reading-pipeline.md) | What's queued, classified, and ready for claim-note writing? |
-| [discuss-queue.md](discuss-queue.md) | Which paper notes are waiting for a Socratic discussion pass? |
-| [open-questions.md](open-questions.md) | What open questions has past synthesis raised? |
-| [contradictions.md](contradictions.md) | Which claim notes disagree with each other? |
-
-## Structural health
-
-| Dashboard | Question it answers |
-| --- | --- |
-| [drift-watch.md](drift-watch.md) | What structural drift has the Linter detected? |
-| [loose-ends.md](loose-ends.md) | Which files are named `TODO`, `tmp`, or `untitled`? |
-| [weekly-review.md](weekly-review.md) | What needs attention this week across all categories? |
-
-## Operational health
-
-| Dashboard | Question it answers |
-| --- | --- |
-| [fleet-health.md](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
-| [audit-log.md](audit-log.md) | What did the policy MCP allow, deny, and flag today? |
+| Group | Dashboards | When you look |
+|---|---|---|
+| [Daily glance](daily-glance/README.md) | Daily Health, Board state | Start of every session — "is anything wrong?" |
+| [Synthesis agenda](synthesis-agenda/README.md) | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
+| [Structural health](structural-health/README.md) | Drift watch, Loose ends, Weekly review | Maintenance — the Friday ritual and drift checks |
+| [Operational health](operational-health/README.md) | Fleet health, Audit log | When checking how the agent fleet is performing |
 
 ## Why the dashboards are designed the way they are
 

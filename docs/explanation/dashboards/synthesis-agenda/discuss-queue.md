@@ -1,6 +1,7 @@
 ---
 title: The discuss-queue dashboard
-parent: Dashboards
+parent: Synthesis agenda
+grand_parent: Dashboards
 ---
 
 
@@ -37,6 +38,6 @@ Every fully-classified paper note (`lifecycle: current`) that hasn't yet had a S
 ## Related
 
 - Broader sibling: [reading-pipeline](reading-pipeline.md)
-- The profile invoked to drain this queue: [Socratic](../profiles/socratic.md)
-- Workflow: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
-- The workspace this dashboard anchors: [workspaces](../../reference/obsidian-workspaces.md)
+- The profile invoked to drain this queue: [Socratic](../../profiles/socratic.md)
+- Workflow: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)
+- The workspace this dashboard anchors: [workspaces](../../../reference/obsidian-workspaces.md)

@@ -37,8 +37,8 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 **Explanation**
 
 - Structural counterpart in content: [Verifier](verifier.md)
-- The weekly ritual Linter findings feed into: [weekly review](../dashboards/weekly-review.md)
-- Why the Linter runs zero LLM: [why-computational-methods.md](../architecture/why-computational-methods.md)
+- The weekly ritual Linter findings feed into: [weekly review](../dashboards/structural-health/weekly-review.md)
+- Why the Linter runs zero LLM: [why-computational-methods.md](../rationale/why-computational-methods.md)
 
 **How-to**
 

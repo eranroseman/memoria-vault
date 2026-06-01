@@ -40,7 +40,7 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 
 - The Librarian's opposing counterpart on posture: [Verifier](verifier.md)
 - Directional counterpart on retrieval: [Mapper](mapper.md)
-- Why intake is separated from synthesis: [why specialist profiles](../architecture/why-specialist-profiles.md)
+- Why intake is separated from synthesis: [why specialist profiles](../rationale/why-specialist-profiles.md)
 
 **How-to**
 

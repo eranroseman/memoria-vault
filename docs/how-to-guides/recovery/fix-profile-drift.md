@@ -85,4 +85,4 @@ No drift reported for any profile.
 - Redeploy profiles (normal workflow): [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
 - Profile configuration: [configuration.md](../using-hermes-agent/configuration.md)
 - Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)
-- The idempotency mechanism behind the fix: [distribution-model.md](../../explanation/architecture/distribution-model.md)
+- The idempotency mechanism behind the fix: [distribution-model.md](../../explanation/deployment/distribution-model.md)

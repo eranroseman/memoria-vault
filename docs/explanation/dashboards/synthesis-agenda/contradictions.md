@@ -1,6 +1,7 @@
 ---
 title: contradictions dashboard
-parent: Dashboards
+parent: Synthesis agenda
+grand_parent: Dashboards
 ---
 
 # `contradictions` dashboard
@@ -30,6 +31,6 @@ Until you file `contradicts` links, the dashboard is near-empty. That emptiness 
 ## Related
 
 - [explanation/dashboards/open-questions.md](open-questions.md) — closest sibling; both build the synthesis agenda
-- Setting the contradicts relations: [link-related-claims.md](../../how-to-guides/sources/link-related-claims.md)
-- Sweeps that surface contradictions: [run-a-retraction-sweep.md](../../how-to-guides/maintenance/run-a-retraction-sweep.md)
-- [reference/linking.md](../../reference/linking.md) — the `relations:` block and typed-relation vocabulary
+- Setting the contradicts relations: [link-related-claims.md](../../../how-to-guides/sources/link-related-claims.md)
+- Sweeps that surface contradictions: [run-a-retraction-sweep.md](../../../how-to-guides/maintenance/run-a-retraction-sweep.md)
+- [reference/linking.md](../../../reference/linking.md) — the `relations:` block and typed-relation vocabulary

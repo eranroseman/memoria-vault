@@ -50,7 +50,7 @@ These are the candidate-specific fields; every note also carries the global requ
 
 ## Consequences
 
-- A single Dataview query in the [weekly-review](../../docs/explanation/dashboards/weekly-review.md) covers all candidate sources.
+- A single Dataview query in the [weekly-review](../../docs/explanation/dashboards/structural-health/weekly-review.md) covers all candidate sources.
 - Triage dashboards work uniformly regardless of where a candidate came from.
 - **No captured source is silently lost.** Ingestion failures surface as triage-able dead-letter notes instead of `blocked` board cards, decoupling capture reliability from ingest reliability.
 - Tiny schema cost; high payoff for any later screening work.
@@ -67,4 +67,4 @@ These are the candidate-specific fields; every note also carries the global requ
 ## Related
 
 - **Consumed by:** [ADR-16 pre-ingest screening](16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
-- **Files affected:** [vault/README.md](../../docs/explanation/architecture/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/weekly-review.md)
+- **Files affected:** [vault/README.md](../../docs/explanation/architecture/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/structural-health/weekly-review.md)

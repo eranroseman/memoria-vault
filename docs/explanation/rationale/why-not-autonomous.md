@@ -1,6 +1,6 @@
 ---
 title: Why Memoria doesn't pursue full autonomy
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why Memoria doesn't pursue full autonomy
@@ -88,4 +88,4 @@ Memoria is L3. The seven profiles execute multi-step work unattended within a ca
 
 - Why the review gate is structural: [why-human-gate.md](why-human-gate.md)
 - The intellectual foundations of this position: [../intellectual-foundations.md](../intellectual-foundations.md)
-- Full borrow/adapt/ignore table: [architecture/why-pattern-provenance.md](why-pattern-provenance.md)
+- Full borrow/adapt/ignore table: [why-pattern-provenance.md](why-pattern-provenance.md)

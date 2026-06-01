@@ -45,7 +45,7 @@ For the archive procedure, see [how-to-guides/maintenance/run-the-weekly-review.
 
 **Explanation**
 
-- Why the cycle needs weekly attention: [../dashboards/weekly-review.md](../dashboards/weekly-review.md)
+- Why the cycle needs weekly attention: [weekly-review.md](../dashboards/structural-health/weekly-review.md)
 - The epistemic roles of note types: [note-types.md](note-types.md)
 - Why promotion is gated: [promotion-model.md](promotion-model.md)
 - The folder structure the cycle flows through: [vault.md](../architecture/vault.md)

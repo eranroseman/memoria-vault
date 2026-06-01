@@ -53,8 +53,8 @@ Research, writing, and coding all access the same agent from within their respec
 
 ## Related
 
-- Why these principles led to a human-gated system: [architecture/why-human-gate.md](architecture/why-human-gate.md)
-- Why specialist profiles rather than one generalist: [architecture/why-specialist-profiles.md](architecture/why-specialist-profiles.md)
-- Why not autonomous: [architecture/why-not-autonomous.md](architecture/why-not-autonomous.md)
+- Why these principles led to a human-gated system: [why-human-gate.md](rationale/why-human-gate.md)
+- Why specialist profiles rather than one generalist: [why-specialist-profiles.md](rationale/why-specialist-profiles.md)
+- Why not autonomous: [why-not-autonomous.md](rationale/why-not-autonomous.md)
 - What the principles describe: [what-memoria-is.md](what-memoria-is.md)
 - Where the principles come from: [intellectual-foundations.md](intellectual-foundations.md)

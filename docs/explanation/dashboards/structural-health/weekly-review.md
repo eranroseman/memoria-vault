@@ -1,6 +1,7 @@
 ---
 title: The weekly-review dashboard
-parent: Dashboards
+parent: Structural health
+grand_parent: Dashboards
 ---
 
 
@@ -12,7 +13,7 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 
 ## What this dashboard is not
 
-**Not [Daily Health](daily-health.md).** Daily Health is the morning health glance — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
+**Not [Daily Health](../daily-glance/daily-health.md).** Daily Health is the morning health glance — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
 
 **Not the only weekly view.** The `reading-pipeline`, `loose-ends`, and `drift-watch` dashboards are also recommended-weekly — but weekly-review is the ritual *entry point* that links to them and defines the order. It is the orchestrator of the weekly ritual, not just one surface among several.
 
@@ -36,14 +37,14 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 
 **Explanation**
 
-- Dashboard opened first thing every morning: [Daily Health](daily-health.md)
-- Reading-stage companion: [reading-pipeline](reading-pipeline.md)
-- Why the ritual matters: [knowledge-cycle.md](../knowledge/knowledge-cycle.md)
-- The dashboards overview: [README.md](README.md)
+- Dashboard opened first thing every morning: [Daily Health](../daily-glance/daily-health.md)
+- Reading-stage companion: [reading-pipeline](../synthesis-agenda/reading-pipeline.md)
+- Why the ritual matters: [knowledge-cycle.md](../../knowledge/knowledge-cycle.md)
+- The dashboards overview: [README.md](../README.md)
 
 **How-to**
 
-- How to run the ritual: [run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- How to run the ritual: [run the weekly review](../../../how-to-guides/maintenance/run-the-weekly-review.md)
 
 **Background**
 

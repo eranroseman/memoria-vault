@@ -27,9 +27,9 @@ Forcing that constant question through a dashboard would mean either keeping a d
 
 ## Why state, never decisions
 
-The governing rule is **show state, not decisions**. A count is ambient — `Review: 7` tells you a queue has depth without telling you what to do. The list of *which* seven cards, and the act of approving them, belongs in the [board-state dashboard](../dashboards/board-state.md). This division is what keeps the line glance-readable in under a second: it never grows into a panel, because anything that would require reading prose or making a choice is, by rule, escalated to a dashboard.
+The governing rule is **show state, not decisions**. A count is ambient — `Review: 7` tells you a queue has depth without telling you what to do. The list of *which* seven cards, and the act of approving them, belongs in the [board-state dashboard](../dashboards/daily-glance/board-state.md). This division is what keeps the line glance-readable in under a second: it never grows into a panel, because anything that would require reading prose or making a choice is, by rule, escalated to a dashboard.
 
-The same rule bounds the Linter segment: lightweight findings (broken links, schema validity) sit on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch](../dashboards/drift-watch.md). The line carries the *temperature*, not the diagnosis.
+The same rule bounds the Linter segment: lightweight findings (broken links, schema validity) sit on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch](../dashboards/structural-health/drift-watch.md). The line carries the *temperature*, not the diagnosis.
 
 ---
 
@@ -42,6 +42,6 @@ Linter + Kanban is the working set, and the cap is deliberate. Each additional a
 ## Related
 
 - The restraint principle this surface embodies: [visual-discipline.md](visual-discipline.md)
-- Where the Kanban counts expand to full detail: [board-state dashboard](../dashboards/board-state.md)
-- Where heavy Linter findings escalate: [drift-watch dashboard](../dashboards/drift-watch.md)
+- Where the Kanban counts expand to full detail: [board-state dashboard](../dashboards/daily-glance/board-state.md)
+- Where heavy Linter findings escalate: [drift-watch dashboard](../dashboards/structural-health/drift-watch.md)
 - Format, counters, and design rules (reference): [reference/obsidian-status-line.md](../../reference/obsidian-status-line.md)

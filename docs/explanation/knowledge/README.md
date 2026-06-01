@@ -1,6 +1,7 @@
 ---
 title: Knowledge
 parent: Explanation
+nav_order: 4
 has_children: true
 permalink: /explanation/knowledge/
 ---

@@ -161,4 +161,4 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 ## Related
 
 - Foundations that cite these works: [intellectual-foundations.md](../explanation/intellectual-foundations.md)
-- The pattern-provenance survey citing this list: [why-pattern-provenance.md](../explanation/architecture/why-pattern-provenance.md)
+- The pattern-provenance survey citing this list: [why-pattern-provenance.md](../explanation/rationale/why-pattern-provenance.md)

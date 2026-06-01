@@ -1,6 +1,7 @@
 ---
 title: audit-log dashboard
-parent: Dashboards
+parent: Operational health
+grand_parent: Dashboards
 ---
 
 # `audit-log` dashboard
@@ -31,6 +32,6 @@ The Linter rotates `audit.jsonl` weekly to `00-meta/02-logs/archive/audit-YYYY-W
 
 ## Related
 
-- [explanation/dashboards/drift-watch.md](drift-watch.md) — structural drift findings (complementary layer)
+- [explanation/dashboards/drift-watch.md](../structural-health/drift-watch.md) — structural drift findings (complementary layer)
 - [explanation/dashboards/fleet-health.md](fleet-health.md) — trend aggregations that consume this stream
-- [reference/policy-mcp.md](../../reference/policy-mcp.md) — the decision protocol and action vocabulary the log records
+- [reference/policy-mcp.md](../../../reference/policy-mcp.md) — the decision protocol and action vocabulary the log records

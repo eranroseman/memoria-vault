@@ -1,6 +1,6 @@
 ---
 title: Bootstrap installer
-parent: Architecture
+parent: Deployment
 ---
 
 # Bootstrap installer
@@ -86,5 +86,5 @@ Each trades a little breadth for much less shell to build and maintain:
 
 - **Reference:** [installer.md](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-37 the repo is the install unit](../../../project-files/decisions/37-repo-as-install-unit.md).
-- **Explanation:** [distribution-model.md](distribution-model.md) (the repo as install unit), [why-hermes.md](why-hermes.md) (the runtime the installer provisions).
+- **Explanation:** [distribution-model.md](distribution-model.md) (the repo as install unit), [why-hermes.md](../rationale/why-hermes.md) (the runtime the installer provisions).
 - **How-to:** [quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).

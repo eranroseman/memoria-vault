@@ -1,6 +1,6 @@
 ---
 title: Why three layers, not one
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why three layers, not one
@@ -72,7 +72,7 @@ Review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30
 
 **Explanation**
 
-- The three layers described: [architecture/README.md](README.md)
+- The three layers described: [architecture/README.md](../architecture/README.md)
 - How the worker layer is structured: [why-specialist-profiles.md](why-specialist-profiles.md)
 - Why the vault's review gate is structural: [why-human-gate.md](why-human-gate.md)
 - How the knowledge model is organized: [../knowledge/README.md](../knowledge/README.md)

@@ -1,6 +1,6 @@
 ---
 title: "Pattern provenance: borrow, adapt, ignore"
-parent: Architecture
+parent: Design rationale
 ---
 
 # Pattern provenance: borrow, adapt, ignore

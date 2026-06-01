@@ -16,7 +16,7 @@ This guide uses the audit log to tell them apart and find the reason.
 ## Prerequisites
 
 - The policy MCP wired and running — it writes `00-meta/02-logs/audit.jsonl`. Until the gate runs live, that log does not exist (see [implementation-status](../../../project-files/operations/implementation-status.md)); a missing *file* is a wiring problem, not a denial.
-- The [audit-log dashboard](../../explanation/dashboards/audit-log.md) available in Obsidian
+- The [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md) available in Obsidian
 
 ## Steps
 
@@ -69,4 +69,4 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 - Other recovery procedures: [recovery guides](README.md)
 - The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
 - The decision protocol and action vocabulary: [policy-mcp.md](../../reference/policy-mcp.md)
-- The dashboard: [audit-log dashboard](../../explanation/dashboards/audit-log.md)
+- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)

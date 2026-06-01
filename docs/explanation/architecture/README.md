@@ -1,6 +1,7 @@
 ---
 title: Architecture
 parent: Explanation
+nav_order: 3
 has_children: true
 permalink: /explanation/architecture/
 ---
@@ -49,7 +50,7 @@ Memoria has three layers — a Kanban board that orchestrates work, seven Hermes
 
 Memoria addresses this by design: the board persists in-flight state across sessions; the vault persists settled knowledge. Workers re-ground on those files between steps rather than relying on conversational continuity. This is "thin control over thick state" — the agents carry as little context as possible; the durable artifacts carry the memory.
 
-Three independent research systems (Chen 2026, AgentRxiv 2025, PARNESS 2026) reach the same conclusion from different starting points: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. The three-layer split is the structural form of that finding. See [why-three-layers.md](why-three-layers.md) for the full reasoning.
+Three independent research systems (Chen 2026, AgentRxiv 2025, PARNESS 2026) reach the same conclusion from different starting points: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. The three-layer split is the structural form of that finding. See [why-three-layers.md](../rationale/why-three-layers.md) for the full reasoning.
 
 ---
 
@@ -61,44 +62,24 @@ The three layers correspond to three concerns that must be kept separate for the
 - *Who is executing it and under what permissions* — the worker layer's concern.
 - *What stable knowledge has accumulated* — the vault's concern.
 
-Collapsing any two creates problems. Board + workers collapsed means work state lives in agent memory (lost between sessions). Workers + vault collapsed means agents write canonical knowledge without review. Board + vault collapsed means task history pollutes the knowledge graph. See [why-three-layers.md](why-three-layers.md) for each failure mode in detail.
+Collapsing any two creates problems. Board + workers collapsed means work state lives in agent memory (lost between sessions). Workers + vault collapsed means agents write canonical knowledge without review. Board + vault collapsed means task history pollutes the knowledge graph. See [why-three-layers.md](../rationale/why-three-layers.md) for each failure mode in detail.
 
 ---
 
-## Documents in this section
+## What's in this section
 
-The pages here come in three kinds: **rationale** (`why-*` — a design choice and its reasoning), **structural** (what a given layer or surface *is*), and **methodology** (how the design was arrived at).
+This section covers **what each layer and surface *is*** — the structural pages. The *why* behind the design lives in [Design rationale](../rationale/README.md); packaging and install live in [Deployment](../deployment/README.md).
 
-**Rationale — why the design is shaped this way**
+| Page | What it describes |
+|---|---|
+| [The control plane](control-plane.md) | The board as the system's control plane |
+| [Memory tiers](memory-tiers.md) | The six memory substrates and their scopes |
+| [Interaction channels](human-channels.md) | The human and programmatic interaction surfaces (Obsidian, CLI, Telegram, API) |
+| [The vault](vault.md) | The vault as a knowledge structure (lifecycle folders, promotion overview) |
+| [Session logging](session-logging.md) | What each agent session records, and why one file per session |
 
-- **[why-three-layers.md](why-three-layers.md)** — the thin-control-thick-state principle and what breaks without separation.
-- **[why-specialist-profiles.md](why-specialist-profiles.md)** — why seven specialists instead of one generalist, and why there is no Orchestrator.
-- **[why-human-gate.md](why-human-gate.md)** — why the review gate is structural, not advisory.
-- **[why-not-autonomous.md](why-not-autonomous.md)** — the autonomy ceiling: why Memoria doesn't pursue L4/L5 autonomy for synthesis.
-- **[why-hermes.md](why-hermes.md)** — why the execution layer is the Hermes runtime, what it provides, and where the API/programmatic surface fits.
-- **[why-computational-methods.md](why-computational-methods.md)** — why deterministic methods are preferred over LLM calls wherever correctness matters.
+## Where the rest went
 
-**Structural — what each layer or surface is**
-
-- **[control-plane.md](control-plane.md)** — the board as the system's control plane.
-- **[memory-tiers.md](memory-tiers.md)** — the six memory substrates and their scopes.
-- **[human-channels.md](human-channels.md)** — the human interaction surfaces (Obsidian, CLI, Telegram).
-- **[distribution-model.md](distribution-model.md)** — how profiles and the vault are packaged and installed.
-- **[bootstrap-installer.md](bootstrap-installer.md)** — the one-command installer's design and decided rules (WSL2-only, one bash implementation, inspect-first). Inventories live in [reference/installer.md](../../reference/installer.md).
-- **[vault.md](vault.md)** — the vault as a knowledge structure (lifecycle folders, promotion overview).
-- **[session-logging.md](session-logging.md)** — what each agent session records, and why one file per session.
-
-**Methodology — how the design was arrived at**
-
-- **[why-pattern-provenance.md](why-pattern-provenance.md)** — the borrow / adapt / reference / ignore judgment table against ~47 surveyed AI-research systems. This is the evidence base the rationale pages above lean on.
-
-## `why-*` explanations vs. ADRs
-
-The `why-*` files here and the ADRs in [project-files/decisions/](../../../project-files/decisions/) are deliberately different artifacts, and the boundary matters:
-
-- A **`why-*` explanation** is the *durable conceptual argument* — why the design is shaped this way, written to be read and re-read. It carries no date and no status; it is maintained as the canonical reasoning.
-- An **ADR** is the *dated decision record* — what was decided, when, the alternatives weighed, and the status. It is immutable once accepted.
-
-When the two cover the same ground (e.g. [why-human-gate.md](why-human-gate.md) and the structural-review-gate ADR), the explanation holds the argument and the ADR holds the decision; each should link to the other rather than restate it. If you change the reasoning, update the `why-*` file; if you reverse the decision, supersede the ADR.
-
-For operational reference (permission matrices, command lists, config formats), see [reference/](../../reference/).
+- **Why the design is shaped this way** (`why-*` arguments) → [Design rationale](../rationale/README.md)
+- **How profiles and the vault are packaged and installed** → [Deployment](../deployment/README.md)
+- **Operational reference** (permission matrices, command lists, config formats) → [reference/](../../reference/)

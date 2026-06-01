@@ -1,6 +1,7 @@
 ---
 title: Obsidian
 parent: Explanation
+nav_order: 10
 has_children: true
 permalink: /explanation/obsidian/
 ---

@@ -5,7 +5,7 @@ parent: Reference
 
 # Installer (bootstrap)
 
-Lookup tables for the bootstrap installer — what it installs, on which platforms, what it touches, and what the user must still supply by hand. For *why* the installer is shaped this way, see [explanation/architecture/bootstrap-installer.md](../explanation/architecture/bootstrap-installer.md).
+Lookup tables for the bootstrap installer — what it installs, on which platforms, what it touches, and what the user must still supply by hand. For *why* the installer is shaped this way, see [explanation/architecture/bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md).
 
 ## Platform support matrix
 
@@ -105,7 +105,7 @@ Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Li
 
 ## Related
 
-- **Design rationale:** [explanation/architecture/bootstrap-installer.md](../explanation/architecture/bootstrap-installer.md).
+- **Design rationale:** [explanation/architecture/bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md).
 - **Redeploy path:** [redeploy-profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`install.sh --profiles-only`).
 - **Setup guides:** [set-up-the-vault](../how-to-guides/setup/set-up-the-vault.md), [set-up-hermes](../how-to-guides/setup/set-up-hermes.md), [set-up-zotero](../how-to-guides/setup/set-up-zotero.md).
 - **Telemetry shipped by v0.1:** [telemetry.md](telemetry.md).

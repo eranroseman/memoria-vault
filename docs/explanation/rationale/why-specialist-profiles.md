@@ -1,6 +1,6 @@
 ---
 title: Why specialist profiles, not a generalist agent
-parent: Architecture
+parent: Design rationale
 ---
 
 # Why specialist profiles, not a generalist agent
@@ -89,7 +89,7 @@ Socratic is also never queue-dispatched. It is only invoked synchronously by the
 
 ## Related
 
-- How profiles relate to the board and vault: [README.md](README.md)
+- How profiles relate to the board and vault: [README.md](../architecture/README.md)
 - Why the board separates concerns: [why-three-layers.md](why-three-layers.md)
 - Why the review gate is human-owned: [why-human-gate.md](why-human-gate.md)
 - Permission matrices (lookup): [reference/profiles.md](../../reference/profiles.md)

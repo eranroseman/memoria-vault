@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [distribution-model.md](../../docs/explanation/architecture/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.
+How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [distribution-model.md](../../docs/explanation/deployment/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.
 
 ## Decision
 
@@ -39,9 +39,9 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 ## Related
 
-- **Supporting rationale:** [distribution-model.md](../../docs/explanation/architecture/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
+- **Supporting rationale:** [distribution-model.md](../../docs/explanation/deployment/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
 - **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-33 build on Hermes](33-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
-- **Installer design:** [bootstrap-installer.md](../../docs/explanation/architecture/bootstrap-installer.md) (rationale) + [reference/installer.md](../../docs/reference/installer.md) (inventories).
+- **Installer design:** [bootstrap-installer.md](../../docs/explanation/deployment/bootstrap-installer.md) (rationale) + [reference/installer.md](../../docs/reference/installer.md) (inventories).
 - **Proposals:** [profile-compilation.md](../proposals/profile-compilation.md) (the deferred compiler).
 - **How-to:** [redeploy-profiles.md](../../docs/how-to-guides/maintenance/redeploy-profiles.md), [set-up-the-vault.md](../../docs/how-to-guides/setup/set-up-the-vault.md).
 - **Source discussion:** retroactively records the distribution model in `distribution-model.md`; note this ADR follows the *current* repo-as-install-unit model, which has moved past the earlier vault-as-carrier framing.

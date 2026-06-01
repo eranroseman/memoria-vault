@@ -1,6 +1,7 @@
 ---
 title: The Daily Health dashboard
-parent: Dashboards
+parent: Daily glance
+grand_parent: Dashboards
 ---
 
 
@@ -40,7 +41,7 @@ Four sections, each a one-decision query: today's **blocked cards and those awai
 
 ## Related
 
-- The weekly-ritual companion: [weekly-review](weekly-review.md)
+- The weekly-ritual companion: [weekly-review](../structural-health/weekly-review.md)
 - What populates today's queue: [board-state](board-state.md)
 - What populates the drift signals: `drift-watch`
 - What populates the trust scores: `fleet-health`
