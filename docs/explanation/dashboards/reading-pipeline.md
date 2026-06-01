@@ -35,5 +35,5 @@ It shows what is actively in flight through the upstream pipeline and what has c
 
 - Narrower upstream-discipline sibling: [discuss-queue](discuss-queue.md)
 - Weekly entry point that links to this: [weekly-review](weekly-review.md)
-- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
 - Lifecycle stages explained: [knowledge/lifecycle-over-topic](../knowledge/lifecycle-over-topic.md)
+- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)

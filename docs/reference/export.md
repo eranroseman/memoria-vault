@@ -88,5 +88,5 @@ A `deliverable` note is `current` immediately on creation; it is never edited af
 
 ## Related
 
-- The export how-to: [export-a-draft.md](../how-to-guides/writing/export-a-draft.md)
 - The bibliography rendering depends on: [bibliography.md](bibliography.md)
+- The export how-to: [export-a-draft.md](../how-to-guides/writing/export-a-draft.md)

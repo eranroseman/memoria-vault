@@ -24,5 +24,5 @@ This is consistent with the rest of the system's posture: agents produce recomme
 
 ## Related
 
-- [how-to-guides/writing/verify-and-revise.md](../../how-to-guides/writing/verify-and-revise.md) — how to read the report and address gaps
 - [explanation/profiles/verifier.md](../profiles/verifier.md) — what the Verifier checks and how
+- [how-to-guides/writing/verify-and-revise.md](../../how-to-guides/writing/verify-and-revise.md) — how to read the report and address gaps

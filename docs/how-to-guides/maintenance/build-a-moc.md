@@ -37,7 +37,7 @@ You author and curate the MOC. The Linter's `skeleton-drift` detector will flag 
 
 ## Related
 
-- The MOC as a note type: [note-types.md](../../explanation/knowledge/note-types.md)
-- MOC creation thresholds and link vocabulary: [linking.md](../../reference/linking.md#moc-thresholds)
-- Why hubs matter to the knowledge cycle: [knowledge-cycle.md](../../explanation/knowledge/knowledge-cycle.md)
 - Promotion adds MOC entries (step 5): [promote-a-claim.md](../sources/promote-a-claim.md)
+- MOC creation thresholds and link vocabulary: [linking.md](../../reference/linking.md#moc-thresholds)
+- The MOC as a note type: [note-types.md](../../explanation/knowledge/note-types.md)
+- Why hubs matter to the knowledge cycle: [knowledge-cycle.md](../../explanation/knowledge/knowledge-cycle.md)

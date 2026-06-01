@@ -147,7 +147,7 @@ Slugs are permanent — renaming a note breaks all wikilinks pointing to the old
 
 ## Related
 
+- How-to for setting typed relations: [link-related-claims.md](../how-to-guides/sources/link-related-claims.md)
 - Why the Connections section is load-bearing: [note-body-structure.md](../explanation/knowledge/note-body-structure.md)
 - Why notes are filed by lifecycle, not topic: [lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)
 - How links keep the vault compounding: [knowledge-cycle.md](../explanation/knowledge/knowledge-cycle.md)
-- How-to for setting typed relations: [link-related-claims.md](../how-to-guides/sources/link-related-claims.md)

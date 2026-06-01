@@ -36,7 +36,7 @@ Linter + Kanban is the working set, and the cap is deliberate. Each additional a
 
 ## Related
 
-- Format, counters, and design rules (reference): [reference/obsidian-status-line.md](../../reference/obsidian-status-line.md)
 - The restraint principle this surface embodies: [visual-discipline.md](visual-discipline.md)
 - Where the Kanban counts expand to full detail: [board-state dashboard](../dashboards/board-state.md)
 - Where heavy Linter findings escalate: [drift-watch dashboard](../dashboards/drift-watch.md)
+- Format, counters, and design rules (reference): [reference/obsidian-status-line.md](../../reference/obsidian-status-line.md)

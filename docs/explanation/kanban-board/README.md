@@ -83,6 +83,8 @@ A scheduled metrics aggregator rolls run history into `00-meta/08-metrics/` note
 
 ## Related
 
+**Explanation**
+
 - State machine detail: [states.md](states.md)
 - Schema design: [card-schema.md](card-schema.md)
 - Dashboard that reads the board export: [dashboards/board-state](../dashboards/board-state.md)

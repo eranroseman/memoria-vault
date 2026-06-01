@@ -75,9 +75,14 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 ## Related
 
+**Explanation**
+
 - Why specialist profiles support this: [why-specialist-profiles.md](why-specialist-profiles.md)
 - Why the vault won't autonomize synthesis: [why-not-autonomous.md](why-not-autonomous.md)
 - How the review state works in the workflow: [../workflows/review-as-state.md](../workflows/review-as-state.md)
+- What the gate enforces at the synthesis boundary: [promotion-model.md](../knowledge/promotion-model.md)
+
+**Reference**
+
 - Policy MCP enforcement details: [reference/profiles.md](../../reference/profiles.md) (permissions) · [reference/memory.md](../../reference/memory.md) (audit log)
 - The enforcement mechanism: [policy-mcp.md](../../reference/policy-mcp.md)
-- What the gate enforces at the synthesis boundary: [promotion-model.md](../knowledge/promotion-model.md)

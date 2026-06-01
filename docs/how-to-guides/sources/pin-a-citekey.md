@@ -40,5 +40,5 @@ This produces `mamykina2010sense`, `chen2021pipeline`, `klasnja2019microrandomiz
 
 ## Related
 
-- The unpinned-citekey pitfall this fixes: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
 - Pinning is step 2 of ingest: [capture-and-ingest.md](capture-and-ingest.md)
+- The unpinned-citekey pitfall this fixes: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)

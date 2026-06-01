@@ -148,5 +148,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/
 - Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md), [Mapper](../explanation/profiles/mapper.md), [Verifier](../explanation/profiles/verifier.md), [Linter](../explanation/profiles/linter.md)
+- Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/

@@ -29,9 +29,17 @@ The Mapper is the lens on what the human already has. It produces scope reports,
 
 ## Related
 
+**Explanation**
+
 - Directional counterpart: [Librarian](librarian.md)
 - Content counterpart: [Writer](writer.md)
-- Workflow: [assess your corpus](../../how-to-guides/writing/assess-your-corpus.md)
 - Why the map/argument split matters: [why specialist profiles](../architecture/why-specialist-profiles.md)
 - The [!brief] callout the Mapper produces: [callouts.md](../obsidian/callouts.md)
+
+**How-to**
+
+- Workflow: [assess your corpus](../../how-to-guides/writing/assess-your-corpus.md)
+
+**Reference**
+
 - Callout reference for [!brief]: [obsidian-callouts.md](../../reference/obsidian-callouts.md)

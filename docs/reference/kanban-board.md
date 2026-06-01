@@ -123,5 +123,5 @@ The handoff payload is **forward-looking**: it provisions the *next* worker with
 
 ## Related
 
-- The review-overlay explanation: [review-as-state.md](../explanation/workflows/review-as-state.md)
 - Recovering stuck cards: [fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)
+- The review-overlay explanation: [review-as-state.md](../explanation/workflows/review-as-state.md)

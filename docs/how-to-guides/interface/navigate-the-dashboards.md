@@ -96,6 +96,6 @@ Files named `TODO`, `tmp`, `untitled`, or matching other noise patterns. More th
 
 ## Related
 
-- Dashboard design rationale: [explanation/dashboards/README.md](../../explanation/dashboards/README.md)
-- Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
 - Weekly review procedure: [maintenance/run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
+- Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
+- Dashboard design rationale: [explanation/dashboards/README.md](../../explanation/dashboards/README.md)

@@ -136,7 +136,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Export reference (formats, CSL): [export.md](../../reference/export.md)
-- CSL styles: stored at `.memoria/csl/` in the vault
-- The works-cited reference: [bibliography.md](../../reference/bibliography.md)
 - Zotero .bib configuration export depends on: [set-up-zotero.md](../setup/set-up-zotero.md)
+- Export reference (formats, CSL): [export.md](../../reference/export.md)
+- The works-cited reference: [bibliography.md](../../reference/bibliography.md)
+- CSL styles: stored at `.memoria/csl/` in the vault

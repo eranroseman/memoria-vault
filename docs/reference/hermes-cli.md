@@ -135,9 +135,17 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 ## Related
 
+**Reference**
+
 - In-Obsidian command palette (`Memoria:` entries): [command-palette.md](command-palette.md)
+- Lane identifiers the commands map to: [profiles.md](profiles.md)
+
+**How-to**
+
 - How to start a chat session: [how-to-guides/hermes/chat-with-hermes.md](../how-to-guides/hermes/chat-with-hermes.md)
 - How to configure a profile: [how-to-guides/hermes/configuration.md](../how-to-guides/hermes/configuration.md)
 - Kanban how-to (stuck cards, unblocking): [how-to-guides/recovery/fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)
-- Lane identifiers the commands map to: [profiles.md](profiles.md)
+
+**Explanation**
+
 - The profile explanation pages: [profiles/README.md](../explanation/profiles/README.md)

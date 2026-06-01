@@ -96,10 +96,15 @@ See [../knowledge/common-pitfalls.md](../knowledge/common-pitfalls.md) for the r
 
 ## Related
 
+**Explanation**
+
+- Why notes move through the folders: [knowledge-cycle.md](../knowledge/knowledge-cycle.md)
+- Why review-gated zones exist: [why-human-gate.md](why-human-gate.md)
+- How the vault ships and deploys: [distribution-model.md](distribution-model.md)
+
+**Reference**
+
 - Frontmatter fields: [../../reference/frontmatter.md](../../reference/frontmatter.md)
 - Note types (all 15, with templates): [../../reference/note-types.md](../../reference/note-types.md)
 - Linking patterns: [../../reference/linking.md](../../reference/linking.md)
 - On-disk layout (full tree): [../../reference/on-disk-layout.md](../../reference/on-disk-layout.md)
-- Why notes move through the folders: [knowledge-cycle.md](../knowledge/knowledge-cycle.md)
-- Why review-gated zones exist: [why-human-gate.md](why-human-gate.md)
-- How the vault ships and deploys: [distribution-model.md](distribution-model.md)

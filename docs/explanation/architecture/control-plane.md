@@ -52,6 +52,6 @@ For the per-profile permission matrices, see [reference/profiles.md](../../refer
 
 ## Related
 
-- Policy MCP (what the rules are): [reference/policy-mcp.md](../../reference/policy-mcp.md)
 - Board state machine (the cards being dispatched): [kanban-board/README.md](../kanban-board/README.md)
 - Human channels (which access paths reach the API): [architecture/human-channels.md](human-channels.md)
+- Policy MCP (what the rules are): [reference/policy-mcp.md](../../reference/policy-mcp.md)

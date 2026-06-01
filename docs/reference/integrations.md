@@ -87,5 +87,5 @@ Tools evaluated and not in the current design:
 
 - Ingest workflow (what runs when a source is ingested): [ingest.md](ingest.md)
 - Profile permissions (which profiles can call which integrations): [profiles.md](profiles.md)
-- Librarian design (the profile that calls most of these): [explanation/profiles/librarian.md](../explanation/profiles/librarian.md)
 - Where the API keys are configured: [set-up-hermes.md](../how-to-guides/setup/set-up-hermes.md)
+- Librarian design (the profile that calls most of these): [explanation/profiles/librarian.md](../explanation/profiles/librarian.md)

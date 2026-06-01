@@ -30,7 +30,7 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 ## Related
 
 - The profile this feeds into: [Writer](writer.md)
-- The workflow Socratic anchors: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
 - Why synthesis belongs to the human: [why not autonomous](../architecture/why-not-autonomous.md)
 - Dashboard that surfaces the Socratic queue: [discuss-queue](../dashboards/discuss-queue.md)
 - The discuss -> human-writes-claim path: [promotion-model.md](../knowledge/promotion-model.md)
+- The workflow Socratic anchors: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)

@@ -54,8 +54,8 @@ The separation is what allows agent permissions to be cleanly scoped: the Librar
 
 ## Related
 
-- Note-type reference (templates, fields, lifecycle tables): [reference/note-types.md](../../reference/note-types.md)
 - The three epistemic roles explained: [note-types.md](note-types.md)
-- How to use the paper-note workflow: [how-to-guides/sources/discuss-a-paper.md](../../how-to-guides/sources/discuss-a-paper.md)
 - Why the Connections section compounds: [knowledge-cycle.md](knowledge-cycle.md)
 - What goes wrong without this structure: [common-pitfalls.md](common-pitfalls.md)
+- How to use the paper-note workflow: [how-to-guides/sources/discuss-a-paper.md](../../how-to-guides/sources/discuss-a-paper.md)
+- Note-type reference (templates, fields, lifecycle tables): [reference/note-types.md](../../reference/note-types.md)

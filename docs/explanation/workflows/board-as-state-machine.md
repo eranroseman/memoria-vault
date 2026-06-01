@@ -81,5 +81,5 @@ If routing rules can't decide (no eligible profile, or ambiguous assignment), th
 - Why the three layers require explicit separation: [../architecture/why-three-layers.md](../architecture/why-three-layers.md)
 - Why review is a first-class state: [review-as-state.md](review-as-state.md)
 - How the knowledge model complements the board: [../knowledge/README.md](../knowledge/README.md)
-- Board state machine (full reference): [reference/kanban-board.md](../../reference/kanban-board.md)
 - The board's conceptual overview: [kanban-board/README.md](../kanban-board/README.md)
+- Board state machine (full reference): [reference/kanban-board.md](../../reference/kanban-board.md)

@@ -58,7 +58,7 @@ For the explicit mapping of tasks to their appropriate owner, see [reference/pro
 
 ## Related
 
+- Why promotion is gated: [promotion-model.md](promotion-model.md)
 - The fix for compound notes: [refactor-a-note.md](../../how-to-guides/maintenance/refactor-a-note.md)
 - Catching unverified agent output: [run-a-retraction-sweep.md](../../how-to-guides/maintenance/run-a-retraction-sweep.md)
-- Why promotion is gated: [promotion-model.md](promotion-model.md)
 - Lane permissions referenced here: [profiles.md](../../reference/profiles.md)

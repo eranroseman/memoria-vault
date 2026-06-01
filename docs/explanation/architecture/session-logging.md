@@ -39,6 +39,6 @@ Per-session files are named by `YYYY-MM-DD-HHMM`, so files from different machin
 
 ## Related
 
+- Linter (owns `00-meta/02-logs/` and rotates the audit log): [explanation/profiles/linter.md](../profiles/linter.md)
 - Session-log granularity (per-session files, not per-action): [memory.md](../../reference/memory.md)
 - Audit log (the other log): [reference/policy-mcp.md](../../reference/policy-mcp.md)
-- Linter (owns `00-meta/02-logs/` and rotates the audit log): [explanation/profiles/linter.md](../profiles/linter.md)

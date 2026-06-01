@@ -91,6 +91,6 @@ Session logs (`00-meta/02-logs/sessions/YYYY-MM-DD-HHMM.jsonl`) are written one 
 
 ## Related
 
-- Thin control over thick state: [why-three-layers.md](../explanation/architecture/why-three-layers.md)
 - The audit log writer and decision protocol: [policy-mcp.md](policy-mcp.md)
+- Thin control over thick state: [why-three-layers.md](../explanation/architecture/why-three-layers.md)
 - The board as the coordination substrate: [kanban-board/README.md](../explanation/kanban-board/README.md)

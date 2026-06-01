@@ -55,9 +55,20 @@ For a `contradicts` link, open the [contradictions dashboard](../../explanation/
 
 ## Related
 
+**How-to**
+
 - Set a relation while authoring: [Write a claim note](write-a-claim-note.md) (Step 7)
 - The temporal complement (replacement, not disagreement): [Promote a claim](promote-a-claim.md), supersession (ADR-10)
+
+**Reference**
+
 - Syntax and vocabulary: [linking.md — Typed relations](../../reference/linking.md#typed-relations-relations-block), [frontmatter.md](../../reference/frontmatter.md)
-- Why typed links are human-set and opt-in: [ADR-08](../../../project-files/decisions/08-typed-relations-frontmatter.md)
+
+**Explanation**
+
 - The consumer: [contradictions dashboard](../../explanation/dashboards/contradictions.md)
 - Why the Connections section is required: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
+
+**Background**
+
+- Why typed links are human-set and opt-in: [ADR-08](../../../project-files/decisions/08-typed-relations-frontmatter.md)

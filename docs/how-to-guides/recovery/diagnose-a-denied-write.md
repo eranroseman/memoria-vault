@@ -60,8 +60,8 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 ## Related
 
+- Approving a held (`dry_run`) write: [Work the review queue](../writing/work-the-review-queue.md)
+- Other recovery procedures: [recovery guides](README.md)
 - The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
 - The decision protocol and action vocabulary: [policy-mcp.md](../../reference/policy-mcp.md)
 - The dashboard: [audit-log dashboard](../../explanation/dashboards/audit-log.md)
-- Approving a held (`dry_run`) write: [Work the review queue](../writing/work-the-review-queue.md)
-- Other recovery procedures: [recovery guides](README.md)

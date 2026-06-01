@@ -117,7 +117,7 @@ Once a year (or after a major reading batch), open `vocabulary.md` and walk thro
 
 ## Related
 
-- Vocabulary discipline (why three fields, why open): [explanation/knowledge/vocabulary-discipline.md](../../explanation/knowledge/vocabulary-discipline.md)
-- Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
 - Classify a source: [sources/classify-a-source.md](../sources/classify-a-source.md)
 - Run the Linter: [maintenance/run-the-linter.md](run-the-linter.md)
+- Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
+- Vocabulary discipline (why three fields, why open): [explanation/knowledge/vocabulary-discipline.md](../../explanation/knowledge/vocabulary-discipline.md)

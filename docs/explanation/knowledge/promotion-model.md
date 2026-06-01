@@ -87,9 +87,14 @@ The right response to a full review queue is not to automate review. It is to ma
 
 ## Related
 
+**Explanation**
+
 - The three epistemic roles: [note-types.md](note-types.md)
 - Why lifecycle folders enable this: [lifecycle-over-topic.md](lifecycle-over-topic.md)
 - Why the review gate is structural: [../architecture/why-human-gate.md](../architecture/why-human-gate.md)
 - How the board's review state works: [../workflows/review-as-state.md](../workflows/review-as-state.md)
 - The folders promotion moves between: [vault.md](../architecture/vault.md)
+
+**Reference**
+
 - The reference promotion map: [note-types.md](../../reference/note-types.md)

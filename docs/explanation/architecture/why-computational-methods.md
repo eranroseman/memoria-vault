@@ -35,7 +35,7 @@ Without an explicit classification, there is pressure to route every task to an 
 
 ## Related
 
-- [reference/computational-toolbox.md](../../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses
 - [explanation/obsidian/callouts.md](../obsidian/callouts.md) — how the hybrid pattern produces callout content
 - Which profile handles which task type: [why-specialist-profiles.md](why-specialist-profiles.md)
 - The zero-LLM profile this rationale produces: [linter.md](../profiles/linter.md)
+- [reference/computational-toolbox.md](../../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses

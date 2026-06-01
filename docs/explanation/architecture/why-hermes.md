@@ -59,9 +59,14 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 
 ## Related
 
+**Explanation**
+
 - What Hermes coordinates — the three layers: [why-three-layers.md](why-three-layers.md)
 - The board as a state machine: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
 - The card-schema overlay Memoria adds on top of Hermes: [../kanban-board/card-schema.md](../kanban-board/card-schema.md)
 - The human interaction surfaces (Obsidian, CLI, Telegram): [human-channels.md](human-channels.md)
+
+**Reference**
+
 - What the API's writes pass through: [reference/policy-mcp.md](../../reference/policy-mcp.md)
 - Hermes admin commands (reference): [reference/hermes-cli.md](../../reference/hermes-cli.md)

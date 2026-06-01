@@ -33,5 +33,5 @@ Each profile page follows the same shape: its mission, *why it's designed this w
 ## Related
 
 - Why seven specialists, not one generalist: [why-specialist-profiles.md](../architecture/why-specialist-profiles.md)
-- Permission matrices — who can write where (lookup tables): [reference/profiles.md](../../reference/profiles.md)
 - How profiles pick up and hand off work: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
+- Permission matrices — who can write where (lookup tables): [reference/profiles.md](../../reference/profiles.md)

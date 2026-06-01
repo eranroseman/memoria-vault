@@ -66,5 +66,5 @@ Each lens is one command. Adding a lens = adding one QuickAdd entry.
 ## Related
 
 - Hermes CLI commands (per-profile + board management): [hermes-cli.md](hermes-cli.md)
-- Invocation patterns and hotkey discipline: [how-to-guides/command-palette.md](../how-to-guides/interface/command-palette.md)
 - Policy on commands that target review-gated zones: [policy-mcp.md — Review-gated zones](policy-mcp.md)
+- Invocation patterns and hotkey discipline: [how-to-guides/command-palette.md](../how-to-guides/interface/command-palette.md)

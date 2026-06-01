@@ -88,7 +88,7 @@ Do not let Socratic accumulate more than one session's worth of conversation. Lo
 
 ## Related
 
-- Profile picker design: [explanation/obsidian/agent-client-picker.md](../../explanation/obsidian/agent-client-picker.md)
+- Discussing a paper end-to-end: [sources/discuss-a-paper.md](../sources/discuss-a-paper.md)
 - Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
-- Discussing a paper end-to-end: [sources/discuss-a-paper.md](../sources/discuss-a-paper.md)
+- Profile picker design: [explanation/obsidian/agent-client-picker.md](../../explanation/obsidian/agent-client-picker.md)

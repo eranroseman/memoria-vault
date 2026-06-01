@@ -65,9 +65,20 @@ The test: **memory is read back as recall; configuration is read as rules.** "To
 
 ## Related
 
-- Hermes native memory: [hermes-agent.nousresearch.com/docs/user-guide/features/memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)
+**Explanation**
+
 - Board handoff payload (board memory travels here): [explanation/kanban-board/card-schema.md](../kanban-board/card-schema.md)
+- Architecture overview: [explanation/architecture/README.md](README.md)
+
+**How-to**
+
+- Configuring project hints (the config example above): [configure-project-hints.md](../../how-to-guides/setup/configure-project-hints.md)
+
+**Reference**
+
 - Audit log format: [reference/policy-mcp.md](../../reference/policy-mcp.md)
 - The substrate table as reference: [reference/memory.md](../../reference/memory.md)
-- Configuring project hints (the config example above): [configure-project-hints.md](../../how-to-guides/setup/configure-project-hints.md)
-- Architecture overview: [explanation/architecture/README.md](README.md)
+
+**Background**
+
+- Hermes native memory: [hermes-agent.nousresearch.com/docs/user-guide/features/memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)

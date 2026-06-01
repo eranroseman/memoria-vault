@@ -60,6 +60,6 @@ The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over tim
 ## Related
 
 - Callout Manager plugin: [reference/obsidian-plugins.md](obsidian-plugins.md)
-- Fleet-health dashboard: [explanation/dashboards/](../explanation/dashboards/)
 - Computational toolbox (scoring functions): [reference/computational-toolbox.md](computational-toolbox.md)
+- Fleet-health dashboard: [explanation/dashboards/](../explanation/dashboards/)
 - The callout explanation page: [callouts.md](../explanation/obsidian/callouts.md)

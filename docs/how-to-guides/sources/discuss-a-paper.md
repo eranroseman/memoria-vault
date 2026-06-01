@@ -59,9 +59,17 @@ The Socratic profile's lane policy is `policy.allow.write: []` — it cannot edi
 
 ## Related
 
+**How-to**
+
 - Previous step: [Classify a source](classify-a-source.md)
 - Next step: [Write a claim note](write-a-claim-note.md)
+
+**Reference**
+
+- The full permission matrix: [profiles.md](../../reference/profiles.md)
+
+**Explanation**
+
 - Socratic profile design: [explanation/profiles/socratic.md](../../explanation/profiles/socratic.md)
 - Discuss queue dashboard: [explanation/dashboards/discuss-queue.md](../../explanation/dashboards/discuss-queue.md)
 - Paper-note structure used as context: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
-- The full permission matrix: [profiles.md](../../reference/profiles.md)

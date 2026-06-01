@@ -28,7 +28,7 @@ This is the class of failure the Linter's `schema-check` detector is designed to
 
 ## Related
 
-- Field definitions and the `study_design` controlled vocabulary: [reference/frontmatter.md](../../reference/frontmatter.md)
 - The Linter's schema-check detector: [profiles/linter.md](../profiles/linter.md)
 - The common-pitfalls scenario this addresses: [common-pitfalls.md](common-pitfalls.md)
 - The how-to for the vocabulary: [manage-vocabulary.md](../../how-to-guides/maintenance/manage-vocabulary.md)
+- Field definitions and the `study_design` controlled vocabulary: [reference/frontmatter.md](../../reference/frontmatter.md)

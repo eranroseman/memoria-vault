@@ -29,9 +29,17 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 ## Related
 
+**Explanation**
+
 - Structural counterpart in content: [Verifier](verifier.md)
-- Workflow: [run the Linter](../../how-to-guides/maintenance/run-the-linter.md)
 - The weekly ritual Linter findings feed into: [weekly review](../dashboards/weekly-review.md)
-- Recovery: [fix broken frontmatter](../../how-to-guides/recovery/fix-broken-frontmatter.md), [fix profile drift](../../how-to-guides/recovery/fix-profile-drift.md)
-- Structural detectors and auto-fix classes: [profiles.md](../../reference/profiles.md)
 - Why the Linter runs zero LLM: [why-computational-methods.md](../architecture/why-computational-methods.md)
+
+**How-to**
+
+- Workflow: [run the Linter](../../how-to-guides/maintenance/run-the-linter.md)
+- Recovery: [fix broken frontmatter](../../how-to-guides/recovery/fix-broken-frontmatter.md), [fix profile drift](../../how-to-guides/recovery/fix-profile-drift.md)
+
+**Reference**
+
+- Structural detectors and auto-fix classes: [profiles.md](../../reference/profiles.md)
