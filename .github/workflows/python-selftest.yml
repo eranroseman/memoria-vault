@@ -1,8 +1,11 @@
 name: python-selftest
 
 # Runs the --self-test suites of the vault's Python tooling (policy gate, board
-# exporter, metrics, Linter detectors). These are pure-stdlib and need no deps,
-# so the job is fast and hermetic.
+# exporter, metrics, Linter detectors) against the real runtime deps.
+#
+# policy_mcp degrades without PyYAML, but policy_hook's self-test writes a lane
+# YAML and needs it to load — so we install requirements.txt (mcp + PyYAML)
+# rather than rely on stdlib-only behavior.
 #
 # This backs a REQUIRED status check, so — like docs-doctor and lint-installers —
 # it must run on EVERY push/PR (no `paths:` filter), or path-unrelated PRs would
@@ -20,6 +23,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install runtime deps
+        run: python -m pip install --quiet -r vault/.memoria/mcp/requirements.txt
       - name: Run all --self-test suites
         run: |
           set -e
