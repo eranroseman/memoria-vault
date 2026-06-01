@@ -1,7 +1,7 @@
 profile: memoria-coder
 
 # Allowlist wired to real Hermes skill IDs — adapt-not-wrap (2026-05-31).
-# See https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/installer.md § skills.
+# See https://eranroseman.github.io/memoria-vault/reference/installer/ § skills.
 
 policy:
   allow:
