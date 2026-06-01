@@ -1,18 +1,14 @@
 name: Lint installers
 
+# shellcheck + PSScriptAnalyzer are REQUIRED status checks in the branch ruleset,
+# so they must run (and report) on EVERY push/PR — not just install-script changes.
+# A required check that is path-filtered never reports on unrelated PRs, leaving
+# them permanently "blocked". The linters are fast and idempotent, so running them
+# unconditionally is the correct trade-off (same rationale as docs-doctor).
+
 on:
   push:
-    paths:
-      - "install.sh"
-      - "install.ps1"
-      - "PSScriptAnalyzerSettings.psd1"
-      - ".github/workflows/lint-installers.yml"
   pull_request:
-    paths:
-      - "install.sh"
-      - "install.ps1"
-      - "PSScriptAnalyzerSettings.psd1"
-      - ".github/workflows/lint-installers.yml"
 
 jobs:
   shellcheck:
