@@ -1,3 +1,8 @@
+---
+title: "Tutorial 03: Bring in a paper"
+parent: Tutorials
+---
+
 
 # Tutorial 03: Bring in a paper
 

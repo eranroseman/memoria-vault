@@ -1,3 +1,8 @@
+---
+title: Frontmatter fields
+parent: Reference
+---
+
 # Frontmatter fields
 
 Every YAML field Memoria uses, its type, allowed values, who owns it, and which note types carry it. For the field-namespace model see [Namespace ownership](#namespace-ownership). For per-type lifecycle refinements see [note-types.md](note-types.md).

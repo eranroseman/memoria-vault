@@ -1,3 +1,10 @@
+---
+title: Sources
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/sources/
+---
+
 # Sources (upstream)
 
 Day-to-day tasks for moving sources from discovery to durable knowledge. Performed inside Obsidian.

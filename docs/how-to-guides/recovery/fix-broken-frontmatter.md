@@ -1,3 +1,8 @@
+---
+title: How to fix broken frontmatter
+parent: Recovery
+---
+
 
 # How to fix broken frontmatter
 

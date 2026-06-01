@@ -1,3 +1,8 @@
+---
+title: How to use canvas for argument mapping
+parent: Writing
+---
+
 # How to use canvas for argument mapping
 
 This guide shows you how to arrange claim notes spatially in an Obsidian Canvas to find the argument structure before drafting.

@@ -1,3 +1,8 @@
+---
+title: contradictions dashboard
+parent: Dashboards
+---
+
 # `contradictions` dashboard
 
 Surfaces claim notes that disagree with each other as a synthesis starting point. Open it when building an argument or during the weekly synthesis pass — a cluster of contradictions is usually where the interesting writing is.

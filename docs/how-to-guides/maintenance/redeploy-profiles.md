@@ -1,3 +1,8 @@
+---
+title: How to redeploy profiles
+parent: Maintenance
+---
+
 
 # How to redeploy profiles
 

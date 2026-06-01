@@ -1,3 +1,8 @@
+---
+title: Board states and the review gate
+parent: Kanban board
+---
+
 
 # Board states and the review gate
 

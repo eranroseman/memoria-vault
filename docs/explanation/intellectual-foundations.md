@@ -1,3 +1,8 @@
+---
+title: Intellectual foundations
+parent: Explanation
+---
+
 
 # Intellectual foundations
 

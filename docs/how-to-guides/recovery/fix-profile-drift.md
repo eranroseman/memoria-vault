@@ -1,3 +1,8 @@
+---
+title: How to fix profile drift
+parent: Recovery
+---
+
 
 # How to fix profile drift
 

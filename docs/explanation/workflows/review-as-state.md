@@ -1,3 +1,8 @@
+---
+title: Review as a first-class state
+parent: Workflows
+---
+
 # Review as a first-class state
 
 In most collaborative systems, "reviewed" is a convention — a comment, a tag, a verbal confirmation. In Memoria, review is a **structured state** in the card schema. The difference is not cosmetic; it is the mechanism that makes review queryable, enforceable, and honest about what has and hasn't been decided.

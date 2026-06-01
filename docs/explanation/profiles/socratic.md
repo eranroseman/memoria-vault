@@ -1,3 +1,8 @@
+---
+title: The Socratic profile
+parent: Profiles
+---
+
 
 # The Socratic profile
 

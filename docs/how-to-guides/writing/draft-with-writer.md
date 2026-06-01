@@ -1,3 +1,8 @@
+---
+title: How to draft with the Writer
+parent: Writing
+---
+
 
 # How to draft with the Writer
 

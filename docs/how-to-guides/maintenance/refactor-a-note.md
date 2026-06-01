@@ -1,3 +1,8 @@
+---
+title: How to refactor claim notes
+parent: Maintenance
+---
+
 # How to refactor claim notes
 
 This guide shows you how to keep claim notes atomic and remove duplication without losing provenance.

@@ -1,3 +1,10 @@
+---
+title: Obsidian
+parent: Explanation
+has_children: true
+permalink: /explanation/obsidian/
+---
+
 # Obsidian — the human surface
 
 Obsidian is where the human meets Memoria. The agents run in Hermes and the board lives in `kanban.db`, but everything the human reads, writes, and decides happens here. This section explains *how that surface is designed* — not how to operate it (that's the [interface how-to guides](../../how-to-guides/interface/)) and not the exact settings (that's [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md) and the `obsidian-*` reference pages).

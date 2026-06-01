@@ -1,3 +1,8 @@
+---
+title: The Linter
+parent: Profiles
+---
+
 
 # The Linter
 

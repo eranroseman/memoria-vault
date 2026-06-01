@@ -1,3 +1,8 @@
+---
+title: How to capture and ingest a source
+parent: Sources
+---
+
 
 # How to capture and ingest a source
 

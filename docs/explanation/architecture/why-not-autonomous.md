@@ -1,3 +1,8 @@
+---
+title: Why Memoria doesn't pursue full autonomy
+parent: Architecture
+---
+
 # Why Memoria doesn't pursue full autonomy
 
 Memoria targets L3 on the autonomy spectrum — multi-step autonomous execution under human-set strategy with per-batch review — and maintains a structurally enforced ceiling. This document explains why the ceiling exists and where the exception lies.

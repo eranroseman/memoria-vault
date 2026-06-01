@@ -1,3 +1,10 @@
+---
+title: Maintenance
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/maintenance/
+---
+
 # Maintenance
 
 Recurring operational tasks. Run on a schedule or when prompted by a failure.

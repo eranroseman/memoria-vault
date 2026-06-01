@@ -1,3 +1,8 @@
+---
+title: "Pattern provenance: borrow, adapt, ignore"
+parent: Architecture
+---
+
 # Pattern provenance: borrow, adapt, ignore
 
 Memoria draws on a broad survey of ~47 contemporary AI-research systems, platforms, and benchmarks. This document is the synthesized judgment table: what was borrowed as-is, what was taken with the autonomy stripped out, what informs framing without contributing a design pattern, and what was evaluated and explicitly refused.

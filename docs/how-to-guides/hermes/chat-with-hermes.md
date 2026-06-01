@@ -1,3 +1,8 @@
+---
+title: How to chat with a Hermes profile
+parent: Hermes
+---
+
 
 # How to chat with a Hermes profile
 

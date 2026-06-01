@@ -1,3 +1,8 @@
+---
+title: Home — the vault front door
+parent: Obsidian
+---
+
 # Home — the vault front door
 
 `Home.md` at the vault root is the note Memoria opens on launch (via the obsidian-homepage plugin). It is a **launchpad**, not a dashboard: it surfaces the dashboards rather than computing anything itself.

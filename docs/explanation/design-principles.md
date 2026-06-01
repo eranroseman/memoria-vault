@@ -1,3 +1,8 @@
+---
+title: Design principles
+parent: Explanation
+---
+
 # Design principles
 
 Ten principles that settle ambiguous decisions. When a tool choice, workflow step, or architectural question is unclear, these are the tiebreakers.

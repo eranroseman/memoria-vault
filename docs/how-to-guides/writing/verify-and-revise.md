@@ -1,3 +1,8 @@
+---
+title: How to verify and revise a draft
+parent: Writing
+---
+
 
 # How to verify and revise a draft
 

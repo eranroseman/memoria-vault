@@ -1,3 +1,10 @@
+---
+title: Setup
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/setup/
+---
+
 # Setup
 
 One-time configuration tasks. Run once per machine or after a major system change.

@@ -1,3 +1,8 @@
+---
+title: Why specialist profiles, not a generalist agent
+parent: Architecture
+---
+
 # Why specialist profiles, not a generalist agent
 
 Memoria uses seven specialist profiles instead of one generalist agent. Each specialist has a focused mission, narrow folder permissions, and a clear exit condition. This is not an organizational preference — it is the mechanism that makes quality responsibility traceable and permission enforcement practical.

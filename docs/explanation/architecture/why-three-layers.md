@@ -1,3 +1,8 @@
+---
+title: Why three layers, not one
+parent: Architecture
+---
+
 # Why three layers, not one
 
 Memoria separates three concerns — active work, execution, and settled knowledge — into three distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable.

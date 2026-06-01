@@ -1,3 +1,8 @@
+---
+title: How to write a claim note
+parent: Sources
+---
+
 
 # How to write a claim note
 

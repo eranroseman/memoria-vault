@@ -1,3 +1,8 @@
+---
+title: Ingest routing
+parent: Reference
+---
+
 # Ingest routing
 
 Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [how-to-guides/sources/capture-and-ingest.md](../how-to-guides/sources/capture-and-ingest.md).

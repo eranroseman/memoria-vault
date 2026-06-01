@@ -1,3 +1,10 @@
+---
+title: Knowledge
+parent: Explanation
+has_children: true
+permalink: /explanation/knowledge/
+---
+
 # The knowledge model
 
 The vault stores durable knowledge organized by lifecycle stage. Understanding the knowledge model means understanding what makes knowledge *durable*, how the vault's organization serves that goal, and why certain moves are allowed and others aren't.

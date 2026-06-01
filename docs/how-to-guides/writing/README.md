@@ -1,3 +1,10 @@
+---
+title: Writing
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/writing/
+---
+
 # Writing (downstream)
 
 Day-to-day tasks for turning accumulated knowledge into written output. Performed inside Obsidian.

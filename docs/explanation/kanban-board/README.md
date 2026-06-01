@@ -1,3 +1,10 @@
+---
+title: Kanban board
+parent: Explanation
+has_children: true
+permalink: /explanation/kanban-board/
+---
+
 
 # The Kanban board
 

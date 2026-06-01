@@ -1,3 +1,8 @@
+---
+title: Glossary
+parent: Reference
+---
+
 # Glossary
 
 Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [explanation/](../explanation/).

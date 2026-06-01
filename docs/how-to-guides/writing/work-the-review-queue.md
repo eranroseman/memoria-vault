@@ -1,3 +1,8 @@
+---
+title: How to work the review queue
+parent: Writing
+---
+
 
 # How to work the review queue
 

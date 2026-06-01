@@ -1,3 +1,8 @@
+---
+title: How to find new sources
+parent: Sources
+---
+
 
 # How to find new sources
 

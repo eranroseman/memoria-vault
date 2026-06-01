@@ -1,3 +1,8 @@
+---
+title: Session logging
+parent: Architecture
+---
+
 # Session logging
 
 Session logging is a system mechanism, not a workflow. Every agent session produces a per-session log that Git preserves — there is no card, nothing to claim, and no state transition. It runs underneath the card-driven workflows rather than being one of them.

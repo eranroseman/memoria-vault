@@ -1,3 +1,8 @@
+---
+title: "Safe mode: minimal working path"
+parent: Recovery
+---
+
 # Safe mode: minimal working path
 
 When optional tooling is unavailable, these three workflows must still function. For each: the command that must work, the named fallbacks, and the one thing never to run automatically.

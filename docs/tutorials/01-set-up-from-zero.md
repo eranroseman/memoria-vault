@@ -1,3 +1,8 @@
+---
+title: "Tutorial 01: Set up from zero"
+parent: Tutorials
+---
+
 
 # Tutorial 01: Set up from zero
 

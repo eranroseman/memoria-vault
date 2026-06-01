@@ -1,3 +1,8 @@
+---
+title: "Tutorial 07: Find new sources"
+parent: Tutorials
+---
+
 
 # Tutorial 07: Find new sources
 

@@ -1,3 +1,10 @@
+---
+title: Recovery
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/recovery/
+---
+
 # Recovery
 
 Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one failure mode.

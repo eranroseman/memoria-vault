@@ -1,3 +1,8 @@
+---
+title: How to use the agent-client pane
+parent: Interface
+---
+
 
 # How to use the agent-client pane
 

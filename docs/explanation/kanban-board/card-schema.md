@@ -1,3 +1,8 @@
+---
+title: Why the card schema is split
+parent: Kanban board
+---
+
 
 # Why the card schema is split
 

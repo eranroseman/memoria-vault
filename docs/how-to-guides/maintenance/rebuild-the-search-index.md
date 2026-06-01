@@ -1,3 +1,8 @@
+---
+title: How to rebuild the search index
+parent: Maintenance
+---
+
 
 # How to rebuild the search index
 

@@ -1,3 +1,8 @@
+---
+title: External integrations
+parent: Reference
+---
+
 # External integrations
 
 APIs and tools the Librarian profile reaches during ingest and enrichment. All external calls are gated by `external_api_policy: explicit_only` in the Librarian lane-override — a skill must declare its API usage explicitly before it can invoke it.

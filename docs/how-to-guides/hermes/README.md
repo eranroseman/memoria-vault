@@ -1,3 +1,10 @@
+---
+title: Hermes
+parent: How-to guides
+has_children: true
+permalink: /how-to-guides/hermes/
+---
+
 # Using Hermes Agent
 
 Operational guides for the Hermes CLI — interactive chat sessions and profile configuration.

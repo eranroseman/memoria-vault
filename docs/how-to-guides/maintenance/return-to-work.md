@@ -1,3 +1,8 @@
+---
+title: How to return to work after a break
+parent: Maintenance
+---
+
 # How to return to work after a break
 
 Three checks before starting any research session after being away — a day, a week, or longer. Takes under two minutes. Catches the most common resumption failures before they cost time mid-session.

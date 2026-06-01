@@ -1,3 +1,8 @@
+---
+title: The vault
+parent: Architecture
+---
+
 # The vault
 
 The vault is where durable knowledge lives. Everything else in Memoria — the board, the profiles, the dashboards — exists to serve it. This document explains the vault's structure: what the folders mean, how notes move through it, and the conventions that keep it navigable.

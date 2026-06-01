@@ -1,3 +1,8 @@
+---
+title: audit-log dashboard
+parent: Dashboards
+---
+
 # `audit-log` dashboard
 
 The forensic trail for every vault write the policy MCP touched. Open it when something feels off — a worker behaving unexpectedly, a card stuck with an unclear reason, or after a scheduled overnight run completes.
