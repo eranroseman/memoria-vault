@@ -34,6 +34,6 @@ Until the Linter is running end-to-end and writing to `00-meta/02-logs/lint-find
 
 ## Related
 
-- [explanation/profiles/linter.md](../profiles/linter.md) — the eight M-detectors and what each catches
-- [reference/profiles.md](../../reference/profiles.md#linter-eight-m-detectors) — M-detector severity table
+- [explanation/profiles/linter.md](../profiles/linter.md) — the eight structural detectors and what each catches
+- [reference/profiles.md](../../reference/profiles.md#linter-the-eight-structural-detectors) — structural-detector severity table
 - [explanation/dashboards/audit-log.md](audit-log.md) — per-decision forensics layer below structural drift

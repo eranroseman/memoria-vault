@@ -1,6 +1,6 @@
 # Obsidian callouts
 
-Three inline callout types written by agent profiles into vault notes. Defined via the [Callout Manager](plugins.md) plugin.
+Three inline callout types written by agent profiles into vault notes. Defined via the [Callout Manager](obsidian-plugins.md) plugin.
 
 ---
 
@@ -59,6 +59,6 @@ The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over tim
 
 ## Related
 
-- Callout Manager plugin: [reference/plugins.md](plugins.md)
+- Callout Manager plugin: [reference/obsidian-plugins.md](obsidian-plugins.md)
 - Fleet-health dashboard: [explanation/dashboards/](../explanation/dashboards/)
 - Computational toolbox (scoring functions): [reference/computational-toolbox.md](computational-toolbox.md)

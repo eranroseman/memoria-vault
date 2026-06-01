@@ -23,7 +23,7 @@ The diagnostic the CLI is uniquely suited for is "why did this happen" rather th
 
 The signal that a CLI operation is being used too often is that the operation belongs somewhere else. Daily approvals done at the terminal mean the dashboard approval path is missing or broken. Frequent manual dispatch means a trigger should be automated. CLI frequency is a smell, not a workflow.
 
-For command syntax and available operations, see [reference/commands.md](../../reference/commands.md).
+For command syntax and available operations, see [reference/hermes-cli.md](../../reference/hermes-cli.md).
 
 ---
 
@@ -47,13 +47,13 @@ The API server (port 8642) is where programs connect to Memoria — file-system 
 
 The API server exists because programmatic integration needs a different interface than human operation. A file-system watcher that fires on PDF drops cannot use the command palette. A Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; the channels above are the interaction surfaces for humans.
 
-Security-wise, the API passes every write through the policy MCP — it does not grant elevated permissions. A program that calls the API has exactly the permissions of the profile it is acting as. See [reference/policy.md](../../reference/policy.md) for the enforcement details.
+Security-wise, the API passes every write through the policy MCP — it does not grant elevated permissions. A program that calls the API has exactly the permissions of the profile it is acting as. See [reference/policy-mcp.md](../../reference/policy-mcp.md) for the enforcement details.
 
 ---
 
 ## Related
 
 - Obsidian UI components: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- CLI commands: [reference/commands.md](../../reference/commands.md)
+- CLI commands: [reference/hermes-cli.md](../../reference/hermes-cli.md)
 - Messaging gateway setup: [how-to-guides/setup/set-up-messaging.md](../../how-to-guides/setup/set-up-messaging.md)
-- Policy MCP (what API calls go through): [reference/policy.md](../../reference/policy.md)
+- Policy MCP (what API calls go through): [reference/policy-mcp.md](../../reference/policy-mcp.md)

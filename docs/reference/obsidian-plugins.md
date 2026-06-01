@@ -1,6 +1,6 @@
-# Plugins
+# Obsidian plugins
 
-Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).
+Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [zotero-plugins.md](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).
 
 ---
 
@@ -15,7 +15,7 @@ Memoria breaks without these. The starter vault **ships all eight bundled and co
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
-| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/library.bib`; creates paper notes from the configured template. |
+| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/library.bib`; creates paper notes from the configured template. (Zotero-side: see [zotero-plugins.md](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
 
@@ -48,39 +48,12 @@ Install when the friction is felt. Not required for core function.
 
 ---
 
-## Zotero plugins
+## Reference plugins (evaluated, not in the install set)
 
-Plugins that install in Zotero (not Obsidian). Required or recommended alongside the Obsidian plugin set.
-
-| Add-on | Install in | Status | Purpose |
-| --- | --- | --- | --- |
-| Better BibTeX | Zotero | **Required** | Stable citekeys; auto-export `.bib` to vault; `zotero.lua` Lua filter for live Word export. |
-| MarkDB-Connect | Zotero | Recommended | Tags Zotero items that have a vault note; right-click → jump to note. Setup: [set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md). |
-| RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
-
-### Zotero ↔ Obsidian plugin comparison
-
-Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-citation-plugin`; the others are documented for evaluation.
-
-| Plugin | Connects via | Zotero must run | Annotation import | Bulk import | Stability |
-| --- | --- | --- | --- | --- | --- |
-| **obsidian-citation-plugin** (hans) | `.bib` / CSL-JSON file | No | No | No | High — Memoria default |
-| **zotero-integration** (mgmeyers) | BBT HTTP API | Yes | Yes | No | High — breaks on major updates |
-| **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
-| **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
-
-For guidance on choosing between these plugins see [how-to/setup/set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md).
-
----
-
-## Reference plugins (4)
-
-Documented but not in the install set. Evaluated alternatives and future-migration targets.
+Documented but not in the install set. Obsidian-side evaluated alternatives. (Zotero-connector alternatives — zotlit, zotero-integration — are in [zotero-plugins.md](zotero-plugins.md).)
 
 | Plugin | Status | Notes |
 | --- | --- | --- |
-| zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. See comparison table above. |
-| zotero-integration | Not in use | Imports Zotero items via HTTP API; useful if PDF annotation workflow is adopted. |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
 | obsidian-linter | **Incompatible — do not install** (ADR-12) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
 

@@ -50,4 +50,4 @@ Scheduling would encode a guess about *when* A finishes. The dependency edge enc
 - Conceptual overview: [README.md](README.md)
 - State machine: [states.md](states.md)
 - Card-schema field tables: [kanban-board.md](../../reference/kanban-board.md)
-- How policy gates the payload: [policy.md](../../reference/policy.md)
+- How policy gates the payload: [policy-mcp.md](../../reference/policy-mcp.md)

@@ -49,4 +49,4 @@ These are **workspace layout** bindings (`Cmd/Ctrl` + number). They are distinct
 - Dashboard in Human workspace (right): [board-state](../explanation/dashboards/board-state.md)
 - Dashboard in Reading workspace (left, primary): [discuss-queue](../explanation/dashboards/discuss-queue.md)
 - Dashboard in Reading workspace (left, secondary): [reading-pipeline](../explanation/dashboards/reading-pipeline.md)
-- ACP pane profiles: [agent-client plugin](plugins.md)
+- ACP pane profiles: [agent-client plugin](obsidian-plugins.md)

@@ -24,7 +24,7 @@ For the rationale — why deterministic over LLM, the hybrid pattern, cost and a
 
 **Used by:** `similarity-check`, `find-duplicates`, `[!suggestions]` ranking, `[!brief]` candidate selection.
 
-**Implementation:** a sentence-transformer model embeds note bodies into an HNSW index (FAISS, hnswlib, or `qmd`). Re-indexed incrementally as new notes arrive. Default models:
+**Implementation:** a sentence-transformer model embeds note bodies into an HNSW index. The shipped backend is the `qmd` skill (hybrid BM25 + vector retrieval) — the skill actually granted to the lanes that call these methods; FAISS and hnswlib are the underlying index libraries `qmd` can sit on. Re-indexed incrementally as new notes arrive. Default models:
 
 | Model | Params | Best for |
 | --- | --- | --- |

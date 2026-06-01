@@ -20,8 +20,9 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | File | What it covers |
 | --- | --- |
 | [profiles.md](profiles.md) | Lane identifiers, capability table, folder permissions, Linter severity |
-| [commands.md](commands.md) | Hermes CLI commands and Obsidian command-palette entries |
-| [policy.md](policy.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
+| [command-palette.md](command-palette.md) | Obsidian `Memoria:` command-palette entries (the in-Obsidian UI surface) |
+| [hermes-cli.md](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
+| [policy-mcp.md](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
 | [computational-toolbox.md](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 
 ## Pipelines and I/O
@@ -36,16 +37,17 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 
 | File | What it covers |
 | --- | --- |
-| [hermes-admin.md](hermes-admin.md) | Administrative Hermes CLI: profile install/list, kanban management, skills, cron |
 | [integrations.md](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
-| [plugins.md](plugins.md) | Obsidian plugin inventory and load-bearing configuration settings |
 | [on-disk-layout.md](on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions |
 | [failure-modes.md](failure-modes.md) | All failure modes by severity: symptom, cause, fix |
+| [bibliography.md](bibliography.md) | Works cited across the docs, in ACM author-date style; in-text citations link here |
 
 ## Obsidian
 
 | File | What it covers |
 | --- | --- |
+| [obsidian-plugins.md](obsidian-plugins.md) | Obsidian plugin inventory and load-bearing configuration settings |
+| [zotero-plugins.md](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison |
 | [obsidian-callouts.md](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema |
 | [obsidian-status-line.md](obsidian-status-line.md) | Status-line format, field definitions, and update cadence |
 | [obsidian-workspaces.md](obsidian-workspaces.md) | Workspace names, layout rules, and switching conventions |

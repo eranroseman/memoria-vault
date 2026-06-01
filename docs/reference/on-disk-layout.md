@@ -245,7 +245,7 @@ Notes in `00-meta/` that ship with the starter vault for human reference.
 | `00-meta/04-reference/dataview-cheatsheet.md` | Reference patterns for dashboard queries — TABLE / LIST / TASK / FROM / WHERE / SORT / FLATTEN / LIMIT examples. | Human (rarely changes) |
 | `00-meta/04-reference/performance-checklist.md` | Dashboard performance discipline for Dataview query authors. | Human (rarely changes) |
 | `00-meta/04-reference/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. | Human (rarely changes) |
-| `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/plugins.md`. | Human (sync with plugin changes) |
+| `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/obsidian-plugins.md`. | Human (sync with plugin changes) |
 | `00-meta/04-reference/design-system.md` | Canonical visual-style source: palette, typography, spacing, layout, motion, voice. Drives CSS snippet generators and Pandoc export configs. | Human (edits define the brand) |
 
 The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lags the corresponding design file.

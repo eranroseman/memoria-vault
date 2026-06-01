@@ -29,12 +29,12 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | File | Status | Notes |
 | --- | --- | --- |
 | `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. Required by the profile-install step. |
+| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. The hook command carries `{{VAULT_PATH}}` (a substitution target, like `mcp.json`). Required by the profile-install step. |
 | `mcp.json` | shipped | `mcp_servers`: `policy` + `obsidian`; `{{VAULT_PATH}}` substitution target. |
 | `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
-| `skills/` | shipped | Placeholder (`.keep`). K-Dense skills installed here via `hermes skills install`. |
+| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`); the other five ship as `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
 
 ---
 
@@ -42,17 +42,19 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 | Profile | Primary role | Core commands | Allowed skills | Invocation level |
 | --- | --- | --- | --- | --- |
-| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query` | `paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `obsidian`, `qmd`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
+| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query`, `export prior-labels` | `paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `obsidian`, `qmd`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
 | **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map`, `comparative-brief` | `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 2 (Kanban) |
 | **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `obsidian` (read-only) | Level 3 (interactive only) |
 | **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
-| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
+| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
 | **Linter** | Validate and report | `lint`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | *(none — runs `detectors.py` via terminal)* | Level 1 (cron) |
 
 > **Commands vs. skills.** The **Core commands** are the profile's command surface (CLI / palette). The **Allowed skills** are the real Hermes/K-Dense skill IDs the lane-override grants (the policy gate). Per the [adapt-not-wrap decision](../../project-files/proposals/bootstrap-installer.md), the commands are mostly `SOUL.md` procedures composing these skills — only `obsidian-paper-note` and `retraction-check` are authored as skills; `qmd` is a skills.sh skill; the Linter runs the shipped `detectors.py`. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
+
+A profile's **invocation level** is *how it gets started* — what triggers it to run. It's a routing property (set by `routing.invocation` in the lane-override plus whether the profile ships a cron schedule), not a permission. Three levels, by who or what pulls the trigger:
 
 | Level | Cadence | Description |
 | --- | --- | --- |
@@ -80,7 +82,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 ## Folder permission matrix
 
-`W` = write · `R` = read · `—` = no access
+`W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the *exact subfolder*, *what note types* land there, and *which command/skill* does the writing.
 
 | Profile | `00-meta` | `10-inbox` | `20-sources` | `30-synthesis/01-claims` | `30-synthesis/02-reference` | `30-synthesis/03-moc` | `40-workbench` | `50-deliverables` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -92,24 +94,42 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | **Coder** | R | R | R | R | R | R | W (`*/06-code/`) | R (export = dry-run) |
 | **Linter** | W (`02-logs/` only) | R | R | R | R | R | R | R |
 
-**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/` except logs) remain human-owned.** Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes to its own named subfolder.
+### Why every profile has read-everywhere
+
+Read access is universal by design — agents must *ground* on the whole vault to do narrow work well. The Writer drafts from claim notes it may never write to; the Verifier traces a draft's citations back to `20-sources/`; the Mapper surveys the entire corpus. Restricting reads would force each profile to re-fetch context it's allowed to see anyway, with no safety gain: **the trust boundary is the *write* gate, not the read.** A profile that reads a claim note and a profile that *writes* one are categorically different acts, and only the second can corrupt canonical state. (Socratic is the apparent exception — it reads everything but writes nothing — which is exactly the point: read-broad, write-none is a safe combination.) The one read that *is* withheld is secrets: `.env` and `auth.json` are outside the vault and never exposed to any profile.
+
+### Per-profile write detail — where, what, why
+
+| Profile | Where (exact subfolder) | What (note types) | Why (command / skill) |
+| --- | --- | --- | --- |
+| **Librarian** | `10-inbox/03-candidates/`, `20-sources/01-papers/`, `20-sources/02-items/`, `20-sources/03-entities/` | `candidate-note` (deferred), `paper-note`, `item-note`, entity notes | `find` (candidates), `ingest` / `obsidian-paper-note` skill (sources), `enrich` |
+| **Mapper** | `40-workbench/*/01-map/` only | `corpus-map.md`, `gap-report.md` | `scope-project`, `gap-report`, `cluster-map` |
+| **Socratic** | *(none — `policy.allow.write: []`)* | — | write-denied by design |
+| **Writer** | `10-inbox/02-answers/`; `40-workbench/*/{02-framing,03-canvas,04-drafts}/`; `30-synthesis/02-reference/**` and `50-deliverables/**` (both review-gated → `dry_run`) | `answer-note`, framing/canvas/`draft`; proposed `reference-note`, `deliverable` | `draft`, `query`, `promote` (handoff); `llm-wiki` / `obsidian-markdown` / `scientific-writing` skills |
+| **Verifier** | `10-inbox/03-candidates/` (gap cards), `40-workbench/*/05-verification/` | gap candidate notes, `[!verification]` reports | `cite-check`, `similarity-check`, `find-duplicates` |
+| **Coder** | `40-workbench/*/06-code/` | `code-note`, code artifacts | `code`, `scaffold`, `commit`, `revert` |
+| **Linter** | `00-meta/02-logs/` only | audit/session logs, rotation archive | `session-log`, log rotation (auto-fix class `authorized-targeted`) |
+
+**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/` except logs) remain human-owned.** Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are *allowed in the lane-override* but the policy MCP degrades them to `dry_run` until a human approves — that's why the Writer's reference/deliverable writes are marked review-gated above. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
 
 ---
 
-## Linter: eight M-detectors
+## Linter: the eight structural detectors
 
-Deterministic, zero-LLM structural checks. Full procedures live in `.memoria/profiles/memoria-linter/M-detectors.md`.
+Deterministic, zero-LLM structural checks. "Structural detectors" is the canonical name (see [linter.md](../explanation/profiles/linter.md) for the design rationale); **"M-detectors" is just shorthand for the file that documents them** — `M-detectors.md` — not an acronym, and "M" expands to nothing. Full per-detector procedures live in [M-detectors.md](../../vault/.memoria/profiles/memoria-linter/M-detectors.md).
 
-| Slug | Severity | Catches |
-| --- | --- | --- |
-| `profile-install-drift` | LOW | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
-| `vault-hash-drift` | CRITICAL | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
-| `skeleton-drift` | MEDIUM | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
-| `dashboard-field-drift` | HIGH | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
-| `command-vocab-drift` | MEDIUM | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
-| `plugin-config-drift` | MEDIUM | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
-| `orphan-working-files` | LOW | Editor backups / `.tmp.*` / `.bak` leftovers accumulated outside transient zones. |
-| `extract-path-broken` | HIGH | A paper-note's `extract_path` points at a Marker extract file that doesn't exist. |
+The **Implementation** column distinguishes only *where each runs*, never LLM-vs-not — all eight are deterministic and use no LLM. Three are functions in the shipped `detectors.py` (pure Python stdlib). The other five run as **live-Linter agent procedures** (not in `detectors.py`) because they need runtime context the script lacks: a git diff, a SHA-256 pass over the audit log, or commit timestamps.
+
+| Slug | Severity | Implementation | Catches |
+| --- | --- | --- | --- |
+| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
+| `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
+| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
+| `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
+| `command-vocab-drift` | MEDIUM | agent procedure (SOUL.md scan) | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
+| `plugin-config-drift` | MEDIUM | agent procedure (git HEAD diff) | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
+| `orphan-working-files` | LOW | `detectors.py` (stdlib) | Editor backups / `.tmp.*` / `.bak` leftovers accumulated outside transient zones. |
+| `extract-path-broken` | HIGH | `detectors.py` (stdlib) | A paper-note's `extract_path` points at a Marker extract file that doesn't exist. |
 
 The defining property of all eight: **silent** — each failure looks like "nothing to do" while something is actually wrong.
 
@@ -119,14 +139,16 @@ The defining property of all eight: **silent** — each failure looks like "noth
 
 Every proposed fix is classified into one of four classes. The class determines whether the fix applies automatically or requires human action. The policy MCP enforces the class gate at the tool layer.
 
+**How a fix gets its class.** The class is a **fixed property of the fix *type*, decided in the detector's own logic — not a runtime judgment.** Each detector that proposes a fix tags it with one of the four classes from a hard-coded mapping (trailing-whitespace → `safe-and-unambiguous`, audit-log rotation → `authorized-targeted`, frontmatter field rename → `schema-content`, and so on). There is no LLM and no per-case discretion: a given fix type always carries the same class. Two of the four classes are then *granted* to the Linter lane (`policy.allow.auto_fix.classes` in `lane-overrides/linter.yaml`); the other two are denied, so the policy MCP forces them to `dry_run` or blocks them regardless of what the detector proposed. So assignment is two-step: the detector *tags* the class deterministically, and the lane policy *gates* which tagged classes may auto-apply.
+
 | Class | Examples | Default behavior |
 | --- | --- | --- |
-| `safe-and-unambiguous` | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value | **Auto-fix** (delegated to Templater) |
-| `authorized-targeted` | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh | **Auto-fix** (Linter's own logs/dashboards only) |
-| `schema-content` | Frontmatter field rename, value-set change, deprecated field removal | **Dry-run always** (requires `schema-migrate`) |
+| `safe-and-unambiguous` | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value | **Auto-fix** (granted; delegated to Templater) |
+| `authorized-targeted` | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh | **Auto-fix** (granted; Linter's own logs/dashboards only) |
+| `schema-content` | Frontmatter field rename, value-set change, deprecated field removal | **Dry-run always** (not granted; requires `schema-migrate`) |
 | `review-gated-edit` | Any write to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | **Deny** (policy MCP forces `dry_run` regardless of class) |
 
-Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml`.
+Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml` — the two granted classes; the other two appear under `deny.auto_fix.classes`.
 
 ---
 

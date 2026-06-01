@@ -70,5 +70,5 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
-- Command catalog: [commands.md](../../reference/commands.md); palette setup: [command-palette.md](../interface/command-palette.md)
+- Command catalog: [command-palette.md](../../reference/command-palette.md); palette setup: [command-palette.md](../interface/command-palette.md)
 - Redeploy after adding a lens: [Redeploy profiles](../maintenance/redeploy-profiles.md)

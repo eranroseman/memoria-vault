@@ -33,7 +33,7 @@ The eight bundled plugins:
 | `quickadd` | Registers `Memoria:` command-palette entries |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 
-All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client agent paths). See [reference/plugins.md](../../reference/plugins.md) for the load-bearing settings of each.
+All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client agent paths). See [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
 
 **3. Configure the REST API plugin.**
 
@@ -74,6 +74,6 @@ Memoria's linting is the `memoria-linter` Hermes profile (structural validation 
 ## Related
 
 - Next step: [Set up Zotero](set-up-zotero.md)
-- Plugin reference: [reference/plugins/](../../reference/plugins.md)
+- Plugin reference: [reference/obsidian-plugins/](../../reference/obsidian-plugins.md)
 - Callout types: [reference/obsidian-callouts](../../reference/obsidian-callouts.md)
 - Workspaces reference: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)

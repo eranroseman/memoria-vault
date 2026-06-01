@@ -1,6 +1,6 @@
 # Obsidian
 
-How the human interacts with Memoria through Obsidian. For Obsidian plugin configuration and load-bearing settings see [reference/plugins.md](../../reference/plugins.md).
+How the human interacts with Memoria through Obsidian. For Obsidian plugin configuration and load-bearing settings see [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md).
 
 | File | What it covers |
 |---|---|
