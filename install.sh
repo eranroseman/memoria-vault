@@ -168,7 +168,15 @@ ensure_prereqs() {
   local missing=""
   have git    || missing="$missing git"
   have pandoc || missing="$missing pandoc"
-  if [ -z "$missing" ]; then ok "git and pandoc present"; return; fi
+  # We install MCP deps into a venv (Step 5). Debian/Ubuntu ship the `venv` module
+  # but withhold `ensurepip` until python3-venv is installed, so a venv created
+  # without it has no pip. Probe ensurepip (not just venv) and add the package if
+  # apt is available — far cleaner than the --break-system-packages fallback.
+  detect_python
+  if [ -n "$PYTHON" ] && ! "$PYTHON" -c "import ensurepip" >/dev/null 2>&1 && have apt-get; then
+    missing="$missing python3-venv"
+  fi
+  if [ -z "$missing" ]; then ok "git, pandoc, and venv support present"; return; fi
 
   warn "Missing:$missing"
   if [ "$DRY_RUN" -eq 1 ]; then warn "(dry-run) would install:$missing"; return; fi
@@ -311,18 +319,28 @@ install_mcp_deps() {
   if [ -z "$PYTHON" ]; then warn "No Python found — skipping MCP deps (install later into a venv)."; return; fi
 
   local venv="$VAULT_PATH/.memoria/.venv"
-  # Create the venv if missing. If the stdlib venv module is unavailable (Debian
-  # splits it into python3-venv), fall back to a plain pip install and warn.
+  # A venv is "usable" only if it has a working pip. Debian's `venv` without
+  # `ensurepip` (python3-venv not installed) creates bin/python but no pip, so
+  # checking for bin/python alone is not enough — verify pip, and discard a
+  # half-built venv so we don't keep reusing a broken one.
+  if [ -x "$venv/bin/python" ] && ! "$venv/bin/python" -m pip --version >/dev/null 2>&1; then
+    warn "Existing venv at $venv has no pip — rebuilding."
+    rm -rf "$venv"
+  fi
   if [ ! -x "$venv/bin/python" ]; then
-    if "$PYTHON" -m venv "$venv" 2>/dev/null; then
+    if "$PYTHON" -m venv "$venv" >/dev/null 2>&1 && "$venv/bin/python" -m pip --version >/dev/null 2>&1; then
       ok "Created venv at $venv"
     else
-      warn "Could not create a venv ('$PYTHON -m venv' failed — install python3-venv)."
-      warn "Falling back to: $PYTHON -m pip install --user -r $reqs"
-      run "$PYTHON" -m pip install --user --quiet -r "$reqs" \
-        || die "pip --user install failed. Install python3-venv, then re-run."
+      # venv unavailable/broken (missing ensurepip). ensure_prereqs tries to add
+      # python3-venv; if that didn't happen, --break-system-packages is the only
+      # pip target left on a PEP-668 system (plain --user is also blocked).
+      rm -rf "$venv"
+      warn "Could not create a working venv (missing ensurepip / python3-venv)."
+      warn "Falling back to: $PYTHON -m pip install --user --break-system-packages"
+      run "$PYTHON" -m pip install --user --break-system-packages --quiet -r "$reqs" \
+        || die "pip fallback failed. Install python3-venv (apt install python3-venv), then re-run."
       VENV_PYTHON="$PYTHON"   # runtime uses the same interpreter the deps landed in
-      ok "MCP dependencies installed (user site-packages)"
+      ok "MCP dependencies installed (user site-packages, system override)"
       return
     fi
   fi
