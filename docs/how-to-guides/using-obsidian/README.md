@@ -11,6 +11,8 @@ Driving Memoria from inside Obsidian — the command palette, the agent-client (
 
 | Guide | What it covers |
 | --- | --- |
+| [Vault homepage](use-the-vault-homepage.md) | Open the front door, navigate dashboards, update research directions |
+| [Workspaces](use-workspaces.md) | Set up and switch between the three cognitive-mode workspace layouts |
 | [Command palette](obsidian-command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
 | [Agent-client pane](use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
 | [Navigate the dashboards](navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
