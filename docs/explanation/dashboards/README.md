@@ -56,5 +56,5 @@ When a dependency is missing (a plugin not installed, a log file not yet created
 
 ## Related
 
-- How to operate the dashboards: [navigate-the-dashboards.md](../../how-to-guides/interface/navigate-the-dashboards.md)
+- How to operate the dashboards: [navigate-the-dashboards.md](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
 - The primary weekly entry point: [run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md)

@@ -20,7 +20,7 @@ Memoria has two distinct modes of use, each with its own tooling:
 **Day-to-day use — Obsidian is the UI.**
 Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [sources/](sources/) and [writing/](writing/) are written for this mode.
 
-**Setup and maintenance — Hermes CLI and PowerShell.**
+**Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
 Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [setup/](setup/), [maintenance/](maintenance/), and [recovery/](recovery/) are written for this mode.
 
 ---
@@ -46,9 +46,9 @@ One-time configuration tasks. Run once per machine or after a major system chang
 
 | Guide | What it covers |
 | --- | --- |
-| [Command palette](interface/command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
-| [Agent-client pane](interface/use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
-| [Navigate the dashboards](interface/navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
+| [Command palette](using-obsidian/obsidian-command-palette.md) | Set up QuickAdd entries, invoke commands by type, assign hotkeys |
+| [Agent-client pane](using-obsidian/use-the-acp-pane.md) | Open the pane, select profiles, attach context, read responses, clear sessions |
+| [Navigate the dashboards](using-obsidian/navigate-the-dashboards.md) | Which dashboard to open for each situation, workspace shortcuts |
 
 ### Using Hermes Agent
 
@@ -56,8 +56,8 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 
 | Guide | What it covers |
 | --- | --- |
-| [Chat with Hermes](hermes/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
-| [Configure a profile](hermes/configuration.md) | Model routing, write permissions, skills, API keys |
+| [Chat with Hermes](using-hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
+| [Configure a profile](using-hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
 
 Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [reference/hermes-cli.md](../reference/hermes-cli.md).
 
@@ -103,7 +103,7 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Run the weekly review](maintenance/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
 | [Run the Linter](maintenance/run-the-linter.md) | On-demand or scheduled structural health check |
 | [Rebuild the search index](maintenance/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
-| [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
+| [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.using-hermes-agent/profiles/` |
 | [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Build a Map of Content](maintenance/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
 | [Refactor claim notes](maintenance/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
