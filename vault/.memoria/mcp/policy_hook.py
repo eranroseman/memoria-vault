@@ -1,11 +1,23 @@
 #!/usr/bin/env python3
-"""Hermes pre_tool_call hook -- route obsidian-MCP vault writes through the policy gate.
+"""Hermes pre_tool_call hook -- route vault writes through the policy gate.
 
-The policy MCP (policy_mcp.py) can *decide* whether a write is allowed, but a
-vanilla `mcp-obsidian` write tool doesn't call it. This hook closes that gap: it
-runs *before* every matched obsidian tool, maps the tool to a policy action, asks
-the same tested decision core, and BLOCKS denied / review-gated writes by printing
+The policy MCP (policy_mcp.py) can *decide* whether a write is allowed, but the
+write tools don't call it. This hook closes that gap: it runs *before* every
+matched tool, maps the tool to a policy action, asks the same tested decision
+core, and BLOCKS denied / review-gated writes by printing
 ``{"decision": "block", "reason": ...}``. Allowed actions print ``{}`` (proceed).
+
+Two write families are gated (see classify):
+  - the `obsidian` MCP write tools (every profile's vault-write path), and
+  - the Hermes `file` toolset writes (`write_file`, `patch`) -- gated on the two
+    lanes that legitimately keep terminal+file (Coder, Linter) via a "file"
+    matcher, so a file-tool write to a review-gated zone is blocked too (#51).
+The `terminal` toolset is deliberately NOT gated here: an arbitrary shell command
+has no single path to evaluate, so those lanes stay bounded by their lane-override
+`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> 00-meta/02-logs/) plus
+review-to-promote. The complete write boundary for non-Coder/Linter lanes is the
+*capability* layer -- they don't get the terminal/file toolsets at all
+(`agent.disabled_toolsets`; tool-registry.yaml). This hook is the path layer.
 
 This one script handles BOTH the gate and the audit completion, branching on
 `hook_event_name`:
@@ -63,18 +75,30 @@ WRITE_KEYWORDS = {
     "rename": "move",
     "move": "move",
 }
-PATH_KEYS = ("filepath", "path", "file", "target", "filename", "dest", "destination")
+# Hermes `file` toolset WRITE tools (gated on Coder/Linter via a "file" matcher --
+# the two lanes that legitimately keep terminal+file; #51). The bare tool name is
+# matched exactly so we never gate an unrelated tool that merely contains "patch".
+# Reads (read_file, search_files) are absent -> not gated. The `terminal` toolset
+# is deliberately NOT here: an arbitrary shell command has no single path to gate,
+# so those writes stay bounded by the lane-override write_scope, not this hook.
+FILE_WRITE_TOOLS = {"write_file": "write", "patch": "write"}
+PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
 
 def classify(tool_name: str) -> str | None:
-    """Policy action for an obsidian *write* tool, or None for reads / non-obsidian."""
+    """Policy action for a gated *write* tool, or None for reads / ungated tools.
+
+    Two families: obsidian MCP writes (substring match, survives prefixing) and
+    Hermes `file` toolset writes (exact base-name match). Everything else --
+    reads, and crucially the `terminal` toolset -- returns None (not gated here)."""
     t = (tool_name or "").lower()
-    if "obsidian" not in t:
+    if "obsidian" in t:
+        for kw, action in WRITE_KEYWORDS.items():
+            if kw in t:
+                return action
         return None
-    for kw, action in WRITE_KEYWORDS.items():
-        if kw in t:
-            return action
-    return None
+    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]   # strip server/toolset prefix
+    return FILE_WRITE_TOOLS.get(base)
 
 
 def extract_path(tool_input: dict) -> str:
@@ -83,6 +107,28 @@ def extract_path(tool_input: dict) -> str:
         if isinstance(v, str) and v.strip():
             return v
     return ""
+
+
+def to_vault_relative(path: str, vault: Path):
+    """Normalize a tool-supplied path to vault-root-relative (forward slashes).
+
+    Obsidian tools already emit vault-relative paths (pass-through). The `file`
+    toolset can emit ABSOLUTE paths; the policy lane globs are vault-relative, so:
+      - relative path        -> returned as-is (sans leading ``./``)
+      - absolute under vault -> relativized to the vault root
+      - absolute OUTSIDE vault -> ``None``: the gate governs vault zones only, so
+        an external write (e.g. Coder committing to a repo outside the vault) is
+        not this hook's concern and is left to proceed."""
+    if not path:
+        return path
+    p = path.replace("\\", "/")
+    pp = Path(p)
+    if not pp.is_absolute():
+        return p[2:] if p.startswith("./") else p
+    try:
+        return str(pp.resolve().relative_to(vault.resolve())).replace("\\", "/")
+    except (ValueError, OSError):
+        return None
 
 
 def vault_root() -> Path:
@@ -114,9 +160,11 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
     complete the reversibility record. Pure enough to unit-test otherwise."""
     action = classify(payload.get("tool_name", ""))
     if action is None:
-        return {}                                  # not an obsidian write -> not our concern
+        return {}                                  # read / terminal / ungated tool -> not our concern
 
-    path = extract_path(payload.get("tool_input") or {})
+    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault)
+    if path is None:
+        return {}                                  # file write outside the vault -> gate governs vault zones only
     extra = payload.get("extra") or {}
     task_id = extra.get("task_id") or payload.get("session_id") or ""
 
@@ -170,7 +218,7 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         return {}
 
     action = classify(payload.get("tool_name", "")) or "write"
-    path = extract_path(payload.get("tool_input") or {}) or stashed.get("path", "")
+    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault) or stashed.get("path", "")
     extra = payload.get("extra") or {}
     task_id = extra.get("task_id") or payload.get("session_id") or ""
 
@@ -234,8 +282,16 @@ def self_test() -> int:
     check("classify: prefixed write matched", classify("mcp__obsidian__put_content") == "write")
     check("classify: read tool -> None", classify("obsidian_get_file_contents") is None)
     check("classify: search -> None", classify("obsidian_simple_search") is None)
-    check("classify: non-obsidian -> None", classify("terminal") is None)
+    check("classify: terminal -> None (shell ungated)", classify("terminal") is None)
+    check("classify: process -> None", classify("process") is None)
+    # Hermes `file` toolset writes (Coder/Linter) -- gated; reads are not.
+    check("classify: write_file -> write", classify("write_file") == "write")
+    check("classify: bare patch -> write", classify("patch") == "write")
+    check("classify: prefixed file write", classify("file__write_file") == "write")
+    check("classify: read_file -> None", classify("read_file") is None)
+    check("classify: search_files -> None", classify("search_files") is None)
     check("extract_path: filepath", extract_path({"filepath": "20-sources/x.md"}) == "20-sources/x.md")
+    check("extract_path: file_path", extract_path({"file_path": "20-sources/y.md"}) == "20-sources/y.md")
 
     # evaluate against a temp vault + real lane files -------------------------
     with tempfile.TemporaryDirectory() as td:
@@ -270,6 +326,25 @@ def self_test() -> int:
                              "tool_input": {"filepath": "10-inbox/02-answers/a.md"}},
                             "memoria-writer", vault)
         check("missing task_id -> fail-closed block", r_fc.get("decision") == "block")
+
+        # Hermes `file` toolset writes are gated the same way (#51, Coder/Linter) ---
+        evf = lambda tool, path: evaluate_pre(
+            {"tool_name": tool, "tool_input": {"file_path": path},
+             "extra": {"task_id": "T1"}}, "memoria-writer", vault)
+        check("file write_file allowed zone -> {}", evf("write_file", "10-inbox/02-answers/f.md") == {})
+        r_fg = evf("write_file", "30-synthesis/01-claims/c.md")
+        check("file write_file denied zone -> block", r_fg.get("decision") == "block")
+        # to_vault_relative: absolute-under-vault relativized -> gated against lane globs
+        abs_claim = str(vault / "30-synthesis" / "01-claims" / "c.md")
+        check("to_vault_relative: abs under vault -> relative",
+              to_vault_relative(abs_claim, vault) == "30-synthesis/01-claims/c.md")
+        check("file write abs in-vault denied zone -> block",
+              evf("write_file", abs_claim).get("decision") == "block")
+        # absolute path OUTSIDE the vault -> None -> not gated (proceeds)
+        check("to_vault_relative: abs outside vault -> None",
+              to_vault_relative("/etc/passwd", vault) is None)
+        check("file write outside vault -> {} (gate governs vault only)",
+              evf("write_file", "/tmp/external-repo/main.py") == {})
 
         # pre -> post reversibility roundtrip (paired before/after hash) ------
         (vault / "10-inbox" / "02-answers").mkdir(parents=True, exist_ok=True)

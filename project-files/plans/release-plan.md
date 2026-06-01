@@ -42,7 +42,7 @@ v0.1.0 ships when **all** gates are green. Each maps to a validation tier
 | --- | --- | --- | --- |
 | G1 | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | ✅ done (this session) |
 | G2 | Policy gate enforced live: review-gated zones blocked, allowed zones pass, fail-closed on missing `task_id` | Tier 4 (deployed `policy_hook`) | ✅ done |
-| G3 | An agent can **read and write** the vault through the obsidian bridge under the gate | Tier 4 (live model write) | ❌ **blocked by [#39](https://github.com/eranroseman/memoria-vault/issues/39)** |
+| G3 | An agent can **read and write** the vault through the obsidian bridge under the gate | Tier 4 (live model write) | ⏳ **re-test pending [#39](https://github.com/eranroseman/memoria-vault/issues/39)** — root cause reframed (env-block `${VAR}` _is_ supported on current Hermes; the 401 is a version/`.env`-shadow issue, not a config defect). No code change; re-run Tier-4 on a confirmed Hermes version with `OBSIDIAN_API_KEY` non-empty. |
 | G4 | All ten dashboards render on real data (Dataview queries resolve) | Tier 5 | ⏳ not yet run |
 | G5 | Six-signal telemetry emits (board-state/transitions/disposition/cost + audit + fama) once the board-export cron is wired | Tier 4–5 + cron | ⏳ partial (emitters exist; cron unwired) |
 | G6 | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | ✅ enforced (required checks) |
@@ -61,7 +61,11 @@ the blockers are:**
 
 Consult those two for the live, authoritative set. (At time of writing the P0 is
 [#39](https://github.com/eranroseman/memoria-vault/issues/39) — obsidian bridge
-key delivery, gate G3.)
+key delivery, gate G3 — now **re-test-pending** rather than architecturally
+blocked: the env-substitution root cause was reversed, so closing it is a
+verification step, not a code fix. [#51](https://github.com/eranroseman/memoria-vault/issues/51)
+— policy-gate scope — has its capability-layer fix landed and awaits live
+re-verification.)
 
 ## 4. Validation plan
 
@@ -71,10 +75,10 @@ tier set, with this session's results recorded inline.
 | Tier | What it proves | Result this session |
 | --- | --- | --- |
 | 0 | Static: parse, LF endings, profile files present | ✅ pass |
-| 1 | Python `--self-test` (policy_mcp 34, policy_hook 18, board_export 26, metrics 20, detectors 15) | ✅ pass |
+| 1 | Python `--self-test` (policy_mcp 34, policy_hook 32, board_export 26, metrics 20, detectors 15) | ✅ pass |
 | 2 | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution | ✅ pass (fixed 4 bugs) |
 | 3 | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run | ✅ pass (fixed venv + profile-install bugs) |
-| 4 | Live: model connectivity, REST bridge, **policy gate enforcement** | ✅ mostly — **G3 blocked by #39** |
+| 4 | Live: model connectivity, REST bridge, **policy gate enforcement** | ✅ mostly — **G3 re-test pending #39** (reframed: not a config defect; re-run on a confirmed Hermes version). Tier-4 also surfaced the gate-scope gap **#51** (terminal/file writes ungated) — capability-layer fix landed (`disabled_toolsets` ×7 + file-write hook on Coder/Linter); needs live re-verify. |
 | 5 | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export | ⏳ not yet run |
 
 A release candidate must re-run **Tier 0–5 green** on a clean machine (the

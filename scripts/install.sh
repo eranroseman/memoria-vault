@@ -420,6 +420,22 @@ install_profiles() {
     # whole install errored out ("unrecognized arguments"). Use --name explicitly.
     if run hermes profile install "$dst" --name "$p" --alias --force --yes; then
       installed="$installed $p"
+      # Capability layer (#51): the policy hook gates the obsidian + `file` WRITE
+      # paths, but the structural guarantee for lanes that must not write outside
+      # obsidian is the *absence* of the terminal/file toolsets (tool-registry.yaml).
+      # Only Coder and Linter legitimately keep them (their file writes are gated by
+      # the hook; their shell writes are bounded by lane write_scope). Apply via
+      # `config set` -- a targeted agent-key merge. A partial `agent:` block in
+      # config.yaml would replace the whole inherited agent section and drop global
+      # defaults (reasoning_effort, etc.), which is why this is set here, not shipped
+      # in the file (same reason reasoning_effort is a config-set recommendation).
+      # NOTE(confirm-at-build): confirm `hermes config set` accepts a list value for
+      # agent.disabled_toolsets on the target Hermes build; adjust the syntax if not.
+      case "$p" in
+        memoria-coder|memoria-linter) : ;;     # keep terminal+file (hook-gated)
+        *) run hermes -p "$p" config set agent.disabled_toolsets '["terminal","file"]' \
+             || warn "could not disable terminal/file toolsets for $p — set agent.disabled_toolsets by hand (capability layer, #51)" ;;
+      esac
       # Bootstrap .env from .env.EXAMPLE on FIRST install only (never clobber creds).
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
       env_file="$HERMES_PROFILES_DIR/$p/.env"

@@ -10,13 +10,25 @@ model:
   base_url: https://api.kilo.ai/api/gateway
   default: ~anthropic/claude-haiku-latest
 
-# Route obsidian-MCP vault writes through the policy gate (Linter writes only 00-meta/02-logs/).
+# Route writes through the policy gate (Linter writes only 00-meta/02-logs/). The
+# Linter keeps the `file` toolset (detectors.py + Git over the vault tree), so its
+# in-vault file writes (write_file/patch) are gated too, not just obsidian (#51).
+# The gate governs vault zones only; `terminal` stays ungated by hook (Linter is
+# bounded there by its lane-override write_scope, 00-meta/02-logs/).
+# NOTE(confirm-at-build): see the memoria-coder config — confirm the live file-tool
+# names against the "write_file|patch" matcher regex.
 hooks:
   pre_tool_call:
     - matcher: "obsidian"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-linter"
       timeout: 10
+    - matcher: "write_file|patch"      # Hermes `file` toolset writes
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-linter"
+      timeout: 10
   post_tool_call:                       # completes the audit record with after_hash (reversibility)
     - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-linter"
+      timeout: 10
+    - matcher: "write_file|patch"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-linter"
       timeout: 10

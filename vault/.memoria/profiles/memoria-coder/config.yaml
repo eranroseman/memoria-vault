@@ -9,13 +9,27 @@ model:
   base_url: https://api.kilo.ai/api/gateway
   default: ~anthropic/claude-haiku-latest
 
-# Route obsidian-MCP vault writes through the policy gate.
+# Route writes through the policy gate. Coder keeps the `file` toolset (Git/repo +
+# external-agent handoff), so its in-vault file writes (write_file/patch) are gated
+# too, not just obsidian (#51). The gate governs vault zones only — writes outside
+# the vault proceed (policy_hook.to_vault_relative returns None -> allow). The
+# `terminal` toolset stays ungated by hook (shell has no single path); Coder is
+# bounded there by its lane-override write_scope (40-workbench/*/06-code/).
+# NOTE(confirm-at-build): the "file" matcher is a regex on the tool name; confirm
+# the file-toolset tools surface as write_file/patch (bare or prefixed) on the live
+# Hermes build and adjust the regex if they are namespaced differently.
 hooks:
   pre_tool_call:
     - matcher: "obsidian"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
       timeout: 10
+    - matcher: "write_file|patch"      # Hermes `file` toolset writes
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
+      timeout: 10
   post_tool_call:                       # completes the audit record with after_hash (reversibility)
     - matcher: "obsidian"
+      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
+      timeout: 10
+    - matcher: "write_file|patch"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
       timeout: 10
