@@ -180,7 +180,12 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         policy_mcp.PolicyEngine(vault).complete_write(
             profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256))
     except Exception:
-        pass                                        # never break the loop on the audit-completion path
+        # Never break the agent loop on the audit-completion path. Under
+        # --self-test (HOOK_SELFTEST=1) print the cause — otherwise a swallowed
+        # failure here surfaces downstream as a confusing missing-audit-file error.
+        if os.environ.get("HOOK_SELFTEST"):
+            import traceback
+            traceback.print_exc()
     finally:
         try:
             pend.unlink()
@@ -198,6 +203,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if args.self_test:
+        os.environ["HOOK_SELFTEST"] = "1"   # surface swallowed completion errors
         sys.exit(1 if self_test() else 0)
 
     try:
@@ -276,7 +282,11 @@ def self_test() -> int:
         # the tool "runs": the file now exists with content
         (vault / "10-inbox" / "02-answers" / "round.md").write_text("answer body", encoding="utf-8")
         post = evaluate_post(ev_payload, "memoria-writer", vault)
-        audit_lines = (vault / "00-meta" / "02-logs" / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+        # A missing audit file means complete_write failed (swallowed above); report
+        # it as a clear check instead of crashing the whole suite on read_text().
+        audit_file = vault / "00-meta" / "02-logs" / "audit.jsonl"
+        check("post wrote the audit log", audit_file.is_file())
+        audit_lines = audit_file.read_text(encoding="utf-8").splitlines() if audit_file.is_file() else []
         completes = [json.loads(l) for l in audit_lines if json.loads(l).get("decision") == "write_complete"]
         check("post returns {} (never blocks)", post == {})
         check("post appended a write_complete record", len(completes) == 1)
