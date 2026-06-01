@@ -12,7 +12,7 @@ on:
 
 jobs:
   shellcheck:
-    name: shellcheck (install.sh)
+    name: shellcheck (scripts/install.sh)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,21 +20,21 @@ jobs:
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: "."
-          additional_files: "install.sh"
+          additional_files: "scripts/install.sh"
           severity: warning
 
   psscriptanalyzer:
-    name: PSScriptAnalyzer (install.ps1)
+    name: PSScriptAnalyzer (scripts/install.ps1)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install PSScriptAnalyzer
         shell: pwsh
         run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-      - name: Analyze install.ps1
+      - name: Analyze scripts/install.ps1
         shell: pwsh
         run: |
-          $results = Invoke-ScriptAnalyzer -Path install.ps1 -Severity Warning,Error -Settings ./PSScriptAnalyzerSettings.psd1
+          $results = Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1
           if ($results) {
             $results | Format-Table -AutoSize
             exit 1

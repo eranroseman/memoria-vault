@@ -9,7 +9,7 @@ Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit
 
 | Path | Contents | Audience |
 | --- | --- | --- |
-| `install.sh` / `install.ps1` (repo root) | The **bootstrap installer**: provisions the stack and deploys the vault. `install.sh` is the real implementation; `install.ps1` is a thin WSL2 launcher. | End users (run once). |
+| `scripts/install.sh` / `scripts/install.ps1` (repo root) | The **bootstrap installer**: provisions the stack and deploys the vault. `scripts/install.sh` is the real implementation; `scripts/install.ps1` is a thin WSL2 launcher. | End users (run once). |
 | `vault/` | The starter vault — folder skeleton, Obsidian config, and the `.memoria/` scaffold. The **runtime artifact**. | End users (opened in Obsidian after install). |
 | `docs/` | Architecture, workflow, profile, and decision documents. Not needed at runtime. | Developers and contributors. |
 
@@ -36,7 +36,7 @@ The bootstrap copies `vault/` to a working location (off OneDrive on Windows); t
 
 ## Why the profile install is idempotent
 
-The bootstrap's profile-install step (the function in `install.sh`, also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
+The bootstrap's profile-install step (the function in `scripts/install.sh`, also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
 
 The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with the vault source. Without it, the seven profile directories under `~/.hermes/profiles/` would drift from their vault source over time — a drift the Linter's `profile-install-drift` detector catches but cannot fix. The re-run is the fix; making it safe to re-run is what makes the fix actionable.
 

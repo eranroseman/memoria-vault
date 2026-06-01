@@ -48,13 +48,13 @@ One line. Inspect the script first if you like — that's the recommended path.
 **Linux (Ubuntu/Debian) or WSL2:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 ```
 
-**Windows (PowerShell)** — gates WSL2, installs the GUI apps via winget, then runs `install.sh` in WSL2:
+**Windows (PowerShell)** — gates WSL2, installs the GUI apps via winget, then runs `scripts/install.sh` in WSL2:
 
 ```powershell
-irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
 **Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `vault/`):
@@ -62,7 +62,7 @@ irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
-bash install.sh            # or  .\install.ps1  on Windows
+bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 #   --dry-run   preview every command, change nothing
 #   --no-apps   skip the Obsidian/Zotero guidance (headless / VPS)
 ```
@@ -87,7 +87,7 @@ bash install.sh            # or  .\install.ps1  on Windows
 
 | Path | What |
 | --- | --- |
-| `install.sh` / `install.ps1` | The bootstrap (`install.sh`) + thin Windows WSL2 launcher |
+| `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
 | `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
 | `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/` |
 | `project-files/` | Decisions, proposals, and operations notes |
@@ -103,9 +103,9 @@ Start in [`docs/`](docs/). New here? Begin with
 After editing vault source, re-deploy without reinstalling:
 
 ```bash
-bash install.sh --profiles-only                   # redeploy all seven profiles
-bash install.sh --profiles-only --only memoria-librarian  # one profile
-.\install.ps1 -ProfilesOnly                       # Windows equivalent
+bash scripts/install.sh --profiles-only                   # redeploy all seven profiles
+bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
+.\scripts/install.ps1 -ProfilesOnly                       # Windows equivalent
 ```
 
 ## Contributing

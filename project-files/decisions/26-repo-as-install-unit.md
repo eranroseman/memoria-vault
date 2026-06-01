@@ -17,7 +17,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 ## Decision
 
-**The repo (`memoria-vault`) is the install unit.** A user clones it (or runs the one-line bootstrap that clones it), and the bootstrap installer at the repo root (`install.sh`, with `install.ps1` as a thin WSL2 launcher) deploys everything. The repo has three parts with distinct audiences: `install.sh`/`install.ps1` (bootstrap), `vault/` (the runtime artifact deployed to a working location off OneDrive on Windows), and `docs/` (developer-facing, not deployed). Consequences that follow as rules:
+**The repo (`memoria-vault`) is the install unit.** A user clones it (or runs the one-line bootstrap that clones it), and the bootstrap installer at the repo root (`scripts/install.sh`, with `scripts/install.ps1` as a thin WSL2 launcher) deploys everything. The repo has three parts with distinct audiences: `scripts/install.sh`/`scripts/install.ps1` (bootstrap), `vault/` (the runtime artifact deployed to a working location off OneDrive on Windows), and `docs/` (developer-facing, not deployed). Consequences that follow as rules:
 
 - **`vault/` is not independently installable** — installing requires the whole repo, and any reference from a vault-resident file to `docs/` or `project-files/` is a **GitHub URL, never a relative path**, because the deployed vault does not carry them.
 - **Profiles are hand-authored**, not compiled. The seven profile directories under `.memoria/profiles/` are maintained by hand; a profile compiler is **deferred** ([profile-compilation.md](../proposals/profile-compilation.md)) because seven-profile scale does not yet justify the complexity.

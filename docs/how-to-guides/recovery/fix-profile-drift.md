@@ -35,7 +35,7 @@ This compares the SHA-256 of every file in `vault/.memoria/profiles/` against it
 There are two causes with different implications:
 
 **Cause A: The vault source changed and the install script hasn't been re-run.**
-This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile-install (`bash install.sh --profiles-only`, or `.\install.ps1 -ProfilesOnly` on Windows).
+This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile-install (`bash scripts/install.sh --profiles-only`, or `.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
 **Cause B: Someone edited the deployed copy directly.**
 
@@ -54,21 +54,21 @@ If the diff shows meaningful changes in the deployed copy (not in the vault sour
 Re-run the profile-install after resolving Cause A or B (from the repo clone):
 
 ```bash
-bash install.sh --profiles-only      # Linux / WSL2
+bash scripts/install.sh --profiles-only      # Linux / WSL2
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly          # Windows
+.\scripts/install.ps1 -ProfilesOnly          # Windows
 ```
 
 To fix drift on a single profile only:
 
 ```bash
-bash install.sh --profiles-only --only memoria-linter
+bash scripts/install.sh --profiles-only --only memoria-linter
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly -Only memoria-linter
+.\scripts/install.ps1 -ProfilesOnly -Only memoria-linter
 ```
 
 ## Verify

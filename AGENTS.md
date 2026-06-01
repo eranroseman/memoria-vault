@@ -75,7 +75,7 @@ commits the whole git working tree every ~30 min — you'll see commits titled
 (`~/Memoria` on Windows), where auto-backup is a wanted feature. It turns hostile
 only if someone **opens a checkout of this dev repo as an Obsidian vault** (e.g.
 points Windows-Obsidian at a `\\wsl$\…\memoria-vault` path) — then the timer
-auto-commits the entire source tree (`install.sh`, `project-files/`, `docs/`…),
+auto-commits the entire source tree (`scripts/install.sh`, `project-files/`, `docs/`…),
 bundling your in-progress edits with unrelated work and sometimes spawning phantom
 branches that orphan work.
 
@@ -96,7 +96,7 @@ The working tree may hold the user's parallel work-in-progress or hook-generated
 churn. Stage only the files you changed:
 
 ```bash
-git add install.sh                      # yes — explicit
+git add scripts/install.sh                      # yes — explicit
 git add project-files/decisions/24-*.md # yes
 git add -A                              # NO — sweeps in others' work
 ```
@@ -139,8 +139,8 @@ These checks are **required** by the branch ruleset and must all pass:
 | Check | Runs |
 | --- | --- |
 | `docs-doctor` | structural lint of `docs/` (broken links, misfiled files) |
-| `shellcheck (install.sh)` | shell lint |
-| `PSScriptAnalyzer (install.ps1)` | PowerShell lint |
+| `shellcheck (scripts/install.sh)` | shell lint |
+| `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` of the vault Python tooling (policy gate, board export, metrics, detectors) |
 | `docs-links` | every `docs/` reference under `vault/` resolves (Pages URLs map to a real doc; no banned blob URLs) — `scripts/check-vault-links.sh` |
 
@@ -150,8 +150,8 @@ reports on PRs that don't touch those paths, leaving them permanently `BLOCKED`.
 Both `docs-doctor.yml` and `lint-installers.yml` therefore run on every push/PR
 unconditionally. If you add a new required check, follow the same rule.
 
-**Linter notes:** `install.ps1` is an interactive installer, so `Write-Host` is
-intentional and excluded via `PSScriptAnalyzerSettings.psd1`; PowerShell
+**Linter notes:** `scripts/install.ps1` is an interactive installer, so `Write-Host` is
+intentional and excluded via `scripts/PSScriptAnalyzerSettings.psd1`; PowerShell
 functions must use approved verbs (`Install-`, not `Ensure-`).
 
 ## 5. Test before you commit
@@ -159,15 +159,15 @@ functions must use approved verbs (`Install-`, not `Ensure-`).
 Every installer bug in this repo's history was caught by *running* the code, not
 reading it. Before opening a PR:
 
-- **Shell** (`install.sh`): `bash -n install.sh` (parse) + a `--dry-run` pass.
-- **PowerShell** (`install.ps1`): the CI **`PSScriptAnalyzer`** check is the gate —
+- **Shell** (`scripts/install.sh`): `bash -n scripts/install.sh` (parse) + a `--dry-run` pass.
+- **PowerShell** (`scripts/install.ps1`): the CI **`PSScriptAnalyzer`** check is the gate —
   a WSL2 agent usually has no `pwsh`, so lean on CI but still read the script when you
   change its logic.
 - **Python** (`.memoria/mcp/*.py`, `detectors.py`): run `--self-test`
   (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`,
   `detectors.py` all support it).
 - **Installer end-to-end:** deploy into a *throwaway* vault
-  (`bash install.sh --yes --no-apps --vault ~/Memoria-test`), verify, then clean
+  (`bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test`), verify, then clean
   up — never test against the real `~/Memoria`.
 
 ## 6. Runtime / platform facts
@@ -175,11 +175,11 @@ reading it. Before opening a PR:
 - The dev repo and the **Hermes runtime both run in WSL2** (Linux); you edit and run
   everything from the WSL2 side (VSCode Remote-WSL). **Obsidian and the runtime vault
   stay on Windows** — see *Where things live*.
-- **`install.ps1` is the end-user Windows launcher**: it `wslpath`-converts the
-  Windows vault path and hands off to `install.sh` inside WSL2. For dev work, run
-  `install.sh` directly in WSL2; you rarely touch `install.ps1` except to lint it.
+- **`scripts/install.ps1` is the end-user Windows launcher**: it `wslpath`-converts the
+  Windows vault path and hands off to `scripts/install.sh` inside WSL2. For dev work, run
+  `scripts/install.sh` directly in WSL2; you rarely touch `scripts/install.ps1` except to lint it.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to **LF**
-  (a CRLF in `install.sh` breaks the WSL2 shebang). Never override it — working on
+  (a CRLF in `scripts/install.sh` breaks the WSL2 shebang). Never override it — working on
   ext4 in WSL2 avoids the CRLF churn that `/mnt/c` + Windows editors introduce.
 - **Obsidian REST bridge** (integration work): WSL2-Hermes ↔ Windows-Obsidian needs
   `networkingMode=mirrored` in `.wslconfig` so `https://127.0.0.1:27124` resolves

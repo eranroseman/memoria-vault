@@ -11,7 +11,7 @@ Open the vault in Obsidian, install the required plugins, and configure the REST
 ## Prerequisites
 
 - Obsidian installed ([obsidian.md](https://obsidian.md))
-- Memoria installed — the bootstrap (`install.sh`, or `install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
+- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
 
 ## Steps
 

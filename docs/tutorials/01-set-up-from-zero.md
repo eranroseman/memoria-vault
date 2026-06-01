@@ -41,11 +41,11 @@ You now have the **repo** at `~/memoria` (the install unit). In the next step th
 Still in the terminal, from the repo root (`~/memoria`):
 
 ```bash
-bash install.sh        # Linux / WSL2
+bash scripts/install.sh        # Linux / WSL2
 ```
 
 ```powershell
-.\install.ps1          # Windows (gates WSL2, then runs install.sh in WSL2)
+.\scripts/install.ps1          # Windows (gates WSL2, then runs scripts/install.sh in WSL2)
 ```
 
 The installer (with your confirmation at each external step):

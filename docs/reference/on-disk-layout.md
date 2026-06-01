@@ -16,13 +16,15 @@ Where every file lives across the two filesystem roots: the starter vault (versi
 There are two roots. The **repo** is the install unit — cloned anywhere; the bootstrap
 copies `vault/` to your chosen **runtime vault** folder (default `~/Memoria`, deliberately
 off OneDrive). Both folder names are free; the internal shapes are fixed. The install
-scripts live at the **repo root**, not inside the vault.
+scripts live in **`scripts/`**, not inside the vault.
 
 ```text
 memoria-vault/                       # repo root — the install unit (clone anywhere)
 ├── README.md                       # clone and install instructions
-├── install.sh                      # bootstrap installer (Ubuntu/Debian + WSL2)
-├── install.ps1                     # thin Windows launcher (gates WSL2, runs install.sh)
+├── scripts/                        # installer and maintenance scripts
+│   ├── install.sh                  # bootstrap installer (Ubuntu/Debian + WSL2)
+│   ├── install.ps1                 # thin Windows launcher (gates WSL2, runs install.sh)
+│   └── PSScriptAnalyzerSettings.psd1  # PSScriptAnalyzer lint config
 ├── docs/                           # engineering spec (NOT copied to the runtime vault)
 ├── project-files/                  # decisions, proposals, operations
 │

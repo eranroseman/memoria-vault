@@ -28,7 +28,7 @@ hermes --version
 hermes profile list
 ```
 
-`hermes --version` returns a version number. `hermes profile list` shows all seven `memoria-*` profiles registered. If profiles are missing, re-deploy them from the repo clone: `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
+`hermes --version` returns a version number. `hermes profile list` shows all seven `memoria-*` profiles registered. If profiles are missing, re-deploy them from the repo clone: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
 **3. Confirm the vault is synced.**
 

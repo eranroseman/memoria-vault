@@ -16,7 +16,7 @@ model:
   default: ~anthropic/claude-haiku-latest
 
 # Route obsidian-MCP vault writes through the policy gate. {{VAULT_PATH}} is
-# substituted by install.ps1. Matcher "obsidian" catches every obsidian_* tool;
+# substituted by scripts/install.ps1. Matcher "obsidian" catches every obsidian_* tool;
 # the hook lets reads pass and gates writes (deny/dry_run -> blocked).
 hooks:
   pre_tool_call:

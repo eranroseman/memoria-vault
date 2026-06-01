@@ -19,7 +19,7 @@ Two platforms only; **macOS is out of scope for v0.1**, and Linux is **Ubuntu/De
 | Git | `apt` | in WSL2 (`apt`) — the one hard pre-Hermes prereq |
 | Pandoc | `apt` | in WSL2 (`apt`) — the one runtime Hermes does *not* provision |
 | uv, Python 3.11, Node 22, ripgrep, ffmpeg | provisioned by the Hermes installer | same (inside WSL2) |
-| Hermes runtime + `.memoria` Python | native (upstream `install.sh`) | **WSL2 (Ubuntu) only — else abort** |
+| Hermes runtime + `.memoria` Python | native (upstream `scripts/install.sh`) | **WSL2 (Ubuntu) only — else abort** |
 
 The Hermes installer auto-provisions uv, Python 3.11, Node.js 22, ripgrep, and ffmpeg, so the bootstrap installs only **Git** (if missing) and **Pandoc** before handing off. On Windows, Obsidian + Zotero + the vault files are Windows-native, while Hermes and everything it provisions live in WSL2 Ubuntu and read the vault across `/mnt/c`.
 
@@ -106,6 +106,6 @@ Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Li
 ## Related
 
 - **Design rationale:** [explanation/architecture/bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md).
-- **Redeploy path:** [redeploy-profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`install.sh --profiles-only`).
+- **Redeploy path:** [redeploy-profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
 - **Setup guides:** [set-up-the-vault](../how-to-guides/setup/set-up-the-vault.md), [set-up-hermes](../how-to-guides/setup/set-up-hermes.md), [set-up-zotero](../how-to-guides/setup/set-up-zotero.md).
 - **Telemetry shipped by v0.1:** [telemetry.md](telemetry.md).

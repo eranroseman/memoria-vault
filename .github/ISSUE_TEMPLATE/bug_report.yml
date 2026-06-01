@@ -15,7 +15,7 @@ body:
       label: Component
       description: Which part of Memoria is affected?
       options:
-        - Install script (install.sh / install.ps1)
+        - Install script (scripts/install.sh / scripts/install.ps1)
         - Profile (specify below)
         - Vault structure / templates
         - Hermes integration (AGENTS.md / SOUL.md)
@@ -37,7 +37,7 @@ body:
     attributes:
       label: What happened?
       description: A clear description of the bug.
-      placeholder: When I run install.sh, the researcher profile is not copied to ~/.hermes/profiles/.
+      placeholder: When I run scripts/install.sh, the researcher profile is not copied to ~/.hermes/profiles/.
     validations:
       required: true
 
@@ -55,7 +55,7 @@ body:
       label: Steps to reproduce
       placeholder: |
         1. Clone the repo
-        2. Run `bash install.sh`
+        2. Run `bash scripts/install.sh`
         3. Check `~/.hermes/profiles/`
     validations:
       required: true

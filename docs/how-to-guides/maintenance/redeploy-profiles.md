@@ -20,11 +20,11 @@ Push vault source edits — to `SOUL.md`, `config.yaml`, `mcp.json`, skills, or 
 **1. Redeploy all profiles.** Run from the repo clone (it holds the installer); `--profiles-only` skips the full bootstrap and just re-deploys profiles.
 
 ```bash
-bash install.sh --profiles-only      # Linux / WSL2 (where Hermes runs)
+bash scripts/install.sh --profiles-only      # Linux / WSL2 (where Hermes runs)
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly          # Windows (forwards to install.sh in WSL2)
+.\scripts/install.ps1 -ProfilesOnly          # Windows (forwards to scripts/install.sh in WSL2)
 ```
 
 Add `--vault <dir>` (`-Vault <dir>` on Windows) if your runtime vault isn't the default `~/Memoria`. The script is idempotent — safe to run at any time. It:
@@ -37,11 +37,11 @@ Add `--vault <dir>` (`-Vault <dir>` on Windows) if your runtime vault isn't the 
 **2. Redeploy a single profile** (faster when only one changed):
 
 ```bash
-bash install.sh --profiles-only --only memoria-linter
+bash scripts/install.sh --profiles-only --only memoria-linter
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly -Only memoria-linter
+.\scripts/install.ps1 -ProfilesOnly -Only memoria-linter
 ```
 
 **3. Confirm the change landed.**

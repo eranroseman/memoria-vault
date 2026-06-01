@@ -26,7 +26,7 @@ The default aliases (`memoria-librarian`, etc.) belong to your primary vault, an
 
 ```bash
 # from your repo clone — copy the vault out + deploy (memoria-* now point at it):
-bash install.sh --vault ~/my-second-vault
+bash scripts/install.sh --vault ~/my-second-vault
 
 # duplicate each deployed profile under a project2-* alias (its mcp.json already
 # has the substituted second-vault path):
@@ -35,7 +35,7 @@ for role in librarian mapper socratic writer verifier coder linter; do
 done
 
 # restore the memoria-* profiles to your primary vault:
-bash install.sh --profiles-only --vault ~/your-primary-vault
+bash scripts/install.sh --profiles-only --vault ~/your-primary-vault
 ```
 
 This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second vault while `memoria-*` keep pointing at your primary.

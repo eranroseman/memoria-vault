@@ -15,13 +15,13 @@ Before running either:
 1. **Inspect first (recommended).** Download and read the script, then run the
    local copy:
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh -o install.sh
-   less install.sh        # read it
-   bash install.sh        # then run it
+   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o scripts/install.sh
+   less scripts/install.sh        # read it
+   bash scripts/install.sh        # then run it
    ```
 2. **Or clone and run locally** — the README shows how.
-3. **Preview with `--dry-run`.** `bash install.sh --dry-run` (or
-   `install.ps1 -DryRun`) prints every command the installer *would* run and
+3. **Preview with `--dry-run`.** `bash scripts/install.sh --dry-run` (or
+   `scripts/install.ps1 -DryRun`) prints every command the installer *would* run and
    changes nothing.
 
 What the installer does and does not do, by design:
@@ -61,7 +61,7 @@ You can expect an acknowledgement within 48 hours and a resolution timeline with
 
 Areas of particular interest:
 
-- **install.sh / install.ps1** — path traversal, argument injection, unsafe downloads, or privilege escalation in the installer
+- **scripts/install.sh / scripts/install.ps1** — path traversal, argument injection, unsafe downloads, or privilege escalation in the installer
 - **API key handling** — keys exposed in logs, written to unexpected locations, or leaked through environment variables
 - **Hermes profile configs** (`vault/.memoria/profiles/`) — prompt injection, write-gate bypass, or lane policy circumvention via profile YAML
 - **Policy MCP layer** — any path that allows an agent to write to canonical vault zones without human confirmation

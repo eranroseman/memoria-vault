@@ -11,7 +11,7 @@ Fill the API secrets for each profile and verify that Hermes can reach the vault
 ## Prerequisites
 
 - Hermes installed and on your `PATH` (`hermes --version` returns a version)
-- Memoria installed — the bootstrap (`install.sh`, or `install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
+- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
 - Obsidian running with the REST API plugin active ([set-up-obsidian.md](set-up-obsidian.md)) — you need the `apiKey` from that step
 
 ## Steps
@@ -60,7 +60,7 @@ notepad "$env:USERPROFILE\.hermes\profiles\memoria-mapper\.env"
 Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\mcp.json"
 ```
 
-The `policy` server's `args` should point at an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{VAULT_PATH}}`, re-run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
+The `policy` server's `args` should point at an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{VAULT_PATH}}`, re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
 **4. Test the Librarian can reach Obsidian.**
 

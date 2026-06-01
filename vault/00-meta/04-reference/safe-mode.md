@@ -55,7 +55,7 @@ The three core workflows (ingest, review, export) with minimal commands and fall
 ```bash
 cd <vault-root>
 git stash                  # save any in-flight uncommitted changes
-./install.ps1              # re-run the installer
+./scripts/install.ps1              # re-run the installer
 git stash pop              # restore
 ```
 

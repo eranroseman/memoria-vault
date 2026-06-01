@@ -88,7 +88,7 @@ Add a `.stignore` in the vault root to exclude noise:
 ```bash
 # on VPS — from the repo root (headless: skip the Obsidian/Zotero guidance)
 cd ~/memoria-vault
-bash install.sh --no-apps
+bash scripts/install.sh --no-apps
 ```
 
 Hermes is already installed (step 1), so the installer detects it, copies the vault, and deploys the profiles. Use `--vault <dir>` to control where the runtime vault lands.

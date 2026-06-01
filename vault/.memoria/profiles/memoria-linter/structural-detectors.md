@@ -4,7 +4,7 @@ The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](S
 
 | ID | Detector | Severity | Why this severity |
 | --- | --- | --- | --- |
-| `profile-install-drift` | Profile install drift | LOW | The deployed copy in `~/.hermes/profiles/memoria-<name>/` differs from its source in `.memoria/profiles/memoria-<name>/`. Usually means a `git pull` updated the source and the human hasn't re-run `install.ps1` — recoverable in one command. |
+| `profile-install-drift` | Profile install drift | LOW | The deployed copy in `~/.hermes/profiles/memoria-<name>/` differs from its source in `.memoria/profiles/memoria-<name>/`. Usually means a `git pull` updated the source and the human hasn't re-run `scripts/install.ps1` — recoverable in one command. |
 | `vault-hash-drift` | Vault hash drift | CRITICAL | A file was written outside the policy MCP, or was tampered with after a write. Either reversibility or security is at stake. |
 | `skeleton-drift` | Skeleton note drift | MEDIUM | The human-facing notes lag the engineering spec. Won't break anything immediately but erodes trust over weeks. |
 | `dashboard-field-drift` | Dashboard field drift | HIGH | Silent-failure mode: a query returns zero rows in a real vault because a field name is wrong. The human sees "nothing to do" when there's something to do. |
@@ -17,16 +17,16 @@ The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](S
 
 ## `profile-install-drift` — Profile install drift
 
-You own drift detection between the source profile files in `.memoria/profiles/memoria-<name>/` (checked into the vault repo) and the deployed copies under `~/.hermes/profiles/memoria-<name>/` (written by `install.ps1`). Under direct profile management the source and the deployed copy are supposed to match exactly after every install run, modulo the `{{VAULT_PATH}}` substitution in `mcp.json` and the human-owned `.env` file.
+You own drift detection between the source profile files in `.memoria/profiles/memoria-<name>/` (checked into the vault repo) and the deployed copies under `~/.hermes/profiles/memoria-<name>/` (written by `scripts/install.ps1`). Under direct profile management the source and the deployed copy are supposed to match exactly after every install run, modulo the `{{VAULT_PATH}}` substitution in `mcp.json` and the human-owned `.env` file.
 
 Procedure:
 
 1. For each of the seven profiles, list the files under both `.memoria/profiles/memoria-<name>/` (source, in the vault) and `~/.hermes/profiles/memoria-<name>/` (deployed).
 2. For each file present in both, compute SHA-256. Exclude `.env` (user-owned, expected to differ). For `mcp.json`, substitute `{{VAULT_PATH}}` in the source copy with the vault's absolute path (forward-slash form) before hashing — this is what the installer does.
-3. For each file present in only one side, report it: a source-only file means `install.ps1` hasn't been re-run since the file was added; a deploy-only file means the human added a file by hand that doesn't exist in the vault.
+3. For each file present in only one side, report it: a source-only file means `scripts/install.ps1` hasn't been re-run since the file was added; a deploy-only file means the human added a file by hand that doesn't exist in the vault.
 4. If any hash differs: report the affected profile, file, and which side has the unexpected content (vault source ahead of deploy, or hand-edited deploy).
 
-This action is `report` only. Never re-run `install.ps1` automatically — a drift might indicate (a) the source changed and the human hasn't re-installed yet, or (b) the human hand-edited a deployed file. Both cases need human judgment about whether the change should be promoted into the vault source or reverted.
+This action is `report` only. Never re-run `scripts/install.ps1` automatically — a drift might indicate (a) the source changed and the human hasn't re-installed yet, or (b) the human hand-edited a deployed file. Both cases need human judgment about whether the change should be promoted into the vault source or reverted.
 
 ## `vault-hash-drift` — Vault hash drift
 

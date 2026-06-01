@@ -111,7 +111,7 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 | Command | What it does |
 | --- | --- |
 | `hermes profile list` | List all registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --alias <alias> --force --yes` | Install or refresh a profile from a staged directory. In practice use `install.sh --profiles-only` — it handles `{{VAULT_PATH}}` substitution first. |
+| `hermes profile install <dir> --alias <alias> --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` — it handles `{{VAULT_PATH}}` substitution first. |
 | `hermes profile show <alias>` | Show a profile's `SOUL.md`, MCP servers, allowed skills, and `.env` key names (values redacted). |
 | `hermes profile remove <alias>` | Remove the profile registration. Does not delete the vault source files under `.memoria/profiles/`. |
 

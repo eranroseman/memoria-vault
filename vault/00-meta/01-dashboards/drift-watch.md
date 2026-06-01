@@ -4,7 +4,7 @@
 
 **Decision.** Surface the Linter's eight structural detector findings as one consolidated view. Each detector catches a specific kind of silent drift the human wouldn't otherwise notice. This is the dashboard you open when something feels off — the lint pass passed but the system still seems wrong.
 
-**When to open.** Weekly review (Friday ritual); after accepting a plugin upgrade; after editing a profile's `SOUL.md` / `config.yaml` or a lane-override file (and re-running `install.ps1`); when an [audit-log](audit-log.md) anomaly suggests a configuration drift.
+**When to open.** Weekly review (Friday ritual); after accepting a plugin upgrade; after editing a profile's `SOUL.md` / `config.yaml` or a lane-override file (and re-running `scripts/install.ps1`); when an [audit-log](audit-log.md) anomaly suggests a configuration drift.
 
 ## The eight detectors
 
@@ -12,7 +12,7 @@ For the full definitions, severities, and remediation paths, see [the Linter's s
 
 | ID | Detector | What it catches | Severity |
 | --- | --- | --- | --- |
-| `profile-install-drift` | Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file differs from its source at `.memoria/profiles/memoria-<name>/` (hand-edit to the install, or `git pull` without re-running `install.ps1`) | LOW |
+| `profile-install-drift` | Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file differs from its source at `.memoria/profiles/memoria-<name>/` (hand-edit to the install, or `git pull` without re-running `scripts/install.ps1`) | LOW |
 | `vault-hash-drift` | Vault hash drift | Vault file modified outside the policy MCP (tamper or out-of-band edit) | CRITICAL |
 | `skeleton-drift` | Skeleton note drift | Human notes in `00-meta/` lagging the engineering spec | MEDIUM |
 | `dashboard-field-drift` | Dashboard field drift | Dataview query references a frontmatter field no template emits | HIGH |

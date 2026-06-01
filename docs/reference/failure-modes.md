@@ -42,7 +42,7 @@ Sorted by severity, then topic.
 | Citekey not found at ingest | LOW | `.bib` not updated or not pulled | Export from Zotero (File → Export Library → Keep Updated); `git add .memoria/library.bib && git commit && git push`. |
 | `_enrichment` fields not queryable | LOW | `_enrichment` is a nested frontmatter namespace; Dataview can't query nested keys directly | Promote specific fields (e.g., `enriched_date`) to main frontmatter, or query the parent key. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
-| Profile install drift after edit | LOW | Vault source changed but profiles not re-deployed | Re-run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows). |
+| Profile install drift after edit | LOW | Vault source changed but profiles not re-deployed | Re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows). |
 | Bitwarden bootstrap token rejected | LOW | Wrong region or revoked token | Re-run `hermes secrets bitwarden setup` and pick the correct region. |
 
 ---

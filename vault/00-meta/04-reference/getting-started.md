@@ -15,8 +15,8 @@ First-time setup checklist. Five steps from clone to first ingest.
 ```bash
 git clone <vault-repo-url> my-vault
 cd my-vault
-./install.ps1   # Windows
-./install.sh    # macOS / Linux
+./scripts/install.ps1   # Windows
+./scripts/install.sh    # macOS / Linux
 ```
 
 The installer copies the seven Hermes profile directories from `.memoria/profiles/` to `~/.hermes/profiles/`, substitutes `{{VAULT_PATH}}` in each `mcp.json` with the absolute vault path, and bootstraps `.env` files from `.env.EXAMPLE`.

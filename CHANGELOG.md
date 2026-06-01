@@ -13,10 +13,10 @@ Working toward the first tagged release, **v0.1.0** — **not yet cut.** No
 ### Added
 - Seven specialist agent profiles: `librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`
 - Obsidian starter vault (`vault/`) with the `.memoria/` tooling layer; Diátaxis engineering docs in `docs/`
-- `install.sh` (Ubuntu/WSL2 bootstrap) and `install.ps1` (thin Windows → WSL2 launcher)
+- `scripts/install.sh` (Ubuntu/WSL2 bootstrap) and `scripts/install.ps1` (thin Windows → WSL2 launcher)
 - Policy MCP write-gate + `policy_hook.py` pre/post tool-call hook (the structural review gate)
 - Six-signal telemetry capture (`board_export.py`, `metrics_aggregate.py`, Linter `detectors.py`)
-- CI required checks: `docs-doctor`, `shellcheck (install.sh)`, `PSScriptAnalyzer (install.ps1)`, `python-selftest`, `docs-links`
+- CI required checks: `docs-doctor`, `shellcheck (scripts/install.sh)`, `PSScriptAnalyzer (scripts/install.ps1)`, `python-selftest`, `docs-links`
 - Repo health: GitHub issue/PR templates, `CODEOWNERS`, `FUNDING.yml`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE` (MIT), and `AGENTS.md` (agent workflow guidelines)
 
 ### Known issues

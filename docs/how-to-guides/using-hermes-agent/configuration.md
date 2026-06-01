@@ -17,7 +17,7 @@ Each profile has two locations:
 | `vault/.memoria/profiles/memoria-<name>/` | **Vault source** — version-controlled, authoritative |
 | `~/.hermes/profiles/memoria-<name>/` | **Deployed copy** — what Hermes actually runs |
 
-Always edit the vault source. Re-deploy with `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows) to push changes to the deployed copy. Never edit the deployed copy directly — it will be overwritten on the next install.
+Always edit the vault source. Re-deploy with `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows) to push changes to the deployed copy. Never edit the deployed copy directly — it will be overwritten on the next install.
 
 ## File roles
 
@@ -44,7 +44,7 @@ model:
 
 The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus a `hooks` block) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
 
-3. Save and re-deploy: `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
+3. Save and re-deploy: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
 ## Auxiliary models (set globally, not per-profile)
 
@@ -96,13 +96,13 @@ routing:
 
 You do **not** declare review-gating per lane: writes to the review-gated zones (`30-synthesis/01-claims`, `02-reference`, `03-moc`, `50-deliverables`) are automatically degraded to `dry_run` by the policy MCP. `audit_log` is a token in the `require:` list (the log path is fixed at `00-meta/02-logs/audit.jsonl`), not a key.
 
-After editing, re-deploy (`bash install.sh --profiles-only`) — the installer picks up lane-override changes on every run.
+After editing, re-deploy (`bash scripts/install.sh --profiles-only`) — the installer picks up lane-override changes on every run.
 
 ## Add or remove a skill
 
 Skills live in `vault/.memoria/profiles/memoria-<name>/skills/`. Each skill is a `.yaml` or `.md` file defining the skill's commands and context.
 
-To add a skill, copy the skill file into the profile's `skills/` directory and re-deploy (`bash install.sh --profiles-only`). To remove one, delete the file and re-deploy.
+To add a skill, copy the skill file into the profile's `skills/` directory and re-deploy (`bash scripts/install.sh --profiles-only`). To remove one, delete the file and re-deploy.
 
 ## Update API credentials
 

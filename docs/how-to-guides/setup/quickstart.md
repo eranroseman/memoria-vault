@@ -20,12 +20,12 @@ Five steps from zero to a working vault with one source ingested. For the full s
 
 ```bash
 # Linux / WSL2:
-curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 ```
 
 ```powershell
 # Windows (PowerShell): gates WSL2, then runs the Linux installer
-irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
 The installer provisions Hermes, deploys the seven profiles, and copies the vault to your chosen folder (default `~/Memoria`, off OneDrive).
