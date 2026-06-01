@@ -6,6 +6,8 @@ parent: Setup
 
 # How to set up the messaging gateway
 
+> **v0.1 status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component. This guide documents the intended setup; the bot wiring and inbound capture path are not validated end-to-end in v0.1. Use Obsidian capture ([triage-fleeting-notes](../sources/triage-fleeting-notes.md)) as the supported path until this lands.
+
 Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's inbox.
 
 ## Prerequisites
