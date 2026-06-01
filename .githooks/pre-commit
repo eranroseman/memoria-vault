@@ -1,19 +1,73 @@
 #!/bin/sh
-# docs-doctor pre-commit guard — blocks commits that break docs/ structure.
+# Memoria pre-commit guard — a fast local mirror of the required CI checks, so
+# failures surface before push/PR instead of in GitHub Actions.
 #
 # Enable once per clone:
 #   git config core.hooksPath .githooks
 #
-# Runs only when docs/ or the linter itself is staged. Bypass (rarely) with:
-#   git commit --no-verify
+# Each block runs ONLY when relevant files are staged (so unrelated commits stay
+# fast). Bypass any block (rarely) with:  git commit --no-verify
+#
+# Mirrors the four required checks: docs-doctor, shellcheck (install.sh),
+# PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest.
 
-git diff --cached --name-only | grep -qE '^docs/|^scripts/docs-doctor\.py' || exit 0
+fail=0
+staged() { git diff --cached --name-only; }
+PY=$(command -v python || command -v python3 || true)
 
-PY=$(command -v python || command -v python3)
-[ -z "$PY" ] && { echo "pre-commit: python not found; skipping docs-doctor" >&2; exit 0; }
+# --- 0. Warn on a direct commit to main -------------------------------------
+# main is PR-protected upstream; committing here usually means you forgot to
+# branch (and an editor auto-backup can sweep work into main). Warn, don't block.
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ "$branch" = "main" ]; then
+  echo "pre-commit: WARNING - committing on 'main'. main is PR-protected; you" >&2
+  echo "            probably want a branch:  git switch -c fix/<thing>" >&2
+fi
 
-"$PY" scripts/docs-doctor.py docs || {
+# --- 1. docs-doctor (when docs/ or the linter is staged) --------------------
+if staged | grep -qE '^docs/|^scripts/docs-doctor\.py'; then
+  if [ -n "$PY" ]; then
+    "$PY" scripts/docs-doctor.py docs || { echo "pre-commit: docs-doctor failed (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: python not found; skipping docs-doctor" >&2
+  fi
+fi
+
+# --- 2. install.sh parse + shellcheck (when install.sh is staged) -----------
+if staged | grep -qE '^install\.sh$'; then
+  bash -n install.sh || { echo "pre-commit: install.sh has a syntax error." >&2; fail=1; }
+  if command -v shellcheck >/dev/null 2>&1; then
+    shellcheck -S warning install.sh || { echo "pre-commit: shellcheck found issues." >&2; fail=1; }
+  fi
+fi
+
+# --- 3. Python --self-test (when any tracked .py tool is staged) ------------
+if staged | grep -qE '\.py$'; then
+  if [ -n "$PY" ]; then
+    P=vault/.memoria
+    for t in "$P/mcp/policy_mcp.py" "$P/mcp/policy_hook.py" "$P/mcp/board_export.py" \
+             "$P/mcp/metrics_aggregate.py" "$P/profiles/memoria-linter/detectors.py"; do
+      [ -f "$t" ] || continue
+      "$PY" "$t" --self-test >/dev/null 2>&1 || { echo "pre-commit: self-test FAILED: $t" >&2; fail=1; }
+    done
+  else
+    echo "pre-commit: python not found; skipping self-tests" >&2
+  fi
+fi
+
+# --- 4. {{VAULT_PATH}} leak guard -------------------------------------------
+# The placeholder belongs only in templates the installer substitutes (mcp.json,
+# config.yaml) and in docs prose. Flag it leaking into other staged non-doc files.
+for f in $(staged | grep -vE '\.(json|ya?ml|md)$'); do
+  [ -f "$f" ] || continue
+  if grep -q '{{VAULT_PATH}}' "$f"; then
+    echo "pre-commit: '{{VAULT_PATH}}' placeholder leaked into $f" >&2; fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
   echo "" >&2
-  echo "pre-commit: docs-doctor found issues (above). Fix them, or bypass with: git commit --no-verify" >&2
+  echo "pre-commit: blocked. Fix the above, or bypass with: git commit --no-verify" >&2
   exit 1
-}
+fi
+exit 0
