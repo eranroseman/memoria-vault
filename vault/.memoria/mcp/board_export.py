@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-"""Board exporter -- project the Hermes Kanban into Dataview-queryable files.
+"""Board exporter -- project the Hermes Kanban into Dataview-queryable files and
+append the per-card telemetry time-series.
 
 The authoritative board is the Hermes built-in Kanban (~/.hermes/kanban.db).
-Obsidian's Dataview cannot query that database, so this script writes two
-read-only projections the dashboards consume (see
-docs/reference/kanban-board.md):
+Obsidian's Dataview cannot query that database, so this script writes read-only
+projections the dashboards consume, plus append-only event logs the metrics
+aggregator and any publication analysis read (see docs/reference/telemetry.md):
 
   00-meta/board/<task_id>.md          one markdown file per live card  (board-state dashboard)
   00-meta/02-logs/board-state.jsonl   per-lane count snapshot, one line per run (status line)
+  00-meta/02-logs/board-transitions.jsonl  per-card state/review transitions (time-series)
+  00-meta/02-logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
+  00-meta/02-logs/cost.jsonl          API spend + token counts per card at completion
 
-Source of truth: `hermes kanban list --json` (or `--from-json <file>` for tests
-and offline runs). The export is ONE-WAY (board -> files); editing the markdown
-never changes the board. Intended to run on a cron cadence matching the
-dispatcher (~60s); the Linter owns rotation/cleanup of the projected files.
+Transitions/disposition/cost are computed by diffing this run's board against the
+previous run, cached in `00-meta/02-logs/.board-state-cache.json`. Source of
+truth: `hermes kanban list --json` (or `--from-json <file>` for tests/offline).
+The export is ONE-WAY (board -> files). Run on a cron cadence (~60s); the Linter
+owns rotation/cleanup of the projected files and logs.
 
     python board_export.py --vault <path>                  # read `hermes kanban list --json`
     python board_export.py --vault <path> --from-json cards.json
@@ -29,8 +34,15 @@ from pathlib import Path
 
 BOARD_RELDIR = "00-meta/board"
 SNAPSHOT_RELPATH = "00-meta/02-logs/board-state.jsonl"
+TRANSITIONS_RELPATH = "00-meta/02-logs/board-transitions.jsonl"  # per-card status/review changes
+DISPOSITION_RELPATH = "00-meta/02-logs/disposition.jsonl"        # accept | edit | reject (un-backfillable)
+COST_RELPATH = "00-meta/02-logs/cost.jsonl"                      # API spend + tokens per card at completion
+STATE_CACHE_RELPATH = "00-meta/02-logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
 LIVE_STATUSES = ("triage", "todo", "ready", "running", "blocked", "done")  # not archived
 REVIEW_QUEUE_STATES = ("requested",)   # done cards handed off for human review (review_status: requested)
+# Terminal review outcomes -> default human-loop disposition (an explicit metadata.disposition
+# of "edited" overrides, capturing the human-modified-then-accepted case the diff can't see).
+TERMINAL_REVIEW = {"approved": "accepted", "rejected": "rejected", "changes-requested": "rejected"}
 
 
 # --------------------------------------------------------------------------- #
@@ -93,6 +105,14 @@ def normalize(card: dict) -> dict:
         "reason": _first(card, "reason") or md.get("blocked_reason", ""),
         "last_updated": _first(card, "updated_at", "modified_at", "created_at"),
         "summary": summary,
+        # --- telemetry overlay (all best-effort; empty when Hermes doesn't supply them) ---
+        "agent_recommendation": md.get("agent_recommendation", md.get("agent_verdict", "")),
+        "disposition": md.get("disposition", ""),       # explicit "edited" wins over the derived accept/reject
+        "review_requested_at": md.get("review_requested_at", ""),
+        "reviewed_at": md.get("reviewed_at", ""),
+        "cost": md.get("cost", card.get("cost", "")),   # API spend for the card ($)
+        "tokens_in": md.get("tokens_in", card.get("tokens_in", "")),
+        "tokens_out": md.get("tokens_out", card.get("tokens_out", "")),
     }
 
 
@@ -171,11 +191,96 @@ def export_snapshot(vault: Path, cards: list[dict]) -> dict:
     return snap
 
 
+# --------------------------------------------------------------------------- #
+# Telemetry event logs (transitions / disposition / cost) -- diff vs last run
+# --------------------------------------------------------------------------- #
+def _ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def load_state_cache(vault: Path) -> dict:
+    """Per-card {status, review_status} seen on the previous run (for diffing)."""
+    p = vault / STATE_CACHE_RELPATH
+    if p.exists():
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def save_state_cache(vault: Path, cards: list[dict]) -> None:
+    cur = {}
+    for raw in cards:
+        c = normalize(raw)
+        cur[c["task_id"]] = {"status": c["status"], "review_status": c["review_status"]}
+    p = vault / STATE_CACHE_RELPATH
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(cur, ensure_ascii=False), encoding="utf-8")
+
+
+def compute_events(prev: dict, cards: list[dict]) -> dict:
+    """Diff previous per-card state vs current; return transition / disposition /
+    cost event rows. A card unseen before counts as a transition into its state."""
+    ts = _ts()
+    transitions: list[dict] = []
+    dispositions: list[dict] = []
+    costs: list[dict] = []
+    for raw in cards:
+        c = normalize(raw)
+        tid, lane = c["task_id"], c["assignee"]
+        if tid not in prev:
+            continue   # first sight this run -- seeded into the cache below, emits no event
+        before = prev[tid]
+        old_status, old_review = before.get("status"), before.get("review_status")
+
+        if c["status"] != old_status:
+            transitions.append({"timestamp": ts, "task_id": tid, "lane": lane,
+                                 "kind": "status", "from": old_status, "to": c["status"]})
+            # Cost is final at completion -- log it on the transition into `done`.
+            if c["status"] == "done" and (c["cost"] != "" or c["tokens_out"] != ""):
+                costs.append({"timestamp": ts, "task_id": tid, "lane": lane,
+                              "cost": c["cost"], "tokens_in": c["tokens_in"],
+                              "tokens_out": c["tokens_out"]})
+
+        if c["review_status"] != old_review:
+            transitions.append({"timestamp": ts, "task_id": tid, "lane": lane,
+                                 "kind": "review", "from": old_review, "to": c["review_status"]})
+            # Disposition fires when review reaches a terminal outcome.
+            if c["review_status"] in TERMINAL_REVIEW:
+                disp = c["disposition"] or TERMINAL_REVIEW[c["review_status"]]
+                dispositions.append({"timestamp": ts, "task_id": tid, "lane": lane,
+                                     "disposition": disp,
+                                     "agent_recommendation": c["agent_recommendation"]})
+    return {"transitions": transitions, "dispositions": dispositions, "costs": costs}
+
+
+def _append_jsonl(path: Path, rows: list[dict]) -> None:
+    if not rows:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for r in rows:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def export_events(vault: Path, prev: dict, cards: list[dict]) -> dict:
+    ev = compute_events(prev, cards)
+    _append_jsonl(vault / TRANSITIONS_RELPATH, ev["transitions"])
+    _append_jsonl(vault / DISPOSITION_RELPATH, ev["dispositions"])
+    _append_jsonl(vault / COST_RELPATH, ev["costs"])
+    return {k: len(v) for k, v in ev.items()}
+
+
 def run_export(vault: Path, from_json: Path | None = None) -> dict:
     cards = load_cards(from_json)
+    prev = load_state_cache(vault)
+    events = export_events(vault, prev, cards)   # diff BEFORE the cache is overwritten
     exported = export_markdown(vault, cards)
     snap = export_snapshot(vault, cards)
-    return {"exported_cards": len(exported), "snapshot": snap["totals"]}
+    save_state_cache(vault, cards)
+    return {"exported_cards": len(exported), "snapshot": snap["totals"], "events": events}
 
 
 # --------------------------------------------------------------------------- #
@@ -211,6 +316,10 @@ def self_test() -> int:
     check("normalize defaults review_status", normalize(sample[3])["review_status"] == "unreviewed")
     check("normalize pulls run summary", "enrich" in normalize(sample[0])["summary"])
     check("normalize reads block reason", normalize(sample[3])["reason"] == "needs human input")
+    check("normalize reads renamed agent_recommendation",
+          normalize({"metadata": {"agent_recommendation": "clean"}})["agent_recommendation"] == "clean")
+    check("normalize falls back to legacy agent_verdict",
+          normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"] == "issues-found")
 
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
@@ -234,6 +343,51 @@ def self_test() -> int:
         check("snapshot per-lane present", snap["lanes"]["memoria-librarian"]["running"] == 1)
         lines = (vault / SNAPSHOT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
         check("snapshot appends one JSONL line", len(lines) == 1 and json.loads(lines[0]))
+
+    # --- telemetry events: two runs, diff the second against the first --------
+    with tempfile.TemporaryDirectory() as td:
+        vault = Path(td)
+        run1 = [
+            {"task_id": "e1", "title": "x", "status": "ready",
+             "assignee": "memoria-writer", "metadata": {"review_status": "unreviewed"}},
+            {"task_id": "e2", "title": "y", "status": "done",
+             "assignee": "memoria-writer", "metadata": {"review_status": "requested"}},
+            {"task_id": "e3", "title": "z", "status": "done",
+             "assignee": "memoria-verifier", "metadata": {"review_status": "requested"}},
+        ]
+        ev1 = export_events(vault, load_state_cache(vault), run1)
+        save_state_cache(vault, run1)
+        check("first run seeds cache, emits no events",
+              ev1 == {"transitions": 0, "dispositions": 0, "costs": 0})
+
+        run2 = [
+            # e1: ready -> done, with cost + tokens
+            {"task_id": "e1", "title": "x", "status": "done", "assignee": "memoria-writer",
+             "metadata": {"review_status": "unreviewed", "cost": 0.42, "tokens_in": 800, "tokens_out": 1200}},
+            # e2: requested -> approved => accepted
+            {"task_id": "e2", "title": "y", "status": "done", "assignee": "memoria-writer",
+             "metadata": {"review_status": "approved", "agent_recommendation": "clean"}},
+            # e3: requested -> approved but human edited first => edited (explicit override)
+            {"task_id": "e3", "title": "z", "status": "done", "assignee": "memoria-verifier",
+             "metadata": {"review_status": "approved", "disposition": "edited"}},
+        ]
+        ev2 = export_events(vault, load_state_cache(vault), run2)
+        save_state_cache(vault, run2)
+        check("second run logs three transitions (e1 status, e2/e3 review)", ev2["transitions"] == 3)
+        check("second run logs cost on completion", ev2["costs"] == 1)
+        check("second run logs two dispositions", ev2["dispositions"] == 2)
+
+        disp = [json.loads(l) for l in (vault / DISPOSITION_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
+        by_id = {d["task_id"]: d for d in disp}
+        check("approve -> accepted", by_id["e2"]["disposition"] == "accepted")
+        check("explicit edited overrides accepted", by_id["e3"]["disposition"] == "edited")
+        cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
+        check("cost row carries spend + tokens", cost["cost"] == 0.42 and cost["tokens_out"] == 1200)
+        tr = [json.loads(l) for l in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
+        check("transition records status change e1 ready->done",
+              any(t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr))
+        check("no spurious events on an unchanged re-run", export_events(vault, load_state_cache(vault), run2) ==
+              {"transitions": 0, "dispositions": 0, "costs": 0})
 
     print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
     return failures

@@ -33,6 +33,10 @@ from pathlib import Path
 METRICS_RELDIR = "00-meta/08-metrics"
 AUDIT_RELPATH = "00-meta/02-logs/audit.jsonl"
 LINT_RELPATH = "00-meta/02-logs/lint-findings.jsonl"
+DISPOSITION_RELPATH = "00-meta/02-logs/disposition.jsonl"        # accept | edit | reject per review
+COST_RELPATH = "00-meta/02-logs/cost.jsonl"                      # API spend + tokens per card
+TRANSITIONS_RELPATH = "00-meta/02-logs/board-transitions.jsonl"  # status/review transitions (for decision time)
+TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 LANES = ("memoria-librarian", "memoria-mapper", "memoria-socratic", "memoria-writer",
          "memoria-verifier", "memoria-coder", "memoria-linter")
@@ -134,6 +138,90 @@ def read_drift(vault: Path, period: str) -> dict[str, int]:
     return out
 
 
+def _iter_jsonl(vault: Path, relpath: str, period: str | None):
+    """Yield JSON rows from a JSONL log, filtered to `period` (None = all)."""
+    p = vault / relpath
+    if not p.is_file():
+        return
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if period is not None:
+            ts = _parse_ts(e.get("timestamp", ""))
+            if ts is None or iso_period(ts) != period:
+                continue
+        yield e
+
+
+def read_disposition(vault: Path, period: str) -> dict[str, dict]:
+    """Per-lane accept/edit/reject counts from disposition.jsonl for `period`."""
+    out: dict[str, dict] = {}
+    for e in _iter_jsonl(vault, DISPOSITION_RELPATH, period):
+        rec = out.setdefault(e.get("lane", "unknown"),
+                             {"accepted": 0, "edited": 0, "rejected": 0})
+        d = e.get("disposition")
+        if d in rec:
+            rec[d] += 1
+    return out
+
+
+def accept_ratio_of(d: dict) -> float | None:
+    """Accepted-as-is fraction (edits and rejects count against it) — the
+    rubber-stamping / prompt-drift signal. None when no reviews yet."""
+    total = d.get("accepted", 0) + d.get("edited", 0) + d.get("rejected", 0)
+    return d["accepted"] / total if total else None
+
+
+def read_cost(vault: Path, period: str) -> dict[str, dict]:
+    """Per-lane API spend + token totals from cost.jsonl for `period`."""
+    out: dict[str, dict] = {}
+    for e in _iter_jsonl(vault, COST_RELPATH, period):
+        rec = out.setdefault(e.get("lane", "unknown"),
+                             {"cost": 0.0, "tokens_in": 0, "tokens_out": 0, "cards": 0})
+        rec["cards"] += 1
+        for k in ("cost", "tokens_in", "tokens_out"):
+            try:
+                rec[k] += float(e.get(k) or 0)
+            except (TypeError, ValueError):
+                pass
+    return out
+
+
+def _median(xs: list[float]) -> float | None:
+    s = sorted(xs)
+    n = len(s)
+    if n == 0:
+        return None
+    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
+def read_decision_time(vault: Path, period: str) -> dict[str, float]:
+    """Per-lane median operator decision time (minutes) — the gap between a card's
+    `review -> requested` transition and its terminal review transition, read from
+    board-transitions.jsonl. Keyed to the period of the *terminal* transition."""
+    requested: dict[str, datetime] = {}   # task_id -> requested ts (across all time)
+    samples: dict[str, list[float]] = {}
+    for e in _iter_jsonl(vault, TRANSITIONS_RELPATH, None):   # need full history to pair
+        if e.get("kind") != "review":
+            continue
+        ts = _parse_ts(e.get("timestamp", ""))
+        tid, lane, to = e.get("task_id"), e.get("lane", "unknown"), e.get("to")
+        if ts is None or tid is None:
+            continue
+        if to == "requested":
+            requested[tid] = ts
+        elif to in TERMINAL_REVIEW and tid in requested:
+            t0 = requested.pop(tid)
+            if iso_period(ts) == period:
+                samples.setdefault(lane, []).append((ts - t0).total_seconds() / 60.0)
+    return {lane: round(_median(v), 1) for lane, v in samples.items() if v}
+
+
 def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
                 drift: int = 0, secret_hits: int = 0,
                 accept_ratio: float | None = None) -> tuple[int, str]:
@@ -152,21 +240,28 @@ def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
     return int(score), band
 
 
-def compute_lane(lane: str, audit: dict, board: dict, drift: int) -> dict | None:
+def compute_lane(lane: str, audit: dict, board: dict, drift: int,
+                 disp: dict | None = None, cost: dict | None = None,
+                 dtime: dict | None = None) -> dict | None:
     """Combine the inputs for one lane into a metric dict, or None if no activity."""
     a = audit.get(lane, {})
     b = board.get(lane, {})
+    d = (disp or {}).get(lane, {})
+    c = (cost or {}).get(lane, {})
     writes = a.get("total", 0)
     denies = a.get("deny", 0)
     done, blocked = b.get("done", 0), b.get("blocked", 0)
     runs = done + blocked
-    samples = writes + runs
+    reviews = d.get("accepted", 0) + d.get("edited", 0) + d.get("rejected", 0)
+    samples = writes + runs + reviews
     if samples == 0:
         return None
     deny_rate = denies / writes if writes else 0.0
     success_rate = done / runs if runs else 1.0
     retry_rate = b.get("retry_total", 0) / runs if runs else 0.0
-    score, band = trust_score(deny_rate, retry_rate, success_rate, drift=drift)
+    accept_ratio = accept_ratio_of(d) if reviews else None
+    score, band = trust_score(deny_rate, retry_rate, success_rate, drift=drift,
+                              accept_ratio=accept_ratio)
     if samples < LOW_CONFIDENCE_SAMPLES:
         band = "insufficient-data"
     return {
@@ -175,6 +270,14 @@ def compute_lane(lane: str, audit: dict, board: dict, drift: int) -> dict | None
         "retry_rate": round(retry_rate, 3), "drift_incidents": drift,
         "writes": writes, "denies": denies, "dry_runs": a.get("dry_run", 0),
         "done": done, "blocked": blocked, "samples": samples,
+        # --- human-loop + cost telemetry (the publication-grade signals) ---
+        "accepted": d.get("accepted", 0), "edited": d.get("edited", 0),
+        "rejected": d.get("rejected", 0),
+        "accept_ratio": round(accept_ratio, 3) if accept_ratio is not None else None,
+        "decision_time_min": (dtime or {}).get(lane),
+        "cost": round(c.get("cost", 0.0), 4),
+        "tokens_in": int(c.get("tokens_in", 0)), "tokens_out": int(c.get("tokens_out", 0)),
+        "consistency_passk": None,   # pass^k needs repeated-run data; harness TODO (see header)
     }
 
 
@@ -207,11 +310,14 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
     audit = read_audit(vault, period)
     board = read_board(cards)
     drift = read_drift(vault, period)
+    disp = read_disposition(vault, period)
+    cost = read_cost(vault, period)
+    dtime = read_decision_time(vault, period)
     outdir = vault / METRICS_RELDIR
     outdir.mkdir(parents=True, exist_ok=True)
     written = []
     for lane in LANES:
-        m = compute_lane(lane, audit, board, drift.get(lane, 0))
+        m = compute_lane(lane, audit, board, drift.get(lane, 0), disp, cost, dtime)
         if m is None:
             continue
         (outdir / f"lane-{lane.replace('memoria-', '')}-{period}.md").write_text(
