@@ -93,6 +93,22 @@ hermes -p memoria-socratic acp
 
 It should start an ACP stdio server (it logs to stderr; stdout is reserved for JSON-RPC). In Obsidian, the `agent-client` picker then offers Socratic / Mapper / Writer / Verifier. ACP reuses the same `~/.hermes/{.env,config.yaml,skills/}` you configured above — no separate credentials.
 
+**7. Route the auxiliary models to Haiku (cost efficiency).**
+
+Hermes runs cheap, high-frequency bookkeeping tasks (title generation, context compression, command approval, MCP routing, skills-hub search) through *auxiliary* model slots that default to the profile's main model — so a Verifier or Socratic compression call would otherwise burn **Opus**. These are set **globally** (not per-profile — Hermes replaces a config section wholesale). Add this block to your **global** `~/.hermes/config.yaml`:
+
+```yaml
+auxiliary:
+  title_generation: { provider: kilocode, model: ~anthropic/claude-haiku-latest }
+  compression:      { provider: kilocode, model: ~anthropic/claude-haiku-latest }
+  approval:         { provider: kilocode, model: ~anthropic/claude-haiku-latest }
+  mcp:              { provider: kilocode, model: ~anthropic/claude-haiku-latest }
+  skills_hub:       { provider: kilocode, model: ~anthropic/claude-haiku-latest }
+  # vision / web_extract: add a cheap multimodal model only if you use image/page analysis
+```
+
+Restart Hermes after editing the global config. Full rationale: [configuration.md § Auxiliary models](../hermes/configuration.md#auxiliary-models-set-globally-not-per-profile).
+
 ## Verify
 
 ```bash
