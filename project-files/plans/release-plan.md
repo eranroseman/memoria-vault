@@ -18,7 +18,7 @@ of truth for build state; this plan points to it rather than restating it.
 > vault, **not** verified end-to-end*. So v0.1 is overwhelmingly **built but
 > unverified**. The release gate is therefore **verification, not construction** —
 > turning `shipped` rows into `approved` ones. The Tier 0–5 install testing
-> (`notes/install-test-checklist.md`) is that verification work.
+> (§4 below) is that verification work.
 
 ---
 
@@ -65,8 +65,8 @@ key delivery, gate G3.)
 
 ## 4. Validation plan
 
-Formalizes the tiered install testing in `notes/install-test-checklist.md`
-(currently a working note; promote a copy here when v0.1 cuts).
+The authoritative tiered install-testing plan. The table below is the canonical
+tier set, with this session's results recorded inline.
 
 | Tier | What it proves | Result this session |
 | --- | --- | --- |
