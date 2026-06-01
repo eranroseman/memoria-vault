@@ -10,7 +10,7 @@ permalink: /explanation/knowledge/
 
 The vault stores durable knowledge organized by lifecycle stage. Understanding the knowledge model means understanding what makes knowledge *durable*, how the vault's organization serves that goal, and why certain moves are allowed and others aren't.
 
-> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern "evergreen notes" successors. Memoria's contribution is not the method but its *delegation*: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
+> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern "evergreen notes" successors. Memoria's contribution is not the method but its *delegation*: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
 
 ---
 

@@ -35,4 +35,4 @@ The `why-*` pages: the durable conceptual arguments behind Memoria's core design
 
 - The structures these arguments shape: [Architecture](../architecture/README.md)
 - The dated decisions they pair with: [ADRs](../../../project-files/decisions/)
-- The cross-cutting principles they share: [Design principles](../design-principles.md)
+- The cross-cutting principles they share: [Design principles](../overview/design-principles.md)

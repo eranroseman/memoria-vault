@@ -67,7 +67,7 @@ The distinction between `paper-note` and `item-note` is sometimes unclear (a cod
 
 The claim note is what distinguishes a research vault from a document store. A vault full of paper notes is just a bibliography with annotations — useful, but not compounding. A vault with claim notes is a knowledge graph: the human's own assertions, grounded in evidence, connected to each other.
 
-The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
+The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
 
 The test: if the claim note's title contains the word "and" doing real conceptual work, it should be two notes.
 

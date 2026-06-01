@@ -71,7 +71,7 @@ This makes topic queries Dataview queries: `WHERE contains(topic, "cognitive-sci
 
 The vault's navigation structure (MOCs — Maps of Content) builds the topical view on top of the lifecycle structure. A `cognitive-science` MOC is a note in `30-synthesis/03-moc/` that links to the relevant paper notes, claim notes, and reference pages — regardless of which sub-projects they were created for.
 
-Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten)).
+Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
