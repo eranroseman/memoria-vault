@@ -6,20 +6,22 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-- GitHub issue templates (bug report, feature request) and PR template
-- `CODEOWNERS`, `FUNDING.yml`, installer lint CI workflow
-
----
-
-## [0.1.0] – 2026-05-25
+Working toward the first tagged release, **v0.1.0** — **not yet cut.** No
+`v0.1.0` tag or GitHub release exists; see the release gate in
+[project-files/operations/release-plan.md](project-files/operations/release-plan.md).
 
 ### Added
-- Initial public release: seven agent profiles (researcher, writer, developer, analyst, strategist, educator, operator)
-- Obsidian starter vault with Diátaxis docs structure
-- `install.sh` / `install.ps1` installers
-- `docs-doctor` CI workflow for structural doc linting
-- `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE` (MIT)
+- Seven specialist agent profiles: `librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`
+- Obsidian starter vault (`vault/`) with the `.memoria/` tooling layer; Diátaxis engineering docs in `docs/`
+- `install.sh` (Ubuntu/WSL2 bootstrap) and `install.ps1` (thin Windows → WSL2 launcher)
+- Policy MCP write-gate + `policy_hook.py` pre/post tool-call hook (the structural review gate)
+- Six-signal telemetry capture (`board_export.py`, `metrics_aggregate.py`, Linter `detectors.py`)
+- CI required checks: `docs-doctor`, `shellcheck (install.sh)`, `PSScriptAnalyzer (install.ps1)`, `python-selftest`, `docs-links`
+- Repo health: GitHub issue/PR templates, `CODEOWNERS`, `FUNDING.yml`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `LICENSE` (MIT), and `AGENTS.md` (agent workflow guidelines)
 
-[Unreleased]: https://github.com/eranroseman/memoria-vault/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/eranroseman/memoria-vault/releases/tag/v0.1.0
+### Known issues
+- The Obsidian MCP bridge does not receive its API key in live Hermes runs
+  ([#39](https://github.com/eranroseman/memoria-vault/issues/39)) — blocks agent
+  vault writes; a v0.1 release blocker.
+
+[Unreleased]: https://github.com/eranroseman/memoria-vault/commits/main
