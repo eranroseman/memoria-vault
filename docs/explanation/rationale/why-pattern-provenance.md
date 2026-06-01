@@ -7,7 +7,7 @@ parent: Design rationale
 
 Memoria draws on a broad survey of ~47 contemporary AI-research systems, platforms, and benchmarks. This document is the synthesized judgment table: what was borrowed as-is, what was taken with the autonomy stripped out, what informs framing without contributing a design pattern, and what was evaluated and explicitly refused.
 
-The headline patterns are summarized in [intellectual-foundations.md](../intellectual-foundations.md). The autonomy boundary that rejects several patterns wholesale is in [why-not-autonomous.md](why-not-autonomous.md).
+The headline patterns are summarized in [intellectual-foundations.md](../overview/intellectual-foundations.md). The autonomy boundary that rejects several patterns wholesale is in [why-not-autonomous.md](why-not-autonomous.md).
 
 ---
 
@@ -61,7 +61,7 @@ Papers that inform framing or positioning without contributing a borrowable desi
 
 | Contribution | Source | Why referenced |
 |---|---|---|
-| **L1–L5 autonomy taxonomy** | Chen 2026 (*From Copilots to Colleagues*) | Vocabulary for positioning Memoria precisely on the autonomy spectrum. Memoria targets L3 with a structurally enforced ceiling. See [../what-memoria-is.md](../what-memoria-is.md). |
+| **L1–L5 autonomy taxonomy** | Chen 2026 (*From Copilots to Colleagues*) | Vocabulary for positioning Memoria precisely on the autonomy spectrum. Memoria targets L3 with a structurally enforced ceiling. See [../what-memoria-is.md](../overview/what-memoria-is.md). |
 | **"Persistent knowledge accumulation is the #1 barrier to L5"** | Chen 2026 | Independent validation of Memoria's vault-as-load-bearing-piece thesis from a 95-paper survey. Chen identifies as the field's open problem exactly what Memoria's central commitment addresses. |
 | **Deep Research as a sibling-but-distinct category** | [Huang et al. 2025](../../reference/bibliography.md#huang2025deepresearch); [Xu and Peng 2025](../../reference/bibliography.md#xu2025deepresearch) | Defines a category (query-driven, ephemeral-report agents like OpenAI DR / Gemini DR) that Memoria explicitly is not. Corpus-curating and durable vs. query-driven and ephemeral are different tools for different needs. |
 | **Autonomous-vs-collaborative axis** | [Gridach et al. 2025](../../reference/bibliography.md#gridach2025agentic) | Positions Memoria unambiguously on the collaborative side. Survey findings that literature-review automation is the field's weakest sub-task reinforce the "agent does bookkeeping; human owns judgment" thesis. |
@@ -122,5 +122,5 @@ This makes the architecture more reliable (errors surface at stage gates), easie
 
 ## Related
 
-- The principles this survey operationalizes: [design-principles.md](../design-principles.md)
-- What Memoria is, in system terms: [what-memoria-is.md](../what-memoria-is.md)
+- The principles this survey operationalizes: [design-principles.md](../overview/design-principles.md)
+- What Memoria is, in system terms: [what-memoria-is.md](../overview/what-memoria-is.md)

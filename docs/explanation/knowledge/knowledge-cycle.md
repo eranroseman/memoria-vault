@@ -25,7 +25,7 @@ The distinction between a vault that compounds and one that merely accumulates i
 
 This is Karpathy's compiler insight applied to personal research: the vault's value is not in its size but in its integration. A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes.
 
-Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim-note density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten)).
+Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim-note density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ## Where the cycle gets stuck
 

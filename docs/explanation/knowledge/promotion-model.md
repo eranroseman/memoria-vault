@@ -64,7 +64,7 @@ Claim notes carry a `maturity` field with values `seedling`, `budding`, `evergre
 
 The progression from seedling to evergreen is organic: a claim becomes more evergreen as it accumulates corroborating links, as it survives the addition of contradictory evidence, and as the human revisits and refines it. There is no automated promotion from `seedling` to `evergreen`; the human sets the maturity in judgment.
 
-The `seedling → budding → evergreen` vocabulary is borrowed from the **evergreen-notes** tradition that grew out of Zettelkasten (Andy Matuschak's framing of notes that are developed over time rather than written once). Memoria adopts the maturity ladder but, per its bookkeeping-not-intelligence stance, keeps the maturity judgment human-set — see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten).
+The `seedling → budding → evergreen` vocabulary is borrowed from the **evergreen-notes** tradition that grew out of Zettelkasten (Andy Matuschak's framing of notes that are developed over time rather than written once). Memoria adopts the maturity ladder but, per its bookkeeping-not-intelligence stance, keeps the maturity judgment human-set — see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten).
 
 A common pitfall is using `maturity` as a reason to defer promotion: "I'll make it canonical when it's evergreen." This misunderstands the model. Make a claim canonical when the human has decided it represents their position. Maturity tracks confidence in the claim; promotion tracks whether the human has claimed it as theirs.
 

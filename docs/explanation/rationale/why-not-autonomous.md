@@ -87,5 +87,5 @@ Memoria is L3. The seven profiles execute multi-step work unattended within a ca
 ## Related
 
 - Why the review gate is structural: [why-human-gate.md](why-human-gate.md)
-- The intellectual foundations of this position: [../intellectual-foundations.md](../intellectual-foundations.md)
+- The intellectual foundations of this position: [../intellectual-foundations.md](../overview/intellectual-foundations.md)
 - Full borrow/adapt/ignore table: [why-pattern-provenance.md](why-pattern-provenance.md)

@@ -30,10 +30,11 @@ They don't include step-by-step instructions, lookup tables, or precise configur
 
 Read from the inside out: start with what the system is, then why it's shaped that way, then how each design area works.
 
-### Start here
+### Start here — [Overview](overview/README.md)
 
-1. **[what-memoria-is.md](what-memoria-is.md)** — the system's identity: what it is, what it's not, and why it exists. Everything else builds on this.
-2. **[intellectual-foundations.md](intellectual-foundations.md)** — the three ideas Memoria is built on (Karpathy, Zettelkasten, Memex) and how the AI-research systems survey shaped the design.
+1. **[what-memoria-is.md](overview/what-memoria-is.md)** — the system's identity: what it is, what it's not, and why it exists. Everything else builds on this.
+2. **[intellectual-foundations.md](overview/intellectual-foundations.md)** — the three ideas Memoria is built on (Karpathy, Zettelkasten, Memex) and how the AI-research systems survey shaped the design.
+3. **[design-principles.md](overview/design-principles.md)** — the cross-cutting principles the design returns to.
 
 ### Why the design is shaped this way
 
@@ -62,13 +63,7 @@ Read from the inside out: start with what the system is, then why it's shaped th
 
 The curated path above is a reading order, not a full index. The sidebar lists every page; the sections are:
 
-**Top-level pages**
-
-- [what-memoria-is.md](what-memoria-is.md) · [intellectual-foundations.md](intellectual-foundations.md) — the entry points (start here)
-- [design-principles.md](design-principles.md) — the cross-cutting principles the design returns to
-
-**Sections** (each has its own README)
-
+- [Overview](overview/README.md) — start here: what-memoria-is, intellectual-foundations, design-principles
 - [Design rationale](rationale/README.md) — the `why-*` arguments: three-layers, specialist-profiles, human-gate, not-autonomous, hermes, computational-methods, pattern-provenance
 - [Architecture](architecture/README.md) — what each layer and surface *is*: control-plane, memory-tiers, interaction channels, vault, session-logging
 - [Knowledge](knowledge/README.md) — how durable knowledge is organized: lifecycle-over-topic, note-types, promotion-model, knowledge-cycle, note-body-structure, vocabulary-discipline, common-pitfalls

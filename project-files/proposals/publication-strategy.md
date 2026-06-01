@@ -96,7 +96,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 
 **Why it's harder than it looks.** Position papers without empirical work get rejected; with strong empirical work they compete with full system papers. The sweet spot is narrow.
 
-**Strengths Memoria already has.** The "synthesis quality is not scalar" argument in [why-not-autonomous.md](../../docs/explanation/rationale/why-not-autonomous.md); the borrow / adapt / ignore table in [why-pattern-provenance.md](../../docs/explanation/rationale/why-pattern-provenance.md); the intellectual-foundations framing in [intellectual-foundations.md](../../docs/explanation/intellectual-foundations.md). The benchmark review independently *validates* the core posture (deterministic ingest, blocking gate, narrow per-lane profiles, vault-as-distilled-memory) — the external corroboration a "this design is correct" claim needs.
+**Strengths Memoria already has.** The "synthesis quality is not scalar" argument in [why-not-autonomous.md](../../docs/explanation/rationale/why-not-autonomous.md); the borrow / adapt / ignore table in [why-pattern-provenance.md](../../docs/explanation/rationale/why-pattern-provenance.md); the intellectual-foundations framing in [intellectual-foundations.md](../../docs/explanation/overview/intellectual-foundations.md). The benchmark review independently *validates* the core posture (deterministic ingest, blocking gate, narrow per-lane profiles, vault-as-distilled-memory) — the external corroboration a "this design is correct" claim needs.
 
 **Work required (~9–12 months).**
 1. Everything in Path 2 (you need the empirical evidence).
@@ -118,7 +118,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 Three superficially-attractive claims that would not survive review:
 
 - **The seven-profile design alone.** MetaGPT, AI co-scientist, and Agent Laboratory already published multi-role architectures; Memoria's profile design is internally consistent but not novel enough to anchor a paper.
-- **The Karpathy LLM-Wiki + Zettelkasten + Memex synthesis.** Argued in [intellectual-foundations.md](../../docs/explanation/intellectual-foundations.md), but the three components are well-known; novelty has to be in what Memoria *does* with them.
+- **The Karpathy LLM-Wiki + Zettelkasten + Memex synthesis.** Argued in [intellectual-foundations.md](../../docs/explanation/overview/intellectual-foundations.md), but the three components are well-known; novelty has to be in what Memoria *does* with them.
 - **Obsidian-as-substrate.** Many systems use Obsidian; operational, not contributory.
 
 The novelty Memoria *can* claim is a triad plus the data payoff:
