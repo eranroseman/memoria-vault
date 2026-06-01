@@ -138,7 +138,10 @@ if (-not $PSBoundParameters.ContainsKey('Vault') -and -not $Yes) {
 
 # Windows path -> /mnt/c/... so Windows-Obsidian and WSL-Hermes share one vault.
 New-Item -ItemType Directory -Path $Vault -Force | Out-Null
-$wslVault = (& wsl.exe wslpath -a "$Vault").Trim()
+# Pass a forward-slash path to wslpath: when a backslash Windows path is marshalled
+# to wsl.exe the backslashes are eaten (C:\Users\x -> C:Usersx), so wslpath fails.
+# wslpath accepts C:/Users/x and returns /mnt/c/Users/x correctly.
+$wslVault = (& wsl.exe wslpath -a ($Vault -replace '\\','/')).Trim()
 Ok "Vault (Windows): $Vault"
 Ok "Vault (WSL):     $wslVault"
 
@@ -152,16 +155,23 @@ $fwdStr = ($fwd -join ' ')
 
 # Prefer a local install.sh (running from a clone); else curl it in WSL.
 $localSh = Join-Path $PSScriptRoot 'install.sh'
+# install.sh writes its progress (warn/hdr) to stderr. Under the script's
+# ErrorActionPreference='Stop', PowerShell 5.1 wraps each native-exe stderr line
+# as a terminating error and would abort here even though wsl.exe returned 0.
+# Relax to 'Continue' just around the handoff, then restore + check the real code.
+$savedEAP = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
 if (Test-Path $localSh) {
-    $wslSh = (& wsl.exe wslpath -a "$localSh").Trim()
+    $wslSh = (& wsl.exe wslpath -a ($localSh -replace '\\','/')).Trim()
     Say "Running: wsl bash $wslSh $fwdStr"
     & wsl.exe -e bash "$wslSh" @fwd
 } else {
     Say "Running (piped): wsl bash <(curl $RawUrl) $fwdStr"
     & wsl.exe -e bash -c "curl -fsSL '$RawUrl' | bash -s -- $fwdStr"
 }
-
 $code = $LASTEXITCODE
+$ErrorActionPreference = $savedEAP
+
 if ($code -ne 0) { Die "install.sh exited with code $code." }
 
 Hdr 'Done'
