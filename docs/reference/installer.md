@@ -63,18 +63,18 @@ The installer prints this checklist and the exact paths; it writes nothing. **v0
 
 | Secret | Where to get it | Goes in |
 |---|---|---|
-| `KILOCODE_API_KEY` | [kilo.ai](https://kilo.ai) | each profile `.env` (or once in `~/.using-hermes-agent/.env`) |
+| `KILOCODE_API_KEY` | [kilo.ai](https://kilo.ai) | each profile `.env` (or once in `~/.hermes/.env`) |
 | `OBSIDIAN_API_KEY` | Obsidian → Local REST API (first launch) | every profile `.env` |
 | `OPENALEX_EMAIL` | any working address (polite pool) | Librarian `.env` |
 | `SEMANTIC_SCHOLAR_API_KEY`, `PUBMED_API_KEY`, `GITHUB_TOKEN` | per [set-up-zotero](../how-to-guides/setup/set-up-zotero.md) | Librarian `.env` (optional) |
 
-Profile `.env` paths: `~/.using-hermes-agent/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
+Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
 
 ## Skills provisioning
 
 The seven profiles' lane-overrides name **28 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
 
-- **Installable from K-Dense** (`git clone` → `~/.using-hermes-agent/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`.
+- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`.
 - **Installable from the official Hermes registry** (`hermes skills install official/...`): `arxiv` (lane name `arxiv-search`), `llm-wiki` (lane name `llm-wiki-draft`), plus `obsidian`, `ocr-and-documents`, `github-repo-management`, `codex`, `claude-code`.
 - **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): the two real thin skills `obsidian-paper-note` (Librarian) and `retraction-check` (Verifier); the rest are handled by adapting the design — prompt-only behaviors in `SOUL.md`, lane-overrides pointing at a real skill ID, QuickAdd templates, or `detectors.py` functions (the Linter runs `detectors.py`, not Hermes skills).
 - **Not a skill:** `rest-passthrough` is a lane-override capability token.
@@ -101,7 +101,7 @@ Profiles also carry `skills/` and `cron/` directories.
 
 ## Models and ACP
 
-Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.using-hermes-agent/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [using-hermes-agent/configuration.md](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
+Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [using-hermes-agent/configuration.md](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
 
 ## Related
 

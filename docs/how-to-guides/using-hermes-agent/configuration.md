@@ -15,7 +15,7 @@ Each profile has two locations:
 | Location | Purpose |
 | --- | --- |
 | `vault/.memoria/profiles/memoria-<name>/` | **Vault source** — version-controlled, authoritative |
-| `~/.using-hermes-agent/profiles/memoria-<name>/` | **Deployed copy** — what Hermes actually runs |
+| `~/.hermes/profiles/memoria-<name>/` | **Deployed copy** — what Hermes actually runs |
 
 Always edit the vault source. Re-deploy with `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows) to push changes to the deployed copy. Never edit the deployed copy directly — it will be overwritten on the next install.
 
@@ -42,7 +42,7 @@ model:
   default: ~anthropic/claude-opus-latest   # the model string (provider/model)
 ```
 
-The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus a `hooks` block) — everything else inherits from the global `~/.using-hermes-agent/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
+The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus a `hooks` block) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
 
 3. Save and re-deploy: `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
 
@@ -50,7 +50,7 @@ The key is `default` (not `name`). For direct Anthropic instead, use `provider: 
 
 Hermes runs several cheap, high-frequency tasks through *auxiliary* model slots — title generation, context compression, command approval, MCP tool routing, skills-hub search. Each defaults to `provider: auto`, meaning it **reuses the profile's main model**. For Memoria that's wasteful: a Verifier or Socratic compression/title call would burn **Opus**.
 
-Set these once in your **global** `~/.using-hermes-agent/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Use a **split**: the trivial, input-heavy slots go to **GLM 4.7 Flash** ($0.07/$0.40 per 1M — cheapest input), and `compression` goes to **DeepSeek V4 Flash** because its summary model must hold at least the main model's context window (DeepSeek's **1M** context gives headroom; GLM's 202K barely clears Claude's ~200K):
+Set these once in your **global** `~/.hermes/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Use a **split**: the trivial, input-heavy slots go to **GLM 4.7 Flash** ($0.07/$0.40 per 1M — cheapest input), and `compression` goes to **DeepSeek V4 Flash** because its summary model must hold at least the main model's context window (DeepSeek's **1M** context gives headroom; GLM's 202K barely clears Claude's ~200K):
 
 ```yaml
 auxiliary:
