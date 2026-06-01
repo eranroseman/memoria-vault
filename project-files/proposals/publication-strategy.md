@@ -6,7 +6,7 @@ created: 2026-05-27
 
 # Publication strategy — paths, shapes, and sequence
 
-> **Path 1 is decided.** The recommendation distilled from this analysis — pursue the vault-eval / vault-CiteME benchmark first, and start the six-signal capture now — is adopted as [ADR-24](../decisions/24-publication-path.md). This proposal is retained for the **deferred** parts: the full four-path comparison, the per-path work-breakdowns, and the negative space, which inform the *next* publication decision (Path 2 vs. Path 3) once Path 1 has produced data. It is the source analysis behind ADR-24, not a competing decision.
+> **Path 1 is decided.** The recommendation distilled from this analysis — pursue the vault-eval / vault-CiteME benchmark first, and start the six-signal capture now — is adopted as [ADR-20](../decisions/20-publication-path.md). This proposal is retained for the **deferred** parts: the full four-path comparison, the per-path work-breakdowns, and the negative space, which inform the *next* publication decision (Path 2 vs. Path 3) once Path 1 has produced data. It is the source analysis behind ADR-20, not a competing decision.
 
 ## What
 
@@ -14,7 +14,7 @@ A standing map of how Memoria could become a published contribution: the publica
 
 ## Why
 
-Memoria is, as of v0.1, a design artifact. No surveyed paper published on design alone — every one ran a system and measured something, shipped a benchmark, or organized the field. Choosing a publication shape is the unblocking move because it determines what gets built and instrumented, and in what order. ADR-24 commits to the first paper; this document preserves the menu for everything after it, so the post-Path-1 decision is grounded.
+Memoria is, as of v0.1, a design artifact. No surveyed paper published on design alone — every one ran a system and measured something, shipped a benchmark, or organized the field. Choosing a publication shape is the unblocking move because it determines what gets built and instrumented, and in what order. ADR-20 commits to the first paper; this document preserves the menu for everything after it, so the post-Path-1 decision is grounded.
 
 ## Background — publication shapes in the surveyed field
 
@@ -44,7 +44,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 
 ## The four paths
 
-### Path 1 (most tractable, **decided — see ADR-24**) — vault-CiteME benchmark paper
+### Path 1 (most tractable, **decided — see ADR-20**) — vault-CiteME benchmark paper
 
 **Claim.** "We introduce vault-CiteME, a within-corpus citation-attribution benchmark for AI research assistants, and evaluate N frontier models against the Memoria Verifier profile."
 
@@ -155,7 +155,7 @@ Do not commit to Path 2 or Path 3 before Path 1's data exists. Both depend on em
 
 ## Dependencies
 
-- [ADR-24](../decisions/24-publication-path.md) (the committed first paper this analysis sits behind).
+- [ADR-20](../decisions/20-publication-path.md) (the committed first paper this analysis sits behind).
 - [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../decisions/10-claim-supersession.md) (the FAMA cell).
 - The six-signal capture ([reference/telemetry.md](../../docs/reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../operations/timeline.md)) — without populated logs, Paths 2/3 have no data.
 - [proposal-31](31-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [measurement-and-verification.md](measurement-and-verification.md) (the deferred analysis harnesses).

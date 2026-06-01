@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 23
+id: 19
 title: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
 status: accepted
 date_proposed: 2026-05-31
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-23: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
+# ADR-19: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
 
 > **Tier 1 accepted / implemented in v0.1 (2026-06-01).** The report-only "MOC threshold crossed" check ships in the Linter's lint-checks table — surfaces "consider a MOC for topic X" in the weekly dashboard, never auto-creates. **Tier 2 (Mapper stub) remains deferred** per the Guard below.
 
@@ -22,7 +22,7 @@ The system surfaces when a topic cluster has crossed the MOC-creation threshold 
 
 ## Why
 
-There is an asymmetry in how the two human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([commands.md](../../docs/reference/commands.md)). A `moc` gets none — it is human-authored start to finish ([build-a-moc.md](../../docs/how-to-guides/maintenance/build-a-moc.md): "You author and curate the MOC"), and the Mapper's `SOUL.md` has no MOC verb at all.
+There is an asymmetry in how the two human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([commands.md](../../docs/reference/obsidian-command-palette.md)). A `moc` gets none — it is human-authored start to finish ([build-a-moc.md](../../docs/how-to-guides/maintenance/build-a-moc.md): "You author and curate the MOC"), and the Mapper's `SOUL.md` has no MOC verb at all.
 
 Yet the Mapper already computes the exact signal a MOC proposal needs: `cluster-map` finds dense topic clusters, and [linking.md](../../docs/reference/linking.md#moc-thresholds) defines the ≥15–20-note threshold that says "time for a MOC." The capability is present; it is simply not wired to a proposal. Today the human must manually track note counts per topic to know when a MOC is due — a bookkeeping task the system is otherwise built to absorb.
 

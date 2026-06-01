@@ -66,7 +66,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Surface area** is still nontrivial (WSL2 orchestration + Zotero `.xpi` handling), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the GUI/secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the Zotero/secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **Distribution-model change:** `vault/` stops being independently distributable. Acceptable because the real workflow is cloning the whole repo, but it is a deliberate reversal recorded in [ADR-37](../../../project-files/decisions/37-repo-as-install-unit.md) and [distribution-model.md](distribution-model.md).
+- **Distribution-model change:** `vault/` stops being independently distributable. Acceptable because the real workflow is cloning the whole repo, but it is a deliberate reversal recorded in [ADR-26](../../../project-files/decisions/26-repo-as-install-unit.md) and [distribution-model.md](distribution-model.md).
 
 ## Decisions (v0.1, settled)
 
@@ -85,6 +85,6 @@ Each trades a little breadth for much less shell to build and maintain:
 ## Related
 
 - **Reference:** [installer.md](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
-- **Decisions:** [ADR-37 the repo is the install unit](../../../project-files/decisions/37-repo-as-install-unit.md).
+- **Decisions:** [ADR-26 the repo is the install unit](../../../project-files/decisions/26-repo-as-install-unit.md).
 - **Explanation:** [distribution-model.md](distribution-model.md) (the repo as install unit), [why-hermes.md](../rationale/why-hermes.md) (the runtime the installer provisions).
 - **How-to:** [quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).

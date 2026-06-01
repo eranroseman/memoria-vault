@@ -21,4 +21,4 @@ How Memoria is packaged, installed, and deployed. These pages explain the *ratio
 
 - The steps to actually install: [Setup how-to guides](../../how-to-guides/setup/)
 - Installer inventories (what gets copied where): [reference/installer.md](../../reference/installer.md)
-- The repo-as-install-unit decision: [ADR-37](../../../project-files/decisions/37-repo-as-install-unit.md)
+- The repo-as-install-unit decision: [ADR-26](../../../project-files/decisions/26-repo-as-install-unit.md)

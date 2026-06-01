@@ -44,7 +44,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Dependencies.** A `code-experiment` card type with `success_metric:`, `budget_iterations:`, `budget_cost_usd:` fields. Policy MCP permitting writes only to `40-workbench/<project>/06-code/experiments/<run-id>/`.
 
-**Related.** [PROP-01 code-artifact autopilot](PROP-01-code-artifact-autopilot.md) is the *scheduled-script* variant of Coder-lane autonomy; this is the *keep/revert experiment* variant. Both are bounded by [ADR-32](../decisions/32-l3-autonomy-ceiling.md).
+**Related.** [PROP-01 code-artifact autopilot](PROP-01-code-artifact-autopilot.md) is the *scheduled-script* variant of Coder-lane autonomy; this is the *keep/revert experiment* variant. Both are bounded by [ADR-21](../decisions/21-l3-autonomy-ceiling.md).
 
 ---
 

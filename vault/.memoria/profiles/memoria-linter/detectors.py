@@ -338,7 +338,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
 def fama_exposure(vault: Path) -> list[Finding]:
     """FAMA exposure -- a downstream note that wikilinks a *superseded* claim
     (lifecycle: archived, or carrying superseded_by). Reusing obsolete memory is
-    the FAMA failure mode the supersession mechanism (ADR-10 / ADR-21) makes
+    the FAMA failure mode the supersession mechanism (ADR-10 / ADR-17) makes
     measurable -- the report's headline novelty turned into a deterministic check."""
     notes = list(iter_notes(vault))
     superseded: dict[str, str] = {}    # claim stem -> its relpath

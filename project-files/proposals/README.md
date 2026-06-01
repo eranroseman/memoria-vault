@@ -28,9 +28,9 @@ Three were accepted and **moved to `decisions/`** as ADRs; the bootstrap install
 
 | Now at | What it added |
 |---|---|
-| [decisions/ADR-21](../decisions/21-shared-candidate-frontmatter.md) | `candidate-note` (16th type) — discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters |
-| [decisions/ADR-22](../decisions/22-rename-agent-verdict.md) | `agent_verdict` → `agent_recommendation` across schema / dashboards / docs |
-| [decisions/ADR-23](../decisions/23-moc-threshold-alert.md) | **Tier 1** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
+| [decisions/ADR-17](../decisions/17-shared-candidate-frontmatter.md) | `candidate-note` (16th type) — discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters |
+| [decisions/ADR-18](../decisions/18-rename-agent-verdict.md) | `agent_verdict` → `agent_recommendation` across schema / dashboards / docs |
+| [decisions/ADR-19](../decisions/19-moc-threshold-alert.md) | **Tier 1** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
 | [docs: bootstrap installer](../../docs/explanation/deployment/bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) — implemented; design now in docs ([reference inventories](../../docs/reference/installer.md)) |
 
 ### Deferred from decisions
@@ -56,7 +56,7 @@ Thematic groups from the future-directions survey.
 |---|---|
 | [discovery-loop.md](discovery-loop.md) | Proactive nightly discovery; Coder experiment loop; agent-proposed claim candidates |
 | [measurement-and-verification.md](measurement-and-verification.md) | CiteME harness, chain-of-evidence taxonomy, fleet observability, propagation debts |
-| [publication-strategy.md](publication-strategy.md) | Four publication paths + shapes + sequence; the deferred analysis behind ADR-24 (Path 2/3 selection) |
+| [publication-strategy.md](publication-strategy.md) | Four publication paths + shapes + sequence; the deferred analysis behind ADR-20 (Path 2/3 selection) |
 | [classical-method-displacements.md](classical-method-displacements.md) | NLI contradiction detection, learning-to-rank, claim-sentence classification |
 | [triage-improvements.md](triage-improvements.md) | Semi-autonomous triage, consensus pre-filter, tournament ranking |
 | [schema-and-retrieval.md](schema-and-retrieval.md) | Scenario-typed retrieval extensions, MASSW aspects, exploration-trace capture |

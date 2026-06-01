@@ -17,7 +17,7 @@ Canonical list of every frontmatter field used in this vault. The source of trut
 
 Templates for each in `03-templates/`.
 
-> **`candidate-note` is the transient lead / dead-letter type** ([ADR — shared candidate frontmatter](../../../project-files/decisions/21-shared-candidate-frontmatter.md)). Files in `10-inbox/03-candidates/` carry `type: candidate-note` with a `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), a `candidate_status` (`pending-screen` / `pending-ingest` / `included` / `excluded`), and `exclusion_reason`. This **one type unifies** the Librarian's discovery candidates and the Verifier's gap-cards (`source: gap`). It is transient — promoted to a durable type on `included`, archived on `excluded` — so unlike the other 15 it isn't a permanent knowledge node.
+> **`candidate-note` is the transient lead / dead-letter type** ([ADR — shared candidate frontmatter](../../../project-files/decisions/17-shared-candidate-frontmatter.md)). Files in `10-inbox/03-candidates/` carry `type: candidate-note` with a `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), a `candidate_status` (`pending-screen` / `pending-ingest` / `included` / `excluded`), and `exclusion_reason`. This **one type unifies** the Librarian's discovery candidates and the Verifier's gap-cards (`source: gap`). It is transient — promoted to a durable type on `included`, archived on `excluded` — so unlike the other 15 it isn't a permanent knowledge node.
 
 ### What the `-note` suffix means
 

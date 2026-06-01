@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 37
+id: 26
 title: The repo is the install unit; profiles are hand-authored and idempotently deployed
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-37: The repo is the install unit; profiles are hand-authored and idempotently deployed
+# ADR-26: The repo is the install unit; profiles are hand-authored and idempotently deployed
 
 ## Context
 
@@ -40,7 +40,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 ## Related
 
 - **Supporting rationale:** [distribution-model.md](../../docs/explanation/deployment/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
-- **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-33 build on Hermes](33-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
+- **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
 - **Installer design:** [bootstrap-installer.md](../../docs/explanation/deployment/bootstrap-installer.md) (rationale) + [reference/installer.md](../../docs/reference/installer.md) (inventories).
 - **Proposals:** [profile-compilation.md](../proposals/profile-compilation.md) (the deferred compiler).
 - **How-to:** [redeploy-profiles.md](../../docs/how-to-guides/maintenance/redeploy-profiles.md), [set-up-the-vault.md](../../docs/how-to-guides/setup/set-up-the-vault.md).

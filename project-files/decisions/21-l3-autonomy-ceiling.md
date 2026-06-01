@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 32
+id: 21
 title: L3 autonomy ceiling, structurally enforced, with the Coder-lane exception
 status: accepted
 date_proposed: 2026-06-01
@@ -9,7 +9,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-32: L3 autonomy ceiling, structurally enforced, with the Coder-lane exception
+# ADR-21: L3 autonomy ceiling, structurally enforced, with the Coder-lane exception
 
 ## Context
 
