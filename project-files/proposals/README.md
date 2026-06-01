@@ -65,6 +65,14 @@ Thematic groups from the future-directions survey.
 | [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
 | [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
 
+### Deployment reference
+
+How the vault and execution layer can be distributed across machines. Patterns beyond the `local-only` v0.1 default are optional and adopted per-setup.
+
+| File | What it covers |
+|---|---|
+| [deployment.md](deployment.md) | Four deployment patterns (local-only default; local-mesh, obsidian-sync, always-on) and how vault + execution layer sync across machines |
+
 ### Rejected alternatives
 
 Tools and approaches evaluated and not adopted.
