@@ -80,7 +80,7 @@ tier set, with this session's results recorded inline.
 | 0 | Static: parse, LF endings, profile files present | ✅ pass (re-verified post-#39/#51) |
 | 1 | Python `--self-test` (policy_mcp 34, policy_hook 32, board_export 26, metrics 20, detectors 15) | ✅ pass (re-verified — 127/127 checks green after the #51 hook changes) |
 | 2 | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution | ✅ pass (fixed 4 bugs; re-run after the `scripts/` move found + fixed stale installer self-references — remote-bootstrap URLs and `bash install.sh` hints) |
-| 3 | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run | ✅ pass (fixed venv + profile-install bugs) |
+| 3 | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run | ✅ re-verified this session (live Hermes/WSL2): EXIT=0, 7 profiles @0.1.0, venv built, idempotent `--profiles-only` clean. **Found + fixed** the #51 capability-layer `config set` string-coercion bug (now a typed YAML list via PyYAML). **Open:** 2 official skills 404 (`ocr-and-documents`, `github-repo-management`). |
 | 4 | Live: model connectivity, REST bridge, **policy gate enforcement** | ✅ mostly — **G3 re-test pending #39** (reframed: not a config defect; re-run on a confirmed Hermes version). Tier-4 also surfaced the gate-scope gap **#51** (terminal/file writes ungated) — capability-layer fix landed (`disabled_toolsets` ×7 + file-write hook on Coder/Linter); needs live re-verify. |
 | 5 | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export | ⏳ not yet run |
 

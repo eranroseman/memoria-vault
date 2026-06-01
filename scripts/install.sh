@@ -351,6 +351,27 @@ install_mcp_deps() {
   ok "MCP dependencies installed into $venv"
 }
 
+# Capability layer (#51): write agent.disabled_toolsets as a real YAML LIST into a
+# deployed profile config. `hermes config set` stores the value as a scalar string
+# (verified Tier-3: it wrote disabled_toolsets: '["terminal","file"]', which Hermes
+# would read as one bogus toolset name, disabling nothing) and offers no list form,
+# so we edit the file directly with PyYAML — preserving the model + hooks blocks.
+disable_write_toolsets() {
+  local cfg="$1"
+  local py="${VENV_PYTHON:-${PYTHON:-python3}}"
+  printf '  + %s: agent.disabled_toolsets=[terminal, file]\n' "$cfg"
+  [ "$DRY_RUN" -eq 1 ] && return 0
+  [ -f "$cfg" ] || { warn "config not found: $cfg"; return 1; }
+  "$py" - "$cfg" <<'PY'
+import sys, yaml
+f = sys.argv[1]
+d = yaml.safe_load(open(f)) or {}
+d.setdefault("agent", {})["disabled_toolsets"] = ["terminal", "file"]
+with open(f, "w") as fh:
+    yaml.safe_dump(d, fh, sort_keys=False, default_flow_style=False)
+PY
+}
+
 # =============================================================================
 # Step 6 — deploy the seven profiles  (the original profile-installer logic)
 # =============================================================================
@@ -424,16 +445,11 @@ install_profiles() {
       # paths, but the structural guarantee for lanes that must not write outside
       # obsidian is the *absence* of the terminal/file toolsets (tool-registry.yaml).
       # Only Coder and Linter legitimately keep them (their file writes are gated by
-      # the hook; their shell writes are bounded by lane write_scope). Apply via
-      # `config set` -- a targeted agent-key merge. A partial `agent:` block in
-      # config.yaml would replace the whole inherited agent section and drop global
-      # defaults (reasoning_effort, etc.), which is why this is set here, not shipped
-      # in the file (same reason reasoning_effort is a config-set recommendation).
-      # NOTE(confirm-at-build): confirm `hermes config set` accepts a list value for
-      # agent.disabled_toolsets on the target Hermes build; adjust the syntax if not.
+      # the hook; their shell writes are bounded by lane write_scope). Set it on the
+      # deployed config (post-install) so the model + hooks blocks are preserved.
       case "$p" in
         memoria-coder|memoria-linter) : ;;     # keep terminal+file (hook-gated)
-        *) run hermes -p "$p" config set agent.disabled_toolsets '["terminal","file"]' \
+        *) disable_write_toolsets "$HERMES_PROFILES_DIR/$p/config.yaml" \
              || warn "could not disable terminal/file toolsets for $p — set agent.disabled_toolsets by hand (capability layer, #51)" ;;
       esac
       # Bootstrap .env from .env.EXAMPLE on FIRST install only (never clobber creds).
