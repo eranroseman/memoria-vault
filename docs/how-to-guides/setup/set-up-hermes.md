@@ -6,7 +6,7 @@ Fill the API secrets for each profile and verify that Hermes can reach the vault
 ## Prerequisites
 
 - Hermes installed and on your `PATH` (`hermes --version` returns a version)
-- The vault cloned and `install.ps1` run ([set-up-the-vault.md](set-up-the-vault.md))
+- Memoria installed — the bootstrap (`install.sh`, or `install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
 - Obsidian running with the REST API plugin active ([set-up-obsidian.md](set-up-obsidian.md)) — you need the `apiKey` from that step
 
 ## Steps
@@ -55,7 +55,7 @@ notepad "$env:USERPROFILE\.hermes\profiles\memoria-mapper\.env"
 Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\mcp.json"
 ```
 
-The `policy` server's `args` should point at an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{VAULT_PATH}}`, re-run `./install.ps1`.
+The `policy` server's `args` should point at an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{VAULT_PATH}}`, re-run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
 
 **4. Test the Librarian can reach Obsidian.**
 
@@ -76,6 +76,22 @@ Pick a citekey from `.memoria/library.bib` and run:
 ```
 
 `--dry-run` reports what the Librarian *would* write without actually writing anything. Confirm the output shows the expected note path and metadata fields.
+
+**6. Enable the Obsidian chat pane (ACP).**
+
+The `agent-client` plugin talks to Hermes over **ACP** (Agent Client Protocol), which is an optional Hermes extra — install it so `hermes acp` exists:
+
+```bash
+pip install 'hermes-agent[acp]'   # from a source checkout: pip install -e '.[acp]'
+```
+
+The bundled `agent-client` config launches one ACP server per agent (e.g. `hermes -p memoria-socratic acp`). `-p`/`--profile` is a **global** Hermes flag — it applies to every subcommand including `acp` — so per-profile ACP works. Smoke-test it:
+
+```bash
+hermes -p memoria-socratic acp
+```
+
+It should start an ACP stdio server (it logs to stderr; stdout is reserved for JSON-RPC). In Obsidian, the `agent-client` picker then offers Socratic / Mapper / Writer / Verifier. ACP reuses the same `~/.hermes/{.env,config.yaml,skills/}` you configured above — no separate credentials.
 
 ## Verify
 

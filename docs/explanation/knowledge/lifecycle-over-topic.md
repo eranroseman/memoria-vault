@@ -40,13 +40,15 @@ The numbers are not just labels — they encode a one-way progression. Moving fo
 
 ---
 
-## The workbench exception
+## The workbench: web upstream, thread downstream
 
-`40-workbench/` is the deliberate exception to the lifecycle principle. Its unit is the **project**, not the stage. A project folder (`40-workbench/<project-name>/`) holds every working artifact for one effort, organized by sub-stage: `01-map/`, `02-framing/`, `03-canvas/`, `04-drafts/`, `05-verification/`, `06-code/`.
+`40-workbench/` looks like an exception to the lifecycle principle, but it is better understood as its second half. Both the upstream zones (`10-inbox/`, `20-sources/`, `30-synthesis/`) and the workbench subdivide internally — sources split into papers/items/entities, the workbench into `01-map/`, `02-framing/`, `03-canvas/`, `04-drafts/`, `05-verification/`, `06-code/`. What differs is the *shape* of the organization, not whether it encodes lifecycle.
 
-This doesn't violate the principle — it extends it carefully. The principle is an *anti-duplication rule* for many-to-many data: a source has many topics, so it can't live in one topic folder. Workbench artifacts are single-project: a draft belongs to exactly one project, so the duplication problem never arises. A project is not a topic — it's a bounded, transient effort that gets archived when it ships.
+Upstream, notes form a **web**. A paper note connects to many claim notes, a claim note to many sources and MOCs — all many-to-many. You find an upstream note by querying the graph or following a MOC; its folder tells you its lifecycle stage, and its links tell you what it relates to. There is no single reading order, because the knowledge isn't a single argument.
 
-The durable knowledge from a project still migrates to the lifecycle layers: the claim notes it produced go to `30-synthesis/01-claims/`, the paper notes to `20-sources/01-papers/`, the deliverable to `50-deliverables/`. The workbench is temporary; the vault is permanent.
+The workbench is the **downstream**, where one project distills a single train of thought. Its sub-folders aren't a smaller web — they are the stages of one argument: map the terrain, frame the question, draft, verify, build. Notes are grouped by that one thread because a draft, its framing, and its verification all belong to exactly one effort. This is why the workbench groups by project: not because it breaks the "lifecycle, not topic" rule (a project is not a topic — it's a bounded, transient effort), but because a single line of reasoning is organized linearly, while a knowledge base is organized as a web.
+
+This also dissolves the apparent anti-duplication tension. The rule against topic folders exists because a source has many topics and so can't live in one folder. Workbench artifacts are single-project by construction, so the many-to-many problem never arises. When the project ships, its durable output migrates back into the upstream web — claim notes to `30-synthesis/01-claims/`, paper notes to `20-sources/01-papers/`, the deliverable to `50-deliverables/` — and the project folder archives as a unit. The workbench is temporary; the web is permanent.
 
 ---
 
@@ -63,6 +65,8 @@ With lifecycle folders handling the organizational dimension that folders can un
 This makes topic queries Dataview queries: `WHERE contains(topic, "cognitive-science")`. It makes cross-topic connections explicit: a claim note about HCI that cites cognitive science papers is connected to both topics through its links, not through its folder location.
 
 The vault's navigation structure (MOCs — Maps of Content) builds the topical view on top of the lifecycle structure. A `cognitive-science` MOC is a note in `30-synthesis/03-moc/` that links to the relevant paper notes, claim notes, and reference pages — regardless of which sub-projects they were created for.
+
+Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 

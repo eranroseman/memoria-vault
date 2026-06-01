@@ -30,7 +30,7 @@ Open `20-sources/01-papers/` in Obsidian. Pick a paper-note that's central to yo
 
 ## Step 2 — Start the Librarian's find skill
 
-Open WSL2 (or your terminal on Linux/macOS):
+Open WSL2 (or your terminal on Linux):
 
 ```bash
 hermes -p memoria-librarian chat -s find

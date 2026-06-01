@@ -81,10 +81,12 @@ Add a `.stignore` in the vault root to exclude noise:
 **5. Install the Memoria profiles on the VPS.**
 
 ```bash
-# on VPS — from inside the vault/
-cd ~/memoria-vault/vault
-./install.sh    # POSIX installer (use ./install.ps1 on Windows)
+# on VPS — from the repo root (headless: skip the Obsidian/Zotero guidance)
+cd ~/memoria-vault
+bash install.sh --no-apps
 ```
+
+Hermes is already installed (step 1), so the installer detects it, copies the vault, and deploys the profiles. Use `--vault <dir>` to control where the runtime vault lands.
 
 **6. Configure the VPS profiles — remove the Obsidian MCP server.**
 

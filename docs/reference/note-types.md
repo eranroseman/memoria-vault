@@ -63,18 +63,20 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 Legal promotion paths — what type a note becomes when it advances.
 
 ```text
-fleeting-note ──┬──► answer-note ──► claim-note ──► reference-note
-                │         (Writer)        (human)         (Writer + human)
-                ├──► paper-note (classified)
-                │         (Librarian → human)
+fleeting-note ──┬──► paper-note / item-note   (Librarian classifies → human)
+                ├──► claim-note               (human writes directly)
                 └──► (discarded)
 
-claim-note ────► moc membership (via frontmatter moc:)
-claim-note ────► draft section (cited in body)
-draft ─────────► deliverable (on export)
-canvas ────────► draft (informs structure; canvas then archived)
-code-note ─────► project-note (linked from project)
+answer-note ───► claim-note      (human distills, after review)
+claim-note ────► reference-note  (when evergreen + cross-linked)
+claim-note ────► moc membership  (via frontmatter moc:)
+claim-note ────► draft section   (cited in body)
+draft ─────────► deliverable     (on export)
+canvas ────────► draft           (informs structure; canvas then archived)
+code-note ─────► project-note    (linked from project)
 ```
+
+This is the mechanical view of every type transition, including the workbench-internal moves (`canvas → draft`, `code-note → project-note`) that the conceptual model omits. An `answer-note` is created fresh by the Writer in response to a query — it is **not** promoted from a `fleeting-note`. For *why* the gated promotions require human authorship — and why a `paper-note` never becomes a `claim-note` — see [promotion-model.md](../explanation/knowledge/promotion-model.md).
 
 Promotion constraints:
 

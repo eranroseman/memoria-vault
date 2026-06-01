@@ -1,48 +1,44 @@
 
 # How to set up the vault
 
-Clone the starter vault and run the install script to get the folder structure, profiles, and templates in place. This is the foundation step — all other setup guides build on it.
+Run the bootstrap installer to provision the runtime, lay the vault down, and register the profiles. This is the foundation step — all other setup guides build on it.
 
 ## Prerequisites
 
 - Git on your `PATH`
-- PowerShell (Windows) or bash (macOS/Linux)
-- Hermes installed and on your `PATH`
+- Ubuntu/Debian, or **Windows with WSL2** enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — macOS is not supported
+- The installer provisions Hermes itself (+ the ACP extra); you don't need it beforehand
 
 ## Steps
 
-**1. Clone the starter vault.**
+**1. Run the bootstrap.** The one-liner does everything; inspect the script first if you like.
 
 ```bash
-git clone https://github.com/<your-handle>/memoria-vault.git
+# Linux / WSL2:
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
 ```
-
-Choose the folder name freely — the installer detects its own location at runtime.
-
-**2. Navigate into the vault subfolder.**
 
 ```powershell
-cd memoria-vault\vault
+# Windows (PowerShell): gates WSL2, installs the GUI apps, then runs install.sh in WSL2
+irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
 ```
 
-The `vault/` subfolder is the Obsidian vault. It contains `.obsidian/`, `.memoria/`, `install.ps1`, and the full folder skeleton (`00-meta/` through `95-archive/`).
-
-**3. Run the install script.**
-
-```powershell
-./install.ps1     # Windows
-```
+Prefer to see it first? Clone and run from the **repo root** (the installers live there, not inside `vault/`):
 
 ```bash
-./install.sh      # macOS / Linux / WSL2
+git clone https://github.com/eranroseman/memoria-vault.git
+cd memoria-vault
+bash install.sh            # or .\install.ps1 on Windows
 ```
 
-The script is idempotent — safe to re-run. For each of the seven profiles it:
+**2. What it does.** With your confirmation at each external step, the installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the seven profiles:
 
-- Stages the profile files from `.memoria/profiles/memoria-<name>/`
-- Substitutes `{{VAULT_PATH}}` in `mcp.json` with this vault's absolute path
+- Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`
+- Substitutes `{{VAULT_PATH}}` in `mcp.json` **and** `config.yaml` with the runtime vault's absolute path
 - Calls `hermes profile install` to register the profile
 - Copies `.env.EXAMPLE` to `.env` for each profile (only on first install — existing `.env` files are never overwritten)
+
+It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
 
 **4. Set up a Git remote** (recommended).
 
@@ -67,7 +63,7 @@ Check that `{{VAULT_PATH}}` was substituted:
 Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\mcp.json"
 ```
 
-The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `./install.ps1`.
+The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows).
 
 ## Related
 

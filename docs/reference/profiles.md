@@ -29,9 +29,9 @@ Each profile lives at `.memoria/profiles/memoria-<name>/`:
 | File | Status | Notes |
 | --- | --- | --- |
 | `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. Required by `install.ps1`. |
+| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. Required by the profile-install step. |
 | `mcp.json` | shipped | `mcp_servers`: `policy` + `obsidian`; `{{VAULT_PATH}}` substitution target. |
-| `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by `install.ps1`. |
+| `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
 | `skills/` | shipped | Placeholder (`.keep`). K-Dense skills installed here via `hermes skills install`. |
@@ -102,7 +102,7 @@ Deterministic, zero-LLM structural checks. Full procedures live in `.memoria/pro
 
 | Slug | Severity | Catches |
 | --- | --- | --- |
-| `profile-install-drift` | LOW | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.ps1`). |
+| `profile-install-drift` | LOW | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
 | `vault-hash-drift` | CRITICAL | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
 | `skeleton-drift` | MEDIUM | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
 | `dashboard-field-drift` | HIGH | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |

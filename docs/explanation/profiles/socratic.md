@@ -5,16 +5,6 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 
 ---
 
-## What Socratic is not
-
-**Not Writer.** Writer drafts prose from evidence; Socratic asks questions to sharpen the human's thinking *before* they write. They are sequential, not interchangeable — Socratic belongs in the Discuss stage, Writer in the Draft stage. The most common failure mode for a question-asking AI is summarizing back what the user said as if it were an answer ("so what you're saying is X"). Socratic must not do this — that move performs the synthesis the human should do themselves.
-
-**Not Mapper.** Mapper surveys the whole corpus; Socratic engages with one source or one claim at a time. Different scope, different abstraction level.
-
-**Not a search agent.** Socratic doesn't fetch new context, run queries, or propose links. It works strictly with what is in front of the human during the session.
-
----
-
 ## Why it's designed this way
 
 **Write-denial is architectural, not conventional.** The lane policy enforces an empty write list at the policy MCP layer — there is no path Socratic can write to. This is stricter than the skill-level restrictions used by other profiles. The protection is what makes Socratic safe to invoke from any device, including untrusted ones: there is nothing it can corrupt by design.
@@ -24,6 +14,16 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 **Generative but write-denied — an intentional combination.** Socratic is the only profile that is both LLM-required (open-ended conversation has no deterministic algorithm) and architecturally write-denied. The LLM's nondeterminism cannot corrupt canonical state because the LLM has no canonical state to write to. This is the pattern that makes Socratic safe to give genuine conversational latitude — the freedom is bounded by the write wall, not by a stricter prompt.
 
 **One frame per session.** When `lens-reading` loads with a named lens (e.g., `mamykina-sensemaking`), Socratic stays in that frame for the session. Switching frames mid-session muddies whose questions are being asked. A new session for a different lens preserves the discipline.
+
+---
+
+## What Socratic is not
+
+**Not Writer.** Writer drafts prose from evidence; Socratic asks questions to sharpen the human's thinking *before* they write. They are sequential, not interchangeable — Socratic belongs in the Discuss stage, Writer in the Draft stage. The most common failure mode for a question-asking AI is summarizing back what the user said as if it were an answer ("so what you're saying is X"). Socratic must not do this — that move performs the synthesis the human should do themselves.
+
+**Not Mapper.** Mapper surveys the whole corpus; Socratic engages with one source or one claim at a time. Different scope, different abstraction level.
+
+**Not a search agent.** Socratic doesn't fetch new context, run queries, or propose links. It works strictly with what is in front of the human during the session.
 
 ---
 

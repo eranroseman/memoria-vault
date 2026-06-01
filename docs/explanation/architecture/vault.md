@@ -60,7 +60,7 @@ The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 
 **`30-synthesis/` is human territory** — claim notes and MOCs are human-authored. Agents draft candidates that land in `10-inbox/`; the human writes the canonical synthesis. The review-gated-zone deny rule enforces this structurally.
 
-**`40-workbench/` is the one exception** — its unit is the project, not the lifecycle stage. A project folder holds all working artifacts for one effort (map, framing, drafts, verification, code) and archives as a unit when it ships. See [../knowledge/lifecycle-over-topic.md#the-workbench-exception](../knowledge/lifecycle-over-topic.md).
+**`40-workbench/` groups by project — the downstream half of the same principle.** The upstream zones (`10`–`30`) hold a *web* of notes, navigated many-to-many through MOCs and queries; the workbench holds the *downstream*, where one project distills a single train of thought. Its sub-folders (`01-map`, `02-framing`, `04-drafts`, …) are the stages of that one thread, and the whole project archives as a unit when it ships. A project is not a topic — it's a bounded, transient effort. See [lifecycle-over-topic.md → "The workbench"](../knowledge/lifecycle-over-topic.md#the-workbench-web-upstream-thread-downstream).
 
 **`90-assets/` does not hold PDFs** — PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`. `90-assets/` holds Marker-extracted markdown and binary attachments.
 
@@ -82,23 +82,9 @@ A small set of singleton files in `00-meta/` shape how the system runs:
 
 ## Promotion map
 
-Knowledge moves left-to-right through the folder numbers. The legal moves:
+Knowledge moves left-to-right through the folder numbers: capture (`10-inbox/`) into sources (`20-sources/`) or synthesis (`30-synthesis/`), and on to deliverables (`50-deliverables/`). Each move is a *promotion* — a fleeting note becomes a classified paper- or item-note (Librarian enriches, human classifies) or a claim note (human writes directly); an answer note distills into a claim note; a claim note matures into a reference note or joins a MOC; a draft exports to a deliverable. A `paper-note` never becomes a `claim-note` directly — the distinction between "what the source says" and "what the human thinks" is preserved. Archived notes stay in place for provenance, and only humans move notes to `95-archive/`.
 
-```text
-fleeting-note ──► paper-note        (Librarian enriches, human classifies)
-fleeting-note ──► claim-note        (human writes directly)
-fleeting-note ──► (discarded)
-
-answer-note   ──► claim-note        (human distills)
-answer-note   ──► (discarded)
-
-claim-note    ──► reference-note    (when evergreen and cross-linked)
-draft         ──► deliverable       (on export)
-```
-
-Rules: a `paper-note` never becomes a `claim-note` directly — the distinction between "what the source says" and "what the human thinks" is preserved. Archived notes stay in place for provenance. Only humans move notes to `95-archive/`.
-
-See [../knowledge/promotion-model.md](../knowledge/promotion-model.md) for the full reasoning.
+The move-by-move map, the disallowed moves, and the reasoning behind the synthesis gate live in [../knowledge/promotion-model.md](../knowledge/promotion-model.md) — the single source for the promotion model. This overview states the path in prose rather than reproducing the diagram, so the two cannot drift.
 
 ---
 

@@ -1,257 +1,161 @@
 #Requires -Version 5.1
-
 <#
 .SYNOPSIS
-    Memoria installer -- set up the seven Hermes profiles from this vault.
+    Memoria bootstrap -- thin Windows launcher.
 
 .DESCRIPTION
-    Idempotent. Always overwrites profile directories under
-    ~/.hermes/profiles/memoria-*/ from the source in .memoria/profiles/.
-    Preserves human-owned .env files. Gracefully skips profiles whose
-    source is incomplete (missing required files) -- useful while the v0.1
-    scaffold is still being filled in.
+    Windows is only the editing surface; the Hermes runtime lives in WSL2. This
+    launcher does the three Windows-only things, then hands all real work to
+    install.sh running inside WSL2:
 
-    Substitutes {{VAULT_PATH}} placeholders in each profile's mcp.json with
-    this vault's absolute path (forward-slash form) before installing.
+      1. Gate on WSL2 (no WSL2 -> Microsoft how-to link + exit; install nothing).
+      2. Install the GUI apps (Obsidian, Zotero) via winget -- guided.
+      3. Run install.sh inside WSL2 (with --no-apps; the vault path translated to
+         a /mnt/c path so both Windows-Obsidian and WSL-Hermes can reach it).
+
+    There is intentionally NO install logic here -- install.sh is the single
+    source of truth. Inspect it first:
+      https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh
+
+.PARAMETER Vault
+    Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
+    (deliberately OUTSIDE OneDrive -- OneDrive corrupts the .obsidian DB and
+    fights Hermes file locks).
+
+.PARAMETER ProfilesOnly
+    Skip the bootstrap; just (re)deploy profiles from an existing vault.
 
 .PARAMETER Only
-    If specified, install only these profile names (comma-separated).
-    Example: ./install.ps1 -Only memoria-librarian,memoria-linter
+    Restrict the profile step to these profiles (e.g. -Only memoria-linter).
+    Pairs with -ProfilesOnly. Forwarded to install.sh as --only.
 
-.PARAMETER SkipHermesCheck
-    Skip the Hermes-on-PATH check (use if Hermes is installed but not on PATH).
+.PARAMETER DryRun
+    Forward --dry-run to install.sh (print commands, change nothing).
 
-.PARAMETER SkipPythonCheck
-    Skip the Python check (use during early v0.1 when no MCP server source
-    has been authored yet).
-
-.EXAMPLE
-    ./install.ps1
-    Install all seven profiles whose source files are complete.
+.PARAMETER Yes
+    Non-interactive: accept defaults, no prompts.
 
 .EXAMPLE
-    ./install.ps1 -Only memoria-linter
-    Install just the Linter (useful for incremental development).
+    irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
+
+.EXAMPLE
+    .\install.ps1 -Vault D:\Memoria
 #>
-
 [CmdletBinding()]
 param(
+    [string]$Vault = (Join-Path $env:USERPROFILE 'Memoria'),
     [string[]]$Only,
-    [switch]$SkipHermesCheck,
-    [switch]$SkipPythonCheck
+    [switch]$ProfilesOnly,
+    [switch]$DryRun,
+    [switch]$Yes
 )
 
 $ErrorActionPreference = 'Stop'
+$RawUrl  = 'https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh'
+$WslDoc  = 'https://learn.microsoft.com/windows/wsl/install'
+
+function Say  { param($m) Write-Host $m }
+function Hdr  { param($m) Write-Host "`n== $m ==" -ForegroundColor Cyan }
+function Ok   { param($m) Write-Host "[OK] $m" -ForegroundColor Green }
+function Warn { param($m) Write-Host "[!] $m" -ForegroundColor Yellow }
+function Die  { param($m) Write-Host "[X] $m" -ForegroundColor Red; exit 1 }
 
 # ============================================================================
-# Paths and constants
+# 1. WSL2 gate -- no WSL2 means we install nothing on Windows.
 # ============================================================================
-# This script lives at the repo root; the Obsidian vault is the ./vault
-# subfolder, and the profile sources live under ./vault/.memoria/.
-$RepoRoot          = $PSScriptRoot
-$VaultPath         = Join-Path $RepoRoot 'vault'
-$MemoriaPath       = Join-Path $VaultPath '.memoria'
-$ProfilesSourceDir = Join-Path $MemoriaPath 'profiles'
-$McpRequirements   = Join-Path $MemoriaPath 'mcp\requirements.txt'
-$HermesProfilesDir = Join-Path $env:USERPROFILE '.hermes\profiles'
-
-if (-not (Test-Path $MemoriaPath)) {
-    Write-Host "[X] Cannot find the vault at $VaultPath (no .memoria/ inside it)." -ForegroundColor Red
-    Write-Host "    Run install.ps1 from the repo root -- it expects a ./vault/ folder beside it."
-    exit 1
+Hdr 'WSL2 check'
+if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
+    Say "WSL is not installed. Memoria's runtime (Hermes) requires WSL2."
+    Say "Follow the official Microsoft guide, reboot, then re-run this installer:"
+    Say "    $WslDoc"
+    Die 'No WSL -- nothing installed.'
 }
 
-$AllProfiles = @(
-    'memoria-librarian',
-    'memoria-mapper',
-    'memoria-socratic',
-    'memoria-writer',
-    'memoria-verifier',
-    'memoria-coder',
-    'memoria-linter'
-)
+# A working default distro? (`wsl uname -r` succeeds and reports a WSL2 kernel.)
+$kernel = ''
+try { $kernel = (& wsl.exe -e uname -r) 2>$null } catch { $kernel = '' }
+if (-not $kernel) {
+    Say "WSL is present but no Linux distro is ready. Install Ubuntu and set WSL2:"
+    Say "    wsl --install -d Ubuntu"
+    Say "    (full guide: $WslDoc)"
+    Die 'No usable WSL2 distro -- nothing installed.'
+}
+if ($kernel -notmatch 'WSL2|microsoft-standard') {
+    Warn "Your default distro may be WSL1 (kernel: $kernel)."
+    Warn "Memoria needs WSL2. Convert it:  wsl --set-version <distro> 2   (guide: $WslDoc)"
+    if (-not $Yes) {
+        $ans = Read-Host 'Continue anyway? [y/N]'
+        if ($ans -notmatch '^[Yy]') { Die 'Stopped -- convert the distro to WSL2 and re-run.' }
+    }
+}
+Ok "WSL2 ready (kernel: $kernel)"
 
-# Minimum file set a profile needs to be installable. All four are part of v0.1
-# (the glossary defines v0.1 as the complete system); SOUL.md shipped first, the
-# other three (config.yaml, mcp.json, distribution.yaml) are the profile wiring
-# hermes profile install requires.
-$RequiredFiles = @('SOUL.md', 'config.yaml', 'mcp.json', 'distribution.yaml')
+# ============================================================================
+# 2. Windows GUI apps via winget (guided). install.sh runs with --no-apps.
+# ============================================================================
+function Ensure-WingetApp {
+    param([string]$Id, [string]$Name, [string]$Fallback)
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Warn "winget not found -- install $Name manually: $Fallback"
+        return
+    }
+    $present = (& winget list --id $Id -e) | Select-String -SimpleMatch $Id -Quiet
+    if ($present) { Ok "$Name present"; return }
+    Say "$Name is not installed. Command:  winget install --id $Id -e"
+    $go = $Yes
+    if (-not $Yes) { $go = ((Read-Host "Install $Name now via winget? [y/N]") -match '^[Yy]') }
+    if ($go) {
+        if ($DryRun) { Say "  + winget install --id $Id -e --source winget" }
+        else { & winget install --id $Id -e --source winget --accept-package-agreements --accept-source-agreements }
+    } else {
+        Say "  Skipped. Install later: $Fallback"
+    }
+}
 
-$Targets = if ($Only) {
-    $AllProfiles | Where-Object { $_ -in $Only }
+if (-not $ProfilesOnly) {
+    Hdr 'Windows GUI apps'
+    Ensure-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
+    Ensure-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
+    Say ''
+    Say 'Zotero add-ons (install from Zotero -> Tools -> Add-ons -> Install From File):'
+    Say '  - Better BibTeX (REQUIRED): https://github.com/retorquere/zotero-better-bibtex/releases/latest'
+    Say '  - MarkDB-Connect (recommended): https://github.com/daeh/zotero-markdb-connect/releases/latest'
+    Say 'On first Obsidian launch: turn off Restricted mode so the bundled plugins load.'
+}
+
+# ============================================================================
+# 3. Translate the vault path and hand off to install.sh inside WSL2.
+# ============================================================================
+Hdr 'Handing off to WSL2'
+
+# Windows path -> /mnt/c/... so Windows-Obsidian and WSL-Hermes share one vault.
+New-Item -ItemType Directory -Path $Vault -Force | Out-Null
+$wslVault = (& wsl.exe wslpath -a "$Vault").Trim()
+Ok "Vault (Windows): $Vault"
+Ok "Vault (WSL):     $wslVault"
+
+# Forwarded flags. Always --no-apps (Windows handled the GUI apps above).
+$fwd = @('--no-apps', '--vault', $wslVault)
+if ($ProfilesOnly) { $fwd += '--profiles-only' }
+if ($Only)         { $fwd += @('--only', ($Only -join ',')) }
+if ($DryRun)       { $fwd += '--dry-run' }
+if ($Yes)          { $fwd += '--yes' }
+$fwdStr = ($fwd -join ' ')
+
+# Prefer a local install.sh (running from a clone); else curl it in WSL.
+$localSh = Join-Path $PSScriptRoot 'install.sh'
+if (Test-Path $localSh) {
+    $wslSh = (& wsl.exe wslpath -a "$localSh").Trim()
+    Say "Running: wsl bash $wslSh $fwdStr"
+    & wsl.exe -e bash "$wslSh" @fwd
 } else {
-    $AllProfiles
+    Say "Running (piped): wsl bash <(curl $RawUrl) $fwdStr"
+    & wsl.exe -e bash -c "curl -fsSL '$RawUrl' | bash -s -- $fwdStr"
 }
 
-Write-Host "Memoria installer" -ForegroundColor Cyan
-Write-Host "  Vault path:   $VaultPath"
-Write-Host "  Hermes home:  $HermesProfilesDir"
-Write-Host "  Targets:      $($Targets -join ', ')"
-Write-Host ""
+$code = $LASTEXITCODE
+if ($code -ne 0) { Die "install.sh exited with code $code." }
 
-# ============================================================================
-# Prerequisites
-# ============================================================================
-if (-not $SkipHermesCheck) {
-    $hermes = Get-Command hermes -ErrorAction SilentlyContinue
-    if (-not $hermes) {
-        Write-Host "[X] Hermes not found on PATH." -ForegroundColor Red
-        Write-Host "    Install: https://hermes-agent.nousresearch.com/docs/getting-started/installation"
-        Write-Host "    If Hermes is installed but not on PATH, re-run with -SkipHermesCheck."
-        exit 1
-    }
-    Write-Host "[OK] Hermes found at $($hermes.Source)" -ForegroundColor Green
-}
-
-if (-not $SkipPythonCheck) {
-    $python = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $python) {
-        Write-Host "[X] Python not found on PATH. Required for the MCP servers." -ForegroundColor Red
-        Write-Host "    If you don't need MCP servers yet (early v0.1 scaffold),"
-        Write-Host "    re-run with -SkipPythonCheck."
-        exit 1
-    }
-    Write-Host "[OK] Python found: $(& python --version 2>&1)" -ForegroundColor Green
-}
-
-# ============================================================================
-# MCP dependencies (skipped gracefully if requirements.txt isn't authored yet)
-# ============================================================================
-if (Test-Path $McpRequirements) {
-    Write-Host ""
-    Write-Host "Installing MCP server dependencies from .memoria/mcp/requirements.txt..."
-    & python -m pip install --quiet -r $McpRequirements
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[X] pip install failed (exit $LASTEXITCODE)." -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "[OK] MCP dependencies installed" -ForegroundColor Green
-} else {
-    Write-Host ""
-    Write-Warning "No requirements.txt at $McpRequirements -- MCP install skipped."
-    Write-Warning "Expected once .memoria/mcp/ is authored. (Not in v0.1 scaffold.)"
-}
-
-# ============================================================================
-# Stage + install each target profile
-# ============================================================================
-$StagingDir = Join-Path $env:TEMP "memoria-staging-$([guid]::NewGuid().ToString('N').Substring(0,8))"
-New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
-
-$installed = @()
-$skipped   = @()
-$utf8NoBom = New-Object System.Text.UTF8Encoding $false
-
-try {
-    foreach ($p in $Targets) {
-        $src = Join-Path $ProfilesSourceDir $p
-
-        if (-not (Test-Path $src)) {
-            $skipped += [PSCustomObject]@{ Profile = $p; Reason = "source directory missing at $src" }
-            continue
-        }
-
-        # Check required files
-        $missing = @()
-        foreach ($f in $RequiredFiles) {
-            if (-not (Test-Path (Join-Path $src $f))) {
-                $missing += $f
-            }
-        }
-        if ($missing.Count -gt 0) {
-            $skipped += [PSCustomObject]@{
-                Profile = $p
-                Reason  = "incomplete source -- missing: $($missing -join ', ')"
-            }
-            continue
-        }
-
-        Write-Host ""
-        Write-Host "Staging $p..."
-
-        $dst = Join-Path $StagingDir $p
-        Copy-Item -Path $src -Destination $dst -Recurse -Force
-
-        # Substitute {{VAULT_PATH}} in the files that reference the vault by
-        # absolute path: mcp.json (MCP server commands) and config.yaml (the
-        # pre_tool_call policy-gate hook command). Write UTF-8 no-BOM because
-        # JSON/YAML parsers can choke on a BOM.
-        $vaultPathForward = $VaultPath -replace '\\', '/'
-        foreach ($fname in @('mcp.json', 'config.yaml')) {
-            $f = Join-Path $dst $fname
-            if (Test-Path $f) {
-                $content = Get-Content -Path $f -Raw
-                $content = $content -replace '\{\{VAULT_PATH\}\}', $vaultPathForward
-                [System.IO.File]::WriteAllText($f, $content, $utf8NoBom)
-            }
-        }
-
-        Write-Host "Installing $p..."
-        & hermes profile install $dst --alias $p --force --yes
-        if ($LASTEXITCODE -ne 0) {
-            $skipped += [PSCustomObject]@{
-                Profile = $p
-                Reason  = "hermes profile install failed (exit $LASTEXITCODE)"
-            }
-            continue
-        }
-
-        $installed += $p
-
-        # Bootstrap .env from .env.EXAMPLE on first install. .env is human-
-        # owned and Hermes preserves it across re-installs; we only create it
-        # if absent so re-running this script never clobbers credentials.
-        $envExample = Join-Path $HermesProfilesDir "$p\.env.EXAMPLE"
-        $envFile    = Join-Path $HermesProfilesDir "$p\.env"
-        if ((Test-Path $envExample) -and -not (Test-Path $envFile)) {
-            Copy-Item $envExample $envFile
-            Write-Host "  Created .env from .env.EXAMPLE (fill in real values)"
-        }
-    }
-}
-finally {
-    if (Test-Path $StagingDir) {
-        Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
-}
-
-# ============================================================================
-# Summary
-# ============================================================================
-Write-Host ""
-Write-Host "=== Install summary ===" -ForegroundColor Cyan
-Write-Host "  Installed: $($installed.Count) of $($Targets.Count) targeted"
-foreach ($p in $installed) {
-    Write-Host "    [+] $p" -ForegroundColor Green
-}
-if ($skipped.Count -gt 0) {
-    Write-Host "  Skipped:"
-    foreach ($s in $skipped) {
-        Write-Host "    [-] $($s.Profile): $($s.Reason)" -ForegroundColor Yellow
-    }
-}
-
-if ($installed.Count -eq 0) {
-    Write-Host ""
-    Write-Host "No profiles installed. The v0.1 scaffold ships SOUL.md prompts" -ForegroundColor Yellow
-    Write-Host "but not the wiring (config.yaml, mcp.json, distribution.yaml)."   -ForegroundColor Yellow
-    Write-Host "Author the missing files for at least one profile, then re-run."  -ForegroundColor Yellow
-    exit 0
-}
-
-Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  1. Fill in credentials in each installed profile's .env file:"
-foreach ($p in $installed) {
-    Write-Host "       $(Join-Path $HermesProfilesDir "$p\.env")"
-}
-Write-Host ""
-Write-Host "  2. Open this folder in Obsidian as your vault."
-Write-Host "       Folder: $VaultPath"
-Write-Host ""
-Write-Host "  3. Try a session:"
-Write-Host "       hermes -p $($installed[0]) chat"
-Write-Host ""
-Write-Host "Re-run this script after 'git pull' to refresh installed profiles."        -ForegroundColor DarkGray
-Write-Host "Author-owned files (SOUL.md, config.yaml, mcp.json, skills/, cron/)"        -ForegroundColor DarkGray
-Write-Host "are overwritten; human-owned .env files are preserved."                  -ForegroundColor DarkGray
+Hdr 'Done'
+Say "Open this folder in Obsidian as your vault:  $Vault"
+Say "Hermes runs inside WSL2 -- open a WSL shell for 'hermes ...' commands."

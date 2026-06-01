@@ -5,7 +5,7 @@ The Kanban board is Memoria's **control plane** — the shared state machine tha
 
 ---
 
-## The two lifecycles
+## The three dimensions
 
 A card carries three independent dimensions, and keeping them separate is the central design move of the board:
 
@@ -29,7 +29,7 @@ Every card follows the same arc:
 4. **Completed.** The worker finishes its slice, moves the card to `done`, and writes a handoff summary plus structured metadata. If the card produced a checkable artifact, Verifier or Linter attaches a recommendation in `agent_verdict`.
 5. **Human review.** The human reads the output, and either approves (then archives) or rejects (then archives with a reason, and optionally spawns a successor card).
 
-The worker reaching `done` is not the same as the work being accepted. That distinction is the whole reason the two lifecycles exist.
+The worker reaching `done` is not the same as the work being accepted. That distinction — execution state versus review state — is the whole reason these dimensions are kept separate.
 
 ---
 
@@ -71,9 +71,9 @@ There is no implicit return to the queue. Every rework is a new card with a new 
 
 The authoritative board lives in `kanban.db` — a database Dataview cannot query directly. Two read-only projections bridge the gap.
 
-**Board export → `00-meta/board/`** — the dispatcher periodically writes each live card to a markdown file. The [board-state dashboard](../dashboards/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
+**Board export → `00-meta/board/`** — a `board_export.py` job writes each live card to a markdown file on a **~60-second cadence** (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). The [board-state dashboard](../dashboards/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
 
-**Board-state snapshot → `board-state.jsonl`** — a compact JSONL file written on each dispatcher tick with per-lane running/ready/blocked counts and review-queue depth. The status-line widget reads this instead of re-querying the database, keeping its refresh lightweight.
+**Board-state snapshot → `board-state.jsonl`** — the same ~60s pass appends a compact JSONL line with per-lane running/ready/blocked counts and review-queue depth. The status-line widget reads this instead of re-querying the database, keeping its refresh lightweight.
 
 The projections are one-way and ephemeral: editing a projected markdown file does nothing to the board. The projections are regenerated on each pass; any manual edit is overwritten. The board stays authoritative; the markdown is a read view.
 

@@ -18,21 +18,21 @@ The difference matters most in long-horizon work. A research task doesn't comple
 
 Memoria distinguishes two pipelines, each with its own direction:
 
-**The upstream pipeline** brings new knowledge into the vault. Sources are discovered, enriched, classified, discussed, and synthesized into claim notes. The general shape:
+**The upstream pipeline** brings new knowledge into the vault. Sources are found, enriched, classified, discussed, and distilled into claim notes. The general shape (simplified — the full stage list adds `link`, `corroborate`, `promote`, and `archive`):
 
 ```text
-discover → ingest → classify → (discuss) → synthesize
+find → ingest → classify → (discuss) → distill
 ```
 
-Where `discover` is Librarian finding candidates; `ingest` is Librarian creating a paper note; `classify` is the human deciding which topics and projects apply; `discuss` is an optional Socratic session for difficult papers; `synthesize` is the human writing a claim note based on the source.
+Where `find` is the Librarian surfacing candidates; `ingest` is the Librarian creating a paper note; `classify` is the human deciding which topics and projects apply; `discuss` is an optional Socratic session for difficult papers; `distill` is the human writing a claim note based on the source. These stage names match the [glossary](../../reference/glossary.md#pipeline-stages) and the source-workflow how-to guides.
 
-**The downstream pipeline** turns accumulated knowledge into deliverables. A project starts with a scope report, develops through framing, drafting, and verification, and ends with an exported deliverable.
+**The downstream pipeline** turns accumulated knowledge into deliverables. A project starts by assessing the corpus, develops through framing, drafting, verification, and revision, and ends with an exported deliverable.
 
 ```text
-scope → frame → draft → verify → export
+assess → frame → draft → verify → revise → export
 ```
 
-Where `scope` is Mapper charting the corpus; `frame` is the human and Writer developing competing outlines; `draft` is Writer producing prose; `verify` is Verifier checking citations; `export` is a Pandoc pipeline producing the final artifact.
+Where `assess` is the Mapper charting the corpus (via `scope-project`) and the human deciding whether to proceed; `frame` is the human and Writer developing competing outlines; `draft` is the Writer producing prose; `verify` is the Verifier checking citations; `revise` is the human closing the verification gaps; `export` is a Pandoc pipeline producing the final artifact. These names match the [glossary](../../reference/glossary.md#pipeline-stages) and the writing how-to guides.
 
 The pipelines are not sequential end-to-end — they're ongoing. The upstream pipeline runs continuously as new sources are discovered; the downstream pipeline runs per-project when the human decides to synthesize. A mature vault might have dozens of projects in various stages of the downstream pipeline while the upstream pipeline runs nightly.
 

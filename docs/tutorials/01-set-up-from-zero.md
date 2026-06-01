@@ -27,35 +27,30 @@ git clone https://github.com/eranroseman/memoria-vault.git ~/memoria
 cd ~/memoria
 ```
 
-You now have the vault folder at `~/memoria`. You can rename or move it — the internal shape is what matters, not the folder name.
+You now have the **repo** at `~/memoria` (the install unit). In the next step the installer copies the vault out of it to your runtime folder (default `~/Memoria`) — that copy is what you'll open in Obsidian.
 
 ---
 
 ## Step 2 — Run the installer
 
-Still in the terminal:
+Still in the terminal, from the repo root (`~/memoria`):
 
 ```bash
-./install.ps1    # Windows (PowerShell)
-./install.sh     # macOS / Linux
+bash install.sh        # Linux / WSL2
 ```
 
-The installer:
-- Copies the seven profile directories into `~/.hermes/profiles/`
-- Substitutes your vault path into each profile's `mcp.json`
-
-You'll see output like:
-
+```powershell
+.\install.ps1          # Windows (gates WSL2, then runs install.sh in WSL2)
 ```
-Installing memoria-librarian... done
-Installing memoria-mapper... done
-Installing memoria-socratic... done
-Installing memoria-writer... done
-Installing memoria-verifier... done
-Installing memoria-coder... done
-Installing memoria-linter... done
-All seven profiles installed.
-```
+
+The installer (with your confirmation at each external step):
+
+- Installs Hermes + the ACP extra
+- Copies `vault/` to your runtime folder (default `~/Memoria`, off OneDrive)
+- Substitutes your vault path into each profile's `mcp.json` and `config.yaml`
+- Registers the seven profiles into `~/.hermes/profiles/` and provisions skills
+
+It ends with a **Next steps** summary, including the path it copied the vault to (it asks before each external action; `--dry-run` previews without changing anything).
 
 > This is the only time in the tutorials you'll use the terminal. Day-to-day operation happens entirely in Obsidian.
 
@@ -65,7 +60,7 @@ All seven profiles installed.
 
 1. Open Obsidian.
 2. Click **Open folder as vault**.
-3. Navigate to `~/memoria` and click **Open**.
+3. Navigate to the folder the installer reported (default `~/Memoria`) and click **Open**.
 4. If Obsidian asks about trusting the vault author, click **Trust and enable plugins**. Memoria's plugins are safe to enable.
 
 Obsidian opens. You'll see the vault in Safe Mode because community plugins aren't enabled yet.

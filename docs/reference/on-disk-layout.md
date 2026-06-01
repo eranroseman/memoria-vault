@@ -6,27 +6,33 @@ Where every file lives across the two filesystem roots: the starter vault (versi
 
 ---
 
-## Vault root
+## Repo root and vault root
 
-The vault root folder name is human-defined (clone into any folder). The internal shape is fixed.
+There are two roots. The **repo** is the install unit — cloned anywhere; the bootstrap
+copies `vault/` to your chosen **runtime vault** folder (default `~/Memoria`, deliberately
+off OneDrive). Both folder names are free; the internal shapes are fixed. The install
+scripts live at the **repo root**, not inside the vault.
 
 ```text
-<vault-root>/
+memoria-vault/                       # repo root — the install unit (clone anywhere)
 ├── README.md                       # clone and install instructions
-├── install.ps1                     # Windows installer
-├── install.sh                      # macOS/Linux/WSL2 installer (shipped)
+├── install.sh                      # bootstrap installer (Ubuntu/Debian + WSL2)
+├── install.ps1                     # thin Windows launcher (gates WSL2, runs install.sh)
+├── docs/                           # engineering spec (NOT copied to the runtime vault)
+├── project-files/                  # decisions, proposals, operations
 │
-├── 00-meta/                        # vault skeleton — human-visible in Obsidian
-├── 10-inbox/                       # capture zone
-├── 20-sources/                     # ingested sources
-├── 30-synthesis/                   # human-owned canonical knowledge
-├── 40-workbench/                   # project scratch
-├── 50-deliverables/                # terminal outputs
-├── 90-assets/                      # extracted figures, supplementary
-├── 95-archive/                     # superseded notes
-│
-├── .obsidian/                      # Obsidian config (hidden by Obsidian)
-└── .memoria/                       # Memoria tooling (hidden by Obsidian)
+└── vault/                          # the Obsidian vault — the runtime artifact
+    ├── 00-meta/                    # vault skeleton — human-visible in Obsidian
+    ├── 10-inbox/                   # capture zone
+    ├── 20-sources/                 # ingested sources
+    ├── 30-synthesis/               # human-owned canonical knowledge
+    ├── 40-workbench/               # project scratch
+    ├── 50-deliverables/            # terminal outputs
+    ├── 90-assets/                  # extracted figures, supplementary
+    ├── 95-archive/                 # superseded notes
+    │
+    ├── .obsidian/                  # Obsidian config (hidden by Obsidian)
+    └── .memoria/                   # Memoria tooling (hidden by Obsidian)
 ```
 
 ---

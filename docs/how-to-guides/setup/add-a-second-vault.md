@@ -11,26 +11,31 @@ Fork the starter vault for a separate project or research area, keeping it indep
 
 ## Steps
 
-**1. Clone or fork the starter vault into a new folder.**
+**1. Choose a folder for the second vault.**
+
+You already have the repo from your primary setup — no need to re-clone. Pick a distinct folder, e.g. `~/my-second-vault`; step 2 lays the vault down there.
+
+**2. Register the second vault's profiles under unique aliases.**
+
+The default aliases (`memoria-librarian`, etc.) belong to your primary vault, and the installer does not yet support an alias prefix. Lay down the second vault (this temporarily re-points the shared `memoria-*` profiles at it), then duplicate the deployed profiles under a `project2-*` alias:
 
 ```bash
-git clone https://github.com/<your-handle>/memoria-vault.git my-second-vault
-cd my-second-vault/vault
+# from your repo clone — copy the vault out + deploy (memoria-* now point at it):
+bash install.sh --vault ~/my-second-vault
+
+# duplicate each deployed profile under a project2-* alias (its mcp.json already
+# has the substituted second-vault path):
+for role in librarian mapper socratic writer verifier coder linter; do
+  hermes profile install ~/.hermes/profiles/memoria-$role --alias project2-$role --force --yes
+done
+
+# restore the memoria-* profiles to your primary vault:
+bash install.sh --profiles-only --vault ~/your-primary-vault
 ```
 
-Choose a different folder name from your primary vault — the Hermes profile aliases will include this vault's path, so names must not collide.
+This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second vault while `memoria-*` keep pointing at your primary.
 
-**2. Run the installer with unique profile aliases.**
-
-The default aliases (`memoria-librarian`, etc.) are already used by your primary vault. Install the second vault's profiles under different names:
-
-```powershell
-./install.ps1 -AliasPrefix "project2-"
-```
-
-This registers `project2-librarian`, `project2-linter`, etc. — separate Hermes profiles pointing at the second vault's `.memoria/` directory.
-
-> **Note.** If `install.ps1` doesn't yet support `-AliasPrefix`, run it normally and manually rename the profiles in `~/.hermes/profiles/` after install, then update `mcp.json` in each to point at this vault's path.
+> **Note.** A built-in `--alias-prefix` flag is a future enhancement; until then this manual duplication is the supported route.
 
 **3. Open the second vault in Obsidian.**
 

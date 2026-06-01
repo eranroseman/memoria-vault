@@ -16,22 +16,24 @@ The trust assumption in canonical zones is not just a convention; it's what make
 
 Promotion follows a one-way path through lifecycle stages. The legal moves:
 
-```
-fleeting-note ──► paper-note (Librarian enriches, human classifies)
-fleeting-note ──► claim-note (human writes directly)
-fleeting-note ──► (discarded)
+```text
+fleeting-note  ──► paper-note / item-note  (Librarian enriches, human classifies)
+fleeting-note  ──► claim-note              (human writes directly)
+fleeting-note  ──► (discarded)
 
-answer-note ──► claim-note (human distills)
-answer-note ──► (discarded)
+answer-note    ──► claim-note              (human distills)
+answer-note    ──► (discarded)
 
-candidate-note ──► paper-note (Librarian ingests after human accepts)
+candidate-note ──► paper-note / item-note  (Librarian ingests after human accepts)
 candidate-note ──► (discarded)
 
-claim-note ──► reference-note (when evergreen and cross-linked)
-claim-note ──► moc membership (via frontmatter moc:)
+claim-note     ──► reference-note          (when evergreen and cross-linked)
+claim-note     ──► moc membership          (via frontmatter moc:)
 
-draft ──► deliverable (on export)
+draft          ──► deliverable             (on export)
 ```
+
+Two clarifications on the map. **Source notes are not only papers**: a captured repository, package, product, dataset, or standard promotes along the same path but lands as an `item-note` in `20-sources/02-items/` — the destination keys on whether the source carries a stable publication ID, not on any difference in how the note is handled (see [note-types.md](note-types.md)). **Entity notes** (`person-note`, `organization-note`, `venue-note`) are created as cross-link side-effects during ingestion rather than promoted from an earlier stage, so they don't appear above. And `candidate-note` is the deferred 16th type (see [note-types.md](note-types.md)); its two rows apply once the discovery/screening pipeline is adopted.
 
 Several moves are explicitly disallowed:
 
@@ -56,6 +58,8 @@ This is why the gate is at the synthesis boundary, not the source boundary. Sour
 Claim notes carry a `maturity` field with values `seedling`, `budding`, `evergreen`. Maturity is not a promotion gate — a `seedling` claim is still a canonical claim. It is a signal to the human about how much confidence to place in the claim for downstream use.
 
 The progression from seedling to evergreen is organic: a claim becomes more evergreen as it accumulates corroborating links, as it survives the addition of contradictory evidence, and as the human revisits and refines it. There is no automated promotion from `seedling` to `evergreen`; the human sets the maturity in judgment.
+
+The `seedling → budding → evergreen` vocabulary is borrowed from the **evergreen-notes** tradition that grew out of Zettelkasten (Andy Matuschak's framing of notes that are developed over time rather than written once). Memoria adopts the maturity ladder but, per its bookkeeping-not-intelligence stance, keeps the maturity judgment human-set — see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten).
 
 A common pitfall is using `maturity` as a reason to defer promotion: "I'll make it canonical when it's evergreen." This misunderstands the model. Make a claim canonical when the human has decided it represents their position. Maturity tracks confidence in the claim; promotion tracks whether the human has claimed it as theirs.
 

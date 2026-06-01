@@ -1,15 +1,16 @@
 ---
 topic: proposals
-status: under-consideration  # user-requested 2026-05-31; design under review, implementation pending approval
+status: implemented  # user-requested 2026-05-31; design approved + scripts written 2026-05-31
 created: 2026-05-31
 ---
 
 # Bootstrap installer (one-line full-stack setup)
 
-> **Design doc — pending approval.** This is the "plan first" deliverable. No scripts
-> are written against it yet. Once approved, it becomes the build spec; the doc
-> changes in the [Documentation changes](#documentation-changes-diátaxis) section
-> ship with the implementation.
+> **Implemented 2026-05-31.** The scripts are written against this design and live at
+> the repo root: [`install.sh`](../../install.sh) (the bootstrap brain) and
+> [`install.ps1`](../../install.ps1) (the thin WSL2 launcher). This doc is now the
+> as-built spec. Outstanding items are limited to the confirm-at-build residuals and a
+> live smoke-test (see [Still open](#still-open-beforewhile-building)).
 
 ## What
 
@@ -236,6 +237,33 @@ Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on
 > `provider: kilocode`. All seven `distribution.yaml` `env_requires` were updated to
 > require `KILOCODE_API_KEY` and demote `ANTHROPIC_API_KEY` to optional (swap-only), and
 > the setup docs were reconciled to match.
+
+## ACP, model, and auxiliary configuration
+
+**ACP (the Obsidian chat pane).** The bundled `agent-client` plugin is an ACP *client* — it
+launches a Hermes ACP server per agent. The Hermes side needs the **ACP extra installed**
+(`pip install 'hermes-agent[acp]'`, or `pip install -e '.[acp]'` from source), which provides
+the `hermes acp` command. The bootstrap must install it before the pane works; config is the
+standard `~/.hermes/{.env,config.yaml,skills/}` ([ACP docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/acp)).
+
+> **`-p` in ACP mode — confirmed (2026-05-31).** The [CLI reference](https://hermes-agent.nousresearch.com/docs/reference/cli-commands)
+> confirms `-p`/`--profile` is a **global** flag applying to every subcommand, so
+> `hermes -p memoria-<profile> acp` (as in `agent-client/data.json.example`) is valid and the
+> four-agent picker design holds. Live smoke-test once ACP is installed: `hermes -p memoria-socratic acp`.
+
+**Models — per profile (done, aliases confirmed 2026-05-31).** Each profile `config.yaml` sets
+the tier: Linter → `~anthropic/claude-haiku-latest`; Librarian/Mapper/Writer/Coder →
+`…sonnet-latest`; Socratic/Verifier → `…opus-latest` (`provider: kilocode`). Alias strings
+confirmed against the KiloCode catalog. **Auxiliary models** are set globally (Haiku tier for
+the cheap tasks) — see [hermes/configuration.md](../../docs/how-to-guides/hermes/configuration.md).
+
+**Auxiliary models — set in the *global* `~/.hermes/config.yaml`.** Auxiliary slots default to
+`provider: auto` (reuse the profile's main model) — so a Verifier title-gen/compression call
+would burn Opus. Point the cheap-task slots at a cheap model: `title_generation`, `compression`,
+`approval`, `mcp`, `skills_hub` → `~anthropic/claude-haiku-latest` (or a flash model);
+`vision`/`web_extract` → a cheap multimodal if used. This is global config the human owns —
+Memoria's per-profile `config.yaml` only overrides the `model` block (Hermes replaces config
+*sections* wholesale, so a per-profile `auxiliary:` block would clobber the global one).
 
 ## Architecture: bootstrap vs profile-installer
 
@@ -464,10 +492,10 @@ search (2026-05-31) found no drop-in skill but clear components + prior art to c
 > only `session-log` remains. The Linter's allowlist grants **no Hermes skills**
 > (`allow.skills: []`) — `detectors.py` runs via the profile's terminal capability.
 
-Net: **3 + 6 + 2 + 2 + 5 + 2 = 20.** What actually gets *authored as a skill* is **2**
-(`obsidian-paper-note`, `retraction-check` — still to author); the **`graph_analyze`
-`detectors.py` function** and the **`Memoria: scaffold code note` QuickAdd choice** are
-**done** (2026-05-31). Everything else is lane-override + `SOUL.md` edits — no wrapper files.
+Net: **3 + 6 + 2 + 2 + 5 + 2 = 20.** All of it is now in place (2026-05-31): the **2 authored
+skills** (`obsidian-paper-note` in the Librarian's `skills/`, `retraction-check` in the
+Verifier's), the **`graph_analyze` `detectors.py` function**, the **`Memoria: scaffold code note`
+QuickAdd choice**, and the lane-override + `SOUL.md` edits for the rest — no wrapper files.
 
 ### What "per-profile wiring" means
 
@@ -509,18 +537,29 @@ from the walkthrough). Profiles also carry `skills/` and `cron/` directories.
 
 ## Still open (before/while building)
 
-- **Author the 2 remaining skills** — `obsidian-paper-note` and `retraction-check` (the only
-  two of the 20 that stay real authored skills; pre-authoring search done, components
-  identified above). `graph-analyze` (`detectors.py`) and `scaffold-code-note` (QuickAdd) are
-  **done (2026-05-31)**; the rest are direct-use / `SOUL.md` procedures.
-- **Write the `SOUL.md` procedures** for the 5 Memoria-logic items (`session-log`,
-  `scope-project`, `gap-report`, `comparative-brief`, `cite-check`) and confirm the
-  prompt-only behaviors (`socratic-processing`, `lens-reading`, `counter-outline`).
-- **Skill install IDs pinned** — see [Pinned skill install IDs](#pinned-skill-install-ids).
-  Two confirm-at-build residuals: official-skills bundled-vs-`install`, and the exact `qmd`
-  skill packaging.
-- **Hosting** — confirm the public repo + raw URL for the one-liner.
-- **Write the bootstrap scripts** (`install.sh` + thin `install.ps1`) per this design, once the above are settled.
+The scripts are **written and validated** (`bash -n` + a full `--dry-run --yes` pass;
+`install.ps1` parses clean). Each remaining item is marked in the script as a
+`TODO(confirm-at-build)` comment or a warn-not-fail branch, so the installer runs today and
+these only refine it:
 
-(Resolved: KiloCode auth = `KILOCODE_API_KEY`; `qmd` kept as the search skill (skills.sh);
-skill-name drift reconciled in the lane-overrides + `profiles.md`.)
+- **Hermes install mechanism** — `ensure_hermes` currently does `pip install --user
+  'hermes-agent[acp]'`. The official installer script (which also provisions
+  uv/python/node/ripgrep/ffmpeg) is preferred once its URL is pinned. The ACP extra is
+  ensured either way.
+- **Official-skills bundled-vs-`install`** — `install_skills` attempts `hermes skills install
+  official/…` and warns-not-fails (a Hermes that already bundles them is fine).
+- **`qmd` packaging** — attempts `skills-sh/moltbot/skills/qmd`, warns-not-fails; the CLI is
+  Node ([tobi/qmd](https://github.com/tobi/qmd)). Confirm the exact skill.
+- **Live smoke-test** — `hermes -p memoria-socratic acp` (design says it works; verify on a
+  real install — printed as step 4 of the installer's "Next steps").
+
+**Hosting — confirmed:** public repo `eranroseman/memoria-vault`, scripts at the repo root on
+`main`. One-liner targets: `https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.{sh,ps1}`.
+These URLs now host the **bootstrap** (the old profile-installer survives as
+`install.sh --profiles-only`, the maintenance path).
+
+(Resolved 2026-05-31: bootstrap `install.sh` + thin `install.ps1` written; the 2 skills
+authored (`obsidian-paper-note`, `retraction-check`); `graph-analyze` detector +
+`scaffold-code-note` QuickAdd done; the 5 `SOUL.md` procedures + 3 prompt-only behaviors in
+place; skill IDs pinned; model aliases + ACP `-p` confirmed; KiloCode auth =
+`KILOCODE_API_KEY`; `qmd` kept (skills.sh); skill-name drift reconciled.)

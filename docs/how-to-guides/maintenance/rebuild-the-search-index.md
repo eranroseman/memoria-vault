@@ -76,7 +76,7 @@ To rebuild on a schedule, add to the Linter's cron tasks in `vault/.memoria/prof
   working_dir: "{{VAULT_PATH}}"
 ```
 
-Run `./install.ps1` to register the new cron task.
+Run `bash install.sh --profiles-only` (`.\install.ps1 -ProfilesOnly` on Windows) to register the new cron task.
 
 ## Verify
 

@@ -54,7 +54,7 @@ Other working note types — `draft`, `canvas`, `code-note`, `project-note`, `de
 
 The paper note is the most important source note, and the most carefully designed. Papers are the primary raw material of research synthesis. A paper note needs to capture enough for the human to work from without re-reading the paper for each downstream use.
 
-The distinction between `paper-note` and `item-note` is sometimes unclear (a codebase can be referenced like a paper, a paper can describe a tool). The rule: if it has a citekey (is in Zotero with a bibliography entry), it's a `paper-note`. If it's a software artifact without a formal citation, it's an `item-note`. The practical difference is in how Zotero and BibTeX handle them; the epistemic role is the same.
+The distinction between `paper-note` and `item-note` is sometimes unclear (a codebase can be referenced like a paper, a paper can describe a tool). The rule keys on **how the source is identified, not on whether it carries a citekey** — in a Zotero workflow almost everything acquires a citekey, items included. A source identified by a stable publication ID (DOI, arXiv, PMID, ISBN) is a `paper-note`; a source identified only by name or URL (a repository, package, product, dataset, or standard) is an `item-note`. The [ingest dispatch](../../reference/ingest.md#type-detection-dispatch) encodes exactly this test. The epistemic role is identical either way — both describe the world from an outside perspective.
 
 ---
 
@@ -62,7 +62,7 @@ The distinction between `paper-note` and `item-note` is sometimes unclear (a cod
 
 The claim note is what distinguishes a research vault from a document store. A vault full of paper notes is just a bibliography with annotations — useful, but not compounding. A vault with claim notes is a knowledge graph: the human's own assertions, grounded in evidence, connected to each other.
 
-The discipline is atomicity: one claim per note. This is Luhmann's rule, and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
+The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [intellectual-foundations.md](../intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
 
 The test: if the claim note's title contains the word "and" doing real conceptual work, it should be two notes.
 

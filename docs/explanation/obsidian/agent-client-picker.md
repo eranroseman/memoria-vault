@@ -1,10 +1,20 @@
-# The agent-client picker
+# The agent-client pane
 
-The agent-client plugin implements ACP inside Obsidian. Its `customAgents` array drives a picker — a list of profiles the human can switch the active chat between. This document explains why the picker is shaped the way it is: why Memoria labels its profiles by identity rather than by action, and what each label is meant to communicate.
+The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile, and a picker — driven by its `customAgents` array — for switching which profile is active. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, why switching profiles clears the conversation, and why Memoria labels its profiles by identity rather than by action.
 
-For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [reference/plugins.md](../../reference/plugins.md).
+For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [use-the-acp-pane.md](../../how-to-guides/interface/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [reference/plugins.md](../../reference/plugins.md).
 
 ---
+
+## Why a conversational pane at all
+
+Most of Memoria's work flows through the board: a card is created, dispatched, completed, reviewed. The pane is the deliberate exception — the one surface for work that is *synchronous and exploratory* rather than queued and auditable. Thinking a paper through, asking what the corpus already holds, sketching a counter-outline: these are conversations, not tasks with a fixed output. Forcing them onto the board would produce cards that never cleanly close, because the "output" lives in the human's understanding, not in a file.
+
+So the pane and the board divide cleanly: **the board is for work that produces a reviewable artifact; the pane is for thinking that produces a clearer human.** Anything from a pane session that *should* become durable (a claim note, a draft) is written through the normal gated path afterward — the pane itself writes nothing canonical (Socratic writes nothing at all).
+
+## Why the conversation clears on profile switch
+
+Switching the picker to a different profile discards the current conversation, by design. Each profile is a distinct specialist with its own permission contract and its own frame; carrying a Mapper exchange into a Socratic session would blur whose questions are being asked and invite the human to run, say, a drafting operation inside what they think is a read-only corpus query. A cleared pane on switch makes the boundary between specialists physical rather than a matter of discipline — the same separation the three-dimension card schema enforces on the board, applied to the interactive surface. (The persistent exception is Socratic, which stays open across notes *within* a reading session precisely because sustained questioning is its whole purpose.)
 
 ## Profiles, not modes
 

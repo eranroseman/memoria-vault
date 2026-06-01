@@ -54,6 +54,8 @@ Thematic groups from the future-directions survey.
 | [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
 | [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
 | [bootstrap-installer.md](bootstrap-installer.md) | One-line full-stack installer (Obsidian + Hermes + Zotero + vault); **user-requested, under review** |
+| [moc-threshold-alert.md](moc-threshold-alert.md) | Agent-proposed MOCs: threshold alert (report-only), then optional bare-stub draft |
+| [rename-agent-verdict.md](rename-agent-verdict.md) | Rename card field `agent_verdict` → `agent_recommendation` |
 
 ### Rejected alternatives
 
