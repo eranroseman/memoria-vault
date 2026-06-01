@@ -22,3 +22,4 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Link related claims](link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Link |
 | [Promote a claim to canonical reference](promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Promote |
 | [Archive a source](archive-a-source.md) | Retire an outdated or superseded source | Archive |
+| [Run a systematic review](run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Find → Screen → Ingest |

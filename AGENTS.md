@@ -164,3 +164,68 @@ reading it. Before opening a PR:
   structure. Keep the seven in sync.
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
   (ADRs). `notes/` and working reports are scratch — don't treat them as canon.
+
+## 8. Writing and editing docs
+
+### `docs/` — every file must sit in exactly one Diátaxis quadrant
+
+| Quadrant | Folder | The file answers… | Must not contain |
+|---|---|---|---|
+| Tutorial | `docs/tutorials/` | "How do I learn X by doing it?" | Explanation, reference lookup |
+| How-to guide | `docs/how-to-guides/` | "How do I accomplish X?" | Why things work, conceptual background |
+| Reference | `docs/reference/` | "What is the exact value / schema / command?" | Instructional steps, rationale |
+| Explanation | `docs/explanation/` | "Why is it designed this way?" | Step-by-step instructions, lookup tables |
+
+**Quadrant test before writing.** Ask: "Would a reader come here to *do* something, to *learn* something, to *look something up*, or to *understand* something?" Route accordingly. Mixed-quadrant pages are always wrong — split them.
+
+**Link rules.**
+
+- `docs/` files → **relative links** (developers have the full repo locally).
+- `vault/` files → **absolute website URLs** (`https://eranroseman.github.io/memoria-vault/…`) because the vault installs standalone to `~/Memoria` where repo-relative paths don't resolve.
+
+**Indexing.** Every new page must be added to its section README. New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`.
+
+### `project-files/decisions/` — ADR template
+
+```markdown
+---
+topic: decisions
+id: <NN>
+title: <Short title>
+status: accepted | rejected | superseded
+date_proposed: YYYY-MM-DD
+date_resolved: YYYY-MM-DD
+supersedes: []
+superseded_by: []
+---
+
+# ADR-<NN>: <Title>
+
+## Context
+## Decision
+## Why
+## Consequences
+## Alternatives considered
+```
+
+### `project-files/proposals/` — PROP template
+
+```markdown
+---
+topic: proposals
+id: PROP-<NN>
+title: <Short title>
+status: open | deferred | adopted | rejected
+created: YYYY-MM-DD
+---
+
+# PROP-<NN>: <Title>
+
+## What
+## Why
+## Trade-offs
+## Adoption trigger
+## Guard
+## Alternatives considered
+## Related
+```
