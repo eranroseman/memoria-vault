@@ -1,7 +1,12 @@
 ---
 topic: decisions
-status: accepted  # adopted/implemented in v0.1 2026-06-01
-created: 2026-05-31
+id: 22
+title: Rename `agent_verdict` → `agent_recommendation`
+status: accepted
+date_proposed: 2026-05-31
+date_resolved: 2026-06-01
+supersedes: []
+superseded_by: []
 ---
 
 # ADR-22: Rename `agent_verdict` → `agent_recommendation`
