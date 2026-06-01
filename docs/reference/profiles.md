@@ -1,9 +1,9 @@
 ---
-title: Profiles
+title: Profile capabilities
 parent: Reference
 ---
 
-# Profiles
+# Profile capabilities
 
 Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../explanation/profiles/).
 
