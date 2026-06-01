@@ -67,4 +67,13 @@ Collapsing any two creates problems. Board + workers collapsed means work state 
 
 Structural topics in this section also include **[control-plane.md](control-plane.md)**, **[memory-tiers.md](memory-tiers.md)**, **[human-channels.md](human-channels.md)**, **[distribution-model.md](distribution-model.md)**, **[why-pattern-provenance.md](why-pattern-provenance.md)**, **[why-computational-methods.md](why-computational-methods.md)**, **[vault.md](vault.md)** (the vault as a knowledge structure), and **[session-logging.md](session-logging.md)** (what each session records).
 
+## `why-*` explanations vs. ADRs
+
+The `why-*` files here and the ADRs in [project-files/decisions/](../../../project-files/decisions/) are deliberately different artifacts, and the boundary matters:
+
+- A **`why-*` explanation** is the *durable conceptual argument* — why the design is shaped this way, written to be read and re-read. It carries no date and no status; it is maintained as the canonical reasoning.
+- An **ADR** is the *dated decision record* — what was decided, when, the alternatives weighed, and the status. It is immutable once accepted.
+
+When the two cover the same ground (e.g. [why-human-gate.md](why-human-gate.md) and the structural-review-gate ADR), the explanation holds the argument and the ADR holds the decision; each should link to the other rather than restate it. If you change the reasoning, update the `why-*` file; if you reverse the decision, supersede the ADR.
+
 For operational reference (permission matrices, command lists, config formats), see [reference/](../../reference/).
