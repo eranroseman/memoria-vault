@@ -1,19 +1,14 @@
 name: docs-doctor
 
-# Structural lint for docs/. Make this a required status check in branch
-# protection so a misfiled file or broken link fails the PR and cannot merge.
+# Structural lint for docs/. This is a REQUIRED status check in the branch
+# ruleset, so it must run (and report) on EVERY push/PR — not just doc changes.
+# A required check that is path-filtered never reports on non-docs PRs, which
+# leaves them permanently "blocked". The lint is fast and idempotent, so running
+# it unconditionally is the correct trade-off.
 
 on:
   push:
-    paths:
-      - "docs/**"
-      - "scripts/docs-doctor.py"
-      - ".github/workflows/docs-doctor.yml"
   pull_request:
-    paths:
-      - "docs/**"
-      - "scripts/docs-doctor.py"
-      - ".github/workflows/docs-doctor.yml"
 
 jobs:
   docs-doctor:
