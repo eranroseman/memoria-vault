@@ -20,6 +20,7 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Read through a lens](read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](write-a-claim-note.md) | Distill a source into a durable claim | Distill |
 | [Link related claims](link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Link |
+| [Review link suggestions](review-link-suggestions.md) | Triage the Librarian's `[!suggestions]` callout — approve / reject candidate links | Link |
 | [Promote a claim to canonical reference](promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Promote |
 | [Archive a source](archive-a-source.md) | Retire an outdated or superseded source | Archive |
 | [Run a systematic review](run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Find → Screen → Ingest |

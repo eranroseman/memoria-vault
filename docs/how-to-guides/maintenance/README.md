@@ -16,6 +16,7 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Rebuild the search index](rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
 | [Redeploy profiles](redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
+| [Run a schema migration](run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
 | [Build a MOC](build-a-moc.md) | Create a map-of-content when a cluster reaches critical mass |
 | [Refactor a note](refactor-a-note.md) | Split, merge, or retype a note without breaking links |
 | [Return to work](return-to-work.md) | Re-orient after an absence and pick up where you left off |
