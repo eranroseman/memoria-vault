@@ -155,3 +155,7 @@ When you have roughly 15–20 notes on this topic (papers + claims combined), yo
 When you're ready to write something from what you've built:
 
 [Tutorial 05 — Start a writing project](05-start-a-writing-project.md): scope the corpus for a project, let Mapper produce a corpus map, choose a framing, and commit an outline.
+
+---
+
+← [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) · [Tutorial 05: Start a writing project](05-start-a-writing-project.md) →

@@ -188,3 +188,7 @@ The paper is now a vault citizen. The claim note is your intellectual contributi
 ## What's next
 
 [Tutorial 04 — Build a reading batch](04-build-a-reading-batch.md): repeat this flow for 5 papers on the same topic, write 3 linked claim notes, and see your first connected knowledge cluster take shape.
+
+---
+
+← [Tutorial 02: Your first note](02-your-first-note.md) · [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) →

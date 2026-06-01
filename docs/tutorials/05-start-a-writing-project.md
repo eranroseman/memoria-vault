@@ -131,3 +131,7 @@ Save `CHOSEN.md`.
 ## What's next
 
 [Tutorial 06 — Verify and address a gap](06-verify-and-address-gaps.md): write one section of prose from your outline, run verification to check your citation trail, and address a gap when verification finds a claim without backing.
+
+---
+
+← [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) · [Tutorial 06: Verify and address a gap](06-verify-and-address-gaps.md) →

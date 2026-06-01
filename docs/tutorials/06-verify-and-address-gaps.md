@@ -146,3 +146,7 @@ You now know the complete Memoria workflow. The daily rhythm from here is:
 - **Run the weekly review** (open `weekly-review.md` every Friday, process link suggestions, address any Linter findings)
 
 The [how-to guides](../how-to-guides/) cover individual workflows in more depth. The [reference section](../reference/) is what you reach for when you need the exact name of a field or command.
+
+---
+
+← [Tutorial 05: Start a writing project](05-start-a-writing-project.md) · [Tutorial 07: Find new sources](07-find-new-sources.md) →

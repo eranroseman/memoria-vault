@@ -113,3 +113,7 @@ This is the Zettelkasten permanent note. You wrote it — not the agent. Socrati
 ## What's next
 
 [Tutorial 03 — Bring in a paper](03-bring-in-a-paper.md): connect your first paper source to the vault and write a claim note with bibliographic grounding.
+
+---
+
+← [Tutorial 01: Set up from zero](01-set-up-from-zero.md) · [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) →
