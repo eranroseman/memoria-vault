@@ -24,14 +24,14 @@ A proposal is not a to-do list item. It won't be scheduled until its trigger fir
 
 ### Adopted into v0.1 (2026-06-01)
 
-Three were accepted and **moved to `decisions/`** as ADRs; the bootstrap installer is implemented and stays here (a user-requested install doc, not a numbered ADR).
+Three were accepted and **moved to `decisions/`** as ADRs; the bootstrap installer is implemented and its design moved to docs (an as-built spec, not a deferred proposal).
 
 | Now at | What it added |
 |---|---|
 | [decisions/ADR-21](../decisions/21-shared-candidate-frontmatter.md) | `candidate-note` (16th type) — discovery candidates + Verifier gap-cards (`source: gap`) + ingestion dead-letters |
 | [decisions/ADR-22](../decisions/22-rename-agent-verdict.md) | `agent_verdict` → `agent_recommendation` across schema / dashboards / docs |
 | [decisions/ADR-23](../decisions/23-moc-threshold-alert.md) | **Tier 1** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
-| [bootstrap-installer.md](bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) — implemented |
+| [docs: bootstrap installer](../../docs/explanation/architecture/bootstrap-installer.md) | One-line installer (`install.sh` + thin `install.ps1`) — implemented; design now in docs ([reference inventories](../../docs/reference/installer.md)) |
 
 ### Deferred from decisions
 
@@ -64,7 +64,6 @@ Thematic groups from the future-directions survey.
 | [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
 | [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
 | [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
-| [bootstrap-installer.md](bootstrap-installer.md) | One-line full-stack installer (Obsidian + Hermes + Zotero + vault) — **implemented (see Adopted, above)** |
 
 ### Rejected alternatives
 

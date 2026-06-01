@@ -1,7 +1,7 @@
 profile: memoria-mapper
 
 # Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
-# See project-files/proposals/bootstrap-installer.md § skills.
+# See https://github.com/eranroseman/memoria-vault/blob/main/docs/reference/installer.md § skills.
 
 policy:
   allow:

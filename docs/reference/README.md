@@ -47,6 +47,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [integrations.md](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
 | [on-disk-layout.md](on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions |
+| [installer.md](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables |
 | [failure-modes.md](failure-modes.md) | All failure modes by severity: symptom, cause, fix |
 | [bibliography.md](bibliography.md) | Works cited across the docs, in ACM author-date style; in-text citations link here |
 
