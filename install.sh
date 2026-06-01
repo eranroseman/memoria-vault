@@ -108,7 +108,10 @@ have() { command -v "$1" >/dev/null 2>&1; }
 
 # Remove the temp/staging clone on exit (only the one we created — never the
 # user's own clone when run inspect-first). The runtime vault is the copy.
-cleanup() { [ -n "$STAGING_REPO" ] && [ -d "$STAGING_REPO" ] && rm -rf "$STAGING_REPO"; }
+# NB: must return 0 — this is the EXIT trap, and its status becomes the script's
+# exit code. Without the `return 0`, a successful run from a local clone (where
+# STAGING_REPO is empty) would exit 1 on the failed `[ -n "" ]` test.
+cleanup() { [ -n "$STAGING_REPO" ] && [ -d "$STAGING_REPO" ] && rm -rf "$STAGING_REPO"; return 0; }
 trap cleanup EXIT
 
 detect_python() {
@@ -292,6 +295,11 @@ install_mcp_deps() {
   hdr "MCP server dependencies"
   detect_python
   local reqs="$VAULT_PATH/.memoria/mcp/requirements.txt"
+  # In --dry-run the vault was not actually copied, so reqs won't exist yet —
+  # report what WOULD happen rather than a misleading "missing file" skip.
+  if [ "$DRY_RUN" -eq 1 ] && [ ! -f "$reqs" ]; then
+    warn "(dry-run) vault not copied yet; would pip install from $reqs"; return
+  fi
   if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
   if [ -z "$PYTHON" ]; then warn "No Python found — skipping MCP deps (install later: pip install -r $reqs)."; return; fi
   run "$PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps failed."
