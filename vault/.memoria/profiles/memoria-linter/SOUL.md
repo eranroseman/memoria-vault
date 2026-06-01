@@ -129,7 +129,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 | Scite contrast | `> 15%` contrasting citations on a paper | Report — surface for human attention. |
 | Schema version mismatch | `schema_version` differs from current schema | Report — propose `schema-migrate --dry-run`. |
 | Promote-to-reference queue | `maturity: evergreen` notes still in `30-synthesis/01-claims/` | Report — surface in promotion backlog. |
-| MOC threshold crossed | A `topic` has ≥ 15 notes (papers + claim notes combined) and no `moc` covering it ([MOC thresholds](../../../docs/reference/linking.md#moc-thresholds)) | Report — surface "consider a MOC for topic X" in the weekly dashboard. **Report-only (Tier 1)**; never auto-create or draft a MOC (curation is human-owned). |
+| MOC threshold crossed | A `topic` has ≥ 15 notes (papers + claim notes combined) and no `moc` covering it ([MOC thresholds](https://eranroseman.github.io/memoria-vault/reference/linking/#moc-thresholds)) | Report — surface "consider a MOC for topic X" in the weekly dashboard. **Report-only (Tier 1)**; never auto-create or draft a MOC (curation is human-owned). |
 | Stale inbox | `answer-note` with `lifecycle: proposed` older than 7 days | Report — surface in weekly dashboard. |
 | Answer-draft retention | `answer-note` in `10-inbox/02-answers/` older than 90 days (mtime) — the `stale-answer-drafts` detector | Report — flag for keep / promote / discard; **never auto-archive**. Surface in weekly dashboard. |
 | Stale items | Item note's `last_checked` older than 90 days | Report. |
