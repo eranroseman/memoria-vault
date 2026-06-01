@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 10
+id: PROP-01
 title: Code-artifact autopilot
-status: proposed
-date_proposed: 2026-05-15
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-15
 ---
 
-# Proposal 10: Code-artifact autopilot
+# PROP-01: Code-artifact autopilot
 
 ## Context
 

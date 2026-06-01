@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 29
+id: PROP-07
 title: Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt
-status: proposed
-date_proposed: 2026-05-30
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-30
 ---
 
-# Proposal 29: admin/forensic GUI surface (`hermes-workspace`) — deferred
+# PROP-07: admin/forensic GUI surface (`hermes-workspace`) — deferred
 
 ## Context
 

@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 28
+id: PROP-06
 title: Per-note-type acceptance checklists ("frozen evaluator") — deferred
-status: proposed
-date_proposed: 2026-05-30
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-30
 ---
 
-# Proposal 28: per-note-type acceptance checklists ("frozen evaluator") — deferred
+# PROP-06: per-note-type acceptance checklists ("frozen evaluator") — deferred
 
 ## Context
 
@@ -21,7 +18,7 @@ for a claim-note: *"makes a falsifiable claim, supported by ≥ 1 citekey, title
 itself, under 250 words."*
 
 The appeal: it makes implicit quality standards explicit and uniform, and it pairs naturally
-with the ratchet gate ([Proposal 27](27-ratchet-duplicate-gate.md)), which could use the checklist
+with the ratchet gate ([PROP-05](PROP-05-ratchet-duplicate-gate.md)), which could use the checklist
 to decide what to flag.
 
 ## Decision
@@ -29,7 +26,7 @@ to decide what to flag.
 **Defer.** Memoria does **not** adopt frozen-evaluator checklists now. Revisit once the vault
 holds **50+ `claim-note`s**, when the criteria can be grounded in real examples rather than
 guessed. If adopted later, wire it into the same pre-file moment as the ratchet
-([Proposal 27](27-ratchet-duplicate-gate.md)).
+([PROP-05](PROP-05-ratchet-duplicate-gate.md)).
 
 ## Consequences
 
@@ -52,6 +49,6 @@ and it composes with the ratchet. Worth holding as a deferred decision rather th
 
 ## Related
 
-- **Pairs with:** [Proposal 27 — ratchet duplicate gate](27-ratchet-duplicate-gate.md)
+- **Pairs with:** [PROP-05 — ratchet duplicate gate](PROP-05-ratchet-duplicate-gate.md)
 - **Note type concerned:** [claim-note](../../docs/reference/note-types.md)
 - **Re-entry trigger:** 50+ claim-notes in `30-synthesis/01-claims/`

@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 17
+id: PROP-04
 title: Retriever / Scout as a separate profile
-status: proposed
-date_proposed: 2026-05-15
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-15
 ---
 
-# Proposal 17: Retriever / Scout as a separate profile
+# PROP-04: Retriever / Scout as a separate profile
 
 ## Context
 

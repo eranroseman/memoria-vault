@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 14
+id: PROP-02
 title: Cross-run skill-insights memory
-status: proposed
-date_proposed: 2026-05-15
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-15
 ---
 
-# Proposal 14: Cross-run skill-insights memory
+# PROP-02: Cross-run skill-insights memory
 
 ## Context
 

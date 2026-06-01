@@ -1,15 +1,12 @@
 ---
 topic: proposals
-id: 15
+id: PROP-03
 title: Dedicated review-note type
-status: proposed
-date_proposed: 2026-05-15
-date_resolved:
-supersedes: []
-superseded_by: []
+status: deferred
+created: 2026-05-15
 ---
 
-# Proposal 15: Dedicated review-note type
+# PROP-03: Dedicated review-note type
 
 ## Context
 
