@@ -5,8 +5,29 @@ Conventions for any AI agent (Claude Code, Hermes, etc.) making changes to
 
 This file encodes hazards learned the hard way. Following it avoids the failure
 modes that bite agents here: **concurrent sessions** sharing one working tree, the
-**auto-commit hook** entangling your work, and **branch protection** rejecting
-direct pushes.
+**auto-commit hook** entangling your work, **branch protection** rejecting direct
+pushes, and the **Windows ↔ WSL2 split** the project runs across.
+
+---
+
+## Where things live
+
+The project spans two hosts. Know which side you're on before you touch anything.
+
+| Piece | Host | Path | Who works here |
+| --- | --- | --- | --- |
+| **This dev repo** (`memoria-vault`) | **WSL2** · ext4 | e.g. `~/memoria-vault` | VSCode (Remote-WSL), git, **agents** |
+| **Hermes runtime** | **WSL2** · Linux | `~/.hermes/` — profiles, config, MCP venv | the agent runtime |
+| **Obsidian + runtime vault** | **Windows** | `~/Memoria` (the installed artifact) | the human, in the Obsidian GUI |
+
+- You work **inside WSL2** on the ext4 copy of this repo — never `/mnt/c`, never OneDrive.
+- **Obsidian stays on Windows** and opens the *runtime* vault (`~/Memoria`), **never this dev repo**.
+- **Integration boundary.** WSL2-Hermes reaches Windows-Obsidian through the Obsidian
+  **Local REST API** at `https://127.0.0.1:27124`. That works only with WSL2
+  **mirrored networking** — set `networkingMode=mirrored` in `%UserProfile%\.wslconfig`,
+  then `wsl --shutdown` — so both sides share `127.0.0.1`. Without it, Hermes gets
+  `HTTP 000`. Use the bare `…:27124/` REST endpoint, not `…/mcp/`; the API key lives in
+  the Obsidian plugin's `data.json` (never print or commit it).
 
 ---
 
@@ -23,20 +44,20 @@ hypothetical — it happened repeatedly (HEAD jumping branches, edits vanishing,
 one session's work bundled into another's PR).
 
 A worktree shares the same `.git` history but has its own HEAD, branch, and files,
-so sessions can't trample each other:
+so parallel sessions can't trample each other:
 
 ```bash
-# one-time per session, OUTSIDE OneDrive (OneDrive sync fights git):
+# one-time per session, on the WSL2 ext4 filesystem (NOT /mnt/c):
 git worktree add ~/mv-<session> -b agent/<session> origin/main
 cd ~/mv-<session>          # do ALL your work here
 # ... branch, edit, commit, PR from here ...
 git worktree remove ~/mv-<session>   # when done (or leave it for next time)
 ```
 
-`core.hooksPath` and `.gitattributes` are inherited, so the pre-commit guard and
-LF rules apply in the worktree too. The shared canonical checkout
-(`…/OneDrive/…/memoria-vault`) is **also inside OneDrive** — a second reason to
-do real work in a worktree outside it.
+Keep worktrees on **ext4** (`~/…`), never under `/mnt/c`: Windows-mounted paths are
+slow and break git's permission/inode assumptions. `core.hooksPath` and
+`.gitattributes` are inherited, so the pre-commit guard and LF rules apply in the
+worktree too.
 
 ## 1. Branch before you edit — always
 
@@ -51,16 +72,17 @@ git fetch origin && git switch -c fix/<thing> origin/main
 (`autoSaveInterval: 30` in `vault/.obsidian/plugins/obsidian-git/data.json`)
 commits the whole git working tree every ~30 min — you'll see commits titled
 `vault: <timestamp> N files`. That config ships *for the end-user's runtime vault*
-(`~/Memoria`), where auto-backup is a wanted feature. It becomes hostile only when
-someone **opens this dev repo (`memoria-vault/`) itself as an Obsidian vault** —
-then the timer auto-commits the entire source tree (`install.sh`, `project-files/`,
-`docs/`…), bundling your in-progress edits with the user's unrelated work and
-sometimes spawning phantom branches that orphan work.
+(`~/Memoria` on Windows), where auto-backup is a wanted feature. It turns hostile
+only if someone **opens a checkout of this dev repo as an Obsidian vault** (e.g.
+points Windows-Obsidian at a `\\wsl$\…\memoria-vault` path) — then the timer
+auto-commits the entire source tree (`install.sh`, `project-files/`, `docs/`…),
+bundling your in-progress edits with unrelated work and sometimes spawning phantom
+branches that orphan work.
 
 **Two defenses:**
 
-1. **Don't open `memoria-vault/` as an Obsidian vault.** Edit the source repo with
-   a normal editor; open the *runtime* vault (`~/Memoria`) in Obsidian instead.
+1. **Never open this dev repo as an Obsidian vault.** Edit it in VSCode (Remote-WSL);
+   Obsidian opens only the *runtime* vault (`~/Memoria`).
 2. **Always create your own branch before editing** (above). A dedicated branch
    keeps your change isolated and reviewable even if a stray auto-commit fires.
 
@@ -138,7 +160,9 @@ Every installer bug in this repo's history was caught by *running* the code, not
 reading it. Before opening a PR:
 
 - **Shell** (`install.sh`): `bash -n install.sh` (parse) + a `--dry-run` pass.
-- **PowerShell** (`install.ps1`): `Invoke-ScriptAnalyzer -Settings ./PSScriptAnalyzerSettings.psd1`.
+- **PowerShell** (`install.ps1`): the CI **`PSScriptAnalyzer`** check is the gate —
+  a WSL2 agent usually has no `pwsh`, so lean on CI but still read the script when you
+  change its logic.
 - **Python** (`.memoria/mcp/*.py`, `detectors.py`): run `--self-test`
   (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`,
   `detectors.py` all support it).
@@ -148,15 +172,27 @@ reading it. Before opening a PR:
 
 ## 6. Runtime / platform facts
 
-- The Hermes runtime runs on **Linux/WSL2**; Windows is only the editing surface.
-  `install.ps1` is a thin launcher that hands off to `install.sh` inside WSL2.
-- Line endings: `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to **LF**
-  (a CRLF in `install.sh` breaks the WSL2 shebang). Don't override it.
-- MCP deps install into a vault-local venv (`<vault>/.memoria/.venv`); the
-  installer wires that interpreter into each profile's `mcp.json`/`config.yaml`.
+- The dev repo and the **Hermes runtime both run in WSL2** (Linux); you edit and run
+  everything from the WSL2 side (VSCode Remote-WSL). **Obsidian and the runtime vault
+  stay on Windows** — see *Where things live*.
+- **`install.ps1` is the end-user Windows launcher**: it `wslpath`-converts the
+  Windows vault path and hands off to `install.sh` inside WSL2. For dev work, run
+  `install.sh` directly in WSL2; you rarely touch `install.ps1` except to lint it.
+- **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to **LF**
+  (a CRLF in `install.sh` breaks the WSL2 shebang). Never override it — working on
+  ext4 in WSL2 avoids the CRLF churn that `/mnt/c` + Windows editors introduce.
+- **Obsidian REST bridge** (integration work): WSL2-Hermes ↔ Windows-Obsidian needs
+  `networkingMode=mirrored` in `.wslconfig` so `https://127.0.0.1:27124` resolves
+  across the boundary — see *Where things live*.
+- MCP deps install into a vault-local venv (`<vault>/.memoria/.venv`); the installer
+  wires that interpreter into each profile's `mcp.json`/`config.yaml`.
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
-  files (shipped as `.example`). **Never** commit a real key; if one leaks,
-  rotate it.
+  files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
+- **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
+  ledger — read it before relying on live agent writes. Current blockers include the
+  policy-gate scope-bypass (terminal/filesystem writes skip the gate,
+  [#51](https://github.com/eranroseman/memoria-vault/issues/51)) and the per-profile
+  API key not yet reaching the runtime.
 
 ## 7. Profiles and the vault
 
@@ -164,7 +200,8 @@ reading it. Before opening a PR:
   `SOUL.md` / `AGENTS.md` / `config.yaml` / `mcp.json` / `distribution.yaml`
   structure. Keep the seven in sync.
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
-  (ADRs). `notes/` and working reports are scratch — don't treat them as canon.
+  (ADRs); current build state is `project-files/plans/implementation-status.md`.
+  `_notes/` and working reports are scratch — don't treat them as canon.
 
 ## 8. Writing and editing docs
 
@@ -232,7 +269,3 @@ created: YYYY-MM-DD
 ## Alternatives considered
 ## Related
 ```
-
-### `project-files/plans/` — planning docs (living, no fixed template)
-
-Forward-looking project logistics: the release gate (`release-plan.md`), the implementation timeline (`timeline.md`), and current build state (`implementation-status.md`). These are living documents — keep them current as the build progresses; they take `topic: plans` frontmatter but have no per-file template. (Folder renamed from `operations/` on 2026-06-01.)
