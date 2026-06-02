@@ -112,15 +112,15 @@ Every `allow_with_log` and `deny` decision appends one JSONL entry to `99-system
 
 ```json
 {
-  "ts": "2026-05-31T14:23:01Z",
+  "timestamp": "2026-05-31T14:23:01Z",
   "profile": "memoria-librarian",
   "action": "write",
   "path": "20-sources/01-papers/smith-2024.md",
   "task_id": "TASK-2026-05-31-003",
   "decision": "allow_with_log",
   "policy_rule": "librarian.write.sources",
-  "sha256_before": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
-  "sha256_after": "sha256:a87ff679a2f3e71d9181a67b7542122c..."
+  "before_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
+  "after_hash": "sha256:a87ff679a2f3e71d9181a67b7542122c..."
 }
 ```
 

@@ -96,7 +96,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 ### 1.4 Verification toolbox (how every test is checked)
 
 - **Vault write** → the file exists at the expected path with the expected frontmatter/body; e.g. `grep -l '^type: paper-note' 20-sources/01-papers/smithA.md`.
-- **Policy gate** → `99-system/logs/audit.jsonl` gains a row: `decision: allow_with_log` (permitted) or `deny` (forbidden), each carrying `sha256_before`/`sha256_after`. `tail -1 99-system/logs/audit.jsonl | jq`.
+- **Policy gate** → `99-system/logs/audit.jsonl` gains a row: `decision: allow_with_log` (permitted) or `deny` (forbidden), each carrying `before_hash`/`after_hash`. `tail -1 99-system/logs/audit.jsonl | jq`.
 - **Board state** → `hermes kanban show <id>` / `kanban list`; transitions also land in `99-system/logs/board-transitions.jsonl`.
 - **Telemetry** → `disposition.jsonl`, `cost.jsonl`, `lint-findings.jsonl` per [telemetry.md](../../docs/reference/telemetry.md).
 - **Read-only / dry-run** → assert the **inverse**: no new file, and **no** `allow_with_log` write row for that lane in `audit.jsonl`.
@@ -265,7 +265,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X1 | **Deny path** — force a Librarian write to `30-synthesis/01-claims/` | `decision: deny` row for `memoria-librarian` in `audit.jsonl`; no file written |
 | X2 | **Socratic write-wall** — any Socratic write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
 | X3 | **Review-gate degradation** — Writer/agent write to `30-synthesis/02-reference/` or `50-deliverables/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
-| X4 | **Audit chain integrity** — after a batch of writes | every `allow_with_log` row carries `sha256_before`/`sha256_after`; the chain is unbroken (`lint`'s `vault-hash-drift` reports clean) |
+| X4 | **Audit chain integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash`; the chain is unbroken (`lint`'s `vault-hash-drift` reports clean) |
 | X5 | **Dry-run safety** — all Verifier/Linter default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([profile-policies.md](../../vault/00-meta/04-reference/profile-policies.md)) |
 | X7 | **Model in effect** — `profile show` for all 7 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |

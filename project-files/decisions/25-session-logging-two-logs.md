@@ -19,7 +19,7 @@ Memoria's review gate ([ADR-03](03-structural-review-gate.md)) is only trustwort
 
 Memoria keeps **two separate logs in `99-system/logs/`**, written by different components:
 
-- **Policy MCP audit log** (`audit.jsonl`) — written by the **policy MCP**, append-only and **SHA-256 hash-chained** (each entry records `sha256_before` / `sha256_after`, computed by the MCP, and the chain must stay unbroken across the whole log) so modification is detectable; rotated weekly by the Linter. It answers the forensic question and feeds the audit-log and fleet-health dashboards.
+- **Policy MCP audit log** (`audit.jsonl`) — written by the **policy MCP**, append-only and **SHA-256 hash-chained** (each entry records `before_hash` / `after_hash`, computed by the MCP, and the chain must stay unbroken across the whole log) so modification is detectable; rotated weekly by the Linter. It answers the forensic question and feeds the audit-log and fleet-health dashboards.
 - **Per-session summaries** (`sessions/YYYY-MM-DD-HHMM.jsonl`) — written by the **Linter** (summarizing Hermes raw activity), one file per session, never rotated, accumulating indefinitely. They answer the narrative question for the human reviewing what happened.
 
 The two are never combined. The `sessions/` directory is intentionally **not** pre-created in the starter vault (an empty tracked folder would add git noise); the installer creates it on first setup, and the Linter is the sole writer of session memory.
