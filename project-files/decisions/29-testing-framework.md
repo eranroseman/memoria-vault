@@ -1,0 +1,59 @@
+---
+topic: decisions
+id: 29
+title: A layered testing framework, not a pile of protocols
+status: accepted
+date_proposed: 2026-06-02
+date_resolved: 2026-06-02
+supersedes: []
+superseded_by: []
+---
+
+# ADR-29: A layered testing framework
+
+## Context
+
+Memoria has three good test protocols — [headless](../tests/headless-test-protocol.md) (static + schema), [hermes-cli](../tests/hermes-cli-test-protocol.md) (agent wiring + the policy gate), and [GUI](../plans/gui-test-protocol.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the protocols **drift** from the design (e.g. the CLI protocol still cited the dissolved `00-meta/04-reference/`, the GUI protocol still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+
+## Decision
+
+Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at the base, expensive/manual/rare at the top), indexed by a coverage matrix, governed by four disciplines.
+
+**Layers**
+
+| Layer | Covers | Protocol / owner | Trigger |
+| --- | --- | --- | --- |
+| **L0 Static & schema** | the 5 CI checks + dashboard/telemetry schema-drift | headless | every commit (CI) |
+| **L1 Component** | Python `--self-test` ×5 (gate, hook, board, metrics, detectors) | headless §A | every commit (CI) |
+| **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
+| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
+| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../tests/e2e-golden-path-protocol.md) | per release |
+| **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-integration.md) vault-eval | per release / model swap |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../tests/installer-test-protocol.md) (+ others as built) | on relevant change |
+
+**Disciplines**
+
+1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../tests/coverage-matrix.md) maps every design component → its layer/protocol → automated? → release gate. Gaps are tracked, not discovered by accident.
+2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
+3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a protocol references resolves, so protocols can't rot silently; runs in CI alongside docs-doctor.
+4. **Explicit gate mapping.** Each release-plan Gate/Tier names the layer/protocol that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
+
+All protocols live in `project-files/tests/`, built from `test-protocol-template.md`.
+
+## Why
+
+- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-six-memory-substrates.md)). Without an index, coverage erodes and nobody notices; the matrix makes erosion visible.
+- The pyramid pushes coverage to the cheapest layer that can assert it: a `--self-test` on every commit beats a manual GUI step per release.
+- Separating wiring (L0–L4) from quality (L5) keeps fast deterministic checks honest and quarantines the slow, judgement-heavy eval where it belongs.
+
+## Consequences
+
+- New artifacts: the coverage matrix, the installer and golden-path protocols, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately (`99-system/eval/` is empty until then).
+- The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
+- Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed protocol.
+
+## Alternatives considered
+
+**Keep ad-hoc protocols (status quo).** Rejected: it's how the gaps and drift accrued — coverage is implicit and unmonitored.
+
+**One exhaustive suite.** Rejected: a single mega-protocol is unmaintainable and ignores that different surfaces need different cadences (per-commit vs per-release vs per-model-swap). The pyramid matches cadence to cost.

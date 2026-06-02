@@ -148,7 +148,7 @@ If S1–S5 pass, proceed to the full matrix.
 | L3 | `ingest` (no PDF) | F1 (`jonesB`) | `ingest jonesB` | note created; `extract_path` blank (not aborted); ingest still completes |
 | L4 | `obsidian-paper-note` | F1 (`smithA`, delete the L2 note first) | `obsidian-paper-note smithA` | same as L2 — full pipeline incl. `[!brief]` (this is the skill `ingest` wraps) |
 | L5 | `enrich` | F7 | `enrich <citekey>` | `_enrichment` refreshed, top-level `enriched_date` = today; audit write row; main human fields untouched |
-| L6 | `classify` | a `paper-note` with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from `00-meta/04-reference/` vocab); human fields still empty |
+| L6 | `classify` | a `paper-note` with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [frontmatter.md](../../docs/reference/frontmatter.md)); human fields still empty |
 | L7 | `query` | F3 | `query "<claim topic>"` | ranked matches returned; **read-only** — no write row in `audit.jsonl` |
 | L8 | `export prior-labels` | F3 + some `paper-note`s | `export prior-labels` | an ASReview-format priors file produced; row count = # matching the frontmatter filter |
 
@@ -267,7 +267,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X3 | **Review-gate degradation** — Writer/agent write to `30-synthesis/02-reference/` or `50-deliverables/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
 | X4 | **Audit chain integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash`; the chain is unbroken (`lint`'s `vault-hash-drift` reports clean) |
 | X5 | **Dry-run safety** — all Verifier/Linter default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
-| X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([profile-policies.md](../../vault/00-meta/04-reference/profile-policies.md)) |
+| X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../docs/reference/profiles.md)) |
 | X7 | **Model in effect** — `profile show` for all 7 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |
 
 ---
