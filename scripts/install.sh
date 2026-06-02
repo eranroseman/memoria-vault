@@ -372,6 +372,31 @@ with open(f, "w") as fh:
 PY
 }
 
+# Seed shared secrets into a profile's .env. Hermes profile runs read ONLY the
+# profile's own .env -- there is NO global ~/.hermes/.env inheritance (confirmed
+# live, Tier-4: `hermes -p <p> config env-path` resolves to the profile .env, and a
+# profile run with keys only in the global .env fails "no API key found"). So every
+# shared key (model + obsidian + per-lane API keys) must live in EACH profile's
+# .env. Copy each key the profile declares in its .env.EXAMPLE from the global
+# ~/.hermes/.env when the global has a non-empty value, without overwriting a value
+# already present in the profile .env. Idempotent -- the maintenance path is to put
+# keys in $HERMES_HOME/.env, then re-run `--profiles-only` to propagate them.
+seed_profile_env() {
+  local pdir="$1" name; name=$(basename "$pdir")
+  local penv="$pdir/.env" pexample="$pdir/.env.EXAMPLE" globalenv="$HERMES_HOME/.env"
+  if [ "$DRY_RUN" -eq 1 ]; then printf '  + (dry-run) would seed %s/.env from %s\n' "$name" "$globalenv"; return 0; fi
+  [ -f "$globalenv" ] && [ -f "$pexample" ] || return 0
+  local seeded=0 k line
+  for k in $(grep -oE '^[A-Za-z_][A-Za-z0-9_]*=' "$pexample" | tr -d '='); do
+    grep -qE "^$k=" "$penv" 2>/dev/null && continue          # already set in the profile .env
+    # a NON-empty value in the global .env (|| true: missing key must not abort under set -e+pipefail)
+    line=$(grep -E "^$k=.+" "$globalenv" | head -1 || true)
+    [ -n "$line" ] && { printf '%s\n' "$line" >> "$penv"; seeded=$((seeded + 1)); }
+  done
+  [ "$seeded" -gt 0 ] && say "    seeded $seeded shared key(s) into $name/.env from $HERMES_HOME/.env"
+  return 0
+}
+
 # =============================================================================
 # Step 6 — deploy the seven profiles  (the original profile-installer logic)
 # =============================================================================
@@ -456,13 +481,15 @@ install_profiles() {
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
       env_file="$HERMES_PROFILES_DIR/$p/.env"
       if [ "$DRY_RUN" -eq 0 ] && [ -f "$env_example" ] && [ ! -f "$env_file" ]; then
-        # Copy the template but DROP empty-valued lines (`FOO=`). An empty value
-        # in a profile .env SHADOWS the same key in the global ~/.hermes/.env, so a
-        # profile run reports "no API key was found" even when the global key is
-        # set. Keys without a per-profile override fall through to the global env.
+        # Copy the template but DROP empty-valued lines (`FOO=`) so the profile .env
+        # starts with no blank keys. Real values are seeded next from the global env.
         grep -vE '^[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*$' "$env_example" > "$env_file" || :
-        say "    created .env from .env.EXAMPLE (put shared keys in $HERMES_HOME/.env)"
+        say "    created .env from .env.EXAMPLE"
       fi
+      # Propagate shared secrets from $HERMES_HOME/.env into this profile's .env --
+      # profile runs do NOT read the global .env (Tier-4), so keys must be per-profile.
+      # Runs every install (idempotent): fill the global .env, re-run --profiles-only.
+      seed_profile_env "$HERMES_PROFILES_DIR/$p"
     else
       skipped="$skipped\n    [-] $p: hermes profile install failed"
     fi
@@ -571,12 +598,14 @@ zotero_plugins() {
 # =============================================================================
 print_secrets_guidance() {
   hdr "API keys (you add these — never commit them)"
-  say "Put shared keys in the GLOBAL  $HERMES_HOME/.env  — one place, all profiles:"
+  say "1. Put your keys in  $HERMES_HOME/.env  (the global file):"
   say "    KILOCODE_API_KEY=...        # model access (shipped provider: kilocode / kilo.ai)"
   say "    OBSIDIAN_API_KEY=...        # 64-char hex from the Obsidian REST API plugin"
   say "    OPENALEX_EMAIL=you@x.com    # Librarian — polite-pool header"
-  say "Per-profile overrides (rare) go in  $HERMES_PROFILES_DIR/<profile>/.env"
-  say "  — but an EMPTY key line there shadows the global one, so leave it out."
+  say "2. Propagate them into every profile (Hermes profile runs read ONLY the"
+  say "   profile's own .env — there is no global fallback):"
+  say "       bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
+  say "   (re-run this any time you add or rotate a key in $HERMES_HOME/.env.)"
   say "Full guide: https://eranroseman.github.io/memoria-vault/how-to-guides/setup/set-up-hermes/"
 }
 

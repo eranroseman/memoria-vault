@@ -201,11 +201,11 @@ routing:
 ```yaml
 hooks:
   pre_tool_call:
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
       timeout: 10
   post_tool_call:
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
       timeout: 10
 ```
@@ -213,7 +213,11 @@ hooks:
 - **`pre_tool_call`** maps the obsidian tool to a policy action, calls `check_permission`, and blocks `deny`/`dry_run`. On an allowed write it stashes the `before_hash`.
 - **`post_tool_call`** reads the stash, computes `after_hash`, and appends the paired `write_complete` audit record.
 
-**Caveat — best-effort, not fail-closed.** Hermes fails open on hook errors (a crashing hook is logged but does not abort the loop). Hard enforcement that survives a broken hook would need a custom obsidian bridge that calls `check_permission` internally.
+**Matcher must be a `re.fullmatch` pattern (Tier-4).** Hermes matches the hook `matcher` against the tool name with `re.fullmatch` (`agent/shell_hooks.py`), so a bare `matcher: "obsidian"` matches *only* a tool literally named `obsidian` and never fires on `obsidian_append_content`/`obsidian_patch_content`. Use `"obsidian.*"` (and `"write_file|patch"` for the Coder/Linter `file` toolset). A wrong matcher silently disables the gate — verify with `hermes -p <profile> hooks test pre_tool_call --for-tool obsidian_patch_content`.
+
+**Caveat 1 — best-effort, not fail-closed.** Hermes fails open on hook errors (a crashing hook is logged but does not abort the loop). Hard enforcement that survives a broken hook would need a custom obsidian bridge that calls `check_permission` internally.
+
+**Caveat 2 — shell hooks are not registered in `oneshot` mode (Tier-4).** `register_from_config` runs from the interactive CLI and the gateway, but **not** from `hermes -z`/oneshot, so a oneshot agent run wires no shell hooks and the gate does not fire there at all (a review-gated write reaches disk with no audit row — confirmed live). Automated lanes (cron, Kanban dispatch) must run through a hook-firing path (interactive/gateway) or use the custom-bridge approach above. Tracked as a release blocker.
 
 ---
 

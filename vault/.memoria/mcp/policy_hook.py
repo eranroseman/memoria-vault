@@ -31,11 +31,11 @@ command for both events:
 
     hooks:
       pre_tool_call:
-        - matcher: "obsidian"          # regex on the tool name; catches obsidian_* writes
+        - matcher: "obsidian.*"        # Hermes matches via re.fullmatch -> need .* to catch obsidian_* writes
           command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
           timeout: 10
       post_tool_call:
-        - matcher: "obsidian"
+        - matcher: "obsidian.*"
           command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
           timeout: 10
 

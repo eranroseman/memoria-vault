@@ -12,10 +12,10 @@ model:
 # Route obsidian-MCP vault writes through the policy gate (Socratic is hard write-denied).
 hooks:
   pre_tool_call:
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-socratic"
       timeout: 10
   post_tool_call:                       # completes the audit record with after_hash (reversibility)
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-socratic"
       timeout: 10

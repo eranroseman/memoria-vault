@@ -20,14 +20,14 @@ model:
 # Hermes build and adjust the regex if they are namespaced differently.
 hooks:
   pre_tool_call:
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
       timeout: 10
     - matcher: "write_file|patch"      # Hermes `file` toolset writes
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
       timeout: 10
   post_tool_call:                       # completes the audit record with after_hash (reversibility)
-    - matcher: "obsidian"
+    - matcher: "obsidian.*"
       command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-coder"
       timeout: 10
     - matcher: "write_file|patch"
