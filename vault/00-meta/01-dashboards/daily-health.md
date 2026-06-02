@@ -6,12 +6,13 @@ Open every morning, glance ~30 seconds, close if nothing's red. The **system-hea
 
 Cards needing you: `blocked` (your decision) or a `done` card with `review_status: requested` (awaiting approval). Oldest first; ≥ 3 rows is the signal to clear them before larger work.
 
-```dataview
-TABLE WITHOUT ID status AS State, assignee AS Lane, file.link AS Card, last_updated AS "Waiting since", reason AS Reason
-FROM "99-system/board"
-WHERE status = "blocked" OR review_status = "requested"
-SORT last_updated ASC
-LIMIT 10
+```dataviewjs
+const q = dv.pages('"99-system/board"')
+  .where(c => c.status === "blocked" || c.review_status === "requested")
+  .sort(c => c.last_updated, "asc");
+if (!q.length) { dv.paragraph("✅ Queue clear — nothing waiting on you."); }
+else dv.table(["State", "Lane", "Card", "Waiting since", "Reason"],
+  q.slice(0, 10).map(c => [c.status, c.assignee, c.file.link, c.last_updated, c.reason]));
 ```
 
 ## 2. Drift signals
@@ -34,15 +35,14 @@ dv.table(
 
 Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run this week. Contributing inputs: [[fleet-health|Fleet Health]].
 
-```dataview
-TABLE WITHOUT ID
-  lane AS Lane,
-  trust_score AS Trust,
-  samples AS Tasks,
-  success_rate AS "Success%"
-FROM "99-system/metrics"
-WHERE type = "lane-metric" AND period = dateformat(date(today), "kkkk-'W'WW")
-SORT trust_score ASC
+```dataviewjs
+const wk = dv.luxon.DateTime.now().toFormat("kkkk-'W'WW");
+const lanes = dv.pages('"99-system/metrics"')
+  .where(p => p.type === "lane-metric" && p.period === wk)
+  .sort(p => p.trust_score, "asc");
+if (!lanes.length) { dv.paragraph("_Aggregator hasn't run this week._"); }
+else dv.table(["Lane", "Trust", "Tasks", "Success%"],
+  lanes.map(p => [p.lane, p.trust_score, p.samples, p.success_rate]));
 ```
 
 ## 4. Cron status
