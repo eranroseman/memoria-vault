@@ -35,8 +35,8 @@ This produces keys in the `mamykina2010sense` shape — lowercase author, year, 
 Automatic Export tab → Add Automatic Export:
 
 - **Format:** Better BibLaTeX
-- **Path:** the absolute path to `.memoria/library.bib` inside your vault, e.g.:
-  `C:\Users\{USERNAME}\memoria-vault\vault\.memoria\library.bib`
+- **Path:** the absolute path to `.memoria/memoria.bib` inside your vault, e.g.:
+  `C:\Users\{USERNAME}\memoria-vault\vault\.memoria\memoria.bib`
 - **Export notes:** off
 - **Use Journal Abbreviations:** off
 - **On change:** Automatic (exports whenever Zotero's library changes)
@@ -54,14 +54,14 @@ Get into the habit: add PDF → right-click → Pin BibTeX key before doing anyt
 After adding one item and pinning its key, check that the `.bib` file was written:
 
 ```powershell
-Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime
+Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime
 ```
 
 The timestamp should be recent. Open the file and confirm the new citekey appears in an `@article{mamykina2010sense,` block (substituting your actual citekey).
 
 ## Verify
 
-- `vault/.memoria/library.bib` exists and contains your item's entry.
+- `vault/.memoria/memoria.bib` exists and contains your item's entry.
 - The citekey in `.bib` matches the `mamykina2010sense` shape.
 - The key is pinned (shown with a lock icon in Zotero's item list, and `extra: bibtex: mamykina2010sense` in the item's Extra field).
 

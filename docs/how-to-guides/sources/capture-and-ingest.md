@@ -10,7 +10,7 @@ Move a paper, repository, or other source from discovery into the vault as a rev
 
 ## Prerequisites
 
-- Zotero and Better BibTeX configured with autosync to `.memoria/library.bib` ([set-up-zotero.md](../setup/set-up-zotero.md))
+- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([set-up-zotero.md](../setup/set-up-zotero.md))
 - The Librarian profile installed and secrets filled ([set-up-hermes.md](../setup/set-up-hermes.md))
 
 ## Steps
@@ -32,10 +32,10 @@ Check the title, authors, and year in Zotero's item panel. Fix any OCR or auto-i
 The export fires on every library change, but you can confirm:
 
 ```powershell
-Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime
+Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime
 ```
 
-The timestamp should be recent. If it's stale, manually trigger: File → Export Library → Better BibLaTeX → overwrite `.memoria/library.bib`.
+The timestamp should be recent. If it's stale, manually trigger: File → Export Library → Better BibLaTeX → overwrite `.memoria/memoria.bib`.
 
 **5. Run ingest in a Librarian session.**
 

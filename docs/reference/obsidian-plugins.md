@@ -20,7 +20,7 @@ Memoria breaks without these. The starter vault **ships all eight bundled and co
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
-| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/library.bib`; creates paper notes from the configured template. (Zotero-side: see [zotero-plugins.md](zotero-plugins.md).) |
+| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [zotero-plugins.md](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
 
@@ -88,7 +88,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| BibTeX file (`citationExportPath`) | `.memoria/library.bib` | Single source of bib data; Better BibTeX auto-exports here. |
+| BibTeX file (`citationExportPath`) | `.memoria/memoria.bib` | Single source of bib data; Better BibTeX auto-exports here. |
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
 | Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |

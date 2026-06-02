@@ -31,7 +31,7 @@ A note without enrichment is better than a deferred ingest.
 **If `.bib` is not synced** — push it manually first:
 
 ```bash
-git add vault/.memoria/library.bib
+git add vault/.memoria/memoria.bib
 git commit -m "manual: bib update"
 git push
 ```
@@ -66,7 +66,7 @@ Then ingest.
 ```bash
 pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --citeproc \
-  --bibliography vault/.memoria/library.bib \
+  --bibliography vault/.memoria/memoria.bib \
   --csl vault/.memoria/csl/<style>.csl \
   -o /tmp/<output>.docx
 ```

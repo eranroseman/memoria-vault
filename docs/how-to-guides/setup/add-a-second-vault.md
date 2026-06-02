@@ -54,7 +54,7 @@ The second vault's Obsidian instance generates a different `apiKey`. Copy it fro
 
 **6. Set up Zotero for the second vault.**
 
-Add a second auto-export in Better BibTeX pointing at `my-second-vault/vault/.memoria/library.bib`. You can share the same Zotero library or create a separate collection.
+Add a second auto-export in Better BibTeX pointing at `my-second-vault/vault/.memoria/memoria.bib`. You can share the same Zotero library or create a separate collection.
 
 ## Verify
 

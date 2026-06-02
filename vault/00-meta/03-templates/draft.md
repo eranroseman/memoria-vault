@@ -40,4 +40,4 @@ Prose. Use citekey links inline: [[mamykina2010sense]]. Pandoc handles citation 
 ## Notes
 
 - Drafts are not canonical notes — they're working manuscripts. The agent assists only on explicit request.
-- Use Pandoc citekeys (`[@citekey]`) for inline citations during drafting; the export pipeline resolves them via `.memoria/library.bib`.
+- Use Pandoc citekeys (`[@citekey]`) for inline citations during drafting; the export pipeline resolves them via `.memoria/memoria.bib`.

@@ -611,7 +611,7 @@ zotero_plugins() {
   say ""
   say "Then configure Better BibTeX:"
   say "  - Citation key formula: stable author+year (see set-up-zotero.md)"
-  say "  - Auto-export your library as BibLaTeX to:  $VAULT_PATH/.memoria/library.bib"
+  say "  - Auto-export your library as BibLaTeX to:  $VAULT_PATH/.memoria/memoria.bib"
   say "    (this overwrites the empty stub the vault ships with)"
 }
 

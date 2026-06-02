@@ -2,8 +2,6 @@
 
 **Location.** `00-meta/01-dashboards/fleet-health.md`
 
-**Status.** Stub — not yet implemented. The runtime queries depend on the scheduled metrics aggregator writing `00-meta/08-metrics/lane-metric-*`; until that is in place this dashboard has no data. The full design lives at [docs/explanation/dashboards/operational-health/fleet-health.md](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/fleet-health/).
-
 **Decision.** Per-lane operational health for the agent fleet — a trust score per lane plus the cost and reliability trends behind it. Open this when deciding whether scheduled (cron) work should keep running or pause.
 
 ## System trust score

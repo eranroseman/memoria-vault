@@ -52,7 +52,7 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
     ├── profiles/        ← seven Hermes profile directories
     ├── mcp/
     ├── lane-overrides/
-    └── library.bib
+    └── memoria.bib
 ```
 
 The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) are structurally protected — no profile can write to them without a human `review_status: approved`. The policy MCP enforces this at the filesystem level.

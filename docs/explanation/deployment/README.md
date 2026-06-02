@@ -14,7 +14,7 @@ How Memoria is packaged, installed, and deployed. These pages explain the *ratio
 |---|---|
 | [Distribution model](distribution-model.md) | How profiles and the vault are packaged and installed — the repo as the install unit, idempotent deploy, hand-authored profiles |
 | [Bootstrap installer](bootstrap-installer.md) | The one-command installer's design and decided rules (WSL2/Linux, one bash implementation, inspect-first) |
-| [Deployment options](deployment-options.md) | The adopted `local-only` default and the conventions common to every sync pattern (Git history, `library.bib` in-vault, per-session logs, one dispatcher per vault) |
+| [Deployment options](deployment-options.md) | The adopted `local-only` default and the conventions common to every sync pattern (Git history, `memoria.bib` in-vault, per-session logs, one dispatcher per vault) |
 
 ---
 

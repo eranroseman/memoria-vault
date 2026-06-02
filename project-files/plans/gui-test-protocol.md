@@ -58,7 +58,7 @@ end (the boxes are clickable in Obsidian).
 | --- | --- | --- |
 | `Agent Client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
-| `Citations` | Insert citations from `.memoria/library.bib` | *Insert citation* command exists (Part D5) |
+| `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert citation* command exists (Part D5) |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Local REST API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
@@ -163,14 +163,14 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 ---
 
-## Part D — Zotero + Better BibTeX → `library.bib` (T5)
+## Part D — Zotero + Better BibTeX → `memoria.bib` (T5)
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
 - [ V] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
-`...\vault\.memoria\library.bib` (the absolute Windows path to the vault's bib).
+`...\vault\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
 
 - [ V] **D2 Pass**
 
@@ -179,15 +179,15 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [ ] **D3 Pass**
 
 **D4. Validate the export.** In Windows PowerShell:
-`Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> vault/.memoria/library.bib`.
+`Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> vault/.memoria/memoria.bib`.
 
-- ✓ Pass: `library.bib` updated and contains the entry.
+- ✓ Pass: `memoria.bib` updated and contains the entry.
 - [ ] **D4 Pass**
 
-**D5. Citation in Obsidian.** Command palette → *Citation: Insert citation* → your item resolves from `library.bib`.
+**D5. Citation in Obsidian.** Command palette → *Citation: Insert citation* → your item resolves from `memoria.bib`.
 
 - ✓ Pass: the citekey/reference is offered and inserts.
-- ✗ Fails: citation plugin `citationExportPath` must point at `.memoria/library.bib`, format `biblatex`.
+- ✗ Fails: citation plugin `citationExportPath` must point at `.memoria/memoria.bib`, format `biblatex`.
 - [ ] **D5 Pass**
 
 ---
@@ -225,7 +225,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
 | C / G4 | All 10 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
-| D | `library.bib` auto-exports; citation resolves | | |
+| D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |
 | E2 | Denied write blocked; deny row in audit-log | | |
 | E3 | Board-state shows a card after cron tick | | |

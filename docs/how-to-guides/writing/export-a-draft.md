@@ -12,7 +12,7 @@ Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, 
 
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
 - The draft is committed and the `[!verification]` callout shows `status: clean`
-- A `.bib` file in `.memoria/library.bib` (for bibliography rendering)
+- A `.bib` file in `.memoria/memoria.bib` (for bibliography rendering)
 
 ## Steps
 
@@ -25,12 +25,12 @@ At the top of your draft `.md` file, ensure:
 title: "Your Paper Title"
 author: "Your Name"
 date: 2026-05-31
-bibliography: ../../../../.memoria/library.bib
+bibliography: ../../../../.memoria/memoria.bib
 csl: ../../../../.memoria/csl/apa.csl   # or whichever CSL you're using
 ---
 ```
 
-Adjust the relative path to `.memoria/library.bib` based on your draft's depth inside the vault folder. For a draft at `40-workbench/project/04-drafts/draft.md`, four `../` climbs back to the vault root.
+Adjust the relative path to `.memoria/memoria.bib` based on your draft's depth inside the vault folder. For a draft at `40-workbench/project/04-drafts/draft.md`, four `../` climbs back to the vault root.
 
 **2. Export to Word (`.docx`).**
 

@@ -1,6 +1,6 @@
 # Daily Health — always-on health monitor
 
-**Location.** `00-meta/01-dashboards/index.md`
+**Location.** `00-meta/01-dashboards/daily-health.md`
 
 **Decision.** Open every morning. Glance for 30 seconds. If nothing is red, close it and move on. If something is red, the flagged item tells you what needs attention before any larger operation.
 

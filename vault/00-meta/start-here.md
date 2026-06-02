@@ -1,10 +1,10 @@
-# Memoria — vault index
+# Memoria — start here
 
 The pinned landing page. Open it in the morning; close it when the system looks healthy.
 
 ## Daily / weekly dashboards
 
-- [[01-dashboards/index|Daily Health]] — daily 30-second glance (board queues, drift signals, lane health, cron status)
+- [[01-dashboards/daily-health|Daily Health]] — daily 30-second glance (board queues, drift signals, lane health, cron status)
 - [[01-dashboards/discuss-queue|Reading queue]] — papers classified but not yet processed
 - [[01-dashboards/weekly-review|Weekly ritual]] — Friday vault audit (orphans, stale enrichment, promotion queue)
 - [[01-dashboards/board-state|Board state]] — full Kanban

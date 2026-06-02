@@ -14,7 +14,7 @@ APIs and tools the Librarian profile reaches during ingest and enrichment. All e
 | Integration | Role | Notes |
 |---|---|---|
 | **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [decisions/06-citekey-naming-convention.md](../../project-files/decisions/06-citekey-naming-convention.md). |
-| **`.memoria/library.bib`** | Auto-exported BibTeX from Zotero | Librarian reads this; never writes to it. Excluded from git (user-specific). |
+| **`.memoria/memoria.bib`** | Auto-exported BibTeX from Zotero | Librarian reads this; never writes to it. Excluded from git (user-specific). |
 
 ---
 

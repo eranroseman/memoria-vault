@@ -23,7 +23,7 @@ The system spans a **vault** (knowledge layer) and an **execution layer** (Herme
 These conventions are adopted design; they hold regardless of which pattern you run, and they are what make the multi-machine patterns safe when you do adopt them:
 
 - **Git is the version history layer, not the sync layer.** Every pattern uses Git for reversibility. Sync is a separate concern.
-- **`library.bib` lives inside the vault** at `.memoria/library.bib`, exported by Better BibTeX. This makes the bib a first-class artifact that travels with the vault under whichever sync mechanism you choose.
+- **`memoria.bib` lives inside the vault** at `.memoria/memoria.bib`, exported by Better BibTeX. This makes the bib a first-class artifact that travels with the vault under whichever sync mechanism you choose.
 - **Cheap-task routing is configured in Hermes, not in the deployment.** See the model-routing pattern (synthesis to Claude, embed / classify / quick-summary to cheaper models via OpenRouter or similar).
 - **Per-session log files, not a single `log.md`.** Each agent session writes a new file to `00-meta/02-logs/`. With one append-only file, distributed writes from VPS and desktop produce sync conflicts; one-file-per-session has nothing to conflict on.
 - **Hermes data dir is `~/.hermes/` by default** (or `%USERPROFILE%\.hermes\` on Windows). Override with `HERMES_HOME=/path/to/dir` when you need isolation — most commonly under multi-machine patterns, where a secondary device's Hermes should keep its own profiles, sessions, and audit log isolated from the primary's `~/.hermes/`.

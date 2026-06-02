@@ -74,7 +74,7 @@ The `--check` query exercises the Obsidian REST API without writing. A successfu
 
 **5. Test ingest on a real source.**
 
-Pick a citekey from `.memoria/library.bib` and run:
+Pick a citekey from `.memoria/memoria.bib` and run:
 
 ```text
 /obsidian-paper-note --source <citekey> --dry-run

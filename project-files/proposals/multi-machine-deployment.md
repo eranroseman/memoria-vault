@@ -21,7 +21,7 @@ Three sync topologies beyond `local-only`, plus a set of operating patterns for 
 | `obsidian-sync` | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access is needed; small team |
 | `always-on` | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](discovery-loop.md) |
 
-**Migration path.** Start `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role. The conventions common to every pattern (Git as history layer, `library.bib` in-vault, per-session logs, **one Hermes dispatcher per vault**, `.env` per-machine) are documented as adopted design in [deployment options](../../docs/explanation/deployment/deployment-options.md) and are what make these patterns safe.
+**Migration path.** Start `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role. The conventions common to every pattern (Git as history layer, `memoria.bib` in-vault, per-session logs, **one Hermes dispatcher per vault**, `.env` per-machine) are documented as adopted design in [deployment options](../../docs/explanation/deployment/deployment-options.md) and are what make these patterns safe.
 
 ## Why
 

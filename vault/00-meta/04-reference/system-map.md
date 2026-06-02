@@ -33,7 +33,7 @@ Promotion to review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 - **Human notes** → `00-meta/` (this folder), the lifecycle folders above
 - **Hermes profiles, MCP servers, lane policies** → `.memoria/` (dot-hidden tooling)
 - **Obsidian config** → `.obsidian/` (dot-hidden)
-- **Machine config** (`library.bib`, `tool-registry.yaml`, Pandoc CSL files) → `.memoria/`
+- **Machine config** (`memoria.bib`, `tool-registry.yaml`, Pandoc CSL files) → `.memoria/`
 
 ## What Memoria isn't
 

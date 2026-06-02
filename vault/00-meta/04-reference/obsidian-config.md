@@ -12,7 +12,7 @@ Which Obsidian community plugins Memoria uses and the load-bearing settings you 
 | **agent-client** | ACP integration with Hermes | `defaultAgentId: "memoria-socratic"`; `autoAllowPermissions: false` |
 | **Local REST API** | Webhook entry point for Hermes | Token in `data.json`; tightly scoped |
 | **PDF++** | Paper-note deep linking to PDF pages | Used in the paper-note workflow |
-| **Citation plugin** | Reads `library.bib` | `citationExportPath: ".memoria/library.bib"` |
+| **Citation plugin** | Reads `memoria.bib` | `citationExportPath: ".memoria/memoria.bib"` |
 | **callout-manager** | Inline-surface callouts (`[!brief]`, `[!suggestions]`, `[!verification]`) | Memoria's three custom callouts |
 
 ## Recommended plugins

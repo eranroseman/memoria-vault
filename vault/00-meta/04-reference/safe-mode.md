@@ -34,7 +34,7 @@ The three core workflows (ingest, review, export) with minimal commands and fall
 2. Run Pandoc directly:
    ```bash
    pandoc draft.md \
-     --bibliography .memoria/library.bib \
+     --bibliography .memoria/memoria.bib \
      --csl .memoria/csl/apa.csl \
      -o output.docx
    ```

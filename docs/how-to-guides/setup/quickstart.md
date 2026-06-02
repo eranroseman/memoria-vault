@@ -32,7 +32,7 @@ The installer provisions Hermes, deploys the seven profiles, and copies the vaul
 
 **2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. All eight required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
-**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][shorttitle1_0]` (the ADR-6 canonical formula — first significant title word, not a fixed char count). Enable auto-export to `<vault>/.memoria/library.bib` (e.g. `~/Memoria/.memoria/library.bib`).
+**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][shorttitle1_0]` (the ADR-6 canonical formula — first significant title word, not a fixed char count). Enable auto-export to `<vault>/.memoria/memoria.bib` (e.g. `~/Memoria/.memoria/memoria.bib`).
 
 **4. Fill the Librarian's secrets.** Copy the Obsidian REST API key from Settings → Local REST API, then:
 

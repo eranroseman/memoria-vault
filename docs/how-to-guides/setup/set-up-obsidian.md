@@ -31,7 +31,7 @@ The eight bundled plugins:
 | --- | --- |
 | `obsidian-local-rest-api` | Hermes writes into the vault over this API |
 | `agent-client` | Routes human ↔ Hermes conversations through a chat pane |
-| `obsidian-citation-plugin` | Reads `library.bib`; creates paper notes from the inline template |
+| `obsidian-citation-plugin` | Reads `memoria.bib`; creates paper notes from the inline template |
 | `callout-manager` | Renders `[!brief]`, `[!suggestions]`, `[!verification]` callout types |
 | `dataview` | Powers all dashboards and queue views (dataviewjs enabled) |
 | `templater-obsidian` | Runs templates for new notes |
@@ -62,7 +62,7 @@ Settings → Local REST API → copy the `apiKey` value. You'll need it when fil
 The required plugins ship with their settings pre-configured in `.obsidian/plugins/`. Confirm:
 
 - Local REST API: HTTPS on port **27124**, loopback-only, insecure HTTP server **off**
-- Obsidian Citation Plugin: bibliography path set to `.memoria/library.bib`
+- Obsidian Citation Plugin: bibliography path set to `.memoria/memoria.bib`
 
 **7. Do not install the frontend Obsidian Linter.**
 

@@ -23,7 +23,7 @@ The human-facing starter vault for **Memoria** — a research operating system t
   - `profiles/memoria-linter/structural-detectors.md` — the Linter's structural-detector reference
   - `mcp/` — the policy MCP servers (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`) + `requirements.txt`
   - `lane-overrides/` — per-lane policy YAML the policy MCP reads at startup
-  - `csl/`, `library.bib`, `tool-registry.yaml` — machine-read config (populated as needed)
+  - `csl/`, `memoria.bib`, `tool-registry.yaml` — machine-read config (populated as needed)
 
 The dot-prefix on `.memoria/` is the same trick `.obsidian/` uses: Obsidian's vault scanner auto-ignores both, so the human never sees tooling files in search, graph view, file explorer, or Dataview queries.
 

@@ -109,7 +109,7 @@ Confirm all eight appear as enabled under Settings → Community plugins, then c
 The Citation Plugin needs to know where your BibTeX file lives. Most of this is pre-configured in the bundled `data.json`; confirm these values:
 
 1. **Settings → Community plugins → Obsidian Citation Plugin → Options** (the gear icon next to it).
-2. Confirm **Citation database path** is: `.memoria/library.bib`
+2. Confirm **Citation database path** is: `.memoria/memoria.bib`
 3. Confirm **Literature note folder** is: `20-sources/01-papers`
 4. The note body is **not** an external template file — this plugin stores it inline in `literatureNoteContentTemplate` (kept in sync with `00-meta/03-templates/paper-note.md`). There is no template-path setting to set here.
 5. Close Settings.
@@ -118,14 +118,14 @@ The Citation Plugin needs to know where your BibTeX file lives. Most of this is 
 
 ## Step 7 — Wire up Zotero
 
-Better BibTeX needs to auto-export your library to `.memoria/library.bib`.
+Better BibTeX needs to auto-export your library to `.memoria/memoria.bib`.
 
 1. In Zotero, open **Edit → Preferences → Better BibTeX**.
 2. Under the **Citation keys** tab, confirm the citation key formula is: `[auth:lower][year][shorttitle1_0]`
    - If it's different, update it. This is the citekey format Memoria expects.
 3. Right-click your library in the left panel → **Export Library**.
 4. Format: **Better BibLaTeX**. Check **Keep updated**.
-5. Save the file to: `<your-vault-path>/.memoria/library.bib`
+5. Save the file to: `<your-vault-path>/.memoria/memoria.bib`
 
 Zotero will now keep that file updated every time you add or modify an item.
 
@@ -149,7 +149,7 @@ Click **Dashboard index** to open `00-meta/01-dashboards/daily-health.md`. The d
 - ✓ Vault open in Obsidian
 - ✓ All eight required plugins installed and enabled
 - ✓ All seven profiles installed in `~/.hermes/profiles/`
-- ✓ Zotero auto-exporting to `.memoria/library.bib`
+- ✓ Zotero auto-exporting to `.memoria/memoria.bib`
 - ✓ Dashboards loading (empty, ready for content)
 
 ---
