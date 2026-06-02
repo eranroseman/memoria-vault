@@ -32,15 +32,6 @@ env_requires:
     description: "Contact email for NCBI E-utilities (Entrez requires it) — read by `citation-management`; the agent also reuses it as the Crossref `mailto` (polite pool) and the Unpaywall `email` param (Unpaywall rejects placeholder addresses)."
     required: false
     default: ""
-  - name: ZOTERO_API_KEY
-    description: "Zotero Web API key — read by the `pyzotero` skill for library read/write."
-    required: false
-    default: ""
-  - name: ZOTERO_LIBRARY_ID
-    description: "Zotero library ID — numeric user ID, or the group ID for a group library. Required by `pyzotero` alongside the key."
-    required: false
-    default: ""
-  - name: ZOTERO_LIBRARY_TYPE
-    description: "Zotero library type — `user` or `group`. Required by `pyzotero`."
-    required: false
-    default: ""
+  # Zotero: the `pyzotero` skill runs in local read-only mode against the Zotero
+  # desktop API (http://localhost:23119) — no ZOTERO_API_KEY / _LIBRARY_ID /
+  # _LIBRARY_TYPE needed. Add a Web API key only if you switch to the cloud API.

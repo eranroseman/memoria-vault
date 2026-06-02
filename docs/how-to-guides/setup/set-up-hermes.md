@@ -33,9 +33,7 @@ OPENALEX_API_KEY=...                  # openalex.org/settings/api — required s
 S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
 NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
 NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the Crossref mailto / Unpaywall email param
-ZOTERO_API_KEY=...                    # pyzotero — also set ZOTERO_LIBRARY_ID and ZOTERO_LIBRARY_TYPE (user|group)
-ZOTERO_LIBRARY_ID=...
-ZOTERO_LIBRARY_TYPE=user
+# Zotero needs no key — pyzotero reads the local desktop API (http://localhost:23119, read-only)
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 

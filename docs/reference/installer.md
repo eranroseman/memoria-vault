@@ -66,7 +66,8 @@ The installer prints this checklist and the exact paths; it writes nothing. **v0
 | `KILOCODE_API_KEY` | [kilo.ai](https://kilo.ai) | each profile `.env` (or once in `~/.hermes/.env`) |
 | `OBSIDIAN_API_KEY` | Obsidian → Local REST API (first launch) | every profile `.env` |
 | `OPENALEX_API_KEY` | [openalex.org/settings/api](https://openalex.org/settings/api) (required since 2026-02) | Librarian `.env` |
-| `S2_API_KEY`, `NCBI_API_KEY`, `NCBI_EMAIL`, `ZOTERO_API_KEY`/`_LIBRARY_ID`/`_LIBRARY_TYPE` | per [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md) | Librarian `.env` (optional) |
+| `S2_API_KEY`, `NCBI_API_KEY`, `NCBI_EMAIL` | Semantic Scholar / NCBI account pages | Librarian `.env` (optional) |
+| Zotero | local desktop API, no key (`pyzotero` read-only) — see [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md) | — |
 | `GITHUB_TOKEN`, `OPENAI_API_KEY` | GitHub PAT / OpenAI dashboard | Coder `.env` (optional) |
 
 Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).

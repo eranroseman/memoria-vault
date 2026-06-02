@@ -16,18 +16,9 @@ env_requires:
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex) — vault read + verification-report writes via the `obsidian` MCP server."
     required: true
-  - name: ZOTERO_API_KEY
-    description: "Zotero Web API key — read by the `pyzotero` skill when cross-checking citations against the library."
-    required: false
-    default: ""
-  - name: ZOTERO_LIBRARY_ID
-    description: "Zotero library ID — numeric user ID, or the group ID for a group library. Required by `pyzotero` alongside the key."
-    required: false
-    default: ""
-  - name: ZOTERO_LIBRARY_TYPE
-    description: "Zotero library type — `user` or `group`. Required by `pyzotero`."
-    required: false
-    default: ""
+  # Zotero: the `pyzotero` skill runs in local read-only mode against the Zotero
+  # desktop API (http://localhost:23119) — no ZOTERO_API_KEY / _LIBRARY_ID /
+  # _LIBRARY_TYPE needed. Add a Web API key only if you switch to the cloud API.
   - name: OPENALEX_API_KEY
     description: "OpenAlex API key (?api_key= query param) — cross-checks during cite-check / retraction-check. As of 2026-02 OpenAlex requires a key; the former polite-pool email (OPENALEX_EMAIL) is discontinued."
     required: false
