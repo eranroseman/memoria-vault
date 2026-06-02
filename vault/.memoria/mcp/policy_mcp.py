@@ -630,6 +630,34 @@ def self_test() -> int:
         deny_auto_fix_classes=["schema-content", "review-gated-edit"],
         require=["audit_log"], write_scope=["99-system/logs/"],
     )
+    # The remaining three lanes mirror their real .memoria/lane-overrides/*.yaml
+    # so the gate contract for all seven profiles is unit-covered (closes the
+    # hermes-cli protocol's X1 / M4 / V-series write-walls — L2 gate testing).
+    librarian = LanePolicy(
+        profile="memoria-librarian",
+        allow_write=["10-inbox/01-fleeting/**", "10-inbox/03-candidates/**",
+                     "20-sources/**"],
+        deny_write=["30-synthesis/**", "40-workbench/**", "50-deliverables/**"],
+        require=["audit_log"],
+        write_scope=["10-inbox/01-fleeting/", "10-inbox/03-candidates/", "20-sources/"],
+    )
+    mapper = LanePolicy(
+        profile="memoria-mapper",
+        allow_write=["40-workbench/*/01-map/corpus-map.md",
+                     "40-workbench/*/01-map/gap-report.md",
+                     "40-workbench/*/01-map/cluster-maps/**"],
+        deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
+                    "50-deliverables/**"],
+        require=["audit_log"], write_scope=["40-workbench/*/01-map/"],
+    )
+    verifier = LanePolicy(
+        profile="memoria-verifier",
+        allow_write=["40-workbench/*/05-verification/**", "10-inbox/03-candidates/**"],
+        deny_write=["20-sources/**", "30-synthesis/**",
+                    "40-workbench/*/04-drafts/**", "50-deliverables/**"],
+        require=["audit_log"],
+        write_scope=["40-workbench/*/05-verification/", "10-inbox/03-candidates/"],
+    )
 
     d = lambda p, a, pa, fl=None, sk=None: decide(p.profile, a, pa, p, flags=fl, skill_deny_write=sk).decision
 
@@ -684,6 +712,37 @@ def self_test() -> int:
           d(writer, "write", "40-workbench/x/04-drafts/d.md", None, co_deny) == "deny")
     check("Writer+counter-outline: framing write still allowed",
           d(writer, "write", "40-workbench/x/02-framing/f.md", None, co_deny) == "allow")
+
+    # ---- L2 gate-contract: per-profile write-walls (hermes-cli §4/§5) ------- #
+    # Lifted from the protocol's case IDs so the gate contract for librarian /
+    # mapper / verifier is unit-tested here, not just observed once at runtime.
+    # (A plain allowed write returns "allow" and is *logged* via require:audit_log
+    # — the protocol's "allow_with_log row" prose means logged, not the
+    # allow_with_log decision, which is for review-gated reads / safe auto-fix.)
+    check("L1/L2 Librarian write to candidates + sources -> allow",
+          d(librarian, "write", "20-sources/01-papers/smithA.md") == "allow"
+          and d(librarian, "write", "10-inbox/03-candidates/c.md") == "allow")
+    check("X1 Librarian write to claims -> deny (write-wall)",
+          d(librarian, "write", "30-synthesis/01-claims/c.md") == "deny")
+    check("Librarian write to deliverables / another lane's map -> deny",
+          d(librarian, "write", "50-deliverables/d.md") == "deny"
+          and d(librarian, "write", "40-workbench/x/01-map/m.md") == "deny")
+    check("M1/M2/M3 Mapper write to its three map artifacts -> allow",
+          d(mapper, "write", "40-workbench/x/01-map/corpus-map.md") == "allow"
+          and d(mapper, "write", "40-workbench/x/01-map/gap-report.md") == "allow"
+          and d(mapper, "write", "40-workbench/x/01-map/cluster-maps/c.md") == "allow")
+    check("Mapper write to an unlisted map file -> deny (exact-file scope)",
+          d(mapper, "write", "40-workbench/x/01-map/other.md") == "deny")
+    check("M4 Mapper write outside its lane -> deny (write-wall)",
+          d(mapper, "write", "20-sources/p.md") == "deny"
+          and d(mapper, "write", "30-synthesis/01-claims/c.md") == "deny")
+    check("V1/V2 Verifier write to verification + gap candidates -> allow",
+          d(verifier, "write", "40-workbench/x/05-verification/report.md") == "allow"
+          and d(verifier, "write", "10-inbox/03-candidates/gap.md") == "allow")
+    check("V1 Verifier write to the draft under test -> deny (no self-edit)",
+          d(verifier, "write", "40-workbench/x/04-drafts/draft.md") == "deny")
+    check("Verifier write to synthesis -> deny (write-wall)",
+          d(verifier, "write", "30-synthesis/01-claims/c.md") == "deny")
 
     # ---- invalid action + missing task_id ---------------------------------- #
     check("unknown action -> deny",
