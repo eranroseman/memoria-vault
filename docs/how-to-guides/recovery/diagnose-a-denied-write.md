@@ -43,7 +43,7 @@ Read the fields ([full schema](../../reference/memory.md#audit-log-event-fields)
 
 Hermes fails open on hook errors, so a broken hook or unregistered MCP can let an attempt pass without ever logging a decision. Check, in order:
 
-- Is the policy server registered in the profile's `mcp.json`?
+- Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
 - Run the self-tests: `python .memoria/mcp/policy_mcp.py --self-test` and `python .memoria/mcp/policy_hook.py --self-test`. A failure here means the gate isn't enforcing.
 - Did the Obsidian Local REST API (port 27124) or a plugin error? The agent may report success while the write silently failed upstream of the gate.
 

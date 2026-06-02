@@ -27,7 +27,7 @@ The bootstrap copies `vault/` to a working location (off OneDrive on Windows); t
 
 **`.memoria/` scaffold** — Memoria's tooling directory, dot-prefixed and invisible to Obsidian's vault scanner. Contains:
 
-- `profiles/` — seven hand-authored Hermes profile directories, each with a `SOUL.md` system prompt, `config.yaml`, `mcp.json`, `skills/`, and `cron/`
+- `profiles/` — seven hand-authored Hermes profile directories, each with a `SOUL.md` system prompt, `config.yaml`, `skills/`, and `cron/`
 - `mcp/` — Python sources for `policy_mcp.py` and `policy_hook.py`
 - `lane-overrides/` — seven YAML files (one per lane) the policy MCP reads at startup
 - `csl/` — Pandoc citation styles

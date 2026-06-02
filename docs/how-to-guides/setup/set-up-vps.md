@@ -95,7 +95,7 @@ Hermes is already installed (step 1), so the installer detects it, copies the va
 
 **6. Configure the VPS profiles — remove the Obsidian MCP server.**
 
-The VPS has no running Obsidian instance. Edit each profile's `mcp.json` under `~/.hermes/profiles/memoria-<name>/mcp.json` and remove the `obsidian` server entry. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
+The VPS has no running Obsidian instance. Edit each profile's `config.yaml` under `~/.hermes/profiles/memoria-<name>/config.yaml` and remove the `obsidian` entry from its `mcp_servers` block. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
 
 **7. Set environment variables on the VPS.**
 
