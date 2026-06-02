@@ -17,7 +17,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Nightly pattern:**
 ```text
-1. Read research-directions.md
+1. Read research-focus.md
 2. Pick top N priorities (default 3)
 3. For each priority: run `find` (max 10 candidates)
 4. Ingest confirmed candidates from the previous day's inbox
@@ -27,7 +27,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Trade-offs.** Requires always-on infrastructure (a sleep-prone machine misses the cron). Bad inclusion criteria flood the inbox and make morning triage unsustainable. Silent cron failure is the dominant operational risk — fail loud, not silent.
 
-**Adoption trigger.** All four must hold: (1) Memoria v0.1 stable, (2) `research-directions.md` maintained for ≥ 4 weeks, (3) always-on deployment active (Syncthing + VPS), (4) `screening-protocol.md` written down. Not before.
+**Adoption trigger.** All four must hold: (1) Memoria v0.1 stable, (2) `research-focus.md` maintained for ≥ 4 weeks, (3) always-on deployment active (Syncthing + VPS), (4) `screening-protocol.md` written down. Not before.
 
 **Guard.** Adopting before inclusion criteria are written down produces an inbox that floods with low-relevance candidates and makes morning triage the slowest part of the day — the opposite of the intent.
 

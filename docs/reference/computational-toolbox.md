@@ -127,7 +127,7 @@ Training guidance:
 
 **Proposed use:** tournament ranking for triage — the reproducible, auditable alternative to LLM pairwise ranking.
 
-**Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-directions.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
+**Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-focus.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
 
 **Cold-start:** needs ~hundreds of past triage decisions before it beats existing scalar ordering. Use the scalar ordering or LLM tournament until then.
 

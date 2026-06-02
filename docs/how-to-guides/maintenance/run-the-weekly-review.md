@@ -19,7 +19,7 @@ Work through the dashboard top to bottom. Each section surfaces a queue; your jo
 
 **Step 1 — Review research priorities (2 min).**
 
-Open `research-directions.md`. Confirm or update the week's active projects and reading focus. This sets the lens for every decision in the steps below.
+Open `research-focus.md`. Confirm or update the week's active projects and reading focus. This sets the lens for every decision in the steps below.
 
 **Step 2 — Clear unreviewed synthesis (10–15 min).**
 

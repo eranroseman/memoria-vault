@@ -138,7 +138,7 @@ In the Obsidian file tree, open `home.md` at the vault root. This is your vault'
 You'll see links to:
 - The dashboard suite (`00-meta/01-dashboards/`)
 - System status
-- Your research directions
+- Your research focus
 
 Click **Dashboard index** to open `00-meta/01-dashboards/daily-health.md`. The dashboards will mostly show empty states — that's expected. They'll fill as you add notes.
 

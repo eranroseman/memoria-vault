@@ -30,7 +30,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 │
 └── vault/                          # the Obsidian vault — the runtime artifact
     ├── home.md                     # vault front door (obsidian-homepage opens it on launch)
-    ├── research-directions.md      # Librarian session-start input (human-edited)
+    ├── research-focus.md      # Librarian session-start input (human-edited)
     ├── troubleshooting.md          # offline-fallback help (kept in-vault by design)
     ├── 00-meta/                    # the human's read surface: dashboards
     ├── 10-inbox/                   # capture zone
@@ -78,7 +78,7 @@ memoria-vault/                       # repo root — the install unit (clone any
     ├── open-questions.md
     ├── reading-pipeline.md
     └── weekly-review.md
-# (human-facing notes — home, research-directions, troubleshooting — sit at the vault root;
+# (human-facing notes — home, research-focus, troubleshooting — sit at the vault root;
 #  the former 04-reference notes live on the website; templates + machine-generated
 #  logs/board/metrics/eval/skills moved to 99-system/ — see below)
 ```
@@ -256,7 +256,7 @@ Notes that ship with the starter vault for human reference — three at the vaul
 | Note | Purpose | Maintained by |
 | --- | --- | --- |
 | `home.md` | Vault-root front door, opened on launch by obsidian-homepage. One status glance, then links to dashboards, the in-vault help note, common operations, and the website. | Human (rarely changes) |
-| `research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
+| `research-focus.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
 | `troubleshooting.md` | Verify the plumbing, the three core workflows (ingest, review, export) with minimal commands and fallbacks, and recovery — for when Hermes or ACP is down. Folds in the former `system-status` health snapshot. Kept in-vault at the root — needed precisely when offline/down. | Human (rarely changes) |
 | `99-system/templates/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol template — used only in systematic-review mode (ADR-16/19). | Human (per review) |
 | `.memoria/design-system.md` | Canonical visual-style tokens: palette, typography, spacing, layout, motion, voice. Read by the CSS-snippet generators and Pandoc export (machine config). | Human (edits define the brand) |

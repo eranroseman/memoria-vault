@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the local reference notes, common operations, and the full website docs. Navigate from it to the right dashboard or tool, and keep your research directions current.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the local reference notes, common operations, and the full website docs. Navigate from it to the right dashboard or tool, and keep your research focus current.
 
 ## Prerequisites
 
@@ -36,11 +36,11 @@ The homepage links to all dashboards without duplicating their queries. Click an
 | **Audit log** | Per-decision forensics from the policy MCP |
 | **Drift watch** | Linter findings and verdict band |
 
-**3. Update your research directions.**
+**3. Update your research focus.**
 
-The Librarian reads `research-directions.md` at the start of every session to set discovery targets. Keep it current.
+The Librarian reads `research-focus.md` at the start of every session to set discovery targets. Keep it current.
 
-Click **Research directions** in the homepage → edit the file directly:
+Click **Research focus** in the homepage → edit the file directly:
 
 - **Current priorities** — up to 3–5 active research questions
 - **Open questions** — specific unresolved questions to surface sources for
@@ -60,11 +60,11 @@ The **Common operations** section lists the Memoria command-palette shortcuts. U
 
 - `Cmd/Ctrl-1` (Human workspace) shows the homepage in the left pane
 - Clicking **Daily Health** opens `00-meta/01-dashboards/daily-health.md`
-- `research-directions.md` has at least one current priority filled in
+- `research-focus.md` has at least one current priority filled in
 
 ## Related
 
 - Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards/)
 - Workspace layout for the Human workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Updating research directions on schedule: [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Updating research focus on schedule: [How to run the weekly review](../maintenance/run-the-weekly-review.md)

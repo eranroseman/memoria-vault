@@ -32,7 +32,7 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 
 ## Start here
 
-- [[research-directions|Research directions]] — your current priorities; read and refresh this at session start (the Librarian reads it too).
+- [[research-focus|Research focus]] — your current priorities; read and refresh this at session start (the Librarian reads it too).
 
 ## Do
 

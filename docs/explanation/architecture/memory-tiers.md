@@ -19,7 +19,7 @@ Two of these scopes are provided by Hermes natively; four are substrates Memoria
 | **Profile memory** (`MEMORY.md` + `USER.md`) | Hermes-native | One Hermes profile | Durable; frozen-snapshot at session start | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected into the system prompt as a frozen snapshot. |
 | **Session search** | Hermes-native | One profile, all past sessions | Indefinite, unlimited | Searchable history of prior conversations. Retrieved on demand — costs no system-prompt tokens until queried. |
 | **Board memory** (handoff payload) | Memoria — Kanban | One card, travels across profiles | Card-bound | The handoff: goal, context, allowed paths, expected outputs, the working set of notes |
-| **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `research-directions`, open questions, decisions log. Shared across every profile that touches the project. |
+| **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `research-focus`, open questions, decisions log. Shared across every profile that touches the project. |
 | **Vault audit memory** | Memoria — vault files | The whole vault | Indefinite, append-only | Audit trail, snapshots, weekly summaries, fleet metrics |
 
 `SOUL.md` is adjacent but is *not* memory — it is the profile's identity prompt, stable across sessions by design.
@@ -38,7 +38,7 @@ The scoping of each substrate is not arbitrary — it follows from what each sub
 
 **Board memory** is per-card rather than per-profile because the handoff is the unit of cross-profile communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it. The Writer does not inherit the Librarian's conversational context — only the structured handoff payload. This is what makes cross-profile handoffs reliable without requiring profiles to share session state.
 
-**Vault project memory** is the appropriate location for anything that must survive across lanes within a project. Profile memory is too local (scoped to one profile, capped in size) and vault audit memory is too far downstream (aggregate history, not project state). `research-directions.md` is the canonical example: it must be readable by every profile that touches the project, but it is not an audit artifact.
+**Vault project memory** is the appropriate location for anything that must survive across lanes within a project. Profile memory is too local (scoped to one profile, capped in size) and vault audit memory is too far downstream (aggregate history, not project state). `research-focus.md` is the canonical example: it must be readable by every profile that touches the project, but it is not an audit artifact.
 
 **Vault audit memory** is append-only because its value is the complete, unmodified chain. Profiles read it; only the Linter writes to it. The append-only constraint is not just a policy choice — the Linter's `vault-hash-drift` detector catches files modified outside this trail. Starting audit capture from day one matters because the cost and human-loop trends it tracks cannot be reconstructed retroactively.
 

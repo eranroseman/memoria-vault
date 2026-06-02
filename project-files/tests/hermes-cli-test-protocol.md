@@ -85,7 +85,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | ID | Fixture |
 |---|---|
 | **F1** | Two Zotero items with pinned BBT citekeys exported to `.memoria/library.bib` — one with an open-access PDF (call it `smithA`) and one without (`jonesB`). |
-| **F2** | `research-directions.md` with ≥ 1 concrete priority topic. |
+| **F2** | `research-focus.md` with ≥ 1 concrete priority topic. |
 | **F3** | ≥ 5 `claim-note`s in `30-synthesis/01-claims/` on a shared topic (for Mapper/Writer/Verifier). |
 | **F4** | A project at `40-workbench/test-proj/` with a `README.md` (`type: project-note`) and the canonical subfolders `01-map … 06-code`. |
 | **F5** | A draft `40-workbench/test-proj/04-drafts/draft.md` citing both a **resolvable** citekey (`smithA`) and a **bogus** one (`@nope1999`). |

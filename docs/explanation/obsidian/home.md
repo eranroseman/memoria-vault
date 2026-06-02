@@ -11,7 +11,7 @@ parent: Obsidian
 
 ## What it shows
 
-A small set of jumping-off points: links to Daily Health and the board-state dashboard, the quick-capture commands, and the human's research directions. Whatever live data appears is *embedded* from a dashboard, not computed here.
+A small set of jumping-off points: links to Daily Health and the board-state dashboard, the quick-capture commands, and the human's research focus. Whatever live data appears is *embedded* from a dashboard, not computed here.
 
 ---
 

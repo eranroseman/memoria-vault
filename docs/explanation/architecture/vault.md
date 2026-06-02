@@ -18,7 +18,7 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 ```text
 <vault-root>/
 ├── home.md              ← front door (obsidian-homepage opens it on launch)
-├── research-directions.md  ← Librarian's session-start input (human-edited)
+├── research-focus.md  ← Librarian's session-start input (human-edited)
 ├── troubleshooting.md   ← offline-fallback help (kept in-vault by design)
 ├── 00-meta/             ← the human's read surface: dashboards
 │   └── 01-dashboards/
@@ -84,7 +84,7 @@ A small set of singleton files at the **vault root** shape how the system runs:
 | File | Purpose | Owned by |
 |---|---|---|
 | `home.md` | The front door, opened on launch by obsidian-homepage. One status glance, then links to the dashboards, the in-vault help note, and the website. | Human (rarely changes) |
-| `research-directions.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
+| `research-focus.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
 | `troubleshooting.md` | Offline-fallback help: verify the plumbing, the three core workflows (ingest / review / export) with minimal commands, and recovery. Folds in the former runtime-health snapshot. Kept in-vault — needed precisely when Hermes or ACP is down. | Human (rarely changes) |
 
 ---

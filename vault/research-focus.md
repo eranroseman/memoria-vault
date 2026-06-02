@@ -1,6 +1,6 @@
-# Research directions
+# Research focus
 
-Read by the Librarian at the start of every session. Keep this file fresh — an empty or stale `research-directions.md` produces an unfocused Librarian.
+Read by the Librarian at the start of every session. Keep this file fresh — an empty or stale `research-focus.md` produces an unfocused Librarian.
 
 ## Current priorities
 
@@ -39,3 +39,5 @@ Read by the Librarian at the start of every session. Keep this file fresh — an
 ---
 
 **Refresh cadence.** Update weekly during the Friday ritual, or whenever priorities shift. The Librarian reads the version at session start; mid-session edits don't take effect until next run.
+
+**More:** [How to use the vault homepage](https://eranroseman.github.io/memoria-vault/how-to-guides/using-obsidian/use-the-vault-homepage/) (how to update this) · [How to run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/maintenance/run-the-weekly-review/) (refresh cadence).

@@ -59,7 +59,7 @@ The underlying principle from `explanation/architecture/why-computational-method
 
 ## 6. Discovery relevance scoring
 
-**What.** Reuse the existing `[!suggestions]` weighted scorer (embedding similarity + citation-graph overlap + topic-tag overlap against `research-directions.md`) to rank nightly discovery candidates. Deterministic, auditable, no extra API calls.
+**What.** Reuse the existing `[!suggestions]` weighted scorer (embedding similarity + citation-graph overlap + topic-tag overlap against `research-focus.md`) to rank nightly discovery candidates. Deterministic, auditable, no extra API calls.
 
 **Adoption trigger.** The discovery loop (see `discovery-loop.md`) is live and morning triage time is > 15 minutes because candidates aren't pre-sorted by relevance.
 
