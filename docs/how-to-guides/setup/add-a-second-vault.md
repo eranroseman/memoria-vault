@@ -28,7 +28,7 @@ The default aliases (`memoria-librarian`, etc.) belong to your primary vault, an
 # from your repo clone — copy the vault out + deploy (memoria-* now point at it):
 bash scripts/install.sh --vault ~/my-second-vault
 
-# duplicate each deployed profile under a project2-* alias (its mcp.json already
+# duplicate each deployed profile under a project2-* alias (its config.yaml already
 # has the substituted second-vault path):
 for role in librarian mapper socratic writer verifier coder linter; do
   hermes profile install ~/.hermes/profiles/memoria-$role --alias project2-$role --force --yes

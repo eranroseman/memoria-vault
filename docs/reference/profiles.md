@@ -34,8 +34,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | File | Status | Notes |
 | --- | --- | --- |
 | `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model) + a `hooks` block registering the policy gate. The hook command carries `{{VAULT_PATH}}` (a substitution target, like `mcp.json`). Required by the profile-install step. |
-| `mcp.json` | shipped | `mcp_servers`: `policy` + `obsidian`; `{{VAULT_PATH}}` substitution target. |
+| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model), the `mcp_servers` block (`policy` + `obsidian`; `{{VAULT_PATH}}` substitution target), and a `plugins` block enabling the `memoria-policy-gate` write gate. Required by the profile-install step. |
 | `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |

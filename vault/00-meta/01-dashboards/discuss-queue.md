@@ -1,6 +1,6 @@
 # Discuss Queue
 
-Classified papers (`lifecycle: current`) not yet processed via Discuss — the upstream-discipline queue (long = processing is falling behind ingest). Open during a reading session to pick what to think about next. [Discuss workflow](https://eranroseman.github.io/memoria-vault/how-to-guides/sources/discuss-a-paper/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/discuss-queue/).
+Classified papers (`lifecycle: current`) not yet processed via Discuss — the upstream-discipline queue (long = processing is falling behind ingest). Open during a reading session to pick what to think about next. [Discuss workflow](https://eranroseman.github.io/memoria-vault/how-to-guides/sources/discuss-a-paper) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/discuss-queue).
 
 ## Cards awaiting Socratic processing
 

@@ -52,7 +52,7 @@ The installer (with your confirmation at each external step):
 
 - Installs Hermes + the ACP extra
 - Copies `vault/` to your runtime folder (default `~/Memoria`, off OneDrive)
-- Substitutes your vault path into each profile's `mcp.json` and `config.yaml`
+- Substitutes your vault path into each profile's `config.yaml`
 - Registers the seven profiles into `~/.hermes/profiles/` and provisions skills
 
 It ends with a **Next steps** summary, including the path it copied the vault to (it asks before each external action; `--dry-run` previews without changing anything).

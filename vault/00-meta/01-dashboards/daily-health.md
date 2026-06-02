@@ -1,6 +1,6 @@
 # Daily Health
 
-Open every morning, glance ~30 seconds, close if nothing's red. The **system-health** view — board queues, drift, lane health, cron. Vault-state work (classification debt, promotion queue, orphans) lives in [[weekly-review|Weekly Review]]. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/).
+Open every morning, glance ~30 seconds, close if nothing's red. The **system-health** view — board queues, drift, lane health, cron. Vault-state work (classification debt, promotion queue, orphans) lives in [[weekly-review|Weekly Review]]. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health).
 
 ## 1. Today's queue
 
@@ -67,4 +67,4 @@ dv.table(["Task", "Lane", "Last run", "Next run", "Result"], rows);
 
 ## Related
 
-Queries stay empty until the board-state / lint-findings / metrics / cron-history feeds are wired ([rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/)). Siblings: [[weekly-review|Weekly Review]] (Friday vault-state), [[drift-watch|Drift watch]] (structural detail), [[fleet-health|Fleet Health]] (cost & trust inputs), [[audit-log|Audit log]] (forensics).
+Queries stay empty until the board-state / lint-findings / metrics / cron-history feeds are wired ([rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health)). Siblings: [[weekly-review|Weekly Review]] (Friday vault-state), [[drift-watch|Drift watch]] (structural detail), [[fleet-health|Fleet Health]] (cost & trust inputs), [[audit-log|Audit log]] (forensics).

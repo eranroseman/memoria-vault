@@ -6,7 +6,7 @@ parent: Maintenance
 
 # How to redeploy profiles
 
-Push vault source edits — to `SOUL.md`, `config.yaml`, `mcp.json`, skills, or cron tasks — out to the installed copies in `~/.hermes/profiles/`.
+Push vault source edits — to `SOUL.md`, `config.yaml`, skills, or cron tasks — out to the installed copies in `~/.hermes/profiles/`.
 
 ## When to redeploy
 
@@ -30,7 +30,7 @@ bash scripts/install.sh --profiles-only      # Linux / WSL2 (where Hermes runs)
 Add `--vault <dir>` (`-Vault <dir>` on Windows) if your runtime vault isn't the default `~/Memoria`. The script is idempotent — safe to run at any time. It:
 
 - Stages each profile's files to a temp directory
-- Substitutes `{{VAULT_PATH}}` in `mcp.json` **and** `config.yaml`
+- Substitutes `{{VAULT_PATH}}` in `config.yaml`
 - Calls `hermes profile install --force` for each profile
 - Never overwrites `.env` files
 

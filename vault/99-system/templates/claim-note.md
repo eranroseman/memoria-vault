@@ -28,7 +28,7 @@ One durable claim in a single sentence.
 - Supporting paper notes.
 
 > [!tip]- Recording contradictions & support
-> Put contradictory/supporting claims in the `relations:` frontmatter (`contradicts` / `supports`), not just here — that's what the contradictions dashboard queries. See [frontmatter reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter/).
+> Put contradictory/supporting claims in the `relations:` frontmatter (`contradicts` / `supports`), not just here — that's what the contradictions dashboard queries. See [frontmatter reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter).
 
 # Open questions
 - What remains unresolved.
