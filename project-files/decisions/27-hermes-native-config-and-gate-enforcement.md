@@ -11,6 +11,17 @@ superseded_by: []
 
 # ADR-27: Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the only write path
 
+> **Correction (2026-06-02, [ADR-28](28-write-gate-as-plugin.md)).** This ADR's
+> *enforcement mechanism* — the `pre_tool_call` **shell hook** with
+> `matcher: "obsidian.*"` — does **not** fire on live agent writes: Hermes registers
+> the obsidian tool as `mcp_obsidian_obsidian_append_content`, and the shell-hook
+> `re.fullmatch` against `obsidian.*` never matches it (shell hooks are also
+> consent-gated and fail-open). ADR-27's validation rows were synthetic
+> (hand-set `task_id`s), not a live run. **ADR-28 replaces the shell hook with a
+> Python plugin** (the gate now enforces live). The rest of ADR-27 — `mcp_servers`
+> in `config.yaml`, the `agent.disabled_toolsets` allowlist, obsidian as the only
+> write path — **stands**; it is what makes one gated path sufficient.
+
 ## Context
 
 A Tier-4 live investigation (Hermes Agent v0.14.0, WSL2, against the `Memoria-test`

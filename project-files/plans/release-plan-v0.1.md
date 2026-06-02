@@ -11,13 +11,15 @@ GitHub release exists, and the build ledger lists nothing as `approved`. **All
 three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery —
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
-review gate firing live). #58 was resolved by
-[ADR-27](../decisions/27-hermes-native-config-and-gate-enforcement.md): the gate
-read as a no-op only because the `obsidian` MCP never loaded (it shipped in a
-standalone `mcp.json`, which Hermes never reads), so writes went through
-`code_execution`/`file` paths the `obsidian.*` matcher couldn't cover. With
-`mcp_servers` in `config.yaml` and a per-lane toolset allowlist (obsidian = the
-only write path), the gate enforces live — validated in oneshot on Memoria-test.
+review gate firing live). #58 took two passes:
+[ADR-27](../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
+`obsidian` MCP and locked each lane to obsidian-only writes, and
+[ADR-28](../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
+hook with a Python plugin — the shell hook's `obsidian.*` `re.fullmatch` never
+matched Hermes' real `mcp_obsidian_*` tool name (and shell hooks are consent-gated
++ fail-open). The gate now **enforces live**: validated in `hermes -z` on
+installer-deployed lanes (allowed write logs `allow`+`write_complete`; denied write
+blocked, no file; simulated policy outage fails closed).
 **No open P0 remains.** [#59](https://github.com/eranroseman/memoria-vault/issues/59)
 (official skills on install) is resolved — those skills are bundled with Hermes,
 not hub-installed. What's left for the cut is **verification, not construction:**
@@ -29,7 +31,7 @@ flips to `true` only when every gate in §2 is `done`.
 > most artifacts are `shipped` — but its legend defines `shipped` as _in the vault,
 > not verified end-to-end_. So v0.1 is overwhelmingly **built but unverified**, and
 > #58 was a textbook case of the danger of stopping at `shipped`: a gate that existed
-> but didn't fire (ADR-27 fixed it). The release gate is **verification, not
+> but didn't fire (it took ADR-27 _and_ the ADR-28 plugin to actually fire it). The release gate is **verification, not
 > construction** — turning `shipped` rows into `approved` ones (§3).
 
 ## State values
@@ -61,7 +63,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
-| G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed on missing `task_id`. Validated live in oneshot on Memoria-test (ADR-27); needs the fresh-clone candidate re-run to confirm across gateway/cron | Tier 4 | — |
+| G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in `-z` on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Gateway/cron are mode-independent by plugin design but not yet separately run; needs the fresh-clone candidate re-run for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
 | G4 | todo | All ten dashboards render on real data (Dataview queries resolve) | Tier 5 | — |
 | G5 | todo | Six-signal telemetry emits once the board-export cron is wired (emitters exist; cron unwired) | Tier 4–5 + cron | — |
@@ -81,7 +83,7 @@ Ubuntu/WSL2 box.
 | T1 | done | Python `--self-test` (112/112 green: policy_mcp 34, policy_hook 32, board_export 26, metrics_aggregate 20) |
 | T2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | T3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
-| T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27, validated live in oneshot on Memoria-test). Needs the fresh-clone candidate live re-run to record green for the cut |
+| T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in `-z` on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run (and gateway/cron) to record green for the cut |
 | T5 | todo | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export |
 
 ## 4. Blockers
@@ -93,8 +95,9 @@ ledger ([implementation-status.md](implementation-status.md)) and any open
 
 **No open P0 remains** — #39, #51, and
 [#58](https://github.com/eranroseman/memoria-vault/issues/58) are all closed (#58
-resolved via ADR-27: the gate now fires because obsidian is each lane's only write
-path). #59 is resolved (skills are bundled, not hub-installed). The remaining
+resolved via ADR-27 + the ADR-28 plugin: obsidian is each lane's only write path,
+and the `memoria-policy-gate` plugin enforces on it — validated live,
+installer-deployed). #59 is resolved (skills are bundled, not hub-installed). The remaining
 blockers are the not-yet-`done` gates in §2 (G2, G4, G5, G8) and tiers in §3 (T4,
 T5) — verification work, not defects.
 

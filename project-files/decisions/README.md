@@ -51,6 +51,7 @@ Rules:
 | [25](25-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
 | [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
 | [27](27-hermes-native-config-and-gate-enforcement.md) | Configure Hermes the way it reads config; gate via toolset allowlist + obsidian-only writes |
+| [28](28-write-gate-as-plugin.md) | The vault write gate is a Hermes Python plugin, not a shell hook |
 
 ### Workflows
 
