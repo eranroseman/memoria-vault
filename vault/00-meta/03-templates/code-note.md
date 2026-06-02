@@ -1,30 +1,19 @@
-# `code-note` template
-
-Documents scripts, notebooks (Jupyter and others), pipelines, and code artifacts. Lives in `40-workbench/*/06-code/`. Shared ownership: agent or human creates; human or coding agent develops.
-
-## Frontmatter
-
-```yaml
 ---
-title: ""
+title: "{{VALUE:code-note title}}"
 type: code-note
 repo: ""
 language: ""
-format: script           # script | notebook | pipeline | module | config
+format: script
 lifecycle: current
 purpose: ""
 related_sources: []
 related_projects: []
 moc: []
 schema_version: 1
-created:
-updated:
+created: {{DATE:YYYY-MM-DD}}
+updated: {{DATE:YYYY-MM-DD}}
 ---
-```
 
-## Body
-
-```md
 # Purpose
 What this code does and why it exists.
 
@@ -41,12 +30,3 @@ What this code does and why it exists.
 - How to run it.
 - Known limitations.
 - Next steps.
-```
-
-## Notes
-
-### Jupyter notebooks
-
-Notebooks are treated as a `code-note` with `format: notebook`. The notebook file itself (`.ipynb`) lives alongside the markdown note in `40-workbench/*/06-code/`. The markdown note carries the same provenance, purpose, and links as any other code note; the notebook holds the executable artifact.
-
-Don't fragment by creating a separate `notebook-note` type — the discipline is the same (provenance, purpose, motivating literature), only the file format differs.

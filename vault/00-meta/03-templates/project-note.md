@@ -1,15 +1,8 @@
-# `project-note` template
-
-Coordinates a research project, its scope, milestones, and active decisions. Lives in `40-workbench/`. Human-authored.
-
-## Frontmatter
-
-```yaml
 ---
-title: ""
+title: "{{VALUE:project title}}"
 type: project-note
 lifecycle: current
-project_phase: active      # planning | active | paused | complete
+project_phase: active
 start_date:
 due_date:
 scope: ""
@@ -19,14 +12,10 @@ related_notes: []
 related_sources: []
 outputs: []
 schema_version: 1
-created:
-updated:
+created: {{DATE:YYYY-MM-DD}}
+updated: {{DATE:YYYY-MM-DD}}
 ---
-```
 
-## Body
-
-```md
 # Goal
 What this project is trying to accomplish.
 
@@ -44,4 +33,3 @@ What this project is trying to accomplish.
 - Relevant paper notes.
 - Relevant claim notes.
 - Relevant code notes.
-```

@@ -1,10 +1,3 @@
-# `organization-note` template
-
-For universities, labs, companies, and funders. Lives in `20-sources/03-entities/02-organizations/`.
-
-## Frontmatter
-
-```yaml
 ---
 title: ""
 type: organization-note
@@ -13,7 +6,7 @@ org_type: lab
 website: ""
 ror_id: ""
 openalex_id: ""
-lifecycle: proposed                  # proposed | current
+lifecycle: proposed
 relationship_to_research: ""
 relevance_to_projects: []
 moc: []
@@ -22,11 +15,7 @@ schema_version: 1
 created:
 updated:
 ---
-```
 
-## Body
-
-```md
 # Overview
 What this organization is and what it does.
 
@@ -43,4 +32,3 @@ What this organization is and what it does.
 # Notes
 - Funding or affiliation details.
 - Structural notes worth remembering.
-```

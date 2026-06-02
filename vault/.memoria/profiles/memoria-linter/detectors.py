@@ -137,8 +137,9 @@ _CODE_BLOCK = re.compile(r"```[a-zA-Z]*\n(.*?)```", re.S)
 
 
 def template_field_names(text: str) -> set[str]:
-    """Field names a template declares -- whether as leading frontmatter or, as
-    in Memoria's doc-style templates, inside a ```yaml frontmatter example."""
+    """Field names a template declares. Memoria templates are raw notes (leading
+    frontmatter); the code-block scan is kept as a fallback for any template that
+    still carries a ```yaml frontmatter example."""
     keys = all_frontmatter_keys(text)
     for block in _CODE_BLOCK.findall(text):
         if "type:" in block or "---" in block:      # a frontmatter example block

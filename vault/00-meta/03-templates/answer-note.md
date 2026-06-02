@@ -1,10 +1,3 @@
-# `answer-note` template
-
-Agent-generated or provisional synthesis awaiting review. Lives in `10-inbox/02-answers/`. Promoted to `claim-note` only after human review.
-
-## Frontmatter
-
-```yaml
 ---
 title: ""
 type: answer-note
@@ -19,11 +12,7 @@ reviewed_by: ""
 reviewed_date:
 schema_version: 1
 ---
-```
 
-## Body
-
-```md
 # Question
 The research question this synthesis answers.
 
@@ -39,4 +28,3 @@ The best current answer in short form.
 - What is uncertain.
 - What needs human review.
 - What may be outdated.
-```

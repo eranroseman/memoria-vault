@@ -25,10 +25,10 @@ Monthly, or whenever you're about to cite a cluster of older papers in a draft. 
    /retraction-sweep
    ```
 
-   The Verifier checks each paper-note's `pub_status` against Zotero retraction alerts and CrossRef retraction metadata. For any paper whose status has changed, it updates the `pub_status` field and surfaces the affected notes.
+   The Verifier checks each paper-note's `pub_status` against Zotero retraction alerts and CrossRef retraction metadata. For any paper whose external status disagrees with the note, it **flags** the disagreement and surfaces the affected notes — it never changes `pub_status` itself; updating the field is your call.
 
 3. **Review the findings.** The Verifier writes a report listing:
-   - Papers whose `pub_status` changed (e.g., `published` → `retracted`)
+   - Papers whose `pub_status` should change (e.g., `active` → `retracted`)
    - Claim notes that cite each affected paper
 
 4. **Decide what to do with each affected claim.** For each claim note citing a retracted paper, you have three options:
@@ -47,6 +47,6 @@ The Verifier detects and flags status changes. You decide what to do with affect
 ## Related
 
 - [how-to-guides/writing/verify-and-revise.md](../writing/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
-- [reference/frontmatter.md](../../reference/frontmatter.md) — `pub_status` values (`published`, `preprint`, `retracted`, `unknown`)
+- [reference/frontmatter.md](../../reference/frontmatter.md) — `pub_status` values (`active`, `preprint`, `retracted`, `deprecated`, `expression-of-concern`)
 - The failure mode sweeps prevent: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
 - The profile running the sweep: [verifier.md](../../explanation/profiles/verifier.md)

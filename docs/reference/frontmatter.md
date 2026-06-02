@@ -103,7 +103,10 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |
-| `pub_status` | string (enum) | `preprint` · `published` · `retracted` · `unknown` | Human / agent | `paper-note` |
+| `pub_status` | string (enum) | `active` · `preprint` · `retracted` · `deprecated` · `expression-of-concern` | Human / agent | `paper-note` |
+| `maintenance_status` | string (enum) | `active` · `deprecated` · `archived` · `unmaintained` | Human / agent | `item-note` |
+| `role_in_stack` | string (enum) | `primary-tool` · `dependency` · `alternative` · `reference-only` | Human | `item-note` |
+| `outreach_status` | string | — | Human | `person-note` (people you intend to contact; blank for entities tracked only for the research graph) |
 | `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` | Human sets to `true` after reviewing the full text. Dashboards query this. |
 | `enriched_date` | date (`YYYY-MM-DD`) | — | Agent | Top-level (not inside `_enrichment`) — dashboards and the Linter's stale-enrichment check query it directly. |
 | `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` | Set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: current`. Used to measure triage-to-promotion latency. |
@@ -122,6 +125,45 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 | Organization | 365 days | Rarely changes |
 | Repository | 30 days | Stars, issues, releases, maintenance status |
 | Package | 30 days | New versions, deprecation |
+
+### `pub_status` values (paper-note)
+
+- `active` — published, not retracted, current.
+- `preprint` — not yet peer-reviewed.
+- `retracted` — formally withdrawn; the note stays for provenance but is excluded from active queries.
+- `expression-of-concern` — flagged by the publisher but not retracted.
+- `deprecated` — superseded by a stronger synthesis or newer paper (use `superseded_by:` to point at the superseding note).
+
+Retraction tracking lives **outside** the vault: Zotero 9 with retraction monitoring (`extensions.zotero.retractionWatch.enabled: true`) checks CrossRef and Retraction Watch automatically, and the Verifier's `retraction-check` skill surfaces disagreements so the human can update `pub_status`. The agent never silently flips a note to `retracted` — see [run-a-retraction-sweep.md](../how-to-guides/maintenance/run-a-retraction-sweep.md).
+
+### `role_in_stack` values (item-note)
+
+Disambiguates how an item relates to your work — and powers queries like "primary tools not re-enriched in 30 days," where alternatives and reference-only items can decay quietly but primary tools shouldn't.
+
+- `primary-tool` — actively used day-to-day (e.g. Obsidian, Hermes, Zotero).
+- `dependency` — something a primary tool depends on (e.g. Better BibTeX under Zotero).
+- `alternative` — evaluated and not chosen; kept for comparison and provenance.
+- `reference-only` — referenced in the literature but not part of your stack.
+
+`maintenance_status` is the item equivalent of a paper note's `pub_status`; the Linter's "stale items" check surfaces items whose `last_checked` is older than 90 days.
+
+### Source tagging: `study_design`, `methods`, `topic`
+
+Three fields, three distinct jobs — mixing them in one field makes all three query types unreliable.
+
+| Field | Question | Cardinality | Vocabulary |
+| --- | --- | --- | --- |
+| `study_design` | What is the research architecture? | One value | Controlled (e.g. RCT, qualitative, design-science) |
+| `methods` | What specific techniques? | Many values | Free-tag first, consolidate at ~50 papers |
+| `topic` | What conceptual content? | Many values | Free-tag first, consolidate at ~50 papers |
+
+### The paper-note URI fields: `zotero_uri`, `pdf_uri`, `extract_path`
+
+Three different reaches into the same paper — each a one-click affordance from the paper-note into a specific representation. **The PDF lives in Zotero, not in the vault** (Memoria treats Zotero as the authoritative PDF store; the vault holds the curated paper-note and the machine-generated extract). The Librarian populates all three during ingest — none are human-typed.
+
+- **`zotero_uri`** — `zotero://select/items/<key>`. Opens the *item record* in Zotero (citation metadata, attachments, tags, retraction status). Two-click reach to the PDF.
+- **`pdf_uri`** — `zotero://open-pdf/library/items/<key>`. Opens the *PDF itself* in Zotero's reader. One-click reach to read or annotate.
+- **`extract_path`** — vault-relative path to the Marker-extracted markdown (conventionally `90-assets/extracts/<citekey>.md`). The in-vault, searchable representation — use to grep, quote, or feed the text to a model.
 
 ---
 

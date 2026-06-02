@@ -1,10 +1,3 @@
-# `venue-note` template
-
-For journals, conferences, workshops, and publication venues. Lives in `20-sources/03-entities/03-venues/`.
-
-## Frontmatter
-
-```yaml
 ---
 title: ""
 type: venue-note
@@ -12,7 +5,7 @@ venue_name: ""
 venue_type: conference
 website: ""
 issn: ""
-lifecycle: proposed                  # proposed | current
+lifecycle: proposed
 scope: ""
 parent_moc: ""
 moc: []
@@ -21,11 +14,7 @@ schema_version: 1
 created:
 updated:
 ---
-```
 
-## Body
-
-```md
 # Venue summary
 What this venue is and what it publishes.
 
@@ -42,4 +31,3 @@ What this venue is and what it publishes.
 # Notes
 - Submission or archival details.
 - Any special constraints or history.
-```

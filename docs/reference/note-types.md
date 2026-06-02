@@ -119,9 +119,18 @@ Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim note
 
 ---
 
+## Per-type notes
+
+A few types carry guidance the tables above don't capture:
+
+- **`code-note` and Jupyter notebooks.** A notebook is a `code-note` with `format: notebook` — the `.ipynb` lives alongside the markdown note in `40-workbench/*/06-code/`, and the note carries the same provenance, purpose, and links as any other code note. Don't create a separate `notebook-note` type: the discipline is identical (provenance, purpose, motivating literature); only the file format differs.
+- **`reference-note` stability.** A reference note is compiled from one or more stable (`evergreen`) claim notes. If it changes substantially every week, it isn't a reference note yet — it's a budding `claim-note`. Move it back to `30-synthesis/01-claims/`.
+
+---
+
 ## Template locations
 
-Templates ship at `00-meta/03-templates/<type>.md`. The Templater plugin reads them; QuickAdd commands invoke them. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
+Templates ship at `00-meta/03-templates/<type>.md` as **raw notes** — frontmatter at line 1, then the body skeleton. QuickAdd commands instantiate them (filling `{{VALUE}}`/`{{DATE}}` tokens); agent skills read them when authoring notes directly. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
 
 ---
 
