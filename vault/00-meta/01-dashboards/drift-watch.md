@@ -1,27 +1,10 @@
-# `drift-watch.md` — structural drift findings
+# Drift watch
 
-**Location.** `00-meta/01-dashboards/drift-watch.md`
-
-**Decision.** Surface the Linter's eight structural detector findings as one consolidated view. Each detector catches a specific kind of silent drift the human wouldn't otherwise notice. This is the dashboard you open when something feels off — the lint pass passed but the system still seems wrong.
-
-**When to open.** Weekly review (Friday ritual); after accepting a plugin upgrade; after editing a profile's `SOUL.md` / `config.yaml` or a lane-override file (and re-running `scripts/install.ps1`); when an [audit-log](audit-log.md) anomaly suggests a configuration drift.
-
-## The eight detectors
-
-For the full definitions, severities, and remediation paths, see [the Linter's structural-detectors reference](../../.memoria/profiles/memoria-linter/structural-detectors.md). At a glance:
-
-| ID | Detector | What it catches | Severity |
-| --- | --- | --- | --- |
-| `profile-install-drift` | Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file differs from its source at `.memoria/profiles/memoria-<name>/` (hand-edit to the install, or `git pull` without re-running `scripts/install.ps1`) | LOW |
-| `vault-hash-drift` | Vault hash drift | Vault file modified outside the policy MCP (tamper or out-of-band edit) | CRITICAL |
-| `skeleton-drift` | Skeleton note drift | Human notes in `00-meta/` lagging the engineering spec | MEDIUM |
-| `dashboard-field-drift` | Dashboard field drift | Dataview query references a frontmatter field no template emits | HIGH |
-| `command-vocab-drift` | Command vocabulary drift | A command in the design isn't declared in its owner SOUL.md | MEDIUM |
-| `plugin-config-drift` | Plugin-config drift | Human's `data.json` files diverge from shipped plugin-config templates | MEDIUM (HIGH on `autoAllowPermissions` escalation) |
-| `orphan-working-files` | Orphan working files | `.tmp.*`, `.bak`, editor backups, manual-rename leftovers outside transient zones | LOW |
-| `extract-path-broken` | Extract path broken link | Paper-note's `extract_path` frontmatter points to a missing extract file | HIGH |
+The Linter's eight structural-detector findings in one view — silent drift between the vault source, the deployed Hermes profiles, and your working vault. Open at the [[weekly-review|weekly review]], after a plugin upgrade, or after editing a `SOUL.md` / `config.yaml` / lane-override (and redeploying). Detector definitions, severities, and remediation: [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch/).
 
 ## Active findings (last lint pass)
+
+Empty is the goal. Each finding links to its detector — remediation lives in the [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter/).
 
 ```dataview
 TABLE WITHOUT ID
@@ -36,11 +19,9 @@ SORT severity ASC, reported_at ASC
 LIMIT 30
 ```
 
-Empty result is the goal. The Linter writes per-finding entries to `00-meta/02-logs/lint-findings/` (or aggregated into a single JSONL the Linter rotates) when a detector fires; findings are cleared when the human either resolves the drift or marks it as accepted (with a note).
-
 ## Verdict band (current period)
 
-The headline rollup. Each lint pass produces one verdict (PASS / REVIEW / FAIL) from its findings — definitions and gating rules in the [Linter SOUL.md](../../.memoria/profiles/memoria-linter/SOUL.md).
+The headline rollup — one `PASS` / `REVIEW` / `FAIL` per lint pass.
 
 ```dataview
 TABLE WITHOUT ID
@@ -58,7 +39,7 @@ LIMIT 8
 
 ## Findings by detector (last 4 weeks)
 
-Time-series view to spot which detectors are recurring offenders. A detector that fires every week with the same finding indicates a systemic issue — either a process the human should change or a configuration that needs revising.
+Recurring offenders: a detector firing weekly with the same finding is a systemic issue to fix, not re-clear.
 
 ```dataview
 TABLE WITHOUT ID
@@ -71,13 +52,13 @@ GROUP BY detector
 SORT count(rows) DESC
 ```
 
-## Schema migration progress
+## Schema-migration backlog
 
-Per-template progress against the current canonical `schema_version`. Migration debt isn't a verdict-band concern — it doesn't gate scheduled work, and bumping `schema_version` is expected to lag note authoring. This section tracks the backlog human-side; the Linter's schema-version-mismatch check (data-hygiene tier, not a structural detector) surfaces the same data in the lint report.
-
-**Why this lives here, not as a structural detector.** Per-field "old note missing new field" checks are noisy on day-one — every legacy note flags. The right primitive is `schema_version` on the note plus a single rollup query, not one detector per field. See [[../04-reference/schema-reference|schema-reference]] for the authoritative field list; the design doc covers the "any frontmatter change bumps schema_version" discipline.
+Per-template `schema_version` debt. Not a verdict-band concern (it doesn't gate work, and bumping lags authoring). Field list and the "any frontmatter change bumps `schema_version`" discipline: [schema reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter/).
 
 ### Paper-notes by schema version
+
+Current canonical is `1`. After a future bump, a version that won't drain is an unstarted migration.
 
 ```dataview
 TABLE WITHOUT ID
@@ -91,11 +72,9 @@ SORT schema_version DESC
 LIMIT 8
 ```
 
-Read this as a histogram: the current canonical version (today `1`) should hold the bulk of notes. When a future migration bumps the version, the new version should accumulate while older ones drain — a version that isn't draining is a migration the human hasn't started; a version with very few notes left is a long-tail candidate for manual cleanup.
-
 ### Paper-notes missing the reach fields
 
-Per-field progress for notes missing `pdf_uri` and `extract_path`. These shipped as **additive** `schema_version: 1` fields (additive fields do not bump the version — see [schema-reference](../04-reference/schema-reference.md)), so paper-notes ingested before they existed can still lack them. Use this to spot which specific notes need backfill — `schema-migrate --dry-run` proposes the changes, but seeing the actual list helps the human decide between auto-script-backfill and selective re-ingest.
+`pdf_uri` / `extract_path` shipped as additive v1 fields, so pre-existing notes can lack them. Empty is the goal; backfill via a Templater script, re-ingest (`hermes -p memoria-librarian run ingest --source <citekey>`), or on next touch.
 
 ```dataview
 TABLE WITHOUT ID
@@ -109,30 +88,8 @@ SORT created ASC
 LIMIT 30
 ```
 
-Empty result is the goal — every paper-note has both reach fields populated. Oldest-first sort surfaces the longest-stalled notes for prioritization. Cap is 30 to keep the dashboard responsive; if the backlog is larger, work it down in batches.
-
-### Migration approaches
-
-Three ways to pay down what this query surfaces, in increasing effort:
-
-1. **Templater backfill script.** For fields derivable from existing frontmatter (e.g., `pdf_uri` constructed from `zotero_uri` by string-replacing `select` with `open-pdf`), a one-shot Templater run writes the new field across the corpus. Cheap; works for most backfill cases here because `zotero_uri` already exists.
-2. **Re-ingest.** `hermes -p memoria-librarian run ingest --source <citekey>` reruns the full pipeline including Marker extraction. Required when `extract_path` is missing (no extract file exists yet). Expensive — Marker runs are non-trivial — but produces the fully-populated note.
-3. **Touch-driven.** Leave the backlog alone; old notes get updated when the human next opens them. Acceptable for cold corpus areas (finished projects, deprecated topics); not acceptable for actively-read areas where the missing fields would block daily workflow.
-
-## What this dashboard does not do
-
-- **Not the same as `audit-log.md`.** The [audit-log dashboard](audit-log.md) shows policy MCP decisions (per write attempt). This dashboard shows structural detector findings (per lint pass). Different cadence, different abstraction layer.
-- **Not actionable on its own.** Every finding links back to its detector's documentation; the remediation lives there, not here. This dashboard surfaces *which* drift, not *how to fix*.
-- **Not for data-hygiene checks.** Orphan notes, stale enrichment, broken wikilinks are surfaced by the [`weekly-review`](weekly-review.md) and the lint report itself, not here. Structural detectors are reserved for structural drift between the vault source, the deployed Hermes profiles, and the human's working vault state.
-
-## Graceful degradation
-
-- **Until the Linter is implemented end-to-end**, this dashboard is largely empty (or filled with placeholder rows from `lint-findings/` if the human is manually entering test findings). That's expected — see docs/explanation/dashboards/README.md for the discipline.
-- **Until `plugin-config-drift` is wired**, the `plugin-config-drift` row in the active findings query won't fire even if `data.json` files drift. Under direct profile management `plugin-config-drift` compares the human's working `.obsidian/plugins/<plugin>/data.json` against the version at the latest git HEAD; the `data.json` suffix conventions are in [the plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/).
-- **Until `extract-path-broken` is wired**, the `extract-path-broken` row won't fire even if `extract_path` values point at missing files. Until then the "Paper-notes missing the new reach fields" query above gives partial coverage — it surfaces empty `extract_path` values, but doesn't catch the silent-failure case where the path is populated but the file is gone. `extract-path-broken` in the [Linter's structural-detectors reference](../../.memoria/profiles/memoria-linter/structural-detectors.md) covers that case explicitly.
-
 ## Related
 
-- [Linter SOUL.md](../../.memoria/profiles/memoria-linter/SOUL.md) — canonical detector definitions and verdict-band rules.
-- [`audit-log.md`](audit-log.md) — per-decision forensics, the layer below this one.
-- [`fleet-health.md`](fleet-health.md) — operational health (cost, retries, trust score). Different concern; complementary view.
+- [[audit-log]] — per-write policy decisions, the layer below this one.
+- [[fleet-health]] — operational health (cost, retries, trust score).
+- Empty until the Linter runs end-to-end — see the [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch/).

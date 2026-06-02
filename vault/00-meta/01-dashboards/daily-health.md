@@ -1,14 +1,10 @@
-# Daily Health — always-on health monitor
+# Daily Health
 
-**Location.** `00-meta/01-dashboards/daily-health.md`
-
-**Decision.** Open every morning. Glance for 30 seconds. If nothing is red, close it and move on. If something is red, the flagged item tells you what needs attention before any larger operation.
-
-**What this is not.** The vault-state queries (unreviewed synthesis, classification debt, evergreen promotion queue, orphan notes) live in [`weekly-review.md`](weekly-review.md) — those belong in the Friday ritual, not the daily glance. This dashboard is the **system-health** view: board queues, drift signals, lane health, cron status. Four sections, each one a one-decision query.
+Open every morning, glance ~30 seconds, close if nothing's red. The **system-health** view — board queues, drift, lane health, cron. Vault-state work (classification debt, promotion queue, orphans) lives in [[weekly-review]]. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/).
 
 ## 1. Today's queue
 
-Cards demanding your attention — `status: blocked` for explicit human decisions, `review_status: requested` (a `done` card) for agent-completed work awaiting approval. Oldest first; cap at ten so the dashboard doesn't grow unbounded.
+Cards needing you: `blocked` (your decision) or a `done` card with `review_status: requested` (awaiting approval). Oldest first; ≥ 3 rows is the signal to clear them before larger work.
 
 ```dataviewjs
 const cards = await dv.io.load("00-meta/02-logs/board-state.jsonl");
@@ -23,11 +19,9 @@ dv.table(
 );
 ```
 
-Empty result is the goal. Three or more rows is the signal to clear them before starting larger work.
-
 ## 2. Drift signals
 
-Findings from the Linter's eight structural detectors in the last 24 hours, severity HIGH or CRITICAL only. Anything that lands here pauses scheduled work — that's what the verdict band's `FAIL` state means. See [`drift-watch.md`](drift-watch.md) for the full structural-detector view; this section is just the alarm.
+HIGH/CRITICAL structural-detector findings in the last 24h — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch]].
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/lint-findings.jsonl");
@@ -43,11 +37,9 @@ dv.table(
 );
 ```
 
-Empty is the goal. If anything appears here, treat the day as a diagnostic day — the architecture is reporting an integrity issue, not a workflow issue.
-
 ## 3. Lane health
 
-The [fleet-health dashboard](fleet-health.md)'s trust score per lane, summarized. Bands: 90+ healthy (no action), 70–89 watch (something is slipping), <70 act (pause scheduled work).
+Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run today. Contributing inputs: [[fleet-health]].
 
 ```dataview
 TABLE WITHOUT ID
@@ -60,11 +52,9 @@ WHERE type = "lane-metric" AND period = string(date(today))
 SORT trust_score ASC
 ```
 
-Any lane at <70 is a flag. Click through to [`fleet-health.md`](fleet-health.md) for the contributing inputs (audit deny rate, drift incidents, retry rate, accept/reject ratios). If the trust score is empty entirely, the aggregator hasn't run today yet (cron failure or recent vault open).
-
 ## 4. Cron status
 
-Last run and next run for the four standard cron tasks (see standard cron tasks). A missed nightly run is a signal — the system didn't sweep, drift may have accumulated, scheduled cards aren't in the queue.
+Last/next run for the four standard tasks (`nightly-hygiene`, `weekly-cluster-report`, `weekly-drift-report`, `fleeting-staleness-report`). A missing row = cron not enabled for that lane; ✗ = last run failed.
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/cron-history.jsonl");
@@ -82,20 +72,6 @@ const rows = Object.entries(byTask).map(([task, e]) => [
 dv.table(["Task", "Lane", "Last run", "Next run", "Result"], rows);
 ```
 
-All four standard tasks should appear: `nightly-hygiene` (Linter), `weekly-cluster-report` (Mapping), `weekly-drift-report` (Linter), `fleeting-staleness-report` (Linter). A missing row means cron isn't enabled for that lane (see the `cron_mode` migration); a row with ✗ in Result means the last run failed.
-
-## Graceful degradation
-
-Until the metrics aggregator, board-state JSONL feed, and lint-findings JSONL feed exist, the four queries above return empty. The placeholders state what would populate them, so an empty result is interpretable as "feature not yet wired" rather than "nothing wrong."
-
-- `00-meta/02-logs/board-state.jsonl` — written by the Kanban dispatcher when cards transition states.
-- `00-meta/02-logs/lint-findings.jsonl` — written by the Linter on each pass.
-- `00-meta/08-metrics/lane-metric-*` — written by the scheduled metrics aggregator (see [`fleet-health.md`](fleet-health.md)).
-- `00-meta/02-logs/cron-history.jsonl` — written by Hermes after each cron task completes.
-
 ## Related
 
-- [`weekly-review.md`](weekly-review.md) — Friday-ritual vault-state view (top-to-bottom in 90 minutes).
-- [`drift-watch.md`](drift-watch.md) — full structural-detector view + verdict band.
-- [`fleet-health.md`](fleet-health.md) — trust score contributing inputs + cost trends.
-- [`audit-log.md`](audit-log.md) — per-decision forensics when something needs investigation.
+Queries stay empty until the board-state / lint-findings / metrics / cron-history feeds are wired ([rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/)). Siblings: [[weekly-review]] (Friday vault-state), [[drift-watch]] (structural detail), [[fleet-health]] (cost & trust inputs), [[audit-log]] (forensics).

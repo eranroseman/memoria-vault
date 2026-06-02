@@ -1,8 +1,6 @@
-# `board-state.md` — Kanban board summary (optional)
+# Board State
 
-**Location.** `00-meta/01-dashboards/board-state.md`
-
-**Decision.** A Dataview view of cards on the Kanban board. The board itself lives in Hermes' `kanban.db`; this view reads a markdown export of card state under `00-meta/board`. `status` carries the Hermes enum (`triage`/`todo`/`ready`/`running`/`blocked`/`done`/`archived`); `lane` is the card's `assignee`; `reason`, `review_*` come from the card `metadata`; `retry_count` and `last_updated` are denormalized by the exporter from Hermes run history and the event stream (they are not native card columns).
+A Dataview view of the Kanban board — reads the markdown export under `00-meta/board/` (the live board is Hermes' `kanban.db`). `status` is the Hermes enum (`triage`→`archived`); `lane` is the card's `assignee`; `retry_count`/`last_updated` are exporter-denormalized. [Board states](https://eranroseman.github.io/memoria-vault/explanation/kanban-board/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/board-state/).
 
 ## Active cards
 

@@ -1,34 +1,14 @@
-# `fleet-health.md` — operational health
+# Fleet Health
 
-**Location.** `00-meta/01-dashboards/fleet-health.md`
+Per-lane operational health for the agent fleet — a 0–100 trust score plus the cost and reliability trends behind it. Open when deciding whether scheduled (cron) work should keep running or pause. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/fleet-health/).
 
-**Decision.** Per-lane operational health for the agent fleet — a trust score per lane plus the cost and reliability trends behind it. Open this when deciding whether scheduled (cron) work should keep running or pause.
+## Trust score per lane
 
-## System trust score
+Bands: **90+** healthy (no action) · **70–89** watch (something slipping) · **<70** act (pause that lane's scheduled work until resolved).
 
-A 0–100 score per lane, aggregated from the contributing inputs below. Bands:
-
-- **90+** — healthy; no action.
-- **70–89** — watch; something is slipping.
-- **<70** — act; pause scheduled work for that lane until resolved.
-
-## Contributing inputs
-
-- Audit deny rate (policy MCP denials / total actions).
-- Drift incidents (schema, plugin-config, vault-hash).
-- Retry rate (cards re-dispatched).
-- Accept / reject ratio on agent proposals.
-- Cost trends (per-lane API spend over time).
-
-Source: `00-meta/08-metrics/lane-metric-*`, written by the scheduled metrics aggregator. (Dataview queries land here once the aggregator is implemented.)
-
-## What this dashboard is not
-
-- **Not [`drift-watch`](drift-watch.md).** Drift-watch is *structural* health (schema / link / config drift); fleet-health is *operational* health (cost, retries, trust). Complementary views.
-- **Not the Linter verdict.** The lint verdict is a *structural* aggregate; the trust score is an *operational* one.
+Aggregated from: audit deny rate, drift incidents (schema / plugin-config / vault-hash), retry rate, accept/reject ratio on agent proposals, and per-lane API cost trend. Source: `00-meta/08-metrics/lane-metric-*`, written by the scheduled metrics aggregator — Dataview queries land here once it's implemented.
 
 ## Related
 
-- [Daily Health](daily-health.md) — shows the per-lane trust-score summary and links here for the contributing inputs.
-- [`drift-watch.md`](drift-watch.md) — complementary structural-health view.
-- Design spec: [docs/explanation/dashboards/operational-health/fleet-health.md](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/fleet-health/).
+- [[daily-health]] — surfaces the trust-score summary and links here for the inputs.
+- [[drift-watch]] — complementary *structural*-health view (this one is *operational*).

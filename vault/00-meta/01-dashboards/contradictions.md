@@ -1,8 +1,6 @@
-# `contradictions.md` — claim-tension surfacer
+# Contradictions
 
-**Location.** `00-meta/01-dashboards/contradictions.md`
-
-**Decision.** Surface claim notes that disagree with each other as a synthesis starting point (ADR-16). Reads the **human-set** `relations.contradicts` link (ADR-9) from claim notes and lists each conflicting pair **once** — `contradicts` is symmetric, so a pair typed on either side (or both) collapses to a single row. Pure consumer: no model judges which claims conflict (the deterministic-rollup discipline every dashboard follows; the NLI candidate-proposer is deferred future work). Diagnostic, never gating — a cluster of contradictions is usually where the interesting writing is. Sparse by design until you file `contradicts` links; the emptiness is itself the signal.
+Claim pairs joined by a **human-set** `relations.contradicts` link (symmetric → each pair listed once). No model judges conflicts — sparse until you file links, and the emptiness is itself the signal. Diagnostic, never gating: a cluster of contradictions is usually where the interesting writing is. [Typed relations (ADR-08)](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/contradictions/).
 
 ## Conflicting claims
 

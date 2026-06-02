@@ -1,8 +1,6 @@
-# `loose-ends.md` — catch leftover junk
+# Loose Ends
 
-**Location.** `00-meta/01-dashboards/loose-ends.md`
-
-**Decision.** Catch junk filenames and notes the agent or human forgot to finish. Run after ingest batches or whenever something feels off. The action: rename, finish, archive, or delete.
+Junk filenames (`TODO`, `tmp`, `untitled`) and unfinished notes. Run after ingest batches or at the weekly review; > 5 is a cleanup signal. Action: rename, finish, archive, or delete. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/loose-ends/).
 
 ```dataview
 TABLE file.link AS Note, file.folder, file.mtime AS Modified
