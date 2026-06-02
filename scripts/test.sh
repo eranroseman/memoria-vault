@@ -38,11 +38,10 @@ l0() {
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
-  # Informational only: run every detector over the live vault. This surfaces
-  # content/quality findings (L5 territory) — NOT a pass/fail gate here, so a
-  # nonzero count never reddens the L0 verdict. Review the output by eye.
-  echo "→ vault lint (informational — not gated):"
-  python3 "$P/profiles/memoria-linter/detectors.py" --vault vault 2>&1 | sed 's/^/    /' | tail -3
+  # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
+  # querying a field no template emits is a silent failure — CI gates it too);
+  # content findings (broken wikilinks, schema-check) print but stay advisory.
+  run python3 "$P/profiles/memoria-linter/detectors.py" --vault vault --gate dashboard-field-drift
 }
 
 case "${1:-all}" in

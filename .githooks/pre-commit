@@ -8,8 +8,9 @@
 # Each block runs ONLY when relevant files are staged (so unrelated commits stay
 # fast). Bypass any block (rarely) with:  git commit --no-verify
 #
-# Mirrors the four required checks: docs-doctor, shellcheck (install.sh),
-# PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest.
+# Mirrors the required checks: docs-doctor, shellcheck (install.sh),
+# PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest,
+# check-test-refs.
 
 fail=0
 staged() { git diff --cached --name-only; }
@@ -78,6 +79,18 @@ for f in $(staged | grep -E '\.(md|py|ya?ml)$'); do
     echo "pre-commit: $f uses a github blob URL for docs/ — use the Pages URL instead" >&2; fail=1
   fi
 done
+
+# --- 5. test-protocol reference resolution (staged test protocols) ----------
+# The protocols under project-files/tests/ (and the GUI working copies in plans/)
+# name many repo paths; check-test-refs ensures each resolves, so a rename can't
+# leave a protocol pointing at a dead file. Mirrors the check-test-refs CI job.
+if staged | grep -qE '^project-files/tests/.*\.md$|^project-files/plans/gui-test-protocol.*\.md$|^scripts/check-test-refs\.py$'; then
+  if [ -n "$PY" ]; then
+    "$PY" scripts/check-test-refs.py || { echo "pre-commit: check-test-refs failed (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: python not found; skipping check-test-refs" >&2
+  fi
+fi
 
 if [ "$fail" -ne 0 ]; then
   echo "" >&2
