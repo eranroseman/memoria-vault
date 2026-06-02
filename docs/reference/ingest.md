@@ -15,14 +15,14 @@ Before any write, the Librarian identifies the input type and routes to the corr
 
 | Input signal | Detected type | Destination folder | Template |
 | --- | --- | --- | --- |
-| DOI or arXiv ID in `.bib` | Paper / preprint | `20-sources/01-papers/` | `paper.md` |
-| `github.com/…` or `gitlab.com/…` URL | Repository | `20-sources/02-items/` | `item.md` |
-| PyPI / npm / CRAN URL | Package | `20-sources/02-items/` | `item.md` |
-| Product or vendor URL | Product | `20-sources/02-items/` | `item.md` |
-| Standards body URL (IEEE, RFC, W3C) | Standard | `20-sources/02-items/` | `item.md` |
-| ORCID or person name | Person | `20-sources/03-entities/01-people/` | `person.md` |
-| ROR or institution name | Organization | `20-sources/03-entities/02-organizations/` | `organization.md` |
-| Conference / journal name | Venue | `20-sources/03-entities/03-venues/` | `venue.md` |
+| DOI or arXiv ID in `.bib` | Paper / preprint | `20-sources/01-papers/` | `paper-note.md` |
+| `github.com/…` or `gitlab.com/…` URL | Repository | `20-sources/02-items/` | `item-note.md` |
+| PyPI / npm / CRAN URL | Package | `20-sources/02-items/` | `item-note.md` |
+| Product or vendor URL | Product | `20-sources/02-items/` | `item-note.md` |
+| Standards body URL (IEEE, RFC, W3C) | Standard | `20-sources/02-items/` | `item-note.md` |
+| ORCID or person name | Person | `20-sources/03-entities/01-people/` | `person-note.md` |
+| ROR or institution name | Organization | `20-sources/03-entities/02-organizations/` | `organization-note.md` |
+| Conference / journal name | Venue | `20-sources/03-entities/03-venues/` | `venue-note.md` |
 | DOI not in `.bib` | Unknown | — | **Prompt human to add to Zotero first** |
 
 **Paper vs. item rule.** The split keys on a **stable publication ID, not medium**: a source carrying a DOI or arXiv ID is a `paper-note` (`01-papers/`). Datasets, software, repos, products, and standards *without* a DOI or arXiv ID are `item-note`s (`02-items/`).
@@ -99,6 +99,8 @@ Fields the Librarian populates on the new note at creation:
 | `enriched_date` | Today's date | Updated by each enrichment pass. |
 | `_proposed_classification` | Agent-proposed `topic`, `study_design`, `methods` | Reviewed and promoted by human at Classify. |
 | `_enrichment` | Citation count, abstract, venue, OA status, stable IDs | Refreshed on schedule by Librarian. |
+
+**Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [obsidian-callouts.md](obsidian-callouts.md).
 
 ---
 

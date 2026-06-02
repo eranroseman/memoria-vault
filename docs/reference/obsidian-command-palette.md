@@ -42,7 +42,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 
 | Command | Output | Assignee |
 | --- | --- | --- |
-| `Memoria: new project` | `40-workbench/<name>/` + `brief.md`; Mapper scope card. | `memoria-mapper` |
+| `Memoria: new project` | `40-workbench/<name>/` + `README.md` (`project-note`); Mapper scope card. | `memoria-mapper` |
 | `Memoria: scope this project` | `corpus-map.md` in `40-workbench/<project>/01-map/`. | `memoria-mapper` |
 | `Memoria: frame this section` | Outlines in `40-workbench/<project>/02-framing/`. | `memoria-writer` |
 | `Memoria: verify this draft` | Verification report in `40-workbench/<project>/05-verification/`. | `memoria-verifier` |

@@ -147,7 +147,7 @@ llm_backend: generic | open-notebook
 llm_backend_fallback: generic | none
 ```
 
-`generic` routes to the host profile's default LLM. `open-notebook` routes to a self-hosted Open Notebook instance for source-grounded RAG (currently pilot-scoped to one skill: `comparative-brief`).
+`generic` routes to the host profile's default LLM. `open-notebook` routes to a self-hosted Open Notebook instance for source-grounded RAG (currently pilot-scoped to the `[!brief]` comparative-read step in the Librarian's `obsidian-paper-note`).
 
 ---
 

@@ -13,7 +13,7 @@ Who can write where. Companion to the lane-override YAML files at `.memoria/lane
 | `30-synthesis/01-claims/` | — | — | — | — | — | — | — |
 | `30-synthesis/02-reference/` | — | — | dry-run | — | — | — | — |
 | `30-synthesis/03-moc/` | — | — | — | — | — | — | — |
-| `40-workbench/` | — | corpus-maps, gap-reports, comparative-briefs, cluster-maps | framing/ via counter-outline | verification/ | — | project notes | — |
+| `40-workbench/` | — | corpus-maps, gap-reports, cluster-maps | framing/ via counter-outline | verification/ | — | project notes | — |
 | `40-workbench/*/04-drafts/` | — | — | ✓ | — | — | — | — |
 | `40-workbench/*/06-code/` | — | — | — | — | — | ✓ | — |
 | `40-workbench/*/03-canvas/` | — | — | argument mapping | — | — | — | — |
@@ -25,7 +25,7 @@ Legend: ✓ = full write; — = no write (denied by policy MCP); cell text = sco
 ## Key rules
 
 - **Socratic is architecturally write-denied.** Lane policy `allow.write: []` — no writes anywhere, ever. Safe on any device.
-- **Mapper is read-only across the vault.** Writes only to specific project-scratch paths (corpus-map, gap-report, comparative-briefs, cluster-maps).
+- **Mapper is read-only across the vault.** Writes only to specific project-scratch paths (corpus-map, gap-report, cluster-maps). The per-source `[!brief]` comparative read is written by the Librarian during ingest (it owns `20-sources/`), not the Mapper.
 - **Review-gated zones require human approval.** `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, and `50-deliverables/` are policy-MCP `dry_run` for every lane.
 - **No lane writes canonical content directly.** Every promotion is synchronous with human attention.
 - **Delete is universally human-only** and discouraged across the board. Prefer archive.

@@ -25,20 +25,20 @@ Obsidian prompts you for a project name. Type: `first-synthesis`
 **What happens:**
 
 - A project folder is created at `40-workbench/first-synthesis/`
-- A `brief.md` opens inside it, from the project template
+- A `README.md` project-note opens inside it, from the template
 - A scope card is created on the Mapper lane queue
 
 ---
 
 ## Step 2 — Fill in the brief
 
-The `brief.md` file is open. Fill in two things:
+The `README.md` file is open. Fill in two things:
 
 **What you're trying to write:** One sentence. For example: "A 500-word synthesis of what we know about notification timing and user receptivity."
 
 **For whom:** One sentence. For example: "For my dissertation chapter on adaptive intervention design."
 
-That's enough. Save `brief.md`.
+That's enough. Save `README.md`.
 
 ---
 
@@ -50,7 +50,7 @@ You'll see a card on the Mapper lane with `status: ready`. Within 60 seconds, it
 
 Mapper is:
 
-- Reading your `brief.md`
+- Reading your `README.md`
 - Searching the vault for notes relevant to the project's topic
 - Counting how many notes exist per sub-topic
 - Identifying which adjacent topics have thin coverage
@@ -117,7 +117,7 @@ Save `CHOSEN.md`.
 ## What you have
 
 - `40-workbench/first-synthesis/` — your project folder
-- `40-workbench/first-synthesis/brief.md` — project brief
+- `40-workbench/first-synthesis/README.md` — project note (`type: project-note`)
 - `40-workbench/first-synthesis/01-map/corpus-map.md` — Mapper's view of your corpus
 - `40-workbench/first-synthesis/02-framing/CHOSEN.md` — your committed outline
 - Board-state dashboard: scope and framing cards archived as complete

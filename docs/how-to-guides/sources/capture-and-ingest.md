@@ -56,7 +56,7 @@ Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sens
 
 **6. Open the note in Obsidian.**
 
-After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
+After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top (the Librarian's comparative read, composed during ingest) and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
 
 The note is now at `lifecycle: proposed`. The next step is [classify it](classify-a-source.md).
 

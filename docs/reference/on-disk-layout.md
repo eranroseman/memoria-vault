@@ -132,7 +132,6 @@ One folder per project. All subfolders ship as `.keep` placeholders.
 ├── 01-map/
 │   ├── corpus-map.md               # Mapper writes
 │   ├── gap-report.md               # Mapper writes
-│   ├── comparative-briefs/         # Mapper writes
 │   └── cluster-maps/               # Mapper writes
 ├── 02-framing/                     # Writer (counter-outline)
 ├── 03-canvas/                      # Human (canvas notes)
@@ -270,7 +269,7 @@ The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lag
 | --- | --- | --- |
 | Note files | `kebab-case.md` | `receptivity-detection-timing.md` |
 | Paper notes | Citekey as filename | `mamykina2010sense.md` |
-| Template files | `<type>.md` | `claim.md`, `paper.md` |
+| Template files | `<type>.md` | `claim-note.md`, `paper-note.md` |
 | Dashboard files | `kebab-case.md` | `weekly-review.md` |
 | Lane-override files | `<short-name>.yaml` | `librarian.yaml` |
 | Profile dirs | `memoria-<name>/` | `memoria-librarian/` |

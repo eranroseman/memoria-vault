@@ -6,7 +6,7 @@ parent: Maintenance
 
 # How to run the weekly review
 
-Walk through the Friday ritual: clear classification debt, process the discuss queue, promote evergreen claims, and run a lint check. The whole session takes 30–60 minutes once the vault is established.
+Walk through the Friday ritual: clear classification debt, process the discuss queue, promote evergreen claims, and run a lint check. The whole session takes up to ~90 minutes — closer to 30–60 once the vault is established and classification debt is low.
 
 ## Prerequisites
 
@@ -32,7 +32,7 @@ These are usually Writer-session drafts or claim notes you started but didn't fi
 
 **Step 3 — Process discovery candidates (5–10 min).**
 
-The `10-inbox/` queue surfaces notes flagged as discovery candidates — sources that appeared in the Mapper's `comparative-brief` but aren't in your vault yet. For each:
+The `10-inbox/` queue surfaces notes flagged as discovery candidates — sources that appeared in a paper note's `[!brief]` comparative read but aren't in your vault yet. For each:
 
 - Add to Zotero and queue for ingest, or
 - Mark `excluded: true` with a reason (out of scope, already have equivalent, etc.)

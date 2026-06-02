@@ -74,7 +74,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
 
-**Note type** — one of the 15 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [note-types.md](note-types.md).
+**Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [note-types.md](note-types.md).
 
 ---
 
@@ -106,7 +106,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Obsidian UI
 
-**Callout** — agent output rendered in-place inside a note: `[!brief]` (Mapper's comparative read), `[!suggestions]` (Librarian's link candidates), `[!verification]` (Verifier's claim trace). Defined by the Callout Manager plugin.
+**Callout** — agent output rendered in-place inside a note: `[!brief]` (Librarian's comparative read, composed at ingest), `[!suggestions]` (Librarian's link candidates), `[!verification]` (Verifier's claim trace). Defined by the Callout Manager plugin.
 
 **Channel** — how the human reaches Memoria from outside Obsidian: CLI (terminal), Telegram (async), or API (programs only). Obsidian itself is the primary UI, not a channel.
 

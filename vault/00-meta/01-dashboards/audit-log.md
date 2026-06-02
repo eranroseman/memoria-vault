@@ -92,7 +92,7 @@ Specific patterns worth alerting on. Add rows here as you discover new failure m
 
 - **Linter `auto_fix` allowed outside the gated classes.** Should be impossible: the policy MCP requires `flags.class ∈ {"safe-and-unambiguous", "authorized-targeted"}`. An entry here means the policy rule drifted from profiles/linter.md.
 - **Socratic with any allowed write.** Socratic's lane policy is `policy.allow.write: []` — the hard wall. Any `decision: allow` or `allow_with_log` for `profile: memoria-socratic` is a configuration bug (the lane-override file has been tampered with or replaced).
-- **Mapper or Verifier with allowed writes outside their declared scratch paths.** Both are `read_only_mode` for the vault and only write to specific project-scratch paths. Any `allow` outside `40-workbench/*/01-map/corpus-map.md` (Mapper) or `40-workbench/*/05-verification/*` (Verifier) is a configuration bug.
+- **Mapper or Verifier with allowed writes outside their declared paths.** Both are `read_only_mode` for the vault except for narrow declared paths. Any `allow` outside the Mapper's `40-workbench/*/01-map/` scratch (`corpus-map.md`, `gap-report.md`, `cluster-maps/`) or the Verifier's `40-workbench/*/05-verification/*` **and** gap-candidate path (`10-inbox/03-candidates/*`) is a configuration bug.
 - **Librarian writing to `30-synthesis/**` with `decision: allow` or `allow_with_log`.** Librarians do not promote to synthesis. Any allowed write here means the lane override is too permissive.
 - **Write recorded with missing hashes.** Every `allow` or `allow_with_log` write must carry both `before_hash` and `after_hash`. Missing hashes break tamper detection.
 
@@ -101,8 +101,8 @@ const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
 const events = text.trim().split("\n").map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
-const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|comparative-briefs\/|cluster-maps\/)/.test(p ?? "");
-const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "");
+const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|cluster-maps\/)/.test(p ?? "");
+const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "") || /^10-inbox\/03-candidates\//.test(p ?? "");
 const anomalies = events.filter(e =>
   (e.profile === "memoria-linter" && e.action === "auto_fix" && isAllowed(e.decision) &&
     !["safe-and-unambiguous", "authorized-targeted"].some(c => (e.policy_rule ?? "").includes(c))) ||

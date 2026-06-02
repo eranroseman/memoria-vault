@@ -23,7 +23,7 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `ingest` | Create the note for a source in the right folder with enrichment. | No |
 | `enrich` | Re-run API enrichment on existing notes. | No |
 | `classify` | Re-propose `_proposed_classification` on a note still needing review. | No |
-| `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker. | No |
+| `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker and the inline `[!brief]` comparative read. | No |
 | `query` | Deterministic vault search (standalone retrieval). | No |
 | `export prior-labels` | Export vault papers as ASReview priors for pre-ingest screening (frontmatter filter + format conversion). | No |
 
@@ -34,7 +34,6 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `scope-project` | Corpus map for a project. Writes `corpus-map.md` to `<project>/01-map/`. | No |
 | `gap-report` | Thin-coverage topics adjacent to a project brief. | No |
 | `cluster-map` | Density / recency map for an arbitrary topic. | No |
-| `comparative-brief` | Compare a new source against existing claims. Drives `[!brief]` callout. | No |
 
 ### Socratic
 

@@ -66,7 +66,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 | Agent | What it does |
 |---|---|
 | **Librarian** | Fetches sources, enriches metadata, proposes classifications — intake layer |
-| **Mapper** | Produces corpus maps, gap reports, and cluster briefs — read-only |
+| **Mapper** | Produces corpus maps, gap reports, and cluster maps — read-only |
 | **Socratic** | Asks questions to sharpen your thinking — architecturally write-denied |
 | **Writer** | Turns evidence into draft prose — lands in review, never direct to canonical |
 | **Verifier** | Traces claims to sources, flags retractions, catches near-duplicates |
