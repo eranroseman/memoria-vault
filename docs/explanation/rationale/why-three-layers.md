@@ -17,7 +17,7 @@ Any knowledge production system that uses AI agents must manage three kinds of s
 2. **Execution context** — which agent is running, what permissions it has, what tools it can use.
 3. **Settled knowledge** — what has been established, synthesized, and approved as canonical.
 
-The failure mode of most single-agent or single-document systems is that these three concerns share the same substrate. They collapse together in chat history, in the agent's working context, or in a flat document store.
+The failure mode of most single-agent or single-document systems is that these three concerns share the same substrate. They collapse together in chat history, in the agent's working memory, or in a flat document store.
 
 ---
 

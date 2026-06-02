@@ -65,7 +65,7 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 - [Overview](overview/README.md) — start here: what-memoria-is, intellectual-foundations, design-principles
 - [Design rationale](rationale/README.md) — the `why-*` arguments: three-layers, specialist-profiles, human-gate, not-autonomous, hermes, computational-methods, pattern-provenance
-- [Architecture](architecture/README.md) — what each layer and surface *is*: control-plane, memory-tiers, interaction channels, vault, session-logging
+- [Architecture](architecture/README.md) — what each layer and surface *is*: control-plane, the memory model, interaction channels, vault, session-logging
 - [Knowledge](knowledge/README.md) — how durable knowledge is organized: lifecycle-over-topic, note-types, promotion-model, knowledge-cycle, note-body-structure, vocabulary-discipline, common-pitfalls
 - [Workflows](workflows/README.md) — how work moves: board-as-state-machine, review-as-state, verify-on-commit
 - [Kanban board](kanban-board/README.md) — the board as coordination layer: card-schema, states
