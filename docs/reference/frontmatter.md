@@ -107,9 +107,9 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 | `maintenance_status` | string (enum) | `active` · `deprecated` · `archived` · `unmaintained` | Human / agent | `item-note` |
 | `role_in_stack` | string (enum) | `primary-tool` · `dependency` · `alternative` · `reference-only` | Human | `item-note` |
 | `outreach_status` | string | — | Human | `person-note` (people you intend to contact; blank for entities tracked only for the research graph) |
-| `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` | Human sets to `true` after reviewing the full text. Dashboards query this. |
+| `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` — Human sets to `true` after reviewing the full text; dashboards query this. |
 | `enriched_date` | date (`YYYY-MM-DD`) | — | Agent | Top-level (not inside `_enrichment`) — dashboards and the Linter's stale-enrichment check query it directly. |
-| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` | Set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: current`. Used to measure triage-to-promotion latency. |
+| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` — set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: current`; measures triage-to-promotion latency. |
 
 > **Note on `added`.** Earlier schema revisions used a single `added` field; the canonical pair is now `created` + `updated`. Any lingering `added` in an old note should be read as an alias for `created`.
 
