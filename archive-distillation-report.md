@@ -6,6 +6,12 @@ scope: All substantive files in _archived/ not yet documented in the current pro
 
 # Archive distillation report
 
+> **Note (2026-06-01).** The source `_archived/` folder was deleted after this distillation
+> was complete and all findings were integrated (see the disposition ledger below). The
+> `_archived/...` paths in this report are historical citations of where each finding came
+> from — they no longer resolve. The folder was never tracked in git, so it is not restorable
+> from history.
+
 **Scope.** Every non-trivial file in `_archived/` — predecessor design conversations
 (`old/research-wiki-conv-*`), external repo analysis (`raw/Analyze the following repos…`),
 Hermes capability assessments (`reports/hermes-*`), migration-draft ADR/reference/how-to files
@@ -60,7 +66,7 @@ and ADR-16 (adopt-on-demand) both assume a `00-meta/04-reference/screening-proto
 in-the-blank artifact exists in the vault. It does not: `vault/` ships no such file.
 
 A production-ready template already exists in
-[`_archived/reports/migration-drafts/screening-protocol.md`](_archived/reports/migration-drafts/screening-protocol.md).
+`_archived/reports/migration-drafts/screening-protocol.md` (now deleted).
 It has been translated to the current taxonomy (candidates in `10-inbox/03-candidates/`,
 systematic-review mode gated by ADR-16). The template covers review metadata, research
 question, inclusion/exclusion criteria, database sources with search strings, PRISMA decision
