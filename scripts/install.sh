@@ -378,6 +378,35 @@ seed_profile_env() {
   return 0
 }
 
+# deploy_policy_plugin PROFILE_DIR PROFILE  — install the policy-gate plugin into
+# a deployed profile's plugins/ dir, substituting the per-lane placeholders.
+#
+# This is the vault WRITE GATE (ADR-28). It replaces the old `hooks:` shell hook,
+# which never fired: Hermes registers MCP tools as `mcp_<server>_<tool>` (the
+# obsidian write is `mcp_obsidian_obsidian_append_content`), the shell-hook
+# matcher uses `re.fullmatch`, so `obsidian.*` matched nothing — and shell hooks
+# are consent-gated + fail-OPEN. The plugin runs in-process in every mode
+# (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is fail-CLOSED.
+# Enabled per lane via `plugins.enabled` in the deployed config.yaml.
+deploy_policy_plugin() {
+  local profile_dir="$1" prof="$2"
+  local plugin_src="$VAULT_PATH/.memoria/plugins/memoria-policy-gate"
+  local plugin_dst="$profile_dir/plugins/memoria-policy-gate"
+  if [ ! -d "$plugin_src" ]; then
+    warn "policy-gate plugin source missing at $plugin_src — WRITE GATE not deployed for $prof"
+    return 0
+  fi
+  run mkdir -p "$plugin_dst"
+  run cp "$plugin_src/plugin.yaml" "$plugin_dst/plugin.yaml"
+  # Substitute {{PROFILE}} and {{VAULT_PATH}} into the plugin code (mirrors the
+  # config.yaml substitution; the plugin runs in the Hermes process, so no PYTHON).
+  if [ -f "$plugin_src/__init__.py" ]; then
+    run_sh "sed -e 's|{{PROFILE}}|$prof|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
+                \"$plugin_src/__init__.py\" > \"$plugin_dst/__init__.py\""
+  fi
+  say "    deployed write-gate plugin (memoria-policy-gate)"
+}
+
 # =============================================================================
 # Step 6 — deploy the seven profiles  (the original profile-installer logic)
 # =============================================================================
@@ -461,6 +490,9 @@ install_profiles() {
       # profile runs do NOT read the global .env (Tier-4), so keys must be per-profile.
       # Runs every install (idempotent): fill the global .env, re-run --profiles-only.
       seed_profile_env "$HERMES_PROFILES_DIR/$p"
+      # Deploy the write-gate plugin (ADR-28) into this profile, substituted per lane.
+      # `plugins.enabled` in the deployed config.yaml turns it on.
+      deploy_policy_plugin "$HERMES_PROFILES_DIR/$p" "$p"
     else
       skipped="$skipped\n    [-] $p: hermes profile install failed"
     fi

@@ -38,14 +38,12 @@ terminal:
 checkpoints:
   enabled: true
 
-# Route writes through the policy gate. matcher is an re.fullmatch pattern, so
-# "obsidian.*" (not "obsidian") is required to catch obsidian_* tools.
-hooks:
-  pre_tool_call:
-    - matcher: "obsidian.*"
-      command: "{{PYTHON}} {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-verifier"
-      timeout: 10
-  post_tool_call:
-    - matcher: "obsidian.*"
-      command: "{{PYTHON}} {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-verifier"
-      timeout: 10
+# Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
+# Hermes registers MCP tools as mcp_<server>_<tool>, so the obsidian write is
+# mcp_obsidian_obsidian_append_content; a shell hook (re.fullmatch "obsidian.*",
+# consent-gated, fail-OPEN) never fired. The plugin runs in-process in every mode
+# (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is fail-CLOSED.
+# Deployed per lane by the installer (deploy_policy_plugin); see .memoria/plugins/.
+plugins:
+  enabled:
+    - memoria-policy-gate
