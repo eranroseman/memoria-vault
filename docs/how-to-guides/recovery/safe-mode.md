@@ -84,7 +84,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 Run before assuming something is broken:
 
 ```bash
-echo $KILOCODE_API_KEY $OPENALEX_EMAIL   # env vars loaded?
+echo $KILOCODE_API_KEY $OPENALEX_API_KEY   # env vars loaded?
 hermes --version                           # Hermes reachable?
 hermes profile list                        # profiles registered?
 cd <vault-path> && git status              # vault synced?

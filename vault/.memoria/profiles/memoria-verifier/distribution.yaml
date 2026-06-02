@@ -16,11 +16,18 @@ env_requires:
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex) — vault read + verification-report writes via the `obsidian` MCP server."
     required: true
-  - name: OPENALEX_EMAIL
-    description: "Contact email for the OpenAlex polite pool — cross-checks during cite-check / retraction-check."
+  # Zotero: the `pyzotero` skill runs in local read-only mode against the Zotero
+  # desktop API (http://localhost:23119) — no ZOTERO_API_KEY / _LIBRARY_ID /
+  # _LIBRARY_TYPE needed. Add a Web API key only if you switch to the cloud API.
+  - name: OPENALEX_API_KEY
+    description: "OpenAlex API key (?api_key= query param) — cross-checks during cite-check / retraction-check. As of 2026-02 OpenAlex requires a key; the former polite-pool email (OPENALEX_EMAIL) is discontinued."
+    required: false
+    default: ""
+  - name: NCBI_EMAIL
+    description: "Contact email used as the Crossref `mailto` (polite pool) when cite-check / retraction-check query api.crossref.org. Crossref and Open Retractions need no API key."
     required: false
     default: ""
   - name: SCITE_API_KEY
-    description: "Scite API key — citation-context and retraction signals for retraction-check."
+    description: "Scite API key (Authorization: Bearer) — optional citation-context and retraction signals. No shipped skill reads it yet; declared so it can be wired in without a profile change."
     required: false
     default: ""

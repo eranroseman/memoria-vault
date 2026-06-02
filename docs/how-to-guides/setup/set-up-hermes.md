@@ -28,11 +28,12 @@ Set these values:
 
 ```env
 KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
-OPENALEX_EMAIL=you@example.com        # required polite-pool header — any working address
-SEMANTIC_SCHOLAR_API_KEY=...          # optional but recommended
-PUBMED_API_KEY=...                    # optional but recommended
-GITHUB_TOKEN=ghp_...                  # optional, for repo enrichment
 OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
+OPENALEX_API_KEY=...                  # openalex.org/settings/api — required since 2026-02 (sent as ?api_key=)
+S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
+NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
+NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the Crossref mailto / Unpaywall email param
+# Zotero needs no key — pyzotero reads the local desktop API (http://localhost:23119, read-only)
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 

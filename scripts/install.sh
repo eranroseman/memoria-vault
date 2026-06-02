@@ -623,7 +623,7 @@ print_secrets_guidance() {
   say "1. Put your keys in  $HERMES_HOME/.env  (the global file):"
   say "    KILOCODE_API_KEY=...        # model access (shipped provider: kilocode / kilo.ai)"
   say "    OBSIDIAN_API_KEY=...        # 64-char hex from the Obsidian REST API plugin"
-  say "    OPENALEX_EMAIL=you@x.com    # Librarian — polite-pool header"
+  say "    OPENALEX_API_KEY=...        # Librarian — openalex.org/settings/api (required since 2026-02)"
   say "2. Propagate them into every profile (Hermes profile runs read ONLY the"
   say "   profile's own .env — there is no global fallback):"
   say "       bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
