@@ -40,7 +40,7 @@ The installer provisions Hermes, deploys the seven profiles, and copies the vaul
 notepad "$env:USERPROFILE\.hermes\profiles\memoria-librarian\.env"
 ```
 
-Set `KILOCODE_API_KEY`, `OPENALEX_EMAIL`, and `OBSIDIAN_API_KEY`.
+Set `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, and `OPENALEX_API_KEY` (OpenAlex requires a key as of 2026-02).
 
 **5. Ingest your first source.** Drag one PDF into Zotero. Note the citekey Better BibTeX assigned. Then:
 

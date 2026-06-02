@@ -10,13 +10,17 @@ env_requires:
     description: "Kilo Code API key (kilo.ai) - model access for the shipped provider: kilocode."
     required: true
   - name: ANTHROPIC_API_KEY
-    description: "Only needed if you switch config.yaml to provider: anthropic; unused by the shipped kilocode config."
+    description: "Anthropic API key — read by the `claude-code` external coding agent. Also the provider-switch key if config.yaml is set to provider: anthropic."
+    required: false
+    default: ""
+  - name: OPENAI_API_KEY
+    description: "OpenAI API key — read by the `codex` external coding agent."
     required: false
     default: ""
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex) — code-note read/write via the `obsidian` MCP server."
     required: true
   - name: GITHUB_TOKEN
-    description: "GitHub token — repo APIs for the external coding-agent handoff (push/PR). Optional for local-only work."
+    description: "GitHub token (Authorization: Bearer) — repo APIs for the `github-repo-management` skill / external coding-agent handoff (push/PR). Optional for local-only work."
     required: false
     default: ""

@@ -17,18 +17,30 @@ env_requires:
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex from the plugin) — vault read/write via the `obsidian` MCP server."
     required: true
-  - name: OPENALEX_EMAIL
-    description: "Contact email for the OpenAlex polite pool — enrichment (citation count, abstract, OA status) at ingest."
+  - name: OPENALEX_API_KEY
+    description: "OpenAlex API key (openalex.org/settings/api), sent as the ?api_key= query param — enrichment (citation count, abstract, OA status) at ingest, read by the `paper-lookup` skill. As of 2026-02 OpenAlex requires a key; the former polite-pool contact email (OPENALEX_EMAIL) is discontinued."
     required: true
-  - name: OPENROUTER_API_KEY
-    description: "OpenRouter key for Hermes auxiliary/fallback models. Optional when provider: anthropic handles the primary model."
+  - name: S2_API_KEY
+    description: "Semantic Scholar API key (x-api-key header) — read by `paper-lookup` for higher rate limits; works without it on a shared pool. NOTE: the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY."
     required: false
     default: ""
-  - name: SEMANTIC_SCHOLAR_API_KEY
-    description: "Semantic Scholar API key — higher rate limits for paper lookup (CrossRef/arXiv/OpenAlex need no key)."
+  - name: NCBI_API_KEY
+    description: "NCBI E-utilities key (ncbi.nlm.nih.gov/account/settings), sent as &api_key= — read by `paper-lookup` and `citation-management` for PubMed/PMC (10 req/s vs 3 without). NOTE: the var is NCBI_API_KEY, not PUBMED_API_KEY."
+    required: false
+    default: ""
+  - name: NCBI_EMAIL
+    description: "Contact email for NCBI E-utilities (Entrez requires it) — read by `citation-management`; the agent also reuses it as the Crossref `mailto` (polite pool) and the Unpaywall `email` param (Unpaywall rejects placeholder addresses)."
     required: false
     default: ""
   - name: ZOTERO_API_KEY
-    description: "Zotero Web API key — only if syncing via the web API instead of a local Better BibTeX export."
+    description: "Zotero Web API key — read by the `pyzotero` skill for library read/write."
+    required: false
+    default: ""
+  - name: ZOTERO_LIBRARY_ID
+    description: "Zotero library ID — numeric user ID, or the group ID for a group library. Required by `pyzotero` alongside the key."
+    required: false
+    default: ""
+  - name: ZOTERO_LIBRARY_TYPE
+    description: "Zotero library type — `user` or `group`. Required by `pyzotero`."
     required: false
     default: ""
