@@ -10,7 +10,7 @@
 #
 # Mirrors the required checks: docs-doctor, shellcheck (install.sh),
 # PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest,
-# check-test-refs.
+# check-test-refs, dashboard schema-drift.
 
 fail=0
 staged() { git diff --cached --name-only; }
@@ -89,6 +89,20 @@ if staged | grep -qE '^project-files/tests/.*\.md$|^project-files/plans/gui-test
     "$PY" scripts/check-test-refs.py || { echo "pre-commit: check-test-refs failed (above)." >&2; fail=1; }
   else
     echo "pre-commit: python not found; skipping check-test-refs" >&2
+  fi
+fi
+
+# --- 6. dashboard schema-drift (when a dashboard or template is staged) ------
+# A dashboard querying a field no template emits is a silent empty table. Only
+# these two folders can introduce that drift, so the (whole-vault) scan runs
+# only when one is staged — keeping the hook per-diff. dashboard-field-drift
+# blocks; other vault findings stay advisory. Mirrors the gated CI step.
+if staged | grep -qE '^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/templates/.*\.md$'; then
+  if [ -n "$PY" ]; then
+    "$PY" vault/.memoria/profiles/memoria-linter/detectors.py --vault vault --gate dashboard-field-drift \
+      || { echo "pre-commit: dashboard schema-drift (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: python not found; skipping schema-drift" >&2
   fi
 fi
 
