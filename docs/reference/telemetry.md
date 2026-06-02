@@ -12,7 +12,7 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 
 - **Format.** One JSON object per line (JSONL). No top-level array, no trailing comma; a partial last line is the only acceptable corruption and is dropped on read.
 - **Append-only.** Writers only ever `open(..., "a")`. Rows are immutable events; nothing is rewritten in place. Rotation (truncate-after-archive) is the *only* sanctioned mutation, and only the owning profile may do it (see the `authorized-targeted` auto-fix class in [Policy MCP](policy-mcp.md)).
-- **Time.** Every row carries a timestamp in ISO-8601 **UTC** with a trailing `Z` (`2026-06-01T14:23:01Z`). The key is `ts` for the audit log (historical) and `timestamp` for everything the board exporter writes. Never local time — cross-log joins depend on a single clock.
+- **Time.** Every row carries a timestamp in ISO-8601 **UTC** with a trailing `Z` (`2026-06-01T14:23:01Z`). The key is `timestamp` in every log. Never local time — cross-log joins depend on a single clock.
 - **Identity.** Card-scoped rows carry `task_id` (board card ID) and `lane` (the assignee profile, e.g. `memoria-writer`). `task_id` is the join key across `board-transitions`, `disposition`, and `cost`.
 - **Encoding.** UTF-8, `ensure_ascii=false` — em-dashes and accented author names survive verbatim.
 
@@ -36,15 +36,15 @@ The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy M
 
 ```json
 {
-  "ts": "2026-05-31T14:23:01Z",
+  "timestamp": "2026-05-31T14:23:01Z",
   "profile": "memoria-librarian",
   "action": "write",
   "path": "20-sources/01-papers/smith-2024.md",
   "task_id": "TASK-2026-05-31-003",
   "decision": "allow_with_log",
   "policy_rule": "librarian.write.sources",
-  "sha256_before": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
-  "sha256_after":  "sha256:a87ff679a2f3e71d9181a67b7542122c..."
+  "before_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
+  "after_hash":  "sha256:a87ff679a2f3e71d9181a67b7542122c..."
 }
 ```
 
