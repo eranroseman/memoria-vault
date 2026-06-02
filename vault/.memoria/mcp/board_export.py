@@ -71,6 +71,25 @@ def _first(card: dict, *keys: str, default=""):
     return default
 
 
+def _iso_ts(value, default="") -> str:
+    """Normalize a Hermes card timestamp to ISO-8601 UTC for the dashboards.
+    Hermes serializes card times as epoch seconds (occasionally milliseconds);
+    older/fixture data already uses an ISO string. Pass ISO-ish strings through,
+    convert epochs, and fall back to the string form so the field never silently
+    drops a value it can't parse."""
+    if value in (None, ""):
+        return default
+    if isinstance(value, str) and not value.isdigit():
+        return value
+    try:
+        ts = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if ts > 1e11:  # milliseconds -> seconds
+        ts /= 1000.0
+    return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _metadata(card: dict) -> dict:
     """The Memoria overlay rides in the card's free-form `metadata` (dict, or a
     JSON-encoded string depending on the Hermes serializer)."""
@@ -103,7 +122,7 @@ def normalize(card: dict) -> dict:
         "review_status": md.get("review_status", "unreviewed"),
         "retry_count": md.get("retry_count", 0),
         "reason": _first(card, "reason") or md.get("blocked_reason", ""),
-        "last_updated": _first(card, "updated_at", "modified_at", "created_at"),
+        "last_updated": _iso_ts(_first(card, "updated_at", "modified_at", "created_at")),
         "summary": summary,
         # --- telemetry overlay (all best-effort; empty when Hermes doesn't supply them) ---
         "agent_recommendation": md.get("agent_recommendation", md.get("agent_verdict", "")),
@@ -320,6 +339,14 @@ def self_test() -> int:
           normalize({"metadata": {"agent_recommendation": "clean"}})["agent_recommendation"] == "clean")
     check("normalize falls back to legacy agent_verdict",
           normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"] == "issues-found")
+    check("normalize converts epoch-seconds last_updated to ISO",
+          normalize({"updated_at": 1700000000})["last_updated"] == "2023-11-14T22:13:20Z")
+    check("normalize converts epoch-millis last_updated to ISO",
+          normalize({"updated_at": 1700000000000})["last_updated"] == "2023-11-14T22:13:20Z")
+    check("normalize passes an ISO last_updated through unchanged",
+          normalize(sample[0])["last_updated"] == "2026-05-31T10:00:00Z")
+    check("normalize leaves last_updated empty when no timestamp",
+          normalize(sample[2])["last_updated"] == "")
 
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
