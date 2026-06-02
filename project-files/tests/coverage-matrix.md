@@ -42,7 +42,7 @@ Every design component → the layer/protocol that covers it → whether it's au
 
 ## L2 — automating the wiring layer
 
-L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../decisions/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all 7 lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half needs Hermes + a cheap model + the Obsidian write path; its driver is settled (`hermes -z` / `hermes chat -q`, not ACP), and one spike remains (filesystem-direct writes vs. the live REST API). It lands as an opt-in `scripts/test-l2.sh` smoke set — nightly, not PR-blocking.
+L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../decisions/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all 7 lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half is settled too: driver `hermes -z` / `hermes chat -q` (not ACP), and it needs **no Obsidian** — the gate is transport-agnostic, so a filesystem-backed `obsidian` MCP shim (Option B) lets it run on any box. It lands as an opt-in `scripts/test-l2.sh` smoke set (§3 S1–S5 + one §4 case per profile) — nightly, not PR-blocking. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
 
 ## Open gaps (⛔ / 🟡), prioritized
 

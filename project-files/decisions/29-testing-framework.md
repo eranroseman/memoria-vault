@@ -61,9 +61,14 @@ L2 ("wiring / contract") splits at the **model boundary**, and the two halves be
 
 **Driver (resolved).** Hermes ships a scripted one-shot: `hermes -z "<prompt>"` (final text only, clean stdout/stderr) and `hermes chat -q` (same, but tool calls in the transcript — what L2b wants, to observe the write + the gate call). ACP is interactive/editor-only — **not** the automation path.
 
-**Open spike.** Can the Obsidian write path target a vault on disk **without** the live Local REST API? If yes, L2b runs on any box with Hermes + a key; if no, it needs a self-hosted runner with Obsidian up.
+**Backend (resolved).** L2b does **not** need Obsidian. In production the 5 non-code lanes write only through the `obsidian` MCP → Local REST API (`file` is in their `disabled_toolsets`), but the gate is **transport-agnostic**: `policy_hook.classify` keys on the base tool-name + path at the `pre_tool_call` plugin layer ([ADR-28](28-write-gate-as-plugin.md)), gating `obsidian_*` and `file` `write_file`/`patch` identically — the REST transport itself is L3's contract (matrix #15), not L2's. So:
+- **Option B (chosen for unattended).** A filesystem-backed `obsidian` MCP shim with the same tool names (`obsidian_append_content`/`patch_content`/`put_content`). Skills call the same tools, the gate fires unchanged, writes land on disk — no GUI, runs anywhere. The ADR-28 task_id objection to a wrapper MCP doesn't apply: the gate plugin still supplies task_id; the shim only executes the write.
+- **Option A (production-faithful variant).** Headless Obsidian (`xvfb-run`) on a self-hosted runner — exercises the real REST path, but heavy/flaky and overlaps L3 #15, so it doesn't gate L2b.
+- *(Rejected: re-enabling the `file` toolset — Memoria skills emit `obsidian_*`, so they'd break without an obsidian server.)*
 
-**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) the spike above; (3) an opt-in `scripts/test-l2.sh` smoke set (the §3 S1–S5 + one §4 case per profile) on the cheap model against a disposable vault, with teardown — **nightly, not PR-blocking**. The full hermes-cli §4 matrix stays the manual protocol of record.
+**Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). For L2b, **build the unattended Option-B harness only for the smoke core** (§3 S1–S5 + one §4 case per profile) — that's the high-frequency signal a human shouldn't babysit. **Keep the full §4 matrix + the GUI/Zotero/dashboard tail attended, per release** — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class). The build decision is "is the per-PR smoke signal worth one harness?" — yes while iterating on the gate/lanes/skills, deferrable if L2 only matters at release.
+
+**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) an opt-in `scripts/test-l2.sh` smoke set on the cheap model against a disposable vault, with teardown — **nightly, not PR-blocking**. The full hermes-cli §4 matrix stays the attended protocol of record.
 
 ## Alternatives considered
 
