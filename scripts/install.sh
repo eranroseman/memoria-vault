@@ -292,12 +292,20 @@ copy_vault() {
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
   # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
-  # it from the example so the ACP pane has a starting config (the user sets the
-  # agent command path inside it). First-install only; never clobber an edited one.
+  # it from the example, substituting {{HOME}} with this machine's home so the ACP
+  # commands resolve. First-install only; never clobber an edited one.
+  # `windowsWslMode`: Obsidian runs on Windows while hermes lives in WSL, so the ACP
+  # commands must resolve through wsl.exe. Under WSL we set it true; on native Linux
+  # (Obsidian and hermes share one filesystem) it stays false.
   local acp_dir="$VAULT_PATH/.obsidian/plugins/agent-client"
   if [ -f "$acp_dir/data.json.example" ] && [ ! -f "$acp_dir/data.json" ]; then
-    run cp "$acp_dir/data.json.example" "$acp_dir/data.json"
-    say "  seeded agent-client/data.json from its example (set the agent command path inside it)"
+    local wsl_mode=false
+    if grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null || [ -n "${WSL_DISTRO_NAME:-}" ]; then
+      wsl_mode=true
+    fi
+    run_sh "sed -e 's|{{HOME}}|$HOME|g' -e 's|\"windowsWslMode\": false|\"windowsWslMode\": $wsl_mode|' \
+                \"$acp_dir/data.json.example\" > \"$acp_dir/data.json\""
+    say "  seeded agent-client/data.json from its example ({{HOME}} -> $HOME, windowsWslMode: $wsl_mode)"
   fi
 
   # The runtime vault is the user's own repo — they set up git themselves, with

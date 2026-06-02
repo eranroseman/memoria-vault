@@ -84,6 +84,17 @@ A similarity score ≥ 0.8 from Verifier means the claim likely already exists i
 
 Do not let Socratic accumulate more than one session's worth of conversation. Long histories degrade response quality. Clear when done.
 
+## If the pane won't connect (Windows + WSL)
+
+On Windows, Obsidian runs natively while hermes lives in WSL, so the ACP commands must resolve **through `wsl.exe`**. Two settings make that work (Settings → **Agent Client**):
+
+- **WSL mode on.** `windowsWslMode: true` — the plugin then runs each agent as `wsl.exe … sh -c "<command> …"`. Without it, Obsidian tries to launch the WSL binary as a Windows process and can't find it.
+- **Command = the WSL absolute path** to hermes, e.g. `/home/<you>/.local/bin/hermes` — **not** a Windows path and **not** the `{{HOME}}` placeholder. The quickest way to fill it is the **Auto-detect** button next to each agent (it runs `which hermes` inside WSL).
+
+The installer (`scripts/install.sh`, run under WSL) seeds these automatically — it substitutes `{{HOME}}` with your WSL home and sets `windowsWslMode: true`. If you instead see a **"Command Not Found: `{{HOME}}/.local/bin/hermes`"** error, the substitution didn't run (an older installer, or a hand-copied `data.json.example`): set the path via **Auto-detect**, confirm WSL mode is on, then **fully restart Obsidian** so the plugin re-reads the config.
+
+On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** and point the command at the plain hermes path.
+
 ## Verify
 
 - `Ctrl+Shift+1` switches the pane to Socratic without reloading Obsidian
