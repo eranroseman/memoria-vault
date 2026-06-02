@@ -89,7 +89,7 @@ Socratic is also never queue-dispatched. It is only invoked synchronously by the
 
 ## Related
 
-- How profiles relate to the board and vault: [README.md](../architecture/README.md)
-- Why the board separates concerns: [why-three-layers.md](why-three-layers.md)
-- Why the review gate is human-owned: [why-human-gate.md](why-human-gate.md)
-- Permission matrices (lookup): [reference/profiles.md](../../reference/profiles.md)
+- How profiles relate to the board and vault: [Architecture](../architecture/README.md)
+- Why the board separates concerns: [Why three layers, not one](why-three-layers.md)
+- Why the review gate is human-owned: [Why the review gate is structural](why-human-gate.md)
+- Permission matrices (lookup): [Profile capabilities](../../reference/profiles.md)

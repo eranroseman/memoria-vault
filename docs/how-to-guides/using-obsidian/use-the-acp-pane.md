@@ -11,8 +11,8 @@ Drive Memoria's conversational profiles from inside Obsidian without switching t
 ## Prerequisites
 
 - Obsidian open with the vault
-- `agent-client` plugin installed and the Hermes gateway reachable ([set-up-hermes.md](../setup/set-up-hermes.md))
-- The three workspace layouts configured ([reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md))
+- `agent-client` plugin installed and the Hermes gateway reachable ([How to set up Hermes](../setup/set-up-hermes.md))
+- The three workspace layouts configured ([Obsidian workspaces](../../reference/obsidian-workspaces.md))
 
 ## Which profile to open
 
@@ -27,7 +27,7 @@ Four profiles appear in the ACP picker. Choose based on what you're about to do:
 
 Start with Socratic by default. Switch to the others only when you have a specific one-shot task.
 
-For the design rationale behind the picker — why three profiles are absent and why the labels name identities rather than actions — see [explanation/obsidian/agent-client-picker.md](../../explanation/obsidian/agent-client-picker.md).
+For the design rationale behind the picker — why three profiles are absent and why the labels name identities rather than actions — see [The agent-client pane](../../explanation/obsidian/agent-client-picker.md).
 
 ## Opening the pane
 
@@ -72,9 +72,9 @@ The transient profiles return structured outputs:
 | --- | --- | --- |
 | Mapper | `[!corpus-map]` callout — dense clusters, thin topics, gaps | Read the gap list before framing a writing project |
 | Writer | Draft prose or outline, written directly in the response | Copy the sections you want into your draft file |
-| Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.85 before writing a new claim |
+| Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.8 before writing a new claim |
 
-A similarity score ≥ 0.85 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
+A similarity score ≥ 0.8 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
 
 ## Ending a session
 
@@ -93,7 +93,7 @@ Do not let Socratic accumulate more than one session's worth of conversation. Lo
 
 ## Related
 
-- Discussing a paper end-to-end: [sources/discuss-a-paper.md](../sources/discuss-a-paper.md)
-- Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- Plugin settings and `customAgents` keys: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
-- Profile picker design: [explanation/obsidian/agent-client-picker.md](../../explanation/obsidian/agent-client-picker.md)
+- Discussing a paper end-to-end: [How to discuss a paper](../sources/discuss-a-paper.md)
+- Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Profile picker design: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)

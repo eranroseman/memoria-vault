@@ -19,13 +19,13 @@ You add a paper to Zotero, the agent ingests it, wikilinks form across the vault
 
 The reason this is silent: Obsidian doesn't warn about broken wikilinks; it just shows them as unresolved. Without the Linter's `graph-analyze` check, the breakage is invisible until you're actively looking for a specific note. The failure compounds over time because new notes continue linking to the broken citekey, not knowing it has changed.
 
-The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [how-to-guides/sources/capture-and-ingest.md](../../how-to-guides/sources/capture-and-ingest.md) for the pinning procedure.
+The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [How to capture and ingest a source](../../how-to-guides/sources/capture-and-ingest.md) for the pinning procedure.
 
 ## Vocabulary drift
 
 You classify paper A with `topic: receptivity-detection` and paper B with `topic: opportune-moments`, not noticing they name the same concept. The Dataview query for `receptivity-detection` returns half the corpus on the topic. You conclude coverage is thin; it isn't.
 
-The failure is invisible because it produces no errors — just incomplete query results. Research directions get shaped by a false gap signal. The Linter's `schema-check` detector can catch drift from a defined vocabulary, but only after the vocabulary is defined. Drift before that point is entirely silent. See [vocabulary-discipline.md](vocabulary-discipline.md) for the reasoning behind deferred vocabulary consolidation.
+The failure is invisible because it produces no errors — just incomplete query results. Research directions get shaped by a false gap signal. The Linter's `schema-check` command can catch drift from a defined vocabulary, but only after the vocabulary is defined. Drift before that point is entirely silent. See [Vocabulary discipline](vocabulary-discipline.md) for the reasoning behind deferred vocabulary consolidation.
 
 ## Summary without synthesis
 
@@ -57,13 +57,13 @@ The failures above share a root, and naming it directly is the best defense. A r
 
 Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Classification promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the human. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate exists to prevent.
 
-For the explicit mapping of tasks to their appropriate owner, see [reference/profiles.md](../../reference/profiles.md).
+For the explicit mapping of tasks to their appropriate owner, see [Profile capabilities](../../reference/profiles.md).
 
 ---
 
 ## Related
 
-- Why promotion is gated: [promotion-model.md](promotion-model.md)
-- The fix for compound notes: [refactor-a-note.md](../../how-to-guides/maintenance/refactor-a-note.md)
-- Catching unverified agent output: [run-a-retraction-sweep.md](../../how-to-guides/maintenance/run-a-retraction-sweep.md)
-- Lane permissions referenced here: [profiles.md](../../reference/profiles.md)
+- Why promotion is gated: [Why promotion is gated](promotion-model.md)
+- The fix for compound notes: [How to refactor claim notes](../../how-to-guides/maintenance/refactor-a-note.md)
+- Catching unverified agent output: [How to run a retraction sweep](../../how-to-guides/maintenance/run-a-retraction-sweep.md)
+- Lane permissions referenced here: [Profile capabilities](../../reference/profiles.md)

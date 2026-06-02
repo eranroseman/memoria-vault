@@ -6,16 +6,15 @@ profile: memoria-mapper
 policy:
   allow:
     skills:
-      # scope-project / gap-report / cluster-mapping / comparative-brief are SOUL.md
+      # scope-project / gap-report / cluster-mapping are SOUL.md
       # procedures composing these real skills:
-      - obsidian            # vault query + write corpus-map / gap-report / briefs / cluster-maps
-      - qmd                 # hybrid BM25+vector retrieval for gap-report + comparative-brief (skills.sh skill)
+      - obsidian            # vault query + write corpus-map / gap-report / cluster-maps
+      - qmd                 # hybrid BM25+vector retrieval for gap-report + corpus retrieval (skills.sh skill)
       - scikit-learn        # HDBSCAN clustering + topic modeling (K-Dense)
       - umap-learn          # cluster-map dimensionality reduction (K-Dense)
     write:
       - "40-workbench/*/01-map/corpus-map.md"
       - "40-workbench/*/01-map/gap-report.md"
-      - "40-workbench/*/01-map/comparative-briefs/**"
       - "40-workbench/*/01-map/cluster-maps/**"
   deny:
     skills: []

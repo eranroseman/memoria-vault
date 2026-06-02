@@ -12,7 +12,7 @@ policy:
     # skill deps. (Advanced graph community-detection could reintroduce networkx later.)
     skills: []
     write:
-      - "00-meta/02-logs/**"     # audit logs, session logs, and rotation archive
+      - "99-system/logs/**"     # audit logs, session logs, and rotation archive
     auto_fix:
       classes:
         - safe-and-unambiguous   # trailing whitespace, missing timestamps — via Templater
@@ -38,4 +38,4 @@ routing:
   invocation: dispatched         # dispatched | interactive_only (also runs on cron: Level 1)
   external_api_policy: blocked   # blocked | explicit_only | open
   write_scope:
-    - "00-meta/02-logs/"
+    - "99-system/logs/"

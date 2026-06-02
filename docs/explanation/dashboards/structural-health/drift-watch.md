@@ -10,7 +10,7 @@ Surfaces the Linter's eight structural-detector findings as one consolidated vie
 
 ## What it shows
 
-The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight structural detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
+The dashboard reads from `99-system/logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight structural detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
 
 **Verdict band:**
 
@@ -36,10 +36,10 @@ The Friday weekly review includes a drift-watch pass because a week of ordinary 
 
 ## Before it has real data
 
-Until the Linter is running end-to-end and writing to `00-meta/02-logs/lint-findings.jsonl`, this dashboard shows a placeholder. Daily-health shows the last-24h HIGH and CRITICAL findings (a filtered subset) once the Linter is active.
+Until the Linter is running end-to-end and writing to `99-system/logs/lint-findings.jsonl`, this dashboard shows a placeholder. Daily-health shows the last-24h HIGH and CRITICAL findings (a filtered subset) once the Linter is active.
 
 ## Related
 
-- [explanation/profiles/linter.md](../../profiles/linter.md) — the eight structural detectors and what each catches
-- [explanation/dashboards/audit-log.md](../operational-health/audit-log.md) — per-decision forensics layer below structural drift
-- [reference/profiles.md](../../../reference/profiles.md#linter-the-eight-structural-detectors) — structural-detector severity table
+- [The Linter](../../profiles/linter.md) — the eight structural detectors and what each catches
+- [audit-log dashboard](../operational-health/audit-log.md) — per-decision forensics layer below structural drift
+- [Profile capabilities](../../../reference/profiles.md#linter-the-eight-structural-detectors) — structural-detector severity table

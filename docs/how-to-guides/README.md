@@ -7,9 +7,9 @@ permalink: /how-to-guides/
 
 # How-to guides
 
-Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already know the system — if you're new, start with the [tutorials](../tutorials/).
+Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already know the system — if you're new, start with the [Tutorials](../tutorials/).
 
-For the *why* behind any design choice, see [explanation](../explanation/). For exact field names, schemas, and command flags, see [reference](../reference/).
+For the *why* behind any design choice, see [Explanation](../explanation/). For exact field names, schemas, and command flags, see [Reference](../reference/).
 
 ---
 
@@ -18,10 +18,10 @@ For the *why* behind any design choice, see [explanation](../explanation/). For 
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [sources/](sources/) and [writing/](writing/) are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](sources/) and [Writing](writing/) are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
-Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [setup/](setup/), [maintenance/](maintenance/), and [recovery/](recovery/) are written for this mode.
+Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintenance/), and [Recovery](recovery/) are written for this mode.
 
 ---
 
@@ -59,7 +59,7 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 | [Chat with Hermes](using-hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
 | [Configure a profile](using-hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
 
-Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [reference/hermes-cli.md](../reference/hermes-cli.md).
+Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [Hermes CLI](../reference/hermes-cli.md).
 
 ### Sources (upstream)
 

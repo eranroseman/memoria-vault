@@ -5,7 +5,7 @@ parent: Reference
 
 # Memory substrates
 
-Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [explanation/architecture/memory-tiers.md](../explanation/architecture/memory-tiers.md).
+Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [Memory tiers](../explanation/architecture/memory-tiers.md).
 
 ---
 
@@ -17,8 +17,8 @@ Where each type of state lives across the Memoria + Hermes stack: tier, backing 
 | **Profile memory** (`MEMORY.md` + `USER.md`) | Hermes native | One profile, all sessions | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-<name>/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected into system prompt at session start as a frozen snapshot. |
 | **Session search** | Hermes native | One profile, all past sessions | Indefinite; unlimited capacity | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations. Retrieved on demand — costs no tokens until queried. |
 | **Board memory** (handoff payload) | Memoria — Kanban | One card; travels across profiles | Card-bound | Card `metadata` field | Handoff goal, context, allowed paths, expected outputs, working set of paper notes. |
-| **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `40-workbench/<project>/` | `research-directions`, open questions, decisions log. Shared across all profiles touching the project. |
-| **Vault audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `00-meta/02-logs/` + `00-meta/08-metrics/` | Audit trail, board snapshots, weekly summaries, fleet metrics. |
+| **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `40-workbench/<project>/` | `research-focus`, open questions, decisions log. Shared across all profiles touching the project. |
+| **Vault audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `99-system/logs/` + `99-system/metrics/` | Audit trail, board snapshots, weekly summaries, fleet metrics. |
 
 Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes runtime — verify exact limits in upstream [Hermes docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory).
 
@@ -46,7 +46,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 | Human preferences and style | Profile `USER.md` | Working context (not persistent) |
 | Cross-session retrieval | Session search | Profile memory (too small for bulk recall) |
 | Project-level decisions | Vault project memory (`40-workbench/<project>/`) | Board memory (card-scoped, dies with card) |
-| Audit trail of all decisions | Vault audit memory (`00-meta/02-logs/audit.jsonl`) | Profile memory (wrong granularity) |
+| Audit trail of all decisions | Vault audit memory (`99-system/logs/audit.jsonl`) | Profile memory (wrong granularity) |
 | Durable synthesized knowledge | Vault notes (`30-synthesis/`) | Any of the above |
 
 ---
@@ -64,7 +64,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 
 ## Audit log event fields
 
-Every policy MCP decision appended to `00-meta/02-logs/audit.jsonl`:
+Every policy MCP decision appended to `99-system/logs/audit.jsonl`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -86,16 +86,16 @@ The `before_hash` / `after_hash` chain must be unbroken across the entire log. `
 | --- | --- |
 | Schedule | Sunday 00:00 local time |
 | Trigger (size) | When `audit.jsonl` exceeds 50 MB |
-| Archive path | `00-meta/02-logs/archive/audit-YYYY-WW.jsonl` (ISO week-numbered) |
+| Archive path | `99-system/logs/archive/audit-YYYY-WW.jsonl` (ISO week-numbered) |
 | Retention | Indefinite (configurable via `.memoria/log-retention.yaml`) |
 | Auto-fix class | `authorized-targeted` (policy MCP allows without escalation) |
 
-Session logs (`00-meta/02-logs/sessions/YYYY-MM-DD-HHMM.jsonl`) are written one per Hermes session and not rotated.
+Session logs (`99-system/logs/sessions/YYYY-MM-DD-HHMM.jsonl`) are written one per Hermes session and not rotated.
 
 ---
 
 ## Related
 
-- The audit log writer and decision protocol: [policy-mcp.md](policy-mcp.md)
-- Thin control over thick state: [why-three-layers.md](../explanation/rationale/why-three-layers.md)
-- The board as the coordination substrate: [kanban-board/README.md](../explanation/kanban-board/README.md)
+- The audit log writer and decision protocol: [Policy MCP](policy-mcp.md)
+- Thin control over thick state: [Why three layers, not one](../explanation/rationale/why-three-layers.md)
+- The board as the coordination substrate: [Kanban board](../explanation/kanban-board/README.md)

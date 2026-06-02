@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-Open `00-meta/index.md` — the vault's front door — navigate from it to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the local reference notes, common operations, and the full website docs. Navigate from it to the right dashboard or tool, and keep your research focus current.
 
 ## Prerequisites
 
@@ -16,12 +16,12 @@ Open `00-meta/index.md` — the vault's front door — navigate from it to the r
 
 **1. Open the homepage.**
 
-The obsidian-homepage plugin opens `00-meta/index.md` automatically on launch. If it's not visible:
+The obsidian-homepage plugin opens `home.md` automatically on launch (in Reading view, Dataview refreshed). If it isn't visible:
 
-- `Cmd/Ctrl-P` → **Open default note**
-- Or navigate manually: file explorer → `00-meta` → `index.md`
+- `Cmd/Ctrl-P` → **Homepage: Open homepage**, or click the home ribbon icon
+- Or open `home.md` from the vault root in the file explorer
 
-Pin it in the sidebar so it's always one click away: right-click the tab → **Pin**.
+The plugin pins the tab for you (configurable); you can also right-click the tab → **Pin**.
 
 **2. Navigate to a dashboard.**
 
@@ -36,11 +36,11 @@ The homepage links to all dashboards without duplicating their queries. Click an
 | **Audit log** | Per-decision forensics from the policy MCP |
 | **Drift watch** | Linter findings and verdict band |
 
-**3. Update your research directions.**
+**3. Update your research focus.**
 
-The Librarian reads `00-meta/research-directions.md` at the start of every session to set discovery targets. Keep it current.
+The Librarian reads `research-focus.md` at the start of every session to set discovery targets. Keep it current.
 
-Click **Research directions** in the homepage → edit the file directly:
+Click **Research focus** in the homepage → edit the file directly:
 
 - **Current priorities** — up to 3–5 active research questions
 - **Open questions** — specific unresolved questions to surface sources for
@@ -59,12 +59,12 @@ The **Common operations** section lists the Memoria command-palette shortcuts. U
 ## Verify
 
 - `Cmd/Ctrl-1` (Human workspace) shows the homepage in the left pane
-- Clicking **Daily Health** opens `00-meta/01-dashboards/index.md`
-- `research-directions.md` has at least one current priority filled in
+- Clicking **Daily Health** opens `00-meta/01-dashboards/daily-health.md`
+- `research-focus.md` has at least one current priority filled in
 
 ## Related
 
-- Why the homepage is a consumer, not a producer: [explanation/obsidian/home.md](../../explanation/obsidian/home.md)
+- Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards/)
-- Workspace layout for the Human workspace: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- Updating research directions on schedule: [how-to-guides/maintenance/run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
+- Workspace layout for the Human workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Updating research focus on schedule: [How to run the weekly review](../maintenance/run-the-weekly-review.md)

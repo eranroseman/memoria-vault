@@ -12,7 +12,7 @@ This is different from [linking related claims](link-related-claims.md): that gu
 ## Prerequisites
 
 - A note carrying a `[!suggestions]` callout (the Librarian attaches one after an `enrich` or weekly link pass)
-- The Callout Manager plugin active ([set-up-obsidian.md](../setup/set-up-obsidian.md))
+- The Callout Manager plugin active ([How to set up Obsidian](../setup/set-up-obsidian.md))
 
 ## Steps
 
@@ -46,14 +46,14 @@ There is a `Memoria: approve all link suggestions` command, but use it only when
 
 **How-to**
 
-- Manually type a claim relation (the deliberate, non-proposed path): [link-related-claims.md](link-related-claims.md)
-- Where suggestions come from in the intake flow: [capture-and-ingest.md](capture-and-ingest.md)
+- Manually type a claim relation (the deliberate, non-proposed path): [How to link related claims (typed relations)](link-related-claims.md)
+- Where suggestions come from in the intake flow: [How to capture and ingest a source](capture-and-ingest.md)
 
 **Reference**
 
-- Callout field shapes, scoring weights, drift cutoffs: [obsidian-callouts.md](../../reference/obsidian-callouts.md)
+- Callout field shapes, scoring weights, drift cutoffs: [Obsidian callouts](../../reference/obsidian-callouts.md)
 
 **Explanation**
 
-- Why suggestions are collapsed and producer-owned: [callouts.md](../../explanation/obsidian/callouts.md)
+- Why suggestions are collapsed and producer-owned: [Callouts](../../explanation/obsidian/callouts.md)
 - How the accept/reject ratio feeds the trust score: [fleet-health dashboard](../../explanation/dashboards/operational-health/fleet-health.md)

@@ -5,9 +5,9 @@ parent: Reference
 
 # Command palette
 
-Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [hermes-cli.md](hermes-cli.md). For invocation patterns and hotkey discipline see [how-to-guides/obsidian-command-palette.md](../how-to-guides/using-obsidian/obsidian-command-palette.md).
+Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [Hermes CLI](hermes-cli.md). For invocation patterns and hotkey discipline see [How to use the Memoria command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md).
 
-> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **three** so far — `Memoria: capture fleeting`, `Memoria: write claim note`, `Memoria: scaffold code note` (all Templater-backed). The rest (API-POST, ACP-pane, and macro choices) are added as the system fills in; see [implementation-status.md](../../project-files/plans/implementation-status.md).
+> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **three** so far — `Memoria: capture fleeting`, `Memoria: write claim note`, `Memoria: scaffold code note` (all Templater-backed). The rest (API-POST, ACP-pane, and macro choices) are added as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
 
 Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds the top five to physical ribbon buttons.
 
@@ -42,7 +42,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 
 | Command | Output | Assignee |
 | --- | --- | --- |
-| `Memoria: new project` | `40-workbench/<name>/` + `brief.md`; Mapper scope card. | `memoria-mapper` |
+| `Memoria: new project` | `40-workbench/<name>/` + `README.md` (`project-note`); Mapper scope card. | `memoria-mapper` |
 | `Memoria: scope this project` | `corpus-map.md` in `40-workbench/<project>/01-map/`. | `memoria-mapper` |
 | `Memoria: frame this section` | Outlines in `40-workbench/<project>/02-framing/`. | `memoria-writer` |
 | `Memoria: verify this draft` | Verification report in `40-workbench/<project>/05-verification/`. | `memoria-verifier` |
@@ -53,7 +53,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 | --- | --- | --- |
 | `Memoria: approve all link suggestions` | Bulk-approves all `review_status: requested` cards. | QuickAdd → POST Hermes API (bulk approve) |
 | `Memoria: lint this note` | Linter dry-run report on the active note. | QuickAdd → POST Hermes API (assignee: `memoria-linter`) |
-| `Memoria: show lane status` | Opens `index.md` dashboard in right sidebar. | QuickAdd → workspace pane |
+| `Memoria: show lane status` | Opens the `daily-health.md` (Daily Health) dashboard in right sidebar. | QuickAdd → workspace pane |
 
 ## Lens-based reading (Socratic, parameterized)
 
@@ -70,6 +70,6 @@ Each lens is one command. Adding a lens = adding one QuickAdd entry.
 
 ## Related
 
-- Hermes CLI commands (per-profile + board management): [hermes-cli.md](hermes-cli.md)
+- Hermes CLI commands (per-profile + board management): [Hermes CLI](hermes-cli.md)
 - Policy on commands that target review-gated zones: [policy-mcp.md — Review-gated zones](policy-mcp.md)
-- Invocation patterns and hotkey discipline: [how-to-guides/obsidian-command-palette.md](../how-to-guides/using-obsidian/obsidian-command-palette.md)
+- Invocation patterns and hotkey discipline: [How to use the Memoria command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md)

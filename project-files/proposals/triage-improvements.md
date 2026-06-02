@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Triage improvements
 status: deferred
 created: 2026-05-31
 ---
@@ -36,9 +37,9 @@ Capabilities that reduce the human's per-candidate judgment cost without moving 
 
 ## 3. Tournament ranking for triage
 
-**What.** When the discovery inbox is large (> 50 candidates), rank candidates by pairwise comparison — each pair evaluated by the LLM against `research-directions.md` — to surface the top-N most relevant candidates first. The human reviews in ranked order; lower-ranked candidates can be deferred.
+**What.** When the discovery inbox is large (> 50 candidates), rank candidates by pairwise comparison — each pair evaluated by the LLM against `research-focus.md` — to surface the top-N most relevant candidates first. The human reviews in ranked order; lower-ranked candidates can be deferred.
 
-**Trade-offs.** Pairwise comparison costs scale quadratically with queue size. Ranking is personalized only if `research-directions.md` is current.
+**Trade-offs.** Pairwise comparison costs scale quadratically with queue size. Ranking is personalized only if `research-focus.md` is current.
 
 **Adoption trigger.** Inbox regularly exceeds 50 candidates *and* the learning-to-rank model (see `classical-method-displacements.md §Learning-to-rank`) is not yet trained (this is the expensive cold-start alternative).
 

@@ -54,7 +54,7 @@ The Verifier surfaces candidates. You make every structural decision — merge, 
 
 ## Related
 
-- Run the Linter after structural edits: [run-the-linter.md](run-the-linter.md)
-- The compound-note failure refactoring fixes: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
-- The note structure you are refactoring toward: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
-- Note types and their boundaries: [note-types.md](../../explanation/knowledge/note-types.md)
+- Run the Linter after structural edits: [How to run the Linter](run-the-linter.md)
+- The compound-note failure refactoring fixes: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
+- The note structure you are refactoring toward: [Note body structure](../../explanation/knowledge/note-body-structure.md)
+- Note types and their boundaries: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)

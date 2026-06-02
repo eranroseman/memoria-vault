@@ -10,27 +10,23 @@ Run the Mapper's `scope-project` command to get a corpus map — a structured re
 
 ## Prerequisites
 
-- A project folder scaffolded in `40-workbench/<project-slug>/` with a `brief.md`
+- A project folder scaffolded in `40-workbench/<project-slug>/` with its `README.md` project-note (from [Start a writing project](start-a-writing-project.md))
 - The Mapper profile installed
 - At least 5 claim notes in `30-synthesis/` (fewer than that and the map is mostly gaps)
 
 ## Steps
 
-**1. Write `brief.md` in the project folder.**
+**1. Confirm the project-note describes the deliverable.**
 
-Create `40-workbench/<project-slug>/brief.md` with:
+The Mapper scopes against the project-note (`40-workbench/<project-slug>/README.md`, `type: project-note`) created in the previous step. Before running, make sure its body states the deliverable and target — for example:
 
-```yaml
----
-type: project-brief
-project: <project-slug>
-deliverable: "journal article / chapter / report / etc."
-audience: "who reads it"
-length: "approx. word count or page count"
----
+```text
+Deliverable: journal article / chapter / report / etc.
+Audience: who reads it
+Length: approx. word count or page count
 ```
 
-In the body, write 2–4 sentences describing the research question and any framing constraints (e.g., "needs to foreground equity considerations," "must cover 2020–2025 literature only").
+and 2–4 sentences on the research question and any framing constraints (e.g., "needs to foreground equity considerations," "must cover 2020–2025 literature only"). Fill `scope` and `research_question` in the frontmatter to match.
 
 **2. Start a Mapper session and run `scope-project`.**
 
@@ -44,7 +40,7 @@ The Mapper retrieves all claim notes and reference notes matching the brief, com
 
 **3. Read the corpus map.**
 
-The output is written to `40-workbench/<project-slug>/01-corpus-map/corpus-map.md`. Open it in Obsidian. Look for:
+The output is written to `40-workbench/<project-slug>/01-map/corpus-map.md`. Open it in Obsidian. Look for:
 
 - **Dense clusters** — areas with multiple claims; safe to draft from
 - **Thin clusters** — mentioned but under-evidenced; may need more reading before drafting
@@ -76,12 +72,12 @@ Whichever you run, read the output by pattern:
 
 ## Verify
 
-- `40-workbench/<project-slug>/01-corpus-map/corpus-map.md` exists and has content
+- `40-workbench/<project-slug>/01-map/corpus-map.md` exists and has content
 - You've made an explicit "write now / read more" decision — not just noted the map and moved on
 
 ## Related
 
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Frame a project](frame-a-project.md)
-- Find new sources (if gaps need filling): [find-new-sources.md](../sources/find-new-sources.md)
-- Conceptual background on the Mapper: [mapper.md](../../explanation/profiles/mapper.md)
+- Find new sources (if gaps need filling): [How to find new sources](../sources/find-new-sources.md)
+- Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/mapper.md)

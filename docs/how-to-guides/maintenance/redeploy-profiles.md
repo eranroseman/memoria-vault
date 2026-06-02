@@ -20,11 +20,11 @@ Push vault source edits — to `SOUL.md`, `config.yaml`, `mcp.json`, skills, or 
 **1. Redeploy all profiles.** Run from the repo clone (it holds the installer); `--profiles-only` skips the full bootstrap and just re-deploys profiles.
 
 ```bash
-bash install.sh --profiles-only      # Linux / WSL2 (where Hermes runs)
+bash scripts/install.sh --profiles-only      # Linux / WSL2 (where Hermes runs)
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly          # Windows (forwards to install.sh in WSL2)
+.\scripts/install.ps1 -ProfilesOnly          # Windows (forwards to scripts/install.sh in WSL2)
 ```
 
 Add `--vault <dir>` (`-Vault <dir>` on Windows) if your runtime vault isn't the default `~/Memoria`. The script is idempotent — safe to run at any time. It:
@@ -37,11 +37,11 @@ Add `--vault <dir>` (`-Vault <dir>` on Windows) if your runtime vault isn't the 
 **2. Redeploy a single profile** (faster when only one changed):
 
 ```bash
-bash install.sh --profiles-only --only memoria-linter
+bash scripts/install.sh --profiles-only --only memoria-linter
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly -Only memoria-linter
+.\scripts/install.ps1 -ProfilesOnly -Only memoria-linter
 ```
 
 **3. Confirm the change landed.**
@@ -52,7 +52,7 @@ hermes profile show memoria-<name>
 
 The output should reflect the edit you made (e.g., updated model name, new MCP server entry).
 
-For lane-override changes, verify with a test write operation — check `00-meta/02-logs/audit.jsonl` to confirm the new policy is enforced.
+For lane-override changes, verify with a test write operation — check `99-system/logs/audit.jsonl` to confirm the new policy is enforced.
 
 ## Verify
 
@@ -74,7 +74,7 @@ Output should show no drift for any profile.
 
 ## Related
 
-- Profile configuration guide: [configuration.md](../using-hermes-agent/configuration.md)
-- Fix profile drift: [fix-profile-drift.md](../recovery/fix-profile-drift.md)
-- Set up profiles (first install): [set-up-hermes.md](../setup/set-up-hermes.md)
-- The idempotency mechanism: [distribution-model.md](../../explanation/deployment/distribution-model.md)
+- Profile configuration guide: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
+- Fix profile drift: [How to fix profile drift](../recovery/fix-profile-drift.md)
+- Set up profiles (first install): [How to set up Hermes](../setup/set-up-hermes.md)
+- The idempotency mechanism: [Distribution model](../../explanation/deployment/distribution-model.md)

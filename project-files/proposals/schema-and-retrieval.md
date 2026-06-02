@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Schema and retrieval extensions
 status: deferred
 created: 2026-05-31
 ---
@@ -20,7 +21,9 @@ Capabilities that make the vault's knowledge graph richer and more queryable.
 
 **Adoption trigger.** Both must hold: (1) ≥ 200 claim notes with ≥ 500 inter-claim wikilinks, *and* (2) the human notices wanting "find similar" queries and resorting to manual backlink walks.
 
-**Guard.** Adopt one value at a time. `similar` first. Earn `cross-domain` only if `similar` proves useful. Do not adopt the full PARNESS four-value taxonomy from day one — it was designed for ML/science workflows and may be wrong-shaped for knowledge work.
+A further candidate value is **`uses-method`** — a methodological-provenance relation on a claim-note pointing to the method-note it operationalizes, enabling "find all claims that used measurement approach X." It composes with the `_aspects.method` field in §2 below: the aspect says *what* method a paper used; the typed relation says *which existing method note* a claim reuses. Sequence it after `similar` — it is only worth the typing discipline once method-notes are a populated, linked layer.
+
+**Guard.** Adopt one value at a time. `similar` first. Earn `cross-domain` (and `uses-method`) only if `similar` proves useful. Do not adopt the full PARNESS four-value taxonomy from day one — it was designed for ML/science workflows and may be wrong-shaped for knowledge work.
 
 ---
 
@@ -31,6 +34,8 @@ Capabilities that make the vault's knowledge graph richer and more queryable.
 The other two MASSW fields (`context` and `projected_impact`) are intentionally skipped: `context` overlaps with `topic:` and the existing summary; `projected_impact` requires post-publication evidence that ingest doesn't have.
 
 **Trade-offs.** Adds LLM calls at ingest (one per paper for aspect extraction). Aspects extracted from an abstract are lower quality than from the full text; Marker-extracted body text improves accuracy when available.
+
+**Extraction mechanism.** For papers whose method or outcome is carried by a figure or table rather than prose, Hermes's `vision_analyze` reads the figure/table directly — making `_aspects.method` / `_aspects.outcome` figure-informed rather than abstract-only. It is available now but not wired into the v0.1 ingest pipeline; this proposal is the natural place it gets adopted (the [ingest reference](../../docs/reference/ingest.md) notes it as an available extraction path).
 
 **Adoption trigger.** The Librarian is regularly ingesting papers *and* the human notices wanting to filter by method or outcome and resorting to reading full summaries.
 

@@ -17,7 +17,7 @@ A single configurable `review_mode` setting with two values:
 - **`blocking`** (default, the only recommended operating mode). Current behavior, unchanged: dispatch refuses to advance a card out of `done`/awaiting-review without human `review_status: approved`.
 - **`advisory`** (study-only). The `agent_recommendation` is still written and surfaced but does **not** structurally block — a card may advance/promote without approval. This deliberately removes the safety property.
 
-Three invariants make the mode evidence rather than just a weaker system: (1) the same five-signal instrumentation fires identically in both modes (commensurability is the point); (2) every logged event is stamped with its arm (`review_mode`), set live because the attribution is non-backfillable; (3) the default is `blocking` and advisory must be explicitly, narrowly enabled — per study, time-boxed, ideally within-subject.
+Three invariants make the mode evidence rather than just a weaker system: (1) the same six-signal instrumentation fires identically in both modes (commensurability is the point); (2) every logged event is stamped with its arm (`review_mode`), set live because the attribution is non-backfillable; (3) the default is `blocking` and advisory must be explicitly, narrowly enabled — per study, time-boxed, ideally within-subject.
 
 ## Why
 
@@ -50,7 +50,7 @@ Committing to the Path 2/3 comparison study. `advisory` mode is not part of the 
 
 ## Related
 
-- **Workflows:** [Verify](../../docs/how-to-guides/writing/verify-and-revise.md), [Promote](../../docs/how-to-guides/sources/promote-a-claim.md); board dispatch rules ([timeline](../plans/timeline.md)).
-- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](measurement-and-verification.md); the publication-instrumentation track in [timeline.md](../plans/timeline.md).
+- **Workflows:** [Verify](../../docs/how-to-guides/writing/verify-and-revise.md), [Promote](../../docs/how-to-guides/sources/promote-a-claim.md); board dispatch rules ([timeline](../plans/release-plan-v0.1-spillover.md)).
+- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](measurement-and-verification.md); the publication-instrumentation track in [release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md).
 - **Related decisions:** [ADR-03 structural review gate](../decisions/03-structural-review-gate.md), [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md), [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

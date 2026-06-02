@@ -38,9 +38,9 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 **Explanation**
 
 - Dashboard opened first thing every morning: [Daily Health](../daily-glance/daily-health.md)
-- Reading-stage companion: [reading-pipeline](../synthesis-agenda/reading-pipeline.md)
-- Why the ritual matters: [knowledge-cycle.md](../../knowledge/knowledge-cycle.md)
-- The dashboards overview: [README.md](../README.md)
+- Reading-stage companion: [The reading-pipeline dashboard](../synthesis-agenda/reading-pipeline.md)
+- Why the ritual matters: [The knowledge cycle](../../knowledge/knowledge-cycle.md)
+- The dashboards overview: [Dashboards](../README.md)
 
 **How-to**
 

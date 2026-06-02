@@ -10,8 +10,8 @@ Use the Writer profile to generate outline proposals, draft prose, and suggest s
 
 ## Prerequisites
 
-- A writing project scaffolded with a corpus map ([start-a-writing-project.md](start-a-writing-project.md))
-- At least one framing chosen — either from a Writer `counter-outline` session or written by hand in `00-framing/CHOSEN.md`
+- A writing project scaffolded with a corpus map ([How to start a writing project](start-a-writing-project.md))
+- At least one framing chosen — either from a Writer `counter-outline` session or written by hand in `02-framing/CHOSEN.md`
 - The Writer profile installed
 
 ## Steps
@@ -24,10 +24,10 @@ If you haven't committed to a structure yet:
 hermes -p memoria-writer chat -s draft
 # then, in the session:
 /counter-outline "question: <your research question>" \
-  --context 40-workbench/<project>/01-corpus-map/corpus-map.md
+  --context 40-workbench/<project>/01-map/corpus-map.md
 ```
 
-The Writer generates 2–3 competing argument structures. Save the one you choose to `00-framing/CHOSEN.md`.
+The Writer generates 2–3 competing argument structures. Save the one you choose to `02-framing/CHOSEN.md`.
 
 **2. For section-length work (8–15 claims), arrange on Canvas before drafting.**
 
@@ -47,7 +47,7 @@ Provide the Writer with your outline and relevant claim notes as context:
 
 ```bash
 /draft "write an introduction for: <section topic>" \
-  --context 40-workbench/<project>/02-outline/outline.md \
+  --context 40-workbench/<project>/02-framing/CHOSEN.md \
   --context 30-synthesis/01-claims/<claim1>.md \
   --context 30-synthesis/01-claims/<claim2>.md
 ```
@@ -80,4 +80,4 @@ Read the `[!verification]` callout at the top of the draft file after each commi
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Verify and revise a draft](verify-and-revise.md)
 - Canvas sub-workflow: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
-- Conceptual background on the Writer: [writer.md](../../explanation/profiles/writer.md)
+- Conceptual background on the Writer: [The Writer](../../explanation/profiles/writer.md)

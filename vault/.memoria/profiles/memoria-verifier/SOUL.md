@@ -37,7 +37,7 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 ## Core skills
 
 - Claim tracing (claim → paper note) — hybrid: regex citation extraction + embedding similarity for matching, with LLM fallback only on the ambiguous middle band.
-- Citation verification (citekey → resolved note) — deterministic regex extraction + lookup against `.memoria/library.bib`.
+- Citation verification (citekey → resolved note) — deterministic regex extraction + lookup against `.memoria/memoria.bib`.
 - Similarity retrieval — cosine similarity over sentence-transformer embeddings via the `qmd` skill (hybrid BM25 + vector; `vsearch`/`search` modes are deterministic — no LLM rerank). Used for duplicate detection (`similarity-check`, `find-duplicates`) and for claim-source matching.
 - Retraction lookup — the `retraction-check` authored skill (open-retractions API + CrossRef) with `pyzotero` resolving Zotero items / DOIs.
 

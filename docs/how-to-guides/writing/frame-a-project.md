@@ -10,7 +10,7 @@ Generate 2–3 competing argument structures, optionally run a lens reading thro
 
 ## Prerequisites
 
-- A corpus map exists for this project ([assess-your-corpus.md](assess-your-corpus.md))
+- A corpus map exists for this project ([How to assess your corpus for a project](assess-your-corpus.md))
 - The Writer and Socratic profiles are installed
 
 ## Steps
@@ -60,5 +60,5 @@ The `CHOSEN.md` file is required before the project card can advance to drafting
 
 - Previous step: [Assess your corpus](assess-your-corpus.md)
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- Socratic lens-reading and write-denial: [socratic.md](../../explanation/profiles/socratic.md)
-- The Writer's counter-outline: [writer.md](../../explanation/profiles/writer.md)
+- Socratic lens-reading and write-denial: [The Socratic](../../explanation/profiles/socratic.md)
+- The Writer's counter-outline: [The Writer](../../explanation/profiles/writer.md)

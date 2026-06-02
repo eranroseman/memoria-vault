@@ -39,6 +39,6 @@ Never a global flag. Opt-in per `code-note`, and only for code whose success is 
 ## Related
 
 - **Workflows:** [Code](../../docs/how-to-guides/writing/create-a-code-artifact.md)
-- **Files:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), `00-meta/03-templates/code-note.md`
+- **Files:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), `99-system/templates/code-note.md`
 - **Related proposal:** [discovery-loop.md](discovery-loop.md) §2 (Coder experiment loop) — the keep/revert variant of the same Coder-lane autonomy; this proposal is the *scheduled-script* variant.
 - **Bounded by:** [ADR-21 L3 autonomy ceiling](../decisions/21-l3-autonomy-ceiling.md) (the Coder exception).

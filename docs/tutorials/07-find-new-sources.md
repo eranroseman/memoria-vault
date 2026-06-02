@@ -107,7 +107,7 @@ For each candidate you review, make one decision.
 1. Open the paper in a browser. The candidate note has a DOI or URL.
 2. Add it to Zotero using the browser connector or by dragging the PDF.
 3. Pin the citekey immediately: right-click the Zotero item → **Better BibTeX → Pin BibTeX key**. Pin before doing anything else — an unpinned key can drift if you edit metadata later.
-4. Wait ~60 seconds for Better BibTeX's auto-export to update `library.bib`.
+4. Wait ~60 seconds for Better BibTeX's auto-export to update `memoria.bib`.
 5. Delete the candidate note — it's been replaced by a real source about to be ingested.
 
 **Exclude — not relevant, or already covered:**
@@ -158,7 +158,7 @@ Classify the new paper-note: [How to classify a source](../how-to-guides/sources
 
 Process outstanding candidates as part of your Friday ritual: [How to run the weekly review](../how-to-guides/maintenance/run-the-weekly-review.md).
 
-You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [how-to-guides/README.md](../how-to-guides/README.md).
+You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [How-to guides](../how-to-guides/README.md).
 
 ---
 

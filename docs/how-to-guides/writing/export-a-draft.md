@@ -12,7 +12,7 @@ Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, 
 
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
 - The draft is committed and the `[!verification]` callout shows `status: clean`
-- A `.bib` file in `.memoria/library.bib` (for bibliography rendering)
+- A `.bib` file in `.memoria/memoria.bib` (for bibliography rendering)
 
 ## Steps
 
@@ -25,12 +25,12 @@ At the top of your draft `.md` file, ensure:
 title: "Your Paper Title"
 author: "Your Name"
 date: 2026-05-31
-bibliography: ../../../../.memoria/library.bib
+bibliography: ../../../../.memoria/memoria.bib
 csl: ../../../../.memoria/csl/apa.csl   # or whichever CSL you're using
 ---
 ```
 
-Adjust the relative path to `.memoria/library.bib` based on your draft's depth inside the vault folder. For a draft at `40-workbench/project/04-drafts/draft.md`, four `../` climbs back to the vault root.
+Adjust the relative path to `.memoria/memoria.bib` based on your draft's depth inside the vault folder. For a draft at `40-workbench/project/04-drafts/draft.md`, four `../` climbs back to the vault root.
 
 **2. Export to Word (`.docx`).**
 
@@ -77,7 +77,7 @@ This runs the same Pandoc command via the Writer profile and writes the output t
 
 **6. Version the deliverable** when finalized.
 
-`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [export.md](../../reference/export.md)). Add a version suffix in place:
+`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [Export routes and formats](../../reference/export.md)). Add a version suffix in place:
 
 ```powershell
 Move-Item "vault\50-deliverables\01-manuscripts\<output>.docx" `
@@ -97,7 +97,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to docx \
   --lua-filter=/path/to/zotero.lua \
-  --output 40-workbench/<project>/05-deliverables/<output>.docx
+  --output 40-workbench/<project>/04-drafts/<output>.docx
 ```
 
 After export: open the `.docx` in Word → Zotero tab → Refresh. Citations convert to live Word fields and a bibliography is inserted.
@@ -120,7 +120,7 @@ Export as ODT with Scannable Cite markers, then run Zotero's RTF/ODF Scan to con
 pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to odt \
-  --output 40-workbench/<project>/05-deliverables/<output>.odt
+  --output 40-workbench/<project>/04-drafts/<output>.odt
 ```
 
 **2.** In Zotero: Tools → RTF/ODF Scan → select the `.odt` file → scan. Zotero rewrites the file with live LibreOffice Reference Mark citations.
@@ -129,7 +129,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 
 ## Known issues
 
-- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [failure-modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
+- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [Failure modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
 - **Obsidian wiki-links in draft:** Pandoc does not understand `[[wikilink]]` syntax. Convert links to standard Markdown `[text](path)` before export, or use a Pandoc Lua filter.
 
 ## Verify
@@ -141,7 +141,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Zotero .bib configuration export depends on: [set-up-zotero.md](../setup/set-up-zotero.md)
-- Export reference (formats, CSL): [export.md](../../reference/export.md)
-- The works-cited reference: [bibliography.md](../../reference/bibliography.md)
+- Zotero .bib configuration export depends on: [How to set up Zotero](../setup/set-up-zotero.md)
+- Export reference (formats, CSL): [Export routes and formats](../../reference/export.md)
+- The works-cited reference: [Bibliography](../../reference/bibliography.md)
 - CSL styles: stored at `.memoria/csl/` in the vault

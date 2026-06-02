@@ -1,8 +1,6 @@
-# `open-questions.md` — research agenda view
+# Open Questions
 
-**Location.** `00-meta/01-dashboards/open-questions.md`
-
-**Decision.** Turn the vault into a research agenda by collecting all explicit open questions. Use when planning the next research direction. Filter further by project or MOC as needed.
+Every claim/paper note carrying an explicit `Open questions` section — the vault as a research agenda. Open when planning the next direction; filter by project or MOC as needed. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/open-questions/).
 
 ```dataview
 TABLE file.link AS Note, file.mtime AS Modified

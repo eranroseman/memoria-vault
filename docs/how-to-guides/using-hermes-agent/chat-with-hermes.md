@@ -75,11 +75,11 @@ For commands that produce a report (lint, health-report, scope-project), redirec
 hermes -p memoria-linter chat -s lint <<< "/lint --dry-run" > lint-report.md
 ```
 
-Or run the session normally and copy the output — the profile logs session output to `00-meta/02-logs/session-log.md` if session-logging is enabled.
+Or run the session normally and copy the output — the profile logs session output to `99-system/logs/session-log.md` if session-logging is enabled.
 
 ## Related
 
-- Profile configuration: [configuration.md](configuration.md)
-- Ingest: [capture-and-ingest.md](../sources/capture-and-ingest.md)
-- Lint: [run-the-linter.md](../maintenance/run-the-linter.md)
-- Administrative CLI commands (profile, kanban, skills, cron): [reference/hermes-cli.md](../../reference/hermes-cli.md)
+- Profile configuration: [How to configure a Hermes profile](configuration.md)
+- Ingest: [How to capture and ingest a source](../sources/capture-and-ingest.md)
+- Lint: [How to run the Linter](../maintenance/run-the-linter.md)
+- Administrative CLI commands (profile, kanban, skills, cron): [Hermes CLI](../../reference/hermes-cli.md)

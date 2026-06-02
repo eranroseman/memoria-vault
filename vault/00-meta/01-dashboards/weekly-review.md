@@ -1,8 +1,6 @@
-# `weekly-review.md` — weekly ritual entry point
+# Weekly Review
 
-**Location.** `00-meta/01-dashboards/weekly-review.md`
-
-**Decision.** Open at the start of each weekly session and work top-to-bottom.
+The Friday ritual — open at the start of the weekly session and work top-to-bottom (~90 min). [Step-by-step procedure](https://eranroseman.github.io/memoria-vault/how-to-guides/maintenance/run-the-weekly-review/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/weekly-review/).
 
 ## Inbox review queue
 
@@ -17,7 +15,7 @@ SORT file.mtime ASC
 
 ## Discovery candidates
 
-Include or exclude discovery candidates from the corpus (the `candidate-note` type — see [note-types.md](../04-reference/schema-reference.md)).
+Include or exclude discovery candidates from the corpus (the `candidate-note` type — see [note types](https://eranroseman.github.io/memoria-vault/reference/note-types/)).
 
 ```dataview
 TABLE file.link AS Candidate, source, candidate_status, file.mtime AS Modified

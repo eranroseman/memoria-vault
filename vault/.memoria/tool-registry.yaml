@@ -59,4 +59,4 @@ profiles:
 
   memoria-linter:
     allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
-    notes: "terminal runs detectors.py; file reads the vault tree + Git; vault_write lane-scoped to 00-meta/02-logs/. No web/browser."
+    notes: "terminal runs detectors.py; file reads the vault tree + Git; vault_write lane-scoped to 99-system/logs/. No web/browser."

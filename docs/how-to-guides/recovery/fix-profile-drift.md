@@ -35,7 +35,7 @@ This compares the SHA-256 of every file in `vault/.memoria/profiles/` against it
 There are two causes with different implications:
 
 **Cause A: The vault source changed and the install script hasn't been re-run.**
-This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile-install (`bash install.sh --profiles-only`, or `.\install.ps1 -ProfilesOnly` on Windows).
+This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile-install (`bash scripts/install.sh --profiles-only`, or `.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
 **Cause B: Someone edited the deployed copy directly.**
 
@@ -54,21 +54,21 @@ If the diff shows meaningful changes in the deployed copy (not in the vault sour
 Re-run the profile-install after resolving Cause A or B (from the repo clone):
 
 ```bash
-bash install.sh --profiles-only      # Linux / WSL2
+bash scripts/install.sh --profiles-only      # Linux / WSL2
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly          # Windows
+.\scripts/install.ps1 -ProfilesOnly          # Windows
 ```
 
 To fix drift on a single profile only:
 
 ```bash
-bash install.sh --profiles-only --only memoria-linter
+bash scripts/install.sh --profiles-only --only memoria-linter
 ```
 
 ```powershell
-.\install.ps1 -ProfilesOnly -Only memoria-linter
+.\scripts/install.ps1 -ProfilesOnly -Only memoria-linter
 ```
 
 ## Verify
@@ -82,7 +82,7 @@ No drift reported for any profile.
 
 ## Related
 
-- Redeploy profiles (normal workflow): [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Profile configuration: [configuration.md](../using-hermes-agent/configuration.md)
-- Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)
-- The idempotency mechanism behind the fix: [distribution-model.md](../../explanation/deployment/distribution-model.md)
+- Redeploy profiles (normal workflow): [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Profile configuration: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
+- Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)
+- The idempotency mechanism behind the fix: [Distribution model](../../explanation/deployment/distribution-model.md)

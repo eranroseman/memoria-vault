@@ -5,9 +5,9 @@ parent: Deployment
 
 # Bootstrap installer
 
-The bootstrap installer — [`install.sh`](../../../install.sh) at the repo root, with [`install.ps1`](../../../install.ps1) as a thin WSL2 launcher — takes a user from nothing to a runnable Memoria install in one command: it installs the desktop apps (Obsidian, Zotero), provisions the Hermes runtime and the seven profiles, lays the vault down off OneDrive, and walks the user through the few steps that cannot be automated (secrets, Zotero GUI clicks).
+The bootstrap installer — [`scripts/install.sh`](../../../scripts/install.sh) at the repo root, with [`scripts/install.ps1`](../../../scripts/install.ps1) as a thin WSL2 launcher — takes a user from nothing to a runnable Memoria install in one command: it installs the desktop apps (Obsidian, Zotero), provisions the Hermes runtime and the seven profiles, lays the vault down off OneDrive, and walks the user through the few steps that cannot be automated (secrets, Zotero GUI clicks).
 
-This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [reference/installer.md](../../reference/installer.md).
+This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../reference/installer.md).
 
 ## Why a bootstrap
 
@@ -18,7 +18,7 @@ Before the bootstrap, the shipped installer did only one of the nine setup steps
 **Goals**
 
 - One command from zero to a runnable vault on Linux (Ubuntu/Debian) and Windows.
-- Idempotent: safe to re-run after a `git pull` (the per-profile redeploy path survives as `install.sh --profiles-only`).
+- Idempotent: safe to re-run after a `git pull` (the per-profile redeploy path survives as `scripts/install.sh --profiles-only`).
 - Detect-then-install; never clobber existing apps or credentials.
 - Honest about what it cannot do (GUI clicks, secrets) — explain, don't fake.
 
@@ -38,7 +38,7 @@ The installer is offered two ways, with **inspect-first as the documented primar
 Per Memoria's runtime model, **Hermes runs only on Linux/WSL2; Windows is the editing surface**. WSL2 is therefore a **hard prerequisite for the entire Windows install**, checked first:
 
 - **No WSL2 → the installer does nothing.** It explains that Memoria on Windows requires WSL2, links Microsoft's guide, and exits without installing anything (enabling WSL2 needs admin + a reboot, so the installer won't attempt it).
-- **WSL2 present → proceed.** The thin `install.ps1` ensures Obsidian and Zotero on the Windows side, then hands the entire rest of the flow to `bash install.sh` inside WSL2.
+- **WSL2 present → proceed.** The thin `scripts/install.ps1` ensures Obsidian and Zotero on the Windows side, then hands the entire rest of the flow to `bash scripts/install.sh` inside WSL2.
 
 **One WSL2 path, not two.** The installer always attempts the automatic in-WSL invocation and **echoes each WSL command before running it**; if a step fails (or under `--dry-run`), those printed commands are the manual fallback. "Manual" is the transparency/recovery output of the single automatic path, not a separate mode — which keeps the one-line promise while staying debuggable.
 
@@ -46,8 +46,8 @@ Per Memoria's runtime model, **Hermes runs only on Linux/WSL2; Windows is the ed
 
 There are two files but **one implementation**:
 
-- **`install.sh` (bash)** is the single real script. It holds the whole bootstrap flow *and* the profile-install logic (refactored from a top-to-bottom script into a function the bootstrap calls). `--profiles-only` exposes just that function for the "re-run after `git pull`" redeploy path; `--only NAME[,NAME]` restricts it to named profiles.
-- **`install.ps1` (PowerShell)** is a **thin launcher only**: gate on WSL2 → ensure the two GUI apps Windows-side → `wsl bash install.sh` (forwarding flags). It contains no install logic.
+- **`scripts/install.sh` (bash)** is the single real script. It holds the whole bootstrap flow *and* the profile-install logic (refactored from a top-to-bottom script into a function the bootstrap calls). `--profiles-only` exposes just that function for the "re-run after `git pull`" redeploy path; `--only NAME[,NAME]` restricts it to named profiles.
+- **`scripts/install.ps1` (PowerShell)** is a **thin launcher only**: gate on WSL2 → ensure the two GUI apps Windows-side → `wsl bash scripts/install.sh` (forwarding flags). It contains no install logic.
 
 This is correctness, not just simplification: Hermes is WSL2-only on Windows, so profiles must be installed *inside* WSL — a native PowerShell `hermes profile install` could never work end-to-end. The real logic has to live in bash; PowerShell can only be a doorway into the Linux side. Both files live at the repo root because the bootstrap is the clone/entry point, not a vault-internal artifact — which is also why [`vault/` is no longer independently installable](distribution-model.md).
 
@@ -66,7 +66,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Surface area** is still nontrivial (WSL2 orchestration + Zotero `.xpi` handling), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the GUI/secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the Zotero/secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **Distribution-model change:** `vault/` stops being independently distributable. Acceptable because the real workflow is cloning the whole repo, but it is a deliberate reversal recorded in [ADR-26](../../../project-files/decisions/26-repo-as-install-unit.md) and [distribution-model.md](distribution-model.md).
+- **Distribution-model change:** `vault/` stops being independently distributable. Acceptable because the real workflow is cloning the whole repo, but it is a deliberate reversal recorded in [ADR-26](../../../project-files/decisions/26-repo-as-install-unit.md) and [Distribution model](distribution-model.md).
 
 ## Decisions (v0.1, settled)
 
@@ -77,14 +77,14 @@ Each trades a little breadth for much less shell to build and maintain:
 5. **WSL2 modes:** one path, not two (automatic in-WSL invocation that echoes its commands).
 6. **Windows without WSL2:** install nothing; link Microsoft's guide and exit.
 7. **Model provider:** v0.1 is KiloCode-only; no separate Anthropic key required.
-8. **One bash implementation; `install.ps1` is a thin WSL2 launcher.**
+8. **One bash implementation; `scripts/install.ps1` is a thin WSL2 launcher.**
 9. **Guide app install, don't fully automate** (detect, then show/run on consent).
 10. **Presence checks, not version gates;** `local-only` deployment assumed.
 11. **Keep the safety rails** — `--dry-run`, up-front consent, `main`-guard.
 
 ## Related
 
-- **Reference:** [installer.md](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
+- **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-26 the repo is the install unit](../../../project-files/decisions/26-repo-as-install-unit.md).
-- **Explanation:** [distribution-model.md](distribution-model.md) (the repo as install unit), [why-hermes.md](../rationale/why-hermes.md) (the runtime the installer provisions).
-- **How-to:** [quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).
+- **Explanation:** [Distribution model](distribution-model.md) (the repo as install unit), [Why Hermes](../rationale/why-hermes.md) (the runtime the installer provisions).
+- **How-to:** [How to install Memoria: quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).

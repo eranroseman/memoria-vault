@@ -48,7 +48,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | Profile | Primary role | Core commands | Allowed skills | Invocation level |
 | --- | --- | --- | --- | --- |
 | **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query`, `export prior-labels` | `paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `obsidian`, `qmd`, `obsidian-paper-note`, `rest-passthrough` | Level 1 (cron) + Level 2 (Kanban) |
-| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map`, `comparative-brief` | `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 2 (Kanban) |
+| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map` | `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 2 (Kanban) |
 | **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `obsidian` (read-only) | Level 3 (interactive only) |
 | **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
 | **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
@@ -87,7 +87,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 `W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the exact subfolder, note types, and command/skill responsible.
 
-Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [why-specialist-profiles.md](../explanation/rationale/why-specialist-profiles.md) for the design rationale.
+Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [Why specialist profiles, not a generalist agent](../explanation/rationale/why-specialist-profiles.md) for the design rationale.
 
 | Profile | `00-meta` | `10-inbox` | `20-sources` | `30-synthesis/01-claims` | `30-synthesis/02-reference` | `30-synthesis/03-moc` | `40-workbench` | `50-deliverables` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -97,7 +97,7 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 | **Writer** | R | W (`02-answers/`) | R | R | W drafts (review-gated) | R (suggest only) | W (drafts, framing, canvas) | R (export = dry-run) |
 | **Verifier** | R | W (`03-candidates/` only) | R | R | R | R | W (`*/05-verification/*`) | R |
 | **Coder** | R | R | R | R | R | R | W (`*/06-code/`) | R (export = dry-run) |
-| **Linter** | W (`02-logs/` only) | R | R | R | R | R | R | R |
+| **Linter** | W (`99-system/logs/` only) | R | R | R | R | R | R | R |
 
 ### Per-profile write detail — where, what, why
 
@@ -109,23 +109,23 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 | **Writer** | `10-inbox/02-answers/`; `40-workbench/*/{02-framing,03-canvas,04-drafts}/`; `30-synthesis/02-reference/**` and `50-deliverables/**` (both review-gated → `dry_run`) | `answer-note`, framing/canvas/`draft`; proposed `reference-note`, `deliverable` | `draft`, `query`, `promote` (handoff); `llm-wiki` / `obsidian-markdown` / `scientific-writing` skills |
 | **Verifier** | `10-inbox/03-candidates/` (gap cards), `40-workbench/*/05-verification/` | gap candidate notes, `[!verification]` reports | `cite-check`, `similarity-check`, `find-duplicates` |
 | **Coder** | `40-workbench/*/06-code/` | `code-note`, code artifacts | `code`, `scaffold`, `commit`, `revert` |
-| **Linter** | `00-meta/02-logs/` only | audit/session logs, rotation archive | `session-log`, log rotation (auto-fix class `authorized-targeted`) |
+| **Linter** | `99-system/logs/` only | audit/session logs, rotation archive | `session-log`, log rotation (auto-fix class `authorized-targeted`) |
 
-**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/` except logs) remain human-owned.** Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are allowed in the lane-override but the policy MCP degrades them to `dry_run` until a human approves. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
+**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/`) remain human-owned.** The Linter's only write zone is `99-system/logs/`. Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are allowed in the lane-override but the policy MCP degrades them to `dry_run` until a human approves. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
 
 ---
 
 ## Linter: the eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [The Linter](../explanation/profiles/linter.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 
 | Slug | Severity | Implementation | Catches |
 | --- | --- | --- | --- |
-| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
+| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `scripts/install.sh --profiles-only`). |
 | `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
-| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
+| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/` skeleton notes lag the design spec they mirror. |
 | `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
 | `command-vocab-drift` | MEDIUM | agent procedure (SOUL.md scan) | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
 | `plugin-config-drift` | MEDIUM | agent procedure (git HEAD diff) | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
@@ -166,5 +166,5 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 ## Related
 
-- Conceptual grouping and rationale: [profiles/README.md](../explanation/profiles/README.md)
-- Linter detectors, auto-fix classes, and severity scale: [linter.md](linter.md)
+- Conceptual grouping and rationale: [Profiles](../explanation/profiles/README.md)
+- Linter detectors, auto-fix classes, and severity scale: [Linter: detectors and auto-fix](linter.md)

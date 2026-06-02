@@ -39,6 +39,6 @@ Adopt a **`relations:` frontmatter block** on claim-notes for *associative* type
 ## Related
 
 - **Workflows affected:** [Distill](../../docs/how-to-guides/sources/write-a-claim-note.md) (where `contradicts` / `supports` are set), [Promote](../../docs/how-to-guides/sources/promote-a-claim.md), [Query](../../docs/how-to-guides/writing/query-the-vault.md) (relation-aware retrieval).
-- **Files affected:** [vault/frontmatter.md](../../docs/reference/frontmatter.md) (the `relations:` namespace + vocabulary), [vault/note-types.md](../../docs/reference/note-types.md) + `00-meta/03-templates/claim-note.md`, the Linter's `structural-detectors.md` (vocabulary check), [dashboards/contradictions.md](../../docs/explanation/dashboards/synthesis-agenda/contradictions.md) (consumer).
+- **Files affected:** [vault/frontmatter.md](../../docs/reference/frontmatter.md) (the `relations:` namespace + vocabulary), [vault/note-types.md](../../docs/reference/note-types.md) + `99-system/templates/claim-note.md`, the Linter's `structural-detectors.md` (vocabulary check), [dashboards/contradictions.md](../../docs/explanation/dashboards/synthesis-agenda/contradictions.md) (consumer).
 - **Required by:** [ADR-9 (Contradictions dashboard)](09-contradictions-dashboard.md) — now unblocked.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (the temporal relation kept top-level; this generalizes the associative rest).

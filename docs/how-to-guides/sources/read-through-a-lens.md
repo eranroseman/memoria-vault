@@ -44,7 +44,7 @@ If a session is loaded with one lens, stay in it. Switching lenses mid-session m
 
 **4. Read actively — the lens shapes questions, not answers.**
 
-Socratic questions the text in front of you through the frame; it will not summarize your thinking back to you, fetch new context, or propose links. Nothing is written to the vault — the entire product is the conversation. The session logs to `00-meta/02-logs/audit.jsonl` (the paper note, the lens, and the duration).
+Socratic questions the text in front of you through the frame; it will not summarize your thinking back to you, fetch new context, or propose links. Nothing is written to the vault — the entire product is the conversation. The session logs to `99-system/logs/audit.jsonl` (the paper note, the lens, and the duration).
 
 **5. Capture what the lens surfaced — yourself.**
 
@@ -68,12 +68,12 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 
 - `Cmd-P → read through` lists the lens command (including any you added).
 - A session opened in a lens stays in that frame and questions through it.
-- `00-meta/02-logs/audit.jsonl` records the session with the lens name.
+- `99-system/logs/audit.jsonl` records the session with the lens name.
 
 ## Related
 
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Redeploy after adding a lens: [Redeploy profiles](../maintenance/redeploy-profiles.md)
-- Command catalog: [obsidian-command-palette.md](../../reference/obsidian-command-palette.md); palette setup: [obsidian-command-palette.md](../using-obsidian/obsidian-command-palette.md)
+- Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [How to use the Memoria command palette](../using-obsidian/obsidian-command-palette.md)
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)

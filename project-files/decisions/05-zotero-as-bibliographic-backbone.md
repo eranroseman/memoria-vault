@@ -17,7 +17,7 @@ Memoria needs a canonical source for bibliographic metadata — author, title, y
 
 ## Decision
 
-**Zotero** is the bibliographic backbone. Every citable source has a Zotero entry with a pinned **Better BibTeX (BBT)** citekey before the paper note is created. The vault's `library.bib` (auto-exported by Zotero on changes) is the source of truth for citation metadata. The Librarian reads from it; it never writes to it.
+**Zotero** is the bibliographic backbone. Every citable source has a Zotero entry with a pinned **Better BibTeX (BBT)** citekey before the paper note is created. The vault's `memoria.bib` (auto-exported by Zotero on changes) is the source of truth for citation metadata. The Librarian reads from it; it never writes to it.
 
 Citekeys follow the convention defined in [ADR-06](06-citekey-naming-convention.md).
 
@@ -30,14 +30,16 @@ The alternative of managing metadata in Obsidian frontmatter puts Memoria in the
 ## Consequences
 
 - A source must be in Zotero with a pinned BBT citekey before ingestion. The Librarian's ingest workflow fails if a citekey is missing.
-- The `library.bib` file lives at `.memoria/library.bib` and is excluded from git (it's large and user-specific). Each setup exports their own from Zotero.
+- The `memoria.bib` file lives at `.memoria/memoria.bib` and is excluded from git (it's large and user-specific). Each setup exports their own from Zotero.
 - PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`, not by copying the file into the vault.
-- ZotLit and similar Obsidian-native reference tools are explicitly not adopted — see [proposals/rejected-alternatives/zotlit.md](../rejected/zotlit.md).
+- Obsidian-native Zotero connectors (ZotLit, zotero-integration) are evaluated but not adopted — see the [connector comparison](../../docs/reference/zotero-plugins.md); the reasoning is in *Alternatives considered* below.
 
 ## Alternatives considered
 
 **Frontmatter-only metadata** — requires Memoria to implement deduplication, field normalization, and PDF management; Zotero already does all of this better.
 
-**ZotLit** — Obsidian plugin that pulls Zotero data directly; evaluated and rejected because it adds plugin dependency without improving the workflow. See [rejected-alternatives/zotlit.md](../rejected/zotlit.md).
+**ZotLit** (Obsidian plugin, reads Zotero's SQLite directly) — held as a *future migration target*, not adopted now. It is genuinely faster for bulk imports, but the daily one-paper-at-a-time flow doesn't justify the migration cost (re-aligning the paper-note template, re-validating the schema), and its Zotero 7 compatibility is unresolved. Adopt only when bulk-import volume — e.g. a scoping or systematic review ingesting dozens of papers at once — justifies it **and** Zotero 7 stability is confirmed. On migration the load-bearing settings are `databaseDir`, a `citationLibrary` matching the same Better BibTeX export so citekey vocabulary stays stable, and a `noteTemplate` reproducing the `_proposed_classification` / `_enrichment` blocks.
+
+**zotero-integration** (Obsidian plugin, Better BibTeX HTTP API) — evaluated, not in use. More capable than the BibTeX-file connector (color-coded annotation import, Nunjucks templates), but it only wins if PDF annotation moves *out* of Obsidian and *into* Zotero. Memoria's design keeps annotation in Obsidian via pdf-plus, so flipping that direction is a change to the human's daily rhythm, not a plugin swap.
 
 **External APIs on demand** — no offline guarantee; no single source of truth; metadata fetched differently on different runs produces drift.

@@ -6,7 +6,7 @@ parent: Setup
 
 # How to install Memoria: quickstart
 
-Five steps from zero to a working vault with one source ingested. For the full step-by-step guide with explanations, see [set-up-the-vault.md](set-up-the-vault.md) through [set-up-hermes.md](set-up-hermes.md).
+Five steps from zero to a working vault with one source ingested. For the full step-by-step guide with explanations, see [How to set up the vault](set-up-the-vault.md) through [How to set up Hermes](set-up-hermes.md).
 
 ## Prerequisites
 
@@ -20,19 +20,19 @@ Five steps from zero to a working vault with one source ingested. For the full s
 
 ```bash
 # Linux / WSL2:
-curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 ```
 
 ```powershell
 # Windows (PowerShell): gates WSL2, then runs the Linux installer
-irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
 The installer provisions Hermes, deploys the seven profiles, and copies the vault to your chosen folder (default `~/Memoria`, off OneDrive).
 
 **2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. All eight required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
-**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][shorttitle1_0]` (the ADR-6 canonical formula — first significant title word, not a fixed char count). Enable auto-export to `<vault>/.memoria/library.bib` (e.g. `~/Memoria/.memoria/library.bib`).
+**3. Wire Zotero.** In Zotero: Tools → Better BibTeX Preferences → Citation key formula: `[auth.lower][year][shorttitle1_0]` (the ADR-6 canonical formula — first significant title word, not a fixed char count). Enable auto-export to `<vault>/.memoria/memoria.bib` (e.g. `~/Memoria/.memoria/memoria.bib`).
 
 **4. Fill the Librarian's secrets.** Copy the Obsidian REST API key from Settings → Local REST API, then:
 
@@ -53,12 +53,12 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 ## Verify
 
 - `<vault>/20-sources/01-papers/<citekey>.md` exists and has a `[!brief]` callout.
-- `<vault>/00-meta/02-logs/audit.jsonl` shows at least one `allow_with_log` entry.
+- `<vault>/99-system/logs/audit.jsonl` shows at least one `allow_with_log` entry.
 - `hermes profile list` shows all seven `memoria-*` profiles.
 
 ## Related
 
-- Full install walkthrough: [set-up-the-vault.md](set-up-the-vault.md)
-- Plugin install details: [set-up-obsidian.md](set-up-obsidian.md)
-- Zotero configuration: [set-up-zotero.md](set-up-zotero.md)
-- API keys and profile secrets: [set-up-hermes.md](set-up-hermes.md)
+- Full install walkthrough: [How to set up the vault](set-up-the-vault.md)
+- Plugin install details: [How to set up Obsidian](set-up-obsidian.md)
+- Zotero configuration: [How to set up Zotero](set-up-zotero.md)
+- API keys and profile secrets: [How to set up Hermes](set-up-hermes.md)

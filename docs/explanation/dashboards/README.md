@@ -8,7 +8,7 @@ permalink: /explanation/dashboards/
 
 # Dashboards
 
-Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)
+Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is the `daily-health.md` dashboard.)
 
 | Group | Dashboards | When you look |
 |---|---|---|
@@ -33,6 +33,6 @@ When a dependency is missing (a plugin not installed, a log file not yet created
 
 ## Related
 
-- Dashboard lookup table (source files, sort orders, verdict band, trust score): [reference/dashboards.md](../../reference/dashboards.md)
-- How to operate the dashboards: [navigate-the-dashboards.md](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
-- The primary weekly entry point: [run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- Dashboard lookup table (source files, sort orders, verdict band, trust score): [Dashboards](../../reference/dashboards.md)
+- How to operate the dashboards: [How to navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- The primary weekly entry point: [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)

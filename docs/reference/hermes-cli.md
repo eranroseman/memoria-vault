@@ -5,7 +5,7 @@ parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [obsidian-command-palette.md](obsidian-command-palette.md).
+Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [Obsidian command palette](obsidian-command-palette.md).
 
 Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `mcp.json`. Per-profile research commands run as `hermes -p memoria-<name> chat -s <command> [args]`.
 
@@ -23,7 +23,7 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `ingest` | Create the note for a source in the right folder with enrichment. | No |
 | `enrich` | Re-run API enrichment on existing notes. | No |
 | `classify` | Re-propose `_proposed_classification` on a note still needing review. | No |
-| `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker. | No |
+| `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker and the inline `[!brief]` comparative read. | No |
 | `query` | Deterministic vault search (standalone retrieval). | No |
 | `export prior-labels` | Export vault papers as ASReview priors for pre-ingest screening (frontmatter filter + format conversion). | No |
 
@@ -34,7 +34,6 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `scope-project` | Corpus map for a project. Writes `corpus-map.md` to `<project>/01-map/`. | No |
 | `gap-report` | Thin-coverage topics adjacent to a project brief. | No |
 | `cluster-map` | Density / recency map for an arbitrary topic. | No |
-| `comparative-brief` | Compare a new source against existing claims. Drives `[!brief]` callout. | No |
 
 ### Socratic
 
@@ -81,7 +80,7 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `schema-migrate` | Propose schema changes between versions. Always dry-run first. | Yes (always required first) |
 | `graph-analyze` | Knowledge graph health: orphans, hubs, clusters, link density. | Yes |
 | `health-report` | Rolls structural findings into the verdict band (PASS / REVIEW / FAIL). | Yes |
-| `session-log` | Write per-session log to `00-meta/02-logs/`. | N/A |
+| `session-log` | Write per-session log to `99-system/logs/`. | N/A |
 | `dry-run` | Run any check in report-only mode. | Yes (by definition) |
 
 ---
@@ -111,7 +110,7 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 | Command | What it does |
 | --- | --- |
 | `hermes profile list` | List all registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --alias <alias> --force --yes` | Install or refresh a profile from a staged directory. In practice use `install.sh --profiles-only` — it handles `{{VAULT_PATH}}` substitution first. |
+| `hermes profile install <dir> --alias <alias> --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` — it handles `{{VAULT_PATH}}` substitution first. |
 | `hermes profile show <alias>` | Show a profile's `SOUL.md`, MCP servers, allowed skills, and `.env` key names (values redacted). |
 | `hermes profile remove <alias>` | Remove the profile registration. Does not delete the vault source files under `.memoria/profiles/`. |
 
@@ -142,15 +141,15 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 **Reference**
 
-- In-Obsidian command palette (`Memoria:` entries): [obsidian-command-palette.md](obsidian-command-palette.md)
-- Lane identifiers the commands map to: [profiles.md](profiles.md)
+- In-Obsidian command palette (`Memoria:` entries): [Obsidian command palette](obsidian-command-palette.md)
+- Lane identifiers the commands map to: [Profile capabilities](profiles.md)
 
 **How-to**
 
-- How to start a chat session: [how-to-guides/using-hermes-agent/chat-with-hermes.md](../how-to-guides/using-hermes-agent/chat-with-hermes.md)
-- How to configure a profile: [how-to-guides/using-hermes-agent/configuration.md](../how-to-guides/using-hermes-agent/configuration.md)
-- Kanban how-to (stuck cards, unblocking): [how-to-guides/recovery/fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)
+- How to start a chat session: [How to chat with a Hermes profile](../how-to-guides/using-hermes-agent/chat-with-hermes.md)
+- How to configure a profile: [How to configure a Hermes profile](../how-to-guides/using-hermes-agent/configuration.md)
+- Kanban how-to (stuck cards, unblocking): [How to fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
 
 **Explanation**
 
-- The profile explanation pages: [profiles/README.md](../explanation/profiles/README.md)
+- The profile explanation pages: [Profiles](../explanation/profiles/README.md)

@@ -7,7 +7,7 @@ parent: Reference
 
 Deterministic and hybrid methods Memoria uses, organized by purpose. The first seven are in active use; the last two (NLI, learning-to-rank) are catalogued candidates not yet shipped.
 
-For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [why-computational-methods](../explanation/rationale/why-computational-methods.md).
+For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md).
 
 ---
 
@@ -127,7 +127,7 @@ Training guidance:
 
 **Proposed use:** tournament ranking for triage — the reproducible, auditable alternative to LLM pairwise ranking.
 
-**Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-directions.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
+**Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-focus.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
 
 **Cold-start:** needs ~hundreds of past triage decisions before it beats existing scalar ordering. Use the scalar ordering or LLM tournament until then.
 
@@ -147,7 +147,7 @@ llm_backend: generic | open-notebook
 llm_backend_fallback: generic | none
 ```
 
-`generic` routes to the host profile's default LLM. `open-notebook` routes to a self-hosted Open Notebook instance for source-grounded RAG (currently pilot-scoped to one skill: `comparative-brief`).
+`generic` routes to the host profile's default LLM. `open-notebook` routes to a self-hosted Open Notebook instance for source-grounded RAG (currently pilot-scoped to the `[!brief]` comparative-read step in the Librarian's `obsidian-paper-note`).
 
 ---
 

@@ -42,7 +42,7 @@ relations:
 
 **4. Point with the exact slug.**
 
-The target is a wikilink to the other claim's **permanent slug** (lowercase kebab-case, subject-verb-object — see [linking.md](../../reference/linking.md#slug-conventions-for-wikilinks)). A mistyped slug is a dangling relation the dashboard can't resolve, and it fails silently. Copy the slug from the target note's filename rather than retyping it.
+The target is a wikilink to the other claim's **permanent slug** (lowercase kebab-case, subject-verb-object — see [Wikilink and link conventions](../../reference/linking.md#slug-conventions-for-wikilinks)). A mistyped slug is a dangling relation the dashboard can't resolve, and it fails silently. Copy the slug from the target note's filename rather than retyping it.
 
 **5. Let the agent propose, but confirm it yourself.**
 
@@ -67,12 +67,12 @@ For a `contradicts` link, open the [contradictions dashboard](../../explanation/
 
 **Reference**
 
-- Syntax and vocabulary: [linking.md — Typed relations](../../reference/linking.md#typed-relations-relations-block), [frontmatter.md](../../reference/frontmatter.md)
+- Syntax and vocabulary: [linking.md — Typed relations](../../reference/linking.md#typed-relations-relations-block), [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**
 
 - The consumer: [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md)
-- Why the Connections section is required: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
+- Why the Connections section is required: [Note body structure](../../explanation/knowledge/note-body-structure.md)
 
 **Background**
 

@@ -1,6 +1,7 @@
 ---
 title: Design principles
 parent: Overview
+nav_order: 3
 ---
 
 # Design principles
@@ -53,8 +54,8 @@ Research, writing, and coding all access the same agent from within their respec
 
 ## Related
 
-- Why these principles led to a human-gated system: [why-human-gate.md](../rationale/why-human-gate.md)
-- Why specialist profiles rather than one generalist: [why-specialist-profiles.md](../rationale/why-specialist-profiles.md)
-- Why not autonomous: [why-not-autonomous.md](../rationale/why-not-autonomous.md)
-- What the principles describe: [what-memoria-is.md](what-memoria-is.md)
-- Where the principles come from: [intellectual-foundations.md](intellectual-foundations.md)
+- Why these principles led to a human-gated system: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why specialist profiles rather than one generalist: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- Why not autonomous: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
+- What the principles describe: [What Memoria is](what-memoria-is.md)
+- Where the principles come from: [Intellectual foundations](intellectual-foundations.md)

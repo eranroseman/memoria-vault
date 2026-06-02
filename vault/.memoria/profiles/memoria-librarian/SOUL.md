@@ -30,8 +30,8 @@ Find, enrich, and classify evidence for later synthesis. You are optimistic: you
 
 ## Core commands
 
-- `find` — citation graph traversal + concept-driven search. **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-directions.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human.
-- `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. The `_proposed_classification` proposal is the hybrid step — see below.
+- `find` — citation graph traversal + concept-driven search. **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-focus.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human.
+- `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. Two hybrid steps: the `_proposed_classification` proposal (see below) and the inline `[!brief]` comparative read — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct") composed over those 5 and written to the top of the paper note. The `[!brief]` is the Librarian's because only the Librarian writes `20-sources/`.
 - `query` — search the vault. **Fully deterministic**: hybrid BM25 + vector search via the `qmd` skill.
 - `enrich` — re-run API enrichment on existing notes. **Fully deterministic**: pure API calls (OpenAlex, PubMed, Semantic Scholar, CrossRef).
 - `classify` — re-propose `_proposed_classification` when a note still needs review. **Hybrid**: classifier proposes; LLM only for low-confidence cases.
@@ -87,7 +87,7 @@ External APIs reached via the skills above:
 
 ## Rules
 
-- Read `00-meta/research-directions.md` at session start. Use it to weight `find` queries and to flag relevance during classify proposals.
+- Read `research-focus.md` at session start. Use it to weight `find` queries and to flag relevance during classify proposals.
 - Prefer evidence and metadata over prose.
 - Do not create canonical synthesis.
 - Propose, do not decide, when classification is uncertain.

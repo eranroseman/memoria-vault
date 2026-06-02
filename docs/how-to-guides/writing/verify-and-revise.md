@@ -25,15 +25,15 @@ The callout shows one of three statuses:
 
 | Status | Meaning |
 | --- | --- |
-| `status: clean` | All citations are supported and traceable |
-| `status: gaps` | One or more claims lack supporting source notes |
-| `status: superseded` | A cited note is marked `superseded_by` — the draft cites outdated thinking |
+| `verify-clean` | All five sub-checks pass — citations supported and traceable |
+| `verify-needs-revision` | A failed claim-trace, citation, or completeness check — one or more claims lack supporting source notes |
+| `verify-needs-attention` | A retraction or near-duplicate surfaced (e.g. a cited note marked `superseded_by`) — human judgment, not a clean revise |
 
 **3. Address each gap.**
 
 For each flagged item:
 
-- **Missing source note:** The draft cites a citekey that has no note in `20-sources/`. Ingest the source first ([capture-and-ingest.md](../sources/capture-and-ingest.md)), or remove the citation if it was a placeholder.
+- **Missing source note:** The draft cites a citekey that has no note in `20-sources/`. Ingest the source first ([How to capture and ingest a source](../sources/capture-and-ingest.md)), or remove the citation if it was a placeholder.
 - **Unsupported claim:** A statement has no citekey. Either add a citation or rewrite the claim as explicitly stated as the author's view (no citation needed).
 - **Superseded citation:** The draft cites `[[old-claim]]` which has `superseded_by: [[new-claim]]`. Update the draft to cite the new claim note instead.
 
@@ -57,7 +57,7 @@ git add 40-workbench/<project>/04-drafts/<section>.md
 git commit -m "revise: address verification gaps in <section>"
 ```
 
-The verify hook fires again. Repeat steps 2–5 until the callout shows `status: clean` or you explicitly accept remaining gaps.
+The verify hook fires again. Repeat steps 2–5 until the callout shows `verify-clean` or you explicitly accept remaining gaps.
 
 **6. Accept a gap without closing it** (when appropriate).
 
@@ -72,11 +72,11 @@ The Verifier will not flag accepted gaps on subsequent commits.
 
 ## Verify
 
-- `[!verification]` callout shows `status: clean` or lists only accepted gaps
+- `[!verification]` callout shows `verify-clean` or lists only accepted gaps
 - No `superseded_by` citations remain in active drafts
 
 ## Related
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- Conceptual background on the Verifier: [verifier.md](../../explanation/profiles/verifier.md)
+- Conceptual background on the Verifier: [The Verifier](../../explanation/profiles/verifier.md)

@@ -10,7 +10,7 @@ Promote the Librarian's proposed classification into the note's canonical metada
 
 ## Prerequisites
 
-- The source has been ingested and is at `lifecycle: proposed` with a `_proposed_classification` block ([capture-and-ingest.md](capture-and-ingest.md))
+- The source has been ingested and is at `lifecycle: proposed` with a `_proposed_classification` block ([How to capture and ingest a source](capture-and-ingest.md))
 
 ## Steps
 
@@ -82,5 +82,5 @@ Scroll to the "Key findings" section in the note body. Write 2–3 sentences sum
 
 - Previous step: [Capture and ingest a source](capture-and-ingest.md)
 - Next step: [Discuss a paper](discuss-a-paper.md)
-- Frontmatter schema reference: [frontmatter.md](../../reference/frontmatter.md)
-- Vocabulary for `topic`, `methods`, `study_design`: [frontmatter.md](../../reference/frontmatter.md#domain-fields)
+- Frontmatter schema reference: [Frontmatter fields](../../reference/frontmatter.md)
+- Vocabulary for `topic`, `methods`, `study_design`: [Frontmatter fields](../../reference/frontmatter.md#domain-fields)

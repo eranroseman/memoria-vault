@@ -11,7 +11,7 @@ superseded_by: []
 
 # ADR-12: obsidian-linter is reference-only, not a control-plane formatter
 
-> **Update (2026-05-31): hardened to incompatible — do not install.** The original decision held obsidian-linter at "reference-only," documenting a de-fanged config for anyone who chose to run it anyway. The current verdict is stronger: **obsidian-linter cannot be used together with Memoria.** Two reinforcing reasons: (1) the [classification-storage decision](../../docs/reference/frontmatter.md) confirmed `_proposed_classification` / `_enrichment` are **YAML frontmatter namespaces the agent writes constantly** — so obsidian-linter's frontmatter rules (key-sort, timestamp, attribute insert/remove) are no longer a corner-case footgun but a guaranteed, continuous collision with a second frontmatter authority; and (2) whole-folder exclusion can't protect `40-workbench/` drafts, which are *both* human-edited and agent-written. The "run it carefully" path is withdrawn. The Decision/Consequences below are retained as the record of the original, milder ruling; where they say "not installed and not recommended," read "not compatible — do not install." The held config in [obsidian-linter.md](../rejected/obsidian-linter.md) is now historical, not a how-to.
+> **Update (2026-05-31): hardened to incompatible — do not install.** The original decision held obsidian-linter at "reference-only," documenting a de-fanged config for anyone who chose to run it anyway. The current verdict is stronger: **obsidian-linter cannot be used together with Memoria.** Two reinforcing reasons: (1) the [classification-storage decision](../../docs/reference/frontmatter.md) confirmed `_proposed_classification` / `_enrichment` are **YAML frontmatter namespaces the agent writes constantly** — so obsidian-linter's frontmatter rules (key-sort, timestamp, attribute insert/remove) are no longer a corner-case footgun but a guaranteed, continuous collision with a second frontmatter authority; and (2) whole-folder exclusion can't protect `40-workbench/` drafts, which are *both* human-edited and agent-written. The "run it carefully" path is withdrawn. The Decision/Consequences below are retained as the record of the original, milder ruling; where they say "not installed and not recommended," read "not compatible — do not install." The held config is preserved under *Held configuration (historical)* below — kept as the record of what was once proposed, not as a how-to.
 
 ## Context
 
@@ -19,7 +19,7 @@ The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdo
 
 ## Decision
 
-Memoria treats obsidian-linter as **reference-only**: documented for the record, **not installed and not recommended**. It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved in [obsidian-linter.md](../rejected/obsidian-linter.md) in case a human chooses to run it anyway or the decision is revisited.
+Memoria treats obsidian-linter as **reference-only**: documented for the record, **not installed and not recommended**. It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved under *Held configuration (historical)* below in case a human chooses to run it anyway or the decision is revisited.
 
 ## Consequences
 
@@ -37,9 +37,17 @@ Memoria treats obsidian-linter as **reference-only**: documented for the record,
 
 **Remove it entirely (no doc).** Rejected: the de-fanged-config and HTML-comment-footgun knowledge is hard-won and worth keeping; `reference/` is exactly the "held, not installed" shelf for it.
 
+## Held configuration (historical, not a how-to)
+
+This records what was once proposed under the milder "reference-only" ruling, and why even a careful config does not rescue the plugin. The current verdict (the Update banner above) is that **no config makes it compatible** — this section is the evaluation record, not an enable path.
+
+The constraints once proposed were: exclude every agent-managed folder via `foldersToIgnore`; `yaml-timestamp` / `insert-yaml-attributes` / `remove-yaml-keys` **off** (they fight the Librarian for the `_proposed_classification` / `_enrichment` frontmatter namespaces it writes on every ingest); `auto-correct-common-misspellings` **off** (it mangles domain terms, e.g. `JITAI`); and never enable any rule that rewrites or strips note content the agent owns.
+
+**Why "just exclude the folders" doesn't rescue it.** The plugin has no per-folder rules — whole-folder `foldersToIgnore` exclusion is the only knob. But `40-workbench/` drafts are *both* human-edited (so you'd want on-save tidiness) *and* agent-written (so formatting corrupts state); no single exclusion list satisfies both. Whole-folder exclusion can keep the plugin off canonical zones but cannot make it safe on the one folder where on-save tidiness would actually help.
+
 ## Related
 
-- **Files affected:** [obsidian-linter.md](../rejected/obsidian-linter.md) (moved from `recommended/` to `rejected/`), [obsidian-plugins.md](../../docs/reference/obsidian-plugins.md) (recommended 11→10, reference 3→4).
+- **Files affected:** the `recommended/`→`reference/` reframing of the prior plugin doc (recommended 11→10, reference 3→4) is recorded in [obsidian-plugins.md](../../docs/reference/obsidian-plugins.md); the held config it carried is folded into this ADR (above).
 - **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) — owns the formatting/validation concern obsidian-linter would otherwise touch.
 - **Related decisions:** the frontmatter namespace discipline this protects ([frontmatter.md](../../docs/reference/frontmatter.md)).
 - **Source discussion:** the control-plane-authority analysis — a deterministic tool still fails the architecture if it writes outside the Policy MCP / audit trail.

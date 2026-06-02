@@ -65,20 +65,20 @@ With lifecycle folders handling the organizational dimension that folders can un
 - `study_design: observational` on a paper note
 - `topic: [working-memory, cognitive-load]` on a claim note
 
-(`topic`, `study_design`, and `methods` are the schema's domain fields — see [frontmatter.md](../../reference/frontmatter.md#domain-fields). There is no `domain` or `keywords` field.)
+(`topic`, `study_design`, and `methods` are the schema's domain fields — see [Frontmatter fields](../../reference/frontmatter.md#domain-fields). There is no `domain` or `keywords` field.)
 
 This makes topic queries Dataview queries: `WHERE contains(topic, "cognitive-science")`. It makes cross-topic connections explicit: a claim note about HCI that cites cognitive science papers is connected to both topics through its links, not through its folder location.
 
 The vault's navigation structure (MOCs — Maps of Content) builds the topical view on top of the lifecycle structure. A `cognitive-science` MOC is a note in `30-synthesis/03-moc/` that links to the relevant paper notes, claim notes, and reference pages — regardless of which sub-projects they were created for.
 
-Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
 ## Related
 
-- What the stages mean for note types: [note-types.md](note-types.md)
-- How notes move between stages: [promotion-model.md](promotion-model.md)
-- How agent permissions map to stages: [why-specialist-profiles.md](../rationale/why-specialist-profiles.md)
-- The folders this rationale structures: [vault.md](../architecture/vault.md)
-- The frontmatter fields involved: [frontmatter.md](../../reference/frontmatter.md)
+- What the stages mean for note types: [Note types and epistemic roles](note-types.md)
+- How notes move between stages: [Why promotion is gated](promotion-model.md)
+- How agent permissions map to stages: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- The folders this rationale structures: [The vault](../architecture/vault.md)
+- The frontmatter fields involved: [Frontmatter fields](../../reference/frontmatter.md)

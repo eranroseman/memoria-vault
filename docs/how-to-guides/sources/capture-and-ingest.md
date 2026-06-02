@@ -10,8 +10,8 @@ Move a paper, repository, or other source from discovery into the vault as a rev
 
 ## Prerequisites
 
-- Zotero and Better BibTeX configured with autosync to `.memoria/library.bib` ([set-up-zotero.md](../setup/set-up-zotero.md))
-- The Librarian profile installed and secrets filled ([set-up-hermes.md](../setup/set-up-hermes.md))
+- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([How to set up Zotero](../setup/set-up-zotero.md))
+- The Librarian profile installed and secrets filled ([How to set up Hermes](../setup/set-up-hermes.md))
 
 ## Steps
 
@@ -32,10 +32,10 @@ Check the title, authors, and year in Zotero's item panel. Fix any OCR or auto-i
 The export fires on every library change, but you can confirm:
 
 ```powershell
-Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime
+Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime
 ```
 
-The timestamp should be recent. If it's stale, manually trigger: File → Export Library → Better BibLaTeX → overwrite `.memoria/library.bib`.
+The timestamp should be recent. If it's stale, manually trigger: File → Export Library → Better BibLaTeX → overwrite `.memoria/memoria.bib`.
 
 **5. Run ingest in a Librarian session.**
 
@@ -56,14 +56,14 @@ Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sens
 
 **6. Open the note in Obsidian.**
 
-After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
+After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top (the Librarian's comparative read, composed during ingest) and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
 
 The note is now at `lifecycle: proposed`. The next step is [classify it](classify-a-source.md).
 
 ## Verify
 
 - The note exists in the correct folder
-- `00-meta/02-logs/audit.jsonl` shows a new `allow_with_log` entry with this citekey's path
+- `99-system/logs/audit.jsonl` shows a new `allow_with_log` entry with this citekey's path
 - The `[!brief]` callout is present
 - The `_proposed_classification` frontmatter block is present with `topic`, `methods`, and `study_design` fields
 
@@ -75,6 +75,6 @@ For multiple sources, run `/obsidian-paper-note --source <citekey>` once per sou
 
 - Next step: [Classify a source](classify-a-source.md)
 - If the citekey isn't found: [Fix a stale .bib](../recovery/fix-stale-bib.md)
-- Pin the citekey (step 2): [pin-a-citekey.md](pin-a-citekey.md)
-- Ingest reference (routing table, per-type enrichment): [ingest.md](../../reference/ingest.md)
-- Source types and note formats: [reference/note-types.md](../../reference/note-types.md)
+- Pin the citekey (step 2): [How to pin a citekey in Zotero](pin-a-citekey.md)
+- Ingest reference (routing table, per-type enrichment): [Ingest routing](../../reference/ingest.md)
+- Source types and note formats: [Note types](../../reference/note-types.md)

@@ -150,7 +150,7 @@ If any claim note shows as an orphan (no links in or out), add at least one link
 
 ## What's next
 
-When you have roughly 15–20 notes on this topic (papers + claims combined), you're ready for a MOC — a Map of Content that gives the cluster a navigational hub. The threshold is in [reference/linking.md](../reference/linking.md#moc-thresholds).
+When you have roughly 15–20 notes on this topic (papers + claims combined), you're ready for a MOC — a Map of Content that gives the cluster a navigational hub. The threshold is in [Wikilink and link conventions](../reference/linking.md#moc-thresholds).
 
 When you're ready to write something from what you've built:
 

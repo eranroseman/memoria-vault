@@ -19,7 +19,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 **Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md).
 
-> The agents named in the Context above (Kilocode, Aider, …) were the decision-time *candidates*. The shipped Coder lane allows **`claude-code`, `codex`, `opencode`** — see [memoria-coder SOUL.md](../../vault/.memoria/profiles/memoria-coder/SOUL.md) for the current set.
+> **Current vs. planned agents.** The shipped Coder lane wires **`codex` and `claude-code`** as the current external coding agents (`opencode` also available) — the real Hermes `autonomous-ai-agents` skill IDs in [memoria-coder SOUL.md](../../vault/.memoria/profiles/memoria-coder/SOUL.md) and `lane-overrides/coder.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Coder's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
 
 ## Consequences
 
@@ -35,4 +35,4 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 ## Related
 
 - **Workflows affected:** [Code](../../docs/how-to-guides/writing/create-a-code-artifact.md)
-- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md), `00-meta/03-templates/code-note.md` (in the starter vault)
+- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md), `99-system/templates/code-note.md` (in the starter vault)

@@ -9,7 +9,7 @@ The board defines what state a card is in. The policy MCP defines where a worker
 
 ```
 Obsidian (Command Palette / ACP pane)  ──►  Hermes API  ──►  MCP servers  ──►  Hermes
-              (UI)                         (port 8642)    (policy + tasks)   (worker)
+              (UI)                         (port 8642)   (policy + obsidian)  (worker)
 ```
 
 Each layer has exactly one job. None of them owns business logic except the MCP servers.
@@ -18,8 +18,8 @@ Each layer has exactly one job. None of them owns business logic except the MCP 
 | --- | --- | --- |
 | **Command Palette / ACP pane** | The two human entry points inside Obsidian. The Command Palette reads frontmatter from the active note and POSTs a JSON payload to the Hermes API. The ACP pane provides a conversational interface to Hermes alongside the active note. | No database access. No policy evaluation. No task state changes. |
 | **Hermes API** | Receives the POST and dispatches the operation — add a card, run a task, query the audit log — into the MCP-gated worker. Upstream Hermes, not custom Memoria code. | No persistent state. No business rules. |
-| **MCP servers** | `policy_mcp` checks permissions, writes the audit log. `tasks_mcp` updates the board, records handoffs, dispatches to Hermes. | No UI. No direct vault writes outside their declared tool surface. |
-| **Hermes** | Runs the actual skill, writes the vault note, returns a structured result. | No board management — reports completion through the tasks MCP. |
+| **MCP servers** | `policy_mcp` checks permissions and writes the audit log; the `obsidian` server gates vault reads/writes. Board state is managed by Hermes's **native kanban tools**, not a Memoria MCP. | No UI. No direct vault writes outside their declared tool surface. |
+| **Hermes** | Runs the actual skill, writes the vault note via the `obsidian` server, advances the card through its native kanban tools, and returns a structured result. | No bespoke task MCP — board management is native Hermes. |
 
 ---
 
@@ -29,7 +29,7 @@ Each layer has exactly one job. None of them owns business logic except the MCP 
 
 **Failure isolation.** If the Obsidian plugin breaks, the same operations run from the CLI. If the API server is down, Hermes can still execute via the CLI and its own MCP client. No single layer's failure takes down the whole system.
 
-**One source of truth per concern.** Policy is in the policy MCP; task state is in the tasks MCP — never in the palette glue, which holds no state. The principle: never put business logic in the palette or QuickAdd wiring. That glue should be thin enough to rebuild in an afternoon; behavior lives in the MCP servers and Hermes.
+**One source of truth per concern.** Policy is in the policy MCP; task state is in the board (Hermes's native kanban) — never in the palette glue, which holds no state. The principle: never put business logic in the palette or QuickAdd wiring. That glue should be thin enough to rebuild in an afternoon; behavior lives in the MCP servers and Hermes.
 
 ---
 
@@ -47,16 +47,16 @@ The reason there is no "add the token later" path is that misconfiguration here 
 
 ## Why MCP servers are registered per profile, not globally
 
-MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers three servers across all profiles — `obsidian` for vault read/write, `policy` for permission checking and audit logging, and `tasks` for board state — but not every profile gets every tool from every server.
+MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [On-disk layout](../../reference/on-disk-layout.md).)
 
 The reason for per-profile registration rather than a global server list is the same reason for separate profiles at all: `tools.include` filters let each profile's surface be narrowed to what it actually needs. The Socratic profile gets the `obsidian` server but only its read-side tools. This is the mechanism that makes "Socratic cannot write" enforceable at the API level, not just at the prompt level.
 
-For the per-profile permission matrices, see [reference/profiles.md](../../reference/profiles.md).
+For the per-profile permission matrices, see [Profile capabilities](../../reference/profiles.md).
 
 ---
 
 ## Related
 
-- Board state machine (the cards being dispatched): [kanban-board/README.md](../kanban-board/README.md)
-- Human channels (which access paths reach the API): [architecture/human-channels.md](human-channels.md)
-- Policy MCP (what the rules are): [reference/policy-mcp.md](../../reference/policy-mcp.md)
+- Board state machine (the cards being dispatched): [Kanban board](../kanban-board/README.md)
+- Human channels (which access paths reach the API): [Interaction channels](human-channels.md)
+- Policy MCP (what the rules are): [Policy MCP](../../reference/policy-mcp.md)

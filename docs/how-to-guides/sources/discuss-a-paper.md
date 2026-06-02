@@ -10,7 +10,7 @@ Run a Socratic session on a classified source to sharpen your understanding befo
 
 ## Prerequisites
 
-- The source is classified (`lifecycle: current`) ([classify-a-source.md](classify-a-source.md))
+- The source is classified (`lifecycle: current`) ([How to classify a source](classify-a-source.md))
 - The `agent-client` Obsidian plugin is installed and connected
 
 ## Steps
@@ -71,10 +71,10 @@ The Socratic profile's lane policy is `policy.allow.write: []` — it cannot edi
 
 **Reference**
 
-- The full permission matrix: [profiles.md](../../reference/profiles.md)
+- The full permission matrix: [Profile capabilities](../../reference/profiles.md)
 
 **Explanation**
 
-- Socratic profile design: [explanation/profiles/socratic.md](../../explanation/profiles/socratic.md)
-- Discuss queue dashboard: [explanation/dashboards/discuss-queue.md](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)
-- Paper-note structure used as context: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
+- Socratic profile design: [The Socratic](../../explanation/profiles/socratic.md)
+- Discuss queue dashboard: [The discuss-queue dashboard](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)
+- Paper-note structure used as context: [Note body structure](../../explanation/knowledge/note-body-structure.md)

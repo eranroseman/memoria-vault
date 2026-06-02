@@ -19,7 +19,7 @@ Every fully-classified paper note (`lifecycle: current`) that hasn't yet had a S
 
 ## What this dashboard is not
 
-**Not [reading-pipeline](reading-pipeline.md).** Reading-pipeline is the broader view: all papers in active processing plus claim-note maturity. Discuss-queue is a single focused signal: which classified sources still owe a Socratic conversation. The implied next action is specific — invoke the Socratic profile, work through the questions, then write a claim note. A generic list without that implied action would just be noise.
+**Not [The reading-pipeline dashboard](reading-pipeline.md).** Reading-pipeline is the broader view: all papers in active processing plus claim-note maturity. Discuss-queue is a single focused signal: which classified sources still owe a Socratic conversation. The implied next action is specific — invoke the Socratic profile, work through the questions, then write a claim note. A generic list without that implied action would just be noise.
 
 **Not a generic to-do list.** Discuss-queue is not a general inbox or a catch-all task surface. Its one question is: which sources are classified and waiting for the thinking step?
 
@@ -37,7 +37,7 @@ Every fully-classified paper note (`lifecycle: current`) that hasn't yet had a S
 
 ## Related
 
-- Broader sibling: [reading-pipeline](reading-pipeline.md)
+- Broader sibling: [The reading-pipeline dashboard](reading-pipeline.md)
 - The profile invoked to drain this queue: [Socratic](../../profiles/socratic.md)
 - Workflow: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)
 - The workspace this dashboard anchors: [workspaces](../../../reference/obsidian-workspaces.md)

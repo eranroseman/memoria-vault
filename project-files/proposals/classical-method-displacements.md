@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Classical method displacements
 status: deferred
 created: 2026-05-31
 ---
@@ -18,7 +19,7 @@ The underlying principle from `explanation/architecture/why-computational-method
 
 **Trade-offs.** NLI is trained on general text; domain claims may need a similarity pre-filter and threshold tuning. False-merge risk at low confidence.
 
-**Adoption trigger.** The human regularly wants to query "find claims that contradict X" and is resorting to manual backlink walks, *and* the vault has ≥ 200 claim notes with typed `contradicts` links (ADR-9 and ADR-16 are the prerequisite).
+**Adoption trigger.** The human regularly wants to query "find claims that contradict X" and is resorting to manual backlink walks, *and* the vault has ≥ 200 claim notes with typed `contradicts` links (ADR-08 and ADR-09 are the prerequisite).
 
 ---
 
@@ -58,7 +59,7 @@ The underlying principle from `explanation/architecture/why-computational-method
 
 ## 6. Discovery relevance scoring
 
-**What.** Reuse the existing `[!suggestions]` weighted scorer (embedding similarity + citation-graph overlap + topic-tag overlap against `research-directions.md`) to rank nightly discovery candidates. Deterministic, auditable, no extra API calls.
+**What.** Reuse the existing `[!suggestions]` weighted scorer (embedding similarity + citation-graph overlap + topic-tag overlap against `research-focus.md`) to rank nightly discovery candidates. Deterministic, auditable, no extra API calls.
 
 **Adoption trigger.** The discovery loop (see `discovery-loop.md`) is live and morning triage time is > 15 minutes because candidates aren't pre-sorted by relevance.
 

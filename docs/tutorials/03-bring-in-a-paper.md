@@ -53,7 +53,7 @@ Within about a minute, you'll see your paper appear with `lifecycle: proposed`. 
 - Created a `paper-note` in `20-sources/01-papers/<citekey>.md`
 - Populated the frontmatter from Zotero's metadata and the OpenAlex/Semantic Scholar APIs
 - Extracted the PDF to `90-assets/extracts/<citekey>.md` (if the PDF is open-access or was imported into Zotero)
-- Triggered a `[!brief]` callout at the top of the paper-note — produced by the Mapper (`comparative-brief`) during ingest — comparing this paper against your existing vault (if you have other papers on related topics)
+- Composed a `[!brief]` callout at the top of the paper-note — the Librarian's comparative read during ingest — comparing this paper against your existing vault (if you have other papers on related topics)
 - Proposed a `_proposed_classification` block with suggested `topic`, `study_design`, and `methods` fields
 
 Open the paper-note at `20-sources/01-papers/<citekey>.md`.

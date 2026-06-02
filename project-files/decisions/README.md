@@ -10,7 +10,7 @@ Rules:
 - **Only accepted decisions live here.** Proposed or deferred items go in [proposals/](../proposals/).
 - **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
 - **Retired decisions are removed.** If a decision was made but the question it answered no longer applies, delete it. The git history is the record.
-- **Sequencing is not decided here.** *When* a decision is implemented lives in the [implementation timeline](../plans/timeline.md), which can change independently of these decisions. Decisions record the choice; the timeline records the schedule — link to it rather than restating phase order, so a re-plan does not strand stale dates in these files.
+- **Sequencing is not decided here.** *When* a decision is implemented lives in the [release roadmap](../plans/release-plan-v0.1.md), which can change independently of these decisions. Decisions record the choice; the timeline records the schedule — link to it rather than restating phase order, so a re-plan does not strand stale dates in these files.
 
 ---
 
@@ -50,6 +50,8 @@ Rules:
 | [13](13-homepage-front-door.md) | Homepage front-door note |
 | [25](25-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
 | [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
+| [27](27-hermes-native-config-and-gate-enforcement.md) | Configure Hermes the way it reads config; gate via toolset allowlist + obsidian-only writes |
+| [28](28-write-gate-as-plugin.md) | The vault write gate is a Hermes Python plugin, not a shell hook |
 
 ### Workflows
 

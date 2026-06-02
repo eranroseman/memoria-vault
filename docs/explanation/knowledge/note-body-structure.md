@@ -7,7 +7,7 @@ parent: Knowledge
 
 The three most important note types — paper-notes, claim-notes, and MOCs — have distinct body structures because they answer different questions and serve different epistemic purposes. Understanding why each section exists helps explain what makes a note function as knowledge rather than as accumulated text.
 
-For the frontmatter fields, templates, and field-by-field reference, see [reference/note-types.md](../../reference/note-types.md).
+For the frontmatter fields, templates, and field-by-field reference, see [Note types](../../reference/note-types.md).
 
 ---
 
@@ -33,7 +33,7 @@ The `## Evidence and argument` section is what distinguishes a claim from an ass
 
 The `## Connections` section is the most structurally significant. A claim note with no connections to other claim notes has not made it into the knowledge graph — it exists in isolation, where it cannot compound. Connections are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without connections has not.
 
-This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Connections section makes that discipline structural rather than aspirational (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Connections section makes that discipline structural rather than aspirational (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
@@ -59,8 +59,8 @@ The separation is what allows agent permissions to be cleanly scoped: the Librar
 
 ## Related
 
-- The three epistemic roles explained: [note-types.md](note-types.md)
-- Why the Connections section compounds: [knowledge-cycle.md](knowledge-cycle.md)
-- What goes wrong without this structure: [common-pitfalls.md](common-pitfalls.md)
-- How to use the paper-note workflow: [how-to-guides/sources/discuss-a-paper.md](../../how-to-guides/sources/discuss-a-paper.md)
-- Note-type reference (templates, fields, lifecycle tables): [reference/note-types.md](../../reference/note-types.md)
+- The three epistemic roles explained: [Note types and epistemic roles](note-types.md)
+- Why the Connections section compounds: [The knowledge cycle](knowledge-cycle.md)
+- What goes wrong without this structure: [Common pitfalls](common-pitfalls.md)
+- How to use the paper-note workflow: [How to discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
+- Note-type reference (templates, fields, lifecycle tables): [Note types](../../reference/note-types.md)

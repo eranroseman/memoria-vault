@@ -22,7 +22,7 @@ The dashboard reads from `30-synthesis/01-claims/` and `20-sources/01-papers/`. 
 
 **Not a tracker.** There's no `resolved:` state. When a question gets answered, you manually remove or update the section. The dashboard reflects what's currently in the notes; it doesn't remember history.
 
-**Not auto-resolving.** Nothing in the system reads these questions and attempts to answer them. The Librarian reads `00-meta/research-directions.md` to guide discovery; open questions from the dashboard can inform what you write there.
+**Not auto-resolving.** Nothing in the system reads these questions and attempts to answer them. The Librarian reads `research-focus.md` to guide discovery; open questions from the dashboard can inform what you write there.
 
 ## Why free-form section, not frontmatter
 
@@ -34,7 +34,7 @@ Any note with a `## Open questions` section appears immediately. No plugin, no l
 
 ## Related
 
-- [explanation/dashboards/contradictions.md](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
-- Where the cycle is stuck: [knowledge-cycle.md](../../knowledge/knowledge-cycle.md)
-- [how-to-guides/sources/write-a-claim-note.md](../../../how-to-guides/sources/write-a-claim-note.md) — where to put open questions in claim notes
-- Where questions are generated: [discuss-a-paper.md](../../../how-to-guides/sources/discuss-a-paper.md)
+- [contradictions dashboard](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
+- Where the cycle is stuck: [The knowledge cycle](../../knowledge/knowledge-cycle.md)
+- [How to write a claim note](../../../how-to-guides/sources/write-a-claim-note.md) — where to put open questions in claim notes
+- Where questions are generated: [How to discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)

@@ -11,7 +11,7 @@ superseded_by: []
 
 # ADR-17: Shared candidate frontmatter format
 
-> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `schema-reference.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
+> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `99-system/templates/candidate-note.md`, registered in `note-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
 
 ## Context
 
@@ -46,7 +46,7 @@ projects: []                     # plural list, matches other templates
 
 These are the candidate-specific fields; every note also carries the global required fields (`schema_version`, `created`, `updated`, `lifecycle`) — see [vault/frontmatter.md](../../docs/reference/frontmatter.md).
 
-`candidate-note` is not in the 15 note types in [vault/note-types.md](../../docs/reference/note-types.md#note-types); adopting this ADR means adding it as the 16th type with its own template (`00-meta/03-templates/candidate-note.md`) and updating the list.
+`candidate-note` is not in the 15 note types in [vault/note-types.md](../../docs/reference/note-types.md#note-types); adopting this ADR means adding it as the 16th type with its own template (`99-system/templates/candidate-note.md`) and updating the list.
 
 ## Consequences
 
@@ -67,4 +67,4 @@ These are the candidate-specific fields; every note also carries the global requ
 ## Related
 
 - **Consumed by:** [ADR-16 pre-ingest screening](16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
-- **Files affected:** [vault/README.md](../../docs/explanation/architecture/vault.md), `00-meta/03-templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/structural-health/weekly-review.md)
+- **Files affected:** [The vault](../../docs/explanation/architecture/vault.md), `99-system/templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/structural-health/weekly-review.md)

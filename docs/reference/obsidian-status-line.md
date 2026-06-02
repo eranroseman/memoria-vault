@@ -5,7 +5,7 @@ parent: Reference
 
 # Obsidian status line
 
-The ambient indicator showing Linter findings and Kanban queue counts. Rendered as a Dataview widget pinned in `00-meta/index.md`, not the OS status bar (which Dataview cannot write to).
+The ambient indicator showing Linter findings and Kanban queue counts. Rendered as a Dataview widget pinned in `home.md`, not the OS status bar (which Dataview cannot write to).
 
 ## Format
 

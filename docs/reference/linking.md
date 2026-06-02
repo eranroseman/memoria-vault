@@ -5,7 +5,7 @@ parent: Reference
 
 # Wikilink and link conventions
 
-Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([note-body-structure.md](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([knowledge-cycle.md](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
+Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([Note body structure](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([Why folders encode lifecycle, not topic](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
 
 ---
 
@@ -65,7 +65,7 @@ Allowed relation types:
 | `supports` | This claim supports the linked claim. |
 | `contradicts` | This claim contradicts the linked claim. |
 
-No other relation types are currently defined. Adding a new type requires updating this reference and the Linter's schema-check detector.
+No other relation types are currently defined. Adding a new type requires updating this reference and the Linter's schema-check command.
 
 ---
 
@@ -129,7 +129,7 @@ The `topic`, `study_design`, and `methods` fields are open — Memoria does not 
 
 - Keep the active `topic` list to **~30 terms** per corpus. A smaller vocabulary produces more consistent classification.
 - Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) belongs in `_enrichment` (auto-populated from APIs), not in the hand-curated `topic` field.
-- Define your vocabulary in a reference note (e.g., `00-meta/04-reference/vocabulary.md`) and review it annually.
+- Define your vocabulary in a reference note (e.g., `00-meta/vocabulary.md`) and review it annually.
 - When renaming a topic term, use Obsidian tag-wrangler or a Linter `schema-migrate` dry-run — never search-replace across notes manually.
 
 ---
@@ -152,7 +152,7 @@ Slugs are permanent — renaming a note breaks all wikilinks pointing to the old
 
 ## Related
 
-- How-to for setting typed relations: [link-related-claims.md](../how-to-guides/sources/link-related-claims.md)
-- Why the Connections section is load-bearing: [note-body-structure.md](../explanation/knowledge/note-body-structure.md)
-- Why notes are filed by lifecycle, not topic: [lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)
-- How links keep the vault compounding: [knowledge-cycle.md](../explanation/knowledge/knowledge-cycle.md)
+- How-to for setting typed relations: [How to link related claims (typed relations)](../how-to-guides/sources/link-related-claims.md)
+- Why the Connections section is load-bearing: [Note body structure](../explanation/knowledge/note-body-structure.md)
+- Why notes are filed by lifecycle, not topic: [Why folders encode lifecycle, not topic](../explanation/knowledge/lifecycle-over-topic.md)
+- How links keep the vault compounding: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)

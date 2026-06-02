@@ -1,18 +1,15 @@
-# `audit-log.md` — forensic trail for vault writes
+# Audit log
 
-**Location.** `00-meta/01-dashboards/audit-log.md`
-
-**Decision.** Spot policy-MCP decisions that need attention: writes blocked at the tool layer, dry-run escalations awaiting human action, and writes to review-gated zones. Open when something feels off — a worker behaving strangely, a board card stuck on an unclear reason, or after a scheduled overnight run completes.
-
-The audit log lives at `00-meta/02-logs/audit.jsonl`, one JSON object per line. See [[../04-reference/profile-policies|profile-policies]] for the in-vault permissions summary; the authoritative policy-MCP format and decision protocol live in the design docs.
+Policy-MCP write decisions, from `99-system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles/) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/audit-log/).
 
 ## Recent denies and dry-runs
 
-The action queue: writes the policy MCP refused or downgraded. Anything sitting here for more than a day without a corresponding board card is an unhandled escalation.
+Writes the policy MCP refused or downgraded. Anything here > 1 day without a board card is an unhandled escalation.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+const text = await dv.io.load("99-system/logs/audit.jsonl");
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const filtered = events
   .filter(e => e.decision === "deny" || e.decision === "dry_run")
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
@@ -25,11 +22,12 @@ dv.table(
 
 ## Writes to review-gated zones
 
-Should be near zero. Every entry here is either an approved promotion (`decision: allow_with_log` with a corresponding `task_id` — review-gated-zone writes always require `flags.explicit_authorization`, which triggers `allow_with_log`) or an attempted bypass (`decision: deny` or `dry_run`). A raw `allow` to a review-gated path is itself a smell, since review-gated zones are supposed to degrade to `dry_run` by default.
+Should be near zero. Each row is an approved promotion (`allow_with_log` + `task_id`) or an attempted bypass (`deny` / `dry_run`). A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+const text = await dv.io.load("99-system/logs/audit.jsonl");
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const canonical = events
   .filter(e => e.path && (
     e.path.startsWith("30-synthesis/01-claims/") ||
@@ -46,11 +44,12 @@ dv.table(
 
 ## Per-profile activity (last 24h)
 
-Sanity check: is each profile writing where you expect? Any `memoria-socratic` write is a smell (Socratic is write-denied across the vault); any `memoria-mapper` or `memoria-verifier` write outside its declared scratch path is a smell; a Librarian with thousands of writes in an hour is a runaway.
+Is each profile writing where expected? Smells: any `memoria-socratic` write (write-denied), any `memoria-mapper`/`memoria-verifier` write outside its scratch path, a Librarian writing thousands/hour.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+const text = await dv.io.load("99-system/logs/audit.jsonl");
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 const recent = events.filter(e => e.timestamp >= cutoff);
 const counts = {};
@@ -66,11 +65,12 @@ dv.table(["Profile", "Action", "Decision", "Count (24h)"], rows);
 
 ## Hash drift (tamper detection)
 
-For each path, the last `after_hash` recorded in the audit log should match the file's current SHA-256. A mismatch means the file was modified outside the audit trail — either a non-MCP tool wrote to it or a human edited it directly. Both cases need investigation: undocumented writes break the reversibility guarantee.
+A path's last recorded `after_hash` should match the file's current SHA-256. A mismatch means a write outside the audit trail (non-MCP tool or direct human edit) — investigate; it breaks reversibility. Cross-reference the Linter's drift report.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+const text = await dv.io.load("99-system/logs/audit.jsonl");
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const lastWriteFor = {};
 for (const e of events) {
   if (e.after_hash && (e.decision === "allow" || e.decision === "allow_with_log")) {
@@ -88,21 +88,22 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 ## Anomalies
 
-Specific patterns worth alerting on. Add rows here as you discover new failure modes — the dashboard is the diary of how the system actually misbehaves.
+Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) for why:
 
-- **Linter `auto_fix` allowed outside the gated classes.** Should be impossible: the policy MCP requires `flags.class ∈ {"safe-and-unambiguous", "authorized-targeted"}`. An entry here means the policy rule drifted from profiles/linter.md.
-- **Socratic with any allowed write.** Socratic's lane policy is `policy.allow.write: []` — the hard wall. Any `decision: allow` or `allow_with_log` for `profile: memoria-socratic` is a configuration bug (the lane-override file has been tampered with or replaced).
-- **Mapper or Verifier with allowed writes outside their declared scratch paths.** Both are `read_only_mode` for the vault and only write to specific project-scratch paths. Any `allow` outside `40-workbench/*/01-map/corpus-map.md` (Mapper) or `40-workbench/*/05-verification/*` (Verifier) is a configuration bug.
-- **Librarian writing to `30-synthesis/**` with `decision: allow` or `allow_with_log`.** Librarians do not promote to synthesis. Any allowed write here means the lane override is too permissive.
-- **Write recorded with missing hashes.** Every `allow` or `allow_with_log` write must carry both `before_hash` and `after_hash`. Missing hashes break tamper detection.
+- Linter `auto_fix` outside the gated classes (`safe-and-unambiguous` / `authorized-targeted`).
+- Socratic with any allowed write (lane is `write: []`).
+- Mapper/Verifier allowed write outside its declared scratch path.
+- Librarian `allow`/`allow_with_log` to `30-synthesis/**`.
+- Any allowed write missing `before_hash` / `after_hash`.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+const text = await dv.io.load("99-system/logs/audit.jsonl");
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
-const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|comparative-briefs\/|cluster-maps\/)/.test(p ?? "");
-const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "");
+const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|cluster-maps\/)/.test(p ?? "");
+const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "") || /^10-inbox\/03-candidates\//.test(p ?? "");
 const anomalies = events.filter(e =>
   (e.profile === "memoria-linter" && e.action === "auto_fix" && isAllowed(e.decision) &&
     !["safe-and-unambiguous", "authorized-targeted"].some(c => (e.policy_rule ?? "").includes(c))) ||
@@ -120,4 +121,4 @@ dv.table(
 
 ## Rotation
 
-`audit.jsonl` is append-only and grows without bound. Rotate weekly: rename the current file to `00-meta/02-logs/archive/audit-YYYY-WW.jsonl` and start a fresh one. The dashboard reads only the current week's file; archived files remain greppable from the shell. Rotation is the Linter's responsibility — see profiles/linter.md.
+`audit.jsonl` is append-only; the Linter rotates it weekly to `99-system/logs/archive/audit-YYYY-WW.jsonl`. The dashboard reads the current week only; archives stay greppable.

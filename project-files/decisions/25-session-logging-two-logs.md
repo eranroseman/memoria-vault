@@ -17,7 +17,7 @@ Memoria's review gate ([ADR-03](03-structural-review-gate.md)) is only trustwort
 
 ## Decision
 
-Memoria keeps **two separate logs in `00-meta/02-logs/`**, written by different components:
+Memoria keeps **two separate logs in `99-system/logs/`**, written by different components:
 
 - **Policy MCP audit log** (`audit.jsonl`) — written by the **policy MCP**, append-only and **SHA-256 hash-chained** (each entry records `sha256_before` / `sha256_after`, computed by the MCP, and the chain must stay unbroken across the whole log) so modification is detectable; rotated weekly by the Linter. It answers the forensic question and feeds the audit-log and fleet-health dashboards.
 - **Per-session summaries** (`sessions/YYYY-MM-DD-HHMM.jsonl`) — written by the **Linter** (summarizing Hermes raw activity), one file per session, never rotated, accumulating indefinitely. They answer the narrative question for the human reviewing what happened.
@@ -42,6 +42,6 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 
 - **Supporting rationale:** [session-logging.md](../../docs/explanation/architecture/session-logging.md) (the two-log table and the not-pre-created rationale).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-23 memory substrates](23-six-memory-substrates.md) (vault audit memory is the append-only substrate); [ADR-24 single-researcher scope](24-single-researcher-scope.md) (multi-machine, single-user safety).
-- **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) (owns `00-meta/02-logs/`, writes session summaries, rotates the audit log, runs `vault-hash-drift`).
+- **Profiles affected:** the [Linter](../../docs/explanation/profiles/linter.md) (owns `99-system/logs/`, writes session summaries, rotates the audit log, runs `vault-hash-drift`).
 - **Reference:** [reference/policy-mcp.md](../../docs/reference/policy-mcp.md) (audit log format and enforcement).
 - **Source discussion:** retroactively records the two-log separation already embedded in `session-logging.md`.

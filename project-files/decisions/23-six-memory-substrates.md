@@ -23,7 +23,7 @@ Memoria's memory is **six distinct substrates**, each with its own scope, lifesp
 2. **Profile memory** `MEMORY.md` + `USER.md` (Hermes) — one profile, durable, injected as a *frozen snapshot* into the system prompt under hard token caps (~800 / ~500); stable facts only.
 3. **Session search** (Hermes) — one profile across all past sessions; searchable recall that carries **no authority** and never gates promotion.
 4. **Board memory / handoff payload** (Memoria — Kanban) — one card, travels across profiles; the structured unit of cross-profile communication.
-5. **Vault project memory** (Memoria — vault files) — one project across lanes; `research-directions`, open questions, decisions.
+5. **Vault project memory** (Memoria — vault files) — one project across lanes; `research-focus`, open questions, decisions.
 6. **Vault audit memory** (Memoria — vault files) — whole vault, append-only; audit trail, snapshots, metrics.
 
 The governing test: **memory is read back as recall; configuration is read as rules** — config (e.g. `project-hints.yaml`) is not a seventh tier. `SOUL.md` is identity, not memory.

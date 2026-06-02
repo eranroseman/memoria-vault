@@ -7,14 +7,14 @@ parent: Maintenance
 
 Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal — using the Linter's `schema-migrate` command, always dry-run first.
 
-Use this for **structural** frontmatter changes that touch many notes. For renaming a single controlled-vocabulary term (e.g. a `topic` value), [manage-vocabulary](manage-vocabulary.md) covers the lighter path; this guide is for changes to the schema itself.
+Use this for **structural** frontmatter changes that touch many notes. For renaming a single controlled-vocabulary term (e.g. a `topic` value), [How to manage your topic vocabulary](manage-vocabulary.md) covers the lighter path; this guide is for changes to the schema itself.
 
-> **High-stakes, human-only.** `schema-migrate` falls in the `schema-content` auto-fix class, which is **always dry-run / report-only** under the policy gate ([reference/linter.md](../../reference/linter.md)). The Linter cannot apply a migration on its own — you review the dry-run and re-run without `--dry-run` deliberately. Commit first so the change is reversible.
+> **High-stakes, human-only.** `schema-migrate` falls in the `schema-content` auto-fix class, which is **always dry-run / report-only** under the policy gate ([Linter: detectors and auto-fix](../../reference/linter.md)). The Linter cannot apply a migration on its own — you review the dry-run and re-run without `--dry-run` deliberately. Commit first so the change is reversible.
 
 ## Prerequisites
 
 - A clean working tree — `git status` shows nothing uncommitted (so the migration is a single reviewable diff)
-- The Linter profile installed and running ([set-up-hermes.md](../setup/set-up-hermes.md))
+- The Linter profile installed and running ([How to set up Hermes](../setup/set-up-hermes.md))
 - A clear before/after for the field you're changing
 
 ## Steps
@@ -83,15 +83,15 @@ If the diff is wrong, `git reset --hard HEAD~1` returns you to the pre-migration
 
 **How-to**
 
-- Renaming a single vocabulary term (lighter path): [manage-vocabulary.md](manage-vocabulary.md)
-- The structural health check that flags schema drift: [run-the-linter.md](run-the-linter.md)
-- Recovering from broken frontmatter after a bad edit: [fix-broken-frontmatter.md](../recovery/fix-broken-frontmatter.md)
+- Renaming a single vocabulary term (lighter path): [How to manage your topic vocabulary](manage-vocabulary.md)
+- The structural health check that flags schema drift: [How to run the Linter](run-the-linter.md)
+- Recovering from broken frontmatter after a bad edit: [How to fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
 
 **Reference**
 
-- The `schema-content` auto-fix class (always dry-run): [linter.md](../../reference/linter.md)
-- Frontmatter field definitions: [frontmatter.md](../../reference/frontmatter.md)
+- The `schema-content` auto-fix class (always dry-run): [Linter: detectors and auto-fix](../../reference/linter.md)
+- Frontmatter field definitions: [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**
 
-- Why the Linter cannot apply schema changes unattended: [linter.md](../../explanation/profiles/linter.md)
+- Why the Linter cannot apply schema changes unattended: [The Linter](../../explanation/profiles/linter.md)

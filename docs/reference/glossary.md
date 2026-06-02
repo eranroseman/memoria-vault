@@ -5,7 +5,7 @@ parent: Reference
 
 # Glossary
 
-Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [explanation/](../explanation/).
+Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [Explanation](../explanation/).
 
 ---
 
@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [plans/timeline.md](../../project-files/plans/timeline.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -64,7 +64,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **WIP limit** — a work-in-progress cap: *active-per-profile* (1 `running` card, Hermes-enforced); *review-queue depth* (bounded; dispatcher delays new done cards once queue is full).
 
-**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `00-meta/08-metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
+**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
 
 ---
 
@@ -74,13 +74,13 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
 
-**Note type** — one of the 15 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [note-types.md](note-types.md).
+**Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [Note types](note-types.md).
 
 ---
 
 ## Policy and audit
 
-**Audit log** — append-only JSONL trail of every policy MCP decision at `00-meta/02-logs/audit.jsonl`. Feeds the `audit-log` dashboard.
+**Audit log** — append-only JSONL trail of every policy MCP decision at `99-system/logs/audit.jsonl`. Feeds the `audit-log` dashboard.
 
 **Automation tier** — the system-wide autonomy setting: `strict` (propose-only), `standard` (safe auto-fixes + low-stakes triage), or `minimal` (+ scheduled answer drafting). Configured per profile. Distinct from the per-profile *invocation level* (cadence: background / Kanban-pulled / interactive).
 
@@ -98,7 +98,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Computational method class** — how a task is solved: **deterministic** (regex / graph / similarity — single right answer), **hybrid** (deterministic narrowing + LLM on the residual), or **generative** (open-ended LLM composition). Memoria prefers deterministic and hybrid over generative wherever correctness and testability matter.
 
-**Deployment option** — how the vault and execution layer sync across machines. Four patterns: `local-only` (single device, v0.1 default), `local-mesh` (Syncthing, peer-to-peer), `obsidian-sync` (cloud-managed), `always-on` (Syncthing + VPS). See [proposals/deployment.md](../../project-files/proposals/deployment.md).
+**Deployment option** — how the vault and execution layer sync across machines. Four patterns: `local-only` (single device, v0.1 default), `local-mesh` (Syncthing, peer-to-peer), `obsidian-sync` (cloud-managed), `always-on` (Syncthing + VPS). See [deployment options](../explanation/deployment/deployment-options.md) for the adopted `local-only` default; the multi-machine patterns are the [multi-machine deployment proposal](../../project-files/proposals/multi-machine-deployment.md).
 
 **Thin control over thick state** — the design principle: the control plane carries as little persistent context as possible; durable knowledge (plans, notes, drafts, audit traces) lives in vault files that workers re-read between steps. See [explanation/architecture/](../../docs/explanation/architecture/).
 
@@ -106,7 +106,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Obsidian UI
 
-**Callout** — agent output rendered in-place inside a note: `[!brief]` (Mapper's comparative read), `[!suggestions]` (Librarian's link candidates), `[!verification]` (Verifier's claim trace). Defined by the Callout Manager plugin.
+**Callout** — agent output rendered in-place inside a note: `[!brief]` (Librarian's comparative read, composed at ingest), `[!suggestions]` (Librarian's link candidates), `[!verification]` (Verifier's claim trace). Defined by the Callout Manager plugin.
 
 **Channel** — how the human reaches Memoria from outside Obsidian: CLI (terminal), Telegram (async), or API (programs only). Obsidian itself is the primary UI, not a channel.
 
@@ -132,7 +132,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Related
 
-- Frontmatter fields these terms name: [frontmatter.md](frontmatter.md)
-- The note types referenced throughout: [note-types.md](note-types.md)
-- Lane and profile terms: [profiles.md](profiles.md)
-- Board and review-overlay terms: [kanban-board.md](kanban-board.md)
+- Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
+- The note types referenced throughout: [Note types](note-types.md)
+- Lane and profile terms: [Profile capabilities](profiles.md)
+- Board and review-overlay terms: [Kanban board reference](kanban-board.md)

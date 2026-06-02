@@ -5,21 +5,21 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [profiles.md](profiles.md).
+Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [The Linter](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [Profile capabilities](profiles.md).
 
 ---
 
 ## The eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 
 | Slug | Severity | Implementation | Catches |
 | --- | --- | --- | --- |
-| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `install.sh --profiles-only`). |
+| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `scripts/install.sh --profiles-only`). |
 | `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
-| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/04-reference/` skeleton notes lag the design spec they mirror. |
+| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/` skeleton notes lag the design spec they mirror. |
 | `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
 | `command-vocab-drift` | MEDIUM | agent procedure (SOUL.md scan) | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
 | `plugin-config-drift` | MEDIUM | agent procedure (git HEAD diff) | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
@@ -60,7 +60,7 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 ## Related
 
-- Profile identity, permissions, and invocation level: [profiles.md](profiles.md)
-- Design rationale: [explanation/profiles/linter.md](../explanation/profiles/linter.md)
+- Profile identity, permissions, and invocation level: [Profile capabilities](profiles.md)
+- Design rationale: [The Linter](../explanation/profiles/linter.md)
 - Workflow: [run the Linter](../how-to-guides/maintenance/run-the-linter.md)
 - Recovery: [fix broken frontmatter](../how-to-guides/recovery/fix-broken-frontmatter.md), [fix profile drift](../how-to-guides/recovery/fix-profile-drift.md)

@@ -16,7 +16,7 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 **The eight structural detectors catch what reading can't.** The structural detectors are designed for one property: they catch failures that look like "nothing to do" when something is actually wrong. A Dataview query that references a field no template emits returns zero rows — the human sees an empty dashboard and assumes there's nothing to review. A paper note whose `extract_path` points at a missing file appears normal. These failures are invisible without a structural sweep. The Linter's job is to make them visible before they compound.
 
-**Owns `00-meta/02-logs/`.** The Linter writes per-session log summaries and rotates the audit log weekly. This ownership is narrow by design — the Linter is the only profile that routinely writes to logs, keeping the audit trail predictable. Audit log rotation is classified as `authorized-targeted` auto-fix, the only class where the Linter writes without explicit human approval.
+**Owns `99-system/logs/`.** The Linter writes per-session log summaries and rotates the audit log weekly. This ownership is narrow by design — the Linter is the only profile that routinely writes to logs, keeping the audit trail predictable. Audit log rotation is classified as `authorized-targeted` auto-fix, the only class where the Linter writes without explicit human approval.
 
 **A structural parallel to the trust score.** The Linter's verdict band (PASS / REVIEW / FAIL) is the structural health rollup; the fleet-health dashboard's trust score is the operational health rollup. Both are headline numbers, both are computed reproducibly from logs and findings, and neither involves LLM judgment. The parallelism is intentional — structural health and operational health deserve the same epistemic discipline.
 
@@ -38,7 +38,7 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 - Structural counterpart in content: [Verifier](verifier.md)
 - The weekly ritual Linter findings feed into: [weekly review](../dashboards/structural-health/weekly-review.md)
-- Why the Linter runs zero LLM: [why-computational-methods.md](../rationale/why-computational-methods.md)
+- Why the Linter runs zero LLM: [Why Memoria uses deterministic methods alongside LLMs](../rationale/why-computational-methods.md)
 
 **How-to**
 
@@ -47,5 +47,5 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 **Reference**
 
-- Structural detectors, auto-fix classes, severity scale: [linter.md](../../reference/linter.md)
-- Profile identity, permissions, invocation level: [profiles.md](../../reference/profiles.md)
+- Structural detectors, auto-fix classes, severity scale: [Linter: detectors and auto-fix](../../reference/linter.md)
+- Profile identity, permissions, invocation level: [Profile capabilities](../../reference/profiles.md)

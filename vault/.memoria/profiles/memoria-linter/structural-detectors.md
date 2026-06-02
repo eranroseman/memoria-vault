@@ -1,10 +1,10 @@
 # Structural detectors: silent-failure checks
 
-The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
+The eight drift checks at the bottom of the Linter's lint table (see [Linter SOUL](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
 
 | ID | Detector | Severity | Why this severity |
 | --- | --- | --- | --- |
-| `profile-install-drift` | Profile install drift | LOW | The deployed copy in `~/.hermes/profiles/memoria-<name>/` differs from its source in `.memoria/profiles/memoria-<name>/`. Usually means a `git pull` updated the source and the human hasn't re-run `install.ps1` — recoverable in one command. |
+| `profile-install-drift` | Profile install drift | LOW | The deployed copy in `~/.hermes/profiles/memoria-<name>/` differs from its source in `.memoria/profiles/memoria-<name>/`. Usually means a `git pull` updated the source and the human hasn't re-run `scripts/install.ps1` — recoverable in one command. |
 | `vault-hash-drift` | Vault hash drift | CRITICAL | A file was written outside the policy MCP, or was tampered with after a write. Either reversibility or security is at stake. |
 | `skeleton-drift` | Skeleton note drift | MEDIUM | The human-facing notes lag the engineering spec. Won't break anything immediately but erodes trust over weeks. |
 | `dashboard-field-drift` | Dashboard field drift | HIGH | Silent-failure mode: a query returns zero rows in a real vault because a field name is wrong. The human sees "nothing to do" when there's something to do. |
@@ -17,24 +17,24 @@ The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](S
 
 ## `profile-install-drift` — Profile install drift
 
-You own drift detection between the source profile files in `.memoria/profiles/memoria-<name>/` (checked into the vault repo) and the deployed copies under `~/.hermes/profiles/memoria-<name>/` (written by `install.ps1`). Under direct profile management the source and the deployed copy are supposed to match exactly after every install run, modulo the `{{VAULT_PATH}}` substitution in `mcp.json` and the human-owned `.env` file.
+You own drift detection between the source profile files in `.memoria/profiles/memoria-<name>/` (checked into the vault repo) and the deployed copies under `~/.hermes/profiles/memoria-<name>/` (written by `scripts/install.ps1`). Under direct profile management the source and the deployed copy are supposed to match exactly after every install run, modulo the `{{VAULT_PATH}}` substitution in `mcp.json` and the human-owned `.env` file.
 
 Procedure:
 
 1. For each of the seven profiles, list the files under both `.memoria/profiles/memoria-<name>/` (source, in the vault) and `~/.hermes/profiles/memoria-<name>/` (deployed).
 2. For each file present in both, compute SHA-256. Exclude `.env` (user-owned, expected to differ). For `mcp.json`, substitute `{{VAULT_PATH}}` in the source copy with the vault's absolute path (forward-slash form) before hashing — this is what the installer does.
-3. For each file present in only one side, report it: a source-only file means `install.ps1` hasn't been re-run since the file was added; a deploy-only file means the human added a file by hand that doesn't exist in the vault.
+3. For each file present in only one side, report it: a source-only file means `scripts/install.ps1` hasn't been re-run since the file was added; a deploy-only file means the human added a file by hand that doesn't exist in the vault.
 4. If any hash differs: report the affected profile, file, and which side has the unexpected content (vault source ahead of deploy, or hand-edited deploy).
 
-This action is `report` only. Never re-run `install.ps1` automatically — a drift might indicate (a) the source changed and the human hasn't re-installed yet, or (b) the human hand-edited a deployed file. Both cases need human judgment about whether the change should be promoted into the vault source or reverted.
+This action is `report` only. Never re-run `scripts/install.ps1` automatically — a drift might indicate (a) the source changed and the human hasn't re-installed yet, or (b) the human hand-edited a deployed file. Both cases need human judgment about whether the change should be promoted into the vault source or reverted.
 
 ## `vault-hash-drift` — Vault hash drift
 
-You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [policy.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
+You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
 
 Procedure:
 
-1. For each tracked path, scan `00-meta/02-logs/audit.jsonl` for the latest entry with that path and a non-null `after_hash`.
+1. For each tracked path, scan `99-system/logs/audit.jsonl` for the latest entry with that path and a non-null `after_hash`.
 2. Compute the file's current SHA-256.
 3. If the hashes differ: report the path, the recorded hash, the current hash, and the timestamp of the last logged write.
 4. If the path has no audit entry but the file exists: report as "untracked file" — this means the file was created outside the policy MCP.
@@ -43,13 +43,13 @@ This action is `report` only. Never overwrite the file to "restore" its previous
 
 ## `skeleton-drift` — Skeleton drift
 
-You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [docs/explanation/architecture/vault.md](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault/)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
+You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [The vault](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault/)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
 
 Procedure:
 
-1. For each skeleton note (`index.md`, `getting-started.md`, `system-map.md`, `agent-roles.md`, `profile-policies.md`, `system-status.md`, `schema-reference.md`, `dataview-cheatsheet.md`, `performance-checklist.md`), read its `updated_at` frontmatter.
+1. For each skeleton note (`home.md`, `troubleshooting.md`), read its `updated` frontmatter. (The other former skeleton notes now live only on the website — see [docs](https://eranroseman.github.io/memoria-vault/) — and are no longer vault-resident, so they're out of skeleton-drift scope.)
 2. For its corresponding `docs/` file(s), get the most recent commit timestamp from git log (same repo).
-3. If any design file is newer than the skeleton's `updated_at`: report the skeleton as out of sync, listing the newer design file(s).
+3. If any design file is newer than the skeleton's `updated`: report the skeleton as out of sync, listing the newer design file(s).
 
 This action is `report` only. Never auto-update the skeleton — the wording is human-owned and the human note may need different framing than the design doc that triggered the drift. Treat skeleton drift the same way you'd treat code-doc drift: pay it down promptly, but only the human can write the updated prose.
 
@@ -68,7 +68,7 @@ Procedure:
    - `FLATTEN field` (list expansion)
    - For `dataviewjs`: `e.field`, `e["field"]`, `dv.pages(...).where(p => p.field ...)` patterns
 3. Skip built-in fields (`file.link`, `file.mtime`, `file.folder`, `file.name`, `file.inlinks`, `file.outlinks`, `file.path`, `file.content`, `file.tags`, etc.) and the universal `type`.
-4. For each remaining field reference, check whether it appears in the frontmatter of *any* template under `00-meta/03-templates/` (or the human can configure a different template root for the linted vault).
+4. For each remaining field reference, check whether it appears in the frontmatter of *any* template under `99-system/templates/` (or the human can configure a different template root for the linted vault).
 5. If a field appears in no template: report the dashboard, the query block, the field name, and the line.
 6. If the field name has a plausible close-match in templates (Levenshtein distance ≤ 2, e.g., `project` vs `projects`), include the suggestion in the report.
 
@@ -152,7 +152,7 @@ You own detection of transient artifacts that leak out of the working zones into
 
 Procedure:
 
-1. Walk the vault tree, skipping `.obsidian/`, `.git/`, and any path under `10-inbox/`, `40-workbench/`, or `00-meta/02-logs/` (the permitted transient zones).
+1. Walk the vault tree, skipping `.obsidian/`, `.git/`, and any path under `10-inbox/`, `40-workbench/`, or `99-system/logs/` (the permitted transient zones).
 2. For each remaining file, check the basename against this pattern set:
    - `*.tmp.*` — common editor / sync conflict suffix (e.g., `notes.md.tmp.241125.1ddf7ac1a3d3`)
    - `*.OLD.*`, `*.lessOLD.*` — manual-rename leftovers
@@ -191,6 +191,6 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 
 ## Related
 
-- [Linter SOUL.md](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
-- [docs/reference/policy-mcp.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the audit log that `vault-hash-drift` verifies against.
-- [project-files/proposals/profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).
+- [Linter SOUL](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
+- [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the audit log that `vault-hash-drift` verifies against.
+- [project-files/proposals/PROP-09-profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/PROP-09-profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).

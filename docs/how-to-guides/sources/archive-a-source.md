@@ -65,6 +65,6 @@ Do not archive a source just to clear it from a queue. If the discuss card has b
 
 ## Related
 
-- Weekly review (surfaces stale sources): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
-- Lifecycle field values: [frontmatter.md](../../reference/frontmatter.md)
-- Why archived notes aren't deleted: [knowledge-cycle.md](../../explanation/knowledge/knowledge-cycle.md)
+- Weekly review (surfaces stale sources): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Lifecycle field values: [Frontmatter fields](../../reference/frontmatter.md)
+- Why archived notes aren't deleted: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

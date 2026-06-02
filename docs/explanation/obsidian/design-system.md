@@ -7,7 +7,7 @@ parent: Obsidian
 
 Memoria outputs travel through multiple renderers — Obsidian's live preview, Pandoc exports (Word, PDF), and open-design's render pipeline. Without a shared visual spec, each consumer makes independent choices that compound over time: the heading scale used in a delivered PDF becomes different from the callout colors in Obsidian, which become different from the CSS in a web export. The design system is the single source that all consumers read.
 
-The vault file `00-meta/04-reference/design-system.md` *implements* the spec for this vault (the actual values). This page explains the principles behind the choices.
+The vault file `.memoria/design-system.md` *implements* the spec for this vault (the actual values). This page explains the principles behind the choices.
 
 ---
 
@@ -21,7 +21,7 @@ Without this, each consumer accumulates its own hardcoded values. A heading size
 
 ## Why single accent, not a color-per-callout
 
-The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only. The reasoning is the same as the [visual-discipline](visual-discipline.md) page: color distinction is an urgency signal. When every category has a distinct color, the urgency signal collapses — the eye learns to treat all colors as equally important, which means it treats them all as equally ignorable. A single accent with distinct icons preserves the signal-to-noise ratio: color means "this is a callout"; the icon means "this is the kind."
+The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only. The reasoning is the same as the [Visual-style discipline](visual-discipline.md) page: color distinction is an urgency signal. When every category has a distinct color, the urgency signal collapses — the eye learns to treat all colors as equally important, which means it treats them all as equally ignorable. A single accent with distinct icons preserves the signal-to-noise ratio: color means "this is a callout"; the icon means "this is the kind."
 
 This rule applies to all surfaces the design system governs. In Pandoc exports, in HTML preview, in slides: one accent.
 
@@ -57,7 +57,7 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 
 ## Related
 
-- The visual-style discipline this system enables: [visual-discipline.md](visual-discipline.md)
-- The callout types and their single-accent rule: [callouts.md](callouts.md)
-- Obsidian plugin inventory: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
-- Vault implementation file: `00-meta/04-reference/design-system.md`
+- The visual-style discipline this system enables: [Visual-style discipline](visual-discipline.md)
+- The callout types and their single-accent rule: [Callouts](callouts.md)
+- Obsidian plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Vault implementation file: `.memoria/design-system.md`

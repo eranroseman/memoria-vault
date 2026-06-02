@@ -5,7 +5,7 @@ parent: Reference
 
 # Policy MCP
 
-The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [explanation/architecture/why-human-gate.md](../explanation/rationale/why-human-gate.md).
+The runtime write-gate that intercepts every vault action, checks lane-override rules, and returns a decision before any content reaches disk. For the design rationale see [Why the review gate is structural](../explanation/rationale/why-human-gate.md).
 
 ---
 
@@ -108,7 +108,7 @@ Dry-run:
 
 ## Audit log format
 
-Every `allow_with_log` and `deny` decision appends one JSONL entry to `00-meta/02-logs/audit.jsonl`:
+Every `allow_with_log` and `deny` decision appends one JSONL entry to `99-system/logs/audit.jsonl`:
 
 ```json
 {
@@ -194,26 +194,26 @@ routing:
 
 ---
 
-## Enforcement: the pre/post_tool_call hook
+## Enforcement: the policy-gate plugin
 
-`check_permission` only decides — by itself it does not stop a write. Vault writes go through the `obsidian` MCP server, which has no knowledge of the policy MCP. The bridge is a Hermes shell hook, `.memoria/mcp/policy_hook.py`, registered per profile in `config.yaml`:
+`check_permission` only decides — by itself it does not stop a write. Vault writes go through the `obsidian` MCP server, which has no knowledge of the policy MCP. The bridge is a **Hermes Python plugin**, `memoria-policy-gate`, enabled per profile via `plugins.enabled` in `config.yaml` and deployed by the installer (it reuses `.memoria/mcp/policy_hook.py`'s decision core verbatim):
 
 ```yaml
-hooks:
-  pre_tool_call:
-    - matcher: "obsidian"
-      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
-      timeout: 10
-  post_tool_call:
-    - matcher: "obsidian"
-      command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
-      timeout: 10
+plugins:
+  enabled:
+    - memoria-policy-gate
 ```
 
-- **`pre_tool_call`** maps the obsidian tool to a policy action, calls `check_permission`, and blocks `deny`/`dry_run`. On an allowed write it stashes the `before_hash`.
-- **`post_tool_call`** reads the stash, computes `after_hash`, and appends the paired `write_complete` audit record.
+The plugin registers two lifecycle hooks on the Hermes plugin manager:
 
-**Caveat — best-effort, not fail-closed.** Hermes fails open on hook errors (a crashing hook is logged but does not abort the loop). Hard enforcement that survives a broken hook would need a custom obsidian bridge that calls `check_permission` internally.
+- **`pre_tool_call`** maps the obsidian tool to a policy action, calls `check_permission` (via `policy_hook.evaluate_pre`), and returns `{"action": "block", …}` for `deny`/`dry_run`. On an allowed write it stashes the `before_hash`. **Fail-closed:** any error inside the gate returns a block.
+- **`post_tool_call`** reads the stash, computes `after_hash`, and appends the paired `write_complete` audit record (via `policy_hook.evaluate_post`).
+
+**Why a plugin, not a shell hook ([ADR-28](../../project-files/decisions/28-write-gate-as-plugin.md)).** Memoria first wired this as a `pre_tool_call` *shell hook* (`matcher: "obsidian.*"`). It never fired on live writes. Hermes registers MCP tools as `mcp_<server>_<tool>`, so the obsidian write is `mcp_obsidian_obsidian_append_content`; the shell-hook matcher uses `re.fullmatch`, and `re.fullmatch("obsidian.*", "mcp_obsidian_…")` is `None`. Shell hooks are also consent-gated (skipped on non-TTY runs) and **fail-open**. The plugin avoids all three: it runs in-process in **every** run mode (`-z`/gateway/cron/ACP) with no consent step, matches the tool name in Python (so the real `mcp_obsidian_*` name is caught — it gates both the obsidian writes and the Coder/Linter `file` writes `write_file`/`patch`), receives the `task_id`, and is fail-closed.
+
+**The gate requires obsidian to be the agent's only write path ([ADR-27](../../project-files/decisions/27-hermes-native-config-and-gate-enforcement.md)).** The per-lane `agent.disabled_toolsets` allowlist removes every filesystem-write toolset from the five non-terminal lanes, so a single gated path is sufficient; Coder/Linter keep `file`, and the plugin gates `write_file`/`patch` too. Residual: if the plugin fails to load there is no gate — bounded by `plugins.enabled` (installer-managed) and the capability allowlist.
+
+**Validated live** (Hermes v0.14.0, `hermes -z`, Memoria-test, installer-deployed on `librarian` and `writer`): allowed-zone write → `allow` + `write_complete`; review-gated/denied write → **blocked**, no file on disk; simulated policy outage → write **fails closed**. ([#58](https://github.com/eranroseman/memoria-vault/issues/58)).
 
 ---
 
@@ -232,7 +232,7 @@ An unexpected `deny` is a Memoria-side question: check the lane-override YAML, t
 
 ## Related
 
-- Profile permission tables: [profiles.md](profiles.md)
-- Audit log substrate and rotation: [memory.md](memory.md)
-- Why the gate is structural: [explanation/architecture/why-human-gate.md](../explanation/rationale/why-human-gate.md)
-- The guard layer in the three-layer model: [why-three-layers.md](../explanation/rationale/why-three-layers.md)
+- Profile permission tables: [Profile capabilities](profiles.md)
+- Audit log substrate and rotation: [Memory substrates](memory.md)
+- Why the gate is structural: [Why the review gate is structural](../explanation/rationale/why-human-gate.md)
+- The guard layer in the three-layer model: [Why three layers, not one](../explanation/rationale/why-three-layers.md)

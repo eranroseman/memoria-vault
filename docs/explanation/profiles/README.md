@@ -8,7 +8,7 @@ permalink: /explanation/profiles/
 
 # Profiles
 
-Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [why-specialist-profiles.md](../rationale/why-specialist-profiles.md).)
+Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).)
 
 The profiles aren't seven equals — they group by where they sit in the knowledge cycle:
 
@@ -38,8 +38,30 @@ Each profile page follows the same shape: its mission, *why it's designed this w
 
 ---
 
+## Delegation posture
+
+Profiles differ in how much they may hand a narrow, temporary subtask to a child or external agent — never the role's *defining* judgment, only support work around it. Strongest delegators at the top:
+
+```text
+  more ┌─────────────────────────────────────────────────────────────────┐
+   ▲   │ Coder      Moderate    helper/lookup + substantive coding to the  │
+   │   │                        external agent; commits stay per-task      │
+   │   │ Writer     Supportive  facts / cleanup; synthesis stays local     │
+   │   │ Librarian  Targeted    narrow enrichment / source lookups;        │
+   │   │                        keeps discovery ownership                   │
+   │   │ Mapper     Low         mechanical retrieval (qmd); keeps the map   │
+   │   │ Verifier   Very low    delegation weakens independence; traces     │
+   │   │ Linter     Lowest      does not spawn work; may request context   │
+   ▼   │ Socratic   None        can't write; questions are the whole product│
+  less └─────────────────────────────────────────────────────────────────┘
+```
+
+**Rule:** delegate narrow, temporary, low-risk subtasks; never the defining judgment. The Coder's delegation is widest because the substantive coding *is* an external-agent handoff by design ([ADR-07](../../../project-files/decisions/07-code-agent-attachment.md)); the Socratic profile delegates nothing because it cannot write and its questions are the entire deliverable.
+
+---
+
 ## Related
 
-- Why seven specialists, not one generalist: [why-specialist-profiles.md](../rationale/why-specialist-profiles.md)
-- How profiles pick up and hand off work: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
-- Permission matrices — who can write where (lookup tables): [reference/profiles.md](../../reference/profiles.md)
+- Why seven specialists, not one generalist: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- How profiles pick up and hand off work: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
+- Permission matrices — who can write where (lookup tables): [Profile capabilities](../../reference/profiles.md)

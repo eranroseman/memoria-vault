@@ -7,7 +7,7 @@ parent: Reference
 
 Where every file lives across the two filesystem roots: the starter vault (versioned, distributable) and `.memoria/` (tooling layer). For the design rationale see [explanation/architecture/](../explanation/architecture/).
 
-**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See [implementation-status.md](../../project-files/plans/implementation-status.md) for build state.
+**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See [Implementation status](../../project-files/plans/implementation-status.md) for build state.
 
 ---
 
@@ -16,18 +16,23 @@ Where every file lives across the two filesystem roots: the starter vault (versi
 There are two roots. The **repo** is the install unit — cloned anywhere; the bootstrap
 copies `vault/` to your chosen **runtime vault** folder (default `~/Memoria`, deliberately
 off OneDrive). Both folder names are free; the internal shapes are fixed. The install
-scripts live at the **repo root**, not inside the vault.
+scripts live in **`scripts/`**, not inside the vault.
 
 ```text
 memoria-vault/                       # repo root — the install unit (clone anywhere)
 ├── README.md                       # clone and install instructions
-├── install.sh                      # bootstrap installer (Ubuntu/Debian + WSL2)
-├── install.ps1                     # thin Windows launcher (gates WSL2, runs install.sh)
+├── scripts/                        # installer and maintenance scripts
+│   ├── install.sh                  # bootstrap installer (Ubuntu/Debian + WSL2)
+│   ├── install.ps1                 # thin Windows launcher (gates WSL2, runs install.sh)
+│   └── PSScriptAnalyzerSettings.psd1  # PSScriptAnalyzer lint config
 ├── docs/                           # engineering spec (NOT copied to the runtime vault)
 ├── project-files/                  # decisions, proposals, operations
 │
 └── vault/                          # the Obsidian vault — the runtime artifact
-    ├── 00-meta/                    # vault skeleton — human-visible in Obsidian
+    ├── home.md                     # vault front door (obsidian-homepage opens it on launch)
+    ├── research-focus.md      # Librarian session-start input (human-edited)
+    ├── troubleshooting.md          # offline-fallback help (kept in-vault by design)
+    ├── 00-meta/                    # the human's read surface: dashboards
     ├── 10-inbox/                   # capture zone
     ├── 20-sources/                 # ingested sources
     ├── 30-synthesis/               # human-owned canonical knowledge
@@ -35,6 +40,7 @@ memoria-vault/                       # repo root — the install unit (clone any
     ├── 50-deliverables/            # terminal outputs
     ├── 90-assets/                  # extracted figures, supplementary
     ├── 95-archive/                 # superseded notes
+    ├── 99-system/                  # machine-consumed/generated (Obsidian-visible): logs, board, metrics, eval, skills, templates
     │
     ├── .obsidian/                  # Obsidian config (hidden by Obsidian)
     └── .memoria/                   # Memoria tooling (hidden by Obsidian)
@@ -46,7 +52,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 
 | Folder | Purpose | Primary writer |
 | --- | --- | --- |
-| `00-meta/` | Vault governance: dashboards, logs, templates, reference notes, eval, metrics | Human / Linter (logs only) |
+| `00-meta/` | The human's read surface: dashboards | Human (reads) |
 | `10-inbox/` | Capture zone: fleeting notes, answer drafts, discovery candidates | Human / Librarian / Writer |
 | `20-sources/` | Ingested sources: papers, items, entities | Librarian |
 | `30-synthesis/` | Canonical knowledge: claims, reference notes, MOCs | Human |
@@ -54,24 +60,36 @@ memoria-vault/                       # repo root — the install unit (clone any
 | `50-deliverables/` | Terminal outputs: manuscripts, presentations, media, releases | Human / Coder (export task) |
 | `90-assets/` | Extracted figures, PDFs stay in Zotero | Librarian (Marker extracts) |
 | `95-archive/` | Superseded notes; never deleted | Human |
+| `99-system/` | Machine-consumed/generated, Obsidian-visible: logs, board export, metrics, eval, skills, templates | Linter / board_export / metrics_aggregate / QuickAdd |
 
 ### `00-meta/` subtree
 
 ```text
 00-meta/
-├── 01-dashboards/
-│   ├── index.md                    # dashboard entry point (opens Daily Health)
-│   ├── audit-log.md
-│   ├── board-state.md
-│   ├── contradictions.md
-│   ├── discuss-queue.md
-│   ├── drift-watch.md
-│   ├── fleet-health.md
-│   ├── loose-ends.md
-│   ├── open-questions.md
-│   ├── reading-pipeline.md
-│   └── weekly-review.md
-├── 02-logs/                        # see reference/telemetry.md for every schema
+└── 01-dashboards/
+    ├── daily-health.md             # the Daily Health dashboard
+    ├── audit-log.md
+    ├── board-state.md
+    ├── contradictions.md
+    ├── discuss-queue.md
+    ├── drift-watch.md
+    ├── fleet-health.md
+    ├── loose-ends.md
+    ├── open-questions.md
+    ├── reading-pipeline.md
+    └── weekly-review.md
+# (human-facing notes — home, research-focus, troubleshooting — sit at the vault root;
+#  the former 04-reference notes live on the website; templates + machine-generated
+#  logs/board/metrics/eval/skills moved to 99-system/ — see below)
+```
+
+### `99-system/` subtree
+
+Machine-consumed and -generated data — read by QuickAdd (`templates/`) and Dataview/exporters (`logs/`, `board/`, `metrics/`). It must be Obsidian-visible (QuickAdd resolves paths through the vault index and Dataview can't query dotfolders, so none of it can live in `.memoria/`), yet the human never opens it directly — hence its own root bucket, last in the tree, rather than mixed into the human-read `00-meta/`. Subfolders are unnumbered.
+
+```text
+99-system/
+├── logs/                           # see reference/telemetry.md for every schema
 │   ├── audit.jsonl                 # pending (created by policy MCP at first run)
 │   ├── sessions/                   # per-session logs from Linter
 │   ├── board-state.jsonl           # pending (board_export.py — per-lane queue snapshot)
@@ -80,15 +98,11 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── cost.jsonl                  # pending (board_export.py — API spend + tokens per card)
 │   ├── lint-findings.jsonl         # pending
 │   └── cron-history.jsonl          # pending
-├── 03-templates/                   # 16 note templates (see note-types.md)
-├── 04-reference/                   # 10 human-facing reference notes (shipped)
-├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
-├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
-├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
 ├── board/                          # markdown board export — ships empty (.keep); pending
-├── index.md                        # vault landing page (pinned in sidebar)
-├── research-directions.md          # Librarian session-start input
-└── system-status.md                # runtime health snapshot
+├── metrics/                        # fleet + eval metrics — ships empty (.keep); deferred
+├── eval/                           # vault eval gold tasks — ships empty (.keep)
+├── skills/                         # skill-governance registry — ships empty (.keep); deferred
+└── templates/                      # 16 note templates + screening-protocol (QuickAdd instantiates these)
 ```
 
 ### `10-inbox/` subtree
@@ -130,7 +144,6 @@ One folder per project. All subfolders ship as `.keep` placeholders.
 ├── 01-map/
 │   ├── corpus-map.md               # Mapper writes
 │   ├── gap-report.md               # Mapper writes
-│   ├── comparative-briefs/         # Mapper writes
 │   └── cluster-maps/               # Mapper writes
 ├── 02-framing/                     # Writer (counter-outline)
 ├── 03-canvas/                      # Human (canvas notes)
@@ -162,9 +175,9 @@ One folder per project. All subfolders ship as `.keep` placeholders.
 │   │   └── data.json.TODO          # callout styling not yet configured
 │   ├── dataview/
 │   ├── obsidian-citation-plugin/
-│   │   └── data.json               # points at .memoria/library.bib
+│   │   └── data.json               # points at .memoria/memoria.bib
 │   ├── obsidian-git/
-│   ├── obsidian-homepage/
+│   ├── homepage/                  # obsidian-homepage plugin (id: homepage); data.json opens home.md
 │   ├── obsidian-local-rest-api/
 │   │   └── data.json.example       # contains secrets — gitignored
 │   ├── quickadd/
@@ -223,13 +236,13 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 ├── mcp/
 │   ├── policy_mcp.py               # shipped (policy write-gate MCP server)
 │   ├── policy_hook.py              # shipped (pre/post_tool_call gate; routes obsidian writes through policy)
-│   ├── board_export.py             # shipped (board → 00-meta/board/ + board-state/transitions/disposition/cost.jsonl)
-│   ├── metrics_aggregate.py        # shipped (board+audit → 08-metrics/ trust-score notes)
+│   ├── board_export.py             # shipped (board → 99-system/board/ + board-state/transitions/disposition/cost.jsonl)
+│   ├── metrics_aggregate.py        # shipped (board+audit → 99-system/metrics/ trust-score notes)
 │   └── requirements.txt            # shipped (mcp, PyYAML)
 │       # tasks_mcp.py — deferred, not needed (native Hermes kanban tools cover it)
 ├── csl/
 │   └── .keep                       # shipped: placeholder for CSL citation style files
-├── library.bib                     # pending: user-generated by Better BibTeX auto-export
+├── memoria.bib                     # pending: user-generated by Better BibTeX auto-export
 ├── project-hints.yaml.example      # shipped
 └── tool-registry.yaml              # shipped (per-profile tool allowlist)
 ```
@@ -238,23 +251,17 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 
 ## Vault skeleton: human-facing notes
 
-Notes in `00-meta/` that ship with the starter vault for human reference.
+Notes that ship with the starter vault for human reference — three at the vault root (the human's cockpit), plus a few in `00-meta/` and `.memoria/`.
 
 | Note | Purpose | Maintained by |
 | --- | --- | --- |
-| `00-meta/index.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
-| `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
-| `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
-| `00-meta/04-reference/getting-started.md` | First-time setup checklist — 5 steps from clone to first ingest. | Human (rarely changes) |
-| `00-meta/04-reference/system-map.md` | High-level architecture summary in plain language. Vault-resident companion to `docs/explanation/architecture/`. | Human (sync with design changes) |
-| `00-meta/04-reference/agent-roles.md` | Plain-language one-paragraph summary of each Hermes profile. Mirrors each `SOUL.md`. | Human (sync with profile changes) |
-| `00-meta/04-reference/profile-policies.md` | Plain-language who-can-write-where summary. Tracks the lane-override YAML files. | Human (sync with lane-override changes) |
-| `00-meta/04-reference/schema-reference.md` | Canonical list of every frontmatter field, type, and allowed values. Source of truth for templates and the Linter. | Human + Linter (flags drift) |
-| `00-meta/04-reference/dataview-cheatsheet.md` | Reference patterns for dashboard queries — TABLE / LIST / TASK / FROM / WHERE / SORT / FLATTEN / LIMIT examples. | Human (rarely changes) |
-| `00-meta/04-reference/performance-checklist.md` | Dashboard performance discipline for Dataview query authors. | Human (rarely changes) |
-| `00-meta/04-reference/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. | Human (rarely changes) |
-| `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/obsidian-plugins.md`. | Human (sync with plugin changes) |
-| `00-meta/04-reference/design-system.md` | Canonical visual-style source: palette, typography, spacing, layout, motion, voice. Drives CSS snippet generators and Pandoc export configs. | Human (edits define the brand) |
+| `home.md` | Vault-root front door, opened on launch by obsidian-homepage. One status glance, then links to dashboards, the in-vault help note, common operations, and the website. | Human (rarely changes) |
+| `research-focus.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
+| `troubleshooting.md` | Verify the plumbing, the three core workflows (ingest, review, export) with minimal commands and fallbacks, and recovery — for when Hermes or ACP is down. Folds in the former `system-status` health snapshot. Kept in-vault at the root — needed precisely when offline/down. | Human (rarely changes) |
+| `99-system/templates/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol template — used only in systematic-review mode (ADR-16/19). | Human (per review) |
+| `.memoria/design-system.md` | Canonical visual-style tokens: palette, typography, spacing, layout, motion, voice. Read by the CSS-snippet generators and Pandoc export (machine config). | Human (edits define the brand) |
+
+The other former `00-meta/04-reference/` notes — getting-started, system-map, agent-roles, profile-policies, obsidian-config, dataview-cheatsheet, performance-checklist, vocabulary-example — now live **only on the [website](https://eranroseman.github.io/memoria-vault/)** (the vault is not a place for product reference docs); the vault links out to them.
 
 The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lags the corresponding design file.
 
@@ -266,7 +273,7 @@ The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lag
 | --- | --- | --- |
 | Note files | `kebab-case.md` | `receptivity-detection-timing.md` |
 | Paper notes | Citekey as filename | `mamykina2010sense.md` |
-| Template files | `<type>.md` | `claim.md`, `paper.md` |
+| Template files | `<type>.md` | `claim-note.md`, `paper-note.md` |
 | Dashboard files | `kebab-case.md` | `weekly-review.md` |
 | Lane-override files | `<short-name>.yaml` | `librarian.yaml` |
 | Profile dirs | `memoria-<name>/` | `memoria-librarian/` |

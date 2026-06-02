@@ -17,10 +17,10 @@ git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
 # Validate the installer without running it
-bash -n install.sh
+bash -n scripts/install.sh
 
 # Dry-run (shows every command, changes nothing)
-bash install.sh --dry-run
+bash scripts/install.sh --dry-run
 ```
 
 See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md) for a full walkthrough.
@@ -29,16 +29,16 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 
 | Area | Where |
 |---|---|
-| Installer (`install.sh` / `install.ps1`) | repo root |
-| Agent profiles | `vault/.hermes/profiles/memoria-*/` |
+| Installer (`scripts/install.sh` / `scripts/install.ps1`) | `scripts/` |
+| Agent profiles | `vault/.memoria/profiles/memoria-*/` |
 | Vault templates & structure | `vault/` |
 | Documentation (Diátaxis) | `docs/` — tutorials, how-to-guides, reference, explanation |
 | Scripts | `scripts/` |
 
 ## Coding conventions
 
-- **Shell:** `install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
-- **PowerShell:** `install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
+- **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
+- **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
 - **Profiles:** Agent profiles live under `vault/.memoria/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the other seven profiles.
 - **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
 - **Markdown:** Enforced by `.markdownlint.jsonc` at the repo root. Run `markdownlint '**/*.md'` before pushing.
@@ -47,7 +47,7 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 
 1. Fork the repo and create a branch off `main`.
 2. Make your changes and test them (`--dry-run` at minimum; a live run if you can).
-3. Run `bash -n install.sh` (syntax check) and `markdownlint '**/*.md'` if you touched docs.
+3. Run `bash -n scripts/install.sh` (syntax check) and `markdownlint '**/*.md'` if you touched docs.
 4. Open a PR against `main`. Fill out the PR template.
 
 ## Commit style

@@ -80,12 +80,12 @@ The design produces a bounded, stage-gated, human-in-the-loop operating cadence:
 
 Chen 2026's five-level taxonomy: L1 (autocomplete) → L2 (multi-step, human approval per step) → L3 (multi-step autonomous, human-set strategy, per-batch review) → L4 (self-directed within a domain) → L5 (fully self-directed).
 
-Memoria is L3. The seven profiles execute multi-step work unattended within a card. The human sets the strategy (`research-directions.md`, `screening-protocol.md`) and the review gate blocks every promotion. L4 requires autonomous keep/revert on synthesis; L5 requires self-directed agenda-setting. Both fail the preconditions test for knowledge work.
+Memoria is L3. The seven profiles execute multi-step work unattended within a card. The human sets the strategy (`research-focus.md`, `screening-protocol.md`) and the review gate blocks every promotion. L4 requires autonomous keep/revert on synthesis; L5 requires self-directed agenda-setting. Both fail the preconditions test for knowledge work.
 
 ---
 
 ## Related
 
-- Why the review gate is structural: [why-human-gate.md](why-human-gate.md)
-- The intellectual foundations of this position: [../intellectual-foundations.md](../overview/intellectual-foundations.md)
-- Full borrow/adapt/ignore table: [why-pattern-provenance.md](why-pattern-provenance.md)
+- Why the review gate is structural: [Why the review gate is structural](why-human-gate.md)
+- The intellectual foundations of this position: [Intellectual foundations](../overview/intellectual-foundations.md)
+- Full borrow/adapt/ignore table: [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md)

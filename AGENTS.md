@@ -8,6 +8,19 @@ modes that bite agents here: **concurrent sessions** sharing one working tree, t
 **auto-commit hook** entangling your work, **branch protection** rejecting direct
 pushes, and the **Windows ↔ WSL2 split** the project runs across.
 
+**One principle above all the mechanics below: decide for the best long-term
+solution, not the least work.** At every design choice, weigh the options by what is
+correct and maintainable for the long run — never pick the one that just minimizes
+your own effort. "That breaks N references," "the current pattern is X," or "it's more
+files to touch" are mechanics to handle, not reasons to settle for a worse design. If
+the better solution costs an hour now, spend it; surface the trade-off and your
+recommendation rather than quietly defaulting to the cheap path.
+
+**When you present options to the human, give the pros and cons of each** — never a
+bare list of choices. Spell out the trade-offs (cost, risk, reversibility, long-term
+fit) for every option, and say which you recommend and why, so the decision is informed
+rather than handed back undifferentiated.
+
 ---
 
 ## Where things live
@@ -75,7 +88,7 @@ commits the whole git working tree every ~30 min — you'll see commits titled
 (`~/Memoria` on Windows), where auto-backup is a wanted feature. It turns hostile
 only if someone **opens a checkout of this dev repo as an Obsidian vault** (e.g.
 points Windows-Obsidian at a `\\wsl$\…\memoria-vault` path) — then the timer
-auto-commits the entire source tree (`install.sh`, `project-files/`, `docs/`…),
+auto-commits the entire source tree (`scripts/install.sh`, `project-files/`, `docs/`…),
 bundling your in-progress edits with unrelated work and sometimes spawning phantom
 branches that orphan work.
 
@@ -96,7 +109,7 @@ The working tree may hold the user's parallel work-in-progress or hook-generated
 churn. Stage only the files you changed:
 
 ```bash
-git add install.sh                      # yes — explicit
+git add scripts/install.sh                      # yes — explicit
 git add project-files/decisions/24-*.md # yes
 git add -A                              # NO — sweeps in others' work
 ```
@@ -138,9 +151,9 @@ These checks are **required** by the branch ruleset and must all pass:
 
 | Check | Runs |
 | --- | --- |
-| `docs-doctor` | structural lint of `docs/` (broken links, misfiled files) |
-| `shellcheck (install.sh)` | shell lint |
-| `PSScriptAnalyzer (install.ps1)` | PowerShell lint |
+| `docs-doctor` | structural lint of `docs/` + `vault/` link text (broken links/anchors, README presence, frontmatter keys, link text = page title) |
+| `shellcheck (scripts/install.sh)` | shell lint |
+| `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` of the vault Python tooling (policy gate, board export, metrics, detectors) |
 | `docs-links` | every `docs/` reference under `vault/` resolves (Pages URLs map to a real doc; no banned blob URLs) — `scripts/check-vault-links.sh` |
 
@@ -150,8 +163,8 @@ reports on PRs that don't touch those paths, leaving them permanently `BLOCKED`.
 Both `docs-doctor.yml` and `lint-installers.yml` therefore run on every push/PR
 unconditionally. If you add a new required check, follow the same rule.
 
-**Linter notes:** `install.ps1` is an interactive installer, so `Write-Host` is
-intentional and excluded via `PSScriptAnalyzerSettings.psd1`; PowerShell
+**Linter notes:** `scripts/install.ps1` is an interactive installer, so `Write-Host` is
+intentional and excluded via `scripts/PSScriptAnalyzerSettings.psd1`; PowerShell
 functions must use approved verbs (`Install-`, not `Ensure-`).
 
 ## 5. Test before you commit
@@ -159,49 +172,66 @@ functions must use approved verbs (`Install-`, not `Ensure-`).
 Every installer bug in this repo's history was caught by *running* the code, not
 reading it. Before opening a PR:
 
-- **Shell** (`install.sh`): `bash -n install.sh` (parse) + a `--dry-run` pass.
-- **PowerShell** (`install.ps1`): the CI **`PSScriptAnalyzer`** check is the gate —
+- **Shell** (`scripts/install.sh`): `bash -n scripts/install.sh` (parse) + a `--dry-run` pass.
+- **PowerShell** (`scripts/install.ps1`): the CI **`PSScriptAnalyzer`** check is the gate —
   a WSL2 agent usually has no `pwsh`, so lean on CI but still read the script when you
   change its logic.
 - **Python** (`.memoria/mcp/*.py`, `detectors.py`): run `--self-test`
   (`policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`,
   `detectors.py` all support it).
 - **Installer end-to-end:** deploy into a *throwaway* vault
-  (`bash install.sh --yes --no-apps --vault ~/Memoria-test`), verify, then clean
+  (`bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test`), verify, then clean
   up — never test against the real `~/Memoria`.
 
 ## 6. Runtime / platform facts
 
+- **Check the official Hermes resources before ANY Hermes decision.** No choice about
+  Hermes config, skills, profiles, hooks, MCP, or runtime is made without first
+  consulting the authoritative sources — the local docs (`~/.hermes/hermes-agent/website/docs/`),
+  `cli-config.yaml.example`, and the bundled + optional **skills catalogs**
+  (`docs/reference/skills-catalog.md`, `optional-skills-catalog.md`). Do **not** guess
+  where Hermes reads config or infer it from Memoria's existing files — Memoria has
+  repeatedly mis-guessed (mcp.json never loaded; per-profile `.env`; the `obsidian.*`
+  fullmatch; `ocr-and-documents`/`github-repo-management` are official *bundled* skills,
+  not missing). The docs are the source of truth; verify against them, then decide.
 - The dev repo and the **Hermes runtime both run in WSL2** (Linux); you edit and run
   everything from the WSL2 side (VSCode Remote-WSL). **Obsidian and the runtime vault
   stay on Windows** — see *Where things live*.
-- **`install.ps1` is the end-user Windows launcher**: it `wslpath`-converts the
-  Windows vault path and hands off to `install.sh` inside WSL2. For dev work, run
-  `install.sh` directly in WSL2; you rarely touch `install.ps1` except to lint it.
+- **`scripts/install.ps1` is the end-user Windows launcher**: it `wslpath`-converts the
+  Windows vault path and hands off to `scripts/install.sh` inside WSL2. For dev work, run
+  `scripts/install.sh` directly in WSL2; you rarely touch `scripts/install.ps1` except to lint it.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to **LF**
-  (a CRLF in `install.sh` breaks the WSL2 shebang). Never override it — working on
+  (a CRLF in `scripts/install.sh` breaks the WSL2 shebang). Never override it — working on
   ext4 in WSL2 avoids the CRLF churn that `/mnt/c` + Windows editors introduce.
-- **Obsidian REST bridge** (integration work): WSL2-Hermes ↔ Windows-Obsidian needs
-  `networkingMode=mirrored` in `.wslconfig` so `https://127.0.0.1:27124` resolves
-  across the boundary — see *Where things live*.
+- **Obsidian REST bridge** (integration work): needs WSL2 `networkingMode=mirrored`
+  for `https://127.0.0.1:27124` to resolve across the boundary — full setup in
+  *Where things live*.
 - MCP deps install into a vault-local venv (`<vault>/.memoria/.venv`); the installer
-  wires that interpreter into each profile's `mcp.json`/`config.yaml`.
+  wires that interpreter into each profile's `config.yaml` (`mcp_servers` + hooks live
+  there — Hermes never reads a standalone `mcp.json`; ADR-27).
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
 - **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
-  ledger — read it before relying on live agent writes. Current blockers include the
-  policy-gate scope-bypass (terminal/filesystem writes skip the gate,
-  [#51](https://github.com/eranroseman/memoria-vault/issues/51)) and the per-profile
-  API key not yet reaching the runtime.
+  ledger — read it before relying on live agent writes. For the live blocker set,
+  consult its `pending`/`broken` rows and the open
+  [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
+  list restated here. (#39/#51/#58 are closed — ADR-27 made the review gate enforce
+  live in all run modes; obsidian is each lane's only write path.)
 
 ## 7. Profiles and the vault
 
 - Agent profiles live under `vault/.memoria/profiles/memoria-*/` and follow the
-  `SOUL.md` / `AGENTS.md` / `config.yaml` / `mcp.json` / `distribution.yaml`
-  structure. Keep the seven in sync.
+  `SOUL.md` / `config.yaml` / `distribution.yaml` structure (+ `cron/`, `skills/`).
+  Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
+  `mcp_servers` (ADR-27).
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
   (ADRs); current build state is `project-files/plans/implementation-status.md`.
-  `_notes/` and working reports are scratch — don't treat them as canon.
+- **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
+  findings, and distillation reports you produce belong in `_reports/` at the repo
+  root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
+  report to the repo root or into `project-files/`: those are canon, `_reports/` is
+  scratch. Once its findings are integrated into docs/ADRs/proposals, the report has
+  served its purpose. Treat nothing under `_reports/` / `_notes/` as canon.
 
 ## 8. Writing and editing docs
 
@@ -269,3 +299,30 @@ created: YYYY-MM-DD
 ## Alternatives considered
 ## Related
 ```
+
+### `project-files/plans/` — release-plan template
+
+One **single-file release plan per version**, structured by what a release needs.
+Full skeleton: `project-files/plans/release-plan-template.md` (copy it per
+release; reset every Gate/Tier State to `todo`).
+
+```markdown
+---
+release: vX.Y.Z
+status: draft        # draft | candidate | released
+released: false      # cut-flag; true only when every gate is `done`
+---
+# Release plan — vX.Y.Z
+## 1. Scope   ## 2. Gates (G# state)   ## 3. Tiers (T# state)   ## 4. Blockers
+## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Spillover
+```
+
+**Single source of state — prevents drift.** Gate/tier state lives ONLY in §2/§3 of
+the release-plan file; per-artifact build state lives ONLY in
+`implementation-status.md`. Every other doc *points* — never restates. Detail too
+long for a crisp plan (full phase steps, investigation notes) goes to a sibling
+`release-plan-<version>-spillover.md`.
+
+The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
+(+ its `-spillover.md`); the per-artifact build ledger is
+[`implementation-status.md`](project-files/plans/implementation-status.md).

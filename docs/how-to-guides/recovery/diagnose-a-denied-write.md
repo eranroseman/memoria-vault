@@ -15,14 +15,14 @@ This guide uses the audit log to tell them apart and find the reason.
 
 ## Prerequisites
 
-- The policy MCP wired and running — it writes `00-meta/02-logs/audit.jsonl`. Until the gate runs live, that log does not exist (see [implementation-status](../../../project-files/plans/implementation-status.md)); a missing *file* is a wiring problem, not a denial.
+- The policy MCP wired and running — it writes `99-system/logs/audit.jsonl`. Until the gate runs live, that log does not exist (see [Implementation status](../../../project-files/plans/implementation-status.md)); a missing *file* is a wiring problem, not a denial.
 - The [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md) available in Obsidian
 
 ## Steps
 
 **1. Open the audit-log dashboard.**
 
-From `Home.md` → the audit-log dashboard. Its primary view is recent **denies and dry-runs**, newest first. Find an entry whose `path` and `profile` match the missing write, around the time it happened.
+From `home.md` → the audit-log dashboard. Its primary view is recent **denies and dry-runs**, newest first. Find an entry whose `path` and `profile` match the missing write, around the time it happened.
 
 **2. Found a matching `deny` or `dry_run`? It was a policy decision.**
 
@@ -68,5 +68,5 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 - Approving a held (`dry_run`) write: [Work the review queue](../writing/work-the-review-queue.md)
 - Other recovery procedures: [recovery guides](README.md)
 - The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
-- The decision protocol and action vocabulary: [policy-mcp.md](../../reference/policy-mcp.md)
+- The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
 - The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)

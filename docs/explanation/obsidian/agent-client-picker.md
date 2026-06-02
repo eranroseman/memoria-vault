@@ -7,7 +7,7 @@ parent: Obsidian
 
 The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile, and a picker — driven by its `customAgents` array — for switching which profile is active. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, why switching profiles clears the conversation, and why Memoria labels its profiles by identity rather than by action.
 
-For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [use-the-acp-pane.md](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md).
+For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [How to use the agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugins](../../reference/obsidian-plugins.md).
 
 ---
 
@@ -54,6 +54,6 @@ Socratic is the **persistent** default because reading sessions demand sustained
 
 ## Related
 
-- Socratic profile: [explanation/profiles/socratic.md](../profiles/socratic.md)
-- Reading & Processing workspace (where the persistent ACP pane lives): [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- Plugin settings: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
+- Socratic profile: [The Socratic](../profiles/socratic.md)
+- Reading & Processing workspace (where the persistent ACP pane lives): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Plugin settings: [Obsidian plugins](../../reference/obsidian-plugins.md)

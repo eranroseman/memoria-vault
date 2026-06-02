@@ -7,7 +7,7 @@ grand_parent: Dashboards
 
 # The Daily Health dashboard
 
-Daily Health is the always-on system-health view, opened every morning. It is implemented as the dashboards' `index.md` home page (`00-meta/01-dashboards/index.md`) — there is no separate `daily-health.md` in the vault. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+Daily Health is the always-on system-health view, opened every morning. It lives at `00-meta/01-dashboards/daily-health.md`. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
 ---
 
@@ -41,7 +41,7 @@ Four sections, each a one-decision query: today's **blocked cards and those awai
 
 ## Related
 
-- The weekly-ritual companion: [weekly-review](../structural-health/weekly-review.md)
-- What populates today's queue: [board-state](board-state.md)
+- The weekly-ritual companion: [The weekly-review dashboard](../structural-health/weekly-review.md)
+- What populates today's queue: [The board-state dashboard](board-state.md)
 - What populates the drift signals: `drift-watch`
 - What populates the trust scores: `fleet-health`

@@ -5,13 +5,13 @@ parent: Reference
 
 # Obsidian plugins
 
-Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [zotero-plugins.md](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).
+Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [Zotero plugins](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).
 
 ---
 
 ## Required Obsidian plugins (8)
 
-Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [set-up-obsidian.md](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [How to set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Memoria breaks without these. The starter vault **ships all eight bundled and co
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
-| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/library.bib`; creates paper notes from the configured template. (Zotero-side: see [zotero-plugins.md](zotero-plugins.md).) |
+| obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
 
@@ -34,7 +34,7 @@ Install when the friction is felt. Not required for core function.
 
 | Plugin | Purpose |
 | --- | --- |
-| obsidian-homepage | Opens `Home.md` on startup (deterministic landing). |
+| obsidian-homepage | Opens `home.md` on startup (deterministic landing). |
 | smart-connections | Vector search across notes. |
 | smart-lookup | Question-first semantic search (shares index with smart-connections). |
 | omnisearch | Fast fuzzy full-text search (keyword counterpart to smart-*). |
@@ -55,7 +55,7 @@ Install when the friction is felt. Not required for core function.
 
 ## Reference plugins (evaluated, not in the install set)
 
-Documented but not in the install set. Obsidian-side evaluated alternatives. (Zotero-connector alternatives — zotlit, zotero-integration — are in [zotero-plugins.md](zotero-plugins.md).)
+Documented but not in the install set. Obsidian-side evaluated alternatives. (Zotero-connector alternatives — zotlit, zotero-integration — are in [Zotero plugins](zotero-plugins.md).)
 
 | Plugin | Status | Notes |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `templates_folder` | `00-meta/03-templates` | Must match vault schema convention. |
+| `templates_folder` | `99-system/templates` | Must match vault schema convention. |
 | `trigger_on_file_creation` | `false` | Auto-trigger races with agent writes. |
 | `enable_system_commands` | `false` | Not required by Memoria; increases attack surface. |
 
@@ -88,11 +88,11 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| BibTeX file (`citationExportPath`) | `.memoria/library.bib` | Single source of bib data; Better BibTeX auto-exports here. |
+| BibTeX file (`citationExportPath`) | `.memoria/memoria.bib` | Single source of bib data; Better BibTeX auto-exports here. |
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
 | Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
-| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `00-meta/03-templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
+| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `99-system/templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
 
 ### obsidian-git
 
@@ -163,4 +163,4 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 ## Related
 
-- How a new user enables these plugins: [quickstart.md](../how-to-guides/setup/quickstart.md)
+- How a new user enables these plugins: [How to install Memoria: quickstart](../how-to-guides/setup/quickstart.md)

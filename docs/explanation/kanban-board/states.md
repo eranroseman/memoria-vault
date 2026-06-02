@@ -62,11 +62,11 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 
 **Explanation**
 
-- Conceptual overview: [README.md](README.md)
-- Card fields: [card-schema.md](card-schema.md)
+- Conceptual overview: [Kanban board](README.md)
+- Card fields: [Why the card schema is split](card-schema.md)
 - Why no Reviewer: [README.md § why no Reviewer and no Orchestrator](README.md#why-no-reviewer-and-no-orchestrator)
-- The review dimension over these states: [review-as-state.md](../workflows/review-as-state.md)
-- The board as a state machine: [board-as-state-machine.md](../workflows/board-as-state-machine.md)
+- The review dimension over these states: [Review as a first-class state](../workflows/review-as-state.md)
+- The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
 
 **How-to**
 
@@ -74,4 +74,4 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 
 **Reference**
 
-- Board-states lookup table: [kanban-board.md](../../reference/kanban-board.md)
+- Board-states lookup table: [Kanban board reference](../../reference/kanban-board.md)

@@ -13,7 +13,7 @@ Three inline callout types written by agent profiles into vault notes. Defined v
 
 | Callout | Location | Producer | Purpose |
 | --- | --- | --- | --- |
-| `[!brief]` | Top of every paper note in `20-sources/01-papers/` | Mapper (via `comparative-brief`, triggered at ingest) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
+| `[!brief]` | Top of every paper note in `20-sources/01-papers/` | Librarian (composed during ingest by `obsidian-paper-note`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
 | `[!suggestions]` | End of any note Librarian has run link suggestions against | Librarian (after `enrich` or weekly link pass) | Bounded candidate links (5 forward + 5 backward, hard cap) with Approve / Reject affordances |
 | `[!verification]` | Top of any draft in `40-workbench/*/04-drafts/` | Verifier (auto-fired on draft `git commit`) | Per-claim trace back to claim notes; failed traces flagged with a link to the verification report |
 
@@ -22,7 +22,7 @@ Three inline callout types written by agent profiles into vault notes. Defined v
 ## Example shape
 
 ```markdown
-> [!brief] Mapper's comparative read
+> [!brief] Comparative read
 > Overlaps with: [[mamykina2010sense]], [[veinot2018good]]
 > May contradict: [[chen2021pipeline]]
 > New construct: "prosodic mimicry safety"
@@ -35,7 +35,7 @@ Three inline callout types written by agent profiles into vault notes. Defined v
 
 - **`[!suggestions]` collapsed by default; `[!brief]` and `[!verification]` expanded.** Volume-prone callouts collapse; one-shot context callouts expand.
 - **Never overwrite human edits.** If a human has edited a `[!brief]`, the next ingest run appends a new `[!brief] (updated YYYY-MM-DD)` block below it — it does not rewrite the existing one.
-- **All callout writes are policy-MCP gated.** When Mapper attaches a `[!brief]`, the write is logged with SHA-256 hashes and is reversible from the audit log.
+- **All callout writes are policy-MCP gated.** When the Librarian attaches a `[!brief]` during ingest, the write is logged with SHA-256 hashes and is reversible from the audit log.
 
 ---
 
@@ -64,7 +64,7 @@ The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over tim
 
 ## Related
 
-- Callout Manager plugin: [reference/obsidian-plugins.md](obsidian-plugins.md)
-- Computational toolbox (scoring functions): [reference/computational-toolbox.md](computational-toolbox.md)
+- Callout Manager plugin: [Obsidian plugins](obsidian-plugins.md)
+- Computational toolbox (scoring functions): [Retrieval and analysis methods](computational-toolbox.md)
 - Fleet-health dashboard: [explanation/dashboards/](../explanation/dashboards/)
-- The callout explanation page: [callouts.md](../explanation/obsidian/callouts.md)
+- The callout explanation page: [Callouts](../explanation/obsidian/callouts.md)

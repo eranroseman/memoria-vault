@@ -6,7 +6,7 @@ parent: Using Obsidian
 
 # How to navigate the dashboards
 
-Ten dashboards in `00-meta/01-dashboards/`, plus the `index.md` home page (the Daily Health view). Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
+Ten dashboards in `00-meta/01-dashboards/`, plus the `daily-health.md` dashboard (Daily Health). Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
 
 For what each dashboard shows in detail, see [explanation/dashboards/](../../explanation/dashboards/).
 
@@ -34,17 +34,17 @@ Glance at the start of every session. Shows today's HIGH and CRITICAL lint findi
 ### "What work is in flight? What's stuck?"
 **Board State** — Human workspace right pane (`Ctrl+1`).
 
-Kanban lane counts and oldest card per lane. If a card has sat in one lane more than 3 days, it's likely stuck. See [recovery/fix-stuck-card.md](../recovery/fix-stuck-card.md).
+Kanban lane counts and oldest card per lane. If a card has sat in one lane more than 3 days, it's likely stuck. See [How to fix a stuck card](../recovery/fix-stuck-card.md).
 
 ### "What papers are waiting for me to classify?"
 **Reading Pipeline** — Reading & Processing workspace, left pane bottom (`Ctrl+2`).
 
-All sources with `lifecycle: proposed`. Sort is oldest-first — clear the oldest items first. See [sources/classify-a-source.md](../sources/classify-a-source.md).
+All sources with `lifecycle: proposed`. Sort is oldest-first — clear the oldest items first. See [How to classify a source](../sources/classify-a-source.md).
 
 ### "Which papers should I be reading and discussing?"
 **Discuss Queue** — Reading & Processing workspace, left pane top (`Ctrl+2`).
 
-Paper notes that are `lifecycle: current` but haven't had a Socratic discussion pass. Sort is oldest-first. Open a paper from this queue, then open the ACP pane with **Memoria: ask about this note**. See [sources/discuss-a-paper.md](../sources/discuss-a-paper.md).
+Paper notes that are `lifecycle: current` but haven't had a Socratic discussion pass. Sort is oldest-first. Open a paper from this queue, then open the ACP pane with **Memoria: ask about this note**. See [How to discuss a paper](../sources/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 **Open Questions** — open manually.
@@ -54,12 +54,12 @@ Collects every claim note and paper note that contains an explicit `## Open ques
 ### "Are any of my claims contradicted by other claims?"
 **Contradictions** — open manually.
 
-The Verifier writes `[!contradiction]` callouts when two claim notes conflict. This dashboard aggregates them. Check before promoting a claim to canonical reference or submitting a draft — unresolved contradictions mean the argument isn't settled.
+This dashboard lists every pair of claim notes joined by a **human-set** `relations.contradicts` link. No model judges which claims conflict — the agents may *propose* a contradiction for confirmation, but the link is always human-set (the NLI-based proposer is deferred). Check before promoting a claim to canonical reference or submitting a draft — unresolved contradictions mean the argument isn't settled.
 
 ### "Something seems wrong but I can't see why"
 **Drift Watch** — open manually.
 
-Verdict band at the top: PASS / REVIEW / FAIL. FAIL means structural desynchronization between the vault source, deployed Hermes profiles, and working vault state. Open when profiles behave unexpectedly or when commands fire but produce wrong results. See [recovery/fix-profile-drift.md](../recovery/fix-profile-drift.md).
+Verdict band at the top: PASS / REVIEW / FAIL. FAIL means structural desynchronization between the vault source, deployed Hermes profiles, and working vault state. Open when profiles behave unexpectedly or when commands fire but produce wrong results. See [How to fix profile drift](../recovery/fix-profile-drift.md).
 
 ### "Are my agents performing well? Is API cost increasing?"
 **Fleet Health** — open manually.
@@ -74,7 +74,7 @@ Per-decision forensics. Open when a write operation didn't happen as expected �
 ### "What do I need to do this week?"
 **Weekly Review** — open on Fridays.
 
-Consolidated weekly agenda: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [maintenance/run-the-weekly-review.md](../maintenance/run-the-weekly-review.md) guide walks through it step by step.
+Consolidated weekly agenda: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [How to run the weekly review](../maintenance/run-the-weekly-review.md) guide walks through it step by step.
 
 ### "What orphan or noise files are in the vault?"
 **Loose Ends** — open during the weekly review or after a lint pass.
@@ -101,6 +101,6 @@ Files named `TODO`, `tmp`, `untitled`, or matching other noise patterns. More th
 
 ## Related
 
-- Weekly review procedure: [maintenance/run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
-- Workspace layouts and hotkeys: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- Dashboard design rationale: [explanation/dashboards/README.md](../../explanation/dashboards/README.md)
+- Weekly review procedure: [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Dashboard design rationale: [Dashboards](../../explanation/dashboards/README.md)

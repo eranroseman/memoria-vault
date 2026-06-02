@@ -1,5 +1,5 @@
 # Hermes profile manifest. Read by `hermes profile install`; its env_requires
-# block is what Hermes writes out as .env.EXAMPLE (install.ps1 then copies that
+# block is what Hermes writes out as .env.EXAMPLE (scripts/install.ps1 then copies that
 # to .env on first install). Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-librarian
 version: 0.1.0

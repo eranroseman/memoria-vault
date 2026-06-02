@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Metrics aggregator -- roll fleet run-history + audit into lane-metric notes.
 
-Writes `00-meta/08-metrics/lane-<lane>-<period>.md` (one per lane per ISO week),
+Writes `99-system/metrics/lane-<lane>-<period>.md` (one per lane per ISO week),
 which the [fleet-health dashboard] reads for the per-lane **trust score** (0-100).
 
 Inputs (all best-effort -- missing sources degrade gracefully):
-  - 00-meta/02-logs/audit.jsonl          deny rate (policy-MCP decisions, this period)
+  - 99-system/logs/audit.jsonl          deny rate (policy-MCP decisions, this period)
   - Hermes board (`hermes kanban list --json`)   success rate + retry rate per lane
-  - 00-meta/02-logs/lint-findings.jsonl  drift incidents (Linter), if present
+  - 99-system/logs/lint-findings.jsonl  drift incidents (Linter), if present
 
 Trust score (glossary "Trust score"): combines audit **deny rate**, **retry rate**,
 **success rate**, **drift incidents**, **secret hits**, and accept/reject ratios;
@@ -30,12 +30,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-METRICS_RELDIR = "00-meta/08-metrics"
-AUDIT_RELPATH = "00-meta/02-logs/audit.jsonl"
-LINT_RELPATH = "00-meta/02-logs/lint-findings.jsonl"
-DISPOSITION_RELPATH = "00-meta/02-logs/disposition.jsonl"        # accept | edit | reject per review
-COST_RELPATH = "00-meta/02-logs/cost.jsonl"                      # API spend + tokens per card
-TRANSITIONS_RELPATH = "00-meta/02-logs/board-transitions.jsonl"  # status/review transitions (for decision time)
+METRICS_RELDIR = "99-system/metrics"
+AUDIT_RELPATH = "99-system/logs/audit.jsonl"
+LINT_RELPATH = "99-system/logs/lint-findings.jsonl"
+DISPOSITION_RELPATH = "99-system/logs/disposition.jsonl"        # accept | edit | reject per review
+COST_RELPATH = "99-system/logs/cost.jsonl"                      # API spend + tokens per card
+TRANSITIONS_RELPATH = "99-system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 LANES = ("memoria-librarian", "memoria-mapper", "memoria-socratic", "memoria-writer",
@@ -136,6 +136,41 @@ def read_drift(vault: Path, period: str) -> dict[str, int]:
         lane = e.get("lane") or e.get("profile") or "fleet"
         out[lane] = out.get(lane, 0) + 1
     return out
+
+
+def read_lint_verdict(vault: Path, period: str) -> dict:
+    """Severity counts + PASS/REVIEW/FAIL verdict from lint-findings.jsonl for `period`.
+
+    Matches the Linter's verdict rule (detectors.py `verdict`): any CRITICAL -> FAIL;
+    any HIGH/MEDIUM -> REVIEW; otherwise PASS."""
+    counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+    for e in _iter_jsonl(vault, LINT_RELPATH, period):
+        sev = e.get("severity", "")
+        if sev in counts:
+            counts[sev] += 1
+    if counts["CRITICAL"]:
+        v = "FAIL"
+    elif counts["HIGH"] or counts["MEDIUM"]:
+        v = "REVIEW"
+    else:
+        v = "PASS"
+    return {"verdict": v, "total": sum(counts.values()), **counts}
+
+
+def lint_verdict_note(v: dict, period: str, now: datetime) -> str:
+    fm = {
+        "type": "lint-verdict", "period": period, "verdict": v["verdict"],
+        "finding_count": v["total"], "critical_count": v["CRITICAL"],
+        "high_count": v["HIGH"], "medium_count": v["MEDIUM"], "low_count": v["LOW"],
+        "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    lines = ["---"]
+    for k, val in fm.items():
+        lines.append(f'{k}: "{val}"' if isinstance(val, str) else f"{k}: {val}")
+    lines += ["---", "", f"# Lint verdict — {period}", "",
+              f"**{v['verdict']}** · {v['total']} finding(s): {v['CRITICAL']} critical · "
+              f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.", ""]
+    return "\n".join(lines)
 
 
 def _iter_jsonl(vault: Path, relpath: str, period: str | None):
@@ -336,7 +371,13 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
         (outdir / f"lane-{lane.replace('memoria-', '')}-{period}.md").write_text(
             lane_note(m, period, now), encoding="utf-8")
         written.append({"lane": lane, "trust_score": m["trust_score"], "band": m["band"]})
-    return {"period": period, "lanes": written}
+    verdict_out = None
+    if (vault / LINT_RELPATH).is_file():                      # only once the Linter has run
+        lv = read_lint_verdict(vault, period)
+        (outdir / f"lint-verdict-{period}.md").write_text(
+            lint_verdict_note(lv, period, now), encoding="utf-8")
+        verdict_out = lv["verdict"]
+    return {"period": period, "lanes": written, "verdict": verdict_out}
 
 
 # --------------------------------------------------------------------------- #
@@ -364,7 +405,7 @@ def self_test() -> int:
 
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
-        (vault / "00-meta" / "02-logs").mkdir(parents=True)
+        (vault / "99-system" / "logs").mkdir(parents=True)
         # audit: writer made 6 writes, 1 deny, this period
         audit_lines = []
         for i in range(5):
@@ -396,7 +437,7 @@ def self_test() -> int:
     # --- new telemetry: disposition, cost, decision-time --------------------
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
-        logs = vault / "00-meta" / "02-logs"
+        logs = vault / "99-system" / "logs"
         logs.mkdir(parents=True)
         disp_rows = ([{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
                      + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]
@@ -426,6 +467,25 @@ def self_test() -> int:
         check("note carries decision_time_min", "decision_time_min: 30.0" in note)
         check("note carries cost", "cost: 0.4" in note)
         check("note carries pass^k null placeholder", "consistency_passk: null" in note)
+
+    # --- lint-verdict rollup (periodized from timestamped lint-findings) -----
+    with tempfile.TemporaryDirectory() as td:
+        vault = Path(td)
+        logs = vault / "99-system" / "logs"
+        logs.mkdir(parents=True)
+        (logs / "lint-findings.jsonl").write_text("\n".join(json.dumps(r) for r in [
+            {"timestamp": "2026-05-28T02:00:00Z", "detector": "broken-wikilink", "severity": "HIGH", "path": "a.md", "message": "x"},
+            {"timestamp": "2026-05-28T02:00:00Z", "detector": "stale-fleeting", "severity": "LOW", "path": "b.md", "message": "y"},
+            {"timestamp": "2026-01-01T02:00:00Z", "detector": "fama-exposure", "severity": "CRITICAL", "path": "c.md", "message": "z"},  # out-of-period
+        ]), encoding="utf-8")
+        lv = read_lint_verdict(vault, period)
+        check("lint verdict REVIEW (HIGH, no CRITICAL in-period)", lv["verdict"] == "REVIEW")
+        check("lint counts in-period only (1 HIGH, 1 LOW, 0 CRITICAL)",
+              (lv["HIGH"], lv["LOW"], lv["CRITICAL"], lv["total"]) == (1, 1, 0, 2))
+        aggregate(vault, [], now=now)
+        vnote = (vault / METRICS_RELDIR / "lint-verdict-2026-W22.md").read_text(encoding="utf-8")
+        check("lint-verdict note written with type + verdict",
+              'type: "lint-verdict"' in vnote and 'verdict: "REVIEW"' in vnote)
 
     print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
     return failures

@@ -1,6 +1,6 @@
 {
   "command_timeout": 5,
-  "templates_folder": "00-meta/03-templates",
+  "templates_folder": "99-system/templates",
   "templates_pairs": [["", ""]],
   "trigger_on_file_creation": false,
   "auto_jump_to_cursor": false,

@@ -5,7 +5,7 @@ parent: Reference
 
 # Note types
 
-The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).
+The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [Frontmatter fields](frontmatter.md); for conceptual model see [The vault](../explanation/architecture/vault.md).
 
 ---
 
@@ -30,7 +30,7 @@ The 16 note types, their canonical folders, templates, lifecycle, and ownership.
 | `deliverable` | `50-deliverables/` | `deliverable.md` | Human / Coder (export task) | Terminal | `current` |
 | `candidate-note` | `10-inbox/03-candidates/` | `candidate-note.md` | Librarian (`find`) / Verifier (`gap`) / human | Human (include → ingest; exclude → archive) | `proposed` → `archived` |
 
-All 16 templates live in `00-meta/03-templates/`.
+All 16 templates live in `99-system/templates/`.
 
 > **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/decisions/17-shared-candidate-frontmatter.md).
 
@@ -51,6 +51,20 @@ The four **bare names** (`moc`, `canvas`, `draft`, `deliverable`) are not knowle
 
 ---
 
+## Slug collision resolution
+
+When two entities would generate the same slug, disambiguate **deterministically** — no lookup table required. The rule is fixed so the same collision always resolves the same way:
+
+| Collision | Resolution |
+| --- | --- |
+| Two researchers with the same name | Append affiliation: `smith-john-iowa` vs `smith-john-stanford` |
+| Two labs with similar names | Use the full institution: `hci-lab-iowa` vs `hci-lab-cmu` |
+| Company vs person, same surname | Person keeps the bare slug; the organization gets an `-org` suffix |
+| Same package name across registries | Registry prefix: `pypi-requests` vs `npm-requests` |
+| Repo vs person, same name | Repos always carry an `{owner}-` prefix — no collision is possible by construction |
+
+---
+
 ## Lifecycle per type
 
 Standard lifecycle is `proposed → current → archived`. Deviations:
@@ -61,7 +75,7 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 | `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `budding` → `evergreen`). |
 | `moc` | Can be `dormant` (topic has gone quiet; not archived yet). |
 | `deliverable` | Created as `current`; never promoted or archived in normal flow. |
-| `project-note` | Refines `current` with `project_phase` (`active` · `paused` · `complete` · `abandoned`). |
+| `project-note` | Refines `current` with `project_phase` (`planning` · `active` · `paused` · `complete`). |
 | `draft` | Refines `current` with `draft_stage` (`outline` · `rough` · `polished` · `submitted`). |
 
 ---
@@ -84,7 +98,7 @@ canvas ────────► draft           (informs structure; canvas th
 code-note ─────► project-note    (linked from project)
 ```
 
-This is the mechanical view of every type transition, including the workbench-internal moves (`canvas → draft`, `code-note → project-note`) that the conceptual model omits. An `answer-note` is created fresh by the Writer in response to a query — it is **not** promoted from a `fleeting-note`. For *why* the gated promotions require human authorship — and why a `paper-note` never becomes a `claim-note` — see [promotion-model.md](../explanation/knowledge/promotion-model.md).
+This is the mechanical view of every type transition, including the workbench-internal moves (`canvas → draft`, `code-note → project-note`) that the conceptual model omits. An `answer-note` is created fresh by the Writer in response to a query — it is **not** promoted from a `fleeting-note`. For *why* the gated promotions require human authorship — and why a `paper-note` never becomes a `claim-note` — see [Why promotion is gated](../explanation/knowledge/promotion-model.md).
 
 Promotion constraints:
 
@@ -101,17 +115,26 @@ Promotion constraints:
 
 ## MOC creation threshold
 
-Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim notes combined). Build child MOCs when a branch has **> 20 claim notes + > 10 paper notes**. See [linking.md](linking.md#moc-thresholds) for the full threshold table.
+Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim notes combined). Build child MOCs when a branch has **> 20 claim notes + > 10 paper notes**. See [Wikilink and link conventions](linking.md#moc-thresholds) for the full threshold table.
+
+---
+
+## Per-type notes
+
+A few types carry guidance the tables above don't capture:
+
+- **`code-note` and Jupyter notebooks.** A notebook is a `code-note` with `format: notebook` — the `.ipynb` lives alongside the markdown note in `40-workbench/*/06-code/`, and the note carries the same provenance, purpose, and links as any other code note. Don't create a separate `notebook-note` type: the discipline is identical (provenance, purpose, motivating literature); only the file format differs.
+- **`reference-note` stability.** A reference note is compiled from one or more stable (`evergreen`) claim notes. If it changes substantially every week, it isn't a reference note yet — it's a budding `claim-note`. Move it back to `30-synthesis/01-claims/`.
 
 ---
 
 ## Template locations
 
-Templates ship at `00-meta/03-templates/<type>.md`. The Templater plugin reads them; QuickAdd commands invoke them. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
+Templates ship at `99-system/templates/<type>.md` as **raw notes** — frontmatter at line 1, then the body skeleton. QuickAdd commands instantiate them (filling `{{VALUE}}`/`{{DATE}}` tokens); agent skills read them when authoring notes directly. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
 
 ---
 
 ## Related
 
-- The conceptual model behind the types: [note-types.md](../explanation/knowledge/note-types.md)
-- The promotion rules referenced here: [promotion-model.md](../explanation/knowledge/promotion-model.md)
+- The conceptual model behind the types: [Note types and epistemic roles](../explanation/knowledge/note-types.md)
+- The promotion rules referenced here: [Why promotion is gated](../explanation/knowledge/promotion-model.md)

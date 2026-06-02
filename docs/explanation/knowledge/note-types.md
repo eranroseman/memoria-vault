@@ -67,7 +67,7 @@ The distinction between `paper-note` and `item-note` is sometimes unclear (a cod
 
 The claim note is what distinguishes a research vault from a document store. A vault full of paper notes is just a bibliography with annotations — useful, but not compounding. A vault with claim notes is a knowledge graph: the human's own assertions, grounded in evidence, connected to each other.
 
-The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
+The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
 
 The test: if the claim note's title contains the word "and" doing real conceptual work, it should be two notes.
 
@@ -75,8 +75,8 @@ The test: if the claim note's title contains the word "and" doing real conceptua
 
 ## Related
 
-- Why these roles map to lifecycle folders: [lifecycle-over-topic.md](lifecycle-over-topic.md)
-- How notes move between roles: [promotion-model.md](promotion-model.md)
-- The *how* of note bodies: [note-body-structure.md](note-body-structure.md)
-- Operating the paper note: [discuss-a-paper.md](../../how-to-guides/sources/discuss-a-paper.md)
-- Complete note-type reference (fields, templates): [reference/note-types.md](../../reference/note-types.md)
+- Why these roles map to lifecycle folders: [Why folders encode lifecycle, not topic](lifecycle-over-topic.md)
+- How notes move between roles: [Why promotion is gated](promotion-model.md)
+- The *how* of note bodies: [Note body structure](note-body-structure.md)
+- Operating the paper note: [How to discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
+- Complete note-type reference (fields, templates): [Note types](../../reference/note-types.md)

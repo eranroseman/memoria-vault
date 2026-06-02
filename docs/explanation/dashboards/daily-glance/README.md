@@ -12,5 +12,5 @@ Dashboards you check at the start of a session to answer "is anything wrong, and
 
 | Dashboard | Question it answers |
 |---|---|
-| [Daily Health](daily-health.md) | Is anything broken right now? What needs attention today? (implemented as the dashboards' `index.md`) |
+| [Daily Health](daily-health.md) | Is anything broken right now? What needs attention today? |
 | [Board state](board-state.md) | What work is in flight? Where are cards stuck? |
