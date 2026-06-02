@@ -6,49 +6,42 @@ Open every morning, glance ~30 seconds, close if nothing's red. The **system-hea
 
 Cards needing you: `blocked` (your decision) or a `done` card with `review_status: requested` (awaiting approval). Oldest first; ≥ 3 rows is the signal to clear them before larger work.
 
-```dataviewjs
-const cards = await dv.io.load("99-system/logs/board-state.jsonl");
-if (!cards || !cards.trim()) { dv.paragraph("_No data yet._"); return; }
-const events = cards.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
-const active = events.filter(e =>
-  e.state === "blocked" || e.review_status === "requested"
-).sort((a, b) => a.last_updated.localeCompare(b.last_updated)).slice(0, 10);
-dv.table(
-  ["State", "Lane", "Card", "Waiting since", "Reason"],
-  active.map(c => [c.state, c.lane, c.task_id, c.last_updated, c.reason ?? c.review_owner ?? ""])
-);
+```dataview
+TABLE WITHOUT ID status AS State, assignee AS Lane, file.link AS Card, last_updated AS "Waiting since", reason AS Reason
+FROM "99-system/board"
+WHERE status = "blocked" OR review_status = "requested"
+SORT last_updated ASC
+LIMIT 10
 ```
 
 ## 2. Drift signals
 
-HIGH/CRITICAL structural-detector findings in the last 24h — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch|Drift watch]].
+HIGH/CRITICAL structural-detector findings from the latest lint — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch|Drift watch]].
 
 ```dataviewjs
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
-const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-const high = events.filter(e =>
-  e.reported_at >= cutoff && (e.severity === "HIGH" || e.severity === "CRITICAL")
-);
+const high = events.filter(e => e.severity === "HIGH" || e.severity === "CRITICAL");
+if (!high.length) { dv.paragraph("✅ No HIGH/CRITICAL findings."); return; }
 dv.table(
   ["Detector", "Severity", "Finding", "Path"],
-  high.map(e => [e.detector, e.severity, e.finding, e.path])
+  high.map(e => [e.detector, e.severity, e.message, e.path])
 );
 ```
 
 ## 3. Lane health
 
-Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run today. Contributing inputs: [[fleet-health|Fleet Health]].
+Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run this week. Contributing inputs: [[fleet-health|Fleet Health]].
 
 ```dataview
 TABLE WITHOUT ID
   lane AS Lane,
   trust_score AS Trust,
-  task_count AS Tasks,
-  task_success_rate AS "Success%"
+  samples AS Tasks,
+  success_rate AS "Success%"
 FROM "99-system/metrics"
-WHERE type = "lane-metric" AND period = string(date(today))
+WHERE type = "lane-metric" AND period = dateformat(date(today), "kkkk-'W'WW")
 SORT trust_score ASC
 ```
 
