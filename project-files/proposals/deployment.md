@@ -130,7 +130,7 @@ The VPS is the primary, and a VPS is always on. SSH-spawned ACP becomes the *rec
 1. **Start vault-only** if you don't need ACP at all.
 2. **SSH-spawned ACP** as the default ACP pattern. No local Hermes install on the laptop. The ACP plugin spawns the VPS's Hermes over Tailscale-bridged SSH. You can ACP with any profile because the VPS has the full suite. Zero install drift — the laptop always uses the primary's Hermes.
 3. **Local Socratic-only install** as an *offline fallback* if you regularly work where SSH to the VPS is unreliable (planes, trains, weak hotel wifi). Configure the `agent-client` plugin with two `command` entries — primary SSH command and a fallback local command — and switch when offline.
-4. **Local full install** only for a *developer* role (see [Phase 3 install discipline](timeline.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
+4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../plans/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
 
 The architectural reason the recommendation differs: local-mesh's primary is unreliable (desktop sleeps), so the laptop needs a local agent for ACP to be usable; always-on's primary is reliable (VPS always on), so SSH-spawn removes the need for a local install entirely.
 

@@ -1,13 +1,14 @@
 # Project files
 
-Four folders. One job each.
+Three folders. One job each.
 
 | Folder | What it holds | When to look here |
 |---|---|---|
 | [decisions/](decisions/) | Accepted architectural decisions | You want to know *why* something is the way it is |
 | [proposals/](proposals/) | Deferred capabilities and ideas under consideration | You want to add a feature or understand what's been considered |
-| [rejected/](rejected/) | Tools and approaches evaluated and not adopted | You want to avoid re-evaluating something already considered |
-| [plans/](plans/) | Timeline, implementation status, release plan | You want to know what's built and what to do next |
+| [plans/](plans/) | Release plans, build status, and the roadmap | You want to know what's built and what to do next |
+
+Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](decisions/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
 
 ---
 

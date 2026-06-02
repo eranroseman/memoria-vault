@@ -1,14 +1,21 @@
-# Timeline and phases
+---
+release: 0.1.0
+status: draft
+---
 
-The week-by-week ramp from [Memoria v0.1](README.md) to production corpus use, plus the six implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
+# Release plan — v0.1.0 — spillover
 
-## Phases
+The detail behind [release-plan-v0.1.md](release-plan-v0.1.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
 
-Three phases from initial setup to production corpus use. Phase 1 installs every Memoria v0.1 component; Phase 2 seeds and validates the corpus; Phase 3 activates density-gated features and automates the edges. The direction throughout: **the system is complete from day 1; corpus density drives what you activate, not what you install.**
+## Phases — full roadmap
+
+The week-by-week ramp from [Memoria v0.1](README.md) to production corpus use, plus the four implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
+
+Four phases from initial setup through production corpus use and beyond. Phase 1 installs every Memoria v0.1 component; Phase 2 seeds and validates the corpus; Phase 3 activates density-gated features and automates the edges; Phase 4 extends to a second device when one enters regular use. The direction throughout: **the system is complete from day 1; corpus density drives what you activate, not what you install.**
 
 ### Phase 1 — Full system setup · Weeks 1–2
 
-**Goal.** Install every Memoria v0.1 component on a single machine (`local-only` deployment): schema contract, complete vault structure, all profiles, all skills, and the Kanban board. Everything in v0.1 lands here on one device. Later phases use these components — they do not install new ones. Multi-device is a Phase 3 concern.
+**Goal.** Install every Memoria v0.1 component on a single machine (`local-only` deployment): schema contract, complete vault structure, all profiles, all skills, and the Kanban board. Everything in v0.1 lands here on one device. Later phases use these components — they do not install new ones. Multi-device is a Phase 4 concern.
 
 **Steps.**
 
@@ -48,10 +55,10 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_recommendation` recommendations the human promotes to `review_status: approved`.
 7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `00-meta/board/<task_id>.md` and `00-meta/02-logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
 8. **Enable the six-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact, so this capture ships in v0.1 (the analysis harnesses in [measurement-and-verification.md](../proposals/measurement-and-verification.md) stay deferred). The six signals — all emitting and self-tested — are: (1) suggestion disposition (accept : edit : reject) per lane → `disposition.jsonl`; (2) operator decision time per `awaiting-review` card → derived from `board-transitions.jsonl`; (3) per-card state-transition timestamps → `board-transitions.jsonl`; (4) API cost per card → `cost.jsonl`; (5) policy deny-reasons → `audit.jsonl`; (6) FAMA exposure (drafts citing a superseded claim) → the `fama-exposure` detector in `lint-findings.jsonl`. Exact schemas: [reference/telemetry.md](../../docs/reference/telemetry.md).
-9. Configure the review-gate mode per [proposal-31](../proposals/PROP-08-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
+9. Configure the review-gate mode per [PROP-08](../proposals/PROP-08-configurable-review-gate-mode.md): `blocking` (default) vs `advisory`. Stamp `review_mode` on every card. This makes the comparison arm available later without retrofitting — a within-subject baseline (same operator, comparable projects) requires that both arms log identically from the start.
 10. Do not prune session `state.db`. It is small, and it preserves the reasoning-trace data needed for any retrospective analysis.
 
-**Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. All five pending Obsidian plugins are installed and dashboard queries return real data. Policy gate self-tests pass (34 + 32 checks). `board_export.py` is running and `00-meta/board/` is populating. All seven profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch. **The five-signal log is running and emitting all five signals. Every profile prompt is committed to git.**
+**Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. All five pending Obsidian plugins are installed and dashboard queries return real data. Policy gate self-tests pass (34 + 32 checks). `board_export.py` is running and `00-meta/board/` is populating. All seven profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch. **The six-signal log is running and emitting all six signals. Every profile prompt is committed to git.**
 
 ### Phase 2 — Seed and synthesize · Weeks 3–8
 
@@ -93,9 +100,9 @@ Three phases from initial setup to production corpus use. Phase 1 installs every
 11. Configure session logging to write to `00-meta/02-logs/` and commit weekly.
 12. **Retain the raw audit log and board history indefinitely.** Do not rotate or prune `00-meta/02-logs/audit.jsonl` or session `state.db`. Fleet observability and static reports are pure backfill from these logs — they have no value if the logs are gone.
 13. **Keep approved drafts** through the Linter's answer-draft retention sweep (the `stale-answer-drafts` detector flags `10-inbox/02-answers/` notes older than 90 days for keep/promote/discard; no auto-archive). They seed the vault-CiteME fixture and cannot be reconstructed.
-14. **Run the comparison arm** if you have accumulated enough review data: switch the review-gate mode to `advisory` on a comparable project (same operator), keep the same logger, and compare false-promotion rate and decision time against the `blocking` baseline. Add a promotion-reversal event so false-promotion is measurable. See [proposal-31](../proposals/PROP-08-configurable-review-gate-mode.md).
+14. **Run the comparison arm** if you have accumulated enough review data: switch the review-gate mode to `advisory` on a comparable project (same operator), keep the same logger, and compare false-promotion rate and decision time against the `blocking` baseline. Add a promotion-reversal event so false-promotion is measurable. See [PROP-08](../proposals/PROP-08-configurable-review-gate-mode.md).
 
-**Exit criteria.** The vault stops being a place you build and becomes a place you write from. The system runs without daily babysitting. The human shows up for review and synthesis; everything else flows. Three months of five-signal log data is available for retrospective analysis.
+**Exit criteria.** The vault stops being a place you build and becomes a place you write from. The system runs without daily babysitting. The human shows up for review and synthesis; everything else flows. Three months of six-signal log data is available for retrospective analysis.
 
 ### Phase 4 — Multi-device · When a second device enters regular use
 

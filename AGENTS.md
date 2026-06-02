@@ -189,10 +189,12 @@ reading it. Before opening a PR:
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
 - **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
-  ledger — read it before relying on live agent writes. Current blockers include the
-  policy-gate scope-bypass (terminal/filesystem writes skip the gate,
-  [#51](https://github.com/eranroseman/memoria-vault/issues/51)) and the per-profile
-  API key not yet reaching the runtime.
+  ledger — read it before relying on live agent writes. For the live blocker set,
+  consult its `pending`/`broken` rows and the open
+  [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
+  list restated here. (At time of writing the P0 is
+  [#58](https://github.com/eranroseman/memoria-vault/issues/58) — the review gate is a
+  no-op in oneshot (`-z`) mode, so automation-lane writes bypass it; #39/#51 are closed.)
 
 ## 7. Profiles and the vault
 
@@ -269,3 +271,30 @@ created: YYYY-MM-DD
 ## Alternatives considered
 ## Related
 ```
+
+### `project-files/plans/` — release-plan template
+
+One **single-file release plan per version**, structured by what a release needs.
+Full skeleton: `project-files/plans/release-plan-template.md` (copy it per
+release; reset every Gate/Tier State to `todo`).
+
+```markdown
+---
+release: vX.Y.Z
+status: draft        # draft | candidate | released
+released: false      # cut-flag; true only when every gate is `done`
+---
+# Release plan — vX.Y.Z
+## 1. Scope   ## 2. Gates (G# state)   ## 3. Tiers (T# state)   ## 4. Blockers
+## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Spillover
+```
+
+**Single source of state — prevents drift.** Gate/tier state lives ONLY in §2/§3 of
+the release-plan file; per-artifact build state lives ONLY in
+`implementation-status.md`. Every other doc *points* — never restates. Detail too
+long for a crisp plan (full phase steps, investigation notes) goes to a sibling
+`release-plan-<version>-spillover.md`.
+
+The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
+(+ its `-spillover.md`); the per-artifact build ledger is
+[`implementation-status.md`](project-files/plans/implementation-status.md).
