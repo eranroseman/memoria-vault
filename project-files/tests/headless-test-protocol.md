@@ -30,7 +30,7 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 The five tooling modules each ship a synthetic-fixture `--self-test` (no vault needed). **All must report 0 failures.**
 
 **A1. Policy MCP.** `python vault/.memoria/mcp/policy_mcp.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s) [all suite].` (34 checks)
+- ✓ Pass: `OK: 0 failing check(s) [all suite].` (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all 7 lanes' allow/deny contract).
 - ✗ Fails: a policy decision changed — diff against the lane-override rules and the review-gated-zone / auto-fix-class logic.
 
 **A2. Policy hook (the gate's pre/post).** `python vault/.memoria/mcp/policy_hook.py --self-test`
