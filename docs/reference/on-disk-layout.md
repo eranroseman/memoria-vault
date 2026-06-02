@@ -83,7 +83,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── lint-findings.jsonl         # pending
 │   └── cron-history.jsonl          # pending
 ├── 03-templates/                   # 16 note templates (see note-types.md)
-├── 04-reference/                   # 10 human-facing reference notes (shipped)
+├── 04-reference/                   # 12 human-facing reference notes (shipped)
 ├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
 ├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
 ├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
@@ -257,6 +257,8 @@ Notes in `00-meta/` that ship with the starter vault for human reference.
 | `00-meta/04-reference/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. | Human (rarely changes) |
 | `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/obsidian-plugins.md`. | Human (sync with plugin changes) |
 | `00-meta/04-reference/design-system.md` | Canonical visual-style source: palette, typography, spacing, layout, motion, voice. Drives CSS snippet generators and Pandoc export configs. | Human (edits define the brand) |
+| `00-meta/04-reference/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol — used only in systematic-review mode (ADR-16/19). | Human (per review) |
+| `00-meta/04-reference/vocabulary-example.md` | Worked HCI + digital-health controlled-vocabulary example — a copy-and-edit starting point, not a default (schema stays open by design). | Human (optional starting point) |
 
 The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lags the corresponding design file.
 

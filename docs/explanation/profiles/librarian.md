@@ -20,6 +20,8 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 
 **Highest external API surface in the system.** Librarian is the only profile that regularly calls OpenAlex, Semantic Scholar, Crossref, PubMed, and Unpaywall. This concentration is intentional: isolating all external API calls in one profile makes the external surface visible, auditable, and controllable. The lane policy requires each skill to declare its API usage explicitly.
 
+> **Browser fallback (available, not wired in v0.1).** Some discovery targets — publisher landing pages, lab sites, preprint servers, research GitHub repos — expose no structured API the calls above can reach. Hermes's browser capability covers that long tail by rendering the page and extracting elements. If adopted, it is scoped to the `discover` skill only and never to canonical-zone writes — it surfaces candidates, it does not file them.
+
 ---
 
 ## What the Librarian is not

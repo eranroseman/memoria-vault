@@ -40,6 +40,7 @@ For guidance on choosing between these connectors see [set-up-zotero.md](../how-
 | --- | --- | --- |
 | zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. See comparison table above. |
 | zotero-integration | Not in use | Imports Zotero items via HTTP API; useful if a PDF-annotation workflow is adopted. |
+| Inciteful | Not in use | Citation-network discovery (Zotero plugin + public Inciteful API). Surfaces central related papers not yet in the library — a complement to OpenAlex forward/backward snowballing in the discover stage. Additive to an already-covered capability. |
 
 ---
 

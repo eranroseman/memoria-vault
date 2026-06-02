@@ -44,7 +44,41 @@ If the type is ambiguous, the Librarian asks before proceeding. The agent never 
 | Organization | ROR API + OpenAlex Institutions | (none — entity note) | Affiliated people → person-notes |
 | Venue | OpenAlex Venues + DBLP | (none — entity note) | (none) |
 
-**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note.
+**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../../project-files/proposals/schema-and-retrieval.md)).
+
+### PDF extraction tools
+
+Marker is the chosen extractor; the others are documented for the cases Marker isn't the best fit.
+
+| Tool | Best for | Status |
+| --- | --- | --- |
+| **Marker** (Datalab) | Math-heavy papers; structured Markdown; `--use_llm` for accuracy | **Chosen** |
+| **Docling** (IBM / Linux Foundation) | General PDFs + tables/figures; ships a `docling-mcp` server that drops in alongside the Zotero/Obsidian MCPs | Strong alternative for table/figure-heavy corpora |
+| **PyMuPDF4LLM** | Fastest CPU-only path for clean, text-based PDFs | Pre-processing |
+| **MarkItDown** (Microsoft) | Web pages, Office docs, HTML → Markdown | Current fallback (above) |
+| **GROBID** (Inria) | Header / reference parsing for PDFs **without** a DOI (~0.87–0.90 F1) | Edge case only — not a pipeline stage |
+| **Nougat** (Meta) | Math LaTeX | Unmaintained — avoid |
+
+### Citation-format parsers — do not reimplement
+
+Every citation workflow rests on mature parsers. Encoding, cross-referencing, and CSL edge cases are deep; use the library rather than hand-rolling.
+
+| Format | Library | Note |
+| --- | --- | --- |
+| BibTeX / BibLaTeX | `bibtexparser` ≥ 2.0 | Handles encoding, special chars, cross-refs |
+| RIS | `rispy` | Round-trip; used internally by ASReview |
+| CSL-JSON | `citeproc-py` + `citeproc-py-styles` | CSL 1.0.1; plain/RST/HTML output |
+| JATS XML (publisher) | `pubmed-parser` or `lxml` | PMC + most publishers |
+| Convert between formats | `pypandoc` | Swiss-army knife across the above + Markdown |
+
+### Identifier reconciliation helpers
+
+For the enrichment path, when resolving an author, institution, or DOI to a stable identifier:
+
+- `habanero.content_negotiation(doi, format="bibtex")` — one call covers DOI → BibTeX / CSL-JSON / RIS.
+- [`drAbreu/alex-mcp`](https://github.com/drAbreu/alex-mcp) — author disambiguation (OpenAlex autocomplete + ORCID matching); installable as an MCP server companion.
+- OpenRefine + ORCID/ROR/Wikidata — bulk entity reconciliation for person and organization notes.
+- `python-orcid` (public search) and `pyalex.Institutions()["search"]` (→ ROR) — programmatic person/institution lookup.
 
 ---
 

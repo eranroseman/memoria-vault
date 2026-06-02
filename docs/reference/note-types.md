@@ -51,6 +51,20 @@ The four **bare names** (`moc`, `canvas`, `draft`, `deliverable`) are not knowle
 
 ---
 
+## Slug collision resolution
+
+When two entities would generate the same slug, disambiguate **deterministically** — no lookup table required. The rule is fixed so the same collision always resolves the same way:
+
+| Collision | Resolution |
+| --- | --- |
+| Two researchers with the same name | Append affiliation: `smith-john-iowa` vs `smith-john-stanford` |
+| Two labs with similar names | Use the full institution: `hci-lab-iowa` vs `hci-lab-cmu` |
+| Company vs person, same surname | Person keeps the bare slug; the organization gets an `-org` suffix |
+| Same package name across registries | Registry prefix: `pypi-requests` vs `npm-requests` |
+| Repo vs person, same name | Repos always carry an `{owner}-` prefix — no collision is possible by construction |
+
+---
+
 ## Lifecycle per type
 
 Standard lifecycle is `proposed → current → archived`. Deviations:

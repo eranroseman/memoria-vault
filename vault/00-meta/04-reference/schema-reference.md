@@ -93,4 +93,6 @@ Frontmatter has three namespaces with different ownership:
 
 **For depth:** [docs/reference/frontmatter.md](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) — the authoritative schema design (this note is the in-vault human-facing mirror; the `relations` vocabulary lives there too, per ADR-08).
 
+**Starting vocabulary:** the `topic` / `study_design` / `methods` fields are open by design. For a worked HCI + digital-health example to copy and edit (or discard), see [vocabulary-example.md](vocabulary-example.md).
+
 **Drift discipline.** When the design schema changes, update this file to match. The Linter's structural-drift check flags this file if `updated` is older than the corresponding design doc.

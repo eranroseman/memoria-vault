@@ -102,6 +102,19 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 
 > **Note on `added`.** Earlier schema revisions used a single `added` field; the canonical pair is now `created` + `updated`. Any lingering `added` in an old note should be read as an alias for `created`.
 
+### Enrichment staleness cadence
+
+`enriched_date` is read against a per-type cadence — different source types decay at different rates, so a single universal threshold over- or under-flags depending on type. The Linter is the authority for these values (`memoria-linter` SOUL.md, "Enrichment staleness by type"); it surfaces stale notes in the weekly dashboard and never re-enriches without an explicit or scheduled trigger.
+
+| Source type | Re-enrich every | What changes |
+| --- | --- | --- |
+| Article | 180 days | Citation count, related papers |
+| Preprint | 30 days | May have been published; check for a journal version |
+| Person | 90 days | New papers, affiliation changes |
+| Organization | 365 days | Rarely changes |
+| Repository | 30 days | Stars, issues, releases, maintenance status |
+| Package | 30 days | New versions, deprecation |
+
 ---
 
 ## Claim-note fields
