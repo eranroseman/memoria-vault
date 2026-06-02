@@ -113,17 +113,18 @@ API spend and token counts, captured once, at the transition into `status: done`
 One row per detector finding from a `memoria-linter` run. The in-memory shape is the `Finding` dataclass in [`detectors.py`](../../vault/.memoria/profiles/memoria-linter/detectors.py); serialized as:
 
 ```json
-{"detector": "fama-exposure", "severity": "HIGH", "path": "40-workbench/draft-x/01-notes/n.md", "message": "cites superseded claim [[oldclaim]]"}
+{"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "40-workbench/draft-x/01-notes/n.md", "message": "cites superseded claim [[oldclaim]]"}
 ```
 
 | Field | Values |
 | --- | --- |
+| `timestamp` | ISO-8601 UTC; one clock per lint pass (`run_all` stamps every finding in a pass with the same time) — enables periodized rollups and 4-week trends |
 | `detector` | the detector slug (`orphan-working-files`, `broken-wikilink`, `fama-exposure`, …) |
 | `severity` | `LOW` \| `MEDIUM` \| `HIGH` \| `CRITICAL` |
 | `path` | vault-relative path of the offending note |
 | `message` | short human-readable cause |
 
-Verdict-band rollup (`PASS` / `REVIEW` / `FAIL`) is computed from severities per [Linter: detectors and auto-fix](linter.md), not stored as a field.
+The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per [Linter: detectors and auto-fix](linter.md)) and persisted **per period** as a `lint-verdict` note (below), not as a field on each finding.
 
 ## Derived: lane-metric notes
 
@@ -137,6 +138,19 @@ Verdict-band rollup (`PASS` / `REVIEW` / `FAIL`) is computed from severities per
 | `decision_time_min` | `board-transitions.jsonl` | median human review latency, minutes |
 | `cost` / `tokens_in` / `tokens_out` | `cost.jsonl` | period totals |
 | `consistency_passk` | reserved | placeholder (`null`) for a future pass^k harness |
+
+## Derived: lint-verdict notes
+
+`metrics_aggregate.py` also rolls the period's `lint-findings.jsonl` into one `99-system/metrics/lint-verdict-<period>.md` note (written only once the Linter has produced a findings log). It gives the drift dashboards a periodized verdict history that the timeless findings feed can't:
+
+| Field | Meaning |
+| --- | --- |
+| `type` | `lint-verdict` |
+| `period` | ISO week (`2026-W22`), matching the lane-metric notes |
+| `verdict` | `PASS` / `REVIEW` / `FAIL` (any `CRITICAL` → FAIL; any `HIGH`/`MEDIUM` → REVIEW; else PASS) |
+| `finding_count` | total findings in the period |
+| `critical_count` / `high_count` / `medium_count` / `low_count` | per-severity counts |
+| `computed_at` | ISO-8601 UTC when the aggregator wrote the note |
 
 A field with no data for the period renders as `null` (never omitted) so downstream parsers see a stable key set.
 

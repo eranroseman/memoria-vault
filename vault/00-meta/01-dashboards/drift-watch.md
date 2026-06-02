@@ -11,38 +11,48 @@ const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
 const rank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
 const rows = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l))
-  .sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)).slice(0, 30);
+  .sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)
+                  || (b.timestamp ?? "").localeCompare(a.timestamp ?? "")).slice(0, 30);
 if (!rows.length) { dv.paragraph("✅ No findings."); return; }
-dv.table(["Detector", "Severity", "Finding", "Path"],
-  rows.map(e => [e.detector, e.severity, e.message, e.path]));
+dv.table(["Detector", "Severity", "Finding", "Path", "Reported"],
+  rows.map(e => [e.detector, e.severity, e.message, e.path, (e.timestamp ?? "").slice(0, 10)]));
 ```
 
-## Verdict (current lint pass)
+## Verdict band (by period)
 
-The headline rollup, computed live from the findings above: any `CRITICAL` → **FAIL**; any `HIGH`/`MEDIUM` → **REVIEW**; otherwise **PASS**. (Per-period history would need a periodized `lint-verdict` note from the metrics aggregator — not yet wired.)
+The headline rollup — one `PASS` / `REVIEW` / `FAIL` per lint period, written by `metrics_aggregate.py` from the period's findings (any `CRITICAL` → FAIL; any `HIGH`/`MEDIUM` → REVIEW; else PASS). Most recent first.
 
-```dataviewjs
-const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
-const ev = (text && text.trim()) ? text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l)) : [];
-const n = s => ev.filter(e => e.severity === s).length;
-const crit = n("CRITICAL"), high = n("HIGH"), med = n("MEDIUM");
-const verdict = crit ? "🔴 FAIL" : (high || med) ? "🟡 REVIEW" : "🟢 PASS";
-dv.paragraph(`**${verdict}** — ${ev.length} finding(s): ${crit} critical · ${high} high · ${med} medium`);
+```dataview
+TABLE WITHOUT ID
+  period AS Period,
+  verdict AS Verdict,
+  finding_count AS "Findings",
+  critical_count AS Critical,
+  high_count AS High,
+  medium_count AS Medium
+FROM "99-system/metrics"
+WHERE type = "lint-verdict"
+SORT period DESC
+LIMIT 8
 ```
 
-## Findings by detector (current pass)
+## Findings by detector (last 4 weeks)
 
-Which detectors are firing now — a detector with many findings is a systemic issue to fix at the source, not re-clear one by one. (Cross-pass recurrence needs timestamped findings, which the lean `Finding` schema doesn't carry.)
+Recurring offenders: a detector firing repeatedly with the same finding is a systemic issue to fix at the source, not re-clear one by one.
 
 ```dataviewjs
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
-const ev = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+const cutoff = new Date(Date.now() - 28 * 864e5).toISOString();
+const ev = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l))
+  .filter(e => (e.timestamp ?? "") >= cutoff);
 const by = {};
-for (const e of ev) by[e.detector] = (by[e.detector] ?? 0) + 1;
-const rows = Object.entries(by).sort((a, b) => b[1] - a[1]);
-if (!rows.length) { dv.paragraph("✅ No findings."); return; }
-dv.table(["Detector", "Count"], rows.map(([d, c]) => [d, c]));
+for (const e of ev) { (by[e.detector] ??= { n: 0, last: "" }); by[e.detector].n++;
+  if ((e.timestamp ?? "") > by[e.detector].last) by[e.detector].last = e.timestamp; }
+const rows = Object.entries(by).sort((a, b) => b[1].n - a[1].n);
+if (!rows.length) { dv.paragraph("✅ No findings in the last 4 weeks."); return; }
+dv.table(["Detector", "Fired (4 wks)", "Last fired"],
+  rows.map(([d, v]) => [d, v.n, (v.last ?? "").slice(0, 10)]));
 ```
 
 ## Schema-migration backlog

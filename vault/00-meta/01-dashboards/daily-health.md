@@ -47,7 +47,7 @@ else dv.table(["Lane", "Trust", "Tasks", "Success%"],
 
 ## 4. Cron status
 
-Last/next run for the four standard tasks (`nightly-hygiene`, `weekly-cluster-report`, `weekly-drift-report`, `fleeting-staleness-report`). A missing row = cron not enabled for that lane; ✗ = last run failed.
+Last/next run for the four standard tasks (`nightly-hygiene`, `weekly-cluster-report`, `weekly-drift-report`, `fleeting-staleness-report`). A missing row = cron not enabled for that lane; ✗ = last run failed. Stays empty until the Hermes cron runtime writes `cron-history.jsonl` — unlike the other feeds, this one is logged by Hermes when it dispatches a scheduled job, not by a vault script.
 
 ```dataviewjs
 const text = await dv.io.load("99-system/logs/cron-history.jsonl");

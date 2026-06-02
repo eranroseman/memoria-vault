@@ -138,6 +138,41 @@ def read_drift(vault: Path, period: str) -> dict[str, int]:
     return out
 
 
+def read_lint_verdict(vault: Path, period: str) -> dict:
+    """Severity counts + PASS/REVIEW/FAIL verdict from lint-findings.jsonl for `period`.
+
+    Matches the Linter's verdict rule (detectors.py `verdict`): any CRITICAL -> FAIL;
+    any HIGH/MEDIUM -> REVIEW; otherwise PASS."""
+    counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+    for e in _iter_jsonl(vault, LINT_RELPATH, period):
+        sev = e.get("severity", "")
+        if sev in counts:
+            counts[sev] += 1
+    if counts["CRITICAL"]:
+        v = "FAIL"
+    elif counts["HIGH"] or counts["MEDIUM"]:
+        v = "REVIEW"
+    else:
+        v = "PASS"
+    return {"verdict": v, "total": sum(counts.values()), **counts}
+
+
+def lint_verdict_note(v: dict, period: str, now: datetime) -> str:
+    fm = {
+        "type": "lint-verdict", "period": period, "verdict": v["verdict"],
+        "finding_count": v["total"], "critical_count": v["CRITICAL"],
+        "high_count": v["HIGH"], "medium_count": v["MEDIUM"], "low_count": v["LOW"],
+        "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    lines = ["---"]
+    for k, val in fm.items():
+        lines.append(f'{k}: "{val}"' if isinstance(val, str) else f"{k}: {val}")
+    lines += ["---", "", f"# Lint verdict — {period}", "",
+              f"**{v['verdict']}** · {v['total']} finding(s): {v['CRITICAL']} critical · "
+              f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.", ""]
+    return "\n".join(lines)
+
+
 def _iter_jsonl(vault: Path, relpath: str, period: str | None):
     """Yield JSON rows from a JSONL log, filtered to `period` (None = all)."""
     p = vault / relpath
@@ -336,7 +371,13 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
         (outdir / f"lane-{lane.replace('memoria-', '')}-{period}.md").write_text(
             lane_note(m, period, now), encoding="utf-8")
         written.append({"lane": lane, "trust_score": m["trust_score"], "band": m["band"]})
-    return {"period": period, "lanes": written}
+    verdict_out = None
+    if (vault / LINT_RELPATH).is_file():                      # only once the Linter has run
+        lv = read_lint_verdict(vault, period)
+        (outdir / f"lint-verdict-{period}.md").write_text(
+            lint_verdict_note(lv, period, now), encoding="utf-8")
+        verdict_out = lv["verdict"]
+    return {"period": period, "lanes": written, "verdict": verdict_out}
 
 
 # --------------------------------------------------------------------------- #
@@ -426,6 +467,25 @@ def self_test() -> int:
         check("note carries decision_time_min", "decision_time_min: 30.0" in note)
         check("note carries cost", "cost: 0.4" in note)
         check("note carries pass^k null placeholder", "consistency_passk: null" in note)
+
+    # --- lint-verdict rollup (periodized from timestamped lint-findings) -----
+    with tempfile.TemporaryDirectory() as td:
+        vault = Path(td)
+        logs = vault / "99-system" / "logs"
+        logs.mkdir(parents=True)
+        (logs / "lint-findings.jsonl").write_text("\n".join(json.dumps(r) for r in [
+            {"timestamp": "2026-05-28T02:00:00Z", "detector": "broken-wikilink", "severity": "HIGH", "path": "a.md", "message": "x"},
+            {"timestamp": "2026-05-28T02:00:00Z", "detector": "stale-fleeting", "severity": "LOW", "path": "b.md", "message": "y"},
+            {"timestamp": "2026-01-01T02:00:00Z", "detector": "fama-exposure", "severity": "CRITICAL", "path": "c.md", "message": "z"},  # out-of-period
+        ]), encoding="utf-8")
+        lv = read_lint_verdict(vault, period)
+        check("lint verdict REVIEW (HIGH, no CRITICAL in-period)", lv["verdict"] == "REVIEW")
+        check("lint counts in-period only (1 HIGH, 1 LOW, 0 CRITICAL)",
+              (lv["HIGH"], lv["LOW"], lv["CRITICAL"], lv["total"]) == (1, 1, 0, 2))
+        aggregate(vault, [], now=now)
+        vnote = (vault / METRICS_RELDIR / "lint-verdict-2026-W22.md").read_text(encoding="utf-8")
+        check("lint-verdict note written with type + verdict",
+              'type: "lint-verdict"' in vnote and 'verdict: "REVIEW"' in vnote)
 
     print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
     return failures

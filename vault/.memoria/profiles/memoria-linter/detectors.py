@@ -57,6 +57,7 @@ class Finding:
     severity: str
     path: str
     message: str
+    timestamp: str = ""   # ISO-8601 UTC; stamped per lint pass in run_all()
 
 
 # --------------------------------------------------------------------------- #
@@ -384,6 +385,9 @@ def run_all(vault: Path) -> list[Finding]:
     findings: list[Finding] = []
     for det in DETECTORS:
         findings += det(vault)
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())   # one clock per pass
+    for f in findings:
+        f.timestamp = now
     return sorted(findings, key=lambda f: (-SEVERITY_RANK[f.severity], f.detector, f.path))
 
 
