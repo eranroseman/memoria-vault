@@ -11,7 +11,7 @@ Run a discovery search — forward citations, backward citations, or concept-dri
 ## Prerequisites
 
 - At least one ingested paper note to use as a seed (`--source` flag)
-- The Librarian profile installed with `OPENALEX_EMAIL` and API keys filled
+- The Librarian profile installed with `OPENALEX_API_KEY` and API keys filled
 
 ## Steps
 

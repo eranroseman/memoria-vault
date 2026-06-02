@@ -32,7 +32,7 @@ end (the boxes are clickable in Obsidian).
 
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **7** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
-- [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_EMAIL`.
+- [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY`.
 - [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27124`).
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
 - [ ] The vault folder is **outside OneDrive**.

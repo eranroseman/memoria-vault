@@ -77,7 +77,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | Obsidian open with Local REST API on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` set | `curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
 | Hermes gateway on `:8642` (needed for `kanban dispatch`) | `hermes gateway status` |
 | Zotero running with Better BibTeX; `.memoria/library.bib` present | file exists, contains the F1 citekeys |
-| `KILOCODE_API_KEY`, `OPENALEX_EMAIL` set per profile `.env` | `hermes profile show memoria-librarian` lists the keys (values redacted) |
+| `KILOCODE_API_KEY`, `OPENALEX_API_KEY` set per profile `.env` | `hermes profile show memoria-librarian` lists the keys (values redacted) |
 | **Disposable test vault** (clone/fixture, never the real research vault) | `HERMES_HOME` / vault path points at the test copy |
 
 ### 1.3 Test fixtures (create once, referenced by ID below)
