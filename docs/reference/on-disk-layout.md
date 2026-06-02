@@ -29,7 +29,10 @@ memoria-vault/                       # repo root — the install unit (clone any
 ├── project-files/                  # decisions, proposals, operations
 │
 └── vault/                          # the Obsidian vault — the runtime artifact
-    ├── 00-meta/                    # vault skeleton — human-visible in Obsidian
+    ├── home.md                     # vault front door (obsidian-homepage opens it on launch)
+    ├── research-directions.md      # Librarian session-start input (human-edited)
+    ├── troubleshooting.md          # offline-fallback help (kept in-vault by design)
+    ├── 00-meta/                    # system machinery — human-visible in Obsidian
     ├── 10-inbox/                   # capture zone
     ├── 20-sources/                 # ingested sources
     ├── 30-synthesis/               # human-owned canonical knowledge
@@ -48,7 +51,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 
 | Folder | Purpose | Primary writer |
 | --- | --- | --- |
-| `00-meta/` | Vault governance: dashboards, logs, templates, reference notes, eval, metrics | Human / Linter (logs only) |
+| `00-meta/` | Vault governance: dashboards, logs, templates, eval, metrics | Human / Linter (logs only) |
 | `10-inbox/` | Capture zone: fleeting notes, answer drafts, discovery candidates | Human / Librarian / Writer |
 | `20-sources/` | Ingested sources: papers, items, entities | Librarian |
 | `30-synthesis/` | Canonical knowledge: claims, reference notes, MOCs | Human |
@@ -86,12 +89,9 @@ memoria-vault/                       # repo root — the install unit (clone any
 ├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
 ├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
 ├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
-├── board/                          # markdown board export — ships empty (.keep); pending
-├── start-here.md                   # vault landing page (pinned in sidebar)
-├── research-directions.md          # Librarian session-start input
-├── safe-mode.md                    # offline fallback workflows (kept in-vault)
-└── system-status.md                # runtime health snapshot
-# (the rest of the former 04-reference notes now live only on the website)
+└── board/                          # markdown board export — ships empty (.keep); pending
+# (human-facing notes — home, research-directions, troubleshooting — now sit at the vault root;
+#  the former 04-reference notes live only on the website)
 ```
 
 ### `10-inbox/` subtree
@@ -166,7 +166,7 @@ One folder per project. All subfolders ship as `.keep` placeholders.
 │   ├── obsidian-citation-plugin/
 │   │   └── data.json               # points at .memoria/memoria.bib
 │   ├── obsidian-git/
-│   ├── obsidian-homepage/
+│   ├── homepage/                  # obsidian-homepage plugin (id: homepage); data.json opens home.md
 │   ├── obsidian-local-rest-api/
 │   │   └── data.json.example       # contains secrets — gitignored
 │   ├── quickadd/
@@ -240,14 +240,13 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 
 ## Vault skeleton: human-facing notes
 
-Notes in `00-meta/` that ship with the starter vault for human reference.
+Notes that ship with the starter vault for human reference — three at the vault root (the human's cockpit), plus a few in `00-meta/` and `.memoria/`.
 
 | Note | Purpose | Maintained by |
 | --- | --- | --- |
-| `00-meta/start-here.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
-| `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
-| `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
-| `00-meta/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. Kept in-vault — needed precisely when offline/down. | Human (rarely changes) |
+| `home.md` | Vault-root front door, opened on launch by obsidian-homepage. One status glance, then links to dashboards, the in-vault help note, common operations, and the website. | Human (rarely changes) |
+| `research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
+| `troubleshooting.md` | Verify the plumbing, the three core workflows (ingest, review, export) with minimal commands and fallbacks, and recovery — for when Hermes or ACP is down. Folds in the former `system-status` health snapshot. Kept in-vault at the root — needed precisely when offline/down. | Human (rarely changes) |
 | `00-meta/03-templates/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol template — used only in systematic-review mode (ADR-16/19). | Human (per review) |
 | `.memoria/design-system.md` | Canonical visual-style tokens: palette, typography, spacing, layout, motion, voice. Read by the CSS-snippet generators and Pandoc export (machine config). | Human (edits define the brand) |
 

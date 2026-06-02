@@ -17,7 +17,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Nightly pattern:**
 ```text
-1. Read 00-meta/research-directions.md
+1. Read research-directions.md
 2. Pick top N priorities (default 3)
 3. For each priority: run `find` (max 10 candidates)
 4. Ingest confirmed candidates from the previous day's inbox

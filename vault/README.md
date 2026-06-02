@@ -6,14 +6,11 @@ The human-facing starter vault for **Memoria** — a research operating system t
 
 ## What's here
 
-- `00-meta/` — vault skeleton
+- `home.md`, `research-directions.md`, `troubleshooting.md` — the three vault-root human notes: the front door (pinned by obsidian-homepage), the Librarian's session-start input (populate this), and the one offline-fallback help note (verify / fall back / recover). Every other reference doc lives on the [website](https://eranroseman.github.io/memoria-vault/) (`design-system.md` moved to `.memoria/`).
+- `00-meta/` — system machinery (human-visible in Obsidian, but not the daily cockpit)
   - `01-dashboards/` — 10 dashboards + `daily-health.md` (Daily Health; plus audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review)
   - `02-logs/` — populated at runtime by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
   - `03-templates/` — 16 note templates (claim-note, paper-note, fleeting-note, …) + `screening-protocol` (systematic-review template)
-  - `home.md` — vault landing page (root; pin in sidebar)
-  - `safe-mode.md` — the vault's one offline-fallback reference note (the rest of the former `04-reference/` now lives on the [website](https://eranroseman.github.io/memoria-vault/); `design-system.md` moved to `.memoria/`)
-  - `research-directions.md` — Librarian's session-start input (populate this)
-  - `system-status.md` — runtime health snapshot
 - `10-inbox/`, `20-sources/`, `30-synthesis/`, `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` — empty human-facing folders following the standard numbered-prefix taxonomy
 - `.obsidian/` — Obsidian config (auto-hidden by Obsidian)
   - `plugins/<id>/` — the **8 bundled, pre-configured community plugins**: `obsidian-local-rest-api`, `agent-client`, `dataview`, `templater-obsidian`, `quickadd`, `obsidian-citation-plugin`, `callout-manager`, `obsidian-git`. Secret/per-machine configs (REST API, agent-client) ship as `data.json.example` and are gitignored.

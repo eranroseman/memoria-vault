@@ -87,7 +87,7 @@ External APIs reached via the skills above:
 
 ## Rules
 
-- Read `00-meta/research-directions.md` at session start. Use it to weight `find` queries and to flag relevance during classify proposals.
+- Read `research-directions.md` at session start. Use it to weight `find` queries and to flag relevance during classify proposals.
 - Prefer evidence and metadata over prose.
 - Do not create canonical synthesis.
 - Propose, do not decide, when classification is uncertain.

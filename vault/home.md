@@ -1,3 +1,8 @@
+---
+created: 2026-06-02
+updated: 2026-06-02
+---
+
 # Memoria
 
 The vault front door — opened on launch by the [obsidian-homepage](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/) plugin. A launchpad: it surfaces one status glance and routes you everywhere else.
@@ -39,15 +44,12 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 
 ## Reference
 
-- [[safe-mode|Safe mode]] — what to do when Hermes or the ACP connection is down
-- [[schema-reference|Schema reference]] — frontmatter field catalog (open side-by-side while editing)
-- [[agent-roles|Agent roles]] · [[profile-policies|Profile policies]] (who writes where) · [[system-map|System map]]
-- [[getting-started|Getting started]] · [[dataview-cheatsheet|Dataview cheatsheet]] · [[obsidian-config|Obsidian config]]
+- [[troubleshooting|Troubleshooting]] — verify the system, fall back, recover (the one help note kept in-vault, for when you're offline/broken)
+- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) · [architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
 
 ## Inputs
 
 - [[research-directions|Research directions]] — your current priorities (read by the Librarian at session start)
-- [[system-status|System status]] — runtime health snapshot
 
 ## Full documentation
 

@@ -17,13 +17,16 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 
 ```text
 <vault-root>/
-├── 00-meta/             ← schema, templates, dashboards, logs, config
+├── home.md              ← front door (obsidian-homepage opens it on launch)
+├── research-directions.md  ← Librarian's session-start input (human-edited)
+├── troubleshooting.md   ← offline-fallback help (kept in-vault by design)
+├── 00-meta/             ← system machinery: dashboards, logs, templates, eval, metrics
 │   ├── 01-dashboards/
 │   ├── 02-logs/
 │   ├── 03-templates/
 │   ├── 05-eval/
 │   └── 07-skills/
-│   (safe-mode.md sits at the 00-meta root; all other reference notes are on the website)
+│   (all reference notes now live on the website)
 ├── 10-inbox/            ← not yet classified; queue, not storage
 │   ├── 01-fleeting/
 │   ├── 02-answers/
@@ -73,13 +76,13 @@ The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 
 ## Special files
 
-A small set of singleton files in `00-meta/` shape how the system runs:
+A small set of singleton files at the **vault root** shape how the system runs:
 
 | File | Purpose | Owned by |
 |---|---|---|
-| `00-meta/research-directions.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
-| `00-meta/system-status.md` | Runtime health snapshot: API status, MCPs up, profiles available. Distinct from the board, which tracks work in flight. | Human |
-| `00-meta/safe-mode.md` | Offline fallback workflows (ingest / review / export) for when Hermes or ACP is down. Kept in-vault. | Human |
+| `home.md` | The front door, opened on launch by obsidian-homepage. One status glance, then links to the dashboards, the in-vault help note, and the website. | Human (rarely changes) |
+| `research-directions.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
+| `troubleshooting.md` | Offline-fallback help: verify the plumbing, the three core workflows (ingest / review / export) with minimal commands, and recovery. Folds in the former runtime-health snapshot. Kept in-vault — needed precisely when Hermes or ACP is down. | Human (rarely changes) |
 
 ---
 

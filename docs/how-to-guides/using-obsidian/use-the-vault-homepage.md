@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)); it links straight to `00-meta/start-here.md`, the pinned landing page. Navigate from there to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the local reference notes, common operations, and the full website docs. Navigate from it to the right dashboard or tool, and keep your research directions current.
 
 ## Prerequisites
 
@@ -16,12 +16,12 @@ The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR
 
 **1. Open the homepage.**
 
-The obsidian-homepage plugin opens `Home.md` automatically on launch; follow its link to `00-meta/start-here.md` — the pinned landing page this guide works from. If neither is visible:
+The obsidian-homepage plugin opens `home.md` automatically on launch (in Reading view, Dataview refreshed). If it isn't visible:
 
-- `Cmd/Ctrl-P` → **Open default note** (opens `Home.md`)
-- Or navigate manually: file explorer → `00-meta` → `start-here.md`
+- `Cmd/Ctrl-P` → **Homepage: Open homepage**, or click the home ribbon icon
+- Or open `home.md` from the vault root in the file explorer
 
-Pin it in the sidebar so it's always one click away: right-click the tab → **Pin**.
+The plugin pins the tab for you (configurable); you can also right-click the tab → **Pin**.
 
 **2. Navigate to a dashboard.**
 
@@ -38,7 +38,7 @@ The homepage links to all dashboards without duplicating their queries. Click an
 
 **3. Update your research directions.**
 
-The Librarian reads `00-meta/research-directions.md` at the start of every session to set discovery targets. Keep it current.
+The Librarian reads `research-directions.md` at the start of every session to set discovery targets. Keep it current.
 
 Click **Research directions** in the homepage → edit the file directly:
 

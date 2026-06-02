@@ -47,9 +47,9 @@ You own consistency between the design documents in this repo's `docs/` tree (ar
 
 Procedure:
 
-1. For each skeleton note (`home.md`, `system-status.md`, `safe-mode.md`), read its `updated_at` frontmatter. (The other former skeleton notes now live only on the website — see [docs](https://eranroseman.github.io/memoria-vault/) — and are no longer vault-resident, so they're out of skeleton-drift scope.)
+1. For each skeleton note (`home.md`, `troubleshooting.md`), read its `updated` frontmatter. (The other former skeleton notes now live only on the website — see [docs](https://eranroseman.github.io/memoria-vault/) — and are no longer vault-resident, so they're out of skeleton-drift scope.)
 2. For its corresponding `docs/` file(s), get the most recent commit timestamp from git log (same repo).
-3. If any design file is newer than the skeleton's `updated_at`: report the skeleton as out of sync, listing the newer design file(s).
+3. If any design file is newer than the skeleton's `updated`: report the skeleton as out of sync, listing the newer design file(s).
 
 This action is `report` only. Never auto-update the skeleton — the wording is human-owned and the human note may need different framing than the design doc that triggered the drift. Treat skeleton drift the same way you'd treat code-doc drift: pay it down promptly, but only the human can write the updated prose.
 
