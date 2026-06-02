@@ -45,7 +45,7 @@ HERMES_PROFILES_DIR="$HERMES_HOME/profiles"
 HERMES_SKILLS_DIR="$HERMES_HOME/skills"
 
 ALL_PROFILES="memoria-librarian memoria-mapper memoria-socratic memoria-writer memoria-verifier memoria-coder memoria-linter"
-REQUIRED_FILES="SOUL.md config.yaml mcp.json distribution.yaml"
+REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
 
 # Official Hermes skills (bundled with Hermes; allowed by name in the lane-overrides).
 # TODO(confirm-at-build): whether these ship bundled or need `hermes skills install`.
@@ -67,7 +67,7 @@ ONLY=""
 REPO_DIR=""
 VAULT_PATH=""
 PYTHON=""
-VENV_PYTHON=""    # interpreter the MCP deps land in; wired into mcp.json/config.yaml at deploy
+VENV_PYTHON=""    # interpreter the MCP deps land in; wired into config.yaml at deploy
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
 
 # --- helpers -----------------------------------------------------------------
@@ -304,7 +304,7 @@ copy_vault() {
 # Deps go into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
 # modern Ubuntu/Debian's PEP-668 "externally-managed-environment" pip block, keeps
 # Memoria's deps off the system site-packages, and gives a stable interpreter path
-# that install_profiles wires into mcp.json/config.yaml (see PYTHON_BIN below).
+# that install_profiles wires into config.yaml (see PYTHON_BIN below).
 install_mcp_deps() {
   hdr "MCP server dependencies"
   detect_python
@@ -349,27 +349,6 @@ install_mcp_deps() {
   run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
   run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
   ok "MCP dependencies installed into $venv"
-}
-
-# Capability layer (#51): write agent.disabled_toolsets as a real YAML LIST into a
-# deployed profile config. `hermes config set` stores the value as a scalar string
-# (verified Tier-3: it wrote disabled_toolsets: '["terminal","file"]', which Hermes
-# would read as one bogus toolset name, disabling nothing) and offers no list form,
-# so we edit the file directly with PyYAML — preserving the model + hooks blocks.
-disable_write_toolsets() {
-  local cfg="$1"
-  local py="${VENV_PYTHON:-${PYTHON:-python3}}"
-  printf '  + %s: agent.disabled_toolsets=[terminal, file]\n' "$cfg"
-  [ "$DRY_RUN" -eq 1 ] && return 0
-  [ -f "$cfg" ] || { warn "config not found: $cfg"; return 1; }
-  "$py" - "$cfg" <<'PY'
-import sys, yaml
-f = sys.argv[1]
-d = yaml.safe_load(open(f)) or {}
-d.setdefault("agent", {})["disabled_toolsets"] = ["terminal", "file"]
-with open(f, "w") as fh:
-    yaml.safe_dump(d, fh, sort_keys=False, default_flow_style=False)
-PY
 }
 
 # Seed shared secrets into a profile's .env. Hermes profile runs read ONLY the
@@ -441,23 +420,20 @@ install_profiles() {
     say "  staging $p"
     dst="$staging/$p"
     run cp -R "$src" "$dst"
-    # Substitute placeholders in the files that reference the vault by absolute
-    # path: mcp.json (server commands) + config.yaml (policy-gate hook). POSIX
-    # paths are already forward-slash, so no conversion is needed.
-    #   - python launcher -> the venv interpreter, so the policy server/hook import
-    #     mcp+PyYAML from where install_mcp_deps put them (not bare system python).
+    # Substitute placeholders in config.yaml — the single file Hermes reads for
+    # model / mcp_servers / hooks / agent / terminal / checkpoints (ADR-27; a
+    # standalone mcp.json is never loaded, so it is not shipped). POSIX paths are
+    # already forward-slash, so no conversion is needed.
+    #   - {{PYTHON}}     -> the venv interpreter, so the policy MCP server + the
+    #                       policy hook import mcp+PyYAML from where install_mcp_deps
+    #                       put them (not bare system python).
     #   - {{VAULT_PATH}} -> the real vault path.
-    # The python swap runs FIRST and targets only the two launcher forms
-    # (mcp.json's "command": "python" and config.yaml's command: "python {{...}}"),
-    # so it never touches the word "python" elsewhere.
     local pybin="${VENV_PYTHON:-python}"
-    for fname in mcp.json config.yaml; do
-      [ -f "$dst/$fname" ] || continue
-      run_sh "sed -e 's|\"command\": \"python\"|\"command\": \"$pybin\"|g' \
-                  -e 's|command: \"python |command: \"$pybin |g' \
+    if [ -f "$dst/config.yaml" ]; then
+      run_sh "sed -e 's|{{PYTHON}}|$pybin|g' \
                   -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
-                  \"$dst/$fname\" > \"$dst/$fname.tmp\" && mv \"$dst/$fname.tmp\" \"$dst/$fname\""
-    done
+                  \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
+    fi
 
     say "  installing $p"
     # `hermes profile install` takes the name from the manifest (or --name to
@@ -466,17 +442,10 @@ install_profiles() {
     # whole install errored out ("unrecognized arguments"). Use --name explicitly.
     if run hermes profile install "$dst" --name "$p" --alias --force --yes; then
       installed="$installed $p"
-      # Capability layer (#51): the policy hook gates the obsidian + `file` WRITE
-      # paths, but the structural guarantee for lanes that must not write outside
-      # obsidian is the *absence* of the terminal/file toolsets (tool-registry.yaml).
-      # Only Coder and Linter legitimately keep them (their file writes are gated by
-      # the hook; their shell writes are bounded by lane write_scope). Set it on the
-      # deployed config (post-install) so the model + hooks blocks are preserved.
-      case "$p" in
-        memoria-coder|memoria-linter) : ;;     # keep terminal+file (hook-gated)
-        *) disable_write_toolsets "$HERMES_PROFILES_DIR/$p/config.yaml" \
-             || warn "could not disable terminal/file toolsets for $p — set agent.disabled_toolsets by hand (capability layer, #51)" ;;
-      esac
+      # Capability layer (ADR-27): each profile's config.yaml already carries
+      # `agent.disabled_toolsets` (every toolset NOT in the lane's tool-registry
+      # allow-set), so the only vault-write path is the gated obsidian MCP. It
+      # ships in the source config — nothing to inject here.
       # Bootstrap .env from .env.EXAMPLE on FIRST install only (never clobber creds).
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
       env_file="$HERMES_PROFILES_DIR/$p/.env"
