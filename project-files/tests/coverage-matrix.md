@@ -25,7 +25,7 @@ Every design component → the layer/protocol that covers it → whether it's au
 | 9 | Audit chain — `before_hash`/`after_hash`, `vault-hash-drift` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
 | 11 | Profile mgmt, skills, cron | L2 | hermes-cli §4.9–4.11 | manual | ✅ |
-| 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](../plans/gui-test-protocol.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
+| 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](gui-test-protocol.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
 | 13 | 11 dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
 | 14 | 8 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
@@ -54,5 +54,5 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../dec
 ## Related
 
 - Framework + layer definitions: [ADR-29](../decisions/29-testing-framework.md)
-- Protocols: [headless](headless-test-protocol.md) · [hermes-cli](hermes-cli-test-protocol.md) · [GUI](../plans/gui-test-protocol.md) *(moving to `tests/`)* · [installer](installer-test-protocol.md) · [e2e-golden-path](e2e-golden-path-protocol.md)
+- Protocols: [headless](headless-test-protocol.md) · [hermes-cli](hermes-cli-test-protocol.md) · [GUI](gui-test-protocol.md) · [installer](installer-test-protocol.md) · [e2e-golden-path](e2e-golden-path-protocol.md)
 - Shared template: [test-protocol-template.md](test-protocol-template.md)

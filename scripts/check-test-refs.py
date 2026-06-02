@@ -17,9 +17,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PROTOCOLS = sorted((ROOT / "project-files" / "tests").glob("*.md"))
-for extra in (ROOT / "project-files" / "plans" / "gui-test-protocol.md",
-              ROOT / "project-files" / "tests" / "gui-test-protocol.md"):
-    if extra.exists() and extra not in PROTOCOLS:
+# Also validate any versioned working copy of the GUI protocol kept under plans/
+# (e.g. gui-test-protocol_v0.1.md). The reusable template lives in tests/ and is
+# already covered by the glob above; run records live in plans/ as _v0.x.
+for extra in sorted((ROOT / "project-files" / "plans").glob("gui-test-protocol*.md")):
+    if extra not in PROTOCOLS:
         PROTOCOLS.append(extra)
 
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
