@@ -1,10 +1,10 @@
 # Drift watch
 
-The Linter's eight structural-detector findings in one view — silent drift between the vault source, the deployed Hermes profiles, and your working vault. Open at the [[weekly-review|weekly review]], after a plugin upgrade, or after editing a `SOUL.md` / `config.yaml` / lane-override (and redeploying). Detector definitions, severities, and remediation: [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch/).
+The Linter's eight structural-detector findings in one view — silent drift between the vault source, the deployed Hermes profiles, and your working vault. Open at the [[weekly-review|weekly review]], after a plugin upgrade, or after editing a `SOUL.md` / `config.yaml` / lane-override (and redeploying). Detector definitions, severities, and remediation: [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch).
 
 ## Active findings (last lint pass)
 
-Empty is the goal. Each finding links to its detector — remediation lives in the [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter/).
+Empty is the goal. Each finding links to its detector — remediation lives in the [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter).
 
 ```dataviewjs
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
@@ -57,7 +57,7 @@ dv.table(["Detector", "Fired (4 wks)", "Last fired"],
 
 ## Schema-migration backlog
 
-Per-template `schema_version` debt. Not a verdict-band concern (it doesn't gate work, and bumping lags authoring). Field list and the "any frontmatter change bumps `schema_version`" discipline: [schema reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter/).
+Per-template `schema_version` debt. Not a verdict-band concern (it doesn't gate work, and bumping lags authoring). Field list and the "any frontmatter change bumps `schema_version`" discipline: [schema reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter).
 
 ### Paper-notes by schema version
 
@@ -95,4 +95,4 @@ LIMIT 30
 
 - [[audit-log|Audit log]] — per-write policy decisions, the layer below this one.
 - [[fleet-health|Fleet Health]] — operational health (cost, retries, trust score).
-- Empty until the Linter runs end-to-end — see the [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch/).
+- Empty until the Linter runs end-to-end — see the [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch).

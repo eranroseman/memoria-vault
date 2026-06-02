@@ -1,6 +1,6 @@
 # Audit log
 
-Policy-MCP write decisions, from `99-system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles/) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/audit-log/).
+Policy-MCP write decisions, from `99-system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/audit-log).
 
 ## Recent denies and dry-runs
 
@@ -88,7 +88,7 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 ## Anomalies
 
-Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) for why:
+Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
 - Linter `auto_fix` outside the gated classes (`safe-and-unambiguous` / `authorized-targeted`).
 - Socratic with any allowed write (lane is `write: []`).

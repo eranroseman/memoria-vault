@@ -1,6 +1,6 @@
 # Contradictions
 
-Claim pairs joined by a **human-set** `relations.contradicts` link (symmetric → each pair listed once). No model judges conflicts — sparse until you file links, and the emptiness is itself the signal. Diagnostic, never gating: a cluster of contradictions is usually where the interesting writing is. [Typed relations (ADR-08)](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/contradictions/).
+Claim pairs joined by a **human-set** `relations.contradicts` link (symmetric → each pair listed once). No model judges conflicts — sparse until you file links, and the emptiness is itself the signal. Diagnostic, never gating: a cluster of contradictions is usually where the interesting writing is. [Typed relations (ADR-08)](https://eranroseman.github.io/memoria-vault/reference/frontmatter) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/contradictions).
 
 ## Conflicting claims
 

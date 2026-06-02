@@ -1,6 +1,6 @@
 # Reading Pipeline
 
-Papers still being classified (`lifecycle: proposed`) and claim notes by maturity — what's in flight. Open when the inbox feels full and you need to pick what to process next. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/reading-pipeline/).
+Papers still being classified (`lifecycle: proposed`) and claim notes by maturity — what's in flight. Open when the inbox feels full and you need to pick what to process next. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/reading-pipeline).
 
 ## Papers in active processing
 
