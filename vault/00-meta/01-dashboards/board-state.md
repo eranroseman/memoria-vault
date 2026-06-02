@@ -1,6 +1,6 @@
 # Board State
 
-A Dataview view of the Kanban board — reads the markdown export under `99-system/board/` (the live board is Hermes' `kanban.db`). `status` is the Hermes enum (`triage`→`archived`); `lane` is the card's `assignee`; `retry_count`/`last_updated` are exporter-denormalized. [Board states](https://eranroseman.github.io/memoria-vault/explanation/kanban-board/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/board-state).
+A Dataview view of the Kanban board — reads the markdown export under `99-system/board/` (the live board is Hermes' `kanban.db`). `status` is the Hermes enum (`triage`→`archived`); `lane` is the card's `assignee`; `retry_count`/`last_updated` are exporter-denormalized (`last_updated` as ISO-8601 UTC). [Board states](https://eranroseman.github.io/memoria-vault/explanation/kanban-board/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/board-state).
 
 ## Active cards
 
