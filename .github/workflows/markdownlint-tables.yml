@@ -1,0 +1,26 @@
+name: markdownlint-tables
+
+# MD056 (table-column-count) only, over docs/ — catches malformed tables (a row
+# with the wrong number of cells silently drops data when rendered). MD056 is
+# convention-agnostic, so unlike the rest of markdownlint it has no Obsidian
+# false positives. Only MD056 is enabled (config `default: false`); every other
+# style rule is the editor's job (.markdownlint.jsonc), not CI's.
+#
+# Runs unconditionally (no `paths:` filter) so it can back a required check —
+# same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  md056-docs:
+    name: MD056 table-column-count (docs/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: MD056 over docs/
+        run: npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-md056.json 'docs/**/*.md'
