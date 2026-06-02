@@ -16,16 +16,16 @@ Dashboards are Dataview / DataviewJS views. They render existing vault state and
 | Dashboard | File | Reads from | Sort | Group |
 | --- | --- | --- | --- | --- |
 | Daily Health | `daily-health.md` | `board-state`, `lint-findings.jsonl`, fleet metrics, `cron-history.jsonl` (filtered subsets) | per-section | Daily glance |
-| Board state | `board-state.md` | `00-meta/board/` markdown card projections | by lane / queue | Daily glance |
+| Board state | `board-state.md` | `99-system/board/` markdown card projections | by lane / queue | Daily glance |
 | Reading pipeline | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), `30-synthesis/01-claims/` (`maturity`) | modification time | Synthesis agenda |
 | Discuss queue | `discuss-queue.md` | `20-sources/01-papers/` (`lifecycle: current`, no Socratic pass) | oldest first | Synthesis agenda |
 | Open questions | `open-questions.md` | `30-synthesis/01-claims/` + `20-sources/01-papers/` (`## Open questions` sections) | most-recently-modified | Synthesis agenda |
 | Contradictions | `contradictions.md` | `claim-note` `relations.contradicts` links (deduplicated pairs) | most-recently-modified | Synthesis agenda |
-| Drift watch | `drift-watch.md` | `00-meta/02-logs/lint-findings.jsonl` | by detector | Structural health |
+| Drift watch | `drift-watch.md` | `99-system/logs/lint-findings.jsonl` | by detector | Structural health |
 | Loose ends | `loose-ends.md` | whole-vault filename scan (`TODO`/`tmp`/`untitled`) | most-recently-modified | Structural health |
 | Weekly review | `weekly-review.md` | inbox, candidates, synthesis, orphans, projects, metrics (multi-section) | top-to-bottom workflow order | Structural health |
-| Fleet health | `fleet-health.md` | `00-meta/08-metrics/lane-metric-*` aggregates | by trust score | Operational health |
-| Audit log | `audit-log.md` | `00-meta/02-logs/audit.jsonl` (current week) | newest first, cap 30 | Operational health |
+| Fleet health | `fleet-health.md` | `99-system/metrics/lane-metric-*` aggregates | by trust score | Operational health |
+| Audit log | `audit-log.md` | `99-system/logs/audit.jsonl` (current week) | newest first, cap 30 | Operational health |
 
 > The "Daily Health" view is the `daily-health.md` dashboard (Obsidian has no special "index" file, so it's named for what it is).
 
@@ -95,7 +95,7 @@ Reference shapes for authoring dashboards. For full Dataview syntax see the [Dat
 - **dataviewjs** — only for external-file reads (logs); **must guard the load** so a missing file degrades gracefully, never throws:
 
   ```js
-  const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
+  const text = await dv.io.load("99-system/logs/audit.jsonl");
   if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
   const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
   ```

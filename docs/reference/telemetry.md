@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `00-meta/02-logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "six-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "six-signal log").
 
 ## Conventions (apply to every log)
 
@@ -28,7 +28,7 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `lint-findings.jsonl` | `memoria-linter` | per Linter run | one detector finding |
 | `sessions/<id>.jsonl` | `memoria-linter` | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
 
-Derived, not raw: `08-metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
+Derived, not raw: `99-system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
 
 ## audit.jsonl
 
@@ -69,7 +69,7 @@ A queue-depth snapshot appended once per `board_export.py` run. Counts only — 
 
 ## board-transitions.jsonl
 
-The card-level state-change stream — the spine the other event logs hang off. Emitted by diffing the previous per-card state (held in `00-meta/02-logs/.board-state-cache.json`, an internal dotfile, not a telemetry log) against the current board. **A card seen for the first time emits no transition** — it is seeded into the cache silently, so the log records only genuine movements, never the initial population.
+The card-level state-change stream — the spine the other event logs hang off. Emitted by diffing the previous per-card state (held in `99-system/logs/.board-state-cache.json`, an internal dotfile, not a telemetry log) against the current board. **A card seen for the first time emits no transition** — it is seeded into the cache silently, so the log records only genuine movements, never the initial population.
 
 ```json
 {"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "kind": "status", "from": "running", "to": "done"}
@@ -127,7 +127,7 @@ Verdict-band rollup (`PASS` / `REVIEW` / `FAIL`) is computed from severities per
 
 ## Derived: lane-metric notes
 
-`metrics_aggregate.py` reads the logs above weekly and writes one Markdown note per lane per period to `08-metrics/lane-<lane>-<period>.md`. These are *output*, but their frontmatter is a stable contract:
+`metrics_aggregate.py` reads the logs above weekly and writes one Markdown note per lane per period to `99-system/metrics/lane-<lane>-<period>.md`. These are *output*, but their frontmatter is a stable contract:
 
 | Field | Source | Meaning |
 | --- | --- | --- |

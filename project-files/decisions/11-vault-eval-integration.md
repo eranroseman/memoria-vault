@@ -22,8 +22,8 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 - **Dispatch (board).** A scheduled `eval` card (quarterly + on-demand) fans each gold task out through the workflow's real profile command — `find` → Librarian, `verify` → the Verifier's `cite-check`, and so on — so the run exercises *deployed* profiles, not mocks.
 - **Execution (Policy MCP).** Eval-context profile writes are non-committing: scoped to a scratch path and discarded after scoring, so a run never mutates the vault.
 - **Scoring + verdict (Linter).** The Linter scores each run (deterministic metrics — recall@k, support-rate, FAMA — reusing the Verifier's entailment for `verify`), records a per-workflow score, and guards gold-set integrity (a gold item whose target path no longer resolves is a broken-reference finding, like any other).
-- **Surfacing (observability).** Results append to `00-meta/08-metrics/eval/` and trend on a dashboard. The verdict is **diagnostic, not gating** — unlike `drift-watch`'s structural FAIL, an eval dip informs the human; it does not pause scheduled work.
-- **Gold set (vault).** Gold tasks live in `00-meta/05-eval/` as YAML; they become a dedicated note type only if the [expansion-threshold](../proposals/README.md) is tripped.
+- **Surfacing (observability).** Results append to `99-system/metrics/eval/` and trend on a dashboard. The verdict is **diagnostic, not gating** — unlike `drift-watch`'s structural FAIL, an eval dip informs the human; it does not pause scheduled work.
+- **Gold set (vault).** Gold tasks live in `99-system/eval/` as YAML; they become a dedicated note type only if the [expansion-threshold](../proposals/README.md) is tripped.
 
 ## Consequences
 
@@ -45,6 +45,6 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 ## Related
 
 - **Workflows affected:** [Verify](../../docs/how-to-guides/writing/verify-and-revise.md) (the eval reuses `cite-check`); the maintenance/`lint` surface (the Linter scores + reports).
-- **Files affected:** [measurement-and-verification.md](../proposals/measurement-and-verification.md), [architecture/on-disk-layout.md](../../docs/reference/on-disk-layout.md) (`00-meta/05-eval/`, `00-meta/08-metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
+- **Files affected:** [measurement-and-verification.md](../proposals/measurement-and-verification.md), [architecture/on-disk-layout.md](../../docs/reference/on-disk-layout.md) (`99-system/eval/`, `99-system/metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
 - **Related decisions / Depends on:** [ADR-10 claim supersession](10-claim-supersession.md) (the drift gold tasks exercise its FAMA check); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) and [ADR-8 typed relations](08-typed-relations-frontmatter.md) (shared observability lineage).
 - **Source discussion:** [measurement-and-verification.md](../proposals/measurement-and-verification.md) (Observability + Integration); the `vault-eval` scaffold.

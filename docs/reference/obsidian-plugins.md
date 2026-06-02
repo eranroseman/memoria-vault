@@ -80,7 +80,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `templates_folder` | `00-meta/03-templates` | Must match vault schema convention. |
+| `templates_folder` | `99-system/templates` | Must match vault schema convention. |
 | `trigger_on_file_creation` | `false` | Auto-trigger races with agent writes. |
 | `enable_system_commands` | `false` | Not required by Memoria; increases attack surface. |
 
@@ -92,7 +92,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
 | Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
-| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `00-meta/03-templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
+| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `99-system/templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
 
 ### obsidian-git
 

@@ -1,12 +1,12 @@
 # Board State
 
-A Dataview view of the Kanban board — reads the markdown export under `00-meta/board/` (the live board is Hermes' `kanban.db`). `status` is the Hermes enum (`triage`→`archived`); `lane` is the card's `assignee`; `retry_count`/`last_updated` are exporter-denormalized. [Board states](https://eranroseman.github.io/memoria-vault/explanation/kanban-board/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/board-state/).
+A Dataview view of the Kanban board — reads the markdown export under `99-system/board/` (the live board is Hermes' `kanban.db`). `status` is the Hermes enum (`triage`→`archived`); `lane` is the card's `assignee`; `retry_count`/`last_updated` are exporter-denormalized. [Board states](https://eranroseman.github.io/memoria-vault/explanation/kanban-board/) · [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/board-state/).
 
 ## Active cards
 
 ```dataview
 TABLE status, assignee, reason, retry_count, last_updated
-FROM "00-meta/board"
+FROM "99-system/board"
 WHERE status != "archived"
 SORT last_updated ASC
 ```
@@ -15,7 +15,7 @@ SORT last_updated ASC
 
 ```dataview
 TABLE file.link AS Card, review_status, review_owner, review_requested_at
-FROM "00-meta/board"
+FROM "99-system/board"
 WHERE review_status = "requested" OR review_status = "in-review"
 SORT review_requested_at ASC
 ```
@@ -24,7 +24,7 @@ SORT review_requested_at ASC
 
 ```dataview
 TABLE file.link AS Card, retry_count, reason, last_updated
-FROM "00-meta/board"
+FROM "99-system/board"
 WHERE retry_count > 0 AND status != "archived"
 SORT retry_count DESC
 ```

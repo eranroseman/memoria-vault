@@ -168,7 +168,7 @@ non-terminal lane has.** Concretely:
 - **Optional defense-in-depth for Coder/Linter**: `terminal.backend: docker`
   sandboxes their `terminal`+`code_execution` in a container, with a vault
   bind-mount scoped to just their write zone (`40-workbench/*/06-code/` for Coder,
-  `00-meta/02-logs/` for Linter). Full-Hermes-in-Docker is **not** adopted: in the
+  `99-system/logs/` for Linter). Full-Hermes-in-Docker is **not** adopted: in the
   WSL2 + Windows-Obsidian topology it adds container→host REST-bridge networking
   fragility for no gate benefit (the gated path lives on the Windows host).
 - **Records to correct** (the investigation invalidated earlier claims):

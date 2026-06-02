@@ -53,7 +53,7 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 ## Verify
 
 - `<vault>/20-sources/01-papers/<citekey>.md` exists and has a `[!brief]` callout.
-- `<vault>/00-meta/02-logs/audit.jsonl` shows at least one `allow_with_log` entry.
+- `<vault>/99-system/logs/audit.jsonl` shows at least one `allow_with_log` entry.
 - `hermes profile list` shows all seven `memoria-*` profiles.
 
 ## Related

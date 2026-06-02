@@ -201,7 +201,7 @@ def main() -> int:
 
     # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
     # and a banned key there propagates to every note created from the template.
-    tmpl_dir = root.parent / "vault" / "00-meta" / "03-templates"
+    tmpl_dir = root.parent / "vault" / "99-system" / "templates"
     if tmpl_dir.is_dir():
         for md in sorted(tmpl_dir.glob("*.md")):
             check_template_frontmatter(md, errors)

@@ -35,4 +35,4 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 ## Related
 
 - **Workflows affected:** [Code](../../docs/how-to-guides/writing/create-a-code-artifact.md)
-- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md), `00-meta/03-templates/code-note.md` (in the starter vault)
+- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md), `99-system/templates/code-note.md` (in the starter vault)

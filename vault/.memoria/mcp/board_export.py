@@ -7,14 +7,14 @@ Obsidian's Dataview cannot query that database, so this script writes read-only
 projections the dashboards consume, plus append-only event logs the metrics
 aggregator and any publication analysis read (see docs/reference/telemetry.md):
 
-  00-meta/board/<task_id>.md          one markdown file per live card  (board-state dashboard)
-  00-meta/02-logs/board-state.jsonl   per-lane count snapshot, one line per run (status line)
-  00-meta/02-logs/board-transitions.jsonl  per-card state/review transitions (time-series)
-  00-meta/02-logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
-  00-meta/02-logs/cost.jsonl          API spend + token counts per card at completion
+  99-system/board/<task_id>.md          one markdown file per live card  (board-state dashboard)
+  99-system/logs/board-state.jsonl   per-lane count snapshot, one line per run (status line)
+  99-system/logs/board-transitions.jsonl  per-card state/review transitions (time-series)
+  99-system/logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
+  99-system/logs/cost.jsonl          API spend + token counts per card at completion
 
 Transitions/disposition/cost are computed by diffing this run's board against the
-previous run, cached in `00-meta/02-logs/.board-state-cache.json`. Source of
+previous run, cached in `99-system/logs/.board-state-cache.json`. Source of
 truth: `hermes kanban list --json` (or `--from-json <file>` for tests/offline).
 The export is ONE-WAY (board -> files). Run on a cron cadence (~60s); the Linter
 owns rotation/cleanup of the projected files and logs.
@@ -32,12 +32,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-BOARD_RELDIR = "00-meta/board"
-SNAPSHOT_RELPATH = "00-meta/02-logs/board-state.jsonl"
-TRANSITIONS_RELPATH = "00-meta/02-logs/board-transitions.jsonl"  # per-card status/review changes
-DISPOSITION_RELPATH = "00-meta/02-logs/disposition.jsonl"        # accept | edit | reject (un-backfillable)
-COST_RELPATH = "00-meta/02-logs/cost.jsonl"                      # API spend + tokens per card at completion
-STATE_CACHE_RELPATH = "00-meta/02-logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
+BOARD_RELDIR = "99-system/board"
+SNAPSHOT_RELPATH = "99-system/logs/board-state.jsonl"
+TRANSITIONS_RELPATH = "99-system/logs/board-transitions.jsonl"  # per-card status/review changes
+DISPOSITION_RELPATH = "99-system/logs/disposition.jsonl"        # accept | edit | reject (un-backfillable)
+COST_RELPATH = "99-system/logs/cost.jsonl"                      # API spend + tokens per card at completion
+STATE_CACHE_RELPATH = "99-system/logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
 LIVE_STATUSES = ("triage", "todo", "ready", "running", "blocked", "done")  # not archived
 REVIEW_QUEUE_STATES = ("requested",)   # done cards handed off for human review (review_status: requested)
 # Terminal review outcomes -> default human-loop disposition (an explicit metadata.disposition

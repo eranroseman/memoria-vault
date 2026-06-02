@@ -64,7 +64,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **WIP limit** — a work-in-progress cap: *active-per-profile* (1 `running` card, Hermes-enforced); *review-queue depth* (bounded; dispatcher delays new done cards once queue is full).
 
-**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `00-meta/08-metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
+**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
 
 ---
 
@@ -80,7 +80,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Policy and audit
 
-**Audit log** — append-only JSONL trail of every policy MCP decision at `00-meta/02-logs/audit.jsonl`. Feeds the `audit-log` dashboard.
+**Audit log** — append-only JSONL trail of every policy MCP decision at `99-system/logs/audit.jsonl`. Feeds the `audit-log` dashboard.
 
 **Automation tier** — the system-wide autonomy setting: `strict` (propose-only), `standard` (safe auto-fixes + low-stakes triage), or `minimal` (+ scheduled answer drafting). Configured per profile. Distinct from the per-profile *invocation level* (cadence: background / Kanban-pulled / interactive).
 

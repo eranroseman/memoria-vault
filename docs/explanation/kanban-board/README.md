@@ -79,13 +79,13 @@ There is no implicit return to the queue. Every rework is a new card with a new 
 
 The authoritative board lives in `kanban.db` — a database Dataview cannot query directly. Two read-only projections bridge the gap.
 
-**Board export → `00-meta/board/`** — a `board_export.py` job writes each live card to a markdown file on a **~60-second cadence** (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). The [board-state dashboard](../dashboards/daily-glance/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
+**Board export → `99-system/board/`** — a `board_export.py` job writes each live card to a markdown file on a **~60-second cadence** (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). The [board-state dashboard](../dashboards/daily-glance/board-state.md) reads these files via Dataview. Each file carries the queryable fields in frontmatter (`task_id`, `status`, `assignee`, `review_status`, `retry_count`) plus the human-readable handoff summary in the body.
 
 **Board-state snapshot → `board-state.jsonl`** — the same ~60s pass appends a compact JSONL line with per-lane running/ready/blocked counts and review-queue depth. The status-line widget reads this instead of re-querying the database, keeping its refresh lightweight.
 
 The projections are one-way and ephemeral: editing a projected markdown file does nothing to the board. The projections are regenerated on each pass; any manual edit is overwritten. The board stays authoritative; the markdown is a read view.
 
-A scheduled metrics aggregator rolls run history into `00-meta/08-metrics/` notes for the fleet-health dashboard's trust score. It activates meaningfully only once the system has accumulated real weekly volume.
+A scheduled metrics aggregator rolls run history into `99-system/metrics/` notes for the fleet-health dashboard's trust score. It activates meaningfully only once the system has accumulated real weekly volume.
 
 ---
 

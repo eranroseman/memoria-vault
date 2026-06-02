@@ -20,13 +20,9 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 ├── home.md              ← front door (obsidian-homepage opens it on launch)
 ├── research-directions.md  ← Librarian's session-start input (human-edited)
 ├── troubleshooting.md   ← offline-fallback help (kept in-vault by design)
-├── 00-meta/             ← system machinery: dashboards, logs, templates, eval, metrics
-│   ├── 01-dashboards/
-│   ├── 02-logs/
-│   ├── 03-templates/
-│   ├── 05-eval/
-│   └── 07-skills/
-│   (all reference notes now live on the website)
+├── 00-meta/             ← the human's read surface: dashboards
+│   └── 01-dashboards/
+│   (reference notes live on the website; templates live in 99-system/)
 ├── 10-inbox/            ← not yet classified; queue, not storage
 │   ├── 01-fleeting/
 │   ├── 02-answers/
@@ -50,6 +46,13 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 ├── 50-deliverables/     ← finished and shipped; review-gated
 ├── 90-assets/           ← attachments and binary files
 ├── 95-archive/          ← deprecated or superseded notes
+├── 99-system/           ← machine-consumed/generated, Obsidian-visible: logs, board, metrics, eval, skills, templates
+│   ├── logs/
+│   ├── board/
+│   ├── metrics/
+│   ├── eval/
+│   ├── skills/
+│   └── templates/      ← 16 note templates (QuickAdd instantiates these)
 ├── .obsidian/           ← Obsidian config (auto-hidden)
 └── .memoria/            ← Memoria tooling (auto-hidden)
     ├── profiles/        ← seven Hermes profile directories

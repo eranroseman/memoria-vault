@@ -52,7 +52,7 @@ hermes profile show memoria-<name>
 
 The output should reflect the edit you made (e.g., updated model name, new MCP server entry).
 
-For lane-override changes, verify with a test write operation — check `00-meta/02-logs/audit.jsonl` to confirm the new policy is enforced.
+For lane-override changes, verify with a test write operation — check `99-system/logs/audit.jsonl` to confirm the new policy is enforced.
 
 ## Verify
 

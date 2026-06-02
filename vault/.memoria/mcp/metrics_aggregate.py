@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Metrics aggregator -- roll fleet run-history + audit into lane-metric notes.
 
-Writes `00-meta/08-metrics/lane-<lane>-<period>.md` (one per lane per ISO week),
+Writes `99-system/metrics/lane-<lane>-<period>.md` (one per lane per ISO week),
 which the [fleet-health dashboard] reads for the per-lane **trust score** (0-100).
 
 Inputs (all best-effort -- missing sources degrade gracefully):
-  - 00-meta/02-logs/audit.jsonl          deny rate (policy-MCP decisions, this period)
+  - 99-system/logs/audit.jsonl          deny rate (policy-MCP decisions, this period)
   - Hermes board (`hermes kanban list --json`)   success rate + retry rate per lane
-  - 00-meta/02-logs/lint-findings.jsonl  drift incidents (Linter), if present
+  - 99-system/logs/lint-findings.jsonl  drift incidents (Linter), if present
 
 Trust score (glossary "Trust score"): combines audit **deny rate**, **retry rate**,
 **success rate**, **drift incidents**, **secret hits**, and accept/reject ratios;
@@ -30,12 +30,12 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-METRICS_RELDIR = "00-meta/08-metrics"
-AUDIT_RELPATH = "00-meta/02-logs/audit.jsonl"
-LINT_RELPATH = "00-meta/02-logs/lint-findings.jsonl"
-DISPOSITION_RELPATH = "00-meta/02-logs/disposition.jsonl"        # accept | edit | reject per review
-COST_RELPATH = "00-meta/02-logs/cost.jsonl"                      # API spend + tokens per card
-TRANSITIONS_RELPATH = "00-meta/02-logs/board-transitions.jsonl"  # status/review transitions (for decision time)
+METRICS_RELDIR = "99-system/metrics"
+AUDIT_RELPATH = "99-system/logs/audit.jsonl"
+LINT_RELPATH = "99-system/logs/lint-findings.jsonl"
+DISPOSITION_RELPATH = "99-system/logs/disposition.jsonl"        # accept | edit | reject per review
+COST_RELPATH = "99-system/logs/cost.jsonl"                      # API spend + tokens per card
+TRANSITIONS_RELPATH = "99-system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 LANES = ("memoria-librarian", "memoria-mapper", "memoria-socratic", "memoria-writer",
@@ -364,7 +364,7 @@ def self_test() -> int:
 
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
-        (vault / "00-meta" / "02-logs").mkdir(parents=True)
+        (vault / "99-system" / "logs").mkdir(parents=True)
         # audit: writer made 6 writes, 1 deny, this period
         audit_lines = []
         for i in range(5):
@@ -396,7 +396,7 @@ def self_test() -> int:
     # --- new telemetry: disposition, cost, decision-time --------------------
     with tempfile.TemporaryDirectory() as td:
         vault = Path(td)
-        logs = vault / "00-meta" / "02-logs"
+        logs = vault / "99-system" / "logs"
         logs.mkdir(parents=True)
         disp_rows = ([{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
                      + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]

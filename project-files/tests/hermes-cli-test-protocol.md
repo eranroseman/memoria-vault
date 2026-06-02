@@ -96,8 +96,8 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 ### 1.4 Verification toolbox (how every test is checked)
 
 - **Vault write** → the file exists at the expected path with the expected frontmatter/body; e.g. `grep -l '^type: paper-note' 20-sources/01-papers/smithA.md`.
-- **Policy gate** → `00-meta/02-logs/audit.jsonl` gains a row: `decision: allow_with_log` (permitted) or `deny` (forbidden), each carrying `sha256_before`/`sha256_after`. `tail -1 00-meta/02-logs/audit.jsonl | jq`.
-- **Board state** → `hermes kanban show <id>` / `kanban list`; transitions also land in `00-meta/02-logs/board-transitions.jsonl`.
+- **Policy gate** → `99-system/logs/audit.jsonl` gains a row: `decision: allow_with_log` (permitted) or `deny` (forbidden), each carrying `sha256_before`/`sha256_after`. `tail -1 99-system/logs/audit.jsonl | jq`.
+- **Board state** → `hermes kanban show <id>` / `kanban list`; transitions also land in `99-system/logs/board-transitions.jsonl`.
 - **Telemetry** → `disposition.jsonl`, `cost.jsonl`, `lint-findings.jsonl` per [telemetry.md](../../docs/reference/telemetry.md).
 - **Read-only / dry-run** → assert the **inverse**: no new file, and **no** `allow_with_log` write row for that lane in `audit.jsonl`.
 
@@ -202,14 +202,14 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| T1 | `lint` | a vault with a planted defect (e.g. broken wikilink) | `lint` | findings written to `00-meta/02-logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
+| T1 | `lint` | a vault with a planted defect (e.g. broken wikilink) | `lint` | findings written to `99-system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
 | T2 | `schema-check` | a note with an out-of-vocab `study_design` | `schema-check` | the schema violation flagged; no auto-fix |
 | T3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
 | T4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
 | T5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
-| T6 | `session-log` | — | `session-log` | a per-session summary at `00-meta/02-logs/sessions/<id>.jsonl` |
+| T6 | `session-log` | — | `session-log` | a per-session summary at `99-system/logs/sessions/<id>.jsonl` |
 | T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
-| T8 | **Linter scope** | — | (during T1) | only `00-meta/02-logs/**` writes occur for `memoria-linter`; cosmetic/log auto-fixes only |
+| T8 | **Linter scope** | — | (during T1) | only `99-system/logs/**` writes occur for `memoria-linter`; cosmetic/log auto-fixes only |
 
 ### 4.8 Board management — `hermes kanban …` (non-interactive)
 

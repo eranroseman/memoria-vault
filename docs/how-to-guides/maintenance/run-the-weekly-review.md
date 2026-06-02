@@ -86,7 +86,7 @@ Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM
 - Classification debt queue is empty or has a known acceptable residual
 - No CRITICAL or HIGH lint findings outstanding
 - The `weekly-review.md` dashboard shows all queue sections at zero or explicitly deferred
-- A new per-session log file in `00-meta/02-logs/sessions/` (named `YYYY-MM-DD-HHMM.jsonl`) records the date and any decisions made
+- A new per-session log file in `99-system/logs/sessions/` (named `YYYY-MM-DD-HHMM.jsonl`) records the date and any decisions made
 
 ## Related
 

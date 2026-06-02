@@ -108,7 +108,7 @@ Dry-run:
 
 ## Audit log format
 
-Every `allow_with_log` and `deny` decision appends one JSONL entry to `00-meta/02-logs/audit.jsonl`:
+Every `allow_with_log` and `deny` decision appends one JSONL entry to `99-system/logs/audit.jsonl`:
 
 ```json
 {

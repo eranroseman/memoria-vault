@@ -80,7 +80,7 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | `schema-migrate` | Propose schema changes between versions. Always dry-run first. | Yes (always required first) |
 | `graph-analyze` | Knowledge graph health: orphans, hubs, clusters, link density. | Yes |
 | `health-report` | Rolls structural findings into the verdict band (PASS / REVIEW / FAIL). | Yes |
-| `session-log` | Write per-session log to `00-meta/02-logs/`. | N/A |
+| `session-log` | Write per-session log to `99-system/logs/`. | N/A |
 | `dry-run` | Run any check in report-only mode. | Yes (by definition) |
 
 ---

@@ -8,6 +8,19 @@ modes that bite agents here: **concurrent sessions** sharing one working tree, t
 **auto-commit hook** entangling your work, **branch protection** rejecting direct
 pushes, and the **Windows ↔ WSL2 split** the project runs across.
 
+**One principle above all the mechanics below: decide for the best long-term
+solution, not the least work.** At every design choice, weigh the options by what is
+correct and maintainable for the long run — never pick the one that just minimizes
+your own effort. "That breaks N references," "the current pattern is X," or "it's more
+files to touch" are mechanics to handle, not reasons to settle for a worse design. If
+the better solution costs an hour now, spend it; surface the trade-off and your
+recommendation rather than quietly defaulting to the cheap path.
+
+**When you present options to the human, give the pros and cons of each** — never a
+bare list of choices. Spell out the trade-offs (cost, risk, reversibility, long-term
+fit) for every option, and say which you recommend and why, so the decision is informed
+rather than handed back undifferentiated.
+
 ---
 
 ## Where things live
@@ -212,7 +225,12 @@ reading it. Before opening a PR:
   structure. Keep the seven in sync.
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
   (ADRs); current build state is `project-files/plans/implementation-status.md`.
-  `_notes/` and working reports are scratch — don't treat them as canon.
+- **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
+  findings, and distillation reports you produce belong in `_reports/` at the repo
+  root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
+  report to the repo root or into `project-files/`: those are canon, `_reports/` is
+  scratch. Once its findings are integrated into docs/ADRs/proposals, the report has
+  served its purpose. Treat nothing under `_reports/` / `_notes/` as canon.
 
 ## 8. Writing and editing docs
 

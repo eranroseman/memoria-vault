@@ -72,7 +72,7 @@ AUTO_FIX_DENY_CLASSES = frozenset({"review-gated-edit"})
 # SHA-256 of the empty byte string -- the before_hash of a freshly-created file.
 EMPTY_SHA256 = "sha256:" + hashlib.sha256(b"").hexdigest()
 
-AUDIT_RELPATH = "00-meta/02-logs/audit.jsonl"
+AUDIT_RELPATH = "99-system/logs/audit.jsonl"
 LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 
 
@@ -398,7 +398,7 @@ def now_iso() -> str:
 
 
 def append_audit(vault: Path, entry: dict) -> None:
-    """Append one JSON object (one line) to 00-meta/02-logs/audit.jsonl. The
+    """Append one JSON object (one line) to 99-system/logs/audit.jsonl. The
     append-only JSONL format survives crashes and is grep-friendly."""
     audit = vault / AUDIT_RELPATH
     audit.parent.mkdir(parents=True, exist_ok=True)
@@ -623,12 +623,12 @@ def self_test() -> int:
                           deny_write=["**"], require=["audit_log"])
     linter = LanePolicy(
         profile="memoria-linter",
-        allow_write=["00-meta/02-logs/**"],
+        allow_write=["99-system/logs/**"],
         allow_auto_fix_classes=["safe-and-unambiguous", "authorized-targeted"],
         deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
                     "40-workbench/**", "50-deliverables/**"],
         deny_auto_fix_classes=["schema-content", "review-gated-edit"],
-        require=["audit_log"], write_scope=["00-meta/02-logs/"],
+        require=["audit_log"], write_scope=["99-system/logs/"],
     )
 
     d = lambda p, a, pa, fl=None, sk=None: decide(p.profile, a, pa, p, flags=fl, skill_deny_write=sk).decision
@@ -657,13 +657,13 @@ def self_test() -> int:
 
     # ---- auto_fix class gating (Linter) ------------------------------------ #
     check("Linter auto_fix safe class in logs -> allow_with_log",
-          d(linter, "auto_fix", "00-meta/02-logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
+          d(linter, "auto_fix", "99-system/logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
     check("Linter auto_fix schema-content -> dry_run",
-          d(linter, "auto_fix", "00-meta/02-logs/x.md", {"class": "schema-content"}) == "dry_run")
+          d(linter, "auto_fix", "99-system/logs/x.md", {"class": "schema-content"}) == "dry_run")
     check("Linter auto_fix review-gated-edit -> deny",
-          d(linter, "auto_fix", "00-meta/02-logs/x.md", {"class": "review-gated-edit"}) == "deny")
+          d(linter, "auto_fix", "99-system/logs/x.md", {"class": "review-gated-edit"}) == "deny")
     check("Linter auto_fix with no class -> deny",
-          d(linter, "auto_fix", "00-meta/02-logs/x.md", None) == "deny")
+          d(linter, "auto_fix", "99-system/logs/x.md", None) == "deny")
 
     # ---- delete / mkdir / report ------------------------------------------- #
     check("Coder delete without authorization -> deny",

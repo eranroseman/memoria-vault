@@ -94,7 +94,7 @@ routing:
     - "20-sources/"
 ```
 
-You do **not** declare review-gating per lane: writes to the review-gated zones (`30-synthesis/01-claims`, `02-reference`, `03-moc`, `50-deliverables`) are automatically degraded to `dry_run` by the policy MCP. `audit_log` is a token in the `require:` list (the log path is fixed at `00-meta/02-logs/audit.jsonl`), not a key.
+You do **not** declare review-gating per lane: writes to the review-gated zones (`30-synthesis/01-claims`, `02-reference`, `03-moc`, `50-deliverables`) are automatically degraded to `dry_run` by the policy MCP. `audit_log` is a token in the `require:` list (the log path is fixed at `99-system/logs/audit.jsonl`), not a key.
 
 After editing, re-deploy (`bash scripts/install.sh --profiles-only`) — the installer picks up lane-override changes on every run.
 

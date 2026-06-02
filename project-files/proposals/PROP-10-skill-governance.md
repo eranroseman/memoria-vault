@@ -12,7 +12,7 @@ Not part of the active design. Adding a skill today means editing `policy.allow.
 
 ## What
 
-A formal lifecycle for skills: a state machine (`intake → proposed → scaffolded → testing → needs-review → approved → active → archived`), per-skill governance notes in `00-meta/07-skills/`, a `skill-lifecycle` dashboard, and a 7-step onboarding checklist for new skills.
+A formal lifecycle for skills: a state machine (`intake → proposed → scaffolded → testing → needs-review → approved → active → archived`), per-skill governance notes in `99-system/skills/`, a `skill-lifecycle` dashboard, and a 7-step onboarding checklist for new skills.
 
 ## Why
 
@@ -42,8 +42,8 @@ Do not stand up the governance layer as a preparatory measure. The runtime mecha
 ## Related
 
 - **Runtime mechanism:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **Placeholder:** `00-meta/07-skills/` ships empty until this is stood up (see [on-disk-layout.md](../../docs/reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md)).
+- **Placeholder:** `99-system/skills/` ships empty until this is stood up (see [on-disk-layout.md](../../docs/reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md)).
 
 ## Dependencies
 
-None beyond the runtime mechanism that already exists. Standing up the governance layer is mostly authoring per-skill notes in `00-meta/07-skills/` and enabling the dashboard.
+None beyond the runtime mechanism that already exists. Standing up the governance layer is mostly authoring per-skill notes in `99-system/skills/` and enabling the dashboard.

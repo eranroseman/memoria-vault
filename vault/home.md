@@ -13,8 +13,8 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 >   const t = await dv.io.load(path);
 >   return (!t || !t.trim()) ? null : t.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 > }
-> const board = await load("00-meta/02-logs/board-state.jsonl");
-> const lint  = await load("00-meta/02-logs/lint-findings.jsonl");
+> const board = await load("99-system/logs/board-state.jsonl");
+> const lint  = await load("99-system/logs/lint-findings.jsonl");
 > if (board === null && lint === null) {
 >   dv.paragraph("_Status feeds not wired yet — see [[daily-health|Daily Health]]._");
 > } else {

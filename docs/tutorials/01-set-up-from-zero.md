@@ -111,7 +111,7 @@ The Citation Plugin needs to know where your BibTeX file lives. Most of this is 
 1. **Settings → Community plugins → Obsidian Citation Plugin → Options** (the gear icon next to it).
 2. Confirm **Citation database path** is: `.memoria/memoria.bib`
 3. Confirm **Literature note folder** is: `20-sources/01-papers`
-4. The note body is **not** an external template file — this plugin stores it inline in `literatureNoteContentTemplate` (kept in sync with `00-meta/03-templates/paper-note.md`). There is no template-path setting to set here.
+4. The note body is **not** an external template file — this plugin stores it inline in `literatureNoteContentTemplate` (kept in sync with `99-system/templates/paper-note.md`). There is no template-path setting to set here.
 5. Close Settings.
 
 ---

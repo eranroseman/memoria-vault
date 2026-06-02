@@ -34,7 +34,7 @@ You own tamper detection for vault files. The policy MCP records SHA-256 `before
 
 Procedure:
 
-1. For each tracked path, scan `00-meta/02-logs/audit.jsonl` for the latest entry with that path and a non-null `after_hash`.
+1. For each tracked path, scan `99-system/logs/audit.jsonl` for the latest entry with that path and a non-null `after_hash`.
 2. Compute the file's current SHA-256.
 3. If the hashes differ: report the path, the recorded hash, the current hash, and the timestamp of the last logged write.
 4. If the path has no audit entry but the file exists: report as "untracked file" — this means the file was created outside the policy MCP.
@@ -68,7 +68,7 @@ Procedure:
    - `FLATTEN field` (list expansion)
    - For `dataviewjs`: `e.field`, `e["field"]`, `dv.pages(...).where(p => p.field ...)` patterns
 3. Skip built-in fields (`file.link`, `file.mtime`, `file.folder`, `file.name`, `file.inlinks`, `file.outlinks`, `file.path`, `file.content`, `file.tags`, etc.) and the universal `type`.
-4. For each remaining field reference, check whether it appears in the frontmatter of *any* template under `00-meta/03-templates/` (or the human can configure a different template root for the linted vault).
+4. For each remaining field reference, check whether it appears in the frontmatter of *any* template under `99-system/templates/` (or the human can configure a different template root for the linted vault).
 5. If a field appears in no template: report the dashboard, the query block, the field name, and the line.
 6. If the field name has a plausible close-match in templates (Levenshtein distance ≤ 2, e.g., `project` vs `projects`), include the suggestion in the report.
 
@@ -152,7 +152,7 @@ You own detection of transient artifacts that leak out of the working zones into
 
 Procedure:
 
-1. Walk the vault tree, skipping `.obsidian/`, `.git/`, and any path under `10-inbox/`, `40-workbench/`, or `00-meta/02-logs/` (the permitted transient zones).
+1. Walk the vault tree, skipping `.obsidian/`, `.git/`, and any path under `10-inbox/`, `40-workbench/`, or `99-system/logs/` (the permitted transient zones).
 2. For each remaining file, check the basename against this pattern set:
    - `*.tmp.*` — common editor / sync conflict suffix (e.g., `notes.md.tmp.241125.1ddf7ac1a3d3`)
    - `*.OLD.*`, `*.lessOLD.*` — manual-rename leftovers

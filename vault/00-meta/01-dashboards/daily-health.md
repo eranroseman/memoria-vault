@@ -7,7 +7,7 @@ Open every morning, glance ~30 seconds, close if nothing's red. The **system-hea
 Cards needing you: `blocked` (your decision) or a `done` card with `review_status: requested` (awaiting approval). Oldest first; ≥ 3 rows is the signal to clear them before larger work.
 
 ```dataviewjs
-const cards = await dv.io.load("00-meta/02-logs/board-state.jsonl");
+const cards = await dv.io.load("99-system/logs/board-state.jsonl");
 if (!cards || !cards.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = cards.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const active = events.filter(e =>
@@ -24,7 +24,7 @@ dv.table(
 HIGH/CRITICAL structural-detector findings in the last 24h — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch]].
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/lint-findings.jsonl");
+const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -47,7 +47,7 @@ TABLE WITHOUT ID
   trust_score AS Trust,
   task_count AS Tasks,
   task_success_rate AS "Success%"
-FROM "00-meta/08-metrics"
+FROM "99-system/metrics"
 WHERE type = "lane-metric" AND period = string(date(today))
 SORT trust_score ASC
 ```
@@ -57,7 +57,7 @@ SORT trust_score ASC
 Last/next run for the four standard tasks (`nightly-hygiene`, `weekly-cluster-report`, `weekly-drift-report`, `fleeting-staleness-report`). A missing row = cron not enabled for that lane; ✗ = last run failed.
 
 ```dataviewjs
-const text = await dv.io.load("00-meta/02-logs/cron-history.jsonl");
+const text = await dv.io.load("99-system/logs/cron-history.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const byTask = {};

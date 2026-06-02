@@ -18,7 +18,7 @@ Set up a PRISMA-compliant screening protocol and process the results into Memori
 
 **1. Create a screening-protocol note.**
 
-In Obsidian: `Cmd-P → Templater: Insert template → screening-protocol`. The template is at `00-meta/03-templates/screening-protocol.md`.
+In Obsidian: `Cmd-P → Templater: Insert template → screening-protocol`. The template is at `99-system/templates/screening-protocol.md`.
 
 Fill in: review title, project ID, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
 
@@ -108,5 +108,5 @@ The paper-note lands in `20-sources/01-papers/` after classification.
 
 - Exploratory discovery (no protocol needed): [Find new sources](find-new-sources.md)
 - After ingest, classify each paper: [Classify a source](classify-a-source.md)
-- The screening-protocol template: `00-meta/03-templates/screening-protocol.md`
+- The screening-protocol template: `99-system/templates/screening-protocol.md`
 - The adopt-on-demand decision: [ADR-16](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)

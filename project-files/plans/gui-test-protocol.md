@@ -133,16 +133,16 @@ block: it must render a table or placeholder, **never a query error**.
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
 | 1 | `daily-health.md` (Daily Health) | board-state, lint-findings, fleet metrics, cron-history | all sections render; no query error |
-| 2 | `board-state.md` | `00-meta/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
+| 2 | `board-state.md` | `99-system/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
 | 3 | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), claims (`maturity`) | resolves; **seed:** a paper note → it appears by lifecycle |
 | 4 | `discuss-queue.md` | papers `lifecycle: current`, no Socratic pass | resolves; empty OK |
 | 5 | `open-questions.md` | `## Open questions` sections in claims/papers | resolves; add a note with that section → it lists |
 | 6 | `contradictions.md` | claim `relations.contradicts` pairs | resolves; empty OK |
-| 7 | `drift-watch.md` | `00-meta/02-logs/lint-findings.jsonl` | resolves; populates after a Linter run |
+| 7 | `drift-watch.md` | `99-system/logs/lint-findings.jsonl` | resolves; populates after a Linter run |
 | 8 | `loose-ends.md` | whole-vault filename scan (`TODO`/`tmp`/`untitled`) | resolves; create `untitled.md` → it lists; delete after |
 | 9 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
-| 10 | `fleet-health.md` | `00-meta/08-metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
-| 11 | `audit-log.md` | `00-meta/02-logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
+| 10 | `fleet-health.md` | `99-system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
+| 11 | `audit-log.md` | `99-system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
@@ -212,7 +212,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
-- ✓ Pass: the card appears under *Active*; `00-meta/board/<task_id>.md` exists.
+- ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
 - [ ] **E3 Pass**
 
 ---

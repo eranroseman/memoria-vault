@@ -10,7 +10,7 @@ Surfaces the Linter's eight structural-detector findings as one consolidated vie
 
 ## What it shows
 
-The dashboard reads from `00-meta/02-logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight structural detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
+The dashboard reads from `99-system/logs/lint-findings.jsonl`, written by the Linter on each scheduled pass. Each of the eight structural detectors produces findings; the dashboard groups them by detector and shows the verdict band rollup.
 
 **Verdict band:**
 
@@ -36,7 +36,7 @@ The Friday weekly review includes a drift-watch pass because a week of ordinary 
 
 ## Before it has real data
 
-Until the Linter is running end-to-end and writing to `00-meta/02-logs/lint-findings.jsonl`, this dashboard shows a placeholder. Daily-health shows the last-24h HIGH and CRITICAL findings (a filtered subset) once the Linter is active.
+Until the Linter is running end-to-end and writing to `99-system/logs/lint-findings.jsonl`, this dashboard shows a placeholder. Daily-health shows the last-24h HIGH and CRITICAL findings (a filtered subset) once the Linter is active.
 
 ## Related
 

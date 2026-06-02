@@ -14,7 +14,7 @@ Two write families are gated (see classify):
     matcher, so a file-tool write to a review-gated zone is blocked too (#51).
 The `terminal` toolset is deliberately NOT gated here: an arbitrary shell command
 has no single path to evaluate, so those lanes stay bounded by their lane-override
-`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> 00-meta/02-logs/) plus
+`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> 99-system/logs/) plus
 review-to-promote. The complete write boundary for non-Coder/Linter lanes is the
 *capability* layer -- they don't get the terminal/file toolsets at all
 (`agent.disabled_toolsets`; tool-registry.yaml). This hook is the path layer.
@@ -150,7 +150,7 @@ def _stash_key(payload: dict) -> str:
 
 def _pending_file(vault: Path, key: str) -> Path:
     safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in key)
-    return vault / "00-meta" / "02-logs" / ".pending" / f"{safe}.json"
+    return vault / "99-system" / "logs" / ".pending" / f"{safe}.json"
 
 
 def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
@@ -359,7 +359,7 @@ def self_test() -> int:
         post = evaluate_post(ev_payload, "memoria-writer", vault)
         # A missing audit file means complete_write failed (swallowed above); report
         # it as a clear check instead of crashing the whole suite on read_text().
-        audit_file = vault / "00-meta" / "02-logs" / "audit.jsonl"
+        audit_file = vault / "99-system" / "logs" / "audit.jsonl"
         check("post wrote the audit log", audit_file.is_file())
         audit_lines = audit_file.read_text(encoding="utf-8").splitlines() if audit_file.is_file() else []
         completes = [json.loads(l) for l in audit_lines if json.loads(l).get("decision") == "write_complete"]

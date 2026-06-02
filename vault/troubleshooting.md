@@ -15,7 +15,7 @@ Quick checks that the system itself is up (run from a terminal):
 | --- | --- | --- |
 | Hermes + profiles | `hermes profile list` | all 7 `memoria-*` profiles respond |
 | Gateway / API | `hermes gateway status` | running on `:8642` |
-| Policy + obsidian MCP | trigger a write, watch `00-meta/02-logs/audit.jsonl` | new `allow_with_log` rows appear |
+| Policy + obsidian MCP | trigger a write, watch `99-system/logs/audit.jsonl` | new `allow_with_log` rows appear |
 | Cron scheduler | [[daily-health]] § Cron status | the four standard tasks show recent runs |
 | Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
 
@@ -58,7 +58,7 @@ pandoc draft.md --bibliography .memoria/memoria.bib --csl .memoria/csl/apa.csl -
 - [ ] Restart Hermes (`hermes profile list` should respond)
 - [ ] Restart the policy MCP (`policy_mcp.py`)
 - [ ] Check `.memoria/` is intact (`profiles/`, `mcp/`, `lane-overrides/`)
-- [ ] Check `00-meta/02-logs/` for recent error entries
+- [ ] Check `99-system/logs/` for recent error entries
 - [ ] `git status` — has anything unexpectedly changed?
 
 **Last resort — [re-install](https://eranroseman.github.io/memoria-vault/reference/installer/)** (idempotent; rewrites author-owned files, preserves your `.env` secrets):

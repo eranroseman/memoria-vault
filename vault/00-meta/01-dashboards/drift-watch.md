@@ -13,7 +13,7 @@ TABLE WITHOUT ID
   finding AS Finding,
   path AS Path,
   reported_at AS "Reported"
-FROM "00-meta/02-logs/lint-findings"
+FROM "99-system/logs/lint-findings"
 WHERE active = true
 SORT severity ASC, reported_at ASC
 LIMIT 30
@@ -31,7 +31,7 @@ TABLE WITHOUT ID
   critical_count AS Critical,
   high_count AS High,
   medium_count AS Medium
-FROM "00-meta/08-metrics"
+FROM "99-system/metrics"
 WHERE type = "lint-verdict"
 SORT period DESC
 LIMIT 8
@@ -46,7 +46,7 @@ TABLE WITHOUT ID
   detector AS Detector,
   count(rows) AS "Fired (4 wks)",
   last(rows.reported_at) AS "Last fired"
-FROM "00-meta/02-logs/lint-findings"
+FROM "99-system/logs/lint-findings"
 WHERE date(reported_at) > date(today) - dur(28 days)
 GROUP BY detector
 SORT count(rows) DESC

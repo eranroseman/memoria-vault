@@ -63,7 +63,7 @@ The note is now at `lifecycle: proposed`. The next step is [classify it](classif
 ## Verify
 
 - The note exists in the correct folder
-- `00-meta/02-logs/audit.jsonl` shows a new `allow_with_log` entry with this citekey's path
+- `99-system/logs/audit.jsonl` shows a new `allow_with_log` entry with this citekey's path
 - The `[!brief]` callout is present
 - The `_proposed_classification` frontmatter block is present with `topic`, `methods`, and `study_design` fields
 

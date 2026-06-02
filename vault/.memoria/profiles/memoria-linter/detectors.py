@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
-TRANSIENT_PREFIXES = ("10-inbox/", "40-workbench/", "00-meta/02-logs/")
+TRANSIENT_PREFIXES = ("10-inbox/", "40-workbench/", "99-system/logs/")
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
@@ -46,7 +46,7 @@ DATAVIEW_KEYWORDS = {
     "limit", "asc", "desc", "table", "list", "task", "and", "or", "not", "reverse",
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
-# (cards) or 00-meta logs/metrics (JSONL) drift on different schemas, not this one.
+# (cards) or 99-system logs/metrics (JSONL) drift on different schemas, not this one.
 NOTE_FOLDERS = ("10-inbox", "20-sources", "30-synthesis", "40-workbench", "50-deliverables")
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
@@ -263,7 +263,7 @@ _IDENT = re.compile(r"[A-Za-z_][\w-]*")
 
 def dashboard_field_drift(vault: Path) -> list[Finding]:
     dash = vault / "00-meta" / "01-dashboards"
-    tmpl = vault / "00-meta" / "03-templates"
+    tmpl = vault / "99-system" / "templates"
     if not dash.is_dir() or not tmpl.is_dir():
         return out_empty()
     known = set(DATAVIEW_BUILTINS)
@@ -414,7 +414,7 @@ def self_test() -> int:
         # folder skeleton
         for d in ("10-inbox/01-fleeting", "20-sources/01-papers",
                   "30-synthesis/01-claims", "00-meta/01-dashboards",
-                  "00-meta/03-templates", "90-assets/extracts"):
+                  "99-system/templates", "90-assets/extracts"):
             (v / d).mkdir(parents=True, exist_ok=True)
 
         # clean claim note (no findings)
@@ -451,7 +451,7 @@ def self_test() -> int:
         dft.parent.mkdir(parents=True, exist_ok=True)
         dft.write_text("---\ntype: draft\n---\nWe still rely on [[oldclaim]] here.\n", encoding="utf-8")
         # template + dashboard referencing an unknown field -> dashboard finding
-        (v / "00-meta/03-templates/claim-note.md").write_text(
+        (v / "99-system/templates/claim-note.md").write_text(
             "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n", encoding="utf-8")
         (v / "00-meta/01-dashboards/d.md").write_text(
             "```dataview\nTABLE maturity, projct\nFROM \"30-synthesis\"\nSORT file.mtime DESC\n```\n",

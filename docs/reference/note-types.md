@@ -30,7 +30,7 @@ The 16 note types, their canonical folders, templates, lifecycle, and ownership.
 | `deliverable` | `50-deliverables/` | `deliverable.md` | Human / Coder (export task) | Terminal | `current` |
 | `candidate-note` | `10-inbox/03-candidates/` | `candidate-note.md` | Librarian (`find`) / Verifier (`gap`) / human | Human (include → ingest; exclude → archive) | `proposed` → `archived` |
 
-All 16 templates live in `00-meta/03-templates/`.
+All 16 templates live in `99-system/templates/`.
 
 > **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/decisions/17-shared-candidate-frontmatter.md).
 
@@ -130,7 +130,7 @@ A few types carry guidance the tables above don't capture:
 
 ## Template locations
 
-Templates ship at `00-meta/03-templates/<type>.md` as **raw notes** — frontmatter at line 1, then the body skeleton. QuickAdd commands instantiate them (filling `{{VALUE}}`/`{{DATE}}` tokens); agent skills read them when authoring notes directly. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
+Templates ship at `99-system/templates/<type>.md` as **raw notes** — frontmatter at line 1, then the body skeleton. QuickAdd commands instantiate them (filling `{{VALUE}}`/`{{DATE}}` tokens); agent skills read them when authoring notes directly. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
 
 ---
 
