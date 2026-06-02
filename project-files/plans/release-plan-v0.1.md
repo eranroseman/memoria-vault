@@ -65,7 +65,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | todo | All ten dashboards render on real data (Dataview queries resolve) | Tier 5 | — |
+| G4 | todo | All ten dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](gui-test-protocol.md) Part C | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry. Board-export cron **wired** (installer `wire_telemetry_cron` deploys the wrapper + `hermes cron create --no-agent`, 1-min cadence) and validated live — a forced tick fires `board_export.py` and `board-state.jsonl` gains a snapshot. Audit deny-reasons already emit from the policy gate; FAMA exposure from the Linter. Full `board-transitions`/`disposition`/`cost` emission needs live card activity to exercise, and the Hermes scheduler/gateway must be running for the cron to fire | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
@@ -84,7 +84,7 @@ Ubuntu/WSL2 box.
 | T2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | T3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
 | T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| T5 | todo | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export |
+| T5 | todo | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](gui-test-protocol.md) (runs on the Windows side) |
 
 ## 4. Blockers
 
