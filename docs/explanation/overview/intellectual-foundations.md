@@ -1,6 +1,7 @@
 ---
 title: Intellectual foundations
 parent: Overview
+nav_order: 2
 ---
 
 

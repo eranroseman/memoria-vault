@@ -1,6 +1,7 @@
 ---
 title: Design principles
 parent: Overview
+nav_order: 3
 ---
 
 # Design principles
