@@ -151,7 +151,7 @@ These checks are **required** by the branch ruleset and must all pass:
 
 | Check | Runs |
 | --- | --- |
-| `docs-doctor` | structural lint of `docs/` (broken links, misfiled files) |
+| `docs-doctor` | structural lint of `docs/` + `vault/` link text (broken links/anchors, README presence, frontmatter keys, link text = page title) |
 | `shellcheck (scripts/install.sh)` | shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` of the vault Python tooling (policy gate, board export, metrics, detectors) |
@@ -203,9 +203,9 @@ reading it. Before opening a PR:
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to **LF**
   (a CRLF in `scripts/install.sh` breaks the WSL2 shebang). Never override it — working on
   ext4 in WSL2 avoids the CRLF churn that `/mnt/c` + Windows editors introduce.
-- **Obsidian REST bridge** (integration work): WSL2-Hermes ↔ Windows-Obsidian needs
-  `networkingMode=mirrored` in `.wslconfig` so `https://127.0.0.1:27124` resolves
-  across the boundary — see *Where things live*.
+- **Obsidian REST bridge** (integration work): needs WSL2 `networkingMode=mirrored`
+  for `https://127.0.0.1:27124` to resolve across the boundary — full setup in
+  *Where things live*.
 - MCP deps install into a vault-local venv (`<vault>/.memoria/.venv`); the installer
   wires that interpreter into each profile's `config.yaml` (`mcp_servers` + hooks live
   there — Hermes never reads a standalone `mcp.json`; ADR-27).
@@ -221,8 +221,9 @@ reading it. Before opening a PR:
 ## 7. Profiles and the vault
 
 - Agent profiles live under `vault/.memoria/profiles/memoria-*/` and follow the
-  `SOUL.md` / `AGENTS.md` / `config.yaml` / `mcp.json` / `distribution.yaml`
-  structure. Keep the seven in sync.
+  `SOUL.md` / `config.yaml` / `distribution.yaml` structure (+ `cron/`, `skills/`).
+  Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
+  `mcp_servers` (ADR-27).
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
   (ADRs); current build state is `project-files/plans/implementation-status.md`.
 - **Generated reports go in `_reports/`, never the tracked tree.** Analysis,

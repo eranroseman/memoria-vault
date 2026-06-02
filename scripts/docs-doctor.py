@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""docs-doctor — structural linter for the Memoria docs/ tree.
+"""docs-doctor — structural linter for the Memoria docs/ tree (+ vault/ link text).
 
 Enforces the conventions from the mode-first refactor plan. These are all
 *structural* checks; classifying a file by reading mode is a human concern and
@@ -16,6 +16,9 @@ Checks:
                         docs and on the vault note templates' fenced frontmatter.
   4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
                         relative Markdown link (GitHub does not render wikilinks).
+  5. Link text        — across docs/ AND vault/, a link's visible text must be the
+                        target's page title, not its filename; bare [[wikilinks]] in
+                        vault notes must be aliased with the title.
 
 Exit 0 if clean, 1 if any error.
 Usage: python scripts/docs-doctor.py [docs_root]   (default: docs)
@@ -32,6 +35,8 @@ DROPPED_KEYS = ("mode", "audience", "tags")  # mode/audience dropped in the refa
 
 # [text](target) — but NOT images ![alt](src). Reference-style/wikilinks unused.
 LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
+LINK_TEXT_RE = re.compile(r"(?<!\!)\[([^\]]*)\]\(([^)]+)\)")  # captures (text, target)
+PAGES_URL = "https://eranroseman.github.io/memoria-vault"
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
@@ -179,6 +184,42 @@ def check_template_frontmatter(md: Path, errors: list[str]) -> None:
                 errors.append(f"{md}: template frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
 
 
+def _link_is_internal(target: str) -> bool:
+    t = target.strip().split()[0]
+    return t.startswith(PAGES_URL) or not t.startswith(("http://", "https://", "mailto:"))
+
+
+def check_link_text(md: Path, errors: list[str]) -> None:
+    # A link's visible text must be the target's page title, not its filename. Flag text
+    # that restates the target's own filename/stem (internal targets only) — prose with a
+    # stray hyphen/slash and external links are left alone.
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for label, target in LINK_TEXT_RE.findall(text):
+        lbl = label.strip().rstrip("/")
+        if not lbl or not _link_is_internal(target):
+            continue
+        if lbl.endswith(".md"):
+            errors.append(f"{md}: link text '{label.strip()}' is a filename — use the target's page title")
+            continue
+        t = target.strip().split()[0].split("#")[0].rstrip("/")
+        base = t.split("/")[-1]
+        stem = base[:-3] if base.endswith(".md") else base
+        if lbl == base or lbl == stem:
+            errors.append(f"{md}: link text '{label.strip()}' restates the filename — use the target's page title")
+
+
+def check_wikilink_aliases(md: Path, errors: list[str]) -> None:
+    # Vault only: a bare [[note]] renders the kebab filename; require [[note|Page Title]].
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for inner in WIKILINK_RE.findall(text):
+        clean = inner.replace("\\|", "|")
+        if "|" in clean:
+            continue
+        tgt = clean.split("#")[0].strip()
+        if tgt:
+            errors.append(f"{md}: bare wikilink [[{inner}]] shows the filename — alias it with the page title ([[{tgt}|…]])")
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -198,6 +239,7 @@ def main() -> int:
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_wikilinks(md, errors, doc_md_names)
+        check_link_text(md, errors)
 
     # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
     # and a banned key there propagates to every note created from the template.
@@ -205,6 +247,16 @@ def main() -> int:
     if tmpl_dir.is_dir():
         for md in sorted(tmpl_dir.glob("*.md")):
             check_template_frontmatter(md, errors)
+
+    # Link-text discipline extends to the vault notes: cross-links must use the page
+    # title — markdown link text and wikilink aliases — never the bare filename.
+    vault = root.parent / "vault"
+    if vault.is_dir():
+        for md in sorted(vault.rglob("*.md")):
+            if ".obsidian" in md.parts or "templates" in md.parts:
+                continue
+            check_link_text(md, errors)
+            check_wikilink_aliases(md, errors)
 
     if errors:
         print(f"docs-doctor: {len(errors)} issue(s)\n")
