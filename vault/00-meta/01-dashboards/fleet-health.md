@@ -1,4 +1,4 @@
-# Fleet Health
+# Fleet Health [placeholder]
 
 Per-lane operational health for the agent fleet — a 0–100 trust score plus the cost and reliability trends behind it. Open when deciding whether scheduled (cron) work should keep running or pause. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/fleet-health/).
 
