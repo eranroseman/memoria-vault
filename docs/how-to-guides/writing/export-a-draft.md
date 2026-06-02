@@ -97,7 +97,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to docx \
   --lua-filter=/path/to/zotero.lua \
-  --output 40-workbench/<project>/05-deliverables/<output>.docx
+  --output 40-workbench/<project>/04-drafts/<output>.docx
 ```
 
 After export: open the `.docx` in Word → Zotero tab → Refresh. Citations convert to live Word fields and a bibliography is inserted.
@@ -120,7 +120,7 @@ Export as ODT with Scannable Cite markers, then run Zotero's RTF/ODF Scan to con
 pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   --from markdown+smart \
   --to odt \
-  --output 40-workbench/<project>/05-deliverables/<output>.odt
+  --output 40-workbench/<project>/04-drafts/<output>.odt
 ```
 
 **2.** In Zotero: Tools → RTF/ODF Scan → select the `.odt` file → scan. Zotero rewrites the file with live LibreOffice Reference Mark citations.

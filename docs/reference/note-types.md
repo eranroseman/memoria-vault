@@ -75,7 +75,7 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 | `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `budding` → `evergreen`). |
 | `moc` | Can be `dormant` (topic has gone quiet; not archived yet). |
 | `deliverable` | Created as `current`; never promoted or archived in normal flow. |
-| `project-note` | Refines `current` with `project_phase` (`active` · `paused` · `complete` · `abandoned`). |
+| `project-note` | Refines `current` with `project_phase` (`planning` · `active` · `paused` · `complete`). |
 | `draft` | Refines `current` with `draft_stage` (`outline` · `rough` · `polished` · `submitted`). |
 
 ---

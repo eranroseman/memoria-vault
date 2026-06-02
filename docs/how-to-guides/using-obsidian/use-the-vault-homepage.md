@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-Open `00-meta/index.md` — the vault's front door — navigate from it to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
+The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)); it links straight to `00-meta/index.md`, the pinned landing page. Navigate from there to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
 
 ## Prerequisites
 
@@ -16,9 +16,9 @@ Open `00-meta/index.md` — the vault's front door — navigate from it to the r
 
 **1. Open the homepage.**
 
-The obsidian-homepage plugin opens `00-meta/index.md` automatically on launch. If it's not visible:
+The obsidian-homepage plugin opens `Home.md` automatically on launch; follow its link to `00-meta/index.md` — the pinned landing page this guide works from. If neither is visible:
 
-- `Cmd/Ctrl-P` → **Open default note**
+- `Cmd/Ctrl-P` → **Open default note** (opens `Home.md`)
 - Or navigate manually: file explorer → `00-meta` → `index.md`
 
 Pin it in the sidebar so it's always one click away: right-click the tab → **Pin**.

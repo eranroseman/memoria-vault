@@ -17,7 +17,7 @@ Obsidian's default is to reopen the last-open notes, so a Memoria session lands 
 
 ## Decision
 
-Memoria ships a **`Home.md` front-door note** at the vault root and opens it on startup with **[obsidian-homepage](../../docs/reference/obsidian-plugins.md)** (`recommended/`, not required). `Home.md` is a thin **Dataview note** — it leads with the Daily Health glance, then links the board, the knowledge dashboards (open-questions, contradictions, reading-pipeline), and the command-palette quick actions; it is a *launchpad*, distinct from the eleven shipped dashboards (it surfaces them, it is not one of them). obsidian-homepage is adopted because it is **view-management only — it opens a note and writes nothing**, so it never touches the Policy-MCP / audit invariants; it can run a "refresh Dataview" command on open. The home view stays a git-tracked, lintable note.
+Memoria ships a **`Home.md` front-door note** at the vault root and opens it on startup with **[obsidian-homepage](../../docs/reference/obsidian-plugins.md)** (`recommended/`, not required). `Home.md` is a thin **Dataview note** — it leads with the Daily Health glance, then links the board, the knowledge dashboards (open-questions, contradictions, reading-pipeline), and the command-palette quick actions; it is a *launchpad*, distinct from the ten shipped dashboards plus the `index.md`/Daily Health home (it surfaces them, it is not one of them). obsidian-homepage is adopted because it is **view-management only — it opens a note and writes nothing**, so it never touches the Policy-MCP / audit invariants; it can run a "refresh Dataview" command on open. The home view stays a git-tracked, lintable note.
 
 ## Consequences
 

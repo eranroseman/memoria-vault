@@ -54,7 +54,7 @@ Collects every claim note and paper note that contains an explicit `## Open ques
 ### "Are any of my claims contradicted by other claims?"
 **Contradictions** — open manually.
 
-The Verifier writes `[!contradiction]` callouts when two claim notes conflict. This dashboard aggregates them. Check before promoting a claim to canonical reference or submitting a draft — unresolved contradictions mean the argument isn't settled.
+This dashboard lists every pair of claim notes joined by a **human-set** `relations.contradicts` link. No model judges which claims conflict — the agents may *propose* a contradiction for confirmation, but the link is always human-set (the NLI-based proposer is deferred). Check before promoting a claim to canonical reference or submitting a draft — unresolved contradictions mean the argument isn't settled.
 
 ### "Something seems wrong but I can't see why"
 **Drift Watch** — open manually.

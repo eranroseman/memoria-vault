@@ -72,9 +72,9 @@ The transient profiles return structured outputs:
 | --- | --- | --- |
 | Mapper | `[!corpus-map]` callout — dense clusters, thin topics, gaps | Read the gap list before framing a writing project |
 | Writer | Draft prose or outline, written directly in the response | Copy the sections you want into your draft file |
-| Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.85 before writing a new claim |
+| Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.8 before writing a new claim |
 
-A similarity score ≥ 0.85 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
+A similarity score ≥ 0.8 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
 
 ## Ending a session
 

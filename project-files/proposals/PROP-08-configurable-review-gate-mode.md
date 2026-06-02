@@ -17,7 +17,7 @@ A single configurable `review_mode` setting with two values:
 - **`blocking`** (default, the only recommended operating mode). Current behavior, unchanged: dispatch refuses to advance a card out of `done`/awaiting-review without human `review_status: approved`.
 - **`advisory`** (study-only). The `agent_recommendation` is still written and surfaced but does **not** structurally block — a card may advance/promote without approval. This deliberately removes the safety property.
 
-Three invariants make the mode evidence rather than just a weaker system: (1) the same five-signal instrumentation fires identically in both modes (commensurability is the point); (2) every logged event is stamped with its arm (`review_mode`), set live because the attribution is non-backfillable; (3) the default is `blocking` and advisory must be explicitly, narrowly enabled — per study, time-boxed, ideally within-subject.
+Three invariants make the mode evidence rather than just a weaker system: (1) the same six-signal instrumentation fires identically in both modes (commensurability is the point); (2) every logged event is stamped with its arm (`review_mode`), set live because the attribution is non-backfillable; (3) the default is `blocking` and advisory must be explicitly, narrowly enabled — per study, time-boxed, ideally within-subject.
 
 ## Why
 

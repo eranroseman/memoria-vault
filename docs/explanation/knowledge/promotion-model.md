@@ -38,7 +38,7 @@ claim-note     ──► moc membership          (via frontmatter moc:)
 draft          ──► deliverable             (on export)
 ```
 
-Two clarifications on the map. **Source notes are not only papers**: a captured repository, package, product, dataset, or standard promotes along the same path but lands as an `item-note` in `20-sources/02-items/` — the destination keys on whether the source carries a stable publication ID, not on any difference in how the note is handled (see [note-types.md](note-types.md)). **Entity notes** (`person-note`, `organization-note`, `venue-note`) are created as cross-link side-effects during ingestion rather than promoted from an earlier stage, so they don't appear above. And `candidate-note` is the deferred 16th type (see [note-types.md](note-types.md)); its two rows apply once the discovery/screening pipeline is adopted.
+Two clarifications on the map. **Source notes are not only papers**: a captured repository, package, product, dataset, or standard promotes along the same path but lands as an `item-note` in `20-sources/02-items/` — the destination keys on whether the source carries a stable publication ID, not on any difference in how the note is handled (see [note-types.md](note-types.md)). **Entity notes** (`person-note`, `organization-note`, `venue-note`) are created as cross-link side-effects during ingestion rather than promoted from an earlier stage, so they don't appear above. And `candidate-note` is the 16th type (adopted in v0.1 — [ADR-17](../../../project-files/decisions/17-shared-candidate-frontmatter.md); see [note-types.md](note-types.md)); its two rows are live for the discovery and gap-card paths.
 
 Several moves are explicitly disallowed:
 

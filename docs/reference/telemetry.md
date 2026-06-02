@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `00-meta/02-logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "five-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `00-meta/02-logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "six-signal log").
 
 ## Conventions (apply to every log)
 
@@ -26,7 +26,7 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome |
 | `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion |
 | `lint-findings.jsonl` | `memoria-linter` | per Linter run | one detector finding |
-| `sessions/<id>.md` | `memoria-linter` | per Linter session | a human-readable session summary (not JSONL) |
+| `sessions/<id>.jsonl` | `memoria-linter` | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
 
 Derived, not raw: `08-metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
 
@@ -88,15 +88,15 @@ The card-level state-change stream — the spine the other event logs hang off. 
 The **un-backfillable** signal: what the human actually did with a finished card. Emitted when a card's `review_status` reaches a terminal outcome.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "edited", "agent_recommendation": "approve"}
+{"timestamp": "2026-06-01T11:30:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "edited", "agent_recommendation": "clean"}
 ```
 
 | Field | Values |
 | --- | --- |
 | `disposition` | `accepted` \| `edited` \| `rejected` — the three-way human verdict |
-| `agent_recommendation` | what the agent proposed (`approve` / `reject` / …); pairs the agent's self-assessment against the human's call |
+| `agent_recommendation` | what the agent proposed (`clean` / `issues-found` / `inconclusive`); pairs the agent's self-assessment against the human's call |
 
-The terminal mapping is: `review_status: approved → accepted`, `rejected → rejected`, `changes-requested → rejected`. A card may override the default by setting `metadata.disposition` explicitly — this is the only way to record `edited` (accepted-after-changes), which the board's `review_status` cannot express on its own. **Without `edited` you cannot distinguish "accepted as written" from "accepted after I fixed it," which is the core acceptance-quality measure for the paper — hence un-backfillable.**
+The terminal mapping is: `review_status: approved → accepted`, `rejected → rejected`. A card may override the default by setting `metadata.disposition` explicitly — this is the only way to record `edited` (accepted-after-changes), which the board's `review_status` cannot express on its own. **Without `edited` you cannot distinguish "accepted as written" from "accepted after I fixed it," which is the core acceptance-quality measure for the paper — hence un-backfillable.**
 
 ## cost.jsonl
 

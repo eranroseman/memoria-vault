@@ -65,7 +65,7 @@ Allowed relation types:
 | `supports` | This claim supports the linked claim. |
 | `contradicts` | This claim contradicts the linked claim. |
 
-No other relation types are currently defined. Adding a new type requires updating this reference and the Linter's schema-check detector.
+No other relation types are currently defined. Adding a new type requires updating this reference and the Linter's schema-check command.
 
 ---
 

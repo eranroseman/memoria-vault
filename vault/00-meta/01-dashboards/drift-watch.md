@@ -16,7 +16,7 @@ For the full definitions, severities, and remediation paths, see [the Linter's s
 | `vault-hash-drift` | Vault hash drift | Vault file modified outside the policy MCP (tamper or out-of-band edit) | CRITICAL |
 | `skeleton-drift` | Skeleton note drift | Human notes in `00-meta/` lagging the engineering spec | MEDIUM |
 | `dashboard-field-drift` | Dashboard field drift | Dataview query references a frontmatter field no template emits | HIGH |
-| `command-vocab-drift` | Command vocabulary drift | A command in the design isn't declared in its owner AGENTS file | MEDIUM |
+| `command-vocab-drift` | Command vocabulary drift | A command in the design isn't declared in its owner SOUL.md | MEDIUM |
 | `plugin-config-drift` | Plugin-config drift | Human's `data.json` files diverge from shipped plugin-config templates | MEDIUM (HIGH on `autoAllowPermissions` escalation) |
 | `orphan-working-files` | Orphan working files | `.tmp.*`, `.bak`, editor backups, manual-rename leftovers outside transient zones | LOW |
 | `extract-path-broken` | Extract path broken link | Paper-note's `extract_path` frontmatter points to a missing extract file | HIGH |
@@ -91,11 +91,11 @@ SORT schema_version DESC
 LIMIT 8
 ```
 
-Read this as a histogram: the current canonical version (e.g., `2`) should accumulate over time; older versions should drain. A version that isn't draining is a migration the human hasn't started; a version that has very few notes left is a long-tail candidate for manual cleanup.
+Read this as a histogram: the current canonical version (today `1`) should hold the bulk of notes. When a future migration bumps the version, the new version should accumulate while older ones drain — a version that isn't draining is a migration the human hasn't started; a version with very few notes left is a long-tail candidate for manual cleanup.
 
-### Paper-notes missing the new reach fields
+### Paper-notes missing the reach fields
 
-Per-field progress for the v1 → v2 migration that added `pdf_uri` and `extract_path`. Use this to spot which specific notes need backfill — `schema-migrate --dry-run` proposes the changes, but seeing the actual list helps the human decide between auto-script-backfill and selective re-ingest.
+Per-field progress for notes missing `pdf_uri` and `extract_path`. These shipped as **additive** `schema_version: 1` fields (additive fields do not bump the version — see [schema-reference](../04-reference/schema-reference.md)), so paper-notes ingested before they existed can still lack them. Use this to spot which specific notes need backfill — `schema-migrate --dry-run` proposes the changes, but seeing the actual list helps the human decide between auto-script-backfill and selective re-ingest.
 
 ```dataview
 TABLE WITHOUT ID
@@ -115,7 +115,7 @@ Empty result is the goal — every paper-note has both reach fields populated. O
 
 Three ways to pay down what this query surfaces, in increasing effort:
 
-1. **Templater backfill script.** For fields derivable from existing frontmatter (e.g., `pdf_uri` constructed from `zotero_uri` by string-replacing `select` with `open-pdf`), a one-shot Templater run writes the new field across the corpus. Cheap; works for most v1 → v2 cases here because `zotero_uri` already exists.
+1. **Templater backfill script.** For fields derivable from existing frontmatter (e.g., `pdf_uri` constructed from `zotero_uri` by string-replacing `select` with `open-pdf`), a one-shot Templater run writes the new field across the corpus. Cheap; works for most backfill cases here because `zotero_uri` already exists.
 2. **Re-ingest.** `hermes -p memoria-librarian run ingest --source <citekey>` reruns the full pipeline including Marker extraction. Required when `extract_path` is missing (no extract file exists yet). Expensive — Marker runs are non-trivial — but produces the fully-populated note.
 3. **Touch-driven.** Leave the backlog alone; old notes get updated when the human next opens them. Acceptable for cold corpus areas (finished projects, deprecated topics); not acceptable for actively-read areas where the missing fields would block daily workflow.
 

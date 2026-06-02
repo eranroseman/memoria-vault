@@ -25,7 +25,7 @@ The root cause is that Better BibTeX treats citekeys as derived from metadata, n
 
 You classify paper A with `topic: receptivity-detection` and paper B with `topic: opportune-moments`, not noticing they name the same concept. The Dataview query for `receptivity-detection` returns half the corpus on the topic. You conclude coverage is thin; it isn't.
 
-The failure is invisible because it produces no errors — just incomplete query results. Research directions get shaped by a false gap signal. The Linter's `schema-check` detector can catch drift from a defined vocabulary, but only after the vocabulary is defined. Drift before that point is entirely silent. See [vocabulary-discipline.md](vocabulary-discipline.md) for the reasoning behind deferred vocabulary consolidation.
+The failure is invisible because it produces no errors — just incomplete query results. Research directions get shaped by a false gap signal. The Linter's `schema-check` command can catch drift from a defined vocabulary, but only after the vocabulary is defined. Drift before that point is entirely silent. See [vocabulary-discipline.md](vocabulary-discipline.md) for the reasoning behind deferred vocabulary consolidation.
 
 ## Summary without synthesis
 

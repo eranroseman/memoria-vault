@@ -10,7 +10,6 @@ title: ""
 type: project-note
 lifecycle: current
 project_phase: active      # planning | active | paused | complete
-phase: planning
 start_date:
 due_date:
 scope: ""

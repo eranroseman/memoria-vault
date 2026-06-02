@@ -51,7 +51,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 ## 3. Agent-proposed candidate claim notes
 
-**What.** After a `discuss` card closes, the Writer proposes *candidate* claim notes from the discussed source — drafts that land in `10-inbox/03-candidates/` as `type: claim-candidate`, never in `30-synthesis/01-claims/`. Each carries its provenance (the paper note and the specific passage). The human edits, authors the canonical claim note, or discards.
+**What.** After a `discuss` card closes, the Writer proposes *candidate* claim notes from the discussed source — drafts that land in `10-inbox/03-candidates/` as `type: candidate-note`, never in `30-synthesis/01-claims/`. Each carries its provenance (the paper note and the specific passage). The human edits, authors the canonical claim note, or discards.
 
 **Trade-offs.** Most judgment-adjacent automation in the roadmap. Two specific risks: (1) **rubber-stamping** — a fluent candidate invites acceptance without the close reading distillation is meant to force; (2) **framing capture** — the agent's phrasing anchors the human's, narrowing the claims they would have written unprompted. Over-proposing is worse than not proposing.
 
@@ -59,4 +59,4 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Guard.** If comprehension is the bottleneck, this does not help. The candidate fires only *after* a `discuss` card closes — proposing from an unread source defeats the purpose.
 
-**Dependencies.** Claim-sentence classification (to ground candidates in specific source passages). A `claim-candidate` card type routing to `10-inbox/03-candidates/` with policy MCP denying writes to `30-synthesis/01-claims/`.
+**Dependencies.** Claim-sentence classification (to ground candidates in specific source passages). A `candidate-note` card type (shared candidate schema, ADR-17) routing to `10-inbox/03-candidates/` with policy MCP denying writes to `30-synthesis/01-claims/`.

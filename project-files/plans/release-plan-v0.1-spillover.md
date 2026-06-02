@@ -32,7 +32,7 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 2. Drop all **16 templates** into `00-meta/03-templates/` (answer, canvas, candidate, claim, code, deliverable, draft, fleeting, item, moc, organization, paper, person, project, reference, venue — see [vault/note-types.md](../../docs/reference/note-types.md)).
 3. Migrate any existing notes whose folder no longer matches their type.
 4. Set up the **full dashboard suite** — `00-meta/01-dashboards/index.md` as the entry point plus all 10 dashboards (see [obsidian/README.md](../../docs/explanation/obsidian/README.md)).
-5. Confirm Zotero + Better BibTeX (citekey format `auth.lower + year + shorttitle(1,0)` per [ADR-6](../decisions/06-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
+5. Confirm Zotero + Better BibTeX (citekey format `[auth.lower][year][title.lower:select,1,1]` per [ADR-6](../decisions/06-citekey-naming-convention.md)) auto-exports to `.memoria/library.bib`.
 6. Resolve the callout-manager configuration: copy `.obsidian/plugins/callout-manager/data.json.TODO` → `data.json` and fill in callout styling. Until resolved, `[!brief]`, `[!suggestions]`, and `[!verification]` callouts do not render correctly.
 
 **Profiles, skills, and plugins**

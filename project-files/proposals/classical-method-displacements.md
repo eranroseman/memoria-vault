@@ -19,7 +19,7 @@ The underlying principle from `explanation/architecture/why-computational-method
 
 **Trade-offs.** NLI is trained on general text; domain claims may need a similarity pre-filter and threshold tuning. False-merge risk at low confidence.
 
-**Adoption trigger.** The human regularly wants to query "find claims that contradict X" and is resorting to manual backlink walks, *and* the vault has ≥ 200 claim notes with typed `contradicts` links (ADR-9 and ADR-16 are the prerequisite).
+**Adoption trigger.** The human regularly wants to query "find claims that contradict X" and is resorting to manual backlink walks, *and* the vault has ≥ 200 claim notes with typed `contradicts` links (ADR-08 and ADR-09 are the prerequisite).
 
 ---
 

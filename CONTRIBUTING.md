@@ -30,7 +30,7 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 | Area | Where |
 |---|---|
 | Installer (`scripts/install.sh` / `scripts/install.ps1`) | `scripts/` |
-| Agent profiles | `vault/.hermes/profiles/memoria-*/` |
+| Agent profiles | `vault/.memoria/profiles/memoria-*/` |
 | Vault templates & structure | `vault/` |
 | Documentation (Diátaxis) | `docs/` — tutorials, how-to-guides, reference, explanation |
 | Scripts | `scripts/` |
