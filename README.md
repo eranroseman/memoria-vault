@@ -26,7 +26,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 | **Socratic** | Interlocutor for your thinking — asks questions about a source, claim, or framing; architecturally write-denied so it can never touch your notes |
 | **Writer** | Turns evidence into draft prose (answer drafts, outlines, manuscript sections) that lands in review state, never directly into canonical synthesis |
 | **Verifier** | Traces claims back to sources, validates every `[@citekey]`, surfaces near-duplicates, and catches retracted sources before you publish |
-| **Coder** | Scaffolds handoffs to an external coding agent (Aider, Kilocode, Claude Code) and records provenance in the vault |
+| **Coder** | Scaffolds handoffs to an external coding agent (Codex, Claude Code; Kilo Code and Aider planned) and records provenance in the vault |
 | **Linter** | Zero-LLM structural validator — frontmatter shape, link health, schema versions, and audit-log rotation; same result every run |
 
 Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles/)
