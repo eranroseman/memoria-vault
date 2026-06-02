@@ -6,7 +6,7 @@ parent: Using Obsidian
 
 # How to use the Memoria command palette
 
-Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leaving Obsidian. This guide covers setting up the bindings and using the palette efficiently.
+Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leaving Obsidian. This guide covers the pre-wired commands and how to add the rest.
 
 ## Prerequisites
 
@@ -16,29 +16,35 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 
 ## Steps
 
-**1. Open the palette and confirm the Memoria commands are present.**
+**1. Open the palette and confirm the pre-wired commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Mem`. Two commands ship pre-wired in the starter vault: `Memoria: capture fleeting` and `Memoria: write claim note` (both backed by Templater templates). The remaining commands in the catalog are not yet wired — they require QuickAdd Macros and user scripts that POST to the Hermes API, which are tracked as a build gap (see [Implementation status](../../../project-files/plans/implementation-status.md)). Add the ones you need per step 2.
+`Cmd-P` (or `Ctrl-P`) → type `Mem`. **Seven note-creation commands ship pre-wired** in the starter vault — each a QuickAdd *Template* choice that instantiates one of the raw-note templates in `99-system/templates/`:
 
-**2. Create a QuickAdd entry for each command you use.**
+- `Memoria: capture fleeting` — fleeting note in `10-inbox/01-fleeting/`
+- `Memoria: write claim note` — claim note in `30-synthesis/01-claims/`
+- `Memoria: write MOC` — Map of Content in `30-synthesis/03-moc/`
+- `Memoria: write draft` · `Memoria: scaffold canvas` · `Memoria: scaffold code note` · `Memoria: write project note` — workbench notes (you pick the `40-workbench/<project>/` subfolder)
 
-Settings → QuickAdd → Add choice → name it exactly as it appears in the catalog (e.g., `Memoria: capture fleeting`). Set the type and implementation per the catalog's Implementation column.
+Each stamps `created`/`updated` automatically and takes its title from a prompt (`capture fleeting` uses a timestamp instead). The **agent-driven** commands in the catalog (`ask about this note`, `lint this note`, `find related notes`, …) are **not yet wired** — they need QuickAdd Macros plus user scripts that POST to the Hermes API, tracked as a build gap (see [Implementation status](../../../project-files/plans/implementation-status.md)). Add the ones you need per step 2.
 
-Repeat for each command you want. Start with the five most-used:
+**2. Add a QuickAdd entry for each agent command you use.**
 
-- `Memoria: capture fleeting`
-- `Memoria: ask about this note`
-- `Memoria: new project`
-- `Memoria: lint this note`
-- `Memoria: approve all link suggestions`
+Settings → QuickAdd → Add choice → name it exactly as it appears in the catalog (e.g., `Memoria: ask about this note`). Set the type and implementation per the catalog's Implementation column (Macro → user script → Hermes API).
+
+Start with the agent commands you'll reach for most:
+
+- `Memoria: ask about this note` — open the Socratic ACP pane on the current note
+- `Memoria: lint this note` — run the Linter on the current note
+- `Memoria: find related notes`
+- `Memoria: new project` — scaffold a full project folder under `40-workbench/`
 
 **3. Use the palette by type, not by scroll.**
 
 `Cmd-P` → type `M` → the palette filters to `Memoria:` commands only. Type 1–3 more letters to narrow further. The filter is fast enough that you do not need physical hotkeys for most commands.
 
-**4. Pin the five highest-frequency commands to the Commander toolbar** (optional).
+**4. Pin the highest-frequency commands to the Commander toolbar** (optional).
 
-If you have the Commander plugin installed: Commander settings → toolbar → add the five commands from step 2 as toolbar buttons. These give one-click access without opening the palette.
+If you have the Commander plugin installed: Commander settings → toolbar → add your most-used commands as toolbar buttons. These give one-click access without opening the palette.
 
 **5. Assign a physical hotkey to any command you invoke more than ten times a day** (optional).
 
@@ -48,7 +54,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 - `Cmd-P` → `M` returns a filtered list of `Memoria:` commands
 - `Memoria: capture fleeting` creates a new note in `10-inbox/01-fleeting/`
-- `Memoria: ask about this note` opens the Socratic ACP pane with the current note in context
+- `Memoria: write claim note` creates a titled claim note in `30-synthesis/01-claims/` from the template — Properties populated, clean body, no template scaffolding
 
 ## Related
 
