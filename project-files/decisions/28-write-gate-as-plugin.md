@@ -108,6 +108,15 @@ through the productionized installer (`memoria-librarian` and `memoria-writer`):
 - **Simulated policy outage** (`policy_mcp.py` moved aside) → an otherwise-allowed
   write is **blocked** (fail-closed), where the shell hook would have failed open.
 
+The gate was then re-validated in the other non-interactive run modes (same agent
+loop; the gateway calls `discover_plugins()` at startup, `gateway/run.py`):
+
+- **Gateway** (driven headless via the built-in `api_server` platform,
+  `POST /v1/chat/completions`) → denied write blocked (audit `deny`); allowed write
+  succeeds (audit `allow` + `write_complete`).
+- **Cron** (`hermes -p <lane> cron run … && cron tick`) → denied write blocked
+  (audit `deny`), no file on disk.
+
 ## Alternatives considered
 
 - **Keep the shell hook, fix the matcher to `mcp_obsidian.*`.** Makes it fire, but
