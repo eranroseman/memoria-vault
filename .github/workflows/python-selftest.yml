@@ -1,7 +1,9 @@
 name: python-selftest
 
 # Runs the --self-test suites of the vault's Python tooling (policy gate, board
-# exporter, metrics, Linter detectors) against the real runtime deps.
+# exporter, metrics, Linter detectors) against the real runtime deps, then gates
+# dashboard schema-drift over the real vault/ tree (a dashboard querying a field
+# no template emits shows an empty table forever — silent, so CI must catch it).
 #
 # policy_mcp degrades without PyYAML, but policy_hook's self-test writes a lane
 # YAML and needs it to load — so we install requirements.txt (mcp + PyYAML)
@@ -34,3 +36,9 @@ jobs:
           python "$P/mcp/board_export.py" --self-test
           python "$P/mcp/metrics_aggregate.py" --self-test
           python "$P/profiles/memoria-linter/detectors.py" --self-test
+      - name: Gate dashboard schema-drift (real vault)
+        # Only dashboard-field-drift blocks; vault content findings (broken
+        # wikilinks, schema-check) stay advisory — they're not this gate's job.
+        run: |
+          python vault/.memoria/profiles/memoria-linter/detectors.py \
+            --vault vault --gate dashboard-field-drift

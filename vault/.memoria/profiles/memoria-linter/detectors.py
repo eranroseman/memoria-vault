@@ -518,6 +518,10 @@ def main() -> None:
     ap.add_argument("--vault", type=Path, help="vault root to lint")
     ap.add_argument("--self-test", action="store_true", help="run synthetic-fixture unit tests")
     ap.add_argument("--json", action="store_true", help="emit findings as JSON")
+    ap.add_argument("--gate", metavar="DETECTORS",
+                    help="comma-separated detector names that MUST be zero; exit 1 if any "
+                         "such finding exists (e.g. dashboard-field-drift). All other "
+                         "findings stay advisory — printed, not fatal.")
     args = ap.parse_args()
 
     if args.self_test:
@@ -534,6 +538,16 @@ def main() -> None:
         for f in findings:
             print(f"  [{f.severity:8s}] {f.detector:22s} {f.path}\n             {f.message}")
         print(f"\n  {len(findings)} finding(s) -- verdict: {verdict(findings)}")
+
+    # --gate: only the named detectors block; content findings remain advisory.
+    if args.gate:
+        gated_names = {n.strip() for n in args.gate.split(",") if n.strip()}
+        blocking = [f for f in findings if f.detector in gated_names]
+        if blocking:
+            print(f"\n  GATE FAIL: {len(blocking)} finding(s) from "
+                  f"{{{', '.join(sorted(gated_names))}}} must be zero.")
+            sys.exit(1)
+        print(f"\n  gate clean ✓ ({', '.join(sorted(gated_names))})")
     sys.exit(0)
 
 

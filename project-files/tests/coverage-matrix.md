@@ -18,7 +18,7 @@ Every design component → the layer/protocol that covers it → whether it's au
 | 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
 | 3 | vault→site links + wikilink resolution | L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
-| 5 | Dashboard ↔ writer-schema drift | L0 | headless §D (`detectors --vault` + schema audit) | semi | ✅ |
+| 5 | Dashboard ↔ writer-schema drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
 | 6 | 7 profiles — every documented CLI command | L2 | [hermes-cli](hermes-cli-test-protocol.md) §4 | manual | ✅ |
 | 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all 7 lanes' write-walls self-tested, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
@@ -38,7 +38,7 @@ Every design component → the layer/protocol that covers it → whether it's au
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |
 | 24 | **Deployment modes** — local / mesh / VPS, Syncthing, `memories/` junction | X | — | — | ⛔ |
-| 25 | **Protocol drift** — protocols' own references resolve | L0 | `scripts/check-test-refs.py` | ✅ | ✅ |
+| 25 | **Protocol drift** — protocols' own references resolve | L0 | `scripts/check-test-refs.py` (CI + `.githooks/pre-commit`) | ✅ | ✅ |
 
 ## L2 — automating the wiring layer
 
