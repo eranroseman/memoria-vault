@@ -45,12 +45,12 @@ end (the boxes are clickable in Obsidian).
 
 - ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/ 95-archive Home README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
-- [ ] **A1 Pass**
+- [ V] **A1 Pass**
 
 **A2. Leave Restricted mode.** Settings → *Community plugins* → turn **off** Restricted mode → **restart Obsidian**.
 
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
-- [ ] **A2 Pass**
+- [V ] **A2 Pass**
 
 **A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
@@ -78,7 +78,7 @@ Tick each plugin that is enabled and validated:
 - [ ] `Local REST API with MCP`
 - [ ] `QuickAdd`
 - [ ] `Templater`
-- [ ] **A3 Pass (8/8)**
+- [V ] **A3 Pass (8/8)**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
@@ -94,22 +94,23 @@ Tick each plugin that is enabled and validated:
 
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
-- [ ] **B1 Pass**
+- [ V] **B1 Pass**
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
-- [ ] **B2 Pass**
+- [V ] **B2 Pass**
 
-**B3. Reachable from WSL2.** In WSL2:
+**B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:
 
 ```
+export OBSIDIAN_API_KEY="$(grep -m1 '^OBSIDIAN_API_KEY=' ~/.hermes/profiles/memoria-librarian/.env | cut -d= -f2-)"
 curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 ```
 
 - ✓ Pass: JSON with `"authenticated": true`.
-- ✗ Fails: `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen); `401` → key mismatch (B2).
+- ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
 - [ ] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
