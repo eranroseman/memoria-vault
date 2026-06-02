@@ -84,7 +84,7 @@ Tools evaluated and not in the current design:
 
 | Tool | Why not |
 |---|---|
-| **ZotLit** | Obsidian-native Zotero integration — evaluated and rejected. See [project-files/rejected/zotlit.md](../../project-files/rejected/zotlit.md). |
+| **ZotLit** | Obsidian-native Zotero integration — evaluated, held as a future migration target. See [ADR-05](../../project-files/decisions/05-zotero-as-bibliographic-backbone.md) and the [connector comparison](zotero-plugins.md). |
 
 ---
 
