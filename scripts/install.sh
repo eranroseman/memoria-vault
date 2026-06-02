@@ -649,6 +649,37 @@ resolve_vault_for_profiles() {
 }
 
 # =============================================================================
+# Step 6b — telemetry cron (board export). Wires the six-signal telemetry: a
+# deterministic, no-LLM cron that projects the live Hermes kanban board to the
+# vault and appends the operational logs. Global (not per-lane). Idempotent.
+# =============================================================================
+wire_telemetry_cron() {
+  hdr "Telemetry cron (board export)"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the telemetry cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/board-export-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-board-export.sh"
+  if [ ! -f "$src" ]; then
+    warn "telemetry cron wrapper missing at $src — board-export cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  # Create the recurring no-agent job (idempotent — skip if one already exists).
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-board-export"; then
+    say "  board-export cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '* * * * *' --script memoria-board-export.sh --no-agent \
+      --name memoria-board-export --deliver local \
+      || warn "could not create the board-export cron — create it manually (see project-files/plans)"
+  fi
+  say "  (emits the six-signal telemetry; fires whenever the Hermes scheduler/gateway runs)"
+  ok "Telemetry cron wired"
+}
+
+# =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
 main() {
@@ -658,6 +689,7 @@ main() {
     resolve_vault_for_profiles
     install_mcp_deps
     install_profiles
+    wire_telemetry_cron
     print_next_steps
     return
   fi
@@ -671,6 +703,7 @@ main() {
   install_mcp_deps
   install_profiles
   install_skills
+  wire_telemetry_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
     ensure_zotero
