@@ -42,7 +42,7 @@ One durable claim in a single sentence.
 
 # Connections
 - Related claim notes (untyped wikilinks).
-- Contradictory and supporting claims are recorded as **typed links** in the `relations:` frontmatter (`contradicts` / `supports`), not just here — see [frontmatter-schema](../04-reference/schema-reference.md).
+- Contradictory and supporting claims are recorded as **typed links** in the `relations:` frontmatter (`contradicts` / `supports`), not just here — see [frontmatter-schema](../schema-reference.md).
 - Supporting paper notes.
 
 # Open questions

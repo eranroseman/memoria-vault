@@ -31,7 +31,7 @@ Capabilities that connect Memoria to external tools or add new interaction surfa
 
 ## 3. Open-design integration for polished deliverables
 
-**What.** An external rendering agent ([open-design](https://github.com/nexu-io/open-design) pattern) takes a Pandoc-exported Markdown deliverable and applies the vault's design system (`00-meta/04-reference/design-system.md`) to produce visually polished output (slide decks, formatted PDFs, web pages). The Coder profile scaffolds the handoff; the rendering agent produces the artifact; the human reviews the result.
+**What.** An external rendering agent ([open-design](https://github.com/nexu-io/open-design) pattern) takes a Pandoc-exported Markdown deliverable and applies the vault's design system (`.memoria/design-system.md`) to produce visually polished output (slide decks, formatted PDFs, web pages). The Coder profile scaffolds the handoff; the rendering agent produces the artifact; the human reviews the result.
 
 **Adoption trigger.** The human needs a deliverable format (presentation, designed PDF) that plain Pandoc doesn't produce and is willing to maintain a design-system file.
 

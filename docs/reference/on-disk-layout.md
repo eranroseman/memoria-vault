@@ -82,15 +82,17 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── cost.jsonl                  # pending (board_export.py — API spend + tokens per card)
 │   ├── lint-findings.jsonl         # pending
 │   └── cron-history.jsonl          # pending
-├── 03-templates/                   # 16 note templates (see note-types.md)
-├── 04-reference/                   # 12 human-facing reference notes (shipped)
+├── 03-templates/                   # 16 note templates + screening-protocol (see note-types.md)
 ├── 05-eval/                        # vault eval gold tasks — ships empty (.keep)
 ├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
 ├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
 ├── board/                          # markdown board export — ships empty (.keep); pending
 ├── start-here.md                   # vault landing page (pinned in sidebar)
 ├── research-directions.md          # Librarian session-start input
+├── safe-mode.md                    # offline fallback workflows (kept in-vault)
+├── schema-reference.md             # frontmatter field catalog (kept in-vault)
 └── system-status.md                # runtime health snapshot
+# (the rest of the former 04-reference notes now live only on the website)
 ```
 
 ### `10-inbox/` subtree
@@ -246,18 +248,12 @@ Notes in `00-meta/` that ship with the starter vault for human reference.
 | `00-meta/start-here.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
 | `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
 | `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
-| `00-meta/04-reference/getting-started.md` | First-time setup checklist — 5 steps from clone to first ingest. | Human (rarely changes) |
-| `00-meta/04-reference/system-map.md` | High-level architecture summary in plain language. Vault-resident companion to `docs/explanation/architecture/`. | Human (sync with design changes) |
-| `00-meta/04-reference/agent-roles.md` | Plain-language one-paragraph summary of each Hermes profile. Mirrors each `SOUL.md`. | Human (sync with profile changes) |
-| `00-meta/04-reference/profile-policies.md` | Plain-language who-can-write-where summary. Tracks the lane-override YAML files. | Human (sync with lane-override changes) |
-| `00-meta/04-reference/schema-reference.md` | Canonical list of every frontmatter field, type, and allowed values. Source of truth for templates and the Linter. | Human + Linter (flags drift) |
-| `00-meta/04-reference/dataview-cheatsheet.md` | Reference patterns for dashboard queries — TABLE / LIST / TASK / FROM / WHERE / SORT / FLATTEN / LIMIT examples. | Human (rarely changes) |
-| `00-meta/04-reference/performance-checklist.md` | Dashboard performance discipline for Dataview query authors. | Human (rarely changes) |
-| `00-meta/04-reference/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. | Human (rarely changes) |
-| `00-meta/04-reference/obsidian-config.md` | Plugin inventory and load-bearing settings the human should not change. Mirrors `docs/reference/obsidian-plugins.md`. | Human (sync with plugin changes) |
-| `00-meta/04-reference/design-system.md` | Canonical visual-style source: palette, typography, spacing, layout, motion, voice. Drives CSS snippet generators and Pandoc export configs. | Human (edits define the brand) |
-| `00-meta/04-reference/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol — used only in systematic-review mode (ADR-16/19). | Human (per review) |
-| `00-meta/04-reference/vocabulary-example.md` | Worked HCI + digital-health controlled-vocabulary example — a copy-and-edit starting point, not a default (schema stays open by design). | Human (optional starting point) |
+| `00-meta/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. Kept in-vault — needed precisely when offline/down. | Human (rarely changes) |
+| `00-meta/schema-reference.md` | Frontmatter field catalog — the in-flow companion to `reference/frontmatter.md`. Source of truth for templates and the Linter. | Human + Linter (flags drift) |
+| `00-meta/03-templates/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol template — used only in systematic-review mode (ADR-16/19). | Human (per review) |
+| `.memoria/design-system.md` | Canonical visual-style tokens: palette, typography, spacing, layout, motion, voice. Read by the CSS-snippet generators and Pandoc export (machine config). | Human (edits define the brand) |
+
+The other former `00-meta/04-reference/` notes — getting-started, system-map, agent-roles, profile-policies, obsidian-config, dataview-cheatsheet, performance-checklist, vocabulary-example — now live **only on the [website](https://eranroseman.github.io/memoria-vault/)** (the vault is not a place for product reference docs); the vault links out to them.
 
 The Linter's `skeleton-drift` detector flags notes whose `updated` timestamp lags the corresponding design file.
 

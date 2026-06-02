@@ -56,9 +56,9 @@ Authoritative runtime signal: `scripts/install.ps1` requires `SOUL.md` + `config
 | `superseded_by:` on `claim-note` | shipped | ADR-10 (claim-supersession); top-level field in template (human-set; currency derives from it). |
 | `Home.md` (vault-root front door) | shipped | ADR-13 (homepage-front-door); ships at vault root. obsidian-homepage auto-open is a post-clone step (see plugins). |
 | `.obsidian/workspaces.json` | deferred | Designed in `obsidian-ui/workspaces.md`; out of v0.1 scope. |
-| Human-facing reference notes (`00-meta/04-reference/`) | shipped | All ten present and verified against design docs by the Linter's `skeleton-drift` detector: `agent-roles`, `dataview-cheatsheet`, `design-system`, `getting-started`, `obsidian-config`, `performance-checklist`, `profile-policies`, `safe-mode`, `schema-reference`, `system-map`. |
+| Vault-resident reference notes (`00-meta/`) | shipped | `04-reference/` dissolved (2026-06-02): reference docs belong on the website (single source of truth), not duplicated in the vault. Two stay in-vault at the `00-meta/` root — `safe-mode` (offline fallback) and `schema-reference` (field catalog) — drift-checked by `skeleton-drift`. Relocated: `design-system` → `.memoria/` (machine tokens read by CSS-gen/Pandoc); `screening-protocol` → `03-templates/` (Templater template). Deleted (now website-only, vault links out): `agent-roles`, `profile-policies`, `system-map`, `getting-started`, `obsidian-config`, `vocabulary-example` (seed lists → `manage-vocabulary.md`), `dataview-cheatsheet` + `performance-checklist` (unique bits → `reference/dashboards.md`). |
 | `00-meta/start-here.md`, `research-directions.md`, `system-status.md` | shipped | Present at `00-meta/` root (vault home / strategy / status). |
-| `screening-protocol.md` | shipped | Fillable PRISMA template at `00-meta/04-reference/screening-protocol.md` (ADR-16 — adopt-on-demand systematic-review tooling cluster). |
+| `screening-protocol.md` | shipped | Fillable PRISMA template at `00-meta/03-templates/screening-protocol.md` (ADR-16 — adopt-on-demand systematic-review tooling cluster). |
 
 ## Dashboards
 

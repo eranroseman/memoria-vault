@@ -37,4 +37,4 @@ Runtime health snapshot. Refresh occasionally — typically when something feels
 
 ---
 
-**When to update this file.** After running the install script. After a config change. When something breaks. Otherwise leave it alone — the [[01-dashboards/daily-health|Daily Health dashboard]] surfaces live signals; this file is the static snapshot. See [[04-reference/safe-mode|safe-mode]] for procedures when components are down.
+**When to update this file.** After running the install script. After a config change. When something breaks. Otherwise leave it alone — the [[01-dashboards/daily-health|Daily Health dashboard]] surfaces live signals; this file is the static snapshot. See [[safe-mode|safe-mode]] for procedures when components are down.

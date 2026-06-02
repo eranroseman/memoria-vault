@@ -129,7 +129,7 @@ The `topic`, `study_design`, and `methods` fields are open — Memoria does not 
 
 - Keep the active `topic` list to **~30 terms** per corpus. A smaller vocabulary produces more consistent classification.
 - Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) belongs in `_enrichment` (auto-populated from APIs), not in the hand-curated `topic` field.
-- Define your vocabulary in a reference note (e.g., `00-meta/04-reference/vocabulary.md`) and review it annually.
+- Define your vocabulary in a reference note (e.g., `00-meta/vocabulary.md`) and review it annually.
 - When renaming a topic term, use Obsidian tag-wrangler or a Linter `schema-migrate` dry-run — never search-replace across notes manually.
 
 ---

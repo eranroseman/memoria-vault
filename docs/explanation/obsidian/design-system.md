@@ -7,7 +7,7 @@ parent: Obsidian
 
 Memoria outputs travel through multiple renderers — Obsidian's live preview, Pandoc exports (Word, PDF), and open-design's render pipeline. Without a shared visual spec, each consumer makes independent choices that compound over time: the heading scale used in a delivered PDF becomes different from the callout colors in Obsidian, which become different from the CSS in a web export. The design system is the single source that all consumers read.
 
-The vault file `00-meta/04-reference/design-system.md` *implements* the spec for this vault (the actual values). This page explains the principles behind the choices.
+The vault file `.memoria/design-system.md` *implements* the spec for this vault (the actual values). This page explains the principles behind the choices.
 
 ---
 
@@ -60,4 +60,4 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 - The visual-style discipline this system enables: [visual-discipline.md](visual-discipline.md)
 - The callout types and their single-accent rule: [callouts.md](callouts.md)
 - Obsidian plugin inventory: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
-- Vault implementation file: `00-meta/04-reference/design-system.md`
+- Vault implementation file: `.memoria/design-system.md`

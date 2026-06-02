@@ -14,7 +14,7 @@ output_kind: manuscript       # manuscript | presentation | poster | infographic
 export_path: ""
 related_draft: ""
 sources: []                   # additional wikilinks the deliverable derived from (claim notes, code notes, etc.)
-design_system: ""             # which 00-meta/04-reference/design-system.md was active during render (open-design-rendered artifacts only)
+design_system: ""             # which .memoria/design-system.md was active during render (open-design-rendered artifacts only)
 render_command: ""            # exact command that produced the artifact (open-design-rendered artifacts only); blank for Pandoc/manual builds
 exported_at:
 schema_version: 1

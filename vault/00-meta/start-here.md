@@ -14,12 +14,12 @@ The pinned landing page. Open it in the morning; close it when the system looks 
 
 ## Reference
 
-- [[04-reference/getting-started|Getting started]] — first-time setup
-- [[04-reference/safe-mode|Safe mode]] — what to do when Hermes or the ACP connection is down
-- [[04-reference/agent-roles|Agent roles]] — what each Hermes profile does
-- [[04-reference/profile-policies|Profile policies]] — who can write where
-- [[04-reference/schema-reference|Schema reference]] — frontmatter field catalog
-- [[04-reference/system-map|System map]] — plain-language architecture summary
+- [[safe-mode|Safe mode]] — what to do when Hermes or the ACP connection is down
+- [[schema-reference|Schema reference]] — frontmatter field catalog
+- [Getting started](https://eranroseman.github.io/memoria-vault/tutorials/01-set-up-from-zero/) — first-time setup
+- [Agent roles](https://eranroseman.github.io/memoria-vault/reference/profiles/) — what each Hermes profile does
+- [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles/) — who can write where
+- [System map](https://eranroseman.github.io/memoria-vault/explanation/architecture/) — plain-language architecture summary
 
 ## Inputs
 

@@ -21,9 +21,9 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 │   ├── 01-dashboards/
 │   ├── 02-logs/
 │   ├── 03-templates/
-│   ├── 04-reference/    ← human-facing skeleton notes
 │   ├── 05-eval/
 │   └── 07-skills/
+│   (safe-mode.md + schema-reference.md sit at the 00-meta root; other reference notes are on the website)
 ├── 10-inbox/            ← not yet classified; queue, not storage
 │   ├── 01-fleeting/
 │   ├── 02-answers/
@@ -79,9 +79,8 @@ A small set of singleton files in `00-meta/` shape how the system runs:
 |---|---|---|
 | `00-meta/research-directions.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
 | `00-meta/system-status.md` | Runtime health snapshot: API status, MCPs up, profiles available. Distinct from the board, which tracks work in flight. | Human |
-| `00-meta/04-reference/getting-started.md` | First-time setup checklist. | Human |
-| `00-meta/04-reference/agent-roles.md` | Plain-language summary of each profile's role. | Human (sync with profile changes) |
-| `00-meta/04-reference/schema-reference.md` | Canonical list of every frontmatter field. The source of truth that templates and the Linter point at. | Human + Linter |
+| `00-meta/safe-mode.md` | Offline fallback workflows (ingest / review / export) for when Hermes or ACP is down. Kept in-vault. | Human |
+| `00-meta/schema-reference.md` | Frontmatter field catalog — the in-flow companion to the website's [frontmatter reference](https://eranroseman.github.io/memoria-vault/reference/frontmatter/). The source of truth templates and the Linter point at. | Human + Linter |
 
 ---
 

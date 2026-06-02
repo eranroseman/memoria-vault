@@ -15,7 +15,7 @@ SORT file.mtime ASC
 
 ## Discovery candidates
 
-Include or exclude discovery candidates from the corpus (the `candidate-note` type — see [note-types.md](../04-reference/schema-reference.md)).
+Include or exclude discovery candidates from the corpus (the `candidate-note` type — see [note-types.md](../schema-reference.md)).
 
 ```dataview
 TABLE file.link AS Candidate, source, candidate_status, file.mtime AS Modified
