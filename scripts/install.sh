@@ -289,6 +289,17 @@ copy_vault() {
   fi
   ok "Vault deployed to $VAULT_PATH"
 
+  # Seed the per-machine Obsidian plugin config that does NOT self-generate.
+  # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
+  # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
+  # it from the example so the ACP pane has a starting config (the user sets the
+  # agent command path inside it). First-install only; never clobber an edited one.
+  local acp_dir="$VAULT_PATH/.obsidian/plugins/agent-client"
+  if [ -f "$acp_dir/data.json.example" ] && [ ! -f "$acp_dir/data.json" ]; then
+    run cp "$acp_dir/data.json.example" "$acp_dir/data.json"
+    say "  seeded agent-client/data.json from its example (set the agent command path inside it)"
+  fi
+
   # The runtime vault is the user's own repo — they set up git themselves, with
   # their own identity and remote. We don't `git init`/commit under a synthetic
   # author. obsidian-git needs a repo to commit into, so point the way:

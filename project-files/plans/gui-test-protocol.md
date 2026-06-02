@@ -28,7 +28,7 @@ fill the results table at the end.
 ## 0. Preconditions
 
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **7** `memoria-*` profiles.
-- [ ] Obsidian and Zotero installed on Windows (the `install.ps1` path does this).
+- [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
 - [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_EMAIL`.
 - [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27124`).
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
@@ -39,23 +39,25 @@ fill the results table at the end.
 ## Part A — Obsidian opens and the 8 bundled plugins load (T5)
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
-- ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/`.
+
+- ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/ 95-archive Home README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
 
 **A2. Leave Restricted mode.** Settings → *Community plugins* → turn **off** Restricted mode → **restart Obsidian**.
+
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
 
 **A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
 | Plugin | Purpose | ✓ Validate it loaded |
 | --- | --- | --- |
-| `obsidian-local-rest-api` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
-| `dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
-| `agent-client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
-| `templater-obsidian` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
-| `quickadd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
-| `obsidian-citation-plugin` | Insert citations from `.memoria/library.bib` | *Insert citation* command exists (Part D5) |
-| `callout-manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
+| `Agent Client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
+| `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
+| `Citations` | Insert citations from `.memoria/library.bib` | *Insert citation* command exists (Part D5) |
+| `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
+| `Local Rest API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
+| `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
+| `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
 | `obsidian-git` | Git commits from Obsidian; post-commit workflows | *Source Control* / Git commands available |
 
 - ✓ Pass: **8/8 enabled**, no "Failed to load plugin" notices.
@@ -63,8 +65,11 @@ fill the results table at the end.
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
-> fresh vault, copy each `.example` → `data.json` before first launch (the REST
-> plugin regenerates its real key + TLS material on restart).
+> fresh vault: `obsidian-local-rest-api` **regenerates its own** (apiKey + TLS) on
+> first launch, and the installer **seeds `agent-client/data.json`** from its example
+> (set the agent command path inside it). Separately, **`obsidian-git` needs Git for
+> Windows** — `install.ps1` installs it via winget; if *Source Control* shows "git
+> not found", install Git and restart Obsidian.
 
 ---
 
@@ -73,20 +78,25 @@ fill the results table at the end.
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
+
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
 
 **B3. Reachable from WSL2.** In WSL2:
+
 ```
 curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 ```
+
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen); `401` → key mismatch (B2).
 
 **B4. Round-trip (write appears live).** In WSL2:
+
 ```
 hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/01-fleeting/gui-probe.md with body: gui round-trip. Use only the obsidian tool."
 ```
+
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
 
@@ -128,9 +138,11 @@ all blocks in the file resolve.
 
 **D4. Validate the export.** In Windows PowerShell:
 `Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> vault/.memoria/library.bib`.
+
 - ✓ Pass: `library.bib` updated and contains the entry.
 
 **D5. Citation in Obsidian.** Command palette → *Citation: Insert citation* → your item resolves from `library.bib`.
+
 - ✓ Pass: the citekey/reference is offered and inserts.
 - ✗ Fails: citation plugin `citationExportPath` must point at `.memoria/library.bib`, format `biblatex`.
 
@@ -139,16 +151,21 @@ all blocks in the file resolve.
 ## Part E — End-to-end GUI flows
 
 **E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-socratic` → ask a question.
+
 - ✓ Pass: a model response renders in the pane (model connectivity through the GUI).
 
 **E2. Write gate visible in the GUI.** In WSL2, drive a **denied** write:
+
 ```
 hermes -p memoria-librarian -z "Use the obsidian append tool to create 30-synthesis/gui-denied.md. Use only the obsidian tool."
 ```
+
 Then open `00-meta/01-dashboards/audit-log.md`.
+
 - ✓ Pass: **no `gui-denied.md` is created**, and a `deny` row for it appears in audit-log.
 
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
+
 - ✓ Pass: the card appears under *Active*; `00-meta/board/<task_id>.md` exists.
 
 ---

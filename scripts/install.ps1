@@ -9,7 +9,7 @@
     install.sh running inside WSL2:
 
       1. Gate on WSL2 (no WSL2 -> Microsoft how-to link + exit; install nothing).
-      2. Install the GUI apps (Obsidian, Zotero) via winget -- guided.
+      2. Install the GUI apps (Obsidian, Zotero) + Git for Windows via winget -- guided.
       3. Run install.sh inside WSL2 (with --no-apps; the vault path translated to
          a /mnt/c path so both Windows-Obsidian and WSL-Hermes can reach it).
 
@@ -116,6 +116,9 @@ if (-not $ProfilesOnly) {
     Hdr 'Windows GUI apps'
     Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
     Install-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
+    # Git for Windows — the obsidian-git plugin shells out to it; without a Windows
+    # git binary the Source Control view shows "git not found". (WSL2 git is separate.)
+    Install-WingetApp -Id 'Git.Git'           -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
     Say ''
     Say 'Zotero add-ons (install from Zotero -> Tools -> Add-ons -> Install From File):'
     Say '  - Better BibTeX (REQUIRED): https://github.com/retorquere/zotero-better-bibtex/releases/latest'
