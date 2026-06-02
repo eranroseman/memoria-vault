@@ -12,7 +12,8 @@ The action queue: writes the policy MCP refused or downgraded. Anything sitting 
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const filtered = events
   .filter(e => e.decision === "deny" || e.decision === "dry_run")
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
@@ -29,7 +30,8 @@ Should be near zero. Every entry here is either an approved promotion (`decision
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const canonical = events
   .filter(e => e.path && (
     e.path.startsWith("30-synthesis/01-claims/") ||
@@ -50,7 +52,8 @@ Sanity check: is each profile writing where you expect? Any `memoria-socratic` w
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 const recent = events.filter(e => e.timestamp >= cutoff);
 const counts = {};
@@ -70,7 +73,8 @@ For each path, the last `after_hash` recorded in the audit log should match the 
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const lastWriteFor = {};
 for (const e of events) {
   if (e.after_hash && (e.decision === "allow" || e.decision === "allow_with_log")) {
@@ -98,7 +102,8 @@ Specific patterns worth alerting on. Add rows here as you discover new failure m
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
 const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|cluster-maps\/)/.test(p ?? "");

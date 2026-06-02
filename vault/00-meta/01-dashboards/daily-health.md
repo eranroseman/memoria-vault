@@ -12,7 +12,8 @@ Cards demanding your attention — `status: blocked` for explicit human decision
 
 ```dataviewjs
 const cards = await dv.io.load("00-meta/02-logs/board-state.jsonl");
-const events = cards.trim().split("\n").map(l => JSON.parse(l));
+if (!cards || !cards.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = cards.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const active = events.filter(e =>
   e.state === "blocked" || e.review_status === "requested"
 ).sort((a, b) => a.last_updated.localeCompare(b.last_updated)).slice(0, 10);
@@ -30,7 +31,8 @@ Findings from the Linter's eight structural detectors in the last 24 hours, seve
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/lint-findings.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 const high = events.filter(e =>
   e.reported_at >= cutoff && (e.severity === "HIGH" || e.severity === "CRITICAL")
@@ -66,7 +68,8 @@ Last run and next run for the four standard cron tasks (see standard cron tasks)
 
 ```dataviewjs
 const text = await dv.io.load("00-meta/02-logs/cron-history.jsonl");
-const events = text.trim().split("\n").map(l => JSON.parse(l));
+if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const byTask = {};
 for (const e of events) {
   if (!byTask[e.task] || e.completed_at > byTask[e.task].completed_at) {
