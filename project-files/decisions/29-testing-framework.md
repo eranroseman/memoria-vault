@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-Memoria has three good test protocols — [headless](../tests/headless-test-protocol.md) (static + schema), [hermes-cli](../tests/hermes-cli-test-protocol.md) (agent wiring + the policy gate), and [GUI](../plans/gui-test-protocol.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the protocols **drift** from the design (e.g. the CLI protocol still cited the dissolved `00-meta/04-reference/`, the GUI protocol still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+Memoria has three good test protocols — [headless](../tests/headless-test-protocol.md) (static + schema), [hermes-cli](../tests/hermes-cli-test-protocol.md) (agent wiring + the policy gate), and [GUI](../tests/gui-test-protocol.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the protocols **drift** from the design (e.g. the CLI protocol still cited the dissolved `00-meta/04-reference/`, the GUI protocol still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
 
 ## Decision
 
