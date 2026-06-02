@@ -55,10 +55,10 @@ fill the results table at the end.
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/library.bib` | *Insert citation* command exists (Part D5) |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
-| `Local Rest API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
+| `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* / Git commands available |
+| `Local REST API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
-| `obsidian-git` | Git commits from Obsidian; post-commit workflows | *Source Control* / Git commands available |
 
 - ✓ Pass: **8/8 enabled**, no "Failed to load plugin" notices.
 - ✗ Fails: a plugin missing → reinstall via `--profiles-only` or copy `.obsidian/plugins/<name>`; a plugin disabled → enable it; load error → check its `data.json` (the two private ones ship as `data.json.example` and must be copied — see A-note).
