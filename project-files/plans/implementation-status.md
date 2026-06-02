@@ -57,15 +57,14 @@ Authoritative runtime signal: `scripts/install.ps1` requires `SOUL.md` + `config
 | `Home.md` (vault-root front door) | shipped | ADR-13 (homepage-front-door); ships at vault root. obsidian-homepage auto-open is a post-clone step (see plugins). |
 | `.obsidian/workspaces.json` | deferred | Designed in `obsidian-ui/workspaces.md`; out of v0.1 scope. |
 | Human-facing reference notes (`00-meta/04-reference/`) | shipped | All ten present and verified against design docs by the Linter's `skeleton-drift` detector: `agent-roles`, `dataview-cheatsheet`, `design-system`, `getting-started`, `obsidian-config`, `performance-checklist`, `profile-policies`, `safe-mode`, `schema-reference`, `system-map`. |
-| `00-meta/index.md`, `research-directions.md`, `system-status.md` | shipped | Present at `00-meta/` root (vault home / strategy / status). |
+| `00-meta/start-here.md`, `research-directions.md`, `system-status.md` | shipped | Present at `00-meta/` root (vault home / strategy / status). |
 | `screening-protocol.md` | shipped | Fillable PRISMA template at `00-meta/04-reference/screening-protocol.md` (ADR-16 — adopt-on-demand systematic-review tooling cluster). |
 
 ## Dashboards
 
 | Artifact | Status | Notes |
 | --- | --- | --- |
-| 10 dashboards + `index.md` (`00-meta/01-dashboards/`) | shipped | Files present: audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review. Dataview is now bundled and configured (dataviewjs enabled); approval still pending query verification against a live corpus. |
-| `daily-health.md` | n/a | The entry point is `index.md`. Any doc naming `daily-health.md` is wrong. |
+| 10 dashboards + `daily-health.md` (`00-meta/01-dashboards/`) | shipped | Files present: audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review. Dataview is now bundled and configured (dataviewjs enabled); approval still pending query verification against a live corpus. |
 | `skill-lifecycle` dashboard | deferred | Out of v0.1 scope. Ships when skill-governance is stood up (Phase 3). |
 | `00-meta/05-eval/` | shipped | `.keep` placeholder present. Eval task content (ADR-11 — vault-eval-integration) is pending. |
 | `00-meta/07-skills/` | shipped | `.keep` placeholder present. Skill-governance overlay is deferred. |

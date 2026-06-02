@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)); it links straight to `00-meta/index.md`, the pinned landing page. Navigate from there to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
+The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)); it links straight to `00-meta/start-here.md`, the pinned landing page. Navigate from there to the right dashboard or tool, and update your research directions so the Librarian has targets at session start.
 
 ## Prerequisites
 
@@ -16,10 +16,10 @@ The obsidian-homepage plugin opens the `Home.md` front-door note on launch ([ADR
 
 **1. Open the homepage.**
 
-The obsidian-homepage plugin opens `Home.md` automatically on launch; follow its link to `00-meta/index.md` — the pinned landing page this guide works from. If neither is visible:
+The obsidian-homepage plugin opens `Home.md` automatically on launch; follow its link to `00-meta/start-here.md` — the pinned landing page this guide works from. If neither is visible:
 
 - `Cmd/Ctrl-P` → **Open default note** (opens `Home.md`)
-- Or navigate manually: file explorer → `00-meta` → `index.md`
+- Or navigate manually: file explorer → `00-meta` → `start-here.md`
 
 Pin it in the sidebar so it's always one click away: right-click the tab → **Pin**.
 
@@ -59,7 +59,7 @@ The **Common operations** section lists the Memoria command-palette shortcuts. U
 ## Verify
 
 - `Cmd/Ctrl-1` (Human workspace) shows the homepage in the left pane
-- Clicking **Daily Health** opens `00-meta/01-dashboards/index.md`
+- Clicking **Daily Health** opens `00-meta/01-dashboards/daily-health.md`
 - `research-directions.md` has at least one current priority filled in
 
 ## Related

@@ -62,7 +62,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 ```text
 00-meta/
 ├── 01-dashboards/
-│   ├── index.md                    # dashboard entry point (opens Daily Health)
+│   ├── daily-health.md             # the Daily Health dashboard
 │   ├── audit-log.md
 │   ├── board-state.md
 │   ├── contradictions.md
@@ -88,7 +88,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 ├── 07-skills/                      # skill-governance registry — ships empty (.keep); deferred
 ├── 08-metrics/                     # fleet + eval metrics — ships empty (.keep); deferred
 ├── board/                          # markdown board export — ships empty (.keep); pending
-├── index.md                        # vault landing page (pinned in sidebar)
+├── start-here.md                   # vault landing page (pinned in sidebar)
 ├── research-directions.md          # Librarian session-start input
 └── system-status.md                # runtime health snapshot
 ```
@@ -243,7 +243,7 @@ Notes in `00-meta/` that ship with the starter vault for human reference.
 
 | Note | Purpose | Maintained by |
 | --- | --- | --- |
-| `00-meta/index.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
+| `00-meta/start-here.md` | Vault landing page. Pinned in sidebar. Links to system status, dashboards, lane views, key files. | Human (rarely changes) |
 | `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
 | `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
 | `00-meta/04-reference/getting-started.md` | First-time setup checklist — 5 steps from clone to first ingest. | Human (rarely changes) |

@@ -27,7 +27,7 @@ For each profile in `~/.hermes/profiles/memoria-<name>/`, edit `.env` with real 
 
 ## 4. Open the vault in Obsidian
 
-Open the vault root directly. Pin [[../index|the vault index]] in the sidebar. Set the default workspace.
+Open the vault root directly. Pin [[../start-here|the vault landing page]] in the sidebar. Set the default workspace.
 
 ## 5. First ingest
 
@@ -39,7 +39,7 @@ Open the vault root directly. Pin [[../index|the vault index]] in the sidebar. S
 
 ## What to read next
 
-- [[../index|index]] — the daily landing page
+- [[../start-here|start here]] — the daily landing page
 - [[agent-roles]] — what each profile does
 - [[profile-policies]] — who can write where
 - [[safe-mode]] — what to do when something breaks

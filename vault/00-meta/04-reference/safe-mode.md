@@ -9,7 +9,7 @@ The three core workflows (ingest, review, export) with minimal commands and fall
 | ACP pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
 | Cards don't move forward | Tasks MCP not running | Check `policy_mcp.py` and `tasks_mcp.py` processes |
 | New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
-| Linter findings stale | Cron not running | Check cron status in [[../01-dashboards/index|Daily Health dashboard]] |
+| Linter findings stale | Cron not running | Check cron status in [[../01-dashboards/daily-health|Daily Health dashboard]] |
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
 | Wikilinks broken across many notes | File or folder was renamed without updating refs | `git diff` to find the rename |
 

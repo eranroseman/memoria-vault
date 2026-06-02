@@ -46,7 +46,7 @@ Which Obsidian community plugins Memoria uses and the load-bearing settings you 
 
 - **One mode per workspace.** Human (`Cmd-1`), Reading & Processing (`Cmd-2`), Drafting (`Cmd-3`)
 - **Three workspaces is the working set.** Resist proliferation
-- **Pin [[../index]]** in the file explorer
+- **Pin [[../start-here]]** in the file explorer
 
 ## Hotkey conventions (Memoria-specific)
 

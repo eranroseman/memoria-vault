@@ -8,7 +8,7 @@ permalink: /explanation/dashboards/
 
 # Dashboards
 
-Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is implemented as the dashboards' `index.md` home page — there is no separate `daily-health.md` file in the vault.)
+Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is the `daily-health.md` dashboard.)
 
 | Group | Dashboards | When you look |
 |---|---|---|

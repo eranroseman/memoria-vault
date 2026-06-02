@@ -111,7 +111,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
-- [ ] **B3 Pass**
+- [ V] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -121,7 +121,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
-- [ ] **B4 Pass**
+- [ V] **B4 Pass**
 
 ---
 
@@ -132,7 +132,7 @@ block: it must render a table or placeholder, **never a query error**.
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
-| 1 | `index.md` (Daily Health) | board-state, lint-findings, fleet metrics, cron-history | all sections render; no query error |
+| 1 | `daily-health.md` (Daily Health) | board-state, lint-findings, fleet metrics, cron-history | all sections render; no query error |
 | 2 | `board-state.md` | `00-meta/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
 | 3 | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), claims (`maturity`) | resolves; **seed:** a paper note → it appears by lifecycle |
 | 4 | `discuss-queue.md` | papers `lifecycle: current`, no Socratic pass | resolves; empty OK |
@@ -148,7 +148,7 @@ block: it must render a table or placeholder, **never a query error**.
 
 Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
-- [ ] 1 · `index.md`
+- [ ] 1 · `daily-health.md`
 - [ ] 2 · `board-state.md`
 - [ ] 3 · `reading-pipeline.md`
 - [ ] 4 · `discuss-queue.md`
@@ -167,12 +167,12 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
-- [ ] **D1 Pass**
+- [ V] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
 `...\vault\.memoria\library.bib` (the absolute Windows path to the vault's bib).
 
-- [ ] **D2 Pass**
+- [ V] **D2 Pass**
 
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
 

@@ -140,7 +140,7 @@ You'll see links to:
 - System status
 - Your research directions
 
-Click **Dashboard index** to open `00-meta/01-dashboards/index.md`. The dashboards will mostly show empty states — that's expected. They'll fill as you add notes.
+Click **Dashboard index** to open `00-meta/01-dashboards/daily-health.md`. The dashboards will mostly show empty states — that's expected. They'll fill as you add notes.
 
 ---
 

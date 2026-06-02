@@ -47,7 +47,7 @@ You own consistency between the design documents in this repo's `docs/` tree (ar
 
 Procedure:
 
-1. For each skeleton note (`index.md`, `getting-started.md`, `system-map.md`, `agent-roles.md`, `profile-policies.md`, `system-status.md`, `schema-reference.md`, `dataview-cheatsheet.md`, `performance-checklist.md`), read its `updated_at` frontmatter.
+1. For each skeleton note (`start-here.md`, `getting-started.md`, `system-map.md`, `agent-roles.md`, `profile-policies.md`, `system-status.md`, `schema-reference.md`, `dataview-cheatsheet.md`, `performance-checklist.md`), read its `updated_at` frontmatter.
 2. For its corresponding `docs/` file(s), get the most recent commit timestamp from git log (same repo).
 3. If any design file is newer than the skeleton's `updated_at`: report the skeleton as out of sync, listing the newer design file(s).
 

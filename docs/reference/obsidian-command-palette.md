@@ -53,7 +53,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 | --- | --- | --- |
 | `Memoria: approve all link suggestions` | Bulk-approves all `review_status: requested` cards. | QuickAdd → POST Hermes API (bulk approve) |
 | `Memoria: lint this note` | Linter dry-run report on the active note. | QuickAdd → POST Hermes API (assignee: `memoria-linter`) |
-| `Memoria: show lane status` | Opens `index.md` dashboard in right sidebar. | QuickAdd → workspace pane |
+| `Memoria: show lane status` | Opens the `daily-health.md` (Daily Health) dashboard in right sidebar. | QuickAdd → workspace pane |
 
 ## Lens-based reading (Socratic, parameterized)
 

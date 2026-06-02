@@ -31,6 +31,6 @@ Source: `00-meta/08-metrics/lane-metric-*`, written by the scheduled metrics agg
 
 ## Related
 
-- [Daily Health](index.md) — shows the per-lane trust-score summary and links here for the contributing inputs.
+- [Daily Health](daily-health.md) — shows the per-lane trust-score summary and links here for the contributing inputs.
 - [`drift-watch.md`](drift-watch.md) — complementary structural-health view.
 - Design spec: [docs/explanation/dashboards/operational-health/fleet-health.md](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/fleet-health/).

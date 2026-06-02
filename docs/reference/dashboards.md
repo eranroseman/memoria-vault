@@ -15,7 +15,7 @@ Dashboards are Dataview / DataviewJS views. They render existing vault state and
 
 | Dashboard | File | Reads from | Sort | Group |
 | --- | --- | --- | --- | --- |
-| Daily Health | `index.md` | `board-state`, `lint-findings.jsonl`, fleet metrics, `cron-history.jsonl` (filtered subsets) | per-section | Daily glance |
+| Daily Health | `daily-health.md` | `board-state`, `lint-findings.jsonl`, fleet metrics, `cron-history.jsonl` (filtered subsets) | per-section | Daily glance |
 | Board state | `board-state.md` | `00-meta/board/` markdown card projections | by lane / queue | Daily glance |
 | Reading pipeline | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), `30-synthesis/01-claims/` (`maturity`) | modification time | Synthesis agenda |
 | Discuss queue | `discuss-queue.md` | `20-sources/01-papers/` (`lifecycle: current`, no Socratic pass) | oldest first | Synthesis agenda |
@@ -27,7 +27,7 @@ Dashboards are Dataview / DataviewJS views. They render existing vault state and
 | Fleet health | `fleet-health.md` | `00-meta/08-metrics/lane-metric-*` aggregates | by trust score | Operational health |
 | Audit log | `audit-log.md` | `00-meta/02-logs/audit.jsonl` (current week) | newest first, cap 30 | Operational health |
 
-> The "Daily Health" view *is* the dashboards' `index.md` — there is no separate `daily-health.md` file in the vault.
+> The "Daily Health" view is the `daily-health.md` dashboard (Obsidian has no special "index" file, so it's named for what it is).
 
 ---
 

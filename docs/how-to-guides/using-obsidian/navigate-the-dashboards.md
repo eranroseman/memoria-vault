@@ -6,7 +6,7 @@ parent: Using Obsidian
 
 # How to navigate the dashboards
 
-Ten dashboards in `00-meta/01-dashboards/`, plus the `index.md` home page (the Daily Health view). Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
+Ten dashboards in `00-meta/01-dashboards/`, plus the `daily-health.md` dashboard (Daily Health). Each answers one question about the vault. This guide maps situations to dashboards — open the right one first.
 
 For what each dashboard shows in detail, see [explanation/dashboards/](../../explanation/dashboards/).
 
