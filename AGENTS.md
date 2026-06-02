@@ -172,6 +172,15 @@ reading it. Before opening a PR:
 
 ## 6. Runtime / platform facts
 
+- **Check the official Hermes resources before ANY Hermes decision.** No choice about
+  Hermes config, skills, profiles, hooks, MCP, or runtime is made without first
+  consulting the authoritative sources — the local docs (`~/.hermes/hermes-agent/website/docs/`),
+  `cli-config.yaml.example`, and the bundled + optional **skills catalogs**
+  (`docs/reference/skills-catalog.md`, `optional-skills-catalog.md`). Do **not** guess
+  where Hermes reads config or infer it from Memoria's existing files — Memoria has
+  repeatedly mis-guessed (mcp.json never loaded; per-profile `.env`; the `obsidian.*`
+  fullmatch; `ocr-and-documents`/`github-repo-management` are official *bundled* skills,
+  not missing). The docs are the source of truth; verify against them, then decide.
 - The dev repo and the **Hermes runtime both run in WSL2** (Linux); you edit and run
   everything from the WSL2 side (VSCode Remote-WSL). **Obsidian and the runtime vault
   stay on Windows** — see *Where things live*.
@@ -185,16 +194,16 @@ reading it. Before opening a PR:
   `networkingMode=mirrored` in `.wslconfig` so `https://127.0.0.1:27124` resolves
   across the boundary — see *Where things live*.
 - MCP deps install into a vault-local venv (`<vault>/.memoria/.venv`); the installer
-  wires that interpreter into each profile's `mcp.json`/`config.yaml`.
+  wires that interpreter into each profile's `config.yaml` (`mcp_servers` + hooks live
+  there — Hermes never reads a standalone `mcp.json`; ADR-27).
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
 - **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
   ledger — read it before relying on live agent writes. For the live blocker set,
   consult its `pending`/`broken` rows and the open
   [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
-  list restated here. (At time of writing the P0 is
-  [#58](https://github.com/eranroseman/memoria-vault/issues/58) — the review gate is a
-  no-op in oneshot (`-z`) mode, so automation-lane writes bypass it; #39/#51 are closed.)
+  list restated here. (#39/#51/#58 are closed — ADR-27 made the review gate enforce
+  live in all run modes; obsidian is each lane's only write path.)
 
 ## 7. Profiles and the vault
 

@@ -47,10 +47,12 @@ HERMES_SKILLS_DIR="$HERMES_HOME/skills"
 ALL_PROFILES="memoria-librarian memoria-mapper memoria-socratic memoria-writer memoria-verifier memoria-coder memoria-linter"
 REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
 
-# Official Hermes skills (bundled with Hermes; allowed by name in the lane-overrides).
-# TODO(confirm-at-build): whether these ship bundled or need `hermes skills install`.
-# We attempt the install and warn-not-fail, so a bundled Hermes is also fine.
-OFFICIAL_SKILLS="official/research/arxiv official/research/llm-wiki official/note-taking/obsidian official/productivity/ocr-and-documents official/github/github-repo-management official/autonomous-ai-agents/codex official/autonomous-ai-agents/claude-code"
+# Official Hermes skills we rely on, allowed by name in the lane-overrides. Per the
+# official catalog (skills-catalog.md) these are BUNDLED: the Hermes install (step 3)
+# copies them to ~/.hermes/skills/<category>/<name>. They are NOT on the skills hub, so
+# `hermes skills install official/...` 404s on them (#59) — we verify presence, never fetch.
+# Paths are on-disk relative (no `official/` prefix), matching the bundled layout.
+BUNDLED_SKILLS="research/arxiv research/llm-wiki note-taking/obsidian productivity/ocr-and-documents github/github-repo-management autonomous-ai-agents/codex autonomous-ai-agents/claude-code"
 
 # Official Hermes installer (Linux/WSL2) — provisions uv-Python, Node, git-bash, ripgrep, ffmpeg.
 HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
@@ -153,7 +155,7 @@ print_plan() {
   say "  4. copy the runtime vault to your chosen folder"
   say "  5. install MCP server dependencies (pip)"
   say "  6. deploy the seven memoria-* Hermes profiles"
-  say "  7. provision skills (K-Dense clone + official/kepano/qmd)"
+  say "  7. provision skills (K-Dense clone + kepano/qmd hub skills; verify bundled official skills)"
   say "  8. guide the Obsidian and Zotero installs"
   say "  9. print where to put your API keys + next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
@@ -490,15 +492,23 @@ install_skills() {
     run git clone --depth 1 "$KDENSE_URL" "$kdense_dir" || warn "K-Dense clone failed — clone it manually into $HERMES_SKILLS_DIR"
   fi
 
-  # B. Official Hermes skills. --yes skips the per-skill confirm prompt (the
-  # installer is non-interactive; without it Hermes auto-cancels with no tty).
-  # We deliberately do NOT pass --force: a skill the scanner flags DANGEROUS
-  # (e.g. claude-code) should stay blocked — warn-not-fail and move on.
+  # B. Official bundled skills — verify, do NOT install. These ship with Hermes
+  # (step 3 copies them into ~/.hermes/skills/); they are not on the hub, so
+  # `hermes skills install` 404s on them (#59). Just confirm they landed.
+  local s
+  for s in $BUNDLED_SKILLS; do
+    if [ -f "$HERMES_SKILLS_DIR/$s/SKILL.md" ]; then
+      say "  bundled present — $s"
+    else
+      warn "bundled skill '$s' not found under $HERMES_SKILLS_DIR — re-run the Hermes installer (step 3); it ships this skill."
+    fi
+  done
+
+  # C. Hub skills — these ARE on the skills hub and must be fetched. --yes skips
+  # the per-skill confirm prompt (non-interactive; without it Hermes auto-cancels
+  # with no tty). We deliberately do NOT pass --force: a skill the scanner flags
+  # DANGEROUS should stay blocked — warn-not-fail and move on.
   if have hermes; then
-    local s
-    for s in $OFFICIAL_SKILLS; do
-      run hermes skills install "$s" --yes || warn "skill '$s' not installed (may already be bundled, or blocked by the security scan)"
-    done
     # kepano obsidian-markdown
     run hermes skills install kepano/obsidian-skills/skills/obsidian-markdown --yes \
       || warn "kepano obsidian-markdown not installed — see the design doc for the clone fallback"
@@ -506,7 +516,7 @@ install_skills() {
     run hermes skills install skills-sh/moltbot/skills/qmd --yes \
       || warn "qmd skill not installed — confirm packaging (skills.sh 'skills-sh/moltbot/skills/qmd'; CLI: github.com/tobi/qmd)"
   else
-    warn "Hermes not on PATH — skipped official/kepano/qmd skill installs."
+    warn "Hermes not on PATH — skipped kepano/qmd hub-skill installs."
   fi
 
   say "  (obsidian-paper-note + retraction-check ship inside the vault profiles — nothing to fetch.)"
