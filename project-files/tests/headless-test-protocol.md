@@ -46,7 +46,7 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 - ✗ Fails: trust-score math, ISO-week `period` handling, or the `lint-verdict` note changed.
 
 **A5. Linter detectors.** `python vault/.memoria/profiles/memoria-linter/detectors.py --self-test`
-- ✓ Pass: `15/15 detector checks passed.`
+- ✓ Pass: `N/N detector checks passed.` (each detector fires on a planted defect and ignores scaffolding/valid links).
 - ✗ Fails: a detector regressed — the line names which (`dashboard-field-drift`, `broken-wikilink`, `fama-exposure`, …).
 
 ---

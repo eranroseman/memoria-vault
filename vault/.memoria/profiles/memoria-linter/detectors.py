@@ -26,6 +26,12 @@ from pathlib import Path
 
 SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = ("10-inbox/", "40-workbench/", "99-system/logs/")
+# Scaffolding, not authored notes: skeleton folders, assets, and the note
+# templates (raw notes full of placeholder [[links]]). Detectors that assert
+# things about *real* notes (broken wikilinks, type schema) skip these. Templates
+# moved 00-meta/ -> 99-system/templates/ in the 99-system refactor (c53486d);
+# keep this the single source of truth so the skip can't drift from the move.
+SCAFFOLD_PREFIXES = ("00-meta/", "90-assets/", "99-system/templates/")
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
@@ -222,8 +228,10 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
     out = []
     for p in iter_notes(vault):
         rp = relpath(vault, p)
-        if rp.startswith(("00-meta/", "90-assets/")):   # skeleton/assets aren't typed notes
+        if rp.startswith(SCAFFOLD_PREFIXES):   # skeleton/assets/templates aren't typed notes
             continue
+        if "/" not in rp:                      # vault-root pages (home, troubleshooting,
+            continue                           # research-focus) are navigation, not typed notes
         fm = parse_frontmatter(read(p))
         if not fm:
             continue
@@ -245,10 +253,13 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
     out = []
     for p in notes:
         rp = relpath(vault, p)
-        if rp.startswith(("00-meta/", "90-assets/")):   # scaffolding: example/placeholder links
+        if rp.startswith(SCAFFOLD_PREFIXES):   # scaffolding: example/placeholder links
             continue
         for m in link_re.finditer(read(p)):
-            target = m.group(1).strip()
+            # rstrip a trailing "\" so a table-escaped pipe resolves: inside a
+            # markdown table cell an aliased link must be written [[note\|alias]],
+            # and the regex captures "note\" -> strip the escape to get "note".
+            target = m.group(1).strip().rstrip("\\")
             if not target:
                 continue
             stem = Path(target).stem
@@ -407,9 +418,11 @@ def self_test() -> int:
     import tempfile
 
     failures = 0
+    checks_run = 0
 
     def check(name, cond):
-        nonlocal failures
+        nonlocal failures, checks_run
+        checks_run += 1
         failures += not cond
         print(f"  {'PASS' if cond else 'FAIL'}  {name}")
 
@@ -454,9 +467,20 @@ def self_test() -> int:
         dft = v / "40-workbench/proj/04-drafts/draft.md"
         dft.parent.mkdir(parents=True, exist_ok=True)
         dft.write_text("---\ntype: draft\n---\nWe still rely on [[oldclaim]] here.\n", encoding="utf-8")
-        # template + dashboard referencing an unknown field -> dashboard finding
+        # template + dashboard referencing an unknown field -> dashboard finding.
+        # The template body carries a placeholder [[link]] (templates are raw notes):
+        # broken-wikilink must ignore it now that templates live in 99-system/.
         (v / "99-system/templates/claim-note.md").write_text(
-            "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n", encoding="utf-8")
+            "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n"
+            "Example link: [[placeholder-target]]\n", encoding="utf-8")
+        # vault-root navigation page: has frontmatter, no type -> NOT a typed note
+        (v / "home.md").write_text(
+            "---\ncreated: 2026-01-01\ncssclasses:\n  - dashboard\n---\n# Home\n", encoding="utf-8")
+        # a real note with a table-escaped aliased link to an existing note ([[good]]):
+        # the "\|" must resolve, not read as a broken "good\" target.
+        (v / "30-synthesis/01-claims/tablelink.md").write_text(
+            "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n"
+            "| col | [[good\\|Good]] |\n", encoding="utf-8")
         (v / "00-meta/01-dashboards/d.md").write_text(
             "```dataview\nTABLE maturity, projct\nFROM \"30-synthesis\"\nSORT file.mtime DESC\n```\n",
             encoding="utf-8")
@@ -472,6 +496,9 @@ def self_test() -> int:
         check("schema-check clean note not flagged", not any("good.md" in x.path for x in by("schema-check")))
         check("broken-wikilink flags [[ghost]]", any("ghost" in x.message for x in by("broken-wikilink")))
         check("broken-wikilink ignores valid [[good]]", not any("[[good]]" in x.message for x in by("broken-wikilink")))
+        check("broken-wikilink ignores template placeholder link", not any("placeholder-target" in x.message for x in by("broken-wikilink")))
+        check("broken-wikilink resolves a table-escaped alias [[good\\|Good]]", not any("tablelink.md" in x.path for x in by("broken-wikilink")))
+        check("schema-check exempts vault-root nav page (home.md)", not any("home.md" in x.path for x in by("schema-check")))
         check("dashboard-field-drift flags 'projct'", any("projct" in x.message for x in by("dashboard-field-drift")))
         check("dashboard-field-drift ignores 'maturity'", not any("'maturity'" in x.message for x in by("dashboard-field-drift")))
         check("graph-analyze flags orphan bad.md", any("bad.md" in x.path for x in by("graph-analyze")))
@@ -480,7 +507,7 @@ def self_test() -> int:
         check("fama-exposure ignores live claim good", not any("good" in x.message for x in by("fama-exposure")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-    print(f"\n{15 - failures}/15 detector checks passed.")
+    print(f"\n{checks_run - failures}/{checks_run} detector checks passed.")
     return failures
 
 
