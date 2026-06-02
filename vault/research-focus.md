@@ -1,6 +1,6 @@
 # Research focus
 
-Read by the Librarian at the start of every session. Keep this file fresh — an empty or stale `research-focus.md` produces an unfocused Librarian.
+Your research steering file — the priorities, open questions, and gaps you want the system working on. The Librarian reads it at the start of every session and **weights discovery** by how well candidate papers match what's here, so it's the main lever you have over what gets surfaced. Keep it current; an empty or stale file produces an unfocused Librarian.
 
 ## Current priorities
 
@@ -40,4 +40,4 @@ Read by the Librarian at the start of every session. Keep this file fresh — an
 
 **Refresh cadence.** Update weekly during the Friday ritual, or whenever priorities shift. The Librarian reads the version at session start; mid-session edits don't take effect until next run.
 
-**More:** [How to use the vault homepage](https://eranroseman.github.io/memoria-vault/how-to-guides/using-obsidian/use-the-vault-homepage/) (how to update this) · [How to run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/maintenance/run-the-weekly-review/) (refresh cadence).
+**More.** Keeping it current: [How to use the vault homepage](https://eranroseman.github.io/memoria-vault/how-to-guides/using-obsidian/use-the-vault-homepage) and the Friday [weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/maintenance/run-the-weekly-review). Its place in Memoria's memory model: [Memory tiers](https://eranroseman.github.io/memoria-vault/explanation/architecture/memory-tiers#why-each-substrate-has-its-scope) — research-focus is the canonical example of *vault project memory*.

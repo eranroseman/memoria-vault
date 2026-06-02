@@ -168,7 +168,7 @@ brand:
 
 ---
 
-**Companion to** [Design system — explanation](https://eranroseman.github.io/memoria-vault/explanation/obsidian/design-system/) — that page describes the schema and discipline; this file *implements* it for this vault.
+**Companion to** [Design system — explanation](https://eranroseman.github.io/memoria-vault/explanation/obsidian/design-system) — that page describes the schema and discipline; this file *implements* it for this vault.
 
 **Consumers of this file:**
 

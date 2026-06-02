@@ -7,7 +7,7 @@ cssclasses:
 
 # Memoria
 
-The vault front door — opened on launch by the [obsidian-homepage](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/) plugin. A launchpad: it surfaces one status glance and routes you everywhere else.
+The vault front door — opened on launch by the [obsidian-homepage](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins) plugin. A launchpad: it surfaces one status glance and routes you everywhere else.
 
 > [!info] Status — full view in [[daily-health|Daily Health]]
 > ```dataviewjs
@@ -53,7 +53,7 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 ## Reference
 
 - [[troubleshooting|Troubleshooting]] — verify the system, fall back, recover (the one help note kept in-vault, for when you're offline/broken)
-- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) · [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [Setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
+- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) · [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [Setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
 
 ## Full documentation
 
