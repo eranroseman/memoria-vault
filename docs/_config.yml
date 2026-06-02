@@ -4,6 +4,7 @@ remote_theme: just-the-docs/just-the-docs
 
 url: https://eranroseman.github.io
 baseurl: /memoria-vault
+permalink: pretty   # content pages get trailing-slash URLs (…/page/), matching the vault's links
 
 # Search
 search_enabled: true
