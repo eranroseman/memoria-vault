@@ -27,7 +27,7 @@ Rules:
 | [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone |
 | [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (Coder-lane exception) |
 | [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime, not a bespoke one |
-| [23](23-six-memory-substrates.md) | Memory is six scoped substrates, not one store |
+| [23](23-six-memory-substrates.md) | Memory is seven scoped substrates, not one store |
 | [24](24-single-researcher-scope.md) | Single-researcher scope; multi-user out of scope |
 
 ### Vault and schema

@@ -5,20 +5,21 @@ parent: Reference
 
 # Memory substrates
 
-Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [Memory tiers](../explanation/architecture/memory-tiers.md).
+Where each type of state lives across the Memoria + Hermes stack: substrate, provider, scope, lifespan, backing store, and what it holds. Listed by how much the human touches them. For the design rationale see [The memory model](../explanation/architecture/memory-model.md).
 
 ---
 
 ## Substrate table
 
-| Tier | Provider | Scope | Lifespan | Backing store | What it holds |
+| Substrate | Provider | Scope | Lifespan | Backing store | What it holds |
 | --- | --- | --- | --- | --- | --- |
-| **Working context** | Hermes native | One profile session | Session-bound; cleared on `/clear` | In-context (live conversation) | Current goal, recent tool results, in-flight reasoning. |
-| **Profile memory** (`MEMORY.md` + `USER.md`) | Hermes native | One profile, all sessions | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-<name>/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected into system prompt at session start as a frozen snapshot. |
-| **Session search** | Hermes native | One profile, all past sessions | Indefinite; unlimited capacity | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations. Retrieved on demand — costs no tokens until queried. |
-| **Board memory** (handoff payload) | Memoria — Kanban | One card; travels across profiles | Card-bound | Card `metadata` field | Handoff goal, context, allowed paths, expected outputs, working set of paper notes. |
-| **Vault project memory** | Memoria — vault files | One project, across lanes | Project-bound | `40-workbench/<project>/` | `research-focus`, open questions, decisions log. Shared across all profiles touching the project. |
-| **Vault audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `99-system/logs/` + `99-system/metrics/` | Audit trail, board snapshots, weekly summaries, fleet metrics. |
+| **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`research-focus.md`, `screening-protocol.md`) | Standing steering: discovery priorities, review mode. The human's main lever over what the system pursues. |
+| **Project memory** | Memoria — vault files | One sub-project, across lanes | Project-bound; archives with the project | `40-workbench/<project>/` | Open questions, decisions, framing for one project. |
+| **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `99-system/logs/` + `99-system/metrics/` | Audit trail, board snapshots, weekly summaries, fleet metrics. |
+| **Handoff memory** (payload) | Memoria — Kanban | One card; travels across profiles | Card-bound | Card `metadata` field | Handoff goal, context, allowed paths, expected outputs, working set of paper notes. |
+| **Agent memory** (`MEMORY.md` + `USER.md`) | Hermes native | One agent (profile), all sessions | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-<name>/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): human working style. Injected as a frozen snapshot. |
+| **Session history** | Hermes native | One agent, all past sessions | Indefinite; unlimited capacity | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations. Retrieved on demand — costs no tokens until queried. |
+| **Working memory** | Hermes native | One profile session | Session-bound; cleared on `/clear` | In-context (live conversation) | Current goal, recent tool results, in-flight reasoning. |
 
 Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes runtime — verify exact limits in upstream [Hermes docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory).
 
@@ -28,12 +29,13 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 
 | Rule | Details |
 | --- | --- |
-| Working context is not shared | Librarian's in-session reasoning does not bleed into the Writer's session. `/clear` discards it. |
-| Profile memory is frozen at session start | Mid-session writes are not visible until the next session. Keep it small and stable — not in-flight task state. |
-| Session search is read-only history | Never gates promotion; never authoritative over the vault. |
-| Board memory is per-card, not per-profile | When a card moves from Librarian → Writer lane, the handoff payload travels with it. Writer does not inherit Librarian's working context. |
-| Vault project memory is the cross-lane channel | Anything that must survive across lanes within a project belongs here, not in profile memory. |
-| Vault audit memory is append-only | Profiles read it; only the Linter writes to it. |
+| Program memory is the human's steering | The human authors `research-focus` / `screening-protocol`; every profile reads it; it never archives — the program outlives any one project. |
+| Project memory is the per-project cross-lane channel | One project's working state — anything that must survive across lanes *within that project*. Archives with the project. |
+| Audit memory is append-only | Profiles read it; only the Linter writes to it. |
+| Handoff memory is per-card, not per-profile | When a card moves from Librarian → Writer lane, the handoff payload travels with it. Writer does not inherit Librarian's working memory. |
+| Agent memory is frozen at session start | Mid-session writes are not visible until the next session. Keep it small and stable — not in-flight task state. |
+| Session history is read-only history | Never gates promotion; never authoritative over the vault. |
+| Working memory is not shared | Librarian's in-session reasoning does not bleed into the Writer's session. `/clear` discards it. |
 
 ---
 
@@ -41,17 +43,18 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 
 | State type | Correct substrate | Wrong substrate (common mistake) |
 | --- | --- | --- |
-| Current task goal and context | Board memory (handoff payload) | Profile memory (too local, capped, frozen at start) |
-| Stable facts about the environment | Profile `MEMORY.md` | Working context (not persistent) |
-| Human preferences and style | Profile `USER.md` | Working context (not persistent) |
-| Cross-session retrieval | Session search | Profile memory (too small for bulk recall) |
-| Project-level decisions | Vault project memory (`40-workbench/<project>/`) | Board memory (card-scoped, dies with card) |
-| Audit trail of all decisions | Vault audit memory (`99-system/logs/audit.jsonl`) | Profile memory (wrong granularity) |
+| What you want the system to pursue | Program memory (`research-focus`) | `project-hints.yaml` (that's config, not recall) |
+| One project's open questions / decisions | Project memory (`40-workbench/<project>/`) | Handoff memory (card-scoped, dies with card) |
+| Current task goal and context | Handoff memory (payload) | Agent memory (too local, capped, frozen at start) |
+| Stable facts about the environment | Agent `MEMORY.md` | Working memory (not persistent) |
+| Human preferences and style | Agent `USER.md` | `MEMORY.md` (keep identity vs. preference separate) |
+| Cross-session retrieval | Session history | Agent memory (too small for bulk recall) |
+| Audit trail of all decisions | Audit memory (`99-system/logs/audit.jsonl`) | Agent memory (wrong granularity) |
 | Durable synthesized knowledge | Vault notes (`30-synthesis/`) | Any of the above |
 
 ---
 
-## Profile memory file locations
+## Agent memory file locations
 
 | File | Location | Token cap (approx.) | Injected as |
 | --- | --- | --- | --- |

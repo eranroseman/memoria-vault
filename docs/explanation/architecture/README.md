@@ -73,7 +73,7 @@ This section covers **what each layer and surface *is*** — the structural page
 | Page | What it describes |
 |---|---|
 | [The control plane](control-plane.md) | The board as the system's control plane |
-| [Memory tiers](memory-tiers.md) | The six memory substrates and their scopes |
+| [The memory model](memory-model.md) | The seven memory substrates and their scopes |
 | [Interaction channels](human-channels.md) | The human and programmatic interaction surfaces (Obsidian, CLI, Telegram, API) |
 | [The vault](vault.md) | The vault as a knowledge structure (lifecycle folders, promotion overview) |
 | [Session logging](session-logging.md) | What each agent session records, and why one file per session |

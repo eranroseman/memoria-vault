@@ -31,7 +31,7 @@ Memoria builds **on** Hermes rather than implementing its own runtime. Hermes ow
 
 **Build a bespoke runtime.** Rejected: its hardest parts are exactly what Hermes already solves, so a reimplementation would be a worse copy plus a permanent maintenance burden, for no gain in the knowledge layer.
 
-**AutoGen-style chat-as-substrate.** Rejected: routing durable work state through a conversation transcript puts state in the wrong layer. Memoria's state must survive `/clear` and cross-profile handoffs in thick stores (board, vault), not in chat history ([memory-tiers.md](../../docs/explanation/architecture/memory-tiers.md)).
+**AutoGen-style chat-as-substrate.** Rejected: routing durable work state through a conversation transcript puts state in the wrong layer. Memoria's state must survive `/clear` and cross-profile handoffs in thick stores (board, vault), not in chat history ([the memory model](../../docs/explanation/architecture/memory-model.md)).
 
 **OpenHands-style sandbox-vs-host permission model.** Rejected: it routes permissions through a sandbox boundary, whereas Memoria needs permissions enforced per-profile at the write layer (the policy MCP), independent of where execution runs.
 

@@ -18,7 +18,7 @@ Memoria needs an execution substrate with four properties, and Hermes ships all 
 - **A persistent Kanban board** (`kanban.db`) — a durable state machine across sessions and retries. When a session closes, work state survives; the next worker picks the card up from its last known state. This is the [thin-control-over-thick-state](why-three-layers.md) requirement made concrete.
 - **Profiles with lanes** — each agent is a named profile (`SOUL.md` identity, `config.yaml` model routing, lane-override permissions) that claims cards on its lane. Memoria's seven specialists *are* Hermes profiles.
 - **A dispatcher** — claims `ready` cards for matching profiles, runs them, advances state, retries on recoverable failure. Memoria adds routing *rules*, not a routing *agent* (there is no Orchestrator — see [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)).
-- **Native memory, MCP, and an API** — profile memory (`MEMORY.md`/`USER.md`), an MCP server interface (which Memoria's policy gate plugs into), and a network endpoint for programmatic triggers.
+- **Native memory, MCP, and an API** — agent memory (`MEMORY.md`/`USER.md`), an MCP server interface (which Memoria's policy gate plugs into), and a network endpoint for programmatic triggers.
 
 Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy MCP that gates writes, the seven specialist `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points.
 
