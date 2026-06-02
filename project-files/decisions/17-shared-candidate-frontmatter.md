@@ -67,4 +67,4 @@ These are the candidate-specific fields; every note also carries the global requ
 ## Related
 
 - **Consumed by:** [ADR-16 pre-ingest screening](16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
-- **Files affected:** [vault/README.md](../../docs/explanation/architecture/vault.md), `99-system/templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/structural-health/weekly-review.md)
+- **Files affected:** [The vault](../../docs/explanation/architecture/vault.md), `99-system/templates/candidate-note.md` (to be created), [dashboards/weekly-review.md](../../docs/explanation/dashboards/structural-health/weekly-review.md)
