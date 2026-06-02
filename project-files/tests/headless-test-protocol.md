@@ -111,26 +111,19 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ---
 
-## One-shot runner (Parts A + B + E)
+## One-shot runner — `scripts/test.sh`
 
-From the repo root:
+The maintained runner for this gate (don't copy-paste a loop that drifts). From the repo root:
 
 ```bash
-set -e
-P=vault/.memoria
-python -m pip install -q -r "$P/mcp/requirements.txt"
-for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate \
-         profiles/memoria-linter/detectors; do
-  python "$P/$s.py" --self-test
-done
-python scripts/docs-doctor.py docs
-bash scripts/check-vault-links.sh
-python -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py"
-bash -n scripts/install.sh
-echo "headless gate (A/B/E): PASS"
+scripts/test.sh        # everything (default)
+scripts/test.sh l1     # Part A only — the five component self-tests
+scripts/test.sh l0     # Parts B + C + E, plus the D1 informational run
 ```
 
-Part C (installer lint) and Part D (schema audit) carry their own tooling / judgment — run them separately.
+It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../decisions/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
+
+Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs PowerShell, and shellcheck (C1) is skipped with a notice when absent (CI still enforces both); the Part **D2** schema audit carries judgment — run it separately.
 
 ---
 
