@@ -15,8 +15,11 @@ write-gate in `-z`/gateway/cron) is validated separately.
 Hermes installed in WSL2. You'll bounce between Obsidian (GUI) and a WSL2 shell.
 
 **How to read each step.** **Action** → **Expected** → **✓ Pass** (the exact thing
-that means it worked) → **✗ If it fails** (first thing to check). Tick the boxes;
-fill the results table at the end.
+that means it worked) → **✗ If it fails** (first thing to check).
+
+**Marking results.** Tick each test's `- [ ] Pass` box when it passes. If it fails,
+**leave it unticked** and record the symptom in the [Results](#results) table at the
+end (the boxes are clickable in Obsidian).
 
 > Dashboard rule of thumb: a dashboard with no data yet shows a **placeholder or
 > empty table — that is success** ("empty is success"). A **red "Dataview: query
@@ -42,10 +45,12 @@ fill the results table at the end.
 
 - ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/ 95-archive Home README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
+- [ ] **A1 Pass**
 
 **A2. Leave Restricted mode.** Settings → *Community plugins* → turn **off** Restricted mode → **restart Obsidian**.
 
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
+- [ ] **A2 Pass**
 
 **A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
@@ -63,6 +68,18 @@ fill the results table at the end.
 - ✓ Pass: **8/8 enabled**, no "Failed to load plugin" notices.
 - ✗ Fails: a plugin missing → reinstall via `--profiles-only` or copy `.obsidian/plugins/<name>`; a plugin disabled → enable it; load error → check its `data.json` (the two private ones ship as `data.json.example` and must be copied — see A-note).
 
+Tick each plugin that is enabled and validated:
+
+- [ ] `Agent Client`
+- [ ] `Callout Manager`
+- [ ] `Citations`
+- [ ] `Dataview`
+- [ ] `Git`
+- [ ] `Local REST API with MCP`
+- [ ] `QuickAdd`
+- [ ] `Templater`
+- [ ] **A3 Pass (8/8)**
+
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
 > fresh vault: `obsidian-local-rest-api` **regenerates its own** (apiKey + TLS) on
@@ -77,10 +94,13 @@ fill the results table at the end.
 
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
+- [ ] **B1 Pass**
+
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
+- [ ] **B2 Pass**
 
 **B3. Reachable from WSL2.** In WSL2:
 
@@ -90,6 +110,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen); `401` → key mismatch (B2).
+- [ ] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -99,14 +120,14 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
+- [ ] **B4 Pass**
 
 ---
 
 ## Part C — The ten dashboards render (G4)
 
 Open each file under `00-meta/01-dashboards/` (Reading view). For **every** ```dataview```
-block: it must render a table or placeholder, **never a query error**. Tick when
-all blocks in the file resolve.
+block: it must render a table or placeholder, **never a query error**.
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
@@ -122,8 +143,22 @@ all blocks in the file resolve.
 | 10 | `fleet-health.md` | `00-meta/08-metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
 | 11 | `audit-log.md` | `00-meta/02-logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 
-- ✓ Pass (G4): **all dashboards' Dataview blocks resolve with no errors**; seeded items appear where seeded.
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
+
+Tick each dashboard whose Dataview blocks all resolve (no query errors):
+
+- [ ] 1 · `index.md`
+- [ ] 2 · `board-state.md`
+- [ ] 3 · `reading-pipeline.md`
+- [ ] 4 · `discuss-queue.md`
+- [ ] 5 · `open-questions.md`
+- [ ] 6 · `contradictions.md`
+- [ ] 7 · `drift-watch.md`
+- [ ] 8 · `loose-ends.md`
+- [ ] 9 · `weekly-review.md`
+- [ ] 10 · `fleet-health.md`
+- [ ] 11 · `audit-log.md`
+- [ ] **Part C / G4 Pass (all 10 resolve)**
 
 ---
 
@@ -131,20 +166,28 @@ all blocks in the file resolve.
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
+- [ ] **D1 Pass**
+
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
 `...\vault\.memoria\library.bib` (the absolute Windows path to the vault's bib).
 
+- [ ] **D2 Pass**
+
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
+
+- [ ] **D3 Pass**
 
 **D4. Validate the export.** In Windows PowerShell:
 `Get-Item vault\.memoria\library.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> vault/.memoria/library.bib`.
 
 - ✓ Pass: `library.bib` updated and contains the entry.
+- [ ] **D4 Pass**
 
 **D5. Citation in Obsidian.** Command palette → *Citation: Insert citation* → your item resolves from `library.bib`.
 
 - ✓ Pass: the citekey/reference is offered and inserts.
 - ✗ Fails: citation plugin `citationExportPath` must point at `.memoria/library.bib`, format `biblatex`.
+- [ ] **D5 Pass**
 
 ---
 
@@ -153,6 +196,7 @@ all blocks in the file resolve.
 **E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-socratic` → ask a question.
 
 - ✓ Pass: a model response renders in the pane (model connectivity through the GUI).
+- [ ] **E1 Pass**
 
 **E2. Write gate visible in the GUI.** In WSL2, drive a **denied** write:
 
@@ -163,10 +207,12 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 30-synthe
 Then open `00-meta/01-dashboards/audit-log.md`.
 
 - ✓ Pass: **no `gui-denied.md` is created**, and a `deny` row for it appears in audit-log.
+- [ ] **E2 Pass**
 
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
 - ✓ Pass: the card appears under *Active*; `00-meta/board/<task_id>.md` exists.
+- [ ] **E3 Pass**
 
 ---
 
