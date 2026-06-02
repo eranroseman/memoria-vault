@@ -326,3 +326,34 @@ long for a crisp plan (full phase steps, investigation notes) goes to a sibling
 The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
 (+ its `-spillover.md`); the per-artifact build ledger is
 [`implementation-status.md`](project-files/plans/implementation-status.md).
+
+## 9. Integration cadence — merge small, merge often
+
+The expensive failures here are not bad merges — they're *late* merges. Three
+branches once grew off a frozen `main` in parallel (60 + 9 + 12 commits, none
+merged back), all touching the same ADR and files — ADR-27 was implemented
+*twice* — so consolidating them became a ~30-conflict semantic reconciliation,
+not a merge. Full post-mortem + human walkthrough:
+[git-workflow.md](project-files/plans/git-workflow.md). The rules:
+
+- **Keep `main` moving.** A branch is one coherent unit → PR → squash-merge →
+  delete. If it passes ~1 day or ~10 unmerged commits, it's already too big —
+  split it and land it. Never let a branch hoard weeks of sweeping work.
+- **Rebase onto `origin/main` constantly** — daily and before every PR
+  (`git fetch && git rebase origin/main`). A branch cut from a stale base and
+  never updated is the divergence engine.
+- **One scope → one branch → one owner, claimed up front.** No two branches may
+  implement the same ADR or rewrite the same files. (ADR-27 built on two branches
+  was the single most expensive collision in this repo.)
+- **Land structural/destructive changes FIRST, alone, fast.** Folder moves, file
+  deletions, schema bumps get their own tiny PR, merged immediately and announced;
+  every active branch rebases to absorb them the same day. A deletion that lives
+  only on a side branch resurrects the file when another branch merges.
+- **Serialize when parallel is unavoidable (a merge train).** First branch merges
+  to `main`; the rest rebase onto the new `main` immediately, then the next merges.
+  Don't grow competing mega-branches.
+- **One worktree + one branch per agent session (see §0).** Two engines on one
+  branch fuse into an un-sliceable history and race each other's HEAD (we hit
+  mis-amends, vanished edits, a file deleted twice). Stop-check: if `git log -3` on
+  the tip shows a co-author who isn't you, you're on someone else's branch — make
+  your own.
