@@ -57,7 +57,7 @@ notepad "$env:USERPROFILE\.hermes\profiles\memoria-mapper\.env"
 **3. Confirm the policy MCP path was substituted.**
 
 ```powershell
-Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\mcp.json"
+Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\config.yaml"
 ```
 
 The `policy` server's `args` should point at an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{VAULT_PATH}}`, re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
