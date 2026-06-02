@@ -6,50 +6,43 @@ The Linter's eight structural-detector findings in one view — silent drift bet
 
 Empty is the goal. Each finding links to its detector — remediation lives in the [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter/).
 
-```dataview
-TABLE WITHOUT ID
-  detector AS Detector,
-  severity AS Severity,
-  finding AS Finding,
-  path AS Path,
-  reported_at AS "Reported"
-FROM "99-system/logs/lint-findings"
-WHERE active = true
-SORT severity ASC, reported_at ASC
-LIMIT 30
+```dataviewjs
+const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
+if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
+const rank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+const rows = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l))
+  .sort((a, b) => (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)).slice(0, 30);
+if (!rows.length) { dv.paragraph("✅ No findings."); return; }
+dv.table(["Detector", "Severity", "Finding", "Path"],
+  rows.map(e => [e.detector, e.severity, e.message, e.path]));
 ```
 
-## Verdict band (current period)
+## Verdict (current lint pass)
 
-The headline rollup — one `PASS` / `REVIEW` / `FAIL` per lint pass.
+The headline rollup, computed live from the findings above: any `CRITICAL` → **FAIL**; any `HIGH`/`MEDIUM` → **REVIEW**; otherwise **PASS**. (Per-period history would need a periodized `lint-verdict` note from the metrics aggregator — not yet wired.)
 
-```dataview
-TABLE WITHOUT ID
-  period AS Period,
-  verdict AS Verdict,
-  finding_count AS "Findings",
-  critical_count AS Critical,
-  high_count AS High,
-  medium_count AS Medium
-FROM "99-system/metrics"
-WHERE type = "lint-verdict"
-SORT period DESC
-LIMIT 8
+```dataviewjs
+const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
+const ev = (text && text.trim()) ? text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l)) : [];
+const n = s => ev.filter(e => e.severity === s).length;
+const crit = n("CRITICAL"), high = n("HIGH"), med = n("MEDIUM");
+const verdict = crit ? "🔴 FAIL" : (high || med) ? "🟡 REVIEW" : "🟢 PASS";
+dv.paragraph(`**${verdict}** — ${ev.length} finding(s): ${crit} critical · ${high} high · ${med} medium`);
 ```
 
-## Findings by detector (last 4 weeks)
+## Findings by detector (current pass)
 
-Recurring offenders: a detector firing weekly with the same finding is a systemic issue to fix, not re-clear.
+Which detectors are firing now — a detector with many findings is a systemic issue to fix at the source, not re-clear one by one. (Cross-pass recurrence needs timestamped findings, which the lean `Finding` schema doesn't carry.)
 
-```dataview
-TABLE WITHOUT ID
-  detector AS Detector,
-  count(rows) AS "Fired (4 wks)",
-  last(rows.reported_at) AS "Last fired"
-FROM "99-system/logs/lint-findings"
-WHERE date(reported_at) > date(today) - dur(28 days)
-GROUP BY detector
-SORT count(rows) DESC
+```dataviewjs
+const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
+if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
+const ev = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+const by = {};
+for (const e of ev) by[e.detector] = (by[e.detector] ?? 0) + 1;
+const rows = Object.entries(by).sort((a, b) => b[1] - a[1]);
+if (!rows.length) { dv.paragraph("✅ No findings."); return; }
+dv.table(["Detector", "Count"], rows.map(([d, c]) => [d, c]));
 ```
 
 ## Schema-migration backlog

@@ -14,10 +14,10 @@ SORT last_updated ASC
 ## Review queue (who owes what)
 
 ```dataview
-TABLE file.link AS Card, review_status, review_owner, review_requested_at
+TABLE file.link AS Card, review_status, assignee AS Lane, last_updated AS "Waiting since"
 FROM "99-system/board"
 WHERE review_status = "requested" OR review_status = "in-review"
-SORT review_requested_at ASC
+SORT last_updated ASC
 ```
 
 ## Retry watch
