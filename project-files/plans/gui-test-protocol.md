@@ -55,7 +55,7 @@ fill the results table at the end.
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/library.bib` | *Insert citation* command exists (Part D5) |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
-| `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* / Git commands available |
+| `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Local REST API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
@@ -174,7 +174,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors | | |
+| A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
 | C / G4 | All 10 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |

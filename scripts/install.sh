@@ -639,6 +639,13 @@ print_next_steps() {
   say "  3. Verify the profiles:        hermes profile list"
   say "  4. Smoke-test the ACP pane:    hermes -p memoria-socratic acp"
   say "  5. Try a session:              hermes -p $first chat"
+  # obsidian-git needs a repo to commit into; we deliberately don't auto-init (the
+  # vault is the user's own repo). Surface the one-liner only if it's not a repo yet.
+  if [ -n "$VAULT_PATH" ] && [ ! -d "$VAULT_PATH/.git" ]; then
+    say ""
+    say "  Tip: obsidian-git needs the vault to be a git repo (we don't auto-init — it's yours):"
+    say "         cd \"$VAULT_PATH\" && git init && git add -A && git commit -m \"Initial Memoria vault\""
+  fi
   say ""
   say "Re-deploy after editing the vault source:  bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
   # NB: trailing `&&` test must not become the function's (and script's) exit
