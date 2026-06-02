@@ -6,7 +6,7 @@ parent: Using Hermes Agent
 
 # How to configure a Hermes profile
 
-Edit a profile's `.env`, `config.yaml`, `mcp.json`, or `lane-overrides` to change its behavior — model routing, allowed skills, write permissions, or API credentials.
+Edit a profile's `.env`, `config.yaml`, or `lane-overrides` to change its behavior — model routing, allowed skills, write permissions, or API credentials.
 
 ## Where profile files live
 
@@ -24,8 +24,7 @@ Always edit the vault source. Re-deploy with `bash scripts/install.sh --profiles
 | File | Controls | Who edits |
 | --- | --- | --- |
 | `SOUL.md` | Profile identity, persona, behavioral constraints | Author (you) |
-| `config.yaml` | Model routing, temperature, context window | Author (installer substitutes `{{VAULT_PATH}}` in the `hooks` command) |
-| `mcp.json` | Which MCP servers the profile connects to | Author (installer substitutes `{{VAULT_PATH}}`) |
+| `config.yaml` | Model routing, `mcp_servers` (policy + obsidian), and the `plugins` block enabling the policy gate | Author (installer substitutes `{{VAULT_PATH}}`) |
 | `skills/` | Skill definitions the profile can load | Author |
 | `cron/` | Scheduled task definitions | Author |
 | `.env` | API keys and secrets | **Human only** — never committed to git |
@@ -42,7 +41,7 @@ model:
   default: ~anthropic/claude-opus-latest   # the model string (provider/model)
 ```
 
-The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus a `hooks` block) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
+The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus `mcp_servers` and `plugins` blocks) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
 
 3. Save and re-deploy: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
 

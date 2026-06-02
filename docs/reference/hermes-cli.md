@@ -7,7 +7,7 @@ parent: Reference
 
 Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [Obsidian command palette](obsidian-command-palette.md).
 
-Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `mcp.json`. Per-profile research commands run as `hermes -p memoria-<name> chat -s <command> [args]`.
+Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile research commands run as `hermes -p memoria-<name> chat -s <command> [args]`.
 
 ---
 

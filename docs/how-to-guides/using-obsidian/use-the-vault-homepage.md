@@ -5,7 +5,7 @@ parent: Using Obsidian
 
 # How to use the vault homepage
 
-The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the local reference notes, common operations, and the full website docs. Navigate from it to the right dashboard or tool, and keep your research focus current.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the in-vault troubleshooting note, common operations, and the full website docs (all other reference now lives on the website). Navigate from it to the right dashboard or tool, and keep your research focus current.
 
 ## Prerequisites
 
@@ -54,7 +54,7 @@ Update this at least weekly during the Friday ritual.
 The **Common operations** section lists the Memoria command-palette shortcuts. Use them directly from here — no need to have a note open first:
 
 - `Cmd/Ctrl-P` → `Memoria: capture fleeting` — instant capture
-- `Cmd/Ctrl-P` → `Memoria: new project` — scaffold a project folder
+- `Cmd/Ctrl-P` → `Memoria: write claim note` — start a new claim from the template
 
 ## Verify
 

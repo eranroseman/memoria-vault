@@ -39,7 +39,7 @@ bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 **2. What it does.** With your confirmation at each external step, the installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the seven profiles:
 
 - Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`
-- Substitutes `{{VAULT_PATH}}` in `mcp.json` **and** `config.yaml` with the runtime vault's absolute path
+- Substitutes `{{VAULT_PATH}}` in `config.yaml` with the runtime vault's absolute path
 - Calls `hermes profile install` to register the profile
 - Copies `.env.EXAMPLE` to `.env` for each profile (only on first install — existing `.env` files are never overwritten)
 
@@ -68,7 +68,7 @@ All seven `memoria-*` profiles appear in the output. If a profile is missing, th
 Check that `{{VAULT_PATH}}` was substituted:
 
 ```powershell
-Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\mcp.json"
+Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\config.yaml"
 ```
 
 The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).

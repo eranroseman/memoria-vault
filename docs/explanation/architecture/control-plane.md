@@ -47,7 +47,7 @@ The reason there is no "add the token later" path is that misconfiguration here 
 
 ## Why MCP servers are registered per profile, not globally
 
-MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [On-disk layout](../../reference/on-disk-layout.md).)
+MCP servers are registered per profile. Each profile's `config.yaml` carries an `mcp_servers` block listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [On-disk layout](../../reference/on-disk-layout.md).)
 
 The reason for per-profile registration rather than a global server list is the same reason for separate profiles at all: `tools.include` filters let each profile's surface be narrowed to what it actually needs. The Socratic profile gets the `obsidian` server but only its read-side tools. This is the mechanism that makes "Socratic cannot write" enforceable at the API level, not just at the prompt level.
 

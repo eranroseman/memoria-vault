@@ -90,11 +90,10 @@ The dependency list for Memoria's MCP servers, installed in step 5 before profil
 
 ## Per-profile wiring
 
-`hermes profile install` requires four files per profile; a profile missing any is skipped (graceful skip):
+`hermes profile install` requires three files per profile; a profile missing any is skipped (graceful skip):
 
 - `SOUL.md` — the system prompt / identity.
-- `config.yaml` — model routing (`provider: kilocode`) plus the `hooks` block registering the policy gate (`pre_tool_call` / `post_tool_call` → `policy_hook.py`).
-- `mcp.json` — the MCP servers the profile connects (the `obsidian` vault-access server and the `policy` server), with `{{VAULT_PATH}}` placeholders the installer substitutes.
+- `config.yaml` — model routing (`provider: kilocode`), the `mcp_servers` block (the `obsidian` vault-access server and the `policy` server, with `{{VAULT_PATH}}` placeholders the installer substitutes), and the `plugins` block enabling the `memoria-policy-gate` write gate (`pre_tool_call` / `post_tool_call` → `policy_hook.py`).
 - `distribution.yaml` — install metadata + `env_requires` (requires `KILOCODE_API_KEY`; `ANTHROPIC_API_KEY` optional).
 
 Profiles also carry `skills/` and `cron/` directories.
