@@ -22,7 +22,7 @@ This guide uses the audit log to tell them apart and find the reason.
 
 **1. Open the audit-log dashboard.**
 
-From `Home.md` → the audit-log dashboard. Its primary view is recent **denies and dry-runs**, newest first. Find an entry whose `path` and `profile` match the missing write, around the time it happened.
+From `home.md` → the audit-log dashboard. Its primary view is recent **denies and dry-runs**, newest first. Find an entry whose `path` and `profile` match the missing write, around the time it happened.
 
 **2. Found a matching `deny` or `dry_run`? It was a policy decision.**
 

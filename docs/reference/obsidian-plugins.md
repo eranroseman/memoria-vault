@@ -34,7 +34,7 @@ Install when the friction is felt. Not required for core function.
 
 | Plugin | Purpose |
 | --- | --- |
-| obsidian-homepage | Opens `Home.md` on startup (deterministic landing). |
+| obsidian-homepage | Opens `home.md` on startup (deterministic landing). |
 | smart-connections | Vector search across notes. |
 | smart-lookup | Question-first semantic search (shares index with smart-connections). |
 | omnisearch | Fast fuzzy full-text search (keyword counterpart to smart-*). |

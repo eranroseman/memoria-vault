@@ -131,9 +131,9 @@ Zotero will now keep that file updated every time you add or modify an item.
 
 ---
 
-## Step 8 — Open Home.md
+## Step 8 — Open home.md
 
-In the Obsidian file tree, open `Home.md` at the vault root. This is your vault's front door.
+In the Obsidian file tree, open `home.md` at the vault root. This is your vault's front door.
 
 You'll see links to:
 - The dashboard suite (`00-meta/01-dashboards/`)

@@ -10,8 +10,8 @@ The human-facing starter vault for **Memoria** — a research operating system t
   - `01-dashboards/` — 10 dashboards + `daily-health.md` (Daily Health; plus audit-log, board-state, contradictions, discuss-queue, drift-watch, fleet-health, loose-ends, open-questions, reading-pipeline, weekly-review)
   - `02-logs/` — populated at runtime by the policy MCP (audit.jsonl, board-state.jsonl, lint-findings.jsonl, cron-history.jsonl)
   - `03-templates/` — 16 note templates (claim-note, paper-note, fleeting-note, …) + `screening-protocol` (systematic-review template)
-  - `start-here.md` — vault landing page (pin in sidebar)
-  - `safe-mode.md` + `schema-reference.md` — the two vault-resident reference notes (the rest of the former `04-reference/` now lives on the [website](https://eranroseman.github.io/memoria-vault/); `design-system.md` moved to `.memoria/`)
+  - `home.md` — vault landing page (root; pin in sidebar)
+  - `safe-mode.md` — the vault's one offline-fallback reference note (the rest of the former `04-reference/` now lives on the [website](https://eranroseman.github.io/memoria-vault/); `design-system.md` moved to `.memoria/`)
   - `research-directions.md` — Librarian's session-start input (populate this)
   - `system-status.md` — runtime health snapshot
 - `10-inbox/`, `20-sources/`, `30-synthesis/`, `40-workbench/`, `50-deliverables/`, `90-assets/`, `95-archive/` — empty human-facing folders following the standard numbered-prefix taxonomy

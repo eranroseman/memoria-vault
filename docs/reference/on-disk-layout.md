@@ -90,7 +90,6 @@ memoria-vault/                       # repo root — the install unit (clone any
 ├── start-here.md                   # vault landing page (pinned in sidebar)
 ├── research-directions.md          # Librarian session-start input
 ├── safe-mode.md                    # offline fallback workflows (kept in-vault)
-├── schema-reference.md             # frontmatter field catalog (kept in-vault)
 └── system-status.md                # runtime health snapshot
 # (the rest of the former 04-reference notes now live only on the website)
 ```
@@ -249,7 +248,6 @@ Notes in `00-meta/` that ship with the starter vault for human reference.
 | `00-meta/research-directions.md` | Current research priorities, open questions, synthesis gaps, papers to prioritize. Librarian reads this at session start. | Human (refresh weekly) |
 | `00-meta/system-status.md` | Runtime health snapshot: Hermes API running, MCPs up, plugin enabled, profiles available. Distinct from `board-state` (which tracks work in flight). | Human (occasional refresh) |
 | `00-meta/safe-mode.md` | The three core workflows (ingest, review, export) with minimal commands and fallbacks for when Hermes or ACP is down. Kept in-vault — needed precisely when offline/down. | Human (rarely changes) |
-| `00-meta/schema-reference.md` | Frontmatter field catalog — the in-flow companion to `reference/frontmatter.md`. Source of truth for templates and the Linter. | Human + Linter (flags drift) |
 | `00-meta/03-templates/screening-protocol.md` | Fill-in PRISMA / ASReview screening protocol template — used only in systematic-review mode (ADR-16/19). | Human (per review) |
 | `.memoria/design-system.md` | Canonical visual-style tokens: palette, typography, spacing, layout, motion, voice. Read by the CSS-snippet generators and Pandoc export (machine config). | Human (edits define the brand) |
 

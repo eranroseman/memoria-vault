@@ -11,7 +11,7 @@ superseded_by: []
 
 # ADR-17: Shared candidate frontmatter format
 
-> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `schema-reference.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
+> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `00-meta/03-templates/candidate-note.md`, registered in `note-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
 
 ## Context
 

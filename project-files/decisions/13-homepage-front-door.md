@@ -17,14 +17,14 @@ Obsidian's default is to reopen the last-open notes, so a Memoria session lands 
 
 ## Decision
 
-Memoria ships a **`Home.md` front-door note** at the vault root and opens it on startup with **[obsidian-homepage](../../docs/reference/obsidian-plugins.md)** (`recommended/`, not required). `Home.md` is a thin **Dataview note** — it leads with the Daily Health glance, then links the board, the knowledge dashboards (open-questions, contradictions, reading-pipeline), and the command-palette quick actions; it is a *launchpad*, distinct from the ten shipped dashboards (incl. Daily Health, `daily-health.md`) (it surfaces them, it is not one of them). obsidian-homepage is adopted because it is **view-management only — it opens a note and writes nothing**, so it never touches the Policy-MCP / audit invariants; it can run a "refresh Dataview" command on open. The home view stays a git-tracked, lintable note.
+Memoria ships a **`home.md` front-door note** at the vault root and opens it on startup with **[obsidian-homepage](../../docs/reference/obsidian-plugins.md)** (`recommended/`, not required). `home.md` is a thin **Dataview note** — it leads with the Daily Health glance, then links the board, the knowledge dashboards (open-questions, contradictions, reading-pipeline), and the command-palette quick actions; it is a *launchpad*, distinct from the ten shipped dashboards (incl. Daily Health, `daily-health.md`) (it surfaces them, it is not one of them). obsidian-homepage is adopted because it is **view-management only — it opens a note and writes nothing**, so it never touches the Policy-MCP / audit invariants; it can run a "refresh Dataview" command on open. The home view stays a git-tracked, lintable note.
 
 ## Consequences
 
 - Deterministic landing: every session opens on the front door, not wherever the last one ended; a "home" command/ribbon jumps back.
 - The home view is a Dataview note — version-controlled, lintable, embeddable — consistent with notes-as-dashboards. No plugin-rendered surface escapes the system's grain.
 - One new `recommended/` plugin (UI-only, dependency-free, per-device) and one new vault note to keep *thin* (it must surface dashboards, not duplicate them).
-- obsidian-homepage is QoL, not load-bearing: without it the human pins `Home.md` manually; Memoria still works.
+- obsidian-homepage is QoL, not load-bearing: without it the human pins `home.md` manually; Memoria still works.
 - Additive and reversible: `Daily Health` keeps its role as the dashboards' entry point; `Home` simply leads with it.
 
 ## Alternatives considered

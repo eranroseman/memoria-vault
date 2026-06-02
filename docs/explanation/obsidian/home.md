@@ -5,7 +5,7 @@ parent: Obsidian
 
 # Home — the vault front door
 
-`Home.md` at the vault root is the note Memoria opens on launch (via the obsidian-homepage plugin). It is a **launchpad**, not a dashboard: it surfaces the dashboards rather than computing anything itself.
+`home.md` at the vault root is the note Memoria opens on launch (via the obsidian-homepage plugin). It is a **launchpad**, not a dashboard: it surfaces the dashboards rather than computing anything itself.
 
 ---
 
@@ -23,7 +23,7 @@ Home contains no Dataview queries of its own. Any query it displays is defined i
 
 ## Why a note, not a plugin start-page
 
-Home is a Markdown note rendered by Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. The obsidian-homepage plugin merely *opens* this note on launch; it is a convenience, not a dependency. If the plugin isn't installed, `Home.md` is still an ordinary note the human can pin in the sidebar — nothing about the front door breaks.
+Home is a Markdown note rendered by Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. The obsidian-homepage plugin merely *opens* this note on launch; it is a convenience, not a dependency. If the plugin isn't installed, `home.md` is still an ordinary note the human can pin in the sidebar — nothing about the front door breaks.
 
 This is the same discipline applied to the dashboards themselves: the human-facing surface is always a plain note the system's own tools can see and check.
 

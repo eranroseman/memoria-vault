@@ -18,7 +18,7 @@ When an agent finishes a task that writes to a review-gated zone (`30-synthesis/
 
 **1. Open the review queue.**
 
-From `Home.md` — the front-door note that opens on startup — go to the **board-state dashboard** (`00-meta/01-dashboards/board-state.md`). The review queue is every card in `done` whose `review_status` is `requested`; the dashboard surfaces them under the review-queue count. For dashboard navigation see [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md).
+From `home.md` — the front-door note that opens on startup — go to the **board-state dashboard** (`00-meta/01-dashboards/board-state.md`). The review queue is every card in `done` whose `review_status` is `requested`; the dashboard surfaces them under the review-queue count. For dashboard navigation see [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md).
 
 **2. Inspect one card.**
 
