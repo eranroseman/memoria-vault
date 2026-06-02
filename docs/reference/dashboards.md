@@ -83,6 +83,38 @@ Board-state is a **read view** — state changes happen through Hermes commands 
 
 ---
 
+## Query patterns (for dashboard authors)
+
+Reference shapes for authoring dashboards. For full Dataview syntax see the [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/).
+
+- **TABLE** — the workhorse: `TABLE file.mtime AS "Modified", lifecycle AS "Status" FROM "20-sources/01-papers" WHERE lifecycle = "proposed" SORT file.mtime DESC LIMIT 20`
+- **LIST** — just links: `LIST FROM "30-synthesis/01-claims" WHERE maturity = "seedling"`
+- **TASK** — inline TODOs: `TASK FROM "10-inbox" WHERE !completed`
+- **FLATTEN** — one row per array item: `... FLATTEN sources AS flat-source`
+- **Field presence** — `WHERE topic` (has it) · `WHERE !topic` (lacks it) · `WHERE contains(topic, "hci")`
+- **dataviewjs** — only for external-file reads (logs); **must guard the load** so a missing file degrades gracefully, never throws:
+
+  ```js
+  const text = await dv.io.load("00-meta/02-logs/audit.jsonl");
+  if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
+  const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+  ```
+
+Common Memoria patterns: pending review (`WHERE review_status = "requested" SORT file.mtime ASC`); stale enrichment (`WHERE _enrichment AND enriched_date < date(today) - dur(30 days)`); orphan claims (`FROM "30-synthesis/01-claims" WHERE length(file.inlinks) = 0`).
+
+## Performance
+
+Keep dashboards responsive as the vault grows:
+
+- **Scope `FROM "folder"`** (narrow), never `FROM ""` (vault-wide) unless truly required.
+- **`LIMIT`** every query (~30); dashboards rarely need more.
+- **Stable field types** — a field that is sometimes a string and sometimes a list slows (and breaks) every query that touches it.
+- **Push string-parsing out of `WHERE`** into a frontmatter field.
+- **Promote queried fields to top-level** (e.g. `enriched_date`, not buried in `_enrichment`).
+- When one dashboard carries 10+ queries, split it into two specialized ones.
+
+---
+
 ## Related
 
 - Why each dashboard exists and when to open it: [explanation/dashboards/](../explanation/dashboards/)

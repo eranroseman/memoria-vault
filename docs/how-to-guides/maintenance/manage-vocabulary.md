@@ -28,7 +28,7 @@ This guide shows you how to keep the `topic`, `study_design`, and `methods` fiel
 
 ## Step 1 — Create your vocabulary reference note
 
-If it doesn't exist yet, create `00-meta/04-reference/vocabulary.md`. This note is the single source of truth for your allowed values.
+If it doesn't exist yet, create `00-meta/vocabulary.md`. This note is the single source of truth for your allowed values.
 
 Structure it with one section per field:
 
@@ -59,6 +59,83 @@ lifecycle: current
 ```
 
 Keep the `topic` list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable Dataview queries.
+
+### Worked example — HCI + digital health (copy, edit, discard)
+
+*One* example, not a Memoria default — `topic`/`study_design`/`methods` are deliberately open. Copy what fits, rename the rest, delete the remainder; nothing here is enforced.
+
+```yaml
+## topic — ~30 terms
+# Intervention design
+- jitai                     # Just-in-Time Adaptive Interventions
+- ema-experience-sampling   # Ecological momentary assessment
+- receptivity-detection     # Optimal-moment detection for delivery
+- behavior-change
+- implementation-science
+# Health domains
+- self-management
+- health-coaching
+- motivational-interviewing
+- mental-health-wellbeing
+- chronic-disease
+- mhealth
+# Research methods (conceptual)
+- hci-methods
+- design-science
+- causal-inference
+- qualitative-methods
+# Systems and technology
+- conversational-agents
+- wearables-sensors
+- digital-phenotyping
+- ubicomp
+- llm-ai-health
+# Knowledge and equity
+- sensemaking
+- health-equity
+- health-informatics
+- patient-provider
+
+## study_design — one value per note, most specific that applies
+- RCT
+- controlled-experiment
+- quasi-experimental
+- observational
+- systematic-review
+- meta-analysis
+- qualitative
+- mixed-methods
+- design-science
+- technical          # algorithm/model/benchmark — no human participants
+- theoretical        # framework / conceptual / position paper
+- secondary-analysis
+
+## methods — list-valued
+# Data collection
+- semi-structured-interview
+- survey
+- diary-study
+- ema-probe
+- log-analysis
+- biometric-sensing
+- think-aloud
+# Analysis
+- thematic-analysis
+- grounded-theory
+- content-analysis
+- statistical-modelling
+- machine-learning
+- nlp-text-analysis
+- causal-dag
+# Design and evaluation
+- participatory-design
+- usability-testing
+- field-deployment
+- wizard-of-oz
+- ab-test
+```
+
+(`maturity` and MOC `scope` are *fixed* Memoria vocabularies, not open — see [frontmatter.md](../../reference/frontmatter.md).)
 
 ---
 

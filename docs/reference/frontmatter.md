@@ -89,6 +89,14 @@ Open fields — Memoria does not enforce a controlled vocabulary for these. Defi
 
 ---
 
+## MOC fields
+
+| Field | Type | Owner | Notes |
+| --- | --- | --- | --- |
+| `scope` | string (enum) | Human | The MOC's organizing axis (`moc` notes only): `topic` (conceptual cluster) · `domain` (broad research area) · `project` (per-project synthesis hub) · `method` (methodological cluster). |
+
+---
+
 ## Source-note fields
 
 Fields specific to ingested sources (`paper-note`, `item-note`, entities).
