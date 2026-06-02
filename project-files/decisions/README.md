@@ -50,6 +50,7 @@ Rules:
 | [13](13-homepage-front-door.md) | Homepage front-door note |
 | [25](25-session-logging-two-logs.md) | Two session logs — hash-chained audit vs. narrative |
 | [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles hand-authored |
+| [27](27-hermes-native-config-and-gate-enforcement.md) | Configure Hermes the way it reads config; gate via toolset allowlist + obsidian-only writes |
 
 ### Workflows
 
