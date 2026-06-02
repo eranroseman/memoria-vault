@@ -87,7 +87,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 `W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the exact subfolder, note types, and command/skill responsible.
 
-Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [why-specialist-profiles.md](../explanation/rationale/why-specialist-profiles.md) for the design rationale.
+Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [Why specialist profiles, not a generalist agent](../explanation/rationale/why-specialist-profiles.md) for the design rationale.
 
 | Profile | `00-meta` | `10-inbox` | `20-sources` | `30-synthesis/01-claims` | `30-synthesis/02-reference` | `30-synthesis/03-moc` | `40-workbench` | `50-deliverables` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 
 ## Linter: the eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [The Linter](../explanation/profiles/linter.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 
@@ -166,5 +166,5 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 ## Related
 
-- Conceptual grouping and rationale: [profiles/README.md](../explanation/profiles/README.md)
-- Linter detectors, auto-fix classes, and severity scale: [linter.md](linter.md)
+- Conceptual grouping and rationale: [Profiles](../explanation/profiles/README.md)
+- Linter detectors, auto-fix classes, and severity scale: [Linter: detectors and auto-fix](linter.md)

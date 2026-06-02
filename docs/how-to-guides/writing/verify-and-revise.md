@@ -33,7 +33,7 @@ The callout shows one of three statuses:
 
 For each flagged item:
 
-- **Missing source note:** The draft cites a citekey that has no note in `20-sources/`. Ingest the source first ([capture-and-ingest.md](../sources/capture-and-ingest.md)), or remove the citation if it was a placeholder.
+- **Missing source note:** The draft cites a citekey that has no note in `20-sources/`. Ingest the source first ([How to capture and ingest a source](../sources/capture-and-ingest.md)), or remove the citation if it was a placeholder.
 - **Unsupported claim:** A statement has no citekey. Either add a citation or rewrite the claim as explicitly stated as the author's view (no citation needed).
 - **Superseded citation:** The draft cites `[[old-claim]]` which has `superseded_by: [[new-claim]]`. Update the draft to cite the new claim note instead.
 
@@ -79,4 +79,4 @@ The Verifier will not flag accepted gaps on subsequent commits.
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- Conceptual background on the Verifier: [verifier.md](../../explanation/profiles/verifier.md)
+- Conceptual background on the Verifier: [The Verifier](../../explanation/profiles/verifier.md)

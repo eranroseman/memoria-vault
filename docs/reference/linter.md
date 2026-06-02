@@ -5,13 +5,13 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [explanation/profiles/linter.md](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [profiles.md](profiles.md).
+Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [The Linter](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [Profile capabilities](profiles.md).
 
 ---
 
 ## The eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [structural-detectors.md](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
 
@@ -60,7 +60,7 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 ## Related
 
-- Profile identity, permissions, and invocation level: [profiles.md](profiles.md)
-- Design rationale: [explanation/profiles/linter.md](../explanation/profiles/linter.md)
+- Profile identity, permissions, and invocation level: [Profile capabilities](profiles.md)
+- Design rationale: [The Linter](../explanation/profiles/linter.md)
 - Workflow: [run the Linter](../how-to-guides/maintenance/run-the-linter.md)
 - Recovery: [fix broken frontmatter](../how-to-guides/recovery/fix-broken-frontmatter.md), [fix profile drift](../how-to-guides/recovery/fix-profile-drift.md)

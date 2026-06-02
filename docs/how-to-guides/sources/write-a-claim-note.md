@@ -10,7 +10,7 @@ Distill a discussed source into a single, durable claim in `30-synthesis/01-clai
 
 ## Prerequisites
 
-- The source has been discussed and you've decided it yields a claim ([discuss-a-paper.md](discuss-a-paper.md))
+- The source has been discussed and you've decided it yields a claim ([How to discuss a paper](discuss-a-paper.md))
 - The Writer profile is installed (for optional prose assistance)
 - The Verifier profile is installed (for the similarity check)
 
@@ -107,10 +107,10 @@ The Writer can suggest links to existing claim notes but cannot author the claim
 
 **Reference**
 
-- Linking patterns: [linking.md](../../reference/linking.md)
-- Frontmatter schema: [frontmatter.md](../../reference/frontmatter.md)
+- Linking patterns: [Wikilink and link conventions](../../reference/linking.md)
+- Frontmatter schema: [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**
 
-- Why each section functions as knowledge: [note-body-structure.md](../../explanation/knowledge/note-body-structure.md)
-- The summary-without-synthesis pitfall: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
+- Why each section functions as knowledge: [Note body structure](../../explanation/knowledge/note-body-structure.md)
+- The summary-without-synthesis pitfall: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)

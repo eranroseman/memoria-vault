@@ -11,8 +11,8 @@ Fill the API secrets for each profile and verify that Hermes can reach the vault
 ## Prerequisites
 
 - Hermes installed and on your `PATH` (`hermes --version` returns a version)
-- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
-- Obsidian running with the REST API plugin active ([set-up-obsidian.md](set-up-obsidian.md)) — you need the `apiKey` from that step
+- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([How to set up the vault](set-up-the-vault.md))
+- Obsidian running with the REST API plugin active ([How to set up Obsidian](set-up-obsidian.md)) — you need the `apiKey` from that step
 
 ## Steps
 
@@ -133,6 +133,6 @@ Each line should have `"decision": "allow_with_log"` and `"profile": "memoria-li
 ## Related
 
 - API key sources: [set-up-zotero.md § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
-- Re-deploying after profile edits: [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Hermes CLI reference: [reference/integrations.md](../../reference/integrations.md)
+- Re-deploying after profile edits: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Hermes CLI reference: [External integrations](../../reference/integrations.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles/) (Librarian, Mapper, etc.)

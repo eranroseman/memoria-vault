@@ -9,7 +9,7 @@ Move Hermes from local WSL2 to a persistent VPS so the system runs overnight bat
 
 ## Prerequisites
 
-- A working local install ([quickstart.md](quickstart.md)) confirmed end-to-end
+- A working local install ([How to install Memoria: quickstart](quickstart.md)) confirmed end-to-end
 - A VPS running Ubuntu 24.04 (minimum: 2 vCPU, 4 GB RAM, 40 GB disk)
 - SSH access to the VPS from your Windows/WSL2 machine
 - Syncthing installed on your desktop (for vault sync)
@@ -222,7 +222,7 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 
 ## Related
 
-- Local install prerequisite: [quickstart.md](quickstart.md)
-- Profile configuration: [using-hermes-agent/configuration.md](../using-hermes-agent/configuration.md)
-- Redeploying profiles after vault changes: [maintenance/redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Tunnel drops on restart: [failure-modes.md](../../reference/failure-modes.md) — see `VPS tunnel drops`
+- Local install prerequisite: [How to install Memoria: quickstart](quickstart.md)
+- Profile configuration: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
+- Redeploying profiles after vault changes: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Tunnel drops on restart: [Failure modes](../../reference/failure-modes.md) — see `VPS tunnel drops`

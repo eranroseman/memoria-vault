@@ -57,5 +57,5 @@ LIMIT 14
 
 ## Related
 
-- [[reading-pipeline]] — upstream: papers still being classified (`lifecycle: proposed`).
-- [[weekly-review]] — consumes this queue's depth as one input.
+- [[reading-pipeline|Reading Pipeline]] — upstream: papers still being classified (`lifecycle: proposed`).
+- [[weekly-review|Weekly Review]] — consumes this queue's depth as one input.

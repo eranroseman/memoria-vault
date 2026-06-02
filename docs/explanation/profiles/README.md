@@ -8,7 +8,7 @@ permalink: /explanation/profiles/
 
 # Profiles
 
-Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [why-specialist-profiles.md](../rationale/why-specialist-profiles.md).)
+Memoria runs **seven specialist profiles** instead of one generalist agent. Each is a Hermes profile with a fixed identity, a narrow permission contract enforced by the policy MCP, and a clear exit condition. The specialization is the design: a profile that does one thing has permissions you can reason about, failures you can scope, and a quality posture you can name. (For *why* seven specialists beat one generalist, see [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).)
 
 The profiles aren't seven equals — they group by where they sit in the knowledge cycle:
 
@@ -62,6 +62,6 @@ Profiles differ in how much they may hand a narrow, temporary subtask to a child
 
 ## Related
 
-- Why seven specialists, not one generalist: [why-specialist-profiles.md](../rationale/why-specialist-profiles.md)
-- How profiles pick up and hand off work: [../workflows/board-as-state-machine.md](../workflows/board-as-state-machine.md)
-- Permission matrices — who can write where (lookup tables): [reference/profiles.md](../../reference/profiles.md)
+- Why seven specialists, not one generalist: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- How profiles pick up and hand off work: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
+- Permission matrices — who can write where (lookup tables): [Profile capabilities](../../reference/profiles.md)

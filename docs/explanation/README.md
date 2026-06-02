@@ -9,7 +9,7 @@ permalink: /explanation/
 
 This section is for **understanding** Memoria — what it is, how it thinks, and why it was built the way it was. These documents answer "why" and "what is" questions. They are for reading and reflection, not for following step-by-step.
 
-If you need to *do* something, see [how-to guides](../how-to-guides/). If you need exact values, field names, or configuration formats, see [reference](../reference/). If you want a guided first experience, see [tutorials](../tutorials/).
+If you need to *do* something, see [how-to guides](../how-to-guides/). If you need exact values, field names, or configuration formats, see [Reference](../reference/). If you want a guided first experience, see [Tutorials](../tutorials/).
 
 ---
 
@@ -32,30 +32,30 @@ Read from the inside out: start with what the system is, then why it's shaped th
 
 ### Start here — [Overview](overview/README.md)
 
-1. **[what-memoria-is.md](overview/what-memoria-is.md)** — the system's identity: what it is, what it's not, and why it exists. Everything else builds on this.
-2. **[intellectual-foundations.md](overview/intellectual-foundations.md)** — the three ideas Memoria is built on (Karpathy, Zettelkasten, Memex) and how the AI-research systems survey shaped the design.
-3. **[design-principles.md](overview/design-principles.md)** — the cross-cutting principles the design returns to.
+1. **[What Memoria is](overview/what-memoria-is.md)** — the system's identity: what it is, what it's not, and why it exists. Everything else builds on this.
+2. **[Intellectual foundations](overview/intellectual-foundations.md)** — the three ideas Memoria is built on (Karpathy, Zettelkasten, Memex) and how the AI-research systems survey shaped the design.
+3. **[Design principles](overview/design-principles.md)** — the cross-cutting principles the design returns to.
 
 ### Why the design is shaped this way
 
-1. **[rationale/why-three-layers.md](rationale/why-three-layers.md)** — why board, workers, and vault are kept separate.
-2. **[rationale/why-specialist-profiles.md](rationale/why-specialist-profiles.md)** — why seven specialists instead of one generalist agent.
-3. **[rationale/why-human-gate.md](rationale/why-human-gate.md)** — why the review gate is structural, not advisory.
-4. **[rationale/why-not-autonomous.md](rationale/why-not-autonomous.md)** — the autonomy ceiling and why Memoria doesn't cross it.
+1. **[Why three layers, not one](rationale/why-three-layers.md)** — why board, workers, and vault are kept separate.
+2. **[Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md)** — why seven specialists instead of one generalist agent.
+3. **[Why the review gate is structural](rationale/why-human-gate.md)** — why the review gate is structural, not advisory.
+4. **[Why Memoria doesn't pursue full autonomy](rationale/why-not-autonomous.md)** — the autonomy ceiling and why Memoria doesn't cross it.
 
 ### How it's structured
 
-1. **[architecture/README.md](architecture/README.md)** — the three-layer model and the structural pages (control plane, memory tiers, channels, vault, logging).
-2. **[knowledge/README.md](knowledge/README.md)** — how the vault organizes durable knowledge (lifecycle folders, note types, gated promotion).
-3. **[workflows/README.md](workflows/README.md)** — how work moves through the system (the board as a state machine, review as a state).
+1. **[Architecture](architecture/README.md)** — the three-layer model and the structural pages (control plane, memory tiers, channels, vault, logging).
+2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge (lifecycle folders, note types, gated promotion).
+3. **[Workflows](workflows/README.md)** — how work moves through the system (the board as a state machine, review as a state).
 
 ---
 
 ## Entry points by background
 
-**New to Memoria:** The two identity documents, then [why-three-layers](rationale/why-three-layers.md), the [knowledge model overview](knowledge/README.md), and the [workflow overview](workflows/README.md) together give a working mental model. The architecture, knowledge, and workflow sections fill in the detail.
+**New to Memoria:** The two identity documents, then [Why three layers, not one](rationale/why-three-layers.md), the [knowledge model overview](knowledge/README.md), and the [workflow overview](workflows/README.md) together give a working mental model. The architecture, knowledge, and workflow sections fill in the detail.
 
-**Coming from another agent system (LangChain, CrewAI, autogen, etc.):** The key differences — specialist lanes, structural human gate, no reasoning orchestrator — are concentrated in [why-specialist-profiles](rationale/why-specialist-profiles.md), [why-human-gate](rationale/why-human-gate.md), and [board-as-state-machine](workflows/board-as-state-machine.md).
+**Coming from another agent system (LangChain, CrewAI, autogen, etc.):** The key differences — specialist lanes, structural human gate, no reasoning orchestrator — are concentrated in [Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md), [Why the review gate is structural](rationale/why-human-gate.md), and [The board as a state machine (the control plane)](workflows/board-as-state-machine.md).
 
 ---
 
@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR. The forward plan lives in the release plan. Both are in [project-files/](../../project-files/): [decisions/](../../project-files/decisions/) for the ADRs, [plans/](../../project-files/plans/) for the release plan and roadmap.
+The *why* behind a specific choice lives in an ADR. The forward plan lives in the release plan. Both are in [Project files](../../project-files/): [Decisions](../../project-files/decisions/) for the ADRs, [Plans](../../project-files/plans/) for the release plan and roadmap.

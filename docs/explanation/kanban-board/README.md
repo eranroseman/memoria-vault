@@ -93,10 +93,10 @@ A scheduled metrics aggregator rolls run history into `99-system/metrics/` notes
 
 **Explanation**
 
-- State machine detail: [states.md](states.md)
-- Schema design: [card-schema.md](card-schema.md)
-- Dashboard that reads the board export: [board-state](../dashboards/daily-glance/board-state.md)
-- Why review is structural: [why-human-gate](../rationale/why-human-gate.md)
-- Profiles that interact with the board: [profiles/README.md](../profiles/README.md)
-- Pipelines that run on the board: [workflows/README.md](../workflows/README.md)
-- The board as control plane: [why-three-layers.md](../rationale/why-three-layers.md)
+- State machine detail: [Board states and the review gate](states.md)
+- Schema design: [Why the card schema is split](card-schema.md)
+- Dashboard that reads the board export: [The board-state dashboard](../dashboards/daily-glance/board-state.md)
+- Why review is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Profiles that interact with the board: [Profiles](../profiles/README.md)
+- Pipelines that run on the board: [Workflows](../workflows/README.md)
+- The board as control plane: [Why three layers, not one](../rationale/why-three-layers.md)

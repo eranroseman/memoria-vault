@@ -90,6 +90,6 @@ LIMIT 30
 
 ## Related
 
-- [[audit-log]] — per-write policy decisions, the layer below this one.
-- [[fleet-health]] — operational health (cost, retries, trust score).
+- [[audit-log|Audit log]] — per-write policy decisions, the layer below this one.
+- [[fleet-health|Fleet Health]] — operational health (cost, retries, trust score).
 - Empty until the Linter runs end-to-end — see the [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/structural-health/drift-watch/).

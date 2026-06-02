@@ -21,7 +21,7 @@ Without this, each consumer accumulates its own hardcoded values. A heading size
 
 ## Why single accent, not a color-per-callout
 
-The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only. The reasoning is the same as the [visual-discipline](visual-discipline.md) page: color distinction is an urgency signal. When every category has a distinct color, the urgency signal collapses — the eye learns to treat all colors as equally important, which means it treats them all as equally ignorable. A single accent with distinct icons preserves the signal-to-noise ratio: color means "this is a callout"; the icon means "this is the kind."
+The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only. The reasoning is the same as the [Visual-style discipline](visual-discipline.md) page: color distinction is an urgency signal. When every category has a distinct color, the urgency signal collapses — the eye learns to treat all colors as equally important, which means it treats them all as equally ignorable. A single accent with distinct icons preserves the signal-to-noise ratio: color means "this is a callout"; the icon means "this is the kind."
 
 This rule applies to all surfaces the design system governs. In Pandoc exports, in HTML preview, in slides: one accent.
 
@@ -57,7 +57,7 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 
 ## Related
 
-- The visual-style discipline this system enables: [visual-discipline.md](visual-discipline.md)
-- The callout types and their single-accent rule: [callouts.md](callouts.md)
-- Obsidian plugin inventory: [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md)
+- The visual-style discipline this system enables: [Visual-style discipline](visual-discipline.md)
+- The callout types and their single-accent rule: [Callouts](callouts.md)
+- Obsidian plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Vault implementation file: `.memoria/design-system.md`

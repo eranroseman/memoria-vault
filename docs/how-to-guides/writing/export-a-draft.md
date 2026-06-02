@@ -77,7 +77,7 @@ This runs the same Pandoc command via the Writer profile and writes the output t
 
 **6. Version the deliverable** when finalized.
 
-`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [export.md](../../reference/export.md)). Add a version suffix in place:
+`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [Export routes and formats](../../reference/export.md)). Add a version suffix in place:
 
 ```powershell
 Move-Item "vault\50-deliverables\01-manuscripts\<output>.docx" `
@@ -129,7 +129,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 
 ## Known issues
 
-- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [failure-modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
+- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [Failure modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
 - **Obsidian wiki-links in draft:** Pandoc does not understand `[[wikilink]]` syntax. Convert links to standard Markdown `[text](path)` before export, or use a Pandoc Lua filter.
 
 ## Verify
@@ -141,7 +141,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Zotero .bib configuration export depends on: [set-up-zotero.md](../setup/set-up-zotero.md)
-- Export reference (formats, CSL): [export.md](../../reference/export.md)
-- The works-cited reference: [bibliography.md](../../reference/bibliography.md)
+- Zotero .bib configuration export depends on: [How to set up Zotero](../setup/set-up-zotero.md)
+- Export reference (formats, CSL): [Export routes and formats](../../reference/export.md)
+- The works-cited reference: [Bibliography](../../reference/bibliography.md)
 - CSL styles: stored at `.memoria/csl/` in the vault

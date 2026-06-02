@@ -75,5 +75,5 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Redeploy after adding a lens: [Redeploy profiles](../maintenance/redeploy-profiles.md)
-- Command catalog: [obsidian-command-palette.md](../../reference/obsidian-command-palette.md); palette setup: [obsidian-command-palette.md](../using-obsidian/obsidian-command-palette.md)
+- Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [How to use the Memoria command palette](../using-obsidian/obsidian-command-palette.md)
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)

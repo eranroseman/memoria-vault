@@ -56,7 +56,7 @@ Switch when your cognitive mode changes — not per task within a mode.
 
 ## Related
 
-- Workspace layout reference (what each pane shows): [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- Opening the ACP pane within Reading workspace: [use-the-acp-pane.md](use-the-acp-pane.md)
-- Opening dashboards: [navigate-the-dashboards.md](navigate-the-dashboards.md)
-- Why three workspaces, not more: [explanation/obsidian/visual-discipline.md](../../explanation/obsidian/visual-discipline.md)
+- Workspace layout reference (what each pane shows): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Opening the ACP pane within Reading workspace: [How to use the agent-client pane](use-the-acp-pane.md)
+- Opening dashboards: [How to navigate the dashboards](navigate-the-dashboards.md)
+- Why three workspaces, not more: [Visual-style discipline](../../explanation/obsidian/visual-discipline.md)

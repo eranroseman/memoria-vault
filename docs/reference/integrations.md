@@ -13,7 +13,7 @@ APIs and tools the Librarian profile reaches during ingest and enrichment. All e
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [decisions/06-citekey-naming-convention.md](../../project-files/decisions/06-citekey-naming-convention.md). |
+| **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [Citekey naming convention](../../project-files/decisions/06-citekey-naming-convention.md). |
 | **`.memoria/memoria.bib`** | Auto-exported BibTeX from Zotero | Librarian reads this; never writes to it. Excluded from git (user-specific). |
 
 ---
@@ -53,7 +53,7 @@ Used during enrichment to link paper notes to person, organization, and venue en
 | **Obsidian Local REST API** (port 27124) | Lets Hermes profiles read and write vault files through Obsidian's API rather than direct filesystem calls. Required for the Librarian and other write-active profiles. |
 | **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (Socratic, ad-hoc queries). Separate from queue-dispatched card work. |
 | **qmd** | Hybrid BM25 + vector search over the vault. Used by Mapper (`cluster-map`, `gap-report`) and Verifier (`similarity-check`, `find-duplicates`). |
-| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [set-up-zotero.md](../how-to-guides/setup/set-up-zotero.md). |
+| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
 
 ---
 
@@ -90,7 +90,7 @@ Tools evaluated and not in the current design:
 
 ## Related
 
-- Ingest workflow (what runs when a source is ingested): [ingest.md](ingest.md)
-- Profile permissions (which profiles can call which integrations): [profiles.md](profiles.md)
-- Where the API keys are configured: [set-up-hermes.md](../how-to-guides/setup/set-up-hermes.md)
-- Librarian design (the profile that calls most of these): [explanation/profiles/librarian.md](../explanation/profiles/librarian.md)
+- Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
+- Profile permissions (which profiles can call which integrations): [Profile capabilities](profiles.md)
+- Where the API keys are configured: [How to set up Hermes](../how-to-guides/setup/set-up-hermes.md)
+- Librarian design (the profile that calls most of these): [The Librarian](../explanation/profiles/librarian.md)

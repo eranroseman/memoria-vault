@@ -135,7 +135,7 @@ Keep the `topic` list to **~30 terms**. A tighter vocabulary produces more consi
 - ab-test
 ```
 
-(`maturity` and MOC `scope` are *fixed* Memoria vocabularies, not open — see [frontmatter.md](../../reference/frontmatter.md).)
+(`maturity` and MOC `scope` are *fixed* Memoria vocabularies, not open — see [Frontmatter fields](../../reference/frontmatter.md).)
 
 ---
 
@@ -199,7 +199,7 @@ Once a year (or after a major reading batch), open `vocabulary.md` and walk thro
 
 ## Related
 
-- Classify a source: [sources/classify-a-source.md](../sources/classify-a-source.md)
-- Run the Linter: [maintenance/run-the-linter.md](run-the-linter.md)
+- Classify a source: [How to classify a source](../sources/classify-a-source.md)
+- Run the Linter: [How to run the Linter](run-the-linter.md)
 - Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
-- Vocabulary discipline (why three fields, why open): [explanation/knowledge/vocabulary-discipline.md](../../explanation/knowledge/vocabulary-discipline.md)
+- Vocabulary discipline (why three fields, why open): [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)

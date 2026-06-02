@@ -10,5 +10,5 @@ Aggregated from: audit deny rate, drift incidents (schema / plugin-config / vaul
 
 ## Related
 
-- [[daily-health]] — surfaces the trust-score summary and links here for the inputs.
-- [[drift-watch]] — complementary *structural*-health view (this one is *operational*).
+- [[daily-health|Daily Health]] — surfaces the trust-score summary and links here for the inputs.
+- [[drift-watch|Drift watch]] — complementary *structural*-health view (this one is *operational*).

@@ -51,7 +51,7 @@ These are **workspace layout** bindings (`Cmd/Ctrl` + number). They are distinct
 ## Related
 
 - ACP pane profiles: [agent-client plugin](obsidian-plugins.md)
-- Dashboard in Human workspace (left): [daily-health](../explanation/dashboards/daily-glance/daily-health.md)
-- Dashboard in Human workspace (right): [board-state](../explanation/dashboards/daily-glance/board-state.md)
-- Dashboard in Reading workspace (left, primary): [discuss-queue](../explanation/dashboards/synthesis-agenda/discuss-queue.md)
-- Dashboard in Reading workspace (left, secondary): [reading-pipeline](../explanation/dashboards/synthesis-agenda/reading-pipeline.md)
+- Dashboard in Human workspace (left): [The Daily Health dashboard](../explanation/dashboards/daily-glance/daily-health.md)
+- Dashboard in Human workspace (right): [The board-state dashboard](../explanation/dashboards/daily-glance/board-state.md)
+- Dashboard in Reading workspace (left, primary): [The discuss-queue dashboard](../explanation/dashboards/synthesis-agenda/discuss-queue.md)
+- Dashboard in Reading workspace (left, secondary): [The reading-pipeline dashboard](../explanation/dashboards/synthesis-agenda/reading-pipeline.md)

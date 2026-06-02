@@ -5,9 +5,9 @@ parent: Reference
 
 # Frontmatter fields
 
-Every YAML field Memoria uses, its type, allowed values, who owns it, and which note types carry it. For the field-namespace model see [Namespace ownership](#namespace-ownership). For per-type lifecycle refinements see [note-types.md](note-types.md).
+Every YAML field Memoria uses, its type, allowed values, who owns it, and which note types carry it. For the field-namespace model see [Namespace ownership](#namespace-ownership). For per-type lifecycle refinements see [Note types](note-types.md).
 
-**Precedence.** When a runtime template (`99-system/templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, [implementation-status.md](../../project-files/plans/implementation-status.md) tracks build state.
+**Precedence.** When a runtime template (`99-system/templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, [Implementation status](../../project-files/plans/implementation-status.md) tracks build state.
 
 ---
 
@@ -79,7 +79,7 @@ A superseded claim is not tracked by `maturity` — it carries `superseded_by` a
 
 ## Domain fields
 
-Open fields — Memoria does not enforce a controlled vocabulary for these. Define your own in a vocabulary reference (see [linking.md](linking.md#vocabulary-discipline)).
+Open fields — Memoria does not enforce a controlled vocabulary for these. Define your own in a vocabulary reference (see [Wikilink and link conventions](linking.md#vocabulary-discipline)).
 
 | Field | Type | Owner | Notes |
 | --- | --- | --- | --- |
@@ -134,7 +134,7 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 - `expression-of-concern` — flagged by the publisher but not retracted.
 - `deprecated` — superseded by a stronger synthesis or newer paper (use `superseded_by:` to point at the superseding note).
 
-Retraction tracking lives **outside** the vault: Zotero 9 with retraction monitoring (`extensions.zotero.retractionWatch.enabled: true`) checks CrossRef and Retraction Watch automatically, and the Verifier's `retraction-check` skill surfaces disagreements so the human can update `pub_status`. The agent never silently flips a note to `retracted` — see [run-a-retraction-sweep.md](../how-to-guides/maintenance/run-a-retraction-sweep.md).
+Retraction tracking lives **outside** the vault: Zotero 9 with retraction monitoring (`extensions.zotero.retractionWatch.enabled: true`) checks CrossRef and Retraction Watch automatically, and the Verifier's `retraction-check` skill surfaces disagreements so the human can update `pub_status`. The agent never silently flips a note to `retracted` — see [How to run a retraction sweep](../how-to-guides/maintenance/run-a-retraction-sweep.md).
 
 ### `role_in_stack` values (item-note)
 
@@ -208,7 +208,7 @@ Agent-maintained; refreshed on schedule. Values drift over time; keep in `_enric
 
 ## Note-type values
 
-The complete set of valid `type` values. Each maps to exactly one note type in [note-types.md](note-types.md).
+The complete set of valid `type` values. Each maps to exactly one note type in [Note types](note-types.md).
 
 ```text
 fleeting-note  answer-note    paper-note    item-note
@@ -231,11 +231,11 @@ Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — 
 
 ## Frontmatter not for notes
 
-`status` is a **board card field** (Hermes built-in). It is not a note field. The value sets for `status` (execution lifecycle) and `lifecycle` (note lifecycle) are deliberately disjoint — never use one in place of the other. See [kanban-board.md](kanban-board.md#execution-lifecycle).
+`status` is a **board card field** (Hermes built-in). It is not a note field. The value sets for `status` (execution lifecycle) and `lifecycle` (note lifecycle) are deliberately disjoint — never use one in place of the other. See [Kanban board reference](kanban-board.md#execution-lifecycle).
 
 ---
 
 ## Related
 
-- Why lifecycle fields exist: [lifecycle-over-topic.md](../explanation/knowledge/lifecycle-over-topic.md)
-- The promotion rules over these fields: [promotion-model.md](../explanation/knowledge/promotion-model.md)
+- Why lifecycle fields exist: [Why folders encode lifecycle, not topic](../explanation/knowledge/lifecycle-over-topic.md)
+- The promotion rules over these fields: [Why promotion is gated](../explanation/knowledge/promotion-model.md)

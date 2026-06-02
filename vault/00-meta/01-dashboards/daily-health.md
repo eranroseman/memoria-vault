@@ -1,6 +1,6 @@
 # Daily Health
 
-Open every morning, glance ~30 seconds, close if nothing's red. The **system-health** view — board queues, drift, lane health, cron. Vault-state work (classification debt, promotion queue, orphans) lives in [[weekly-review]]. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/).
+Open every morning, glance ~30 seconds, close if nothing's red. The **system-health** view — board queues, drift, lane health, cron. Vault-state work (classification debt, promotion queue, orphans) lives in [[weekly-review|Weekly Review]]. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/).
 
 ## 1. Today's queue
 
@@ -21,7 +21,7 @@ dv.table(
 
 ## 2. Drift signals
 
-HIGH/CRITICAL structural-detector findings in the last 24h — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch]].
+HIGH/CRITICAL structural-detector findings in the last 24h — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch|Drift watch]].
 
 ```dataviewjs
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
@@ -39,7 +39,7 @@ dv.table(
 
 ## 3. Lane health
 
-Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run today. Contributing inputs: [[fleet-health]].
+Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run today. Contributing inputs: [[fleet-health|Fleet Health]].
 
 ```dataview
 TABLE WITHOUT ID
@@ -74,4 +74,4 @@ dv.table(["Task", "Lane", "Last run", "Next run", "Result"], rows);
 
 ## Related
 
-Queries stay empty until the board-state / lint-findings / metrics / cron-history feeds are wired ([rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/)). Siblings: [[weekly-review]] (Friday vault-state), [[drift-watch]] (structural detail), [[fleet-health]] (cost & trust inputs), [[audit-log]] (forensics).
+Queries stay empty until the board-state / lint-findings / metrics / cron-history feeds are wired ([rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/daily-health/)). Siblings: [[weekly-review|Weekly Review]] (Friday vault-state), [[drift-watch|Drift watch]] (structural detail), [[fleet-health|Fleet Health]] (cost & trust inputs), [[audit-log|Audit log]] (forensics).

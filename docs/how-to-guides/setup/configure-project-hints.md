@@ -43,7 +43,7 @@ projects:
 
 **3. Draw `primary_topics` from your actual `topic` vocabulary.**
 
-At classify time the Librarian scores a paper's proposed `topic` values against each project's `primary_topics` by **simple overlap**. So the terms here must match the ones you actually use in the `topic` field — a `primary_topics` entry that never appears as a real `topic` contributes nothing. Keep to the ~30-term vocabulary discipline ([linking.md](../../reference/linking.md#vocabulary-discipline)).
+At classify time the Librarian scores a paper's proposed `topic` values against each project's `primary_topics` by **simple overlap**. So the terms here must match the ones you actually use in the `topic` field — a `primary_topics` entry that never appears as a real `topic` contributes nothing. Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
 
 **4. Keep it a hint, not a matrix.**
 
@@ -64,5 +64,5 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 - Where the proposed project is confirmed: [Classify a source](../sources/classify-a-source.md)
 - Topic vocabulary discipline: [linking.md — Vocabulary discipline](../../reference/linking.md#vocabulary-discipline)
 - The profile that reads it: [The Librarian](../../explanation/profiles/librarian.md)
-- The ~30-term topic vocabulary discipline: [vocabulary-discipline.md](../../explanation/knowledge/vocabulary-discipline.md)
+- The ~30-term topic vocabulary discipline: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
 - The decision and its rationale: [ADR-15](../../../project-files/decisions/15-project-auto-classification.md)

@@ -93,5 +93,5 @@ Returns the note. The Writer's `/draft` command uses vault notes in its response
 
 ## Related
 
-- Stale search index failure mode: [failure-modes.md](../../reference/failure-modes.md) — "Stale qmd index"
-- Writer profile: [explanation/profiles/writer.md](../../explanation/profiles/writer.md)
+- Stale search index failure mode: [Failure modes](../../reference/failure-modes.md) — "Stale qmd index"
+- Writer profile: [The Writer](../../explanation/profiles/writer.md)

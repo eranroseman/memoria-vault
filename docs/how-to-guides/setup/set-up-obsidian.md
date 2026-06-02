@@ -11,7 +11,7 @@ Open the vault in Obsidian, install the required plugins, and configure the REST
 ## Prerequisites
 
 - Obsidian installed ([obsidian.md](https://obsidian.md))
-- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([set-up-the-vault.md](set-up-the-vault.md))
+- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([How to set up the vault](set-up-the-vault.md))
 
 ## Steps
 
@@ -38,7 +38,7 @@ The eight bundled plugins:
 | `quickadd` | Registers `Memoria:` command-palette entries |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 
-All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client agent paths). See [reference/obsidian-plugins.md](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
+All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client agent paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
 
 **3. Configure the REST API plugin.**
 
@@ -55,7 +55,7 @@ On restart the plugin regenerates a real `apiKey` (64-char hex token) and its TL
 
 **5. Copy the API key.**
 
-Settings → Local REST API → copy the `apiKey` value. You'll need it when filling the Librarian's `.env` in [set-up-hermes.md](set-up-hermes.md).
+Settings → Local REST API → copy the `apiKey` value. You'll need it when filling the Librarian's `.env` in [How to set up Hermes](set-up-hermes.md).
 
 **6. Confirm plugin settings match the shipped defaults.**
 
@@ -81,4 +81,4 @@ Memoria's linting is the `memoria-linter` Hermes profile (structural validation 
 - Next step: [Set up Zotero](set-up-zotero.md)
 - Plugin reference: [reference/obsidian-plugins/](../../reference/obsidian-plugins.md)
 - Callout types: [reference/obsidian-callouts](../../reference/obsidian-callouts.md)
-- Workspaces reference: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
+- Workspaces reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

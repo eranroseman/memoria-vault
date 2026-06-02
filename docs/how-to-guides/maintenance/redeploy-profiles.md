@@ -74,7 +74,7 @@ Output should show no drift for any profile.
 
 ## Related
 
-- Profile configuration guide: [configuration.md](../using-hermes-agent/configuration.md)
-- Fix profile drift: [fix-profile-drift.md](../recovery/fix-profile-drift.md)
-- Set up profiles (first install): [set-up-hermes.md](../setup/set-up-hermes.md)
-- The idempotency mechanism: [distribution-model.md](../../explanation/deployment/distribution-model.md)
+- Profile configuration guide: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
+- Fix profile drift: [How to fix profile drift](../recovery/fix-profile-drift.md)
+- Set up profiles (first install): [How to set up Hermes](../setup/set-up-hermes.md)
+- The idempotency mechanism: [Distribution model](../../explanation/deployment/distribution-model.md)

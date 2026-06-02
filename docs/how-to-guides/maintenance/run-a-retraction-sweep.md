@@ -46,7 +46,7 @@ The Verifier detects and flags status changes. You decide what to do with affect
 
 ## Related
 
-- [how-to-guides/writing/verify-and-revise.md](../writing/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
-- [reference/frontmatter.md](../../reference/frontmatter.md) — `pub_status` values (`active`, `preprint`, `retracted`, `deprecated`, `expression-of-concern`)
-- The failure mode sweeps prevent: [common-pitfalls.md](../../explanation/knowledge/common-pitfalls.md)
-- The profile running the sweep: [verifier.md](../../explanation/profiles/verifier.md)
+- [How to verify and revise a draft](../writing/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
+- [Frontmatter fields](../../reference/frontmatter.md) — `pub_status` values (`active`, `preprint`, `retracted`, `deprecated`, `expression-of-concern`)
+- The failure mode sweeps prevent: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
+- The profile running the sweep: [The Verifier](../../explanation/profiles/verifier.md)

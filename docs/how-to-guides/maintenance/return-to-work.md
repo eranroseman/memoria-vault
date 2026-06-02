@@ -44,18 +44,18 @@ Expected: either "Already up to date" or a list of fast-forward changes. A merge
 
 **ACP pane not responding** — all workflows have a terminal equivalent. `Cmd-P` commands that invoke Hermes can also be run from the CLI. The ACP pane is a convenience layer, not a requirement.
 
-**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [rebuild-the-search-index.md](rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
+**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [How to rebuild the search index](rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
 
 **Syncthing not synced** — check the Syncthing status bar in Obsidian or open `http://localhost:8384`. Notes created on another device won't be queryable until sync completes.
 
 ## If something is broken
 
-See [safe-mode.md](../recovery/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
+See [Safe mode: minimal working path](../recovery/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
 
 ## Related
 
-- Safe mode (when tools are broken): [recovery/safe-mode.md](../recovery/safe-mode.md)
-- Rebuild search index: [rebuild-the-search-index.md](rebuild-the-search-index.md)
-- Fix a stale .bib: [recovery/fix-stale-bib.md](../recovery/fix-stale-bib.md)
-- Reinstall missing profiles: [set-up-hermes.md](../setup/set-up-hermes.md)
-- The comprehensive failure catalog: [failure-modes.md](../../reference/failure-modes.md)
+- Safe mode (when tools are broken): [Safe mode: minimal working path](../recovery/safe-mode.md)
+- Rebuild search index: [How to rebuild the search index](rebuild-the-search-index.md)
+- Fix a stale .bib: [How to fix a stale .bib](../recovery/fix-stale-bib.md)
+- Reinstall missing profiles: [How to set up Hermes](../setup/set-up-hermes.md)
+- The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)

@@ -158,7 +158,7 @@ Classify the new paper-note: [How to classify a source](../how-to-guides/sources
 
 Process outstanding candidates as part of your Friday ritual: [How to run the weekly review](../how-to-guides/maintenance/run-the-weekly-review.md).
 
-You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [how-to-guides/README.md](../how-to-guides/README.md).
+You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [How-to guides](../how-to-guides/README.md).
 
 ---
 

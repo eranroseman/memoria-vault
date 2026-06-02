@@ -36,6 +36,6 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 
 - The profile this feeds into: [Writer](writer.md)
 - Why synthesis belongs to the human: [why not autonomous](../rationale/why-not-autonomous.md)
-- Dashboard that surfaces the Socratic queue: [discuss-queue](../dashboards/synthesis-agenda/discuss-queue.md)
-- The discuss -> human-writes-claim path: [promotion-model.md](../knowledge/promotion-model.md)
+- Dashboard that surfaces the Socratic queue: [The discuss-queue dashboard](../dashboards/synthesis-agenda/discuss-queue.md)
+- The discuss -> human-writes-claim path: [Why promotion is gated](../knowledge/promotion-model.md)
 - The workflow Socratic anchors: [discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)

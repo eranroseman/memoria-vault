@@ -5,7 +5,7 @@ parent: Reference
 
 # Installer (bootstrap)
 
-Lookup tables for the bootstrap installer — what it installs, on which platforms, what it touches, and what the user must still supply by hand. For *why* the installer is shaped this way, see [explanation/architecture/bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md).
+Lookup tables for the bootstrap installer — what it installs, on which platforms, what it touches, and what the user must still supply by hand. For *why* the installer is shaped this way, see [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
 
 ## Platform support matrix
 
@@ -55,7 +55,7 @@ The Hermes installer auto-provisions uv, Python 3.11, Node.js 22, ripgrep, and f
 | Zotero app + Better BibTeX (required), MarkDB-Connect, RTF/ODF Scan | detect; download `.xpi` + GUI install | ⚠️ |
 | API keys (KiloCode, OpenAlex email, S2, PubMed, GitHub) | user-supplied | ❌ explain |
 
-See [obsidian-plugins.md](obsidian-plugins.md) and [zotero-plugins.md](zotero-plugins.md) for the plugin sets, and [on-disk-layout.md](on-disk-layout.md) for where everything lands.
+See [Obsidian plugins](obsidian-plugins.md) and [Zotero plugins](zotero-plugins.md) for the plugin sets, and [On-disk layout](on-disk-layout.md) for where everything lands.
 
 ## Secrets
 
@@ -66,7 +66,7 @@ The installer prints this checklist and the exact paths; it writes nothing. **v0
 | `KILOCODE_API_KEY` | [kilo.ai](https://kilo.ai) | each profile `.env` (or once in `~/.hermes/.env`) |
 | `OBSIDIAN_API_KEY` | Obsidian → Local REST API (first launch) | every profile `.env` |
 | `OPENALEX_EMAIL` | any working address (polite pool) | Librarian `.env` |
-| `SEMANTIC_SCHOLAR_API_KEY`, `PUBMED_API_KEY`, `GITHUB_TOKEN` | per [set-up-zotero](../how-to-guides/setup/set-up-zotero.md) | Librarian `.env` (optional) |
+| `SEMANTIC_SCHOLAR_API_KEY`, `PUBMED_API_KEY`, `GITHUB_TOKEN` | per [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md) | Librarian `.env` (optional) |
 
 Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
 
@@ -101,11 +101,11 @@ Profiles also carry `skills/` and `cron/` directories.
 
 ## Models and ACP
 
-Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [using-hermes-agent/configuration.md](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
+Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [How to configure a Hermes profile](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
 
 ## Related
 
-- **Design rationale:** [explanation/architecture/bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md).
-- **Redeploy path:** [redeploy-profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
-- **Setup guides:** [set-up-the-vault](../how-to-guides/setup/set-up-the-vault.md), [set-up-hermes](../how-to-guides/setup/set-up-hermes.md), [set-up-zotero](../how-to-guides/setup/set-up-zotero.md).
-- **Telemetry shipped by v0.1:** [telemetry.md](telemetry.md).
+- **Design rationale:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
+- **Redeploy path:** [How to redeploy profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
+- **Setup guides:** [How to set up the vault](../how-to-guides/setup/set-up-the-vault.md), [How to set up Hermes](../how-to-guides/setup/set-up-hermes.md), [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+- **Telemetry shipped by v0.1:** [Telemetry & logs](telemetry.md).

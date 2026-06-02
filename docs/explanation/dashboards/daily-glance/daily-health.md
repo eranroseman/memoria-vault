@@ -41,7 +41,7 @@ Four sections, each a one-decision query: today's **blocked cards and those awai
 
 ## Related
 
-- The weekly-ritual companion: [weekly-review](../structural-health/weekly-review.md)
-- What populates today's queue: [board-state](board-state.md)
+- The weekly-ritual companion: [The weekly-review dashboard](../structural-health/weekly-review.md)
+- What populates today's queue: [The board-state dashboard](board-state.md)
 - What populates the drift signals: `drift-watch`
 - What populates the trust scores: `fleet-health`

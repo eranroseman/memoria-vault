@@ -5,7 +5,7 @@ parent: Reference
 
 # Note types
 
-The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [frontmatter.md](frontmatter.md); for conceptual model see [explanation/architecture/vault.md](../explanation/architecture/vault.md).
+The 16 note types, their canonical folders, templates, lifecycle, and ownership. For field-level detail see [Frontmatter fields](frontmatter.md); for conceptual model see [The vault](../explanation/architecture/vault.md).
 
 ---
 
@@ -98,7 +98,7 @@ canvas ────────► draft           (informs structure; canvas th
 code-note ─────► project-note    (linked from project)
 ```
 
-This is the mechanical view of every type transition, including the workbench-internal moves (`canvas → draft`, `code-note → project-note`) that the conceptual model omits. An `answer-note` is created fresh by the Writer in response to a query — it is **not** promoted from a `fleeting-note`. For *why* the gated promotions require human authorship — and why a `paper-note` never becomes a `claim-note` — see [promotion-model.md](../explanation/knowledge/promotion-model.md).
+This is the mechanical view of every type transition, including the workbench-internal moves (`canvas → draft`, `code-note → project-note`) that the conceptual model omits. An `answer-note` is created fresh by the Writer in response to a query — it is **not** promoted from a `fleeting-note`. For *why* the gated promotions require human authorship — and why a `paper-note` never becomes a `claim-note` — see [Why promotion is gated](../explanation/knowledge/promotion-model.md).
 
 Promotion constraints:
 
@@ -115,7 +115,7 @@ Promotion constraints:
 
 ## MOC creation threshold
 
-Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim notes combined). Build child MOCs when a branch has **> 20 claim notes + > 10 paper notes**. See [linking.md](linking.md#moc-thresholds) for the full threshold table.
+Create a new MOC when a topic reaches **≥ 15–20 notes** (papers + claim notes combined). Build child MOCs when a branch has **> 20 claim notes + > 10 paper notes**. See [Wikilink and link conventions](linking.md#moc-thresholds) for the full threshold table.
 
 ---
 
@@ -136,5 +136,5 @@ Templates ship at `99-system/templates/<type>.md` as **raw notes** — frontmatt
 
 ## Related
 
-- The conceptual model behind the types: [note-types.md](../explanation/knowledge/note-types.md)
-- The promotion rules referenced here: [promotion-model.md](../explanation/knowledge/promotion-model.md)
+- The conceptual model behind the types: [Note types and epistemic roles](../explanation/knowledge/note-types.md)
+- The promotion rules referenced here: [Why promotion is gated](../explanation/knowledge/promotion-model.md)

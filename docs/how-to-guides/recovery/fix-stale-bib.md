@@ -69,5 +69,5 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 
 ## Related
 
-- Zotero setup: [set-up-zotero.md](../setup/set-up-zotero.md)
-- Full failure-modes catalog: [failure-modes.md](../../reference/failure-modes.md)
+- Zotero setup: [How to set up Zotero](../setup/set-up-zotero.md)
+- Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)

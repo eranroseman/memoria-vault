@@ -47,16 +47,16 @@ The reason there is no "add the token later" path is that misconfiguration here 
 
 ## Why MCP servers are registered per profile, not globally
 
-MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [on-disk-layout.md](../../reference/on-disk-layout.md).)
+MCP servers are registered per profile. Each profile carries an `mcp.json` listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [On-disk layout](../../reference/on-disk-layout.md).)
 
 The reason for per-profile registration rather than a global server list is the same reason for separate profiles at all: `tools.include` filters let each profile's surface be narrowed to what it actually needs. The Socratic profile gets the `obsidian` server but only its read-side tools. This is the mechanism that makes "Socratic cannot write" enforceable at the API level, not just at the prompt level.
 
-For the per-profile permission matrices, see [reference/profiles.md](../../reference/profiles.md).
+For the per-profile permission matrices, see [Profile capabilities](../../reference/profiles.md).
 
 ---
 
 ## Related
 
-- Board state machine (the cards being dispatched): [kanban-board/README.md](../kanban-board/README.md)
-- Human channels (which access paths reach the API): [architecture/human-channels.md](human-channels.md)
-- Policy MCP (what the rules are): [reference/policy-mcp.md](../../reference/policy-mcp.md)
+- Board state machine (the cards being dispatched): [Kanban board](../kanban-board/README.md)
+- Human channels (which access paths reach the API): [Interaction channels](human-channels.md)
+- Policy MCP (what the rules are): [Policy MCP](../../reference/policy-mcp.md)

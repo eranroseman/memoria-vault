@@ -10,7 +10,7 @@ Not every agent output belongs on a dashboard. Some context is only useful while
 
 Memoria uses three callout types, defined via the Callout Manager plugin and rendered consistently across the vault.
 
-For the exact scoring weights, similarity thresholds, field shapes, and drift-signal cutoffs, see the reference: [reference/obsidian-callouts.md](../../reference/obsidian-callouts.md). This page explains *why* the three callouts exist and why they're shaped the way they are.
+For the exact scoring weights, similarity thresholds, field shapes, and drift-signal cutoffs, see the reference: [Obsidian callouts](../../reference/obsidian-callouts.md). This page explains *why* the three callouts exist and why they're shaped the way they are.
 
 ## The three callouts and what they represent
 
@@ -48,5 +48,5 @@ Callout writes pass through the policy MCP like any other vault write — logged
 
 ## Related
 
-- The hybrid pattern behind callouts: [why-computational-methods.md](../rationale/why-computational-methods.md)
-- Callout field reference: [obsidian-callouts.md](../../reference/obsidian-callouts.md)
+- The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../rationale/why-computational-methods.md)
+- Callout field reference: [Obsidian callouts](../../reference/obsidian-callouts.md)

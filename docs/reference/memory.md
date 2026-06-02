@@ -5,7 +5,7 @@ parent: Reference
 
 # Memory substrates
 
-Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [explanation/architecture/memory-tiers.md](../explanation/architecture/memory-tiers.md).
+Where each type of state lives across the Memoria + Hermes stack: tier, backing store, scope, lifespan, and what it holds. For the design rationale see [Memory tiers](../explanation/architecture/memory-tiers.md).
 
 ---
 
@@ -96,6 +96,6 @@ Session logs (`99-system/logs/sessions/YYYY-MM-DD-HHMM.jsonl`) are written one p
 
 ## Related
 
-- The audit log writer and decision protocol: [policy-mcp.md](policy-mcp.md)
-- Thin control over thick state: [why-three-layers.md](../explanation/rationale/why-three-layers.md)
-- The board as the coordination substrate: [kanban-board/README.md](../explanation/kanban-board/README.md)
+- The audit log writer and decision protocol: [Policy MCP](policy-mcp.md)
+- Thin control over thick state: [Why three layers, not one](../explanation/rationale/why-three-layers.md)
+- The board as the coordination substrate: [Kanban board](../explanation/kanban-board/README.md)

@@ -36,7 +36,7 @@ lifecycle: current
 promoted_date: 2026-05-31
 ```
 
-(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [frontmatter.md](../../reference/frontmatter.md#lifecycle-values).)
+(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [Frontmatter fields](../../reference/frontmatter.md#lifecycle-values).)
 
 **5. Add a MOC entry** (if a relevant MOC exists).
 
@@ -59,7 +59,7 @@ If no MOC exists yet and this is the third or fourth note on this topic, conside
 ## Related
 
 - Previous step: [Write a claim note](write-a-claim-note.md) (maturity accumulates there)
-- Weekly review (step 5 — promote evergreen claims): [run-the-weekly-review.md](../maintenance/run-the-weekly-review.md)
-- Add the MOC entry (step 5): [build-a-moc.md](../maintenance/build-a-moc.md)
-- MOC creation thresholds: [linking.md](../../reference/linking.md#moc-thresholds)
-- The rules promotion enforces: [promotion-model.md](../../explanation/knowledge/promotion-model.md)
+- Weekly review (step 5 — promote evergreen claims): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Add the MOC entry (step 5): [How to build a Map of Content](../maintenance/build-a-moc.md)
+- MOC creation thresholds: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
+- The rules promotion enforces: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)

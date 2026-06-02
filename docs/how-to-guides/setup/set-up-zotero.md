@@ -12,7 +12,7 @@ Configure Zotero with Better BibTeX and wire up the automatic export so Memoria'
 
 - Zotero 9 installed ([zotero.org](https://www.zotero.org/download/))
 - Better BibTeX plugin installed in Zotero ([retorque.re/zotero-better-bibtex/](https://retorque.re/zotero-better-bibtex/))
-- The vault cloned ([set-up-the-vault.md](set-up-the-vault.md))
+- The vault cloned ([How to set up the vault](set-up-the-vault.md))
 
 ## Steps
 
@@ -96,12 +96,12 @@ Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without k
 | PubMed | ncbi.nlm.nih.gov/account/ | 3 req/sec | 10 req/sec |
 | GitHub | github.com/settings/tokens (`public_repo` scope) | 60 req/hr | 5,000 req/hr |
 
-Register these now; you'll add them to the Librarian's `.env` in [set-up-hermes.md](set-up-hermes.md).
+Register these now; you'll add them to the Librarian's `.env` in [How to set up Hermes](set-up-hermes.md).
 
 ## Related
 
 - Next step: [Set up Hermes](set-up-hermes.md)
-- What ingest does with the `.bib`: [capture-and-ingest.md](../sources/capture-and-ingest.md)
-- Fixing a stale `.bib`: [fix-stale-bib.md](../recovery/fix-stale-bib.md)
-- Pin the citekey after import: [pin-a-citekey.md](../sources/pin-a-citekey.md)
+- What ingest does with the `.bib`: [How to capture and ingest a source](../sources/capture-and-ingest.md)
+- Fixing a stale `.bib`: [How to fix a stale .bib](../recovery/fix-stale-bib.md)
+- Pin the citekey after import: [How to pin a citekey in Zotero](../sources/pin-a-citekey.md)
 - Citekey naming convention: [ADR-6](../../../project-files/decisions/06-citekey-naming-convention.md)

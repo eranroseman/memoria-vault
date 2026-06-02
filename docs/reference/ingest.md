@@ -5,7 +5,7 @@ parent: Reference
 
 # Ingest routing
 
-Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [how-to-guides/sources/capture-and-ingest.md](../how-to-guides/sources/capture-and-ingest.md).
+Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
 
 ---
 
@@ -100,7 +100,7 @@ Fields the Librarian populates on the new note at creation:
 | `_proposed_classification` | Agent-proposed `topic`, `study_design`, `methods` | Reviewed and promoted by human at Classify. |
 | `_enrichment` | Citation count, abstract, venue, OA status, stable IDs | Refreshed on schedule by Librarian. |
 
-**Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [obsidian-callouts.md](obsidian-callouts.md).
+**Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [Obsidian callouts](obsidian-callouts.md).
 
 ---
 
@@ -113,11 +113,11 @@ Fields the Librarian populates on the new note at creation:
 | `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
 | `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
-For the step-by-step ingest procedure see [how-to-guides/sources/capture-and-ingest.md](../how-to-guides/sources/capture-and-ingest.md).
+For the step-by-step ingest procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
 
 ---
 
 ## Related
 
-- The profile running the pipeline: [librarian.md](../explanation/profiles/librarian.md)
-- The note types routing dispatches to: [note-types.md](../explanation/knowledge/note-types.md)
+- The profile running the pipeline: [The Librarian](../explanation/profiles/librarian.md)
+- The note types routing dispatches to: [Note types and epistemic roles](../explanation/knowledge/note-types.md)

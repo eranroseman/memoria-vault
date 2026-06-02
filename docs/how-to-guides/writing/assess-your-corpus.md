@@ -79,5 +79,5 @@ Whichever you run, read the output by pattern:
 
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Frame a project](frame-a-project.md)
-- Find new sources (if gaps need filling): [find-new-sources.md](../sources/find-new-sources.md)
-- Conceptual background on the Mapper: [mapper.md](../../explanation/profiles/mapper.md)
+- Find new sources (if gaps need filling): [How to find new sources](../sources/find-new-sources.md)
+- Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/mapper.md)

@@ -82,12 +82,12 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 **Explanation**
 
-- Why specialist profiles support this: [why-specialist-profiles.md](why-specialist-profiles.md)
-- Why the vault won't autonomize synthesis: [why-not-autonomous.md](why-not-autonomous.md)
-- How the review state works in the workflow: [../workflows/review-as-state.md](../workflows/review-as-state.md)
-- What the gate enforces at the synthesis boundary: [promotion-model.md](../knowledge/promotion-model.md)
+- Why specialist profiles support this: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
+- Why the vault won't autonomize synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
+- How the review state works in the workflow: [Review as a first-class state](../workflows/review-as-state.md)
+- What the gate enforces at the synthesis boundary: [Why promotion is gated](../knowledge/promotion-model.md)
 
 **Reference**
 
-- Policy MCP enforcement details: [reference/profiles.md](../../reference/profiles.md) (permissions) · [reference/memory.md](../../reference/memory.md) (audit log)
-- The enforcement mechanism: [policy-mcp.md](../../reference/policy-mcp.md)
+- Policy MCP enforcement details: [Profile capabilities](../../reference/profiles.md) (permissions) · [Memory substrates](../../reference/memory.md) (audit log)
+- The enforcement mechanism: [Policy MCP](../../reference/policy-mcp.md)

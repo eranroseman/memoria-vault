@@ -10,7 +10,7 @@ Use the Writer profile to generate outline proposals, draft prose, and suggest s
 
 ## Prerequisites
 
-- A writing project scaffolded with a corpus map ([start-a-writing-project.md](start-a-writing-project.md))
+- A writing project scaffolded with a corpus map ([How to start a writing project](start-a-writing-project.md))
 - At least one framing chosen — either from a Writer `counter-outline` session or written by hand in `02-framing/CHOSEN.md`
 - The Writer profile installed
 
@@ -80,4 +80,4 @@ Read the `[!verification]` callout at the top of the draft file after each commi
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Verify and revise a draft](verify-and-revise.md)
 - Canvas sub-workflow: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
-- Conceptual background on the Writer: [writer.md](../../explanation/profiles/writer.md)
+- Conceptual background on the Writer: [The Writer](../../explanation/profiles/writer.md)

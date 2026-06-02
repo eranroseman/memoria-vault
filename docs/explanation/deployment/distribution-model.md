@@ -13,7 +13,7 @@ Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit
 | `vault/` | The starter vault — folder skeleton, Obsidian config, and the `.memoria/` scaffold. The **runtime artifact**. | End users (opened in Obsidian after install). |
 | `docs/` | Architecture, workflow, profile, and decision documents. Not needed at runtime. | Developers and contributors. |
 
-The bootstrap copies `vault/` to a working location (off OneDrive on Windows); the human opens **that deployed copy** in Obsidian. The deployed vault is self-contained — it does not carry `docs/`, so any reference from a vault-resident file (e.g. `vault/README.md`) to `docs/` or `project-files/` is a **GitHub URL, never a relative path**. The installers live at the repo root (not inside `vault/`) because the bootstrap is the clone/entry point; consequently **`vault/` is no longer independently installable** — installing requires the whole repo. See [bootstrap-installer.md](bootstrap-installer.md) for the installer's design and [reference/installer.md](../../reference/installer.md) for the component inventories.
+The bootstrap copies `vault/` to a working location (off OneDrive on Windows); the human opens **that deployed copy** in Obsidian. The deployed vault is self-contained — it does not carry `docs/`, so any reference from a vault-resident file (e.g. `vault/README.md`) to `docs/` or `project-files/` is a **GitHub URL, never a relative path**. The installers live at the repo root (not inside `vault/`) because the bootstrap is the clone/entry point; consequently **`vault/` is no longer independently installable** — installing requires the whole repo. See [Bootstrap installer](bootstrap-installer.md) for the installer's design and [Installer (bootstrap)](../../reference/installer.md) for the component inventories.
 
 ---
 
@@ -52,8 +52,8 @@ A profile compiler that generates profile directories from a shared base plus pe
 
 ## Related
 
-- Profile structure: [explanation/profiles/README.md](../profiles/README.md)
-- Install steps: [how-to-guides/setup/set-up-the-vault.md](../../how-to-guides/setup/set-up-the-vault.md)
-- Operationalizes idempotent deployment: [redeploy-profiles.md](../../how-to-guides/maintenance/redeploy-profiles.md)
-- The one-liner install entry point: [quickstart.md](../../how-to-guides/setup/quickstart.md)
-- On-disk layout reference: [reference/on-disk-layout.md](../../reference/on-disk-layout.md)
+- Profile structure: [Profiles](../profiles/README.md)
+- Install steps: [How to set up the vault](../../how-to-guides/setup/set-up-the-vault.md)
+- Operationalizes idempotent deployment: [How to redeploy profiles](../../how-to-guides/maintenance/redeploy-profiles.md)
+- The one-liner install entry point: [How to install Memoria: quickstart](../../how-to-guides/setup/quickstart.md)
+- On-disk layout reference: [On-disk layout](../../reference/on-disk-layout.md)

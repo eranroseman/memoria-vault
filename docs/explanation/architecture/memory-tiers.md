@@ -72,17 +72,17 @@ The test: **memory is read back as recall; configuration is read as rules.** "To
 
 **Explanation**
 
-- Board handoff payload (board memory travels here): [explanation/kanban-board/card-schema.md](../kanban-board/card-schema.md)
-- Architecture overview: [explanation/architecture/README.md](README.md)
+- Board handoff payload (board memory travels here): [Why the card schema is split](../kanban-board/card-schema.md)
+- Architecture overview: [Architecture](README.md)
 
 **How-to**
 
-- Configuring project hints (the config example above): [configure-project-hints.md](../../how-to-guides/setup/configure-project-hints.md)
+- Configuring project hints (the config example above): [How to configure project hints](../../how-to-guides/setup/configure-project-hints.md)
 
 **Reference**
 
-- Audit log format: [reference/policy-mcp.md](../../reference/policy-mcp.md)
-- The substrate table as reference: [reference/memory.md](../../reference/memory.md)
+- Audit log format: [Policy MCP](../../reference/policy-mcp.md)
+- The substrate table as reference: [Memory substrates](../../reference/memory.md)
 
 **Background**
 

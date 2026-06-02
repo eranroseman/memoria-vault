@@ -7,7 +7,7 @@ parent: Obsidian
 
 The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows Linter findings and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.
 
-For the exact format, counters, and design rules, see the reference: [reference/obsidian-status-line.md](../../reference/obsidian-status-line.md). This page explains *why* it exists and why it's shaped the way it is.
+For the exact format, counters, and design rules, see the reference: [Obsidian status line](../../reference/obsidian-status-line.md). This page explains *why* it exists and why it's shaped the way it is.
 
 ---
 
@@ -29,7 +29,7 @@ Forcing that constant question through a dashboard would mean either keeping a d
 
 The governing rule is **show state, not decisions**. A count is ambient — `Review: 7` tells you a queue has depth without telling you what to do. The list of *which* seven cards, and the act of approving them, belongs in the [board-state dashboard](../dashboards/daily-glance/board-state.md). This division is what keeps the line glance-readable in under a second: it never grows into a panel, because anything that would require reading prose or making a choice is, by rule, escalated to a dashboard.
 
-The same rule bounds the Linter segment: lightweight findings (broken links, schema validity) sit on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch](../dashboards/structural-health/drift-watch.md). The line carries the *temperature*, not the diagnosis.
+The same rule bounds the Linter segment: lightweight findings (broken links, schema validity) sit on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch dashboard](../dashboards/structural-health/drift-watch.md). The line carries the *temperature*, not the diagnosis.
 
 ---
 
@@ -41,7 +41,7 @@ Linter + Kanban is the working set, and the cap is deliberate. Each additional a
 
 ## Related
 
-- The restraint principle this surface embodies: [visual-discipline.md](visual-discipline.md)
+- The restraint principle this surface embodies: [Visual-style discipline](visual-discipline.md)
 - Where the Kanban counts expand to full detail: [board-state dashboard](../dashboards/daily-glance/board-state.md)
 - Where heavy Linter findings escalate: [drift-watch dashboard](../dashboards/structural-health/drift-watch.md)
-- Format, counters, and design rules (reference): [reference/obsidian-status-line.md](../../reference/obsidian-status-line.md)
+- Format, counters, and design rules (reference): [Obsidian status line](../../reference/obsidian-status-line.md)

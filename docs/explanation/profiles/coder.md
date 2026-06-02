@@ -36,5 +36,5 @@ The Coder is the documentary front for an external coding agent (Aider, Kilocode
 
 - Why tasks are delegated to specialists: [why specialist profiles](../rationale/why-specialist-profiles.md)
 - Structural validator counterpart: [Linter](linter.md)
-- The autonomous-loop exception explained: [why-not-autonomous.md](../rationale/why-not-autonomous.md)
+- The autonomous-loop exception explained: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
 - The external agent relationship: [create a code artifact](../../how-to-guides/writing/create-a-code-artifact.md)

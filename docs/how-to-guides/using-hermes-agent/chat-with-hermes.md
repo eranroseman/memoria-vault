@@ -79,7 +79,7 @@ Or run the session normally and copy the output — the profile logs session out
 
 ## Related
 
-- Profile configuration: [configuration.md](configuration.md)
-- Ingest: [capture-and-ingest.md](../sources/capture-and-ingest.md)
-- Lint: [run-the-linter.md](../maintenance/run-the-linter.md)
-- Administrative CLI commands (profile, kanban, skills, cron): [reference/hermes-cli.md](../../reference/hermes-cli.md)
+- Profile configuration: [How to configure a Hermes profile](configuration.md)
+- Ingest: [How to capture and ingest a source](../sources/capture-and-ingest.md)
+- Lint: [How to run the Linter](../maintenance/run-the-linter.md)
+- Administrative CLI commands (profile, kanban, skills, cron): [Hermes CLI](../../reference/hermes-cli.md)

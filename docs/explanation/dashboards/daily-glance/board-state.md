@@ -23,7 +23,7 @@ Four sections, each answering a different question about work in flight: **activ
 
 **Not [Daily Health](daily-health.md)'s "today's queue."** Daily Health shows only `blocked` cards and those awaiting review, capped at ten. Board-state shows the full board across all states — every active card, every lane, everything in retry watch.
 
-**Not [discuss-queue](../synthesis-agenda/discuss-queue.md).** Discuss-queue is an upstream-cognitive-discipline view — paper notes classified but not yet Socratically processed. Board-state is a workflow-execution view — cards moving through states regardless of content type.
+**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is an upstream-cognitive-discipline view — paper notes classified but not yet Socratically processed. Board-state is a workflow-execution view — cards moving through states regardless of content type.
 
 ---
 
@@ -40,6 +40,6 @@ Four sections, each answering a different question about work in flight: **activ
 ## Related
 
 - Filtered daily subset: [Daily Health](daily-health.md)
-- Upstream-discipline complement: [discuss-queue](../synthesis-agenda/discuss-queue.md)
+- Upstream-discipline complement: [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md)
 - Recovery guides for board problems: [fix a stuck card](../../../how-to-guides/recovery/fix-stuck-card.md)
 - Kanban state machine explanation: `kanban-board/README.md`

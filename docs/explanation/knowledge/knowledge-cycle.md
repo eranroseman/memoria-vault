@@ -25,7 +25,7 @@ The distinction between a vault that compounds and one that merely accumulates i
 
 This is Karpathy's compiler insight applied to personal research: the vault's value is not in its size but in its integration. A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes.
 
-Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim-note density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim-note density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ## Where the cycle gets stuck
 
@@ -39,18 +39,18 @@ Notes that are no longer useful do not become invisible by deletion — they bec
 
 Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
 
-For the archive procedure, see [how-to-guides/maintenance/run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md).
+For the archive procedure, see [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md).
 
 ## Related
 
 **Explanation**
 
-- Why the cycle needs weekly attention: [weekly-review.md](../dashboards/structural-health/weekly-review.md)
-- The epistemic roles of note types: [note-types.md](note-types.md)
-- Why promotion is gated: [promotion-model.md](promotion-model.md)
-- The folder structure the cycle flows through: [vault.md](../architecture/vault.md)
+- Why the cycle needs weekly attention: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
+- The epistemic roles of note types: [Note types and epistemic roles](note-types.md)
+- Why promotion is gated: [Why promotion is gated](promotion-model.md)
+- The folder structure the cycle flows through: [The vault](../architecture/vault.md)
 
 **How-to**
 
-- The ritual that keeps the cycle from stalling: [run-the-weekly-review.md](../../how-to-guides/maintenance/run-the-weekly-review.md)
-- The cycle's key transition: [write-a-claim-note.md](../../how-to-guides/sources/write-a-claim-note.md)
+- The ritual that keeps the cycle from stalling: [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- The cycle's key transition: [How to write a claim note](../../how-to-guides/sources/write-a-claim-note.md)

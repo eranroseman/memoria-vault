@@ -1,6 +1,6 @@
 # Structural detectors: silent-failure checks
 
-The eight drift checks at the bottom of the Linter's lint table (see [SOUL.md](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
+The eight drift checks at the bottom of the Linter's lint table (see [Linter SOUL](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
 
 | ID | Detector | Severity | Why this severity |
 | --- | --- | --- | --- |
@@ -30,7 +30,7 @@ This action is `report` only. Never re-run `scripts/install.ps1` automatically �
 
 ## `vault-hash-drift` — Vault hash drift
 
-You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [policy.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
+You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
 
 Procedure:
 
@@ -43,7 +43,7 @@ This action is `report` only. Never overwrite the file to "restore" its previous
 
 ## `skeleton-drift` — Skeleton drift
 
-You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [docs/explanation/architecture/vault.md](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault/)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
+You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [The vault](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault/)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
 
 Procedure:
 
@@ -191,6 +191,6 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 
 ## Related
 
-- [Linter SOUL.md](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
-- [docs/reference/policy-mcp.md](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the audit log that `vault-hash-drift` verifies against.
+- [Linter SOUL](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
+- [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) — the audit log that `vault-hash-drift` verifies against.
 - [project-files/proposals/PROP-09-profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/PROP-09-profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).

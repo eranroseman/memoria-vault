@@ -16,7 +16,7 @@ Quick checks that the system itself is up (run from a terminal):
 | Hermes + profiles | `hermes profile list` | all 7 `memoria-*` profiles respond |
 | Gateway / API | `hermes gateway status` | running on `:8642` |
 | Policy + obsidian MCP | trigger a write, watch `99-system/logs/audit.jsonl` | new `allow_with_log` rows appear |
-| Cron scheduler | [[daily-health]] § Cron status | the four standard tasks show recent runs |
+| Cron scheduler | [[daily-health|Daily Health]] § Cron status | the four standard tasks show recent runs |
 | Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
 
 Profiles: `memoria-{librarian, mapper, socratic, writer, verifier, coder, linter}`.
@@ -30,7 +30,7 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 | Symptom | Likely cause | First check |
 | --- | --- | --- |
 | ACP pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
-| Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state]] |
+| Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state|Board State]] |
 | New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
 | Linter findings stale | Cron not running | Cron status in [[daily-health\|Daily Health]] |
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |

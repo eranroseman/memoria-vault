@@ -11,7 +11,7 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 ## Conventions (apply to every log)
 
 - **Format.** One JSON object per line (JSONL). No top-level array, no trailing comma; a partial last line is the only acceptable corruption and is dropped on read.
-- **Append-only.** Writers only ever `open(..., "a")`. Rows are immutable events; nothing is rewritten in place. Rotation (truncate-after-archive) is the *only* sanctioned mutation, and only the owning profile may do it (see the `authorized-targeted` auto-fix class in [policy-mcp.md](policy-mcp.md)).
+- **Append-only.** Writers only ever `open(..., "a")`. Rows are immutable events; nothing is rewritten in place. Rotation (truncate-after-archive) is the *only* sanctioned mutation, and only the owning profile may do it (see the `authorized-targeted` auto-fix class in [Policy MCP](policy-mcp.md)).
 - **Time.** Every row carries a timestamp in ISO-8601 **UTC** with a trailing `Z` (`2026-06-01T14:23:01Z`). The key is `ts` for the audit log (historical) and `timestamp` for everything the board exporter writes. Never local time — cross-log joins depend on a single clock.
 - **Identity.** Card-scoped rows carry `task_id` (board card ID) and `lane` (the assignee profile, e.g. `memoria-writer`). `task_id` is the join key across `board-transitions`, `disposition`, and `cost`.
 - **Encoding.** UTF-8, `ensure_ascii=false` — em-dashes and accented author names survive verbatim.
@@ -32,7 +32,7 @@ Derived, not raw: `99-system/metrics/lane-<lane>-<period>.md` notes are *compute
 
 ## audit.jsonl
 
-The write-gate's decision trail. Schema and SHA-256 rules are owned by [policy-mcp.md](policy-mcp.md#audit-log-format); reproduced here for completeness:
+The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy MCP](policy-mcp.md#audit-log-format); reproduced here for completeness:
 
 ```json
 {
@@ -123,7 +123,7 @@ One row per detector finding from a `memoria-linter` run. The in-memory shape is
 | `path` | vault-relative path of the offending note |
 | `message` | short human-readable cause |
 
-Verdict-band rollup (`PASS` / `REVIEW` / `FAIL`) is computed from severities per [linter.md](linter.md), not stored as a field.
+Verdict-band rollup (`PASS` / `REVIEW` / `FAIL`) is computed from severities per [Linter: detectors and auto-fix](linter.md), not stored as a field.
 
 ## Derived: lane-metric notes
 

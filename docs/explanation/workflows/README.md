@@ -32,7 +32,7 @@ Memoria distinguishes two pipelines, each with its own direction:
 find → ingest → classify → (discuss) → distill
 ```
 
-Where `find` is the Librarian surfacing candidates; `ingest` is the Librarian creating a paper note; `classify` is the human deciding which topics and projects apply; `discuss` is an optional Socratic session for difficult papers; `distill` is the human writing a claim note based on the source. These stage names match the [glossary](../../reference/glossary.md#pipeline-stages) and the source-workflow how-to guides.
+Where `find` is the Librarian surfacing candidates; `ingest` is the Librarian creating a paper note; `classify` is the human deciding which topics and projects apply; `discuss` is an optional Socratic session for difficult papers; `distill` is the human writing a claim note based on the source. These stage names match the [Glossary](../../reference/glossary.md#pipeline-stages) and the source-workflow how-to guides.
 
 **The downstream pipeline** turns accumulated knowledge into deliverables. A project starts by assessing the corpus, develops through framing, drafting, verification, and revision, and ends with an exported deliverable.
 
@@ -40,7 +40,7 @@ Where `find` is the Librarian surfacing candidates; `ingest` is the Librarian cr
 assess → frame → draft → verify → revise → export
 ```
 
-Where `assess` is the Mapper charting the corpus (via `scope-project`) and the human deciding whether to proceed; `frame` is the human and Writer developing competing outlines; `draft` is the Writer producing prose; `verify` is the Verifier checking citations; `revise` is the human closing the verification gaps; `export` is a Pandoc pipeline producing the final artifact. These names match the [glossary](../../reference/glossary.md#pipeline-stages) and the writing how-to guides.
+Where `assess` is the Mapper charting the corpus (via `scope-project`) and the human deciding whether to proceed; `frame` is the human and Writer developing competing outlines; `draft` is the Writer producing prose; `verify` is the Verifier checking citations; `revise` is the human closing the verification gaps; `export` is a Pandoc pipeline producing the final artifact. These names match the [Glossary](../../reference/glossary.md#pipeline-stages) and the writing how-to guides.
 
 The pipelines are not sequential end-to-end — they're ongoing. The upstream pipeline runs continuously as new sources are discovered; the downstream pipeline runs per-project when the human decides to synthesize. A mature vault might have dozens of projects in various stages of the downstream pipeline while the upstream pipeline runs nightly.
 
@@ -50,7 +50,7 @@ The pipelines are not sequential end-to-end — they're ongoing. The upstream pi
 
 The board is the shared state machine. Every long-lived piece of work lives on the board as a card until a human approves it. The board coordinates work across sessions, profiles, and pipelines by making state explicit and persistent.
 
-See [board-as-state-machine.md](board-as-state-machine.md) for why Kanban — not chat, not a custom orchestration system — is the right coordination layer.
+See [The board as a state machine (the control plane)](board-as-state-machine.md) for why Kanban — not chat, not a custom orchestration system — is the right coordination layer.
 
 ---
 
@@ -58,13 +58,13 @@ See [board-as-state-machine.md](board-as-state-machine.md) for why Kanban — no
 
 At every synthesis boundary — when an `answer-note` might become a `claim-note`, when a draft might become a deliverable, when a candidate might enter the canonical vault — the workflow pauses. A `done` card waits for `review_status: approved` before anything downstream proceeds.
 
-This pause is not a workflow bottleneck in the negative sense — it is the mechanism that keeps the human in contact with what the system is producing. See [review-as-state.md](review-as-state.md) for how review is implemented as a structured state rather than a convention.
+This pause is not a workflow bottleneck in the negative sense — it is the mechanism that keeps the human in contact with what the system is producing. See [Review as a first-class state](review-as-state.md) for how review is implemented as a structured state rather than a convention.
 
 ---
 
 ## Documents in this section
 
-- **[board-as-state-machine.md](board-as-state-machine.md)** — why Kanban is the coordination layer: cards, states, and the persistence properties that make long-horizon work reliable.
-- **[review-as-state.md](review-as-state.md)** — why review is a first-class state in the card schema, what makes it structural rather than advisory, and how it coordinates the human with the agents.
+- **[The board as a state machine (the control plane)](board-as-state-machine.md)** — why Kanban is the coordination layer: cards, states, and the persistence properties that make long-horizon work reliable.
+- **[Review as a first-class state](review-as-state.md)** — why review is a first-class state in the card schema, what makes it structural rather than advisory, and how it coordinates the human with the agents.
 
 For step-by-step workflow recipes, see [how-to guides](../../how-to-guides/).

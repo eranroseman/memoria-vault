@@ -128,7 +128,7 @@ For lane-override changes, check the audit log after the next write operation to
 
 ## Related
 
-- Deploy vault source to profiles: [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Fix profile drift (deployed ≠ source): [fix-profile-drift.md](../recovery/fix-profile-drift.md)
-- Lane override reference: [reference/policy-mcp.md](../../reference/policy-mcp.md)
+- Deploy vault source to profiles: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Fix profile drift (deployed ≠ source): [How to fix profile drift](../recovery/fix-profile-drift.md)
+- Lane override reference: [Policy MCP](../../reference/policy-mcp.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles/)

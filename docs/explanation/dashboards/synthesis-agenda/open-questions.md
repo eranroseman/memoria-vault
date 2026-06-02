@@ -34,7 +34,7 @@ Any note with a `## Open questions` section appears immediately. No plugin, no l
 
 ## Related
 
-- [explanation/dashboards/contradictions.md](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
-- Where the cycle is stuck: [knowledge-cycle.md](../../knowledge/knowledge-cycle.md)
-- [how-to-guides/sources/write-a-claim-note.md](../../../how-to-guides/sources/write-a-claim-note.md) — where to put open questions in claim notes
-- Where questions are generated: [discuss-a-paper.md](../../../how-to-guides/sources/discuss-a-paper.md)
+- [contradictions dashboard](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
+- Where the cycle is stuck: [The knowledge cycle](../../knowledge/knowledge-cycle.md)
+- [How to write a claim note](../../../how-to-guides/sources/write-a-claim-note.md) — where to put open questions in claim notes
+- Where questions are generated: [How to discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)

@@ -55,7 +55,7 @@ A 0–100 composite per lane. Inputs: audit deny rate, structural-drift incident
 | Watch | 70–89 | Something is slipping |
 | Act | < 70 | Pause scheduled work for that lane |
 
-Suggestion-ratio extremes both down-weight the score: accept rate **> ~90%** = rubber-stamping; **< ~20%** = candidate scoring needs tuning. Full formula and band definitions: [glossary.md](glossary.md).
+Suggestion-ratio extremes both down-weight the score: accept rate **> ~90%** = rubber-stamping; **< ~20%** = candidate scoring needs tuning. Full formula and band definitions: [Glossary](glossary.md).
 
 ---
 
@@ -118,7 +118,7 @@ Keep dashboards responsive as the vault grows:
 ## Related
 
 - Why each dashboard exists and when to open it: [explanation/dashboards/](../explanation/dashboards/)
-- The structural detectors behind the verdict band: [linter.md](linter.md)
-- The audit-log event schema and rotation: [memory.md](memory.md#audit-log-event-fields)
-- The status-line counters board-state feeds: [obsidian-status-line.md](obsidian-status-line.md)
-- Operating the dashboards: [how-to-guides/using-obsidian/navigate-the-dashboards.md](../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- The structural detectors behind the verdict band: [Linter: detectors and auto-fix](linter.md)
+- The audit-log event schema and rotation: [Memory substrates](memory.md#audit-log-event-fields)
+- The status-line counters board-state feeds: [Obsidian status line](obsidian-status-line.md)
+- Operating the dashboards: [How to navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)

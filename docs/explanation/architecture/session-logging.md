@@ -32,7 +32,7 @@ Combining them would make the audit log verbose (session narrative) and would ma
 
 ## Why the sessions directory is not pre-created
 
-The `99-system/logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [how-to-guides/setup/set-up-the-vault.md](../../how-to-guides/setup/set-up-the-vault.md) covers this.
+The `99-system/logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [How to set up the vault](../../how-to-guides/setup/set-up-the-vault.md) covers this.
 
 ---
 
@@ -44,6 +44,6 @@ Per-session files are named by `YYYY-MM-DD-HHMM`, so files from different machin
 
 ## Related
 
-- Linter (owns `99-system/logs/` and rotates the audit log): [explanation/profiles/linter.md](../profiles/linter.md)
-- Session-log granularity (per-session files, not per-action): [memory.md](../../reference/memory.md)
-- Audit log (the other log): [reference/policy-mcp.md](../../reference/policy-mcp.md)
+- Linter (owns `99-system/logs/` and rotates the audit log): [The Linter](../profiles/linter.md)
+- Session-log granularity (per-session files, not per-action): [Memory substrates](../../reference/memory.md)
+- Audit log (the other log): [Policy MCP](../../reference/policy-mcp.md)

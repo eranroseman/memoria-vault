@@ -13,7 +13,7 @@ The governing idea: **the architecture is invisible during normal use, and legib
 
 ## Why typography choices are load-bearing
 
-The three callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share a single accent color, differentiated by *icon* rather than color. The reason is attentional: rainbow callouts train the eye to ignore all of them. Color distinction signals urgency; when every category has its own color, the urgency signal collapses into visual noise. (What each callout means: [callouts.md](callouts.md).)
+The three callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share a single accent color, differentiated by *icon* rather than color. The reason is attentional: rainbow callouts train the eye to ignore all of them. Color distinction signals urgency; when every category has its own color, the urgency signal collapses into visual noise. (What each callout means: [Callouts](callouts.md).)
 
 Heading hierarchy is enforced by the Linter not as an aesthetic preference but because Dataview queries that filter on heading content break when the hierarchy is inconsistent — an H4 with no H3 parent is a structural problem that produces empty or wrong dashboard views, not a cosmetic one.
 
@@ -33,7 +33,7 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 The three-workspace design (Human, Reading & Processing, Drafting) maps workspaces to **cognitive modes**, not to projects. A fourth workspace is a signal that either a new cognitive mode has been identified — in which case the workspace system needs rethinking — or that a project has been mistaken for a mode. Projects change constantly; cognitive modes are stable. A workspace per project would create as many workspaces as there are active projects, defeating the purpose of workspaces as a *stable navigational layer*.
 
-The full workspace layout (names, hotkeys, what each pane holds) is reference material: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md).
+The full workspace layout (names, hotkeys, what each pane holds) is reference material: [Obsidian workspaces](../../reference/obsidian-workspaces.md).
 
 ---
 
@@ -45,7 +45,7 @@ Three months in, the mouse hand barely moves and there is no conscious tracking 
 
 ## Related
 
-- The ambient indicator this discipline allows: [the-status-line.md](the-status-line.md)
-- The callout types and their single-accent-color rule: [callouts.md](callouts.md)
-- The front door, which participates in the same restraint: [home.md](home.md)
-- Workspace layout reference: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
+- The ambient indicator this discipline allows: [The status line](the-status-line.md)
+- The callout types and their single-accent-color rule: [Callouts](callouts.md)
+- The front door, which participates in the same restraint: [Home — the vault front door](home.md)
+- Workspace layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

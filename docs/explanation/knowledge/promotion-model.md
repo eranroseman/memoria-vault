@@ -38,7 +38,7 @@ claim-note     ──► moc membership          (via frontmatter moc:)
 draft          ──► deliverable             (on export)
 ```
 
-Two clarifications on the map. **Source notes are not only papers**: a captured repository, package, product, dataset, or standard promotes along the same path but lands as an `item-note` in `20-sources/02-items/` — the destination keys on whether the source carries a stable publication ID, not on any difference in how the note is handled (see [note-types.md](note-types.md)). **Entity notes** (`person-note`, `organization-note`, `venue-note`) are created as cross-link side-effects during ingestion rather than promoted from an earlier stage, so they don't appear above. And `candidate-note` is the 16th type (adopted in v0.1 — [ADR-17](../../../project-files/decisions/17-shared-candidate-frontmatter.md); see [note-types.md](note-types.md)); its two rows are live for the discovery and gap-card paths.
+Two clarifications on the map. **Source notes are not only papers**: a captured repository, package, product, dataset, or standard promotes along the same path but lands as an `item-note` in `20-sources/02-items/` — the destination keys on whether the source carries a stable publication ID, not on any difference in how the note is handled (see [Note types and epistemic roles](note-types.md)). **Entity notes** (`person-note`, `organization-note`, `venue-note`) are created as cross-link side-effects during ingestion rather than promoted from an earlier stage, so they don't appear above. And `candidate-note` is the 16th type (adopted in v0.1 — [ADR-17](../../../project-files/decisions/17-shared-candidate-frontmatter.md); see [Note types and epistemic roles](note-types.md)); its two rows are live for the discovery and gap-card paths.
 
 Several moves are explicitly disallowed:
 
@@ -64,7 +64,7 @@ Claim notes carry a `maturity` field with values `seedling`, `budding`, `evergre
 
 The progression from seedling to evergreen is organic: a claim becomes more evergreen as it accumulates corroborating links, as it survives the addition of contradictory evidence, and as the human revisits and refines it. There is no automated promotion from `seedling` to `evergreen`; the human sets the maturity in judgment.
 
-The `seedling → budding → evergreen` vocabulary is borrowed from the **evergreen-notes** tradition that grew out of Zettelkasten (Andy Matuschak's framing of notes that are developed over time rather than written once). Memoria adopts the maturity ladder but, per its bookkeeping-not-intelligence stance, keeps the maturity judgment human-set — see [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten).
+The `seedling → budding → evergreen` vocabulary is borrowed from the **evergreen-notes** tradition that grew out of Zettelkasten (Andy Matuschak's framing of notes that are developed over time rather than written once). Memoria adopts the maturity ladder but, per its bookkeeping-not-intelligence stance, keeps the maturity judgment human-set — see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten).
 
 A common pitfall is using `maturity` as a reason to defer promotion: "I'll make it canonical when it's evergreen." This misunderstands the model. Make a claim canonical when the human has decided it represents their position. Maturity tracks confidence in the claim; promotion tracks whether the human has claimed it as theirs.
 
@@ -94,12 +94,12 @@ The right response to a full review queue is not to automate review. It is to ma
 
 **Explanation**
 
-- The three epistemic roles: [note-types.md](note-types.md)
-- Why lifecycle folders enable this: [lifecycle-over-topic.md](lifecycle-over-topic.md)
-- Why the review gate is structural: [why-human-gate.md](../rationale/why-human-gate.md)
-- How the board's review state works: [../workflows/review-as-state.md](../workflows/review-as-state.md)
-- The folders promotion moves between: [vault.md](../architecture/vault.md)
+- The three epistemic roles: [Note types and epistemic roles](note-types.md)
+- Why lifecycle folders enable this: [Why folders encode lifecycle, not topic](lifecycle-over-topic.md)
+- Why the review gate is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
+- How the board's review state works: [Review as a first-class state](../workflows/review-as-state.md)
+- The folders promotion moves between: [The vault](../architecture/vault.md)
 
 **Reference**
 
-- The reference promotion map: [note-types.md](../../reference/note-types.md)
+- The reference promotion map: [Note types](../../reference/note-types.md)

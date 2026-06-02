@@ -158,7 +158,7 @@ Click **Dashboard index** to open `00-meta/01-dashboards/daily-health.md`. The d
 
 [Tutorial 02 — Your first note](02-your-first-note.md): capture a thought and turn it into your first permanent claim note. This is the Zettelkasten loop in miniature — you'll do the whole cycle in about 15 minutes.
 
-**See also:** the fast-path install if you'd rather skip the guided walkthrough — [quickstart.md](../how-to-guides/setup/quickstart.md); and [what-memoria-is.md](../explanation/overview/what-memoria-is.md) for what you just installed.
+**See also:** the fast-path install if you'd rather skip the guided walkthrough — [How to install Memoria: quickstart](../how-to-guides/setup/quickstart.md); and [What Memoria is](../explanation/overview/what-memoria-is.md) for what you just installed.
 
 ---
 

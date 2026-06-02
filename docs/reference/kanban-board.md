@@ -73,7 +73,7 @@ A third dimension, separate from review. Agents (Verifier, Linter) attach recomm
 | --- | --- | --- |
 | `id` | string | Unique card identifier. |
 | `status` | enum | The 7-value execution lifecycle. See above. |
-| `assignee` | string | Lane identifier. Format: `memoria-<name>`. See [profiles.md](profiles.md#lane-identifiers). |
+| `assignee` | string | Lane identifier. Format: `memoria-<name>`. See [Profile capabilities](profiles.md#lane-identifiers). |
 | `summary` | string | Worker-written handoff summary on completion. |
 | `reason` | string | Failure reason (present when `status: blocked`). |
 | `max_retries` | integer | Retry threshold before auto-blocking. Default: `3`. Per-lane configurable. |
@@ -128,5 +128,5 @@ The handoff payload is **forward-looking**: it provisions the *next* worker with
 
 ## Related
 
-- Recovering stuck cards: [fix-stuck-card.md](../how-to-guides/recovery/fix-stuck-card.md)
-- The review-overlay explanation: [review-as-state.md](../explanation/workflows/review-as-state.md)
+- Recovering stuck cards: [How to fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
+- The review-overlay explanation: [Review as a first-class state](../explanation/workflows/review-as-state.md)

@@ -52,6 +52,6 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 
 **Reference**
 
-- External APIs the Librarian calls: [integrations.md](../../reference/integrations.md)
-- The ingest routing and enrichment table: [ingest.md](../../reference/ingest.md)
-- The `[!brief]` callout the Librarian composes at ingest: [obsidian-callouts.md](../../reference/obsidian-callouts.md), [callouts.md](../obsidian/callouts.md)
+- External APIs the Librarian calls: [External integrations](../../reference/integrations.md)
+- The ingest routing and enrichment table: [Ingest routing](../../reference/ingest.md)
+- The `[!brief]` callout the Librarian composes at ingest: [Obsidian callouts](../../reference/obsidian-callouts.md), [Callouts](../obsidian/callouts.md)

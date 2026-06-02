@@ -19,7 +19,7 @@ The trigger fires on `post-commit` to `40-workbench/*/04-drafts/`, not on a sche
 
 The hook calls the Hermes API to create the verify card — it does not invoke the Verifier directly. This keeps the trigger thin: it creates a card and returns. The Verifier claims the card through the normal dispatch mechanism, which means verification is audited, retryable, and visible in the board like any other task. A direct invocation from a hook would bypass all of that.
 
-**Draft commits are deliberate, not timed.** This change-based triggering only holds if commits track edits rather than the clock. obsidian-git's `autoSaveInterval` (a ~30-minute scheduled commit; see [obsidian-plugins.md](../../reference/obsidian-plugins.md)) is configured as an offsite-backup safety net for the vault at large — it is **not** the verify trigger for drafts. Committing a draft you want verified is a deliberate act (`Cmd-P → Obsidian Git: Commit`), so "I committed this draft" means "verify it," and the `[!verification]` callout appears on that commit rather than on the next timer tick. If you rely on the auto-save timer for draft commits instead, verification still fires — but batched to the timer, up to ~30 minutes after your last edit, which dilutes the immediate feedback the workflow is designed around.
+**Draft commits are deliberate, not timed.** This change-based triggering only holds if commits track edits rather than the clock. obsidian-git's `autoSaveInterval` (a ~30-minute scheduled commit; see [Obsidian plugins](../../reference/obsidian-plugins.md)) is configured as an offsite-backup safety net for the vault at large — it is **not** the verify trigger for drafts. Committing a draft you want verified is a deliberate act (`Cmd-P → Obsidian Git: Commit`), so "I committed this draft" means "verify it," and the `[!verification]` callout appears on that commit rather than on the next timer tick. If you rely on the auto-save timer for draft commits instead, verification still fires — but batched to the timer, up to ~30 minutes after your last edit, which dilutes the immediate feedback the workflow is designed around.
 
 ## What the automatic trigger is not
 
@@ -29,5 +29,5 @@ This is consistent with the rest of the system's posture: agents produce recomme
 
 ## Related
 
-- [explanation/profiles/verifier.md](../profiles/verifier.md) — what the Verifier checks and how
-- [how-to-guides/writing/verify-and-revise.md](../../how-to-guides/writing/verify-and-revise.md) — how to read the report and address gaps
+- [The Verifier](../profiles/verifier.md) — what the Verifier checks and how
+- [How to verify and revise a draft](../../how-to-guides/writing/verify-and-revise.md) — how to read the report and address gaps

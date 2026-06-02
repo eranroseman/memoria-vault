@@ -1,6 +1,8 @@
 ---
 created: 2026-06-02
 updated: 2026-06-02
+cssclasses:
+  - dashboard
 ---
 
 # Memoria
@@ -13,24 +15,30 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 >   const t = await dv.io.load(path);
 >   return (!t || !t.trim()) ? null : t.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 > }
-> const board = await load("99-system/logs/board-state.jsonl");
-> const lint  = await load("99-system/logs/lint-findings.jsonl");
+> const board = await load("99-system/logs/board-state.jsonl");   // per-run snapshots
+> const lint  = await load("99-system/logs/lint-findings.jsonl"); // one row per finding
 > if (board === null && lint === null) {
 >   dv.paragraph("_Status feeds not wired yet — see [[daily-health|Daily Health]]._");
 > } else {
->   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
->   const reviews  = (board ?? []).filter(e => e.review_status === "requested").length;
->   const blocked  = (board ?? []).filter(e => e.state === "blocked").length;
->   const findings = (lint ?? []).filter(e => e.reported_at >= cutoff && (e.severity === "HIGH" || e.severity === "CRITICAL")).length;
->   const clear = reviews === 0 && blocked === 0 && findings === 0;
->   dv.paragraph(`${clear ? "✅ All clear — " : "⚠ "}${reviews} review(s) pending · ${blocked} blocked · ${findings} HIGH/CRITICAL finding(s) (24h)`);
+>   const latest   = (board ?? []).length ? board[board.length - 1] : null;  // newest snapshot
+>   const reviews  = latest?.totals?.review_queue ?? 0;
+>   const blocked  = latest?.totals?.blocked ?? 0;
+>   const findings = (lint ?? []).filter(e => e.severity === "HIGH" || e.severity === "CRITICAL").length;
+>   const clear    = reviews === 0 && blocked === 0 && findings === 0;
+>   const stamp    = latest?.timestamp ? ` · as of ${latest.timestamp.slice(11, 16)} UTC` : "";
+>   dv.paragraph(`${clear ? "✅ All clear — " : "⚠ "}${reviews} review(s) pending · ${blocked} blocked · ${findings} HIGH/CRITICAL finding(s)${stamp}`);
 > }
 > ```
 
+## Start here
+
+- [[research-directions|Research directions]] — your current priorities; read and refresh this at session start (the Librarian reads it too).
+
 ## Do
 
-- `Cmd/Ctrl-P → Memoria:` — `capture fleeting` · `ask about this note` (Socratic) · `new project` · `lint this note` · `find related notes` · `similarity-check this claim`
-- Mode-switch in the ACP pane: `Ctrl+Shift+1` Ask · `2` Map · `3` Draft · `4` Check
+- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting` · `new project`
+- **Ask / check** — `ask about this note` (Socratic) · `find related notes` · `similarity-check this claim` · `lint this note`
+- **Mode-switch** (ACP pane) — `Ctrl+Shift+1` Ask · `2` Map · `3` Draft · `4` Check
 
 ## Monitor
 
@@ -45,11 +53,7 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 ## Reference
 
 - [[troubleshooting|Troubleshooting]] — verify the system, fall back, recover (the one help note kept in-vault, for when you're offline/broken)
-- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) · [architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
-
-## Inputs
-
-- [[research-directions|Research directions]] — your current priorities (read by the Librarian at session start)
+- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter/) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp/) · [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [Setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
 
 ## Full documentation
 

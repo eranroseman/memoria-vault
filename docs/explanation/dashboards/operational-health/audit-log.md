@@ -32,6 +32,6 @@ The Linter rotates `audit.jsonl` weekly to `99-system/logs/archive/audit-YYYY-WW
 
 ## Related
 
-- [explanation/dashboards/drift-watch.md](../structural-health/drift-watch.md) — structural drift findings (complementary layer)
-- [explanation/dashboards/fleet-health.md](fleet-health.md) — trend aggregations that consume this stream
-- [reference/policy-mcp.md](../../../reference/policy-mcp.md) — the decision protocol and action vocabulary the log records
+- [drift-watch dashboard](../structural-health/drift-watch.md) — structural drift findings (complementary layer)
+- [fleet-health dashboard](fleet-health.md) — trend aggregations that consume this stream
+- [Policy MCP](../../../reference/policy-mcp.md) — the decision protocol and action vocabulary the log records

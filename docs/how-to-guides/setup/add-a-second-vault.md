@@ -10,7 +10,7 @@ Fork the starter vault for a separate project or research area, keeping it indep
 
 ## Prerequisites
 
-- Your primary vault is working ([quickstart.md](quickstart.md))
+- Your primary vault is working ([How to install Memoria: quickstart](quickstart.md))
 - Hermes is installed and on your `PATH`
 - A separate GitHub repo for the second vault (or plan to create one)
 
@@ -46,7 +46,7 @@ This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second
 
 Obsidian supports multiple vaults. File → Open Another Vault → Open folder as vault → select `~/my-second-vault` (the folder the installer copied the vault to).
 
-**4. Install the same set of required plugins** in this vault (same as step 2 of [set-up-obsidian.md](set-up-obsidian.md)). Each vault has its own `.obsidian/` config.
+**4. Install the same set of required plugins** in this vault (same as step 2 of [How to set up Obsidian](set-up-obsidian.md)). Each vault has its own `.obsidian/` config.
 
 **5. Copy the REST API key.**
 
@@ -75,6 +75,6 @@ The dry-run output should show paths inside `my-second-vault/vault/`, not your p
 
 ## Related
 
-- First vault setup: [set-up-the-vault.md](set-up-the-vault.md)
-- Redeploying after profile edits: [redeploy-profiles.md](../maintenance/redeploy-profiles.md)
-- Distribution model explanation: [distribution-model.md](../../explanation/deployment/distribution-model.md)
+- First vault setup: [How to set up the vault](set-up-the-vault.md)
+- Redeploying after profile edits: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Distribution model explanation: [Distribution model](../../explanation/deployment/distribution-model.md)

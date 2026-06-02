@@ -71,7 +71,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
   -o /tmp/<output>.docx
 ```
 
-**If an Obsidian export plugin fails** — run Pandoc directly from the terminal; it is the authoritative export route (any plugin is just a UI wrapper over the same command). See [export.md](../../reference/export.md).
+**If an Obsidian export plugin fails** — run Pandoc directly from the terminal; it is the authoritative export route (any plugin is just a UI wrapper over the same command). See [Export routes and formats](../../reference/export.md).
 
 **If `zotero.lua` live citations are broken** — fall back to static `--citeproc`. Do not debug `zotero.lua` mid-draft. Finish the draft with static citations, then investigate using the failure-modes guide.
 
@@ -94,7 +94,7 @@ All four must return expected values before blaming a tool.
 
 ## Related
 
-- Return-to-work checklist: [maintenance/return-to-work.md](../maintenance/return-to-work.md)
-- Fix stale .bib: [fix-stale-bib.md](fix-stale-bib.md)
-- Fix stuck card: [fix-stuck-card.md](fix-stuck-card.md)
-- Rebuild search index: [maintenance/rebuild-the-search-index.md](../maintenance/rebuild-the-search-index.md)
+- Return-to-work checklist: [How to return to work after a break](../maintenance/return-to-work.md)
+- Fix stale .bib: [How to fix a stale .bib](fix-stale-bib.md)
+- Fix stuck card: [How to fix a stuck card](fix-stuck-card.md)
+- Rebuild search index: [How to rebuild the search index](../maintenance/rebuild-the-search-index.md)

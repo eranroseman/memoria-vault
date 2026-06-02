@@ -5,7 +5,7 @@ parent: Reference
 
 # Glossary
 
-Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [explanation/](../explanation/).
+Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [Explanation](../explanation/).
 
 ---
 
@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [plans/release-plan-v0.1.md](../../project-files/plans/release-plan-v0.1.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -74,7 +74,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
 
-**Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [note-types.md](note-types.md).
+**Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [Note types](note-types.md).
 
 ---
 
@@ -132,7 +132,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Related
 
-- Frontmatter fields these terms name: [frontmatter.md](frontmatter.md)
-- The note types referenced throughout: [note-types.md](note-types.md)
-- Lane and profile terms: [profiles.md](profiles.md)
-- Board and review-overlay terms: [kanban-board.md](kanban-board.md)
+- Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
+- The note types referenced throughout: [Note types](note-types.md)
+- Lane and profile terms: [Profile capabilities](profiles.md)
+- Board and review-overlay terms: [Kanban board reference](kanban-board.md)

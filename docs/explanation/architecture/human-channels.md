@@ -28,7 +28,7 @@ The diagnostic the CLI is uniquely suited for is "why did this happen" rather th
 
 The signal that a CLI operation is being used too often is that the operation belongs somewhere else. Daily approvals done at the terminal mean the dashboard approval path is missing or broken. Frequent manual dispatch means a trigger should be automated. CLI frequency is a smell, not a workflow.
 
-For command syntax and available operations, see [reference/hermes-cli.md](../../reference/hermes-cli.md).
+For command syntax and available operations, see [Hermes CLI](../../reference/hermes-cli.md).
 
 ---
 
@@ -42,7 +42,7 @@ The mobile capture mode takes advantage of the phone's always-accessible nature:
 
 Confining Telegram to one messaging channel is also intentional. Each additional channel — Discord, Slack, WhatsApp — competes for attention and demands its own notification discipline. Until there is a concrete need that Telegram cannot serve, additional channels add noise without value.
 
-For Telegram configuration and the recommended per-profile toolset, see [how-to-guides/setup/set-up-messaging.md](../../how-to-guides/setup/set-up-messaging.md).
+For Telegram configuration and the recommended per-profile toolset, see [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
 
 ---
 
@@ -52,13 +52,13 @@ The API server (port 8642) is where programs connect to Memoria — file-system 
 
 The API server exists because programmatic integration needs a different interface than human operation. A file-system watcher that fires on PDF drops cannot use the command palette. A Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; the channels above are the interaction surfaces for humans.
 
-Security-wise, the API passes every write through the policy MCP — it does not grant elevated permissions. A program that calls the API has exactly the permissions of the profile it is acting as. See [reference/policy-mcp.md](../../reference/policy-mcp.md) for the enforcement details.
+Security-wise, the API passes every write through the policy MCP — it does not grant elevated permissions. A program that calls the API has exactly the permissions of the profile it is acting as. See [Policy MCP](../../reference/policy-mcp.md) for the enforcement details.
 
 ---
 
 ## Related
 
-- Messaging gateway setup: [how-to-guides/setup/set-up-messaging.md](../../how-to-guides/setup/set-up-messaging.md)
-- Obsidian UI components: [reference/obsidian-workspaces.md](../../reference/obsidian-workspaces.md)
-- CLI commands: [reference/hermes-cli.md](../../reference/hermes-cli.md)
-- Policy MCP (what API calls go through): [reference/policy-mcp.md](../../reference/policy-mcp.md)
+- Messaging gateway setup: [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
+- Obsidian UI components: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
+- Policy MCP (what API calls go through): [Policy MCP](../../reference/policy-mcp.md)

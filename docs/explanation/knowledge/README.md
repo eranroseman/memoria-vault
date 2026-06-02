@@ -10,7 +10,7 @@ permalink: /explanation/knowledge/
 
 The vault stores durable knowledge organized by lifecycle stage. Understanding the knowledge model means understanding what makes knowledge *durable*, how the vault's organization serves that goal, and why certain moves are allowed and others aren't.
 
-> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern "evergreen notes" successors. Memoria's contribution is not the method but its *delegation*: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [intellectual-foundations.md](../overview/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
+> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern "evergreen notes" successors. Memoria's contribution is not the method but its *delegation*: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
 
 ---
 
@@ -41,7 +41,7 @@ This is Karpathy's LLM-Wiki insight applied to personal research: the agent is a
 
 Folders in the vault encode **lifecycle stage**, not subject area. A paper about behavioral economics lives in `20-sources/01-papers/`, not in `economics/`. A claim about loss aversion lives in `30-synthesis/01-claims/`, not in `psychology/` or `finance/`.
 
-This sounds counterintuitive. The explanation is in [lifecycle-over-topic.md](lifecycle-over-topic.md). The short version: topics are many-to-many — a paper belongs to multiple topics and a topic spans many papers — so topic folders either duplicate notes (wrong) or become meaningless catch-alls (useless). Lifecycle stage is one-to-one: a note is at exactly one stage in its lifecycle. The stage belongs in the folder; the topics belong in frontmatter and links.
+This sounds counterintuitive. The explanation is in [Why folders encode lifecycle, not topic](lifecycle-over-topic.md). The short version: topics are many-to-many — a paper belongs to multiple topics and a topic spans many papers — so topic folders either duplicate notes (wrong) or become meaningless catch-alls (useless). Lifecycle stage is one-to-one: a note is at exactly one stage in its lifecycle. The stage belongs in the folder; the topics belong in frontmatter and links.
 
 ---
 
@@ -55,7 +55,7 @@ Notes in Memoria have one of three fundamental epistemic roles:
 
 **Working notes** (`10-inbox/`, `40-workbench/`) are in transit or in progress. They are neither source nor synthesis; they are becoming. An inbox note is a candidate for one of the two permanent zones. A workbench draft is synthesis in progress.
 
-Understanding these roles matters because **the agent's permissions follow the roles**. Source notes can be agent-written; the Librarian creates paper notes directly. Synthesis notes are human-owned; the agent can only draft and propose, never canonize. Working notes are shared territory. See [note-types.md](note-types.md) for the full picture.
+Understanding these roles matters because **the agent's permissions follow the roles**. Source notes can be agent-written; the Librarian creates paper notes directly. Synthesis notes are human-owned; the agent can only draft and propose, never canonize. Working notes are shared territory. See [Note types and epistemic roles](note-types.md) for the full picture.
 
 ---
 
@@ -67,14 +67,14 @@ Knowledge moves left-to-right through the folder numbers. A fleeting note might 
 - A source note never becomes a claim note directly — the human writes the claim in their own words, then links to the source.
 - Promotion is irreversible downward; a claim-note doesn't become an inbox note again (it would be archived or superseded instead).
 
-The restriction is not bureaucratic — it is the mechanism that maintains the epistemic integrity of the synthesis zone. See [promotion-model.md](promotion-model.md).
+The restriction is not bureaucratic — it is the mechanism that maintains the epistemic integrity of the synthesis zone. See [Why promotion is gated](promotion-model.md).
 
 ---
 
 ## Documents in this section
 
-- **[lifecycle-over-topic.md](lifecycle-over-topic.md)** — why folders encode stage, not subject, and what would break if they didn't.
-- **[note-types.md](note-types.md)** — the three epistemic roles of notes, and what it means for a note to have an epistemic role.
-- **[promotion-model.md](promotion-model.md)** — what promotion means, why it's gated, and the rules that constrain the promotion map.
+- **[Why folders encode lifecycle, not topic](lifecycle-over-topic.md)** — why folders encode stage, not subject, and what would break if they didn't.
+- **[Note types and epistemic roles](note-types.md)** — the three epistemic roles of notes, and what it means for a note to have an epistemic role.
+- **[Why promotion is gated](promotion-model.md)** — what promotion means, why it's gated, and the rules that constrain the promotion map.
 
-For the complete note-type reference (fields, templates, lifecycle tables), see [reference/note-types.md](../../reference/note-types.md).
+For the complete note-type reference (fields, templates, lifecycle tables), see [Note types](../../reference/note-types.md).
