@@ -52,6 +52,19 @@ All protocols live in `project-files/tests/`, built from `test-protocol-template
 - The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
 - Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed protocol.
 
+## L2 implementation note
+
+L2 ("wiring / contract") splits at the **model boundary**, and the two halves belong at different costs:
+
+- **L2a — policy-gate contract (hermetic).** The gate is pure Python (`policy_mcp.py`), so every lane's allow / deny / dry_run contract is assertable with **no model, Hermes, or Obsidian**. It is already an L1 `--self-test`; folding the hermes-cli §5 write-walls for **all seven lanes** into it (Phase 1, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) pushes the policy-gate half of L2 down to per-commit CI — the cheapest layer that can assert it (Discipline 2 + the pyramid).
+- **L2b — agent wiring (runtime-bound).** Whether `hermes -p <profile> chat -q -s <cmd>` actually dispatches, routes through the *live* gate, and lands the right artifact needs the runtime + a cheap model + the Obsidian write path. Assert artifact **shape / placement / audit row**, never prose.
+
+**Driver (resolved).** Hermes ships a scripted one-shot: `hermes -z "<prompt>"` (final text only, clean stdout/stderr) and `hermes chat -q` (same, but tool calls in the transcript — what L2b wants, to observe the write + the gate call). ACP is interactive/editor-only — **not** the automation path.
+
+**Open spike.** Can the Obsidian write path target a vault on disk **without** the live Local REST API? If yes, L2b runs on any box with Hermes + a key; if no, it needs a self-hosted runner with Obsidian up.
+
+**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) the spike above; (3) an opt-in `scripts/test-l2.sh` smoke set (the §3 S1–S5 + one §4 case per profile) on the cheap model against a disposable vault, with teardown — **nightly, not PR-blocking**. The full hermes-cli §4 matrix stays the manual protocol of record.
+
 ## Alternatives considered
 
 **Keep ad-hoc protocols (status quo).** Rejected: it's how the gaps and drift accrued — coverage is implicit and unmonitored.

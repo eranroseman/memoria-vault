@@ -20,7 +20,7 @@ Every design component → the layer/protocol that covers it → whether it's au
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
 | 5 | Dashboard ↔ writer-schema drift | L0 | headless §D (`detectors --vault` + schema audit) | semi | ✅ |
 | 6 | 7 profiles — every documented CLI command | L2 | [hermes-cli](hermes-cli-test-protocol.md) §4 | manual | ✅ |
-| 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1/A2 · hermes-cli §5 (X1, X2, X6) | semi | ✅ |
+| 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all 7 lanes' write-walls self-tested, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
 | 9 | Audit chain — `before_hash`/`after_hash`, `vault-hash-drift` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
@@ -39,6 +39,10 @@ Every design component → the layer/protocol that covers it → whether it's au
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |
 | 24 | **Deployment modes** — local / mesh / VPS, Syncthing, `memories/` junction | X | — | — | ⛔ |
 | 25 | **Protocol drift** — protocols' own references resolve | L0 | `scripts/check-test-refs.py` | ✅ | ✅ |
+
+## L2 — automating the wiring layer
+
+L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../decisions/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all 7 lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half needs Hermes + a cheap model + the Obsidian write path; its driver is settled (`hermes -z` / `hermes chat -q`, not ACP), and one spike remains (filesystem-direct writes vs. the live REST API). It lands as an opt-in `scripts/test-l2.sh` smoke set — nightly, not PR-blocking.
 
 ## Open gaps (⛔ / 🟡), prioritized
 
