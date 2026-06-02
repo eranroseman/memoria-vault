@@ -1,14 +1,14 @@
 ---
 topic: proposals
+id: PROP-09
+title: Profile compilation from a shared base
 status: deferred
 created: 2026-05-31
 ---
 
-# Profile compilation
+# PROP-09: Profile compilation from a shared base
 
-**Status: deferred.** The seven SOUL.md files are hand-authored and hand-maintained. This proposal describes a build step that would generate the shared sections from a common base, reducing inter-profile drift.
-
----
+The seven SOUL.md files are hand-authored and hand-maintained. This proposal describes a build step that would generate the shared sections from a common base, reducing inter-profile drift.
 
 ## What
 
@@ -33,3 +33,15 @@ Inter-profile drift (the seven SOUL.md files disagreeing on shared behavior) bec
 ## Guard
 
 Do not adopt as a preparatory measure. Seven hand-authored files are simpler than a compiler until drift causes a real problem. The complexity cost of the compiler is paid up front; the benefit only materializes if drift is actually painful.
+
+## Alternatives considered
+
+**Keep hand-authoring (the current state).** The standing answer: at seven-profile scale the shared content is small enough to keep in lockstep by hand, and the Linter's `profile-install-drift` check guards the source→deployment copy. Held until inter-profile drift is a felt, recurring bug.
+
+**A lighter include/partial mechanism instead of a full compiler.** A possible middle path (shared blocks pulled in by reference rather than generated). Defer the build-step-vs-include choice until a concrete first drift incident shows which shape the shared content actually wants.
+
+## Related
+
+- **Decision:** [ADR-26 repo-as-install-unit](../decisions/26-repo-as-install-unit.md) — records hand-authored profiles as the current state and this proposal as the deferred compiler.
+- **Linter detector:** `profile-install-drift` (catches source-vs-deployed drift, not source-vs-source).
+- **Files:** the seven `.memoria/profiles/memoria-<name>/SOUL.md`.

@@ -110,7 +110,7 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 
 **Steps.**
 
-1. **Choose a deployment pattern.** See [Deployment options](../proposals/deployment.md) for the full comparison. `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
+1. **Choose a deployment pattern.** The adopted `local-only` default and the common conventions are in [deployment options](../../docs/explanation/deployment/deployment-options.md); the multi-machine patterns and their full comparison are the [multi-machine deployment proposal](../proposals/multi-machine-deployment.md). `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
 2. **Determine the secondary device's role.** Install only the profiles that device's role justifies. `memoria-socratic` is the safe baseline for any secondary. Add Mapper, Writer, or Verifier only for explicit, justified use cases. Never install Librarian, Coder, or Linter on a secondary — these profiles own state that must not be duplicated across devices.
 3. **Keep all seven profiles and dispatch ownership on the primary.** The primary is the single source of truth for card dispatch. A secondary that runs Librarian or issues dispatch commands creates split ownership and audit gaps.
 4. **For developer secondaries only:** install all seven profiles, but isolate with `HERMES_HOME` pointed at a test vault — never the production vault. This is the one exception to the rule above, and the isolation is what makes it safe.

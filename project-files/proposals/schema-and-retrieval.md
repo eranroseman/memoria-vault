@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Schema and retrieval extensions
 status: deferred
 created: 2026-05-31
 ---

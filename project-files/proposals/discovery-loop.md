@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Discovery loop and autonomy within the boundary
 status: deferred
 created: 2026-05-31
 ---

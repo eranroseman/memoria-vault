@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Classical method displacements
 status: deferred
 created: 2026-05-31
 ---

@@ -6,6 +6,16 @@ status: deferred  # deferred | under-consideration | adopted | rejected
 created: YYYY-MM-DD
 ---
 
+<!--
+Section conventions for a single-capability proposal:
+  Required     — What, Why, Trade-offs, Adoption trigger, Guard
+  Recommended  — Alternatives considered, Related
+  Optional     — Dependencies (only when something must be in place first)
+A thematic survey that bundles several capabilities drops `id` from the
+frontmatter (keep `title`) and repeats a lighter What / Trade-offs / Adoption
+trigger / Guard block per capability instead of these top-level sections.
+-->
+
 # [Capability name]
 
 ## What
@@ -32,6 +42,14 @@ The specific condition that would schedule this. Not "when needed" — a concret
 
 Why NOT to adopt this early. What goes wrong if adopted before the trigger fires?
 
+## Alternatives considered
+
+The other shapes weighed and why they lost — including "adopt now" and "drop the idea entirely" where they apply. One bold lead-in per alternative.
+
+## Related
+
+Links to the workflows, profiles, files, and decisions this touches. Use `none currently` if there are none.
+
 ## Dependencies
 
-What must be in place first. Other proposals, corpus density, profile wiring.
+*(Optional.)* What must be in place first — other proposals, corpus density, profile wiring.

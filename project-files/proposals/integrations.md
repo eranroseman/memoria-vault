@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Integrations and adjacent surfaces
 status: deferred
 created: 2026-05-31
 ---

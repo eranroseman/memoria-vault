@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Publication strategy — paths, shapes, and sequence
 status: deferred
 created: 2026-05-27
 ---

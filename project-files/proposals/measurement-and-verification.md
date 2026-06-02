@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Measurement, quality, and verification
 status: deferred
 created: 2026-05-31
 ---

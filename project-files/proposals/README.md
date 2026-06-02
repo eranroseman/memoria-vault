@@ -33,9 +33,9 @@ Three were accepted and **moved to `decisions/`** as ADRs; the bootstrap install
 | [decisions/ADR-19](../decisions/19-moc-threshold-alert.md) | **Tier 1** — report-only MOC-threshold Linter check (Tier 2 still deferred) |
 | [docs: bootstrap installer](../../docs/explanation/deployment/bootstrap-installer.md) | One-line installer (`scripts/install.sh` + thin `scripts/install.ps1`) — implemented; design now in docs ([reference inventories](../../docs/reference/installer.md)) |
 
-### Deferred from decisions
+### Single-capability proposals (PROP-NN)
 
-Files originally written as ADR candidates — real decisions that didn't get made yet or features that need conditions to be met first.
+One capability each, numbered. These follow the full [template](_template.md) — What / Why / Trade-offs / Adoption trigger / Guard, plus Alternatives considered and Related.
 
 | File | What it proposes |
 |---|---|
@@ -47,10 +47,12 @@ Files originally written as ADR candidates — real decisions that didn't get ma
 | [PROP-06-frozen-evaluator-deferred.md](PROP-06-frozen-evaluator-deferred.md) | Per-note-type acceptance checklists |
 | [PROP-07-admin-gui-surface.md](PROP-07-admin-gui-surface.md) | Admin/forensic GUI surface |
 | [PROP-08-configurable-review-gate-mode.md](PROP-08-configurable-review-gate-mode.md) | Configurable review-gate mode for comparison studies |
+| [PROP-09-profile-compilation.md](PROP-09-profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
+| [PROP-10-skill-governance.md](PROP-10-skill-governance.md) | Skill lifecycle state machine and governance overlay |
 
 ### Capability proposals
 
-Thematic groups from the future-directions survey.
+Thematic surveys that bundle several related capabilities. Unnumbered; each capability carries its own What / Trade-offs / Adoption trigger / Guard block.
 
 | File | What it covers |
 |---|---|
@@ -62,24 +64,16 @@ Thematic groups from the future-directions survey.
 | [schema-and-retrieval.md](schema-and-retrieval.md) | Scenario-typed retrieval extensions, MASSW aspects, exploration-trace capture |
 | [integrations.md](integrations.md) | Inspector plugin, Todoist gap-cards, open-design, static reports |
 | [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
-| [skill-governance.md](skill-governance.md) | Skill lifecycle state machine and governance overlay |
-| [profile-compilation.md](profile-compilation.md) | Build step to generate shared SOUL.md content from a base template |
+| [multi-machine-deployment.md](multi-machine-deployment.md) | Deferred deployment topologies (local-mesh, obsidian-sync, always-on) and secondary-device patterns |
 
-### Deployment reference
-
-How the vault and execution layer can be distributed across machines. Patterns beyond the `local-only` v0.1 default are optional and adopted per-setup.
-
-| File | What it covers |
-|---|---|
-| [deployment.md](deployment.md) | Four deployment patterns (local-only default; local-mesh, obsidian-sync, always-on) and how vault + execution layer sync across machines |
+> **Deployment:** the adopted `local-only` default and the conventions common to every sync pattern are documented in [docs: deployment options](../../docs/explanation/deployment/deployment-options.md); only the multi-machine topologies above remain a proposal.
 
 ### Rejected alternatives
 
-Tools and approaches evaluated and not adopted.
+Tools and approaches evaluated and not adopted are recorded as *Alternatives considered* in the relevant decision, with practical detail in the plugin reference docs.
 
-| File | What was rejected |
+| What was rejected | Where it's recorded |
 |---|---|
-| [../rejected/obsidian-kanban.md](../rejected/obsidian-kanban.md) | Obsidian Kanban plugin as board layer |
-| [../rejected/obsidian-linter.md](../rejected/obsidian-linter.md) | obsidian-linter as a control-plane formatter |
-| [../rejected/zotero-integration.md](../rejected/zotero-integration.md) | Alternative Zotero integration approaches |
-| [../rejected/zotlit.md](../rejected/zotlit.md) | ZotLit Obsidian plugin |
+| Obsidian Kanban plugin as the board layer | [ADR-22](../decisions/22-build-on-hermes-runtime.md), [obsidian-plugins.md](../../docs/reference/obsidian-plugins.md) |
+| obsidian-linter as a control-plane formatter | [ADR-12](../decisions/12-obsidian-linter-reference-only.md), [obsidian-plugins.md](../../docs/reference/obsidian-plugins.md) |
+| ZotLit / zotero-integration Zotero connectors | [ADR-05](../decisions/05-zotero-as-bibliographic-backbone.md), [zotero-plugins.md](../../docs/reference/zotero-plugins.md) |

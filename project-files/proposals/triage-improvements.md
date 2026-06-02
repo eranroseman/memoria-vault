@@ -1,5 +1,6 @@
 ---
 topic: proposals
+title: Triage improvements
 status: deferred
 created: 2026-05-31
 ---

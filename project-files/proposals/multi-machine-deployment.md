@@ -1,35 +1,54 @@
-# Deployment options
+---
+topic: proposals
+title: Multi-machine deployment (topologies and secondary-device patterns)
+status: deferred
+created: 2026-06-01
+---
 
-The system spans a vault (knowledge layer) and an execution layer (Hermes profiles, MCPs). Where each lives — and how they sync — is a human decision with real tradeoffs. Four deployment patterns, ordered by setup complexity.
+# Multi-machine deployment
+
+The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([deployment options](../../docs/explanation/deployment/deployment-options.md)). This proposal covers everything past that default: the multi-machine sync topologies and the patterns by which a *secondary* device safely reads, edits, and (sometimes) dispatches against a shared vault. It is deferred because v0.1 ships single-device; the topologies are additive and cost nothing to defer.
+
+Adjacent: [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) covers cross-machine *capabilities* (cross-vault retrieval, session-history sync, a shared memory server). This file covers the *deployment substrate* those capabilities run on. The two are designed to move together.
+
+## What
+
+Three sync topologies beyond `local-only`, plus a set of operating patterns for any device that isn't the designated primary.
 
 | Pattern | Sync mechanism | Always-on agent | Zotero API access | Ongoing cost | When to use |
 | --- | --- | --- | --- | --- | --- |
-| **`local-only`** | Git (manual pull / push) | ❌ Workstation must be on | ✅ Full localhost:23119 | $0 infra | Simplest start; single workstation; no discovery loop |
-| **`local-mesh`** | Syncthing peer-to-peer (no VPS) | ⚠️ Primary device when on | ✅ Full localhost on primary | $0 infra | Desktop + laptop; want auto-sync without cloud subscription or VPS |
-| **`obsidian-sync`** | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access is needed; small team |
-| **`always-on`** | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](../proposals/discovery-loop.md) |
+| `local-mesh` | Syncthing peer-to-peer (no VPS) | ⚠️ Primary device when on | ✅ Full localhost on primary | $0 infra | Desktop + laptop; auto-sync without cloud subscription or VPS |
+| `obsidian-sync` | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access is needed; small team |
+| `always-on` | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](discovery-loop.md) |
 
-*(Legacy labels map: A → `local-only`, A+ → `local-mesh`, B → `obsidian-sync`, C → `always-on`. The named forms are authoritative; the letters are retained only where an existing anchor depends on them.)*
+**Migration path.** Start `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role. The conventions common to every pattern (Git as history layer, `library.bib` in-vault, per-session logs, **one Hermes dispatcher per vault**, `.env` per-machine) are documented as adopted design in [deployment options](../../docs/explanation/deployment/deployment-options.md) and are what make these patterns safe.
 
-**Start with `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation.** Adding Syncthing to an existing vault is additive — it doesn't require restructuring anything. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role.
+## Why
 
-## Common decisions across options
+`local-only` requires the workstation to be on and offers no auto-sync and no unattended automation. Two felt needs push past it: working the vault from a second device (laptop, phone, tablet), and running discovery/ingest overnight without a human kickoff. Both require a sync topology *and* a safe answer to "what may a non-primary device do against a vault the primary is also dispatching against?" — without one, two machines race on card writes and corrupt the audit log.
 
-These apply regardless of which option you pick:
+## Trade-offs
 
-- **Git is the version history layer, not the sync layer.** All four options use Git for reversibility. Sync is a separate concern.
-- **`library.bib` lives inside the vault** at `.memoria/library.bib`, exported by Better BibTeX. This makes the bib a first-class artifact that travels with the vault under whichever sync mechanism you choose.
-- **Cheap-task routing is configured in Hermes, not in the deployment.** See the model-routing pattern (synthesis to Claude, embed / classify / quick-summary to cheaper models via OpenRouter or similar).
-- **Per-session log files, not a single `log.md`.** Each agent session writes a new file to `00-meta/02-logs/`. With one append-only file, distributed writes from VPS and desktop produce sync conflicts; one-file-per-session has nothing to conflict on.
-- **Hermes data dir is `~/.hermes/` by default** (or `%USERPROFILE%\.hermes\` on Windows). Override with `HERMES_HOME=/path/to/dir` when you need isolation — most commonly on the local-mesh and always-on options, where any secondary device's Hermes should keep its own profiles, sessions, and audit log isolated from the primary's `~/.hermes/`.
-- **One Hermes dispatcher per vault.** Under the local-mesh and always-on options, multiple machines have the vault but only *one* should run Hermes as a dispatcher (cron + `hermes gateway` + card claiming). The task registry lives in `~/.hermes/` per machine; two active dispatchers against the same synced vault race on card writes and produce conflicting audit logs. The convention: the *[primary device](../../docs/reference/glossary.md#system)* (desktop on local-mesh, VPS on always-on) owns dispatch; secondary devices run vault-only or in restricted modes — see [Secondary-device patterns](#secondary-device-patterns-local-mesh-and-always-on) below.
-- **Profile aliases are first-class.** The installer's profile-install step (`scripts/install.sh`, also `--profiles-only`) invokes `hermes profile install <vault>/.memoria/profiles/memoria-<name> --alias memoria-<name>` for each profile (from a staged copy), which gives you `memoria-librarian chat` as a shortcut for `hermes -p memoria-librarian chat`, which is what the workflows in [workflows/README.md](../../docs/explanation/workflows/README.md) assume.
-- **`.env` is per-machine, never committed.** Each profile ships a `.env.EXAMPLE` listing required and optional env vars with descriptions. The installer copies it to `.env` on first install if `.env` doesn't already exist; the human fills in keys. Hermes hard-excludes `.env` and `auth.json` from `hermes profile install` / `update` so credentials never travel between machines.
-- **Profile memory can ride the vault.** `MEMORY.md` / `USER.md` are per-machine by default, but the [`memories/` junction](../proposals/multi-vault-and-multi-machine.md) promotes them into the git-synced vault (`.memoria/profile-memory/memoria-<name>/`) so learned notes follow you across machines — the automatic, no-extra-channel way to share profile memory under non-concurrent local-only / local-mesh use. Session history (`state.db`) and secrets (`.env`) deliberately stay per-machine.
+- **Write coordination is the core risk.** Two active Hermes dispatchers against one synced vault race on card writes and produce conflicting audit logs. The whole secondary-device design exists to make that structurally impossible, not merely discouraged.
+- **`always-on` adds standing cost and ops surface** — a rented VPS (~$12–25/mo), a Syncthing mesh to keep healthy, and a cron whose silent failure is the dominant operational risk.
+- **`obsidian-sync` degrades Zotero access** to `.bib`-only on the VPS (no live localhost API), constraining Librarian discovery on that node.
+- **SSH-spawned ACP trades install simplicity for a reachability dependency** — it removes local install drift but only works while the primary is awake and reachable, with ~100–500ms latency per message.
+- **Install drift across devices** is a standing maintenance cost once more than one machine compiles profiles.
 
-## Secondary-device patterns (local-mesh and always-on)
+## Adoption trigger
 
-Under the local-mesh and always-on options, a "secondary device" is any machine other than the designated primary. (Under local-mesh, that's the laptop. Under always-on, that's the desktop — and any developer laptop alongside the VPS.) The primary owns dispatch; secondary devices range from "read-only consumers" to "ACP-capable interactive surfaces" depending on what's installed.
+Per topology, a concrete signal — not "might be useful":
+- **`local-mesh`:** a *second device* genuinely enters daily use and manual Git pull/push between them is the felt friction.
+- **`always-on`:** unattended overnight work is wanted — most concretely, the [discovery loop](discovery-loop.md) — and a sleep-prone workstation keeps missing the cron.
+- **`obsidian-sync`:** iOS/mobile vault access is required and Syncthing-on-mobile isn't viable.
+
+## Guard
+
+Do not stand up a VPS or a Syncthing mesh as a preparatory measure. `local-only` is the correct posture until a second device or unattended automation is real; adding Syncthing later is additive and restructures nothing, so there is no first-mover cost to pay early. The one invariant that must never be relaxed when you do adopt these: **exactly one Hermes dispatcher per vault** — every secondary-device pattern below is a way of honouring that.
+
+## Proposed mechanism — secondary-device patterns
+
+Under any multi-machine topology, a "secondary device" is any machine other than the designated primary. (Under `local-mesh`, that's the laptop. Under `always-on`, that's the desktop — and any developer laptop alongside the VPS.) The primary owns dispatch; secondary devices range from read-only consumers to ACP-capable interactive surfaces depending on what's installed.
 
 Four patterns, ordered by setup complexity:
 
@@ -104,17 +123,17 @@ Read a paper note on the laptop → open the ACP pane → run a `socratic-proces
 
 The `agent-client` plugin's `command` field is just a shell command. Setting it to `ssh primary-host hermes-agent` makes the ACP plugin spawn the Hermes process on the primary over SSH, streaming stdio back. The secondary device has no Hermes installed; the primary's Hermes is the agent.
 
-Requirements: SSH always reachable (Tailscale or local network), primary awake, tolerance for ~100–500ms latency per message. The pattern's attractiveness depends on whether the primary is reliably reachable — see "Pattern selection by option" below.
+Requirements: SSH always reachable (Tailscale or local network), primary awake, tolerance for ~100–500ms latency per message. The pattern's attractiveness depends on whether the primary is reliably reachable — see "Pattern selection by topology" below.
 
 Under SSH-spawned ACP you can talk to *any* profile remotely, not just Socratic — the spawned Hermes is the authoritative one on the primary with the full profile suite. This matters because it removes the "what's installed locally?" question: nothing's installed locally, so the device can use whichever profile is appropriate for the moment.
 
-The `customAgents` keys are agent-client plugin settings. Which path to pick — SSH-spawn or local-install — depends on the deployment option; see *Pattern selection by option* below.
+The `customAgents` keys are agent-client plugin settings. Which path to pick — SSH-spawn or local-install — depends on the topology; see *Pattern selection by topology* below.
 
-### Pattern selection by option
+### Pattern selection by topology
 
-Which secondary-device pattern to use depends on the deployment option, because local-mesh and always-on have different reachability properties for the primary.
+Which secondary-device pattern to use depends on the topology, because `local-mesh` and `always-on` have different reachability properties for the primary.
 
-#### Under local-mesh (desktop + laptop)
+#### Under `local-mesh` (desktop + laptop)
 
 The desktop is the primary, but desktops are often off. SSH-spawned ACP is therefore unreliable — it depends on the desktop being awake when the laptop wants ACP. The recommended path:
 
@@ -123,7 +142,7 @@ The desktop is the primary, but desktops are often off. SSH-spawned ACP is there
 3. **Promote to Hermes ACP-only** (Socratic-only baseline) when Socratic-on-the-train is a workflow you'd actually use. Local install gives an always-available interactive agent.
 4. **SSH-spawned ACP** only if local-install is genuinely off-limits (corporate laptop, etc.) — and accept that ACP won't work when the desktop is asleep.
 
-#### Under always-on (VPS + desktops + laptops)
+#### Under `always-on` (VPS + desktops + laptops)
 
 The VPS is the primary, and a VPS is always on. SSH-spawned ACP becomes the *recommended* default for the laptop because the destination is always reachable and latency is bounded. The recommended path:
 
@@ -132,13 +151,26 @@ The VPS is the primary, and a VPS is always on. SSH-spawned ACP becomes the *rec
 3. **Local Socratic-only install** as an *offline fallback* if you regularly work where SSH to the VPS is unreliable (planes, trains, weak hotel wifi). Configure the `agent-client` plugin with two `command` entries — primary SSH command and a fallback local command — and switch when offline.
 4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../plans/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
 
-The architectural reason the recommendation differs: local-mesh's primary is unreliable (desktop sleeps), so the laptop needs a local agent for ACP to be usable; always-on's primary is reliable (VPS always on), so SSH-spawn removes the need for a local install entirely.
+The architectural reason the recommendation differs: `local-mesh`'s primary is unreliable (desktop sleeps), so the laptop needs a local agent for ACP to be usable; `always-on`'s primary is reliable (VPS always on), so SSH-spawn removes the need for a local install entirely.
 
-### Roles on secondary devices under always-on
+### Roles on secondary devices under `always-on`
 
 Two distinct roles need different setups:
 
 - **Human-as-reader (PI's laptop):** SSH-spawned ACP into the VPS is the primary pattern. Local install only as offline fallback (Socratic-only). The secondary is a reading and processing surface; the VPS does all the dispatching, scheduling, and writing.
-- **Developer (building Memoria itself or its skills):** Full Hermes install on the dev machine is appropriate because testing changes requires running all profiles end-to-end. **Under always-on, `HERMES_HOME=/path/to/dev-hermes` isolation AND pointing at a *test vault* (clone, fixture, Docker volume) is mandatory, not optional.** Two Hermes dispatchers can coexist *only* if they're pointing at different vaults. A dev's Hermes pointed at the production vault while the VPS is also dispatching against it is the failure mode this rule exists to prevent — and under always-on it's the most likely real-world incident class because the dev's machine is on the same Tailscale as the VPS and can reach it.
+- **Developer (building Memoria itself or its skills):** Full Hermes install on the dev machine is appropriate because testing changes requires running all profiles end-to-end. **Under `always-on`, `HERMES_HOME=/path/to/dev-hermes` isolation AND pointing at a *test vault* (clone, fixture, Docker volume) is mandatory, not optional.** Two Hermes dispatchers can coexist *only* if they're pointing at different vaults. A dev's Hermes pointed at the production vault while the VPS is also dispatching against it is the failure mode this rule exists to prevent — and under `always-on` it's the most likely real-world incident class because the dev's machine is on the same Tailscale as the VPS and can reach it.
 
 The VPS remains the primary dispatcher in either case. Developers iterate against test vaults; the principal investigator's research vault is touched by exactly one Hermes (the VPS's).
+
+## Dependencies
+
+- Syncthing (for `local-mesh` / `always-on`) and a rented VPS (for `always-on`); Tailscale for SSH-spawn reachability.
+- The adopted common conventions in [deployment options](../../docs/explanation/deployment/deployment-options.md) — especially **one dispatcher per vault** — which these patterns presuppose.
+- [discovery-loop.md](discovery-loop.md) is the main thing that *motivates* `always-on`; adopting `always-on` before the discovery loop (or a real second device) is premature.
+
+## Related
+
+- **Adopted baseline:** [deployment options](../../docs/explanation/deployment/deployment-options.md) (the `local-only` default and the common conventions).
+- **Cross-machine capabilities:** [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) (cross-vault retrieval, session-history sync, shared memory server) — the capabilities that ride this substrate.
+- **Install discipline:** [release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md) (Phase 4 dev-install rules).
+- **Glossary:** [primary device](../../docs/reference/glossary.md#system).

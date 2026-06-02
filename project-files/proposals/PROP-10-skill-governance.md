@@ -1,14 +1,14 @@
 ---
 topic: proposals
+id: PROP-10
+title: Skill governance and lifecycle
 status: deferred
 created: 2026-05-31
 ---
 
-# Skill governance and lifecycle
+# PROP-10: Skill governance and lifecycle
 
-**Status: deferred — not part of the active design.** Adding a skill today means editing `policy.allow.skills` in a lane-override file and dropping the `SKILL.md` into the right profile's `skills/` folder. That's sufficient until the human is regularly graduating passthrough-skills to dedicated ones or coordinating cross-lane permission changes.
-
----
+Not part of the active design. Adding a skill today means editing `policy.allow.skills` in a lane-override file and dropping the `SKILL.md` into the right profile's `skills/` folder. That's sufficient until the human is regularly graduating passthrough-skills to dedicated ones or coordinating cross-lane permission changes.
 
 ## What
 
@@ -32,6 +32,17 @@ At least two of these are true:
 ## Guard
 
 Do not stand up the governance layer as a preparatory measure. The runtime mechanism (lane-override files + SKILL.md) works correctly without it; the governance layer is a bookkeeping overlay, not a safety gate.
+
+## Alternatives considered
+
+**Keep the runtime mechanism (the current state).** Lane-override `policy.allow.skills` + a dropped `SKILL.md` is enough while skill count is low and graduations are rare; the bookkeeping fits in the human's head. Held until the adoption trigger fires.
+
+**Stand up only the dashboard, skip the state machine.** A possible partial adoption (visibility without the lifecycle overhead). Defer the choice between full lifecycle and dashboard-only until the actual pain is known — confusion about *what's active* wants the dashboard; uncontrolled *graduations* want the state machine.
+
+## Related
+
+- **Runtime mechanism:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
+- **Placeholder:** `00-meta/07-skills/` ships empty until this is stood up (see [on-disk-layout.md](../../docs/reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md)).
 
 ## Dependencies
 
