@@ -450,7 +450,7 @@ install_profiles() {
   # shellcheck disable=SC2064
   trap "rm -rf '$staging'" RETURN
 
-  local p src missing f dst fname env_example env_file
+  local p src missing f dst env_example env_file
   for p in $targets; do
     src="$profiles_src/$p"
     if [ ! -d "$src" ]; then skipped="$skipped\n    [-] $p: source missing"; continue; fi

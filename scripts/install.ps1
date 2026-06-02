@@ -116,7 +116,7 @@ if (-not $ProfilesOnly) {
     Hdr 'Windows GUI apps'
     Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
     Install-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
-    # Git for Windows — the obsidian-git plugin shells out to it; without a Windows
+    # Git for Windows -- the obsidian-git plugin shells out to it; without a Windows
     # git binary the Source Control view shows "git not found". (WSL2 git is separate.)
     Install-WingetApp -Id 'Git.Git'           -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
     Say ''
