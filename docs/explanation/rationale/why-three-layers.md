@@ -1,6 +1,7 @@
 ---
 title: Why three layers, not one
 parent: Design rationale
+nav_order: 1
 ---
 
 # Why three layers, not one

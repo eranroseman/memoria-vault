@@ -1,6 +1,7 @@
 ---
 title: How to create a code artifact
 parent: Writing
+nav_order: 9
 ---
 
 

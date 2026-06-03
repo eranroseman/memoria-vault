@@ -1,6 +1,7 @@
 ---
 title: How to review link suggestions
 parent: Sources
+nav_order: 11
 ---
 
 # How to review link suggestions

@@ -1,6 +1,7 @@
 ---
 title: How to classify a source
 parent: Sources
+nav_order: 4
 ---
 
 

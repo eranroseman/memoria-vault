@@ -1,6 +1,7 @@
 ---
 title: How to rebuild the search index
 parent: Maintenance
+nav_order: 9
 ---
 
 

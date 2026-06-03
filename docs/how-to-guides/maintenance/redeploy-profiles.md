@@ -1,6 +1,7 @@
 ---
 title: How to redeploy profiles
 parent: Maintenance
+nav_order: 8
 ---
 
 

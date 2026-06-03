@@ -1,6 +1,7 @@
 ---
 title: How to build a Map of Content
 parent: Maintenance
+nav_order: 4
 ---
 
 # How to build a Map of Content

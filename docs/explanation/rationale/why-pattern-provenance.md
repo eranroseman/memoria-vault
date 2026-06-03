@@ -1,6 +1,7 @@
 ---
 title: "Pattern provenance: borrow, adapt, ignore"
 parent: Design rationale
+nav_order: 7
 ---
 
 # Pattern provenance: borrow, adapt, ignore

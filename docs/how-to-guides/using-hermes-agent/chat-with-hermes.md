@@ -1,6 +1,7 @@
 ---
 title: How to chat with a Hermes profile
 parent: Using Hermes Agent
+nav_order: 2
 ---
 
 

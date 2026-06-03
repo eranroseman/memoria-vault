@@ -94,13 +94,13 @@ Tick each plugin that is enabled and validated:
 
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
-- [ V] **B1 Pass**
+- [x] **B1 Pass**
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
-- [V ] **B2 Pass**
+- [x] **B2 Pass**
 
 **B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:
 
@@ -111,7 +111,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
-- [ V] **B3 Pass**
+- [x] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -121,7 +121,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
-- [ V] **B4 Pass**
+- [x] **B4 Pass**
 
 ---
 
@@ -167,12 +167,12 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
-- [ V] **D1 Pass**
+- [x] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
 `C:\Users\eranr\Memoria-test\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
 
-- [ V] **D2 Pass**
+- [x] **D2 Pass**
 
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
 
@@ -214,7 +214,7 @@ Dashboard doesn't refresh automatically.
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
 - ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
-- [ ] **E3 Pass**
+- [x] **E3 Pass**
 
 ---
 

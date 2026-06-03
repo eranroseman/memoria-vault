@@ -1,6 +1,7 @@
 ---
 title: How to set up a VPS for always-on operation
 parent: Setup
+nav_order: 2
 ---
 
 # How to set up a VPS for always-on operation

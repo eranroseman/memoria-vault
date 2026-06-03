@@ -1,6 +1,7 @@
 ---
 title: How to refactor claim notes
 parent: Maintenance
+nav_order: 3
 ---
 
 # How to refactor claim notes

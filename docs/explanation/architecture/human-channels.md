@@ -1,6 +1,7 @@
 ---
 title: Interaction channels
 parent: Architecture
+nav_order: 4
 ---
 
 # Interaction channels

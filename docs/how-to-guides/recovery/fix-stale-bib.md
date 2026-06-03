@@ -1,6 +1,7 @@
 ---
 title: How to fix a stale .bib
 parent: Recovery
+nav_order: 5
 ---
 
 

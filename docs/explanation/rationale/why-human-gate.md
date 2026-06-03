@@ -1,6 +1,7 @@
 ---
 title: Why the review gate is structural
 parent: Design rationale
+nav_order: 3
 ---
 
 # Why the review gate is structural

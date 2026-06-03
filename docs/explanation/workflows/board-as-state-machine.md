@@ -1,6 +1,7 @@
 ---
 title: The board as a state machine (the control plane)
 parent: Workflows
+nav_order: 1
 ---
 
 # The board as a state machine (the control plane)

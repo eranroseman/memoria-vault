@@ -1,6 +1,7 @@
 ---
 title: Session logging
 parent: Architecture
+nav_order: 5
 ---
 
 # Session logging

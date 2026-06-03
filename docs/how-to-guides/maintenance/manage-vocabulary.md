@@ -1,6 +1,7 @@
 ---
 title: How to manage your topic vocabulary
 parent: Maintenance
+nav_order: 5
 ---
 
 

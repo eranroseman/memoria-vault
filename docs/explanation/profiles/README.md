@@ -1,7 +1,7 @@
 ---
 title: Profiles
 parent: Explanation
-nav_order: 8
+nav_order: 5
 has_children: true
 permalink: /explanation/profiles/
 ---

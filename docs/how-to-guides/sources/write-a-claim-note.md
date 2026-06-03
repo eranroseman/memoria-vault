@@ -1,6 +1,7 @@
 ---
 title: How to write a claim note
 parent: Sources
+nav_order: 7
 ---
 
 

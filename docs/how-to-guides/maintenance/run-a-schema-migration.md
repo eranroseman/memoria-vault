@@ -1,6 +1,7 @@
 ---
 title: How to run a schema migration
 parent: Maintenance
+nav_order: 7
 ---
 
 # How to run a schema migration

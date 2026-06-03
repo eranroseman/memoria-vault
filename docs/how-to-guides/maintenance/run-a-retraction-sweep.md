@@ -1,6 +1,7 @@
 ---
 title: How to run a retraction sweep
 parent: Maintenance
+nav_order: 6
 ---
 
 # How to run a retraction sweep

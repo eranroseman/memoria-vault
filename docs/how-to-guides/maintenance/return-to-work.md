@@ -1,6 +1,7 @@
 ---
 title: How to return to work after a break
 parent: Maintenance
+nav_order: 10
 ---
 
 # How to return to work after a break

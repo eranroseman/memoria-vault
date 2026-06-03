@@ -1,6 +1,7 @@
 ---
 title: How to set up Obsidian
 parent: Setup
+nav_order: 4
 ---
 
 

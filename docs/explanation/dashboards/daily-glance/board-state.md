@@ -1,6 +1,7 @@
 ---
 title: The board-state dashboard
 parent: Daily glance
+nav_order: 2
 grand_parent: Dashboards
 ---
 

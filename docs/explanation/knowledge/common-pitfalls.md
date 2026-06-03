@@ -1,6 +1,7 @@
 ---
 title: Common pitfalls
 parent: Knowledge
+nav_order: 7
 ---
 
 # Common pitfalls

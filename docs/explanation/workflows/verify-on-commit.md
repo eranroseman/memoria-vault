@@ -1,6 +1,7 @@
 ---
 title: Verify-on-commit
 parent: Workflows
+nav_order: 3
 ---
 
 # Verify-on-commit

@@ -1,6 +1,7 @@
 ---
 title: "How to install Memoria: quickstart"
 parent: Setup
+nav_order: 1
 ---
 
 

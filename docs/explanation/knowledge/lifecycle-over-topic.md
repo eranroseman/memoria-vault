@@ -1,6 +1,7 @@
 ---
 title: Why folders encode lifecycle, not topic
 parent: Knowledge
+nav_order: 4
 ---
 
 # Why folders encode lifecycle, not topic

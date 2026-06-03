@@ -1,6 +1,7 @@
 ---
 title: contradictions dashboard
 parent: Synthesis agenda
+nav_order: 4
 grand_parent: Dashboards
 ---
 

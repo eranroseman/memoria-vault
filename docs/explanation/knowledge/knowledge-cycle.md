@@ -1,6 +1,7 @@
 ---
 title: The knowledge cycle
 parent: Knowledge
+nav_order: 2
 ---
 
 # The knowledge cycle
