@@ -22,7 +22,8 @@ run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /
 l1() {
   echo "── L1: component self-tests ──"
   for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate \
-           profiles/memoria-linter/detectors; do
+           profiles/memoria-linter/detectors \
+           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper; do
     run python3 "$P/$s.py" --self-test
   done
 }
@@ -33,7 +34,7 @@ l0() {
   run bash scripts/check-vault-links.sh
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py"
+  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py"
   run bash -n scripts/install.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh "$P"/scripts/*.sh
