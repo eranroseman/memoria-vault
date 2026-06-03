@@ -10,7 +10,7 @@ Every note in the vault is somewhere in a long-term progression from ingested so
 
 ## The progression
 
-The cycle moves through seven broad stages: ingest, classify, synthesize, develop, promote, write, export. A new source arrives as a candidate, becomes a paper-note after the Librarian processes it, gets classified by the human, generates claim notes through Socratic discussion and synthesis, those claims mature and cross-link into the existing graph, stable claims get promoted to reference notes, and eventually assembled into a deliverable.
+The cycle runs as two flows. **Compile** turns sources into claims — `find → capture → enrich → classify → (discuss) → distill → link` — and **Compose** turns claims into deliverables — `assess → frame → (canvas) → draft → verify ⇄ revise → export` (see [The Compile and Compose flows](../workflows/compile-and-compose.md)). A new source arrives as a candidate, is captured and enriched into a paper-note, is classified by the human, is optionally questioned through Socratic discussion, and is distilled into claim notes that the human links into the existing graph. Those claims mature, cross-link, and — when stable — are promoted to reference notes; once enough accumulate, a writing project assesses the corpus, frames an argument, drafts, verifies, and exports a deliverable.
 
 This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one flow but many running concurrently.
 

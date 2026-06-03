@@ -118,15 +118,37 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## Cycle stages
 
-**Discuss stage** — Compile-flow stage between classify and distill. Paper note is read through the Socratic profile (write-denied vault-wide) before any claim note is written.
+The knowledge cycle runs as two flows. **Compile** (sources → claims): `find → capture → enrich → classify → (discuss) → distill → link`. **Compose** (claims → deliverables): `assess → frame → (canvas) → draft → verify ⇄ revise → export`.
 
-**Assess stage** — first Compose-flow stage. Mapper runs `scope-project` and produces `corpus-map.md`. Human decides whether corpus is ready to write or needs more reading.
+### Compile
 
-**Frame stage** — second Compose-flow stage. Writer generates competing outlines via `counter-outline`; Socratic optionally produces lens-based framings. Human commits to one via `framing/CHOSEN.md`.
+**Find** — the Librarian surfaces candidate sources (citation / concept search) into `10-inbox/03-candidates/`; the human selects which to pursue.
 
-**Verify stage** — Compose-flow stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
+**Capture** — a chosen source is landed as a `paper-note` from the local `.bib` alone (offline, no-ML); `lifecycle: captured` — the guaranteed, nothing-lost floor.
 
-**Revise stage** — Compose-flow stage between verify and export. Human addresses verification findings until the verify→revise loop closes.
+**Enrich** — network metadata (Semantic Scholar / OpenAlex / Crossref), full text, and ID-keyed entity + citation links are added, and a classification is proposed; `captured → proposed` (progress tracked by `ingest_status`). Best-effort and retryable; never load-bearing for capture.
+
+**Classify** — the human accepts or edits the proposed classification, making the note canonical (`proposed → current`). The first human gate.
+
+**Discuss** *(optional)* — the paper is read through the Socratic profile (write-denied vault-wide) before any claim note is written. Produces sharpened thinking, not a file.
+
+**Distill** — the human writes a `claim-note` grounded in the source (`30-synthesis/01-claims/`). The second human gate and the Compile→knowledge transition; no agent can write claims.
+
+**Link** — the human relates the new claim into the graph with typed `relations:` (`supports` / `contradicts`) and accepts the Librarian's `[!suggestions]`. (Distinct from the mechanical entity/citation linking done during Enrich.)
+
+### Compose
+
+**Assess** — first Compose stage. Mapper runs `scope-project` and produces `corpus-map.md`; the human decides whether the corpus is ready to write or needs more reading (gaps route back to Compile).
+
+**Frame** — the Writer generates competing outlines via `counter-outline` (Socratic optionally adds lens-based framings); the human commits to one via `framing/CHOSEN.md`.
+
+**Canvas** *(optional)* — the chosen claims are laid out spatially (a JSON Canvas in `40-workbench/<project>/03-canvas/`) to find the argument's structure before prose. The Compose-side mirror of Discuss.
+
+**Draft** — the Writer produces prose from the chosen framing and the cited claims.
+
+**Verify ⇄ revise** — the Verifier traces every claim to a claim note and flags gaps (`gap:` cards); the human closes them. A loop, not two passes; the review gate sits at its exit.
+
+**Export** — a Pandoc render turns the approved draft into the final artifact (`50-deliverables/`).
 
 ---
 
