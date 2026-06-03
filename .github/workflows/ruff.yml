@@ -1,0 +1,26 @@
+name: ruff
+
+# Lints the Python tooling (policy gate/hook, board export, metrics, detectors,
+# scripts) with ruff — catches real bugs (pyflakes F-codes: undefined names,
+# unused imports) plus basic style. Linter only; the repo is not ruff-formatted.
+# Config + ignores live in ruff.toml. Pinned to match the version developed against.
+#
+# Runs unconditionally (no `paths:` filter) so it can back a required check —
+# same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install --quiet ruff==0.15.15
+      - name: ruff check
+        run: ruff check scripts vault/.memoria

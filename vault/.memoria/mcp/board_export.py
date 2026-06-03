@@ -404,13 +404,13 @@ def self_test() -> int:
         check("second run logs cost on completion", ev2["costs"] == 1)
         check("second run logs two dispositions", ev2["dispositions"] == 2)
 
-        disp = [json.loads(l) for l in (vault / DISPOSITION_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
+        disp = [json.loads(ln) for ln in (vault / DISPOSITION_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
         by_id = {d["task_id"]: d for d in disp}
         check("approve -> accepted", by_id["e2"]["disposition"] == "accepted")
         check("explicit edited overrides accepted", by_id["e3"]["disposition"] == "edited")
         cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
         check("cost row carries spend + tokens", cost["cost"] == 0.42 and cost["tokens_out"] == 1200)
-        tr = [json.loads(l) for l in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
+        tr = [json.loads(ln) for ln in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
         check("transition records status change e1 ready->done",
               any(t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr))
         check("no spurious events on an unchanged re-run", export_events(vault, load_state_cache(vault), run2) ==
