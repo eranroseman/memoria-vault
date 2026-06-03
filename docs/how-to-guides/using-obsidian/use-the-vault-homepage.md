@@ -1,6 +1,7 @@
 ---
 title: How to use the vault homepage
 parent: Using Obsidian
+nav_order: 1
 ---
 
 # How to use the vault homepage

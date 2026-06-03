@@ -1,6 +1,7 @@
 ---
 title: How to promote a claim to canonical reference
 parent: Sources
+nav_order: 9
 ---
 
 

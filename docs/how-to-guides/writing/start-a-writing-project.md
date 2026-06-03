@@ -1,6 +1,7 @@
 ---
 title: How to start a writing project
 parent: Writing
+nav_order: 1
 ---
 
 

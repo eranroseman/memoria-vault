@@ -1,6 +1,7 @@
 ---
 title: The memory model
 parent: Architecture
+nav_order: 2
 ---
 
 # The memory model

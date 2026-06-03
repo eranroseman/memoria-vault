@@ -1,6 +1,7 @@
 ---
 title: How to capture and ingest a source
 parent: Sources
+nav_order: 2
 ---
 
 

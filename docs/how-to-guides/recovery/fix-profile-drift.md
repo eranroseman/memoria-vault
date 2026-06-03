@@ -1,6 +1,7 @@
 ---
 title: How to fix profile drift
 parent: Recovery
+nav_order: 6
 ---
 
 

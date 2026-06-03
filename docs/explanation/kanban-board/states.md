@@ -1,6 +1,7 @@
 ---
 title: Board states and the review gate
 parent: Kanban board
+nav_order: 1
 ---
 
 

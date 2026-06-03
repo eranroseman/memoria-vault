@@ -1,6 +1,7 @@
 ---
 title: How to pin a citekey in Zotero
 parent: Sources
+nav_order: 12
 ---
 
 # How to pin a citekey in Zotero

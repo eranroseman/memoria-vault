@@ -1,6 +1,7 @@
 ---
 title: How to use the Memoria command palette
 parent: Using Obsidian
+nav_order: 5
 ---
 
 

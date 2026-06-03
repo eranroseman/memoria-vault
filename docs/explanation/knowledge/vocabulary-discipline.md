@@ -1,6 +1,7 @@
 ---
 title: Vocabulary discipline
 parent: Knowledge
+nav_order: 6
 ---
 
 # Vocabulary discipline

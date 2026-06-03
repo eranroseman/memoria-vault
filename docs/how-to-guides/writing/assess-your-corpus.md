@@ -1,6 +1,7 @@
 ---
 title: How to assess your corpus for a project
 parent: Writing
+nav_order: 3
 ---
 
 

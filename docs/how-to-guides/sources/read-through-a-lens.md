@@ -1,6 +1,7 @@
 ---
 title: How to read a paper through a Socratic lens
 parent: Sources
+nav_order: 5
 ---
 
 

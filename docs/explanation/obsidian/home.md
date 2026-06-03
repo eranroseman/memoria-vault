@@ -1,6 +1,7 @@
 ---
 title: Home — the vault front door
 parent: Obsidian
+nav_order: 1
 ---
 
 # Home — the vault front door

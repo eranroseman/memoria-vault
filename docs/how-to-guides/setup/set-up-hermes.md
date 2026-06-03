@@ -1,6 +1,7 @@
 ---
 title: How to set up Hermes
 parent: Setup
+nav_order: 5
 ---
 
 

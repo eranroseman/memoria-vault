@@ -1,6 +1,7 @@
 ---
 title: How to triage fleeting notes
 parent: Sources
+nav_order: 3
 ---
 
 

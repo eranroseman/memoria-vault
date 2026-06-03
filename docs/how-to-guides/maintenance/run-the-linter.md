@@ -1,6 +1,7 @@
 ---
 title: How to run the Linter
 parent: Maintenance
+nav_order: 2
 ---
 
 

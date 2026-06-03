@@ -1,6 +1,7 @@
 ---
 title: How to run the weekly review
 parent: Maintenance
+nav_order: 1
 ---
 
 

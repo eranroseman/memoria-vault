@@ -1,6 +1,7 @@
 ---
 title: The reading-pipeline dashboard
 parent: Synthesis agenda
+nav_order: 1
 grand_parent: Dashboards
 ---
 

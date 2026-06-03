@@ -1,6 +1,7 @@
 ---
 title: How to use the agent-client pane
 parent: Using Obsidian
+nav_order: 4
 ---
 
 

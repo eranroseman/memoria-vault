@@ -1,6 +1,7 @@
 ---
 title: How to draft with the Writer
 parent: Writing
+nav_order: 6
 ---
 
 

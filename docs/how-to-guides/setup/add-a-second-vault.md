@@ -1,6 +1,7 @@
 ---
 title: How to add a second vault
 parent: Setup
+nav_order: 8
 ---
 
 

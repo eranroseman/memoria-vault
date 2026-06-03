@@ -1,6 +1,7 @@
 ---
 title: How to frame a writing project
 parent: Writing
+nav_order: 2
 ---
 
 

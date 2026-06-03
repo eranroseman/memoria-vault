@@ -1,6 +1,7 @@
 ---
 title: Distribution model
 parent: Deployment
+nav_order: 2
 ---
 
 # Distribution model

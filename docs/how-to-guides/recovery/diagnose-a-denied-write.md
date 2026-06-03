@@ -1,6 +1,7 @@
 ---
 title: How to diagnose a denied or blocked write
 parent: Recovery
+nav_order: 4
 ---
 
 

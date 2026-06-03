@@ -1,6 +1,7 @@
 ---
 title: Why Memoria doesn't pursue full autonomy
 parent: Design rationale
+nav_order: 2
 ---
 
 # Why Memoria doesn't pursue full autonomy

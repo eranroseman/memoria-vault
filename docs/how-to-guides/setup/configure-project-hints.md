@@ -1,6 +1,7 @@
 ---
 title: How to configure project hints
 parent: Setup
+nav_order: 9
 ---
 
 

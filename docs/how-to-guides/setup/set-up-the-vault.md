@@ -1,6 +1,7 @@
 ---
 title: How to set up the vault
 parent: Setup
+nav_order: 3
 ---
 
 

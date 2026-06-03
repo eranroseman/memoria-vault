@@ -1,6 +1,7 @@
 ---
 title: fleet-health dashboard
 parent: Operational health
+nav_order: 1
 grand_parent: Dashboards
 ---
 

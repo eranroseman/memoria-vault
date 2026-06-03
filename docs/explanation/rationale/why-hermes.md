@@ -1,6 +1,7 @@
 ---
 title: Why Hermes
 parent: Design rationale
+nav_order: 5
 ---
 
 # Why Hermes

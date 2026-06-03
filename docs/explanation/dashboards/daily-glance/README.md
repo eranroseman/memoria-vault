@@ -1,6 +1,7 @@
 ---
 title: Daily glance
 parent: Dashboards
+nav_order: 1
 grand_parent: Explanation
 has_children: true
 permalink: /explanation/dashboards/daily-glance/
