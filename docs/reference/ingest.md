@@ -89,7 +89,8 @@ Fields the Librarian populates on the new note at creation:
 | Field | Value | Notes |
 | --- | --- | --- |
 | `type` | Detected type (see table above) | Set once; never changed. |
-| `lifecycle` | `proposed` | Promoted to `current` by the human at [Classify](../how-to-guides/sources/classify-a-source.md). |
+| `lifecycle` | `captured` | The Tier-0 floor. The classification proposal promotes `captured → proposed`; the human promotes `proposed → current` at [Classify](../how-to-guides/sources/classify-a-source.md). |
+| `ingest_status` | `tier0` → `enriched` → `complete` | Pipeline progress while `captured`; `needs-human` is the terminal floor after bounded failed re-ingest. See [Frontmatter fields](frontmatter.md#ingest_status-values-ingested-source-notes). |
 | `created` | Today's date | `updated` is set to the same date at creation. |
 | `citekey` | From `.bib` | Paper notes only. |
 | `doi` | From `.bib` or OpenAlex | Promoted from `_enrichment` once verified. |
