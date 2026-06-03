@@ -6,11 +6,11 @@ has_children: true
 permalink: /how-to-guides/sources/
 ---
 
-# Sources (upstream)
+# Sources (Compile)
 
 Day-to-day tasks for moving sources from discovery to durable knowledge. Performed inside Obsidian.
 
-| Guide | What it covers | Pipeline stage |
+| Guide | What it covers | Cycle stage |
 | --- | --- | --- |
 | [Find new sources](find-new-sources.md) | Forward/backward citation search, concept queries, candidate queue | Find |
 | [Triage fleeting notes](triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Fleeting triage |

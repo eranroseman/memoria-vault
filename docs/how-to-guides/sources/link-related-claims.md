@@ -1,11 +1,11 @@
 ---
-title: How to link related claims (typed relations)
+title: Link related claims
 parent: Sources
-nav_order: 8
+nav_order: 9
 ---
 
 
-# How to link related claims (typed relations)
+# Link related claims
 
 Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. A `relations:` block records `supports` / `contradicts` as machine-queryable, **human-set** links — and a `contradicts` link is the data the [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md) reads. This guide is for adding a typed relation between two claims that **already exist**. To set one at the moment you write a claim, use Step 7 of [Write a claim note](write-a-claim-note.md) instead.
 

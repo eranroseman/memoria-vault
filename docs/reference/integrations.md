@@ -53,7 +53,7 @@ Used during enrichment to link paper notes to person, organization, and venue en
 | **Obsidian Local REST API** (port 27124) | Lets Hermes profiles read and write vault files through Obsidian's API rather than direct filesystem calls. Required for the Librarian and other write-active profiles. |
 | **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (Socratic, ad-hoc queries). Separate from queue-dispatched card work. |
 | **qmd** | Hybrid BM25 + vector search over the vault. Used by Mapper (`cluster-map`, `gap-report`) and Verifier (`similarity-check`, `find-duplicates`). |
-| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
+| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
 
 ---
 
@@ -92,5 +92,5 @@ Tools evaluated and not in the current design:
 
 - Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
 - Profile permissions (which profiles can call which integrations): [Profile capabilities](profiles.md)
-- Where the API keys are configured: [How to set up Hermes](../how-to-guides/setup/set-up-hermes.md)
+- Where the API keys are configured: [Set up Hermes](../how-to-guides/setup/set-up-hermes.md)
 - Librarian design (the profile that calls most of these): [The Librarian](../explanation/profiles/librarian.md)

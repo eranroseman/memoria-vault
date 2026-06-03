@@ -38,7 +38,7 @@ Sorted by severity, then topic.
 | Schema version mismatch in Dataview | MEDIUM | Notes on old schema version | `hermes -p memoria-linter chat -s schema-migrate` → `--dry-run` first, review diff, then run on a single folder first. |
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host or stale `.env` (`always-on` only) | Check `journalctl --user -u hermes-overnight`. |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
-| Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [How to fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md). |
+| Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [Fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md). |
 | Citekey not found at ingest | LOW | `.bib` not updated or not pulled | Export from Zotero (File → Export Library → Keep Updated); `git add .memoria/memoria.bib && git commit && git push`. |
 | `_enrichment` fields not queryable | LOW | `_enrichment` is a nested frontmatter namespace; Dataview can't query nested keys directly | Promote specific fields (e.g., `enriched_date`) to main frontmatter, or query the parent key. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |

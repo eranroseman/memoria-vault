@@ -33,7 +33,7 @@ The `routing.invocation: interactive_only` flag is what tells the Kanban dispatc
 
 ## Core commands
 
-- `socratic-processing` — question-only conversation about a paper note (typically invoked at the Discuss stage of upstream).
+- `socratic-processing` — question-only conversation about a paper note (typically invoked at the Discuss stage of the Compile flow).
 - `lens-reading` (parameterized) — read a note or cluster through a named theoretical lens. Examples: `mamykina-sensemaking`, `veinot-informational-justice`, `design-justice-costanza-chock`, `jitai-receptivity-timing`. The named lens (a theoretical frame, not an installed skill) provides the framing; you provide the questions through that frame. Both `socratic-processing` and `lens-reading` are **prompt behaviors of this profile**, not Hermes skills — there is nothing to install.
 
 ## Core skills
@@ -62,7 +62,7 @@ The `routing.invocation: interactive_only` flag is what tells the Kanban dispatc
 ## Exit conditions
 
 - A Socratic session has no card lifecycle. It is invoked synchronously and ends when the human closes the ACP pane.
-- The associated upstream card (e.g., a `discuss-pending` card on a paper note) is moved by the **human**, not by you. You have no write access to update card state.
+- The associated Compile-flow card (e.g., a `discuss-pending` card on a paper note) is moved by the **human**, not by you. You have no write access to update card state.
 
 ## Delegation
 

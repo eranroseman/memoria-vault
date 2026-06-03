@@ -1,17 +1,17 @@
 ---
-title: How to add a second vault
+title: Add a second vault
 parent: Setup
-nav_order: 8
+nav_order: 9
 ---
 
 
-# How to add a second vault
+# Add a second vault
 
 Fork the starter vault for a separate project or research area, keeping it independent from your primary vault while sharing the same Hermes profiles.
 
 ## Prerequisites
 
-- Your primary vault is working ([How to install Memoria: quickstart](quickstart.md))
+- Your primary vault is working ([Quickstart](quickstart.md))
 - Hermes is installed and on your `PATH`
 - A separate GitHub repo for the second vault (or plan to create one)
 
@@ -47,7 +47,7 @@ This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second
 
 Obsidian supports multiple vaults. File → Open Another Vault → Open folder as vault → select `~/my-second-vault` (the folder the installer copied the vault to).
 
-**4. Install the same set of required plugins** in this vault (same as step 2 of [How to set up Obsidian](set-up-obsidian.md)). Each vault has its own `.obsidian/` config.
+**4. Install the same set of required plugins** in this vault (same as step 2 of [Set up Obsidian](set-up-obsidian.md)). Each vault has its own `.obsidian/` config.
 
 **5. Copy the REST API key.**
 
@@ -76,6 +76,6 @@ The dry-run output should show paths inside `my-second-vault/vault/`, not your p
 
 ## Related
 
-- First vault setup: [How to set up the vault](set-up-the-vault.md)
-- Redeploying after profile edits: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- First vault setup: [Set up the vault](set-up-the-vault.md)
+- Redeploying after profile edits: [Redeploy profiles](../maintenance/redeploy-profiles.md)
 - Distribution model explanation: [Distribution model](../../explanation/deployment/distribution-model.md)

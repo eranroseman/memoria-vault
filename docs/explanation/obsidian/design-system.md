@@ -1,7 +1,7 @@
 ---
 title: Design system
 parent: Obsidian
-nav_order: 2
+nav_order: 6
 ---
 
 # Design system

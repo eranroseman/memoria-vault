@@ -1,7 +1,7 @@
 ---
 title: Why specialist profiles, not a generalist agent
 parent: Design rationale
-nav_order: 4
+nav_order: 2
 ---
 
 # Why specialist profiles, not a generalist agent

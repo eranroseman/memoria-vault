@@ -75,7 +75,7 @@ A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
 | Which topics map to which project | `.memoria/project-hints.yaml` (config) | a memory substrate |
 | A synthesized claim or finding | Vault notes (`30-synthesis/`) | any memory substrate |
 
-The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [How to configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
+The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
 
 ---
 
@@ -88,7 +88,7 @@ The test: **memory is read back as recall; configuration is read as rules.** "To
 
 **How-to**
 
-- Configuring project hints (the config example above): [How to configure project hints](../../how-to-guides/setup/configure-project-hints.md)
+- Configuring project hints (the config example above): [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)
 
 **Reference**
 

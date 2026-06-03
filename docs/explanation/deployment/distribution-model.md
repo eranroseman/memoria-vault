@@ -1,7 +1,7 @@
 ---
 title: Distribution model
 parent: Deployment
-nav_order: 2
+nav_order: 1
 ---
 
 # Distribution model
@@ -58,7 +58,7 @@ A profile compiler that generates profile directories from a shared base plus pe
 ## Related
 
 - Profile structure: [Profiles](../profiles/README.md)
-- Install steps: [How to set up the vault](../../how-to-guides/setup/set-up-the-vault.md)
-- Operationalizes idempotent deployment: [How to redeploy profiles](../../how-to-guides/maintenance/redeploy-profiles.md)
-- The one-liner install entry point: [How to install Memoria: quickstart](../../how-to-guides/setup/quickstart.md)
+- Install steps: [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md)
+- Operationalizes idempotent deployment: [Redeploy profiles](../../how-to-guides/maintenance/redeploy-profiles.md)
+- The one-liner install entry point: [Quickstart](../../how-to-guides/setup/quickstart.md)
 - On-disk layout reference: [On-disk layout](../../reference/on-disk-layout.md)

@@ -1,11 +1,11 @@
 ---
-title: How to find new sources
+title: Find new sources
 parent: Sources
 nav_order: 1
 ---
 
 
-# How to find new sources
+# Find new sources
 
 Run a discovery search — forward citations, backward citations, or concept-driven — and route candidates to the inbox for your review.
 
@@ -66,6 +66,6 @@ Don't leave candidates undecided indefinitely. The weekly review surfaces the co
 
 - After including: [Capture and ingest a source](capture-and-ingest.md)
 - Gap candidates from Verify also land here: [Verify and revise a draft](../writing/verify-and-revise.md)
-- Weekly review (step 3 — process discovery candidates): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Weekly review (step 3 — process discovery candidates): [Run the weekly review](../maintenance/run-the-weekly-review.md)
 - The profile running the find: [The Librarian](../../explanation/profiles/librarian.md)
 - Pre-ingest screening (now part of adopt-on-demand): [ADR-16](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)

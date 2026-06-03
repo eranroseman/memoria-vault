@@ -1,11 +1,11 @@
 ---
-title: How to read a paper through a Socratic lens
+title: Read a paper through a Socratic lens
 parent: Sources
-nav_order: 5
+nav_order: 7
 ---
 
 
-# How to read a paper through a Socratic lens
+# Read a paper through a Socratic lens
 
 A *lens* is a named theoretical frame the Socratic profile reads through. The same paper questioned through a *receptivity/timing* lens yields different questions than through an *equity/justice* lens — the lens supplies the framing, you supply the answers. This guide covers choosing a lens for a session, what a lens does and doesn't change, and adding your own.
 
@@ -76,5 +76,5 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Redeploy after adding a lens: [Redeploy profiles](../maintenance/redeploy-profiles.md)
-- Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [How to use the Memoria command palette](../using-obsidian/obsidian-command-palette.md)
+- Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [Command palette](../using-obsidian/obsidian-command-palette.md)
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)

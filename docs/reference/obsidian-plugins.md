@@ -11,7 +11,7 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ## Required Obsidian plugins (8)
 
-Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [How to set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -163,4 +163,4 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 ## Related
 
-- How a new user enables these plugins: [How to install Memoria: quickstart](../how-to-guides/setup/quickstart.md)
+- How a new user enables these plugins: [Quickstart](../how-to-guides/setup/quickstart.md)

@@ -1,11 +1,11 @@
 ---
-title: How to fix broken frontmatter
+title: Fix broken frontmatter
 parent: Recovery
 nav_order: 3
 ---
 
 
-# How to fix broken frontmatter
+# Fix broken frontmatter
 
 Repair a YAML parse error that prevents a note from appearing in Dataview queries or triggers an error in Obsidian's Properties panel.
 

@@ -25,5 +25,5 @@ Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you
 
 ## See also
 
-- [What Memoria is](../explanation/overview/what-memoria-is.md) — system identity, what it is and isn't, upstream/downstream directions
+- [What Memoria is](../explanation/overview/what-memoria-is.md) — system identity, what it is and isn't, Compile/Compose directions
 - [How work moves through the system](../explanation/workflows/README.md) — the Zettelkasten model, the agent division of labour, and the board as coordination layer

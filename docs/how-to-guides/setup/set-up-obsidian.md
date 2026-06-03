@@ -1,18 +1,18 @@
 ---
-title: How to set up Obsidian
+title: Set up Obsidian
 parent: Setup
-nav_order: 4
+nav_order: 3
 ---
 
 
-# How to set up Obsidian
+# Set up Obsidian
 
 Open the vault in Obsidian, install the required plugins, and configure the REST API key.
 
 ## Prerequisites
 
 - Obsidian installed ([obsidian.md](https://obsidian.md))
-- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([How to set up the vault](set-up-the-vault.md))
+- Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([Set up the vault](set-up-the-vault.md))
 
 ## Steps
 
@@ -56,7 +56,7 @@ On restart the plugin regenerates a real `apiKey` (64-char hex token) and its TL
 
 **5. Copy the API key.**
 
-Settings → Local REST API → copy the `apiKey` value. You'll need it when filling the Librarian's `.env` in [How to set up Hermes](set-up-hermes.md).
+Settings → Local REST API → copy the `apiKey` value. You'll need it when filling the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
 
 **6. Confirm plugin settings match the shipped defaults.**
 

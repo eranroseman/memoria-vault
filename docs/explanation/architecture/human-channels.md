@@ -48,7 +48,7 @@ The mobile capture mode takes advantage of the phone's always-accessible nature:
 
 Confining Telegram to one messaging channel is also intentional. Each additional channel — Discord, Slack, WhatsApp — competes for attention and demands its own notification discipline. Until there is a concrete need that Telegram cannot serve, additional channels add noise without value.
 
-For Telegram configuration and the recommended per-profile toolset, see [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
+For Telegram configuration and the recommended per-profile toolset, see [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
 
 ---
 
@@ -64,7 +64,7 @@ Security-wise, the API passes every write through the policy MCP — it does not
 
 ## Related
 
-- Messaging gateway setup: [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
+- Messaging gateway setup: [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
 - Obsidian UI components: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
 - Policy MCP (what API calls go through): [Policy MCP](../../reference/policy-mcp.md)

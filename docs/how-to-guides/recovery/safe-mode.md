@@ -1,10 +1,10 @@
 ---
-title: "Safe mode: minimal working path"
+title: Safe mode
 parent: Recovery
 nav_order: 1
 ---
 
-# Safe mode: minimal working path
+# Safe mode
 
 When optional tooling is unavailable, these three workflows must still function. For each: the command that must work, the named fallbacks, and the one thing never to run automatically.
 
@@ -95,7 +95,7 @@ All four must return expected values before blaming a tool.
 
 ## Related
 
-- Return-to-work checklist: [How to return to work after a break](../maintenance/return-to-work.md)
-- Fix stale .bib: [How to fix a stale .bib](fix-stale-bib.md)
-- Fix stuck card: [How to fix a stuck card](fix-stuck-card.md)
-- Rebuild search index: [How to rebuild the search index](../maintenance/rebuild-the-search-index.md)
+- Return-to-work checklist: [Return to work](../maintenance/return-to-work.md)
+- Fix stale .bib: [Fix a stale .bib](fix-stale-bib.md)
+- Fix stuck card: [Fix a stuck card](fix-stuck-card.md)
+- Rebuild search index: [Rebuild the search index](../maintenance/rebuild-the-search-index.md)
