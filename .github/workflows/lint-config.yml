@@ -25,8 +25,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install --quiet yamllint==1.38.0
-      - name: yamllint (uses .yamllint)
-        run: yamllint .
+      - name: yamllint tracked YAML (excludes vault/.obsidian, uses .yamllint)
+        run: git ls-files '*.yaml' '*.yml' | grep -v 'vault/\.obsidian/' | xargs -r yamllint
 
   actionlint:
     name: actionlint (.github/workflows)

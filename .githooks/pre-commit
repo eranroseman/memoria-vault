@@ -112,12 +112,14 @@ if staged | grep -qE '^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/temp
   fi
 fi
 
-# --- 7. yamllint (when any tracked YAML is staged) --------------------------
-# Profile config / lane-override / cron / workflow YAML is load-bearing. Mirrors
-# the lint-config CI job; uses .yamllint. Skipped with a notice if absent.
-if staged | grep -qE '\.ya?ml$'; then
+# --- 7. yamllint (when a staged YAML is not under vault/.obsidian) ----------
+# Profile config / lane-override / cron / workflow YAML is load-bearing. Lints
+# only the staged, non-.obsidian YAML (vault/.obsidian is vendored); uses
+# .yamllint. Mirrors the lint-config CI job. Skipped with a notice if absent.
+yml_staged=$(staged | grep -E '\.ya?ml$' | grep -v 'vault/\.obsidian/')
+if [ -n "$yml_staged" ]; then
   if command -v yamllint >/dev/null 2>&1; then
-    yamllint . || { echo "pre-commit: yamllint found issues (above)." >&2; fail=1; }
+    echo "$yml_staged" | xargs -r yamllint || { echo "pre-commit: yamllint found issues (above)." >&2; fail=1; }
   else
     echo "pre-commit: yamllint not installed; skipping (CI enforces it)" >&2
   fi
