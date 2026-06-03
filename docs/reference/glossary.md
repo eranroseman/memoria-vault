@@ -116,17 +116,17 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
-## Pipeline stages
+## Cycle stages
 
-**Discuss stage** — upstream pipeline stage between classify and distill. Paper note is read through the Socratic profile (write-denied vault-wide) before any claim note is written.
+**Discuss stage** — Compile-flow stage between classify and distill. Paper note is read through the Socratic profile (write-denied vault-wide) before any claim note is written.
 
-**Assess stage** — first downstream stage. Mapper runs `scope-project` and produces `corpus-map.md`. Human decides whether corpus is ready to write or needs more reading.
+**Assess stage** — first Compose-flow stage. Mapper runs `scope-project` and produces `corpus-map.md`. Human decides whether corpus is ready to write or needs more reading.
 
-**Frame stage** — second downstream stage. Writer generates competing outlines via `counter-outline`; Socratic optionally produces lens-based framings. Human commits to one via `framing/CHOSEN.md`.
+**Frame stage** — second Compose-flow stage. Writer generates competing outlines via `counter-outline`; Socratic optionally produces lens-based framings. Human commits to one via `framing/CHOSEN.md`.
 
-**Verify stage** — downstream stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
+**Verify stage** — Compose-flow stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
 
-**Revise stage** — downstream stage between verify and export. Human addresses verification findings until the verify→revise loop closes.
+**Revise stage** — Compose-flow stage between verify and export. Human addresses verification findings until the verify→revise loop closes.
 
 ---
 

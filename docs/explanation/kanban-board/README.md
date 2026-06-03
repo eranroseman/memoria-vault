@@ -31,7 +31,7 @@ For the state lookup tables (the `status` and `review_status` enums, lane assign
 - Why review is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
 - The board as control plane: [Why three layers, not one](../rationale/why-three-layers.md)
 - Profiles that interact with the board: [Profiles](../profiles/README.md)
-- Pipelines that run on the board: [Workflows](../workflows/README.md)
+- Flows that run on the board: [Workflows](../workflows/README.md)
 
 **Dashboards**
 

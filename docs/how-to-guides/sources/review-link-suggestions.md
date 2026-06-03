@@ -1,10 +1,10 @@
 ---
-title: How to review link suggestions
+title: Review link suggestions
 parent: Sources
-nav_order: 11
+nav_order: 10
 ---
 
-# How to review link suggestions
+# Review link suggestions
 
 Work through the `[!suggestions]` callout the Librarian attaches to a note — approving the candidate links that belong and rejecting the rest. This is the curation step that turns proposed connections into real wikilinks without rubber-stamping.
 
@@ -13,7 +13,7 @@ This is different from [linking related claims](link-related-claims.md): that gu
 ## Prerequisites
 
 - A note carrying a `[!suggestions]` callout (the Librarian attaches one after an `enrich` or weekly link pass)
-- The Callout Manager plugin active ([How to set up Obsidian](../setup/set-up-obsidian.md))
+- The Callout Manager plugin active ([Set up Obsidian](../setup/set-up-obsidian.md))
 
 ## Steps
 
@@ -47,8 +47,8 @@ There is a `Memoria: approve all link suggestions` command, but use it only when
 
 **How-to**
 
-- Manually type a claim relation (the deliberate, non-proposed path): [How to link related claims (typed relations)](link-related-claims.md)
-- Where suggestions come from in the intake flow: [How to capture and ingest a source](capture-and-ingest.md)
+- Manually type a claim relation (the deliberate, non-proposed path): [Link related claims](link-related-claims.md)
+- Where suggestions come from in the intake flow: [Capture and ingest a source](capture-and-ingest.md)
 
 **Reference**
 

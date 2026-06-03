@@ -152,7 +152,7 @@ Slugs are permanent — renaming a note breaks all wikilinks pointing to the old
 
 ## Related
 
-- How-to for setting typed relations: [How to link related claims (typed relations)](../how-to-guides/sources/link-related-claims.md)
+- How-to for setting typed relations: [Link related claims](../how-to-guides/sources/link-related-claims.md)
 - Why the Connections section is load-bearing: [Note body structure](../explanation/knowledge/note-body-structure.md)
 - Why notes are filed by lifecycle, not topic: [Why folders encode lifecycle, not topic](../explanation/knowledge/lifecycle-over-topic.md)
 - How links keep the vault compounding: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)

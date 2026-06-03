@@ -6,7 +6,7 @@ parent: Tutorials
 
 # Tutorial 06: Verify and address a gap
 
-**You will end with:** one verified draft section with a complete citation trail, and your first experience of the downstream feedback loop — where a gap in your draft sends a signal back to the upstream reading queue.
+**You will end with:** one verified draft section with a complete citation trail, and your first experience of the Compose-side feedback loop — where a gap in your draft sends a signal back to the Compile-side reading queue.
 
 **Time:** 30–45 minutes.
 
@@ -128,9 +128,9 @@ This is the human gate that makes Memoria safe to run unattended — agents prop
 - A committed revision in git
 - One untraced claim softened with appropriate hedging
 
-**You've experienced the complete research loop.** Upstream: you brought in papers and wrote claim notes. Downstream: you scoped, framed, wrote, and verified. The verification found a gap. You addressed it.
+**You've experienced the complete research loop.** Compile: you brought in papers and wrote claim notes. Compose: you scoped, framed, wrote, and verified. The verification found a gap. You addressed it.
 
-**See also:** [The Verifier](../explanation/profiles/verifier.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the upstream loop.
+**See also:** [The Verifier](../explanation/profiles/verifier.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the Compile loop.
 
 ---
 

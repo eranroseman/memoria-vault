@@ -12,7 +12,7 @@ Every note in the vault is somewhere in a long-term progression from ingested so
 
 The cycle moves through seven broad stages: ingest, classify, synthesize, develop, promote, write, export. A new source arrives as a candidate, becomes a paper-note after the Librarian processes it, gets classified by the human, generates claim notes through Socratic discussion and synthesis, those claims mature and cross-link into the existing graph, stable claims get promoted to reference notes, and eventually assembled into a deliverable.
 
-This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one pipeline but many running concurrently.
+This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one flow but many running concurrently.
 
 ## Why the cycle is not a linear path
 
@@ -40,7 +40,7 @@ Notes that are no longer useful do not become invisible by deletion — they bec
 
 Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
 
-For the archive procedure, see [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md).
+For the archive procedure, see [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md).
 
 ## Related
 
@@ -53,5 +53,5 @@ For the archive procedure, see [How to run the weekly review](../../how-to-guide
 
 **How-to**
 
-- The ritual that keeps the cycle from stalling: [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
-- The cycle's key transition: [How to write a claim note](../../how-to-guides/sources/write-a-claim-note.md)
+- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- The cycle's key transition: [Write a claim note](../../how-to-guides/sources/write-a-claim-note.md)

@@ -1,10 +1,10 @@
 ---
-title: How to use the vault homepage
+title: Vault homepage
 parent: Using Obsidian
 nav_order: 1
 ---
 
-# How to use the vault homepage
+# Vault homepage
 
 The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../../project-files/decisions/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the in-vault troubleshooting note, common operations, and the full website docs (all other reference now lives on the website). Navigate from it to the right dashboard or tool, and keep your research focus current.
 
@@ -68,4 +68,4 @@ The **Common operations** section lists the Memoria command-palette shortcuts. U
 - Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards/)
 - Workspace layout for the Human workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Updating research focus on schedule: [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Updating research focus on schedule: [Run the weekly review](../maintenance/run-the-weekly-review.md)

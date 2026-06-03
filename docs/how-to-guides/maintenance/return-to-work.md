@@ -1,10 +1,10 @@
 ---
-title: How to return to work after a break
+title: Return to work
 parent: Maintenance
 nav_order: 10
 ---
 
-# How to return to work after a break
+# Return to work
 
 Three checks before starting any research session after being away — a day, a week, or longer. Takes under two minutes. Catches the most common resumption failures before they cost time mid-session.
 
@@ -45,18 +45,18 @@ Expected: either "Already up to date" or a list of fast-forward changes. A merge
 
 **ACP pane not responding** — all workflows have a terminal equivalent. `Cmd-P` commands that invoke Hermes can also be run from the CLI. The ACP pane is a convenience layer, not a requirement.
 
-**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [How to rebuild the search index](rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
+**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [Rebuild the search index](rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
 
 **Syncthing not synced** — check the Syncthing status bar in Obsidian or open `http://localhost:8384`. Notes created on another device won't be queryable until sync completes.
 
 ## If something is broken
 
-See [Safe mode: minimal working path](../recovery/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
+See [Safe mode](../recovery/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
 
 ## Related
 
-- Safe mode (when tools are broken): [Safe mode: minimal working path](../recovery/safe-mode.md)
-- Rebuild search index: [How to rebuild the search index](rebuild-the-search-index.md)
-- Fix a stale .bib: [How to fix a stale .bib](../recovery/fix-stale-bib.md)
-- Reinstall missing profiles: [How to set up Hermes](../setup/set-up-hermes.md)
+- Safe mode (when tools are broken): [Safe mode](../recovery/safe-mode.md)
+- Rebuild search index: [Rebuild the search index](rebuild-the-search-index.md)
+- Fix a stale .bib: [Fix a stale .bib](../recovery/fix-stale-bib.md)
+- Reinstall missing profiles: [Set up Hermes](../setup/set-up-hermes.md)
 - The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)

@@ -1,7 +1,7 @@
 ---
 title: The status line
 parent: Obsidian
-nav_order: 5
+nav_order: 2
 ---
 
 # The status line

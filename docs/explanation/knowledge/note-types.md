@@ -79,5 +79,5 @@ The test: if the claim note's title contains the word "and" doing real conceptua
 - Why these roles map to lifecycle folders: [Why folders encode lifecycle, not topic](lifecycle-over-topic.md)
 - How notes move between roles: [Why promotion is gated](promotion-model.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
-- Operating the paper note: [How to discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
+- Operating the paper note: [Discuss a paper](../../how-to-guides/sources/discuss-a-paper.md)
 - Complete note-type reference (fields, templates): [Note types](../../reference/note-types.md)

@@ -1,11 +1,11 @@
 ---
-title: How to triage fleeting notes
+title: Triage fleeting notes
 parent: Sources
-nav_order: 3
+nav_order: 2
 ---
 
 
-# How to triage fleeting notes
+# Triage fleeting notes
 
 Clear the fleeting inbox: promote each note to something durable, attach it to an existing note, or discard it. Fleeting notes are raw captures — they have a short shelf life by design.
 
@@ -63,9 +63,9 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 
 **How-to**
 
-- Write a claim note: [How to write a claim note](write-a-claim-note.md)
-- Weekly review (step 2 — unreviewed synthesis): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
-- Messaging gateway (how fleeting notes arrive): [How to set up the messaging gateway](../setup/set-up-messaging.md)
+- Write a claim note: [Write a claim note](write-a-claim-note.md)
+- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../maintenance/run-the-weekly-review.md)
+- Messaging gateway (how fleeting notes arrive): [Set up the messaging gateway](../setup/set-up-messaging.md)
 
 **Reference**
 

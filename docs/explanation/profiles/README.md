@@ -12,7 +12,7 @@ Memoria runs **seven specialist profiles** instead of one generalist agent. Each
 
 The profiles aren't seven equals — they group by where they sit in the knowledge cycle. Each profile page follows the same shape: its mission, *why it's designed this way*, and *what it is not* (the contrasts that keep its boundary sharp).
 
-## Upstream — bringing knowledge in
+## Compile — bringing knowledge in
 
 | Profile | Posture | What it covers |
 | --- | --- | --- |

@@ -1,11 +1,11 @@
 ---
-title: How to diagnose a denied or blocked write
+title: Diagnose a denied or blocked write
 parent: Recovery
 nav_order: 4
 ---
 
 
-# How to diagnose a denied or blocked write
+# Diagnose a denied or blocked write
 
 When an agent's write doesn't show up, there are two very different causes, and they need opposite fixes:
 

@@ -1,17 +1,17 @@
 ---
-title: How to draft with the Writer
+title: Draft with the Writer
 parent: Writing
 nav_order: 6
 ---
 
 
-# How to draft with the Writer
+# Draft with the Writer
 
 Use the Writer profile to generate outline proposals, draft prose, and suggest structural organization. Drafting is human-led — the Writer assists with phrasing and linking, but the argument assembly is yours.
 
 ## Prerequisites
 
-- A writing project scaffolded with a corpus map ([How to start a writing project](start-a-writing-project.md))
+- A writing project scaffolded with a corpus map ([Start a writing project](start-a-writing-project.md))
 - At least one framing chosen — either from a Writer `counter-outline` session or written by hand in `02-framing/CHOSEN.md`
 - The Writer profile installed
 

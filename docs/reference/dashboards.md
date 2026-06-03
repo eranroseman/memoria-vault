@@ -121,4 +121,4 @@ Keep dashboards responsive as the vault grows:
 - The structural detectors behind the verdict band: [Linter: detectors and auto-fix](linter.md)
 - The audit-log event schema and rotation: [Memory substrates](memory.md#audit-log-event-fields)
 - The status-line counters board-state feeds: [Obsidian status line](obsidian-status-line.md)
-- Operating the dashboards: [How to navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- Operating the dashboards: [Navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)

@@ -1,10 +1,10 @@
 ---
-title: How to use canvas for argument mapping
+title: Use canvas for argument mapping
 parent: Writing
-nav_order: 5
+nav_order: 4
 ---
 
-# How to use canvas for argument mapping
+# Use canvas for argument mapping
 
 This guide shows you how to arrange claim notes spatially in an Obsidian Canvas to find the argument structure before drafting.
 
@@ -49,13 +49,13 @@ Open the canvas in a split pane. Draft section by section from the outline, citi
 
 ## When a canvas gap can't be filled
 
-If a text card can't be grounded in a claim note, either soften the outline claim or queue the missing source via `Cmd+P → Memoria: capture source from URL`. See [How to find new sources](../sources/find-new-sources.md) for the full candidate triage flow.
+If a text card can't be grounded in a claim note, either soften the outline claim or queue the missing source via `Cmd+P → Memoria: capture source from URL`. See [Find new sources](../sources/find-new-sources.md) for the full candidate triage flow.
 
 ---
 
 ## Related
 
-- Drafting from a committed outline: [How to draft with the Writer](draft-with-writer.md)
-- Producing the outline the canvas maps: [How to frame a writing project](frame-a-project.md)
-- Triage candidates for gaps the canvas exposes: [How to find new sources](../sources/find-new-sources.md)
+- Drafting from a committed outline: [Draft with the Writer](draft-with-writer.md)
+- Producing the outline the canvas maps: [Frame a project](frame-a-project.md)
+- Triage candidates for gaps the canvas exposes: [Find new sources](../sources/find-new-sources.md)
 - Why claim notes (not canvas cards) are the knowledge unit: [Note body structure](../../explanation/knowledge/note-body-structure.md)
