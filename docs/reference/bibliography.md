@@ -35,6 +35,9 @@ Anirudh Ajith, Mengzhou Xia, Alexis Chevalier, Tanya Goyal, Danqi Chen, and Tian
 <a id="bisht2026agentic"></a>
 Harshit Bisht, Vinay Kumar, Kevin Maik Jablonka, Mausam, and N. M. Anoop Krishnan. 2026. Agentic AI Scientists Are Not Built for Autonomous Scientific Discovery. arXiv:2605.08956. Retrieved from https://arxiv.org/abs/2605.08956
 
+<a id="chen2026copilots"></a>
+Deli Chen. 2026. From Copilots to Colleagues: A Survey of Autonomous Research Agents. Preprint. A survey of ~95 papers across machine learning, software engineering, and scientific discovery; proposes the L1–L5 autonomy taxonomy (L1 code-autocomplete → L5 fully self-directed) and identifies persistent knowledge accumulation as a primary barrier to L5 autonomy.
+
 <a id="chen2026autonomous"></a>
 Guoxin Chen, Jie Chen, Lei Chen, Jiale Zhao, Fanzhe Meng, Wayne Xin Zhao, Ruihua Song, Cheng Chen, Ji-Rong Wen, and Kai Jia. 2026. Toward Autonomous Long-Horizon Engineering for ML Research. arXiv:2604.13018. Retrieved from https://arxiv.org/abs/2604.13018
 
@@ -43,9 +46,6 @@ Weco AI. 2026. AIDE: AI-Driven Exploration in the Space of Code (aideml). Softwa
 
 <a id="idea2paper"></a>
 AgentAlphaAGI. 2026. Idea2Paper. Software. Retrieved from https://github.com/AgentAlphaAGI/Idea2Paper
-
-<a id="feng2025levels"></a>
-Kevin Feng, David W. McDonald, and Amy X. Zhang. 2025. Levels of Autonomy for AI Agents. arXiv:2506.12469. Retrieved from https://arxiv.org/abs/2506.12469
 
 <a id="feng2026visionary"></a>
 Yebo Feng and Yang Liu. 2026. A Visionary Look at Vibe Researching. arXiv:2604.00945. Retrieved from https://arxiv.org/abs/2604.00945
