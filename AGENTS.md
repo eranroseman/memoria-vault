@@ -251,9 +251,16 @@ reading it. Before opening a PR:
 - `docs/` files → **relative links** (developers have the full repo locally).
 - `vault/` files → **absolute website URLs** (`https://eranroseman.github.io/memoria-vault/…`) because the vault installs standalone to `~/Memoria` where repo-relative paths don't resolve.
 
-**Indexing.** Every new page must be added to its section README. New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`.
+**Indexing & ordering.** Every new page must be added to its section README — and, if it's a how-to, to the guide map in `how-to-guides/README.md` too (keep that map complete). New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`. Section READMEs are **navigation hubs**: a brief intro + a described child table + an optional "where to go next" — not article-length prose (that belongs in the child pages). Give every page a `nav_order` so each folder reads top-to-bottom in a logical sequence, and keep the README child-table order matching that sidebar order. How-to page titles are **concise** (no "How to …" prefix) and match their README link text and filename.
 
 **Adding a citation to `reference/bibliography.md`.** When a doc cites a new work, add its ACM author-date entry with an `<a id="…"></a>` anchor and link the in-text mention to `[bibliography.md#anchor](../reference/bibliography.md#anchor)` (relative path from the citing file).
+
+### Terminology — name the two flows correctly
+
+Memoria's **knowledge cycle** has two flows: **Compile** (knowledge *in* — sources are found, ingested, classified, discussed, and distilled into claims) and **Compose** (knowledge *out* — claims are assessed, framed, drafted, verified, and exported). "Compile" is deliberate: it echoes the *compiled memory* thesis (Karpathy's LLM-wiki) the design is built on.
+
+- **Never** name these the "upstream/downstream pipeline" or "the two pipelines" — that naming was retired (see [compile-and-compose.md](docs/explanation/workflows/compile-and-compose.md)). Use **Compile flow** / **Compose flow**, or **the knowledge cycle** for the pair.
+- `pipeline`, `upstream`, `downstream` stay fine in *other* senses — the ingest pipeline, a Pandoc/export pipeline, an upstream dependency, a downstream consumer. The rule is narrow: don't use them to name the two flows.
 
 ### `project-files/decisions/` — ADR template
 
