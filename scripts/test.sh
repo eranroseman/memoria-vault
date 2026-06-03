@@ -26,7 +26,8 @@ l1() {
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract; do
+           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract \
+           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline; do
     run python3 "$P/$s.py" --self-test
   done
 }
@@ -37,7 +38,7 @@ l0() {
   run bash scripts/check-vault-links.sh
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py"
+  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py"
   run bash -n scripts/install.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh "$P"/scripts/*.sh
