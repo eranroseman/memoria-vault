@@ -426,8 +426,8 @@ def self_test() -> int:
         ]
 
         res = aggregate(vault, cards, now=now)
-        check("aggregated the writer lane", any(l["lane"] == "memoria-writer" for l in res["lanes"]))
-        check("inactive lane skipped", not any(l["lane"] == "memoria-mapper" for l in res["lanes"]))
+        check("aggregated the writer lane", any(ln["lane"] == "memoria-writer" for ln in res["lanes"]))
+        check("inactive lane skipped", not any(ln["lane"] == "memoria-mapper" for ln in res["lanes"]))
         note = (vault / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
         check("lane note has type: lane-metric", "type: \"lane-metric\"" in note)
         check("deny_rate computed in-period only (1/6)", "deny_rate: 0.167" in note)

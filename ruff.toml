@@ -1,0 +1,11 @@
+# Ruff is used as a LINTER only. The codebase is hand-formatted (aligned comment
+# columns, deliberate line breaks); `ruff format` is intentionally NOT used —
+# reformatting would churn ~2k lines for no behavioral gain.
+#
+# Default rule set (E4/E7/E9 + F) catches real bugs (F = pyflakes) plus basic
+# style. We keep E741 (ambiguous names like `l`) but drop E731.
+[lint]
+ignore = [
+    "E731",  # assigning a lambda to a name — idiomatic for the concise `d`/`by`
+             # test helpers inside our --self-test functions.
+]

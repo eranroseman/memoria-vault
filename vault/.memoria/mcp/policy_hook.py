@@ -362,7 +362,7 @@ def self_test() -> int:
         audit_file = vault / "99-system" / "logs" / "audit.jsonl"
         check("post wrote the audit log", audit_file.is_file())
         audit_lines = audit_file.read_text(encoding="utf-8").splitlines() if audit_file.is_file() else []
-        completes = [json.loads(l) for l in audit_lines if json.loads(l).get("decision") == "write_complete"]
+        completes = [json.loads(ln) for ln in audit_lines if json.loads(ln).get("decision") == "write_complete"]
         check("post returns {} (never blocks)", post == {})
         check("post appended a write_complete record", len(completes) == 1)
         check("write_complete pairs before+after", bool(completes and completes[0]["before_hash"] and completes[0]["after_hash"] and completes[0]["before_hash"] != completes[0]["after_hash"]))
