@@ -118,6 +118,25 @@ For the step-by-step ingest procedure see [Capture and ingest a source](../how-t
 
 ---
 
+## Durability: the capture-intake log and the two sweeps
+
+Capture commits first. Before the gated note write, the capture entry point appends one line to `99-system/logs/capture-intake.jsonl` (un-gated — it is the durability anchor, so a failure anywhere downstream loses nothing):
+
+```json
+{"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero", "note_path": "20-sources/01-papers/<citekey>.md"}
+```
+
+Two backstops recover anything that stalls. Neither writes the vault — re-ingest must be **board-serialized** (single-lane WIP=1 makes find-or-create safe), so each is a detector that enqueues an **idempotent** re-ingest card (`hermes kanban create --idempotency-key reingest:<citekey>`). The board then provides dedup, backoff, and the failure circuit-breaker (the `needs-human` floor). Both live in `obsidian-paper-note/scripts/sweeps.py`:
+
+| Sweep | Detects | Re-drives |
+| --- | --- | --- |
+| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed) | Enqueues a re-ingest card so the first write is retried |
+| `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed) | Enqueues a re-ingest card to re-run enrichment |
+
+Run with `--dry-run` to report what would be enqueued without touching the board.
+
+---
+
 ## Related
 
 - The profile running the pipeline: [The Librarian](../explanation/profiles/librarian.md)
