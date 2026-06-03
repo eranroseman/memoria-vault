@@ -10,7 +10,7 @@
 #
 # Mirrors the required checks: docs-doctor, shellcheck (install.sh),
 # PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest,
-# check-test-refs, dashboard schema-drift.
+# ruff, check-test-refs, dashboard schema-drift.
 
 fail=0
 staged() { git diff --cached --name-only; }
@@ -53,6 +53,12 @@ if staged | grep -qE '\.py$'; then
     done
   else
     echo "pre-commit: python not found; skipping self-tests" >&2
+  fi
+  # ruff lint over the Python tooling (mirrors the `ruff` CI job; config in ruff.toml).
+  if command -v ruff >/dev/null 2>&1; then
+    ruff check scripts vault/.memoria || { echo "pre-commit: ruff found issues (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: ruff not installed; skipping (CI enforces it)" >&2
   fi
 fi
 
