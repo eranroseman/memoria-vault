@@ -1,10 +1,10 @@
 ---
-title: How to use workspaces
+title: Workspaces
 parent: Using Obsidian
 nav_order: 3
 ---
 
-# How to use workspaces
+# Workspaces
 
 Switch between Memoria's three cognitive-mode workspaces — Human, Reading & Processing, and Drafting — using a single hotkey.
 
@@ -58,6 +58,6 @@ Switch when your cognitive mode changes — not per task within a mode.
 ## Related
 
 - Workspace layout reference (what each pane shows): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Opening the ACP pane within Reading workspace: [How to use the agent-client pane](use-the-acp-pane.md)
-- Opening dashboards: [How to navigate the dashboards](navigate-the-dashboards.md)
+- Opening the ACP pane within Reading workspace: [Agent-client pane](use-the-acp-pane.md)
+- Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
 - Why three workspaces, not more: [Visual-style discipline](../../explanation/obsidian/visual-discipline.md)

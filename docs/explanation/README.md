@@ -65,14 +65,14 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 - [Overview](overview/README.md) — start here: what-memoria-is, intellectual-foundations, design-principles
 - [Design rationale](rationale/README.md) — the `why-*` arguments: three-layers, specialist-profiles, human-gate, not-autonomous, hermes, computational-methods, pattern-provenance
-- [Architecture](architecture/README.md) — what each layer and surface *is*: control-plane, the memory model, interaction channels, vault, session-logging
-- [Knowledge](knowledge/README.md) — how durable knowledge is organized: lifecycle-over-topic, note-types, promotion-model, knowledge-cycle, note-body-structure, vocabulary-discipline, common-pitfalls
-- [Workflows](workflows/README.md) — how work moves: board-as-state-machine, review-as-state, verify-on-commit
-- [Kanban board](kanban-board/README.md) — the board as coordination layer: card-schema, states
-- [Deployment](deployment/README.md) — how the system is packaged and installed: distribution-model, bootstrap-installer
-- [Profiles](profiles/README.md) — the seven specialist profiles: librarian, mapper, socratic, writer, verifier, coder, linter
+- [Architecture](architecture/README.md) — what each layer and surface *is*: vault, the memory model, control-plane, interaction channels, session-logging
+- [Knowledge](knowledge/README.md) — how durable knowledge is organized: note-types, knowledge-cycle, note-body-structure, lifecycle-over-topic, promotion-model, vocabulary-discipline, common-pitfalls
+- [Profiles](profiles/README.md) — the seven specialist profiles: librarian, mapper, socratic, writer, verifier, coder, linter — plus delegation-posture
+- [Kanban board](kanban-board/README.md) — the board as coordination layer: states, card-schema, obsidian-projection
+- [Workflows](workflows/README.md) — how work moves: compile-and-compose, board-as-state-machine, review-as-state, verify-on-commit
+- [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, the-status-line, callouts, agent-client-picker, visual-discipline, design-system
 - [Dashboards](dashboards/README.md) — the ten dashboards, grouped: daily-glance, synthesis-agenda, structural-health, operational-health
-- [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, visual-discipline, design-system, the-status-line, callouts, agent-client-picker
+- [Deployment](deployment/README.md) — how the system is packaged and installed: distribution-model, bootstrap-installer, deployment-options
 
 ---
 

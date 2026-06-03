@@ -5,7 +5,7 @@ parent: Reference
 
 # Ingest routing
 
-Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
 
 ---
 
@@ -113,7 +113,7 @@ Fields the Librarian populates on the new note at creation:
 | `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
 | `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
-For the step-by-step ingest procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+For the step-by-step ingest procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
 
 ---
 

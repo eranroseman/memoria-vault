@@ -154,9 +154,9 @@ Concept searches improve with practice. The more specific your query, the less n
 
 ## What's next
 
-Classify the new paper-note: [How to classify a source](../how-to-guides/sources/classify-a-source.md).
+Classify the new paper-note: [Classify a source](../how-to-guides/sources/classify-a-source.md).
 
-Process outstanding candidates as part of your Friday ritual: [How to run the weekly review](../how-to-guides/maintenance/run-the-weekly-review.md).
+Process outstanding candidates as part of your Friday ritual: [Run the weekly review](../how-to-guides/maintenance/run-the-weekly-review.md).
 
 You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [How-to guides](../how-to-guides/README.md).
 

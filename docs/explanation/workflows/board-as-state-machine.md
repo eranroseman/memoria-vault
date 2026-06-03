@@ -6,7 +6,7 @@ nav_order: 2
 
 # The board as a state machine (the control plane)
 
-The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and pipelines. Every long-lived task lives on the board until a human approves it into the vault or archives it.
+The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until a human approves it into the vault or archives it.
 
 ---
 

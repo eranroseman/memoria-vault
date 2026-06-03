@@ -32,6 +32,6 @@ Until you file `contradicts` links, the dashboard is near-empty. That emptiness 
 ## Related
 
 - [open-questions dashboard](open-questions.md) — closest sibling; both build the synthesis agenda
-- Setting the contradicts relations: [How to link related claims (typed relations)](../../../how-to-guides/sources/link-related-claims.md)
-- Sweeps that surface contradictions: [How to run a retraction sweep](../../../how-to-guides/maintenance/run-a-retraction-sweep.md)
+- Setting the contradicts relations: [Link related claims](../../../how-to-guides/sources/link-related-claims.md)
+- Sweeps that surface contradictions: [Run a retraction sweep](../../../how-to-guides/maintenance/run-a-retraction-sweep.md)
 - [Wikilink and link conventions](../../../reference/linking.md) — the `relations:` block and typed-relation vocabulary

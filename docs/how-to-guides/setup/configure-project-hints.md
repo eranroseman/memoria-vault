@@ -1,11 +1,11 @@
 ---
-title: How to configure project hints
+title: Configure project hints
 parent: Setup
-nav_order: 9
+nav_order: 6
 ---
 
 
-# How to configure project hints
+# Configure project hints
 
 `project-hints.yaml` gives the Librarian a lightweight per-project topic list so it can **propose** which project a newly ingested paper belongs to — you confirm or correct that at triage, exactly like every other proposed field. It is **optional**: with no file, project membership is tagged fully by hand. This guide creates it from the shipped example and tunes it.
 

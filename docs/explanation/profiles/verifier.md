@@ -17,7 +17,7 @@ The Verifier interrupts the publish-then-regret loop. It traces every substantiv
 
 **Filing-time similarity is informational, never blocking.** A `similarity-check` finding flags the card with `near-duplicate-candidate` and surfaces the top three similar claims, but does not prevent filing. Human decides between file, merge, or extend. Auto-merge is never an option: collapsing two claim notes is a synthesis decision, not a structural one.
 
-**Gap cards close the loop.** Every failed claim-trace produces a card in `10-inbox/03-candidates/` pointing back to the verification report. Librarian picks these up at the next discovery pass. The verification report is not just a record of failures — it specifies what Librarian should look for next. This closes the loop between downstream checking and upstream sourcing.
+**Gap cards close the loop.** Every failed claim-trace produces a card in `10-inbox/03-candidates/` pointing back to the verification report. Librarian picks these up at the next discovery pass. The verification report is not just a record of failures — it specifies what Librarian should look for next. This closes the loop between Compose-side checking and Compile-side sourcing.
 
 ---
 
@@ -27,7 +27,7 @@ The Verifier interrupts the publish-then-regret loop. It traces every substantiv
 
 **Not Linter.** Both run mechanical checks, but they serve different concerns. Linter checks *structure* — does the frontmatter parse, does the link resolve, does the schema match? Verifier checks *content provenance* — does this claim trace to a real source? Linter is content-agnostic; Verifier is content-aware. They compose rather than overlap.
 
-**Not Writer.** Verifier never edits drafts. When a claim fails to trace, Verifier spawns a gap card in the upstream queue and records the failure in the verification report. The draft is untouched. This is a deliberate boundary: the entity that checks the work should not also be the entity that corrects it.
+**Not Writer.** Verifier never edits drafts. When a claim fails to trace, Verifier spawns a gap card in the Compile-flow intake queue and records the failure in the verification report. The draft is untouched. This is a deliberate boundary: the entity that checks the work should not also be the entity that corrects it.
 
 **Not an LLM-as-judge.** With one carefully bounded exception (the ambiguous middle band of citation-to-claim matching), Verifier's checks are deterministic — regex extraction, embedding similarity, DOI lookups, set arithmetic. This is non-negotiable: a verification step that uses LLM judgment in its core checks would produce different verdicts on different runs, defeating its purpose as a trust anchor.
 

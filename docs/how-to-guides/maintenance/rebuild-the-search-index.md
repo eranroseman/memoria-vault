@@ -1,11 +1,11 @@
 ---
-title: How to rebuild the search index
+title: Rebuild the search index
 parent: Maintenance
 nav_order: 9
 ---
 
 
-# How to rebuild the search index
+# Rebuild the search index
 
 Re-run the `qmd` embedding to restore semantic search when the Writer returns empty results or when a large batch of notes has been added.
 

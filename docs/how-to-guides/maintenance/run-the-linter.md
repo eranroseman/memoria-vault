@@ -1,11 +1,11 @@
 ---
-title: How to run the Linter
+title: Run the Linter
 parent: Maintenance
 nav_order: 2
 ---
 
 
-# How to run the Linter
+# Run the Linter
 
 Trigger a structural health check on the vault — either on demand or to review a scheduled report. The Linter detects orphaned notes, broken links, stale enrichment, schema drift, and profile install drift.
 
@@ -90,8 +90,8 @@ git commit -m "maintenance: resolve lint findings"
 
 ## Related
 
-- Weekly review (lint is step 8): [How to run the weekly review](run-the-weekly-review.md)
-- Fix broken frontmatter: [How to fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
-- Fix profile drift: [How to fix profile drift](../recovery/fix-profile-drift.md)
+- Weekly review (lint is step 8): [Run the weekly review](run-the-weekly-review.md)
+- Fix broken frontmatter: [Fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
+- Fix profile drift: [Fix profile drift](../recovery/fix-profile-drift.md)
 - Linter profile design: [The Linter](../../explanation/profiles/linter.md)
 - Severity scale: [explanation/profiles/linter.md § severity-scale](../../explanation/profiles/linter.md)

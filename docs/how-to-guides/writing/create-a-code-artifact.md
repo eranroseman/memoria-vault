@@ -1,11 +1,11 @@
 ---
-title: How to create a code artifact
+title: Create a code artifact
 parent: Writing
-nav_order: 9
+nav_order: 10
 ---
 
 
-# How to create a code artifact
+# Create a code artifact
 
 Scaffold a code-note linked to the motivating research, then hand off implementation to an external coding agent. Code in Memoria is a research output with provenance — the note records *why* this code exists and what claim it supports.
 

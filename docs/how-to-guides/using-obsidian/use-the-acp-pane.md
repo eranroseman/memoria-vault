@@ -1,18 +1,18 @@
 ---
-title: How to use the agent-client pane
+title: Agent-client pane
 parent: Using Obsidian
 nav_order: 4
 ---
 
 
-# How to use the agent-client pane
+# Agent-client pane
 
 Drive Memoria's conversational profiles from inside Obsidian without switching to a terminal. This guide covers opening the pane, selecting a profile, attaching context, reading responses, and ending a session cleanly.
 
 ## Prerequisites
 
 - Obsidian open with the vault
-- `agent-client` plugin installed and the Hermes gateway reachable ([How to set up Hermes](../setup/set-up-hermes.md))
+- `agent-client` plugin installed and the Hermes gateway reachable ([Set up Hermes](../setup/set-up-hermes.md))
 - The three workspace layouts configured ([Obsidian workspaces](../../reference/obsidian-workspaces.md))
 
 ## Which profile to open
@@ -105,7 +105,7 @@ On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** a
 
 ## Related
 
-- Discussing a paper end-to-end: [How to discuss a paper](../sources/discuss-a-paper.md)
+- Discussing a paper end-to-end: [Discuss a paper](../sources/discuss-a-paper.md)
 - Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Profile picker design: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)

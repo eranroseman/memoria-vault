@@ -1,11 +1,11 @@
 ---
-title: How to export a draft
+title: Export a draft
 parent: Writing
-nav_order: 10
+nav_order: 9
 ---
 
 
-# How to export a draft
+# Export a draft
 
 Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission.
 
@@ -142,7 +142,7 @@ pandoc 40-workbench/<project>/04-drafts/<draft>.md \
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Zotero .bib configuration export depends on: [How to set up Zotero](../setup/set-up-zotero.md)
+- Zotero .bib configuration export depends on: [Set up Zotero](../setup/set-up-zotero.md)
 - Export reference (formats, CSL): [Export routes and formats](../../reference/export.md)
 - The works-cited reference: [Bibliography](../../reference/bibliography.md)
 - CSL styles: stored at `.memoria/csl/` in the vault
