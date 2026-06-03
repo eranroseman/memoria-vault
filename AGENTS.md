@@ -189,7 +189,8 @@ reading it. Before opening a PR:
   Hermes config, skills, profiles, hooks, MCP, or runtime is made without first
   consulting the authoritative sources — the local docs (`~/.hermes/hermes-agent/website/docs/`),
   `cli-config.yaml.example`, and the bundled + optional **skills catalogs**
-  (`docs/reference/skills-catalog.md`, `optional-skills-catalog.md`). Do **not** guess
+  (`skills-catalog.md` and `optional-skills-catalog.md`, in the `reference/` folder of
+  the Hermes docs above — **not** Memoria's `docs/`). Do **not** guess
   where Hermes reads config or infer it from Memoria's existing files — Memoria has
   repeatedly mis-guessed (mcp.json never loaded; per-profile `.env`; the `obsidian.*`
   fullmatch; `ocr-and-documents`/`github-repo-management` are official *bundled* skills,
