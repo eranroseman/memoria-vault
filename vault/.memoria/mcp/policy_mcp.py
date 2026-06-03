@@ -38,7 +38,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:                                  # PyYAML is a runtime dep (see requirements.txt)
-    import yaml                       # but the core/self-test must run without it,
+    import yaml  # but the core/self-test must run without it,
 except ImportError:                   # so lane-file parsing degrades, decisions don't.
     yaml = None                       # type: ignore[assignment]
 
@@ -531,7 +531,7 @@ class PolicyEngine:
 def build_server(vault: Path):
     """Wrap the engine as an MCP server. Imported lazily so the core/self-test
     don't require the `mcp` package."""
-    from mcp.server.fastmcp import FastMCP   # type: ignore
+    from mcp.server.fastmcp import FastMCP  # type: ignore
 
     engine = PolicyEngine(vault)
     server = FastMCP("memoria-policy")

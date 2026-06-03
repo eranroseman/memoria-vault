@@ -408,7 +408,7 @@ def self_test() -> int:
         (vault / "99-system" / "logs").mkdir(parents=True)
         # audit: writer made 6 writes, 1 deny, this period
         audit_lines = []
-        for i in range(5):
+        for _ in range(5):
             audit_lines.append(json.dumps({"timestamp": "2026-05-28T10:00:00Z",
                                            "profile": "memoria-writer", "action": "write", "decision": "allow"}))
         audit_lines.append(json.dumps({"timestamp": "2026-05-28T10:00:00Z",

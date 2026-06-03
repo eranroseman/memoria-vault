@@ -1,0 +1,11 @@
+# Lints the authored YAML: profile config.yaml / distribution.yaml, lane-overrides,
+# cron schedules, GitHub workflows, and issue templates. These configs are
+# load-bearing — a bad indent or duplicate key breaks the Hermes runtime or CI.
+#
+# Relaxed: flag real problems (syntax, duplicate keys, bad indentation, trailing
+# spaces, mis-nested blocks) but not line length — many config lines are long by
+# design. Vendored YAML isn't linted (none is tracked outside these dirs).
+extends: relaxed
+rules:
+  line-length: disable
+  colons: disable   # values are intentionally column-aligned (e.g. tool-registry.yaml)
