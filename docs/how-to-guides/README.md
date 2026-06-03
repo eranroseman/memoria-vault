@@ -71,18 +71,18 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | Guide | What it covers | Cycle stage |
 | --- | --- | --- |
 | [Find new sources](sources/find-new-sources.md) | Forward/backward citation search, concept queries, candidate queue | Find |
-| [Triage fleeting notes](sources/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Fleeting triage |
-| [Capture and ingest a source](sources/capture-and-ingest.md) | Zotero → vault: the complete intake path | Zotero capture + Ingest |
+| [Triage fleeting notes](sources/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Triage (on-ramp) |
+| [Capture and ingest a source](sources/capture-and-ingest.md) | Zotero → vault: the complete intake path | Capture + Enrich |
 | [Classify a source](sources/classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
-| [Pin a citekey](sources/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Zotero capture |
+| [Pin a citekey](sources/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Capture (prep) |
 | [Discuss a paper](sources/discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
 | [Read a paper through a Socratic lens](sources/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](sources/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
 | [Link related claims](sources/link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Link |
 | [Review link suggestions](sources/review-link-suggestions.md) | Triage the Librarian's `[!suggestions]` callout — approve / reject candidate links | Link |
-| [Promote a claim to canonical reference](sources/promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Promote |
-| [Archive a source](sources/archive-a-source.md) | Retire an outdated or superseded source | Archive |
-| [Run a systematic review](sources/run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Find → Screen → Ingest |
+| [Promote a claim to canonical reference](sources/promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Maintenance |
+| [Archive a source](sources/archive-a-source.md) | Retire an outdated or superseded source | Maintenance |
+| [Run a systematic review](sources/run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Screen (opt-in) |
 
 ### Writing (Compose)
 
@@ -93,13 +93,13 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 | [Start a writing project](writing/start-a-writing-project.md) | Scaffold a workbench project folder | — |
 | [Assess your corpus](writing/assess-your-corpus.md) | Mapper corpus map: dense clusters, thin coverage, gaps | Assess |
 | [Frame a project](writing/frame-a-project.md) | Generate competing outlines, choose one framing | Frame |
-| [Use canvas for argument mapping](writing/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Frame |
-| [Query the vault](writing/query-the-vault.md) | Ask a question, get a cited synthesis in your inbox | Query |
-| [Draft with the Writer](writing/draft-with-writer.md) | Use the Writer profile for prose and outlines | Write |
-| [Verify and revise a draft](writing/verify-and-revise.md) | Run Verify, read the callout, close gaps | Verify + Revise |
-| [Work the review queue](writing/work-the-review-queue.md) | Approve or reject agent writes held at the review gate | Review |
+| [Use canvas for argument mapping](writing/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Canvas |
+| [Query the vault](writing/query-the-vault.md) | Ask a question, get a cited synthesis in your inbox | Query (aid) |
+| [Draft with the Writer](writing/draft-with-writer.md) | Use the Writer profile for prose and outlines | Draft |
+| [Verify and revise a draft](writing/verify-and-revise.md) | Run Verify, read the callout, close gaps | Verify ⇄ revise |
+| [Work the review queue](writing/work-the-review-queue.md) | Approve or reject agent writes held at the review gate | Review (gate) |
 | [Export a draft](writing/export-a-draft.md) | Pandoc export to Word, PDF, or plain Markdown | Export |
-| [Create a code artifact](writing/create-a-code-artifact.md) | Scaffold a code-note and delegate to an external coding agent | Code |
+| [Create a code artifact](writing/create-a-code-artifact.md) | Scaffold a code-note and delegate to an external coding agent | Code (branch) |
 
 ### Maintenance
 
