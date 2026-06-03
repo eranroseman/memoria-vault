@@ -65,7 +65,8 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 
 - Conceptual overview: [Kanban board](README.md)
 - Card fields: [Why the card schema is split](card-schema.md)
-- Why no Reviewer: [README.md § why no Reviewer and no Orchestrator](README.md#why-no-reviewer-and-no-orchestrator)
+- Why review is human-only (no Reviewer profile): [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why routing is by rule (no Orchestrator): [The board as a state machine § Why no Orchestrator](../workflows/board-as-state-machine.md#why-no-orchestrator)
 - The review dimension over these states: [Review as a first-class state](../workflows/review-as-state.md)
 - The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
 
