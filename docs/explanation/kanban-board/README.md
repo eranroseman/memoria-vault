@@ -32,7 +32,7 @@ A card carries three independent dimensions, and keeping them separate is the ce
 Every card follows the same arc:
 
 1. **Created** by a trigger: a command-palette action, a cron job, or a file-watcher event. Human-initiated cards start in `triage` (spec not yet finalized); automated cards start directly in `ready`.
-2. **Specified and released.** A `triage` card waits for the human to shape its spec and release it to `ready`. Automated cards skip this step entirely.
+2. **Specified and released.** A `triage` card waits for the human to shape its spec to `todo`, then release it to `ready` (`triage → todo → ready`). Automated cards skip this step entirely.
 3. **Dispatched.** The dispatcher atomically claims a `ready` card matching an available profile and moves it to `running`.
 4. **Completed.** The worker finishes its slice, moves the card to `done`, and writes a handoff summary plus structured metadata. If the card produced a checkable artifact, Verifier or Linter attaches a recommendation in `agent_recommendation`.
 5. **Human review.** The human reads the output, and either approves (then archives) or rejects (then archives with a reason, and optionally spawns a successor card).

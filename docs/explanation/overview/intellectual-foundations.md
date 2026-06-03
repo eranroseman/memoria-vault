@@ -7,7 +7,7 @@ nav_order: 2
 
 # Intellectual foundations
 
-Memoria is built on three converging ideas and informed by a broad survey of contemporary AI research systems. Understanding where the design comes from makes it easier to understand why specific choices were made.
+Memoria is built on four converging ideas and informed by a broad survey of contemporary AI research systems. Understanding where the design comes from makes it easier to understand why specific choices were made.
 
 ---
 
@@ -49,7 +49,7 @@ Memoria's vault is the Memex made operational: the graph of wikilinks, typed rel
 
 ## AI-research systems survey
 
-A broad survey of over 50 contemporary agent-driven research systems, which was conducted in May 2026, grounds the design in what the field has actually tried.
+A broad survey of ~47 contemporary agent-driven research systems, which was conducted in May 2026, grounds the design in what the field has actually tried.
 
 Key patterns adopted by Memoria include the following:
 

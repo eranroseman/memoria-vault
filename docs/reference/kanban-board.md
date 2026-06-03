@@ -21,9 +21,9 @@ triage ──► todo ──► ready ──► running ──► done ──►
 
 | `status` | Meaning | Who moves the card | Hermes command |
 | --- | --- | --- | --- |
-| `triage` | Created; spec incomplete. Dispatcher ignores it. | `hermes kanban specify` or `decompose` | `hermes kanban specify <id>` |
+| `triage` | Created; spec incomplete. Dispatcher ignores it. | Human (via `hermes kanban specify` or `decompose`) | `hermes kanban specify <id>` |
 | `todo` | Specified; on backlog; not yet released for dispatch. | Human | (manual release via `hermes kanban release <id>`) |
-| `ready` | Dispatchable. Dispatcher will claim it for a matching-lane profile. | `hermes kanban release` | `hermes kanban dispatch` (runs one pass) |
+| `ready` | Dispatchable. Dispatcher will claim it for a matching-lane profile. | Human (via `hermes kanban release`) | `hermes kanban dispatch` (runs one pass) |
 | `running` | A profile owns the card and is executing. | Dispatcher (atomic claim + spawn). Workers do not self-claim. | `hermes kanban claim <id>` (manual/script only) |
 | `blocked` | Worker cannot proceed; needs human intervention. Carries a `reason`. | Worker via `kanban_block`. Human clears via `hermes kanban unblock`. | `hermes kanban unblock <id>` |
 | `done` | Worker finished. Review overlay applies here. | Worker via `kanban_complete` | — |
@@ -113,6 +113,7 @@ The handoff payload is **forward-looking**: it provisions the *next* worker with
 | --- | --- | --- |
 | Review queue | 5 cards in `done` (awaiting review) | Back-pressure on the human review bottleneck. |
 | Per worker lane | 1 `running` card | A profile holds one card at a time; multiple instances run one card each. |
+| Writer lane (drafts in flight) | Bounded (no fixed number) | Caps the Writer's concurrent drafts: too many in flight at once degrades synthesis quality because evidence cannot be fully integrated. Protects synthesis quality, not throughput. |
 
 ---
 

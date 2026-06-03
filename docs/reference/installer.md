@@ -49,7 +49,7 @@ The Hermes installer auto-provisions uv, Python 3.11, Node.js 22, ripgrep, and f
 | Hermes runtime | upstream installer (WSL2 on Win) | ✅ |
 | `.memoria` MCP servers (`policy_mcp.py`, `policy_hook.py`) | `pip install -r requirements.txt` | ✅ |
 | Seven Hermes profiles | stage + `{{VAULT_PATH}}` + `hermes profile install` | ✅ |
-| Skills — installable | clone K-Dense (5) + `hermes skills install` official (2) | ✅ |
+| Skills — installable | clone K-Dense (7) + `hermes skills install` official (2) | ✅ |
 | Skills — Memoria-custom | authored as `SKILL.md` in the profile `skills/` dirs | ✅ (ship in vault) |
 | Per-profile `.env` | bootstrap from `.env.EXAMPLE` if absent | ✅ create / ❌ fill |
 | Zotero app + Better BibTeX (required), MarkDB-Connect, RTF/ODF Scan | detect; download `.xpi` + GUI install | ⚠️ |
@@ -74,9 +74,9 @@ Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on
 
 ## Skills provisioning
 
-The seven profiles' lane-overrides name **28 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
+The seven profiles' lane-overrides name **30 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
 
-- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`.
+- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`, `scikit-learn`, `umap-learn`. The last two are the Python clustering/dimensionality-reduction libraries the Mapper drives for `cluster-map` (HDBSCAN + UMAP); they are granted in `mapper.yaml` and installed on the same K-Dense `git clone` path.
 - **Installable from the official Hermes registry** (`hermes skills install official/...`): `arxiv` (lane name `arxiv-search`), `llm-wiki` (lane name `llm-wiki-draft`), plus `obsidian`, `ocr-and-documents`, `github-repo-management`, `codex`, `claude-code`.
 - **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): the two real thin skills `obsidian-paper-note` (Librarian) and `retraction-check` (Verifier); the rest are handled by adapting the design — prompt-only behaviors in `SOUL.md`, lane-overrides pointing at a real skill ID, QuickAdd templates, or `detectors.py` functions (the Linter runs `detectors.py`, not Hermes skills).
 - **Not a skill:** `rest-passthrough` is a lane-override capability token.

@@ -94,6 +94,7 @@ Open fields — Memoria does not enforce a controlled vocabulary for these. Defi
 | Field | Type | Owner | Notes |
 | --- | --- | --- | --- |
 | `scope` | string (enum) | Human | The MOC's organizing axis (`moc` notes only): `topic` (conceptual cluster) · `domain` (broad research area) · `project` (per-project synthesis hub) · `method` (methodological cluster). |
+| `parent_moc` | wikilink | Human | A wikilink to the parent MOC this note hangs under. Present on `moc` (child hub → parent hub) and `venue-note` (venue → its organizing MOC). Blank at top level. |
 
 ---
 
@@ -104,12 +105,13 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |
 | `pub_status` | string (enum) | `active` · `preprint` · `retracted` · `deprecated` · `expression-of-concern` | Human / agent | `paper-note` |
+| `item_category` | string (enum) | `repo` · `tool` · `dataset` · `model` · `service` | Human / agent | `item-note` — what kind of item this is. Defaults to `repo`. |
 | `maintenance_status` | string (enum) | `active` · `deprecated` · `archived` · `unmaintained` | Human / agent | `item-note` |
 | `role_in_stack` | string (enum) | `primary-tool` · `dependency` · `alternative` · `reference-only` | Human | `item-note` |
 | `outreach_status` | string | — | Human | `person-note` (people you intend to contact; blank for entities tracked only for the research graph) |
 | `full_text_reviewed` | boolean | `true` · `false` | Human | `paper-note` · `item-note` — Human sets to `true` after reviewing the full text; dashboards query this. |
 | `enriched_date` | date (`YYYY-MM-DD`) | — | Agent | Top-level (not inside `_enrichment`) — dashboards and the Linter's stale-enrichment check query it directly. |
-| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` — set when the note is moved to `30-synthesis/02-reference/` with `lifecycle: current`; measures triage-to-promotion latency. |
+| `promoted_date` | date (`YYYY-MM-DD`) | — | Human | `claim-note` — set on a claim-note when it is promoted into `30-synthesis/02-reference/` with `lifecycle: current`; measures triage-to-promotion latency. |
 
 > **Note on `added`.** Earlier schema revisions used a single `added` field; the canonical pair is now `created` + `updated`. Any lingering `added` in an old note should be read as an alias for `created`.
 
@@ -176,6 +178,44 @@ Three different reaches into the same paper — each a one-click affordance from
 
 ---
 
+## Answer-note fields
+
+| Field | Type | Owner | Notes |
+| --- | --- | --- | --- |
+| `reviewed_by` | string | Human | Who reviewed the synthesis before it can be promoted to a `claim-note`. `answer-note`. |
+| `reviewed_date` | date (`YYYY-MM-DD`) | Human | When the review happened. `answer-note`. |
+
+An `answer-note` also carries `topic` (see [Domain fields](#domain-fields)) and `moc` (a list of wikilinks to the MOCs it belongs under — see [MOC membership](#moc-membership) below).
+
+---
+
+## Code-note fields
+
+| Field | Type | Allowed values | Owner | Notes |
+| --- | --- | --- | --- | --- |
+| `format` | string (enum) | `script` · `notebook` | Human | `code-note` — a Jupyter notebook is a `code-note` with `format: notebook`. Defaults to `script`. |
+| `purpose` | string | — | Human | `code-note` — one line on what the code is for and why it exists. |
+
+---
+
+## Relational fields
+
+Wikilink/slug lists that connect a note to other notes, sources, and projects. `projects` (see [Identity and time fields](#identity-and-time-fields)) is the canonical project-membership field; the fields below are the per-type relational set the templates carry.
+
+| Field | Type | Owner | Present on |
+| --- | --- | --- | --- |
+| `related_notes` | list of wikilinks | Human | `draft` · `project-note` · `canvas` |
+| `related_sources` | list of wikilinks | Human | `draft` · `project-note` · `code-note` |
+| `related_projects` | list of strings | Human | `code-note` · `canvas` |
+| `related_draft` | wikilink | Human | `deliverable` (the draft this was exported from) |
+| `relevance_to_projects` | list of strings | Human | `item-note` · `person-note` · `organization-note` |
+
+### MOC membership
+
+`moc` is a list of wikilinks to the MOCs a note is filed under. It is carried broadly — `paper-note`, `item-note`, `claim-note`, `answer-note`, `venue-note`, `project-note`, `code-note`, and `moc` itself (a child hub lists parents via `parent_moc`; `moc:` lists the hubs it cross-references). Distinct from `parent_moc` (a single parent hub; see [MOC fields](#moc-fields)).
+
+---
+
 ## Agent-managed namespaces
 
 ### `_proposed_classification` block
@@ -187,6 +227,8 @@ Agent-written proposal; human reviews and selectively promotes fields to main YA
 | `topic` | string or list | Agent's proposed topic(s). |
 | `study_design` | string | Agent's proposed study design. |
 | `methods` | list of strings | Agent's proposed methods. |
+| `projects` | list of strings | Agent's proposed project slugs. |
+| `moc` | list of wikilinks | Agent's proposed MOC memberships. |
 
 ### `_enrichment` block
 
@@ -194,15 +236,19 @@ Agent-maintained; refreshed on schedule. Values drift over time; keep in `_enric
 
 | Sub-field | Type | Notes |
 | --- | --- | --- |
-| `abstract` | string | Paper abstract from API. |
 | `citation_count` | integer | Citation count at last refresh. |
-| `open_access` | boolean | OA status at last refresh. |
-| `venue` | string | Journal/conference name from API. |
-| `openalex_id` | string | OpenAlex record ID. May be promoted to main YAML once verified. |
-| `orcid` | string | Author ORCID. May be promoted once verified. |
-| `ror` | string | Institution ROR ID. May be promoted once verified. |
+| `influential_citation_count` | integer | Semantic Scholar influential-citation count at last refresh. |
+| `scite_supporting` | integer | Count of supporting citation statements (scite.ai). |
+| `scite_contrasting` | integer | Count of contrasting citation statements (scite.ai). |
+| `scite_mentioning` | integer | Count of mentioning citation statements (scite.ai). |
+| `scite_checked_date` | date (`YYYY-MM-DD`) | Last date the scite.ai counts were refreshed. |
+| `mesh_terms` | list of strings | MeSH subject headings from PubMed. |
+| `acm_concepts` | list of strings | ACM Computing Classification concepts. |
+| `openalex_concepts` | list of strings | OpenAlex concept tags. |
+| `oa_pdf_url` | string | Open-access PDF URL discovered during enrichment. |
+| `related_papers` | list of strings | Related-paper leads (citekeys or identifiers) surfaced by the enrichment APIs. |
 
-**Promotion rule.** Stable identifiers (DOI, OpenAlex ID, ORCID, ROR) may be promoted from `_enrichment` to main YAML once verified. Derived metrics (citation counts, OA status) remain in `_enrichment`.
+**Promotion rule.** Stable identifiers (`doi`, `openalex_id`, `semantic_scholar_id`, `pmid`, `arxiv_id`) live in main YAML and are confirmed there once verified. Derived metrics (citation counts, scite statement counts, concept tags) stay in `_enrichment` and are refreshed on the per-type cadence.
 
 ---
 
@@ -232,6 +278,8 @@ Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — 
 ## Frontmatter not for notes
 
 `status` is a **board card field** (Hermes built-in). It is not a note field. The value sets for `status` (execution lifecycle) and `lifecycle` (note lifecycle) are deliberately disjoint — never use one in place of the other. See [Kanban board reference](kanban-board.md#execution-lifecycle).
+
+`screening-protocol.md` (in `99-system/templates/`) is a **program-control template, not a typed note** — it has no `type` and is exempt from the note-type schema. It carries only a `title:`. See [Note types — template locations](note-types.md#template-locations).
 
 ---
 

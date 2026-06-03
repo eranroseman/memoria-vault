@@ -50,7 +50,7 @@ Memoria has three layers — a Kanban board that orchestrates work, seven Hermes
 
 Memoria addresses this by design: the board persists in-flight state across sessions; the vault persists settled knowledge. Workers re-ground on those files between steps rather than relying on conversational continuity. This is "thin control over thick state" — the agents carry as little context as possible; the durable artifacts carry the memory.
 
-Three independent research systems (Chen 2026, AgentRxiv 2025, PARNESS 2026) reach the same conclusion from different starting points: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. The three-layer split is the structural form of that finding. See [Why three layers, not one](../rationale/why-three-layers.md) for the full reasoning.
+Several independent research systems (Chen 2026, AgentRxiv 2025, PARNESS 2026, among others) reach the same conclusion from different starting points: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. The three-layer split is the structural form of that finding. See [Why three layers, not one](../rationale/why-three-layers.md) for the full reasoning.
 
 ---
 

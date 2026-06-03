@@ -29,7 +29,7 @@ A claim note records that it has been overturned with a single typed relation, `
 
 ## Alternatives considered
 
-**Defer alongside ADR-8** (treat supersession as just another typed relation, gated on corpus density): rejected. Generic relations were deferred at the time (ADR-8 has since been adopted) because their *omission only blocks queries*; supersession's omission causes a *correctness failure* (surfacing a stale claim as current — the FAMA failure mode). Its cost/benefit is inverted from generic relations — low marginal cost (one human-set link at a natural moment), high cost-of-omission — so it warrants carving out.
+**Defer alongside ADR-8** (treat supersession as just another typed relation, gated on corpus density): rejected. Generic relations had been deferred (ADR-8 was ratified together with this ADR on 2026-05-29) because their *omission only blocks queries*; supersession's omission causes a *correctness failure* (surfacing a stale claim as current — the FAMA failure mode). Its cost/benefit is inverted from generic relations — low marginal cost (one human-set link at a natural moment), high cost-of-omission — so it warrants carving out.
 
 **Reuse `lifecycle: dormant`/`archived`** to mark superseded claims: rejected. Lifecycle is about durability/activity, not validity, and carries no pointer to the replacement, so you can neither reliably filter "current belief" nor trace what replaced what. A lifecycle transition may *accompany* supersession but is not sufficient.
 

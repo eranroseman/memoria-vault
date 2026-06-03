@@ -40,7 +40,7 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 
 **A dedicated eval-runner profile** (not the Linter): rejected for now — eval is a health-reporting concern the Linter already covers, and a new profile violates the expansion-threshold (add a profile only when an existing one is consistently overloaded). Revisit if eval orchestration outgrows the Linter.
 
-**Gold tasks as a note type now**: rejected — premature; YAML in `00-meta/` suffices until ≥5 items force a type.
+**Gold tasks as a note type now**: rejected — premature; YAML in `99-system/eval/` suffices until ≥5 items force a type.
 
 ## Related
 

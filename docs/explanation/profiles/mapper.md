@@ -15,7 +15,7 @@ The Mapper is the lens on what the human already has. It produces scope reports,
 
 **Reproducible maps, not opinionated summaries.** Mapper's map of a corpus should be the same today and next week, given the same vault state. HDBSCAN clustering, embedding similarity, and recency aggregation are all deterministic. The LLM composes the prose over deterministic outputs. This reproducibility is what makes Mapper's outputs usable as a *decision basis* — if the map changes on every run, the human can't rely on it to decide whether to write now or read more.
 
-**Truly read-only — no exceptions.** Because the Mapper never writes to canonical content, its read-only-across-the-vault invariant holds without carve-outs. (The per-source comparative `[!brief]` lives at the top of a paper note in `20-sources/`, which only the Librarian may write — so that callout is composed by the Librarian during ingest, not the Mapper. See [the Librarian](librarian.md).)
+**Read-only across canonical content.** The Mapper never writes to canonical content; its only writes are to its own project scratch (`40-workbench/*/01-map/`, covered next). (The per-source comparative `[!brief]` lives at the top of a paper note in `20-sources/`, which only the Librarian may write — so that callout is composed by the Librarian during ingest, not the Mapper. See [the Librarian](librarian.md).)
 
 **Project-scratch-only writes.** Mapper writes only to `40-workbench/*/01-map/`. This protects against accidental pollution of canonical zones from corpus-mapping operations. A Mapper session that accidentally wrote to `30-synthesis/` would be difficult to audit; restricting it to project scratch keeps the operation clean.
 

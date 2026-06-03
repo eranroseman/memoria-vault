@@ -35,6 +35,9 @@ Anirudh Ajith, Mengzhou Xia, Alexis Chevalier, Tanya Goyal, Danqi Chen, and Tian
 <a id="bisht2026agentic"></a>
 Harshit Bisht, Vinay Kumar, Kevin Maik Jablonka, Mausam, and N. M. Anoop Krishnan. 2026. Agentic AI Scientists Are Not Built for Autonomous Scientific Discovery. arXiv:2605.08956. Retrieved from https://arxiv.org/abs/2605.08956
 
+<a id="chen2026copilots"></a>
+Deli Chen. 2026. From Copilots to Colleagues: A Survey of Autonomous Research Agents. Self-published. Retrieved from https://victorchen96.github.io/auto_research_survey.pdf. A survey of ~95 papers across machine learning, software engineering, and scientific discovery; proposes the L1–L5 autonomy taxonomy (L1 code-autocomplete → L5 fully self-directed) and identifies persistent knowledge accumulation as a primary barrier to L5 autonomy.
+
 <a id="chen2026autonomous"></a>
 Guoxin Chen, Jie Chen, Lei Chen, Jiale Zhao, Fanzhe Meng, Wayne Xin Zhao, Ruihua Song, Cheng Chen, Ji-Rong Wen, and Kai Jia. 2026. Toward Autonomous Long-Horizon Engineering for ML Research. arXiv:2604.13018. Retrieved from https://arxiv.org/abs/2604.13018
 

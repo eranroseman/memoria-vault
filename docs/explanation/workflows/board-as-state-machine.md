@@ -30,7 +30,7 @@ A card is not just a task title. It carries:
 
 **Execution state** — `status` (the fixed Hermes enum: `triage` → `todo` → `ready` → `running` → `done` → `archived`). This answers "where is the work?" at any moment.
 
-**Review state** — `review_status` (a Memoria overlay on `done` cards: `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
+**Review state** — `review_status` (a Memoria overlay: `unreviewed` (the default) → `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
 
 **Agent recommendation** — `agent_recommendation` (optional, from Verifier or Linter). This answers "what does the checking agent advise?" — separate from the human's decision.
 

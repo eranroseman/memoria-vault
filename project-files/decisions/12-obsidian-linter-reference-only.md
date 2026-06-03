@@ -19,7 +19,7 @@ The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdo
 
 ## Decision
 
-Memoria treats obsidian-linter as **reference-only**: documented for the record, **not installed and not recommended**. It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved under *Held configuration (historical)* below in case a human chooses to run it anyway or the decision is revisited.
+Memoria treats obsidian-linter as **incompatible — do not install**: documented for the record only. (This is the hardened ruling per the Update banner above; it strengthens the original "reference-only … not installed and not recommended" verdict — no config makes the plugin safe to run alongside Memoria.) It must never act as a **control-plane formatter** — it never writes to Policy-MCP-audited zones, and it is never the authority for frontmatter or schema. The formatting concerns it would cover are owned elsewhere: the **Memoria Linter** owns frontmatter/schema validation and structural drift; **markdownlint** owns Markdown hygiene. The plugin's safe-config knowledge (folder exclusion, frontmatter rules off, the HTML-comment footgun) is preserved under *Held configuration (historical)* below in case a human chooses to run it anyway or the decision is revisited.
 
 ## Consequences
 

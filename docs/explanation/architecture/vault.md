@@ -53,7 +53,7 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 │   ├── metrics/
 │   ├── eval/
 │   ├── skills/
-│   └── templates/      ← 16 note templates (QuickAdd instantiates these)
+│   └── templates/      ← 17 template files: 16 note-type templates (QuickAdd instantiates these) + screening-protocol.md (a program-control template)
 ├── .obsidian/           ← Obsidian config (auto-hidden)
 └── .memoria/            ← Memoria tooling (auto-hidden)
     ├── profiles/        ← seven Hermes profile directories

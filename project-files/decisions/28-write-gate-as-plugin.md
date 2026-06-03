@@ -5,11 +5,19 @@ title: The vault write gate is a Hermes Python plugin, not a shell hook
 status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02
-supersedes: []
+supersedes: [27]
 superseded_by: []
 ---
 
 # ADR-28: The vault write gate is a Hermes Python plugin, not a shell hook
+
+> **Partial (mechanism-only) supersession.** The `supersedes: [27]` frontmatter is
+> scoped: this ADR supersedes **only [ADR-27](27-hermes-native-config-and-gate-enforcement.md)'s
+> shell-hook enforcement mechanism**, replacing it with the `memoria-policy-gate`
+> Python plugin. **ADR-27's config-model decisions are retained** — `mcp_servers` in
+> `config.yaml`, the `agent.disabled_toolsets` allowlist, and obsidian as each lane's
+> only write path all still stand (they are what make a single gated path
+> sufficient). ADR-27 is **not** fully superseded.
 
 ## Context
 
