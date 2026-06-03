@@ -38,7 +38,8 @@ Present on every note.
 
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |
-| `lifecycle` | string (enum) | `proposed` · `current` · `dormant` · `archived` | Human | Every note |
+| `lifecycle` | string (enum) | `captured` · `proposed` · `current` · `dormant` · `archived` | Human (`captured` is system-set) | Every note |
+| `ingest_status` | string (enum) | `tier0` · `enriched` · `complete` · `needs-human` | System | Ingested source notes (while `captured`) |
 | `maturity` | string (enum) | `seedling` · `budding` · `evergreen` | Human | `claim-note` only |
 | `project_phase` | string (enum) | `active` · `paused` · `complete` · `abandoned` | Human | `project-note` only |
 | `draft_stage` | string (enum) | `outline` · `rough` · `polished` · `submitted` | Human | `draft` only |
@@ -47,10 +48,22 @@ Present on every note.
 
 | Value | Meaning |
 | --- | --- |
+| `captured` | Ingest floor: the note exists and is durable, but has not yet been classified. Set by the ingest pipeline (Tier 0); the classification proposal is the only thing that promotes it to `proposed`. See [Ingest](ingest.md). |
 | `proposed` | New; not yet reviewed or classified. Default at creation for most types. |
 | `current` | Active and maintained. Dashboards surface this state. |
 | `dormant` | Created, not actively maintained; may be revived. Used by `moc`. |
 | `archived` | Terminal. Retired from active use. Never deleted; queryable. |
+
+### `ingest_status` values (ingested source notes)
+
+Set by the deterministic ingest pipeline; tracks how far a `captured` note has progressed so the retry-sweep knows what to re-drive. Orthogonal to `lifecycle` — a note stays `captured` until classification promotes it.
+
+| Value | Meaning |
+| --- | --- |
+| `tier0` | Tier-0 floor only (offline, or no resolvable identifier / PDF). Enrichment still pending. |
+| `enriched` | Tier-1 metadata merged and extract + link plan attached; the agent judgments (classify, brief) are pending. |
+| `complete` | Fully ingested — classified, linked, brief written; the note has left `captured`. |
+| `needs-human` | Terminal after bounded failed re-ingest attempts. The retry-sweep stops here and surfaces the note for manual resolution. |
 
 ### `maturity` values (claim-notes only)
 
