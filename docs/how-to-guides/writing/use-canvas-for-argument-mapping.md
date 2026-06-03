@@ -1,6 +1,7 @@
 ---
 title: How to use canvas for argument mapping
 parent: Writing
+nav_order: 5
 ---
 
 # How to use canvas for argument mapping

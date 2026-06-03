@@ -1,6 +1,7 @@
 ---
 title: How to work the review queue
 parent: Writing
+nav_order: 8
 ---
 
 

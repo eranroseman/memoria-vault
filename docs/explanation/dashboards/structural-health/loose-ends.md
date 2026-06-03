@@ -1,6 +1,7 @@
 ---
 title: loose-ends dashboard
 parent: Structural health
+nav_order: 3
 grand_parent: Dashboards
 ---
 

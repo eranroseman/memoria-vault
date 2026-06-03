@@ -1,6 +1,7 @@
 ---
 title: The discuss-queue dashboard
 parent: Synthesis agenda
+nav_order: 2
 grand_parent: Dashboards
 ---
 

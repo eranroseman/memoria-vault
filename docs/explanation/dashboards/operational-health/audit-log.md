@@ -1,6 +1,7 @@
 ---
 title: audit-log dashboard
 parent: Operational health
+nav_order: 2
 grand_parent: Dashboards
 ---
 

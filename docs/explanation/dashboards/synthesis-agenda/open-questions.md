@@ -1,6 +1,7 @@
 ---
 title: open-questions dashboard
 parent: Synthesis agenda
+nav_order: 3
 grand_parent: Dashboards
 ---
 

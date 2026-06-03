@@ -1,6 +1,7 @@
 ---
 title: Structural health
 parent: Dashboards
+nav_order: 3
 grand_parent: Explanation
 has_children: true
 permalink: /explanation/dashboards/structural-health/

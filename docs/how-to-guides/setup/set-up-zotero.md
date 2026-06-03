@@ -1,6 +1,7 @@
 ---
 title: How to set up Zotero
 parent: Setup
+nav_order: 7
 ---
 
 

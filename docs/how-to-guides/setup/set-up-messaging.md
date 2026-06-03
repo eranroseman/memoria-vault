@@ -1,6 +1,7 @@
 ---
 title: How to set up the messaging gateway
 parent: Setup
+nav_order: 6
 ---
 
 

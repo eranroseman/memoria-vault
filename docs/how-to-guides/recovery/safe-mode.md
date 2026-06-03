@@ -1,6 +1,7 @@
 ---
 title: "Safe mode: minimal working path"
 parent: Recovery
+nav_order: 1
 ---
 
 # Safe mode: minimal working path

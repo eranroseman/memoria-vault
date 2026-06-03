@@ -1,6 +1,7 @@
 ---
 title: Note body structure
 parent: Knowledge
+nav_order: 3
 ---
 
 # Note body structure

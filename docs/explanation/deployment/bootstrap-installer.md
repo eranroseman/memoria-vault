@@ -1,6 +1,7 @@
 ---
 title: Bootstrap installer
 parent: Deployment
+nav_order: 3
 ---
 
 # Bootstrap installer

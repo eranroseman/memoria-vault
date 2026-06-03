@@ -1,6 +1,7 @@
 ---
 title: How to use workspaces
 parent: Using Obsidian
+nav_order: 3
 ---
 
 # How to use workspaces

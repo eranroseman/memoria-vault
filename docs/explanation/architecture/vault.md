@@ -1,6 +1,7 @@
 ---
 title: The vault
 parent: Architecture
+nav_order: 1
 ---
 
 # The vault

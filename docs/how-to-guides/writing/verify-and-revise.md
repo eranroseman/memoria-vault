@@ -1,6 +1,7 @@
 ---
 title: How to verify and revise a draft
 parent: Writing
+nav_order: 7
 ---
 
 

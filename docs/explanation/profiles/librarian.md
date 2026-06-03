@@ -1,6 +1,7 @@
 ---
 title: The Librarian
 parent: Profiles
+nav_order: 1
 ---
 
 

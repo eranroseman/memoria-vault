@@ -1,6 +1,7 @@
 ---
 title: Synthesis agenda
 parent: Dashboards
+nav_order: 2
 grand_parent: Explanation
 has_children: true
 permalink: /explanation/dashboards/synthesis-agenda/

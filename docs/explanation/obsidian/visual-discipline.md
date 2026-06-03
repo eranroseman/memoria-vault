@@ -1,6 +1,7 @@
 ---
 title: Visual-style discipline
 parent: Obsidian
+nav_order: 3
 ---
 
 # Visual-style discipline

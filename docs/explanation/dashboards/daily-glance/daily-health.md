@@ -1,6 +1,7 @@
 ---
 title: The Daily Health dashboard
 parent: Daily glance
+nav_order: 1
 grand_parent: Dashboards
 ---
 

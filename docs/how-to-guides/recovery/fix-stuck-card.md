@@ -1,6 +1,7 @@
 ---
 title: How to fix a stuck card
 parent: Recovery
+nav_order: 2
 ---
 
 

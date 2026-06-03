@@ -1,6 +1,7 @@
 ---
 title: How to link related claims (typed relations)
 parent: Sources
+nav_order: 8
 ---
 
 

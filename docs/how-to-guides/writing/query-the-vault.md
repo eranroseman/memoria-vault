@@ -1,6 +1,7 @@
 ---
 title: How to query the vault
 parent: Writing
+nav_order: 4
 ---
 
 

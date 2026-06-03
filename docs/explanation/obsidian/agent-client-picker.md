@@ -1,6 +1,7 @@
 ---
 title: The agent-client pane
 parent: Obsidian
+nav_order: 6
 ---
 
 # The agent-client pane

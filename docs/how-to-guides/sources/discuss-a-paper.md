@@ -1,6 +1,7 @@
 ---
 title: How to discuss a paper
 parent: Sources
+nav_order: 6
 ---
 
 
