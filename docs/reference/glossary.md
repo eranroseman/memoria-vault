@@ -72,7 +72,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Claim** (three senses) — (1) *to claim a card*: the dispatcher atomically claims a `ready` card and spawns the assigned profile; (2) *a substantive claim*: an assertion in a draft that Verifier traces; (3) **claim-note**: a `claim-note` in `30-synthesis/01-claims/`.
 
-**Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
+**Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`captured` / `proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
 
 **Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [Note types](note-types.md).
 
