@@ -12,27 +12,41 @@ three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery �
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
 review gate firing live). #58 took two passes:
-[ADR-27](../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
+[ADR-27](../../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
 `obsidian` MCP and locked each lane to obsidian-only writes, and
-[ADR-28](../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
+[ADR-28](../../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
 hook with a Python plugin — the shell hook's `obsidian.*` `re.fullmatch` never
 matched Hermes' real `mcp_obsidian_*` tool name (and shell hooks are consent-gated
 + fail-open). The gate now **enforces live**: validated in `hermes -z` on
 installer-deployed lanes (allowed write logs `allow`+`write_complete`; denied write
 blocked, no file; simulated policy outage fails closed).
-**No open P0 remains.** [#59](https://github.com/eranroseman/memoria-vault/issues/59)
+[#59](https://github.com/eranroseman/memoria-vault/issues/59)
 (official skills on install) is resolved — those skills are bundled with Hermes,
-not hub-installed. What's left for the cut is **verification, not construction:**
-dashboards (G4), telemetry cron (G5), the changelog (G8), the GUI tier (T5), and a
-fresh-clone candidate re-run of the live gate across run modes (G2/T4). `released:`
-flips to `true` only when every gate in §2 is `done`.
+not hub-installed. **No open P0 remains in the tracker — but what's left for the cut
+is not only verification; part of it is the product itself.** The *infrastructure*
+(installer, gate, bridge, dashboards, telemetry, CI) is built and largely verified —
+the remaining infra work is re-runs: dashboards (G4), telemetry cron (G5), the
+changelog (G8), the GUI tier (T5), and a fresh-clone re-run of the live gate (G2/T4).
+**What is not yet built or proven is operability:** no agent has completed a real
+workflow end-to-end, so the loop that makes v0.1 *usable* is still partly
+construction. This plan therefore separates two kinds of done — the infrastructure
+**floor** (§2, G1–G8) and the **operability** gates that prove a workflow actually
+runs (§2, G9–G11) — with the bar and critical path detailed in the
+[shippability assessment](shippability-assessment-2026-06-03.md). `released:` flips to
+`true` only when **every** gate, floor and operability, is `done`.
 
-> **The core reframing.** Per [implementation-status.md](implementation-status.md),
+> **The core reframing.** Per [implementation-status.md](../../plans/implementation-status.md),
 > most artifacts are `shipped` — but its legend defines `shipped` as _in the vault,
 > not verified end-to-end_. So v0.1 is overwhelmingly **built but unverified**, and
 > #58 was a textbook case of the danger of stopping at `shipped`: a gate that existed
-> but didn't fire (it took ADR-27 _and_ the ADR-28 plugin to actually fire it). The release gate is **verification, not
-> construction** — turning `shipped` rows into `approved` ones (§3).
+> but didn't fire (it took ADR-27 _and_ the ADR-28 plugin to actually fire it).
+> **But "verify what's built" is only half the gate.** The other half is
+> **operability**: the command/invocation surface that lets an agent actually run a
+> workflow is _designed, not shipped_ for all seven agents, and the ingest value loop
+> (ADR-30, still `proposed`) has unbuilt steps. So the release gate is **both** — turn
+> `shipped` infrastructure into `approved` (§2 G1–G8, §3), **and** prove one workflow
+> operable end-to-end (§2 G9–G11). Shipping on green plumbing alone would ship zero
+> proven research value.
 
 ## State values
 
@@ -55,27 +69,52 @@ the bundled Obsidian plugins, the Kanban board, and the six-signal telemetry
 capture. Density-gated automation and multi-device are later phases (see §8 and the
 spillover), not v0.1 scope.
 
+**Operability bar (what "shippable" means).** The bundle above is what *installs*;
+it is not what makes v0.1 *usable*. v0.1 is shippable when **one agent workflow runs
+end-to-end — through a real trigger, gated, audited, queued for human review — on the
+hand-usable vault scaffold.** Not seven polished agents; one *operable, verified loop*
+plus the scaffold underneath it. The seven profiles are *configured*; one workflow must
+be *operable*. See the [shippability assessment](shippability-assessment-2026-06-03.md)
+for the bar and its dependency-ordered critical path.
+
 ## 2. Definition of done — gates
 
-v0.1.0 ships when **all eight gates (G1–G8) are green.**
+v0.1.0 ships when **both gate groups are green** — the infrastructure floor (G1–G8)
+**and** the operability gates (G9–G11). The floor proves the plumbing; the operability
+gates prove a workflow actually runs on it. **Green plumbing alone is not a release.**
 _(Proposed gates — confirm/adjust the thresholds.)_
+
+### Infrastructure gates (G1–G8) — the floor
 
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](gui-test-protocol.md) Part C. A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
+| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](../../tests/gui-test-protocol.md) Part C. A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry. Board-export cron **wired** (installer `wire_telemetry_cron` deploys the wrapper + `hermes cron create --no-agent`, 1-min cadence) and validated live — a forced tick fires `board_export.py` and `board-state.jsonl` gains a snapshot. Audit deny-reasons already emit from the policy gate; FAMA exposure from the Linter. Full `board-transitions`/`disposition`/`cost` emission needs live card activity to exercise, and the Hermes scheduler/gateway must be running for the cron to fire | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
 | G8 | todo | `CHANGELOG.md` `[0.1.0]` entry written at cut; version `0.1.0` consistent across the 7 `distribution.yaml` | manual | — |
 
+### Operability gates (G9–G11) — the product (the real release blockers)
+
+These prove an agent completes real work end-to-end, not that components exist. Sourced from the [shippability assessment](shippability-assessment-2026-06-03.md) Gates 1–3 — the dependency-ordered critical path. **These are the substantive distance to a shippable cut.**
+
+| Gate | State | Proves | Verified by | Issue |
+| --- | --- | --- | --- | --- |
+| G9 | todo | **Deterministic spine.** A *dispatched* deterministic agent (Linter `health-report` or Verifier `similarity-check` — zero-LLM, no external API) completes a board card live: dispatch → claim → run → gated write → audit → `done`. Isolates "does the spine work live" from ingest risk — the #1 thing to prove, and the cheapest | live agent run | — |
+| G10 | in-progress | **Ingest value loop** (the product). capture → ingest → gated write → review. ADR-30 Tier-0/1 scripts shipped + `--self-test` green (#93–#100; see ledger), but the LLM classify + `[!brief]`, the gated writes (`pipeline.py` writes nothing today), the capture glue, and one end-to-end run remain. Part **construction**, not just verification. ADR-30 stays `proposed` until a Tier-1 correctness spike (round-2 red-team R2-1 merge / R2-4 tags) | live agent run | — |
+| G11 | todo | **Review loop closes.** Card → `done` → `review_status: requested` → human approves → lifecycle `current`, observed end-to-end. The review gate is policy-tested but **not** e2e-verified | live agent run | — |
+
 ## 3. Validation — tiers
 
 The tiered install-testing plan turns `shipped` rows into `approved` ones. A
 release candidate must re-run **T0–T5 green from a fresh clone** on a clean
-Ubuntu/WSL2 box.
+Ubuntu/WSL2 box. The tiers validate the **infrastructure floor**; the **operability
+gates (G9–G11)** are validated by live *agent* runs — an extension of Tier 4 from
+"the gate fires" to "a workflow completes" — and are tracked in §2, not duplicated
+as tiers here.
 
 | Tier | State | Proves |
 | --- | --- | --- |
@@ -84,29 +123,39 @@ Ubuntu/WSL2 box.
 | T2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | T3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
 | T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| T5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](gui-test-protocol.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
+| T5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](../../tests/gui-test-protocol.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
 
 ## 4. Blockers
 
 Not enumerated here — a second list would drift. **By definition the blockers
 are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the build
-ledger ([implementation-status.md](implementation-status.md)) and any open
+ledger ([implementation-status.md](../../plans/implementation-status.md)) and any open
 **P0** issue in the [tracker](https://github.com/eranroseman/memoria-vault/issues).
 
 **No open P0 remains** — #39, #51, and
 [#58](https://github.com/eranroseman/memoria-vault/issues/58) are all closed (#58
 resolved via ADR-27 + the ADR-28 plugin: obsidian is each lane's only write path,
 and the `memoria-policy-gate` plugin enforces on it — validated live,
-installer-deployed). #59 is resolved (skills are bundled, not hub-installed). The remaining
-blockers are the not-yet-`done` gates in §2 (G2, G4, G5, G8) and tiers in §3 (T4,
-T5) — verification work, not defects.
+installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
+
+The remaining blockers split in two:
+- **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and tiers (T4, T5) — re-runs to confirm what's built.
+- **Operability (the substantive distance):** the release-blocking gates **G9** (deterministic spine), **G10** (ingest value loop — part construction: classify, gated writes, capture glue), and **G11** (review loop closes). These are P0-level work, distinct from the tracker P0 *issues* (all closed) that G7 covers. No agent has completed a verified workflow yet; this is where the real work and risk concentrate (see the [shippability assessment](shippability-assessment-2026-06-03.md) risks).
 
 ## 5. Out of scope (deferred)
 
 The per-artifact deferred set lives in the `deferred` rows of
-[implementation-status.md](implementation-status.md) and in
-[proposals/](../proposals/) — not duplicated here. At the scope level:
+[implementation-status.md](../../plans/implementation-status.md) and in
+[proposals/](../../proposals/) — not duplicated here. At the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
+
+**Cut from the first operable slice** — what keeps "ship one loop" (G9–G11) tractable. None blocks a defensible v0.1; re-open each once a workflow ships:
+
+- The **ACP-pane interactive surface** for Mapper/Writer/Verifier — and therefore the **session-skill / pane-readonly hardening** (the ephemeral-engine + unwired `set_session_skill` gap found this session). The pane isn't advertised in v0.1; a dispatched-only slice doesn't need it.
+- The **other six agents' full command sets** — prove one workflow, not seven.
+- **ADR-30 Tier 2** (NLI contradiction, KeyBERT, the comparative `[!brief]`) and heavy NLP.
+- **Multi-source merge sophistication** (ADR-30 R2-1) — start single-source-with-fallback; validate the merge later.
+- **API-POST capture transport** — the script/CLI/QuickAdd front-end ships first.
 
 ## 6. Known limitations (state in the release notes)
 
@@ -118,13 +167,13 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 ## 7. Cut procedure
 
-1. **Every gate (§2) and tier (§3) `done`; no P0 issues open.** (No P0 open; the remaining non-`done` gates are verification: G2/T4 the fresh-clone live re-run, G4/G5/G8/T5 the dashboards/telemetry/changelog/GUI.)
+1. **Every gate (§2 — floor G1–G8 *and* operability G9–G11) and tier (§3) `done`; no P0 issues open.** The floor gates are verification (G2/T4 fresh-clone live re-run; G4/G5/G8/T5 dashboards/telemetry/changelog/GUI). The operability gates require a real workflow proven end-to-end: **G9** deterministic spine, **G10** ingest value loop, **G11** review loop closes — a release on green floor gates alone ships zero proven research value.
 2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3.
 3. **Confirm version `0.1.0`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
 6. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
-7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](implementation-status.md) once the candidate passes.
+7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](../../plans/implementation-status.md) once the candidate passes.
 
 ## 8. Roadmap after this release
 

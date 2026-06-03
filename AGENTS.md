@@ -331,7 +331,7 @@ the release-plan file; per-artifact build state lives ONLY in
 long for a crisp plan (full phase steps, investigation notes) goes to a sibling
 `release-plan-<version>-spillover.md`.
 
-The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
+The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
 (+ its `-spillover.md`); the per-artifact build ledger is
 [`implementation-status.md`](project-files/plans/implementation-status.md).
 
