@@ -177,7 +177,7 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
-        import policy_mcp                            # reuse the tested decision core
+        import policy_mcp  # reuse the tested decision core
     except Exception as exc:                         # import failure -> block the write
         return {"decision": "block",
                 "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed."}
