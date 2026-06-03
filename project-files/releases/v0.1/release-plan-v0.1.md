@@ -12,9 +12,9 @@ three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery �
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
 review gate firing live). #58 took two passes:
-[ADR-27](../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
+[ADR-27](../../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
 `obsidian` MCP and locked each lane to obsidian-only writes, and
-[ADR-28](../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
+[ADR-28](../../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
 hook with a Python plugin — the shell hook's `obsidian.*` `re.fullmatch` never
 matched Hermes' real `mcp_obsidian_*` tool name (and shell hooks are consent-gated
 + fail-open). The gate now **enforces live**: validated in `hermes -z` on
@@ -27,7 +27,7 @@ dashboards (G4), telemetry cron (G5), the changelog (G8), the GUI tier (T5), and
 fresh-clone candidate re-run of the live gate across run modes (G2/T4). `released:`
 flips to `true` only when every gate in §2 is `done`.
 
-> **The core reframing.** Per [implementation-status.md](implementation-status.md),
+> **The core reframing.** Per [implementation-status.md](../../plans/implementation-status.md),
 > most artifacts are `shipped` — but its legend defines `shipped` as _in the vault,
 > not verified end-to-end_. So v0.1 is overwhelmingly **built but unverified**, and
 > #58 was a textbook case of the danger of stopping at `shipped`: a gate that existed
@@ -65,7 +65,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](gui-test-protocol.md) Part C. A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
+| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](../../tests/gui-test-protocol.md) Part C. A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry. Board-export cron **wired** (installer `wire_telemetry_cron` deploys the wrapper + `hermes cron create --no-agent`, 1-min cadence) and validated live — a forced tick fires `board_export.py` and `board-state.jsonl` gains a snapshot. Audit deny-reasons already emit from the policy gate; FAMA exposure from the Linter. Full `board-transitions`/`disposition`/`cost` emission needs live card activity to exercise, and the Hermes scheduler/gateway must be running for the cron to fire | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
@@ -84,13 +84,13 @@ Ubuntu/WSL2 box.
 | T2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | T3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
 | T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| T5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](gui-test-protocol.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
+| T5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](../../tests/gui-test-protocol.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
 
 ## 4. Blockers
 
 Not enumerated here — a second list would drift. **By definition the blockers
 are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the build
-ledger ([implementation-status.md](implementation-status.md)) and any open
+ledger ([implementation-status.md](../../plans/implementation-status.md)) and any open
 **P0** issue in the [tracker](https://github.com/eranroseman/memoria-vault/issues).
 
 **No open P0 remains** — #39, #51, and
@@ -104,8 +104,8 @@ T5) — verification work, not defects.
 ## 5. Out of scope (deferred)
 
 The per-artifact deferred set lives in the `deferred` rows of
-[implementation-status.md](implementation-status.md) and in
-[proposals/](../proposals/) — not duplicated here. At the scope level:
+[implementation-status.md](../../plans/implementation-status.md) and in
+[proposals/](../../proposals/) — not duplicated here. At the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 ## 6. Known limitations (state in the release notes)
@@ -124,7 +124,7 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
 6. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
-7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](implementation-status.md) once the candidate passes.
+7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](../../plans/implementation-status.md) once the candidate passes.
 
 ## 8. Roadmap after this release
 

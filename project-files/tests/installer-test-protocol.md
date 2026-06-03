@@ -111,4 +111,4 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | `install.ps1` WSL2 handoff (+ bootstrap) | | |
 
-**T0–T3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the T0–T3 rows of [release-plan-v0.1.md](../plans/release-plan-v0.1.md).
+**T0–T3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the T0–T3 rows of [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).

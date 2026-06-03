@@ -1,6 +1,6 @@
 # Implementation status
 
-The design docs in `docs/` describe the **intended** Memoria system. The starter vault (under `vault/` in this repo) is a **v0.1 scaffold** — some components are shipped and present in the vault, and a significant portion of the v0.1 design is pending implementation. Nothing is approved yet. This ledger is the single source of truth for the build state of every artifact, so a gap reads as a known status — not a documentation error. For the phase-by-phase activation sequence — when each component is wired, configured, or first run — see [release-plan-v0.1-spillover.md](release-plan-v0.1-spillover.md).
+The design docs in `docs/` describe the **intended** Memoria system. The starter vault (under `vault/` in this repo) is a **v0.1 scaffold** — some components are shipped and present in the vault, and a significant portion of the v0.1 design is pending implementation. Nothing is approved yet. This ledger is the single source of truth for the build state of every artifact, so a gap reads as a known status — not a documentation error. For the phase-by-phase activation sequence — when each component is wired, configured, or first run — see [release-plan-v0.1-spillover.md](../releases/v0.1/release-plan-v0.1-spillover.md).
 
 When a design doc describes an artifact, tag it with one of the status values below (inline, e.g. *(status: pending)*). When in doubt, this ledger wins.
 
