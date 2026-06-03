@@ -14,7 +14,12 @@ The organizing principle: **each channel owns one mode.** Using one for another'
 | **Obsidian** | Desktop, focused, deliberate | Daily triage, reading, authoring, agent conversations on the active note |
 | **CLI** (`hermes …`) | Desktop, occasional, precise | Forensic queries, profile administration, manual dispatch, backup |
 | **Telegram** | Mobile, async, lightweight | Fleeting capture, source-URL queuing, urgent push notifications |
-| **API server** (port 8642) | Programmatic, integration | File-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch |
+
+The three rows above are the human channels. The API server (port 8642) is listed separately below because it is *not* a human-operated channel — it is a programmatic integration surface that programs use and humans never operate directly:
+
+| Integration surface | Mode | Purpose |
+| --- | --- | --- |
+| **API server** (port 8642) | Programmatic, integration (not human-operated) | File-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch |
 
 ---
 

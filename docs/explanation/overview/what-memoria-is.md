@@ -61,7 +61,7 @@ Memoria addresses both: the agent handles the maintenance discipline that humans
 
 ## Where it sits on the autonomy spectrum
 
-[Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)'s five-level taxonomy runs: L1 (code autocomplete) → L2 (multi-step with human approval per step) → L3 (multi-step autonomous under human-set strategy with per-batch review) → L4 (self-directed within a bounded domain) → L5 (fully self-directed).
+[Chen et al. 2026](../../reference/bibliography.md#chen2026copilots)'s (*From Copilots to Colleagues*) five-level taxonomy runs: L1 (code autocomplete) → L2 (multi-step with human approval per step) → L3 (multi-step autonomous under human-set strategy with per-batch review) → L4 (self-directed within a bounded domain) → L5 (fully self-directed).
 
 **Memoria targets L3 with a structurally enforced ceiling.** Profiles execute multi-step work unattended within a card, but the human sets the strategy and the review gate blocks every promotion. L4 and L5 require autonomous keep/revert on synthesis, which fails for knowledge work — the reasoning is in [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md).
 

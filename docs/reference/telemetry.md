@@ -20,7 +20,7 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 
 | File | Writer | Cadence | One row = |
 | --- | --- | --- | --- |
-| `audit.jsonl` | policy MCP | per gated write | one `allow_with_log` / `deny` decision |
+| `audit.jsonl` | policy MCP | per gated decision | one policy decision (`allow` / `allow_with_log` / `deny` / `dry_run`) |
 | `board-state.jsonl` | `board_export.py` | per export run | a snapshot of per-lane queue counts |
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome |
@@ -48,7 +48,7 @@ The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy M
 }
 ```
 
-Only `allow_with_log` and `deny` decisions are logged. `dry_run` previews and plain `allow` (no `audit_log` requirement) write nothing.
+Every gated decision is logged when the lane requires `audit_log` (all shipped Memoria lanes do), and `allow_with_log` / `deny` / `dry_run` are logged unconditionally. So for the shipped lanes every decision — `allow`, `allow_with_log`, `deny`, and `dry_run` — appends a row. Only a plain `allow` on a lane that does *not* require `audit_log` would write nothing.
 
 ## board-state.jsonl
 

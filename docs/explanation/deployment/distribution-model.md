@@ -31,6 +31,10 @@ The bootstrap copies `vault/` to a working location (off OneDrive on Windows); t
 - `mcp/` — Python sources for `policy_mcp.py` and `policy_hook.py`
 - `lane-overrides/` — seven YAML files (one per lane) the policy MCP reads at startup
 - `csl/` — Pandoc citation styles
+- `plugins/` — bundled plugins, including the `memoria-policy-gate`
+- `scripts/` — helper scripts, including `board-export-cron.sh`
+
+That is six subdirectories in all: `profiles/`, `mcp/`, `lane-overrides/`, `csl/`, `plugins/`, and `scripts/`.
 
 ---
 

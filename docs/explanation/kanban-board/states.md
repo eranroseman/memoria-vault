@@ -46,7 +46,7 @@ Three distinct caps, each motivated by a different failure mode:
 
 **Active per profile = 1.** The strictest cap, and the only one Hermes enforces natively. Parallel runs of the same profile would contend for the same write scope and make the audit trail ambiguous about which run touched what file. Keeping one `running` card per profile at a time keeps the per-write attribution unambiguous.
 
-**Review-queue depth (bounded).** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than a human can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue depth exceeds its cap, the dispatcher delays new card creation on that lane — back-pressure that forces the queue depth to become visible before it becomes invisible.
+**Review-queue depth (bounded).** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than a human can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue depth exceeds its cap, the dispatcher slows new work on that lane — back-pressure that forces the queue depth to become visible before it becomes invisible.
 
 **Writer lane (bounded).** Too many drafts in flight simultaneously means synthesis quality drops because evidence cannot be fully integrated. A writer working on many drafts integrates none of them well. The cap protects synthesis quality, not throughput.
 

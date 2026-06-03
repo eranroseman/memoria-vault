@@ -108,7 +108,7 @@ Dry-run:
 
 ## Audit log format
 
-Every `allow_with_log` and `deny` decision appends one JSONL entry to `99-system/logs/audit.jsonl`:
+An audit entry is appended to `99-system/logs/audit.jsonl` when the decision is `allow_with_log`, `deny`, or `dry_run`, **or** when the lane's `policy.require` includes `audit_log` (which every Memoria lane does). In practice that means **every** decision is logged — including `dry_run` and plain `allow` — for the shipped lanes. A representative entry:
 
 ```json
 {

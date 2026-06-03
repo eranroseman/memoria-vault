@@ -38,7 +38,7 @@ Click anywhere in the Kanban counts to open `board-state.md` for the full view.
 
 ## Implementation
 
-A Dataview inline query in a pinned note. The query reads from a periodically-refreshed `board-state.jsonl` snapshot the Kanban dispatcher writes, or polls the Hermes API (port 8642). No standard implementation is shipped — human setups vary.
+A Dataview inline query in a pinned note. The query reads from a periodically-refreshed `board-state.jsonl` snapshot `board_export.py` writes, or polls the Hermes API (port 8642). No standard implementation is shipped — human setups vary.
 
 ## Design rules
 

@@ -219,7 +219,7 @@ vault/.obsidian/plugins/obsidian-local-rest-api/data.json
 │   ├── memoria-coder/      (SOUL.md + cron/.keep + skills/.keep)
 │   └── memoria-linter/
 │       ├── SOUL.md
-│       ├── detectors.py            # shipped (9 deterministic stdlib checks; 3 are structural detectors)
+│       ├── detectors.py            # shipped (9 functions: 3 structural detectors + 6 housekeeping checks)
 │       ├── structural-detectors.md # shipped
 │       ├── cron/
 │       │   └── scheduled.yaml      # shipped (actual task definitions)

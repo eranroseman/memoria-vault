@@ -1,5 +1,6 @@
 ---
 title: ""
+type: paper-note
 authors: []
 year:
 citekey: ""
@@ -25,7 +26,6 @@ topic: []
 moc: []
 projects: []
 schema_version: 1
-type: paper-note
 _proposed_classification:
   study_design:
   methods: []

@@ -16,7 +16,7 @@ SORT last_updated ASC
 ```dataview
 TABLE file.link AS Card, review_status, assignee AS Lane, last_updated AS "Waiting since"
 FROM "99-system/board"
-WHERE review_status = "requested" OR review_status = "in-review"
+WHERE review_status = "requested"
 SORT last_updated ASC
 ```
 

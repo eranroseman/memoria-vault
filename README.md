@@ -77,7 +77,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 
 ## After install
 
-1. Open the runtime folder (default `~/Memoria`) in Obsidian → **Open folder as vault**, then turn off **Restricted mode** to activate the eight bundled plugins.
+1. Open the runtime folder (default `~/Memoria`) in Obsidian → **Open folder as vault**, then turn off **Restricted mode** to activate the eight enabled bundled plugins (plus `obsidian-homepage`, which ships on disk but is recommended — enable it from Community Plugins if you want `home.md` to auto-open on startup).
 2. **Set up your own git** in the vault — the installer copies it but doesn't `git init` (it's your repo, your identity): `cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"`, then optionally add your own remote. obsidian-git needs a repo to commit into.
 3. Fill the per-profile `.env` secrets — see [set-up-hermes.md](docs/how-to-guides/setup/set-up-hermes.md).
 

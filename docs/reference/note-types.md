@@ -30,7 +30,7 @@ The 16 note types, their canonical folders, templates, lifecycle, and ownership.
 | `deliverable` | `50-deliverables/` | `deliverable.md` | Human / Coder (export task) | Terminal | `current` |
 | `candidate-note` | `10-inbox/03-candidates/` | `candidate-note.md` | Librarian (`find`) / Verifier (`gap`) / human | Human (include → ingest; exclude → archive) | `proposed` → `archived` |
 
-All 16 templates live in `99-system/templates/`.
+All 16 note-type templates live in `99-system/templates/` (alongside `screening-protocol.md`, a program-control template that is not a typed note — 17 template files total). See [Template locations](#template-locations).
 
 > **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/decisions/17-shared-candidate-frontmatter.md).
 
@@ -75,7 +75,7 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 | `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `budding` → `evergreen`). |
 | `moc` | Can be `dormant` (topic has gone quiet; not archived yet). |
 | `deliverable` | Created as `current`; never promoted or archived in normal flow. |
-| `project-note` | Refines `current` with `project_phase` (`planning` · `active` · `paused` · `complete`). |
+| `project-note` | Refines `current` with `project_phase` (`active` · `paused` · `complete` · `abandoned`). |
 | `draft` | Refines `current` with `draft_stage` (`outline` · `rough` · `polished` · `submitted`). |
 
 ---
@@ -131,6 +131,8 @@ A few types carry guidance the tables above don't capture:
 ## Template locations
 
 Templates ship at `99-system/templates/<type>.md` as **raw notes** — frontmatter at line 1, then the body skeleton. QuickAdd commands instantiate them (filling `{{VALUE}}`/`{{DATE}}` tokens); agent skills read them when authoring notes directly. The Linter's `skeleton-drift` detector validates that in-vault templates match this reference.
+
+The directory holds **17 files**: the 16 note-type templates above plus `screening-protocol.md`. The latter is a **program-control template, not a typed note** — it has no `type`, is exempt from the note-type schema, and is not promotable. It backs the pre-ingest screening pass in systematic-review mode (ADR-12 / ADR-19), not a note in the vault graph.
 
 ---
 

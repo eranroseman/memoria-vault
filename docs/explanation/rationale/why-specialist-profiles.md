@@ -33,8 +33,8 @@ Each profile has a mission that defines what it is *for*, not just what it does:
 | **Mapper** | Map the corpus for a project — scope reports, gap analysis, cluster maps. Read-only across the vault. |
 | **Socratic** | Sharpen the human's thinking through questions and lens-based reading. Write-denied entirely. |
 | **Writer** | Turn evidence into drafts, answer notes, and reference-ready prose. |
-| **Verifier** | Trace draft claims to sources; verify citations; flag duplicates. Read-only across the vault. |
-| **Coder** | Build and maintain code artifacts and scripts. |
+| **Verifier** | Trace draft claims to sources; verify citations; flag duplicates. Read-only across the vault, except gap candidate-notes (`10-inbox/03-candidates/`) and verification reports (`40-workbench/*/05-verification/`). |
+| **Coder** | Scaffold handoffs to an external coding agent and record provenance. It does not itself write code. |
 | **Linter** | Validate structure, metadata, schema, link health. Default dry-run. |
 
 The missions are designed to be in productive tension: Librarian is optimistic, Verifier is conservative. Mapper surveys what's there, Socratic questions the human about it, Writer synthesizes it, Verifier checks the synthesis. Each step's output is the next step's input.

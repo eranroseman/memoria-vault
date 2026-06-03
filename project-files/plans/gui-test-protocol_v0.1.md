@@ -7,7 +7,7 @@ status: draft
 # GUI test protocol — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI tier (**T5**) and the ten Dataview dashboards
+shell: the Obsidian/Zotero GUI tier (**T5**) and the eleven Dataview dashboards
 rendering on real data (**G4**). Everything else (installer T0–T3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -125,7 +125,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 ---
 
-## Part C — The ten dashboards render (G4)
+## Part C — The eleven dashboards render (G4)
 
 Open each file under `00-meta/01-dashboards/` (Reading view). For **every** ```dataview```
 block: it must render a table or placeholder, **never a query error**.
@@ -159,7 +159,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [x] 9 · `weekly-review.md`
 - [x] 10 · `fleet-health.md`
 - [x] 11 · `audit-log.md`
-- [x] **Part C / G4 Pass (all 10 resolve)**
+- [x] **Part C / G4 Pass (all 11 resolve)**
 
 ---
 
@@ -222,14 +222,14 @@ Dashboard doesn't refresh automatically.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
-| B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 10 dashboards' Dataview blocks resolve | | |
-| C | Seeded items appear (board-state, audit-log, loose-ends) | | |
-| D | `memoria.bib` auto-exports; citation resolves | | |
-| E1 | ACP pane returns a model response | | |
-| E2 | Denied write blocked; deny row in audit-log | | |
-| E3 | Board-state shows a card after cron tick | | |
+| A | 8/8 plugins enabled, no load errors | Pass | Didn't verify the per-plugin settings |
+| B | REST authenticated (B3) + round-trip write appears (B4) | Pass | B1–B4 all passed |
+| C / G4 | All 11 dashboards' Dataview blocks resolve | Pass | All 11 ticked, no query errors |
+| C | Seeded items appear (board-state, audit-log, loose-ends) | Partial | audit-log (E2) + loose-ends seeded OK; board-state seed not done (depends on E3, below) |
+| D | `memoria.bib` auto-exports; citation resolves | Pass | D1–D5 all passed |
+| E1 | ACP pane returns a model response | Pass | |
+| E2 | Denied write blocked; deny row in audit-log | Pass | |
+| E3 | Board-state shows a card after cron tick | Not run | E3 step left unticked — board telemetry round-trip not exercised |
 
 **T5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the

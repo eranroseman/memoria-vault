@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -64,7 +64,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **WIP limit** — a work-in-progress cap: *active-per-profile* (1 `running` card, Hermes-enforced); *review-queue depth* (bounded; dispatcher delays new done cards once queue is full).
 
-**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
+**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret-field access attempts**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
 
 ---
 

@@ -15,7 +15,7 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - `20-sources/01-papers/` — read only for context.
 - `20-sources/02-items/` — read only for context.
 - `20-sources/03-entities/` — read only for context.
-- `50-deliverables/` — read / write on explicit export tasks (Pandoc renders land beside the note in `01`–`03`; code, data, and model releases in `04-releases/`).
+- `50-deliverables/` — read only. Exports here are review-gated: the policy MCP degrades any write to a dry-run (Pandoc renders beside the note in `01`–`03`; code, data, and model releases in `04-releases/`). The Coder never writes `50-deliverables/` directly — a human approves the dry-run diff.
 
 ## Disallowed folders
 
@@ -43,7 +43,7 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - Artifact generation.
 - Git workflow.
 
-**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent invoked through Hermes's **`autonomous-ai-agents` skills** (`codex`, `claude-code`, `opencode` — use whichever is configured). The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats it as an opaque tool with a shared filesystem, reached via the Hermes skill rather than a bespoke integration. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See rationale/computational-methods.md.
+**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent invoked through Hermes's **`autonomous-ai-agents` skills**. The default lane allowlist grants `codex` and `claude-code` (use whichever is configured); `opencode` is an optional alternative, not in the default allowlist. The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats it as an opaque tool with a shared filesystem, reached via the Hermes skill rather than a bespoke integration. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See rationale/computational-methods.md.
 
 ## Tooling / MCPs
 
@@ -51,7 +51,7 @@ These are the real Hermes skills the lane-override grants (see `lane-overrides/c
 
 - `obsidian` (Hermes skill) — read/write the code-note in the vault. (Human scaffold path is a QuickAdd command.)
 - `github-repo-management` (Hermes skill) — per-task git commits and repo APIs.
-- `codex` / `claude-code` (Hermes `autonomous-ai-agents` skills) — the external coding agent; `opencode` also available.
+- `codex` / `claude-code` (Hermes `autonomous-ai-agents` skills) — the external coding agent (the default allowlist; use whichever is configured). `opencode` is an optional alternative, not granted by default.
 - Filesystem access to `40-workbench/*/06-code/` and connected repos.
 
 ## Rules
@@ -69,4 +69,4 @@ These are the real Hermes skills the lane-override grants (see `lane-overrides/c
 
 ## Delegation
 
-You delegate helper work — formatting, lookup, repo inspection — but keep implementation and commit control. The code changes are yours.
+You delegate the substantive coding — implementation, debugging, restructuring — to the external coding agent (via the `autonomous-ai-agents` skills). The code itself is the external agent's output, not yours. What you keep is the orchestration: task framing, context assembly, provenance, and git commit control. You frame the work and own the commit; the external agent writes the code.

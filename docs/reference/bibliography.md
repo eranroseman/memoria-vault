@@ -38,6 +38,9 @@ Harshit Bisht, Vinay Kumar, Kevin Maik Jablonka, Mausam, and N. M. Anoop Krishna
 <a id="chen2026autonomous"></a>
 Guoxin Chen, Jie Chen, Lei Chen, Jiale Zhao, Fanzhe Meng, Wayne Xin Zhao, Ruihua Song, Cheng Chen, Ji-Rong Wen, and Kai Jia. 2026. Toward Autonomous Long-Horizon Engineering for ML Research. arXiv:2604.13018. Retrieved from https://arxiv.org/abs/2604.13018
 
+<a id="chen2026copilots"></a>
+Chen et al. 2026. From Copilots to Colleagues. arXiv (identifier to confirm). A distinct paper from the long-horizon-engineering entry above — it is the source of the **L1–L5 autonomy taxonomy** and the **95-paper survey** cited in the docs. *Note: the arXiv identifier for this work is unverified and should be confirmed.*
+
 <a id="aideml"></a>
 Weco AI. 2026. AIDE: AI-Driven Exploration in the Space of Code (aideml). Software. Retrieved from https://github.com/WecoAI/aideml
 
