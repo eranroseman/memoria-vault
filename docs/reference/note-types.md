@@ -71,6 +71,7 @@ Standard lifecycle is `proposed → current → archived`. Deviations:
 
 | Type | Lifecycle notes |
 | --- | --- |
+| `paper-note` / `item-note` | When created by the ingest pipeline, starts at `captured` (Tier-0 floor, tracked by `ingest_status`); the classification proposal promotes `captured → proposed`. Manually created source notes start at `proposed` as usual. |
 | `fleeting-note` | Terminal is `archived` (discarded) or promoted (converted to another type and then archived). |
 | `claim-note` | No `proposed` phase — created as `current`. Refinement tracked by `maturity` (`seedling` → `budding` → `evergreen`). |
 | `moc` | Can be `dormant` (topic has gone quiet; not archived yet). |

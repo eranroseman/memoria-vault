@@ -16,6 +16,7 @@ pmid: ""
 arxiv_id: ""
 pub_status: active
 lifecycle: proposed
+ingest_status: ""
 full_text_reviewed: false
 created:
 updated:
