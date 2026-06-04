@@ -1,10 +1,17 @@
-// Memoria — tagline rendered under the sidebar site title (just-the-docs
-// auto-imports _sass/custom/custom.scss). Plain hex (no theme var) so a theme
-// change can't break the SCSS build.
+// Memoria — tagline under the sidebar site title.
+// just-the-docs renders `.site-title` as a flex ROW (align-items: center), so a
+// plain ::after lands beside "Memoria". Stack the title as a column so the
+// tagline sits directly under it. Plain hex (no theme var) so a theme update
+// can't break the SCSS build.
+.site-title {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .site-title::after {
   content: "a research operating system · version 0.1";
-  display: block;
-  margin-top: 0.25em;
+  margin-top: 0.15em;
   font-size: 0.62rem;
   font-weight: 400;
   line-height: 1.3;
