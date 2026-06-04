@@ -103,6 +103,23 @@ Fields the Librarian populates on the new note at creation:
 
 **Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [Obsidian callouts](obsidian-callouts.md).
 
+### Zotero fields without the Zotero API
+
+The pipeline reads only the `.bib`, so Zotero-native fields come from the Better BibTeX export — no live Zotero API dependency:
+
+- **`pdf_uri`** and the local PDF (for full-text extraction) are recovered from the bib `file` field — it carries the attachment path, whose `storage/<KEY>/` segment is the Zotero attachment key.
+- **`zotero_uri`** (the select-into-Zotero link) needs the *parent* item key, which a normal `.bib` omits. Add it with a one-line Better BibTeX **postscript** (Zotero → Better BibTeX → Preferences → Export → Postscript), which the pipeline reads from a `zoteroselect` field:
+
+  ```js
+  if (Translator.BetterBibTeX || Translator.BetterBibLaTeX) {
+    if (zotero.uri) {
+      tex.add({ name: 'zoteroselect',
+        value: zotero.uri.replace(/^https?:\/\/zotero\.org\/(?:users|groups)\/\w+\/items\/(\w+)$/,
+                                  'zotero://select/library/items/$1') })
+    }
+  }
+  ```
+
 ---
 
 ## Card states during ingest
