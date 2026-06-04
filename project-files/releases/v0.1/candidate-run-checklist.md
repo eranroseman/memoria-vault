@@ -18,7 +18,7 @@ predate.
 ## 0. Preconditions
 
 - [ ] Clean **Ubuntu / WSL2** box (Hermes runs in WSL2; Obsidian/Zotero on the Windows side).
-- [ ] WSL2 **mirrored networking** on (`networkingMode=mirrored` in `.wslconfig`) — required for the REST bridge to reach `127.0.0.1:27124`.
+- [ ] WSL2 **mirrored networking** on (`networkingMode=mirrored` in `.wslconfig`) — required for the agent to reach the Obsidian Local REST API on `127.0.0.1` (the native-MCP HTTP port `OBSIDIAN_MCP_PORT`, and the REST bridge on 27124).
 - [ ] Hermes installed and on `PATH` (`hermes version`).
 - [ ] A **throwaway vault** dir for the install, e.g. `export RV=$HOME/Memoria-candidate`.
 - [ ] Fresh clone: `git clone https://github.com/eranroseman/memoria-vault.git && cd memoria-vault` — record the commit (`git rev-parse --short HEAD`).
@@ -61,7 +61,7 @@ Detail: [installer-test-protocol.md](../../tests/installer-test-protocol.md).
 ## T4 — live: model, bridge, gate enforcement  → records G2, G3, T4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
-- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault (HTTP 204 on write, read-back OK). *Runtime gotcha:* `mcp-obsidian` hardwires port **27124** and only one Obsidian vault can serve it — make sure the **candidate** vault holds 27124 (keep any other vault's Local REST API closed). Reload the Obsidian window after pointing it at the candidate vault.
+- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../decisions/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
 Detail: [hermes-cli-test-protocol.md](../../tests/hermes-cli-test-protocol.md), [headless-test-protocol.md](../../tests/headless-test-protocol.md).
