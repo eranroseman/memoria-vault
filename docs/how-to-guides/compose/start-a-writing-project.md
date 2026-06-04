@@ -67,7 +67,7 @@ Add a brief scope statement: what question this project addresses and what the e
 
 **4. Run Assess to get a corpus map.**
 
-`Memoria: scope this project` *(deferred — use the ACP pane / terminal today)*. For this card-producing Mapper task, the working path today is the CLI:
+`Memoria: scope this project` *(deferred — use the ACP pane / terminal today)*. For this card-producing Mapper task, the working path today is the CLI (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
 
 ```bash
 hermes -p memoria-mapper chat -s scope-project

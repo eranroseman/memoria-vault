@@ -19,9 +19,9 @@ Distill a discussed source into a single, durable claim in `30-synthesis/01-clai
 
 **1. Run the similarity check first.**
 
-Before creating the note, check if a near-duplicate already exists. Open the agent-client pane (`Agent Client: Open chat view`), switch to **Verifier** (`Ctrl+Shift+4`) — the active note auto-attaches — and ask it to «similarity-check this claim: "<one-sentence statement of your claim>"».
+Before creating the note, check if a near-duplicate already exists. Open the agent-client pane (`Agent Client: Open chat view`), switch to **Verifier** (via the pane’s profile picker) — the active note auto-attaches — and ask it to «similarity-check this claim: "<one-sentence statement of your claim>"».
 
-**From the terminal (fallback):**
+**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
 
 ```bash
 hermes -p memoria-verifier chat -s similarity-check
@@ -85,9 +85,9 @@ relations:
 
 **8. Optionally, get Writer assistance for phrasing or cross-links.**
 
-With the new claim note active, open the agent-client pane (`Agent Client: Open chat view`), switch to **Writer** (`Ctrl+Shift+3`) — the active note auto-attaches — and ask it to «suggest related notes for this claim».
+With the new claim note active, open the agent-client pane (`Agent Client: Open chat view`), switch to **Writer** (via the pane’s profile picker) — the active note auto-attaches — and ask it to «suggest related notes for this claim».
 
-**From the terminal (fallback):**
+**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
 
 ```bash
 hermes -p memoria-writer chat -s draft

@@ -26,17 +26,13 @@ Three saved Obsidian workspace layouts, bound to hotkeys. One per cognitive mode
 
 Workspace hotkeys are configured under Settings → Hotkeys → search "workspace". The Workspaces core plugin must be enabled first.
 
-These are **workspace layout** bindings (`Cmd/Ctrl` + number). They are distinct from **ACP profile-switch** bindings (`Ctrl+Shift` + number), which switch the active Hermes profile in the agent-client pane. The two sets share the same number keys but use different modifiers and do not collide.
+These are **workspace layout** bindings (`Cmd/Ctrl` + number) — they switch the saved layout. Switching the Hermes profile inside the agent-client pane is a separate action with **no keyboard shortcut**: use the profile picker at the top of the pane (see [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md#switching-profiles)).
 
 | Binding | Action |
 | --- | --- |
 | `Cmd-1` / `Ctrl-1` | Switch to Human workspace |
 | `Cmd-2` / `Ctrl-2` | Switch to Reading & Processing workspace |
 | `Cmd-3` / `Ctrl-3` | Switch to Drafting workspace |
-| `Ctrl+Shift+1` | Switch ACP pane to Socratic profile |
-| `Ctrl+Shift+2` | Switch ACP pane to Mapper profile |
-| `Ctrl+Shift+3` | Switch ACP pane to Writer profile |
-| `Ctrl+Shift+4` | Switch ACP pane to Verifier profile |
 
 ---
 

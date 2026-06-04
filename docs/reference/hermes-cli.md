@@ -19,13 +19,23 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 
 | Command | What it does | Dry-run? |
 | --- | --- | --- |
-| `find` | Forward/backward citation search or concept-driven search. Writes candidates to `10-inbox/03-candidates/`. | No |
+| `find` | Forward/backward citation search or concept-driven search. Writes candidates to `10-inbox/03-candidates/`. Flags below. | No |
 | `ingest` | Create the note for a source in the right folder with enrichment. | No |
 | `enrich` | Re-run API enrichment on existing notes. | No |
 | `classify` | Re-propose `_proposed_classification` on a note still needing review. | No |
 | `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker and the inline `[!brief]` comparative read. | No |
 | `query` | Deterministic vault search (standalone retrieval). | No |
 | `export prior-labels` | Export vault papers as ASReview priors for pre-ingest screening (frontmatter filter + format conversion). | No |
+
+**`find` flags** — issued inside the session after `hermes -p memoria-librarian chat -s find`:
+
+| Flag | Meaning |
+| --- | --- |
+| `--source <citekey>` | Seed paper for a citation search. |
+| `--direction backward` | Papers *cited by* the seed (default is forward — papers that cite it). |
+| `--depth 1` \| `2` | First-order connections vs. broader two-hop sweeps (far more candidates). |
+| `--query "<text>"` | Concept search by research question (query rewrite + hybrid retrieval) instead of a seed. |
+| `--limit <n>` | Cap the number of candidates returned. |
 
 ### Mapper
 
@@ -146,7 +156,7 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 **How-to**
 
-- How to start a chat session: [Chat with Hermes](../how-to-guides/hermes-agent/chat-with-hermes.md)
+- How to start a chat session: [Run a CLI chat session](../how-to-guides/hermes-agent/chat-with-hermes.md)
 - How to configure a profile: [Configure a profile](../how-to-guides/hermes-agent/configuration.md)
 - Kanban how-to (stuck cards, unblocking): [Fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
 

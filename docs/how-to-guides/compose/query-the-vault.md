@@ -16,7 +16,7 @@ Several retrieval surfaces overlap; pick by what you want *out*:
 | You want… | Use | Output |
 | --- | --- | --- |
 | A cited written synthesis you'll verify and maybe keep | **Writer `query`** (this guide) | answer-note in `10-inbox/02-answers/` |
-| To sharpen your *own* thinking by being questioned | **Socratic pane** (`Memoria: ask about this note`) | conversation, no file |
+| To sharpen your *own* thinking by being questioned | **Socratic pane** (*Agent Client: Open chat view* → Socratic) | conversation, no file |
 | A fast deterministic lookup of a known term or field | **Librarian `query`** | results in chat, no file |
 | The notes most similar to one you're looking at | **Mapper `find related notes`** | top matches in chat, no file |
 

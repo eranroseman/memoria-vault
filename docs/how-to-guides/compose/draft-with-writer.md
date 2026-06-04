@@ -19,9 +19,9 @@ Use the Writer profile to generate outline proposals, draft prose, and suggest s
 
 **1. Optionally, generate competing framings first.**
 
-If you haven't committed to a structure yet, open the agent-client pane (`Cmd-P → Agent Client: Open chat view`), switch to the **Writer** (`Ctrl+Shift+3`), attach `01-map/corpus-map.md` via the paperclip, and ask it to counter-outline your research question. The Writer generates 2–3 competing argument structures — save the one you choose to `02-framing/CHOSEN.md`.
+If you haven't committed to a structure yet, open the agent-client pane (`Cmd-P → Agent Client: Open chat view`), switch to the **Writer** (via the pane’s profile picker), attach `01-map/corpus-map.md` via the paperclip, and ask it to counter-outline your research question. The Writer generates 2–3 competing argument structures — save the one you choose to `02-framing/CHOSEN.md`.
 
-**From the terminal (fallback):**
+**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
 
 ```bash
 hermes -p memoria-writer chat -s draft
@@ -36,13 +36,13 @@ Create a new `.canvas` file in `40-workbench/<project>/03-canvas/`. Drag claim n
 
 **3. Start the drafting session.**
 
-Open the agent-client pane and switch to the **Writer** (`Ctrl+Shift+3`). Keep it open for the section.
+Open the agent-client pane and switch to the **Writer** (via the pane’s profile picker). Keep it open for the section.
 
 **4. Draft section by section.**
 
 In the Writer pane, attach your chosen framing (`02-framing/CHOSEN.md`) and the relevant claim notes via the paperclip, then ask it to draft each section — e.g. "write an introduction for: \<section topic\>". Write the resulting prose into `40-workbench/<project>/04-drafts/<section>.md`. Cite citekeys in-text (`[@mamykina2010sense]`). Edit freely — the Writer's output is a starting point.
 
-**From the terminal (fallback):**
+**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
 
 ```bash
 hermes -p memoria-writer chat -s draft

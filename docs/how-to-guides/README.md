@@ -60,7 +60,7 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 | Guide | What it covers |
 | --- | --- |
 | [Configure a profile](hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
-| [Chat with Hermes](hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
+| [Run a CLI chat session](hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
 
 Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [Hermes CLI](../reference/hermes-cli.md).
 

@@ -17,7 +17,7 @@ Retire a source note that is no longer active — superseded, irrelevant to curr
 
 **1. Confirm there are no pending cards for this source.**
 
-Check the Kanban board for open `discuss`, `distill`, or `ingest` cards referencing this citekey:
+Check the Kanban board for open `discuss`, `distill`, or `ingest` cards referencing this citekey ([board commands](../../reference/hermes-cli.md#board-management)):
 
 ```bash
 hermes kanban list --filter citekey=<citekey>

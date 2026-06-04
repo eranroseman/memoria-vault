@@ -36,9 +36,8 @@ The vault front door — opened on launch by the [obsidian-homepage](https://era
 
 ## Do
 
-- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting` · `new project`
-- **Ask / check** — `ask about this note` (Socratic) · `find related notes` · `similarity-check this claim` · `lint this note`
-- **Mode-switch** (ACP pane) — `Ctrl+Shift+1` Ask · `2` Map · `3` Draft · `4` Check
+- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting` · `lint this note`
+- **Ask / check** — open the ACP pane (`Agent Client: Open chat view`), then pick a profile from the picker: **Socratic** (be questioned) · **Mapper** (map the corpus) · **Writer** (draft) · **Verifier** (similarity-check). The active note auto-attaches.
 
 ## Monitor
 

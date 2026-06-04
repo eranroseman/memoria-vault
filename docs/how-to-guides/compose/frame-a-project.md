@@ -18,7 +18,7 @@ Generate 2–3 competing argument structures, optionally run a lens reading thro
 
 **1. Run `counter-outline` to generate competing framings.**
 
-`Memoria: counter-outline this section` *(deferred — use the ACP pane / terminal today)*. For this card-producing Writer task, the working path today is the CLI:
+`Memoria: counter-outline this section` *(deferred — use the ACP pane / terminal today)*. For this card-producing Writer task, the working path today is the CLI (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
 
 ```bash
 hermes -p memoria-writer chat -s counter-outline
@@ -34,9 +34,9 @@ Open the framing options in Obsidian. Don't commit immediately — let them sit 
 
 **3. Optionally, run a lens reading with the Socratic profile.**
 
-To stress-test a framing through a specific theoretical lens, open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (`Ctrl+Shift+1`), and ask it to read the framing through the lens — e.g. "read this through an equity lens" or "…through an ecological-validity lens". *(The `Memoria: read through <X> lens` palette commands are [deferred] — use the pane today.)*
+To stress-test a framing through a specific theoretical lens, open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (via the pane’s profile picker), and ask it to read the framing through the lens — e.g. "read this through an equity lens" or "…through an ecological-validity lens". *(The `Memoria: read through <X> lens` palette commands are [deferred] — use the pane today.)*
 
-**From the terminal (fallback):**
+**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
 
 ```bash
 hermes -p memoria-socratic chat -s lens-reading

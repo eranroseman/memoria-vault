@@ -31,7 +31,7 @@ and 2–4 sentences on the research question and any framing constraints (e.g., 
 
 **2. Start a Mapper session and run `scope-project`.**
 
-`Memoria: scope this project` *(deferred — use the ACP pane / terminal today)*. For this card-producing Mapper task, the working path today is the CLI:
+`Memoria: scope this project` *(deferred — use the ACP pane / terminal today)*. For this card-producing Mapper task, the working path today is the CLI (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
 
 ```bash
 hermes -p memoria-mapper chat -s scope-project

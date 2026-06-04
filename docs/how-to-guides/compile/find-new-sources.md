@@ -28,25 +28,11 @@ Then issue one of the search modes below in the session.
 
 **2. Choose a search mode and run it.**
 
-**Forward citations** — papers that *cite* your seed (what built on this work):
+- **Forward citations** — papers that *cite* your seed (what built on this work): `/find --source <citekey> --depth 1`
+- **Backward citations** — papers *cited by* your seed (what this work builds on): `/find --source <citekey> --direction backward --depth 1`
+- **Concept search** — papers matching a research question: `/find --query "just-in-time adaptive interventions receptivity" --limit 20`
 
-```text
-/find --source <citekey> --depth 1
-```
-
-**Backward citations** — papers *cited by* your seed (what this work builds on):
-
-```text
-/find --source <citekey> --direction backward --depth 1
-```
-
-**Concept search** — papers matching a research question (uses query rewrite + hybrid retrieval):
-
-```text
-/find --query "just-in-time adaptive interventions receptivity" --limit 20
-```
-
-Use `--depth 1` for first-order connections; `--depth 2` for broader sweeps (significantly more candidates).
+For the full flag reference (`--direction`, `--depth`, `--query`, `--limit`), see [Hermes CLI → Librarian `find` flags](../../reference/hermes-cli.md#librarian).
 
 **3. Review the candidates queue.**
 

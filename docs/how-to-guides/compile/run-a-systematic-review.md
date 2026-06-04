@@ -8,6 +8,8 @@ nav_order: 13
 
 Set up a PRISMA-compliant screening protocol and process the results into Memoria. Use this when you need a defensible, reproducible literature search — not for exploratory snowballing, which the normal [find → ingest](find-new-sources.md) path handles.
 
+> **Status: implemented as a manual procedure.** There is no single "run systematic review" command. The workflow composes existing pieces — the `screening-protocol` template, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard Librarian ingest. Every step below works today; the protocol discipline is yours to keep.
+
 ## Prerequisites
 
 - Memoria installed and the Librarian profile running
@@ -89,7 +91,7 @@ For each included paper:
 
 1. Add to Zotero — Better BibTeX auto-assigns a citekey
 2. Pin the citekey if needed: [Pin a citekey](pin-a-citekey.md)
-3. Let the `.bib` auto-export trigger Librarian ingest, or run manually:
+3. Let the `.bib` auto-export trigger Librarian ingest, or run manually (full syntax in [Hermes CLI](../../reference/hermes-cli.md#librarian)):
 
 ```bash
 hermes -p memoria-librarian chat -s obsidian-paper-note

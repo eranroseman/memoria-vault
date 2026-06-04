@@ -22,6 +22,8 @@ The obsidian-homepage plugin opens `home.md` automatically on launch (in Reading
 - `Cmd/Ctrl-P` → **Homepage: Open homepage**, or click the home ribbon icon
 - Or open `home.md` from the vault root in the file explorer
 
+To get back to a clean homepage view at any time, **right-click a tab header → Close all** — it closes every open tab and re-launches the homepage.
+
 The plugin pins the tab for you (configurable); you can also right-click the tab → **Pin**.
 
 **2. Navigate to a dashboard.**
