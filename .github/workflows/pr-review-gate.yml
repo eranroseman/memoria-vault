@@ -99,7 +99,7 @@ jobs:
           steps.policy.outputs.decision == 'auto_approve' &&
           steps.kilo-review.outputs.kilo-conclusion != 'success' &&
           steps.kilo-review.outputs.kilo-conclusion != 'skipped' &&
-          steps.kilo-review.outputs.kilo-conclusion != 'NEUTRAL'
+          steps.kilo-review.outputs.kilo-conclusion != 'neutral'
         run: |
           echo "Kilo Code Review blocked merge (conclusion: ${{ steps.kilo-review.outputs.kilo-conclusion }})."
           echo "Review findings at https://app.kilo.ai/code-reviews"
