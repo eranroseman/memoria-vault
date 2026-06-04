@@ -2,14 +2,26 @@
 topic: decisions
 id: 30
 title: "Tiered ingest pipeline (capture → fallback-chained enrichment → gated write)"
-status: proposed
+status: accepted
 date_proposed: 2026-06-03
-date_resolved:
+date_resolved: 2026-06-03
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-30: Tiered ingest pipeline
+
+> **Implemented and validated live (#100–#116).** The deterministic spine ships as
+> six scripts (`ingest_paper` / `resolve_merge` / `extract` / `link` / `pipeline` /
+> `sweeps`) plus the seeded `00-meta/vocabulary.md`, the `captured` + `ingest_status`
+> schema, and the two re-ingest sweeps on cron. One correction to the design below:
+> the Librarian's capability allowlist (ADR-27) disables `code_execution`, so the
+> pipeline is reached as an **MCP tool** (`ingest_pipeline`, `mcp/ingest_mcp.py`), not
+> a script the worker runs — the agent still makes only the two judgments and writes
+> through the gated obsidian MCP. A real paper ingested end-to-end on installer-deployed
+> lanes (vocabulary-constrained classify + `[!brief]` + ID-keyed entity links + gated
+> writes → `review_status: requested`); the Tier-1 merge is grounded by the 867-paper
+> spike. Tracked in the v0.1 release plan as G10.
 
 ## Context
 
