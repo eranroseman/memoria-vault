@@ -100,9 +100,12 @@ reason = "Application code or unclassified path — human review required."
 if pr_draft:
     decision = "needs_human"
     reason = "Draft PR — awaiting author readiness."
-elif sensitive_paths:
+elif sensitive_paths and not trusted:
     decision = "block"
-    reason = f"Sensitive paths changed: {sensitive_paths[:5]}"
+    reason = f"Sensitive paths changed by untrusted author: {sensitive_paths[:5]}"
+elif sensitive_paths:
+    decision = "needs_human"
+    reason = f"Sensitive paths changed — manual review required: {sensitive_paths[:5]}"
 elif trusted and all_safe:
     decision = "auto_approve"
     reason = (
