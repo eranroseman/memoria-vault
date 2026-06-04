@@ -258,7 +258,7 @@ reading it. Before opening a PR:
 
 ### Terminology — name the two flows correctly
 
-Memoria's **knowledge cycle** has two flows: **Compile** (knowledge *in* — sources are found, ingested, classified, discussed, and distilled into claims) and **Compose** (knowledge *out* — claims are assessed, framed, drafted, verified, and exported). "Compile" is deliberate: it echoes the *compiled memory* thesis (Karpathy's LLM-wiki) the design is built on.
+Memoria's **knowledge cycle** has two flows: **Compile** (knowledge *in* — sources are found, captured, enriched, classified, distilled, and connected into claims) and **Compose** (knowledge *out* — claims are assessed, framed, drafted, verified, and exported). "Compile" is deliberate: it echoes the *compiled memory* thesis (Karpathy's LLM-wiki) the design is built on. Each flow has one reflective phase the human engages by judgment — `discuss` (Compile) and `sketch` (Compose) — not optional extras but where the method's thinking happens.
 
 - **Never** name these the "upstream/downstream pipeline" or "the two pipelines" — that naming was retired (see [compile-and-compose.md](docs/explanation/workflows/compile-and-compose.md)). Use **Compile flow** / **Compose flow**, or **the knowledge cycle** for the pair.
 - `pipeline`, `upstream`, `downstream` stay fine in *other* senses — the ingest pipeline, a Pandoc/export pipeline, an upstream dependency, a downstream consumer. The rule is narrow: don't use them to name the two flows.
@@ -331,7 +331,7 @@ the release-plan file; per-artifact build state lives ONLY in
 long for a crisp plan (full phase steps, investigation notes) goes to a sibling
 `release-plan-<version>-spillover.md`.
 
-The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
+The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
 (+ its `-spillover.md`); the per-artifact build ledger is
 [`implementation-status.md`](project-files/plans/implementation-status.md).
 

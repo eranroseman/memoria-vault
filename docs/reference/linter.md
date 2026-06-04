@@ -58,6 +58,20 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 ---
 
+## Schedule
+
+The Linter is the first lane cleared for scheduled dispatch (read-mostly, low blast radius). Its jobs are defined in the profile's `cron/scheduled.yaml`:
+
+| Cron | Card | Cadence |
+| --- | --- | --- |
+| `0 2 * * *` | `nightly-hygiene` | Nightly 02:00 |
+| `0 5 * * *` | `fleeting-staleness-report` | Nightly 05:00 |
+| `0 4 * * MON` | `weekly-drift-report` | Weekly, Monday 04:00 |
+
+Dispatch stays **disabled** until the lane has produced stable dry-run reports (`approvals.cron_mode` defaults to `deny`); it is enabled deliberately, not on install. The Linter also runs on demand and after each ingest batch.
+
+---
+
 ## Related
 
 - Profile identity, permissions, and invocation level: [Profile capabilities](profiles.md)

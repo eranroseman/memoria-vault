@@ -13,7 +13,7 @@ Trigger a structural health check on the vault — either on demand or to review
 
 - **On demand:** after a large batch ingest, after editing profile files, or when a Dataview query returns unexpected results
 - **Weekly:** as part of the [weekly review](run-the-weekly-review.md), step 8
-- **Automatically:** the Linter runs on a cron schedule (see [standard-cron-tasks](../../../project-files/plans/release-plan-v0.1-spillover.md)) and after each ingest batch
+- **Automatically:** the Linter runs on a cron schedule (see [Linter § Schedule](../../reference/linter.md#schedule)) and after each ingest batch
 
 ## Steps
 

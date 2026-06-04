@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See the [v0.1 release set](../../project-files/releases/v0.1/).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -116,9 +116,9 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
-## Cycle stages
+## Cycle phases
 
-The knowledge cycle runs as two flows. **Compile** (sources → claims): `find → capture → enrich → classify → (discuss) → distill → link`. **Compose** (claims → deliverables): `assess → frame → (canvas) → draft → verify ⇄ revise → export`.
+The knowledge cycle runs as two flows. **Compile** (sources → claims): `find → capture → enrich → classify → discuss → distill → connect`. **Compose** (claims → deliverables): `assess → frame → sketch → draft → verify → export`. Each flow has one **reflective phase** — `discuss` / `sketch` — engaged by judgment, not run on every item.
 
 ### Compile
 
@@ -130,23 +130,23 @@ The knowledge cycle runs as two flows. **Compile** (sources → claims): `find �
 
 **Classify** — the human accepts or edits the proposed classification, making the note canonical (`proposed → current`). The first human gate.
 
-**Discuss** *(optional)* — the paper is read through the Socratic profile (write-denied vault-wide) before any claim note is written. Produces sharpened thinking, not a file.
+**Discuss** *(reflective)* — the paper is questioned through the Socratic profile (write-denied vault-wide) before any claim note is written. Produces sharpened thinking, not a file; engaged by judgment, not every source.
 
 **Distill** — the human writes a `claim-note` grounded in the source (`30-synthesis/01-claims/`). The second human gate and the Compile→knowledge transition; no agent can write claims.
 
-**Link** — the human relates the new claim into the graph with typed `relations:` (`supports` / `contradicts`) and accepts the Librarian's `[!suggestions]`. (Distinct from the mechanical entity/citation linking done during Enrich.)
+**Connect** — the human relates the new claim into the graph with typed `relations:` (`supports` / `contradicts`) and accepts the Librarian's `[!suggestions]`. (Distinct from the mechanical entity/citation linking done during Enrich.)
 
 ### Compose
 
-**Assess** — first Compose stage. Mapper runs `scope-project` and produces `corpus-map.md`; the human decides whether the corpus is ready to write or needs more reading (gaps route back to Compile).
+**Assess** — first Compose phase. Mapper runs `scope-project` and produces `corpus-map.md`; the human decides whether the corpus is ready to write or needs more reading (gaps route back to Compile).
 
 **Frame** — the Writer generates competing outlines via `counter-outline` (Socratic optionally adds lens-based framings); the human commits to one via `framing/CHOSEN.md`.
 
-**Canvas** *(optional)* — the chosen claims are laid out spatially (a JSON Canvas in `40-workbench/<project>/03-canvas/`) to find the argument's structure before prose. The Compose-side mirror of Discuss.
+**Sketch** *(reflective)* — the chosen claims are laid out spatially (a JSON Canvas in `40-workbench/<project>/03-canvas/`) to find the argument's structure before prose. The Compose-side mirror of Discuss; engaged by judgment, not every project.
 
 **Draft** — the Writer produces prose from the chosen framing and the cited claims.
 
-**Verify ⇄ revise** — the Verifier traces every claim to a claim note and flags gaps (`gap:` cards); the human closes them. A loop, not two passes; the review gate sits at its exit.
+**Verify** — the Verifier traces every claim to a claim note and flags gaps (`gap:` cards); the human closes them. A check ↔ fix loop, not a single pass; the review gate sits at its exit.
 
 **Export** — a Pandoc render turns the approved draft into the final artifact (`50-deliverables/`).
 
