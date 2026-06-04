@@ -145,7 +145,7 @@ installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
 
 The remaining blockers split in two:
 - **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and tiers (T4, T5) — re-runs to confirm what's built.
-- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/T4). The substantive construction risk the [shippability assessment](shippability-assessment-2026-06-03.md) flagged is resolved.
+- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/T4). The substantive construction risk the [shippability assessment](shippability-assessment-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
 
 ## 5. Out of scope (deferred)
 
