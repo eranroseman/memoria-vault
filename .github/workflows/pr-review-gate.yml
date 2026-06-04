@@ -97,7 +97,7 @@ jobs:
       - name: Block (Code Review found warnings)
         if: |
           steps.policy.outputs.decision == 'auto_approve' &&
-          steps.kilo-review.outputs.kilo-conclusion != 'SUCCESS' &&
+          steps.kilo-review.outputs.kilo-conclusion != 'success' &&
           steps.kilo-review.outputs.kilo-conclusion != 'SKIPPED' &&
           steps.kilo-review.outputs.kilo-conclusion != 'NEUTRAL'
         run: |
