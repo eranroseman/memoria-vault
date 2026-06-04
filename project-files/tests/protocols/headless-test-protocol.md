@@ -45,7 +45,7 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 - ✓ Pass: `OK: 0 failing check(s).` (includes the `lint-verdict` rollup)
 - ✗ Fails: trust-score math, ISO-week `period` handling, or the `lint-verdict` note changed.
 
-**A5. Linter detectors.** `python vault/.memoria/profiles/memoria-linter/detectors.py --self-test`
+**A5. Linter detectors.** `python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --self-test`
 - ✓ Pass: `N/N detector checks passed.` (each detector fires on a planted defect and ignores scaffolding/valid links).
 - ✗ Fails: a detector regressed — the line names which (`dashboard-field-drift`, `broken-wikilink`, `fama-exposure`, …).
 
@@ -79,7 +79,7 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 
 A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against a real vault tree (`vault/`, or the rebuilt test vault).
 
-**D1. dashboard-field-drift on the real vault.** `python vault/.memoria/profiles/memoria-linter/detectors.py --vault vault`
+**D1. dashboard-field-drift on the real vault.** `python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault`
 - ✓ Pass: no `dashboard-field-drift` findings — every field a dashboard queries **over a note folder** exists in some template.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 
@@ -103,7 +103,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ## Part E — Quick syntax sanity (pre-commit)
 
-**E1. Python compiles.** `python -m py_compile vault/.memoria/mcp/*.py vault/.memoria/profiles/memoria-linter/detectors.py`
+**E1. Python compiles.** `python -m py_compile vault/.memoria/mcp/*.py vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py`
 - ✓ Pass: exit 0, no output.
 
 **E2. Shell parses.** `bash -n scripts/install.sh`

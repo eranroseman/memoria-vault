@@ -43,4 +43,4 @@ Until the Linter is running end-to-end and writing to `99-system/logs/lint-findi
 
 - [The Linter](../../profiles/linter.md) — the eight structural detectors and what each catches
 - [audit-log dashboard](../operational-health/audit-log.md) — per-decision forensics layer below structural drift
-- [Profile capabilities](../../../reference/profiles.md#linter-the-eight-structural-detectors) — structural-detector severity table
+- [Linter: detectors and auto-fix](../../../reference/linter.md#the-eight-structural-detectors) — structural-detector severity table

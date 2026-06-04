@@ -38,7 +38,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
-| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`); the other five ship as `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
+| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`; Linter: `structural-detectors`); the other four ship as `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
 
 ---
 
@@ -52,9 +52,9 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
 | **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
-| **Linter** | Validate and report | `lint`, `report`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | *(none — runs `detectors.py` via terminal)* | Level 1 (cron) |
+| **Linter** | Validate and report | `lint`, `report`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | `structural-detectors` | Level 1 (cron) |
 
-> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). Only `obsidian-paper-note` and `retraction-check` are authored as skills; `qmd` is a skills.sh skill; the Linter runs the shipped `detectors.py`. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
+> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
 
@@ -114,52 +114,9 @@ Read access is universal — agents ground on the whole vault to do narrow work 
 
 ---
 
-## Linter: the eight structural detectors
+## Linter: detectors, auto-fix, severity
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](https://github.com/eranroseman/memoria-vault/blob/main/vault/.memoria/profiles/memoria-linter/structural-detectors.md). For design rationale see [The Linter](../explanation/profiles/linter.md).
-
-**Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps). `detectors.py` defines nine functions in total — these three structural detectors plus six housekeeping checks — so the "nine functions vs. eight structural detectors" counts measure different things and do not contradict.
-
-| Slug | Severity | Implementation | Catches |
-| --- | --- | --- | --- |
-| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `scripts/install.sh --profiles-only`). |
-| `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
-| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/` skeleton notes lag the design spec they mirror. |
-| `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
-| `command-vocab-drift` | MEDIUM | agent procedure (SOUL.md scan) | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
-| `plugin-config-drift` | MEDIUM | agent procedure (git HEAD diff) | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
-| `orphan-working-files` | LOW | `detectors.py` (stdlib) | Editor backups / `.tmp.*` / `.bak` leftovers accumulated outside transient zones. |
-| `extract-path-broken` | HIGH | `detectors.py` (stdlib) | A paper-note's `extract_path` points at a Marker extract file that doesn't exist. |
-
-The defining property of all eight: **silent** — each failure looks like "nothing to do" while something is actually wrong.
-
----
-
-## Linter: auto-fix classes
-
-Every proposed fix carries a class, hard-coded by the detector. The class determines whether the fix applies automatically or requires human action; the policy MCP enforces the gate at the tool layer.
-
-| Class | Examples | Default behavior |
-| --- | --- | --- |
-| `safe-and-unambiguous` | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value | **Auto-fix** (granted; delegated to Templater) |
-| `authorized-targeted` | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh | **Auto-fix** (granted; Linter's own logs/dashboards only) |
-| `schema-content` | Frontmatter field rename, value-set change, deprecated field removal | **Dry-run always** (not granted; requires `schema-migrate`) |
-| `review-gated-edit` | Any write to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | **Deny** |
-
-Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml` — the two granted classes; the other two appear under `deny.auto_fix.classes`. The `review-gated-edit` *class* is denied outright; separately, a mutating write to a review-gated *zone* (a distinct mechanism) degrades to `dry_run`.
-
----
-
-## Linter: severity scale
-
-| Severity | Meaning | Dashboard surfacing |
-| --- | --- | --- |
-| `LOW` | Cosmetic or eventually-fixable. Does not block. | Aggregated weekly in `weekly-review`. |
-| `MEDIUM` | Real drift that hasn't yet caused breakage. | Surfaced in `weekly-review`; reviewed in the Friday ritual. |
-| `HIGH` | Active or imminent breakage. | Surfaced in Daily Health and `drift-watch`; pushed to Telegram. |
-| `CRITICAL` | System integrity at risk. Blocks dispatch until acknowledged. | Always pushed to Telegram. |
-
-**Verdict band rollup:** `PASS` if only LOW/INFO findings (or none). `REVIEW` if any HIGH or MEDIUM and no CRITICAL. `FAIL` only if any CRITICAL. A HIGH-only run is `REVIEW`, never `FAIL`.
+The Linter's eight structural detectors, the four auto-fix classes, the severity scale, and the verdict-band rollup are documented once in [Linter: detectors and auto-fix](linter.md) — the canonical reference. For design rationale see [The Linter](../explanation/profiles/linter.md).
 
 ---
 

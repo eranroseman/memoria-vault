@@ -1,6 +1,6 @@
 # Structural detectors: silent-failure checks
 
-The eight drift checks at the bottom of the Linter's lint table (see [Linter SOUL](SOUL.md#lint-checks-and-thresholds)) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single [verdict band](SOUL.md#verdict-band) that gates scheduled work.
+The eight drift checks at the bottom of the Linter's lint table (see Linter SOUL) — profile install drift, vault hash drift, skeleton drift, dashboard field drift, command vocabulary drift, plugin-config drift, orphan working files, extract path broken link — are **structural detectors**, each identified by a descriptive slug. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single verdict band that gates scheduled work.
 
 | ID | Detector | Severity | Why this severity |
 | --- | --- | --- | --- |
@@ -9,7 +9,7 @@ The eight drift checks at the bottom of the Linter's lint table (see [Linter SOU
 | `skeleton-drift` | Skeleton note drift | MEDIUM | The human-facing notes lag the engineering spec. Won't break anything immediately but erodes trust over weeks. |
 | `dashboard-field-drift` | Dashboard field drift | HIGH | Silent-failure mode: a query returns zero rows in a real vault because a field name is wrong. The human sees "nothing to do" when there's something to do. |
 | `command-vocab-drift` | Command vocabulary drift | MEDIUM | A command named in the design isn't declared in the owning SOUL.md file (or vice versa). The system runs but inconsistencies accumulate. |
-| `plugin-config-drift` | Plugin-config drift | MEDIUM | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. Usually means a settings change through the plugin UI hasn't been committed, or a `git pull` brought in changes the human hasn't reviewed. Suffix conventions (`data.json` / `.example` / `.TODO`) are in the [plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins#datajson-conventions); per-plugin enforcement specifics are below. |
+| `plugin-config-drift` | Plugin-config drift | MEDIUM | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. Usually means a settings change through the plugin UI hasn't been committed, or a `git pull` brought in changes the human hasn't reviewed. Suffix conventions (`data.json` / `.example` / `.TODO`) are in the plugins reference; per-plugin enforcement specifics are below. |
 | `orphan-working-files` | Orphan working files | LOW | Editor backups, manual-rename leftovers, or `.tmp.*` working files have accumulated outside transient zones. Recoverable in one human decision per file (keep, archive, delete). Severity is LOW because no canonical state is at risk — but pattern-matching is cheap and the signal is reliable, so detection earns its place even if remediation is mundane. |
 | `extract-path-broken` | Extract path broken link | HIGH | A paper-note's `extract_path` points at a Marker output file that doesn't exist. Silent-failure mode: the human clicks the wikilink expecting text, gets nothing, doesn't know that ingest was incomplete. Catches aborted ingest runs, citekey renames mid-flight, and deleted extracts. Severity matches `dashboard-field-drift` — the same "field references something missing, query returns empty silently" failure class. |
 
@@ -30,7 +30,7 @@ This action is `report` only. Never re-run `scripts/install.ps1` automatically �
 
 ## `vault-hash-drift` — Vault hash drift
 
-You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
+You own tamper detection for vault files. The policy MCP records SHA-256 `before_hash` and `after_hash` on every `allow` or `allow_with_log` write (see Policy MCP in this repo's `docs/`). Your job is to verify that the file's current hash still matches the last `after_hash` for its path.
 
 Procedure:
 
@@ -43,11 +43,11 @@ This action is `report` only. Never overwrite the file to "restore" its previous
 
 ## `skeleton-drift` — Skeleton drift
 
-You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see [The vault](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault)). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
+You own consistency between the design documents in this repo's `docs/` tree (architecture, workflows, references) and the vault-resident human notes in `00-meta/` (see The vault). The skeleton notes are plain-language companions to the design; when the design changes, the skeleton must follow.
 
 Procedure:
 
-1. For each skeleton note (`home.md`, `troubleshooting.md`), read its `updated` frontmatter. (The other former skeleton notes now live only on the website — see [docs](https://eranroseman.github.io/memoria-vault/) — and are no longer vault-resident, so they're out of skeleton-drift scope.)
+1. For each skeleton note (`home.md`, `troubleshooting.md`), read its `updated` frontmatter. (The other former skeleton notes now live only on the website — see docs — and are no longer vault-resident, so they're out of skeleton-drift scope.)
 2. For its corresponding `docs/` file(s), get the most recent commit timestamp from git log (same repo).
 3. If any design file is newer than the skeleton's `updated`: report the skeleton as out of sync, listing the newer design file(s).
 
@@ -101,7 +101,7 @@ This action is `report` only. Never auto-add a command to a SOUL.md or any summa
 
 ## `plugin-config-drift` — Plugin-config drift
 
-Under direct profile management the "shipped template" for each plugin's `data.json` lives at the same path the human's working file lives — `.obsidian/plugins/<plugin>/data.json` — distinguished only by git state. The shipped version is what's committed at git HEAD; the human's working version is what's currently on disk. Drift is the difference between the two. The [plugins reference](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins#datajson-conventions) covers the rationale for each suffix; the per-plugin enforcement specifics are detailed below.
+Under direct profile management the "shipped template" for each plugin's `data.json` lives at the same path the human's working file lives — `.obsidian/plugins/<plugin>/data.json` — distinguished only by git state. The shipped version is what's committed at git HEAD; the human's working version is what's currently on disk. Drift is the difference between the two. The plugins reference covers the rationale for each suffix; the per-plugin enforcement specifics are detailed below.
 
 The detector handles three filename variants, plus one transition case. Suffix determines which procedure applies:
 
@@ -191,6 +191,6 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 
 ## Related
 
-- [Linter SOUL](SOUL.md) — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
-- [Policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) — the audit log that `vault-hash-drift` verifies against.
-- [project-files/proposals/PROP-09-profile-compilation.md](https://github.com/eranroseman/memoria-vault/blob/main/project-files/proposals/PROP-09-profile-compilation.md) (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).
+- Linter SOUL — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
+- Policy MCP — the audit log that `vault-hash-drift` verifies against.
+- project-files/proposals/PROP-09-profile-compilation.md (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).

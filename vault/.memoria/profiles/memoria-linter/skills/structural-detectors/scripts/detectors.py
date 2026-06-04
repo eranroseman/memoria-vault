@@ -5,9 +5,9 @@ Reference implementation of the *self-contained* checks from structural-detector
 the non-LLM toolkit -- the ones that need only the vault tree (no ~/.hermes
 deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
 
-    python detectors.py --vault <path>     # run against a vault, print findings
-    python detectors.py --self-test        # synthetic-fixture unit tests (no vault)
-    python detectors.py --vault <path> --json
+    python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path>     # run against a vault, print findings
+    python "${HERMES_SKILL_DIR}/scripts/detectors.py" --self-test        # synthetic-fixture unit tests (no vault)
+    python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --json
 
 Detectors needing external context (profile-install-drift, skeleton-drift,
 command-vocab-drift, plugin-config-drift, vault-hash-drift) are intentionally

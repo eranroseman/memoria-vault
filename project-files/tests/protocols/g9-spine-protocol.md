@@ -33,11 +33,11 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 
 Run **A-min first** (isolates the gate/write/complete spine from the scheduler); run **A-cron** second, once A-min is green.
 
-**A-min. Hand-create one `ready` card** assigned to the Linter: task `health-report` (or `nightly-hygiene`), `state: ready`, `assignee: memoria-linter`, via `hermes kanban create …` _(confirm)_.
+**A-min. Hand-create one `ready` card** assigned to the Linter: task `health-report` (or `nightly-lint`), `state: ready`, `assignee: memoria-linter`, via `hermes kanban create …` _(confirm)_.
 - ✓ Pass: card appears in `hermes kanban list --json` as `ready`/`memoria-linter`; within ~60 s the dispatcher moves it to `running` and spawns the Linter.
 - ✗ If it fails: card never claimed → dispatcher not polling (gateway down), or lane-assignee mismatch. Card claimed but no spawn → profile registration/`config.yaml` problem.
 
-**A-cron** (after A-min). Enable the Linter lane cron and let `nightly-hygiene` fire on its schedule (`cron/scheduled.yaml`: `0 2 * * *` → `creates_card:{state: ready}`), or force a tick _(confirm)_.
+**A-cron** (after A-min). Enable the Linter lane cron and let `nightly-lint` fire on its schedule (`cron/scheduled.yaml`: `0 2 * * *` → `creates_card:{state: ready}`), or force a tick _(confirm)_.
 - ✓ Pass: the cron entry creates the `ready` card with no human action, then A-min's claim behavior follows.
 - ✗ If it fails: cron created nothing → scheduler not running, or `cron_mode` still `deny`. (This is the first live exercise of cron→card creation — expect to debug it here.)
 

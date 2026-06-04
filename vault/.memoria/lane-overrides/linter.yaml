@@ -5,12 +5,15 @@ profile: memoria-linter
 
 policy:
   allow:
-    # The Linter invokes NO Hermes skills: every check is the shipped detectors.py tool
-    # (zero-LLM, pure-stdlib, report-only), run via the profile's terminal capability.
-    # schema-check, the health-report verdict, and graph-analyze (orphan detection) are
-    # all implemented in detectors.py; session-log writes the per-session log. No external
-    # skill deps. (Advanced graph community-detection could reintroduce networkx later.)
-    skills: []
+    # The Linter's checks are deterministic; the model contributes no judgment. Its one
+    # skill, structural-detectors, wraps the zero-LLM engine (scripts/detectors.py, pure-stdlib,
+    # report-only, run via the terminal capability) and the drift-detection procedures. The
+    # skill is the discoverable, cron-dispatchable unit — packaging it changes nothing about
+    # determinism. schema-check, the health-report verdict, and graph-analyze (orphan detection)
+    # live in detectors.py; session-log writes the per-session log. No other skill deps.
+    # (Advanced graph community-detection could reintroduce networkx later.)
+    skills:
+      - structural-detectors
     write:
       - "99-system/logs/**"     # audit logs, session logs, and rotation archive
     auto_fix:

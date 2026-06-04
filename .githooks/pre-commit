@@ -47,7 +47,7 @@ if staged | grep -qE '\.py$'; then
   if [ -n "$PY" ]; then
     P=vault/.memoria
     for t in "$P/mcp/policy_mcp.py" "$P/mcp/policy_hook.py" "$P/mcp/board_export.py" \
-             "$P/mcp/metrics_aggregate.py" "$P/profiles/memoria-linter/detectors.py"; do
+             "$P/mcp/metrics_aggregate.py" "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py"; do
       [ -f "$t" ] || continue
       "$PY" "$t" --self-test >/dev/null 2>&1 || { echo "pre-commit: self-test FAILED: $t" >&2; fail=1; }
     done
@@ -105,7 +105,7 @@ fi
 # blocks; other vault findings stay advisory. Mirrors the gated CI step.
 if staged | grep -qE '^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/templates/.*\.md$'; then
   if [ -n "$PY" ]; then
-    "$PY" vault/.memoria/profiles/memoria-linter/detectors.py --vault vault --gate dashboard-field-drift \
+    "$PY" vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault --gate dashboard-field-drift \
       || { echo "pre-commit: dashboard schema-drift (above)." >&2; fail=1; }
   else
     echo "pre-commit: python not found; skipping schema-drift" >&2
