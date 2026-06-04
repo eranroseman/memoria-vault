@@ -18,6 +18,8 @@ Generate 2–3 competing argument structures, optionally run a lens reading thro
 
 **1. Run `counter-outline` to generate competing framings.**
 
+`Memoria: counter-outline this section` *(deferred — use the ACP pane / terminal today)*. For this card-producing Writer task, the working path today is the CLI:
+
 ```bash
 hermes -p memoria-writer chat -s counter-outline
 # then, in the session:

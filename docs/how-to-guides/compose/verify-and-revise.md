@@ -46,7 +46,7 @@ For systematic gap-closing rather than line edits, use the Revise workflow:
 hermes -p memoria-writer chat -s revise
 # then, in the session:
 /revise --draft 40-workbench/<project>/04-drafts/<section>.md \
-        --verification 40-workbench/<project>/04-drafts/<section>.md
+        --verification 40-workbench/<project>/05-verification/<section>.md
 ```
 
 The Writer reads the verification callout and suggests specific edits to close each gap. Review and accept edits manually.

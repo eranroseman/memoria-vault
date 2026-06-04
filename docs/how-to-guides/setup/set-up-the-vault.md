@@ -46,7 +46,7 @@ bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 
 It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
 
-**4. Set up your own git in the vault** (recommended).
+**3. Set up your own git in the vault** (recommended).
 
 The installer copies the vault but does **not** initialize git — the runtime vault is your repo, under your identity. From the runtime folder (default `~/Memoria`):
 

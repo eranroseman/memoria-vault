@@ -38,15 +38,9 @@ Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime
 
 The timestamp should be recent. If it's stale, manually trigger: File → Export Library → Better BibLaTeX → overwrite `.memoria/memoria.bib`.
 
-**5. Run ingest in a Librarian session.**
+**5. Ingest runs automatically — no command to run.**
 
-```bash
-hermes -p memoria-librarian chat -s obsidian-paper-note
-# then, in the session:
-/obsidian-paper-note --source <citekey>
-```
-
-Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sense`). The Librarian will:
+The `.bib` auto-export from step 4 enqueues an `intake:source` card, and the gateway dispatches the Librarian for you. There is no manual ingest session in the normal path. The Librarian will:
 
 - Detect the source type from the `.bib` entry
 - Create the note in the correct folder (`20-sources/01-papers/` for articles, `20-sources/02-items/` for repos/packages/etc.)
@@ -55,9 +49,19 @@ Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sens
 - Propose `_proposed_classification` for your review
 - Write the result back to Zotero's `Extra` field (stable IDs only)
 
+**Manual re-ingest (fallback):** if the auto-dispatch didn't fire (a stale `.bib`, a dropped card), you can re-run ingest from the terminal:
+
+```bash
+hermes -p memoria-librarian chat -s obsidian-paper-note
+# then, in the session:
+/obsidian-paper-note --source <citekey>
+```
+
+Replace `<citekey>` with the pinned citekey from step 2 (e.g., `mamykina2010sense`).
+
 **6. Open the note in Obsidian.**
 
-After the session exits, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top (the Librarian's comparative read, composed during ingest) and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
+Once ingest completes, open `20-sources/01-papers/<citekey>.md` (or the corresponding `02-items/` path). You should see a `[!brief]` callout at the top (the Librarian's comparative read, composed during ingest) and a `_proposed_classification` block in the frontmatter (an agent-owned namespace, separate from the main fields).
 
 The note is now at `lifecycle: proposed`. The next step is [classify it](classify-a-source.md).
 
@@ -70,7 +74,7 @@ The note is now at `lifecycle: proposed`. The next step is [classify it](classif
 
 ## Batch ingest
 
-For multiple sources, run `/obsidian-paper-note --source <citekey>` once per source in the same session, or run separate sessions. Don't try to pass multiple citekeys in one command — type detection and enrichment run per-source.
+Add each source to Zotero and pin its citekey; the `.bib` auto-export enqueues one intake card per source and the Librarian processes them individually — type detection and enrichment run per-source. As a fallback, you can re-run `/obsidian-paper-note --source <citekey>` once per source in a manual session. Don't try to pass multiple citekeys in one command.
 
 ## Related
 

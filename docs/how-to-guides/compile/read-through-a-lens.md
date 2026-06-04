@@ -19,7 +19,7 @@ A *lens* is a named theoretical frame the Socratic profile reads through. The sa
 
 **1. Pick a lens that fits the question you're bringing.**
 
-Choose by the question in your head, not by the paper on screen — the point of a lens is to read a familiar text through an unfamiliar frame.
+Choose by the question in your head, not by the paper on screen — the point of a lens is to read a familiar text through an unfamiliar frame. The palette commands below are *(deferred — use the Socratic ACP pane / terminal today)*; the lens slug is what you actually pass.
 
 | Palette command | Lens slug | Frame it brings |
 | --- | --- | --- |
@@ -30,7 +30,9 @@ Choose by the question in your head, not by the paper on screen — the point of
 
 **2. Open the session in that lens.**
 
-From Obsidian: `Cmd-P → Memoria: read through <X> lens`. Or from the CLI:
+Open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (`Ctrl+Shift+1`) — the active paper note auto-attaches — and ask it to read through the lens by slug, e.g. «read this through the `mamykina-sensemaking` lens».
+
+The `Memoria: read through <X> lens` palette command *(deferred — use the ACP pane / terminal today)* is not wired yet. From the terminal (fallback):
 
 ```bash
 hermes -p memoria-socratic chat -s lens-reading
@@ -57,9 +59,9 @@ Socratic can't write, by design. When the frame surfaces something worth keeping
 
 A lens is a named frame the `lens-reading` skill provides. Add your framing to the Socratic profile's lens skill with a new slug (kebab-case, e.g. `<author>-<concept>`). Keep it to the theoretical stance and the *kinds of questions* the frame privileges — not a summary of any one paper.
 
-**7. Register one palette entry.**
+**7. (Optional) Register a palette entry.**
 
-Add a single QuickAdd entry, `Memoria: read through <X> lens`, mapped to the new slug — adding a lens is adding exactly one palette entry. See [Use the command palette](../using-obsidian/obsidian-command-palette.md) for the QuickAdd mechanics.
+The lens is usable as soon as its slug ships — invoke it from the Socratic ACP pane by slug. If/when the `Memoria: read through <X> lens` palette commands are wired *(deferred today)*, add a single QuickAdd entry mapped to the new slug. See [Use the command palette](../using-obsidian/obsidian-command-palette.md) for the QuickAdd mechanics.
 
 **8. Redeploy and test.**
 
@@ -67,7 +69,7 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 
 ## Verify
 
-- `Cmd-P → read through` lists the lens command (including any you added).
+- The Socratic ACP pane accepts the lens slug and reads through that frame (or, once wired, `Cmd-P → read through` lists the lens command).
 - A session opened in a lens stays in that frame and questions through it.
 - `99-system/logs/audit.jsonl` records the session with the lens name.
 

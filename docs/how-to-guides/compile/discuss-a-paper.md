@@ -18,17 +18,15 @@ Run a Socratic session on a classified source to sharpen your understanding befo
 
 **1. Open the paper note in Obsidian.**
 
-Navigate to `20-sources/01-papers/<citekey>.md`. Open the Reading & Processing workspace if you use it: Cmd-P → Memoria: Reading workspace.
+Navigate to `20-sources/01-papers/<citekey>.md`. Open the Reading & Processing workspace if you use it: `Cmd-P → Memoria: Reading workspace` *(deferred — open the note directly today)*.
 
 **2. Read or skim the relevant sections.**
 
 Before invoking the Socratic profile, orient yourself in the paper. The `[!brief]` callout and the Key Findings section from classification are good starting points.
 
-**3. Open the agent-client pane.**
+**3. Open the agent-client pane and switch to Socratic.**
 
-Cmd-P → Memoria: ask about this note
-
-This opens the right-side ACP pane connected to the Socratic profile (`memoria-socratic`), with the current note in context.
+Open the ACP pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon), then switch to **Socratic** with `Ctrl+Shift+1`. The active paper note auto-attaches as context. Then ask it to discuss the note. *(`Memoria: ask about this note` is deferred — use the ACP pane today.)*
 
 **4. Let the profile run its opening questions.**
 
@@ -51,7 +49,7 @@ The conversation is "done enough" when you can state the paper's core claim in y
 After the dialogue, decide:
 
 - **The paper yields one or more claims** → proceed to [write a claim note](write-a-claim-note.md). The `discuss` card closes automatically when you create the first claim note from this source.
-- **The paper doesn't yield a standalone claim right now** → close the ACP pane, open the paper note, add a brief explanation under Key Findings of why no claim was extracted (e.g., "confirms existing claims but adds no new argument"), then close the `discuss` card manually: Cmd-P → Memoria: close discuss card → select `outcome: no-claim`.
+- **The paper doesn't yield a standalone claim right now** → close the ACP pane, open the paper note, add a brief explanation under Key Findings of why no claim was extracted (e.g., "confirms existing claims but adds no new argument"), then close the `discuss` card manually: `Cmd-P → Memoria: close discuss card → select outcome: no-claim` *(deferred — close the card from the terminal / its source file today)*.
 
 ## Verify
 

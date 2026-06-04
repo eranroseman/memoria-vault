@@ -19,7 +19,9 @@ Use the Writer profile to generate outline proposals, draft prose, and suggest s
 
 **1. Optionally, generate competing framings first.**
 
-If you haven't committed to a structure yet:
+If you haven't committed to a structure yet, open the agent-client pane (`Cmd-P → Agent Client: Open chat view`), switch to the **Writer** (`Ctrl+Shift+3`), attach `01-map/corpus-map.md` via the paperclip, and ask it to counter-outline your research question. The Writer generates 2–3 competing argument structures — save the one you choose to `02-framing/CHOSEN.md`.
+
+**From the terminal (fallback):**
 
 ```bash
 hermes -p memoria-writer chat -s draft
@@ -28,32 +30,27 @@ hermes -p memoria-writer chat -s draft
   --context 40-workbench/<project>/01-map/corpus-map.md
 ```
 
-The Writer generates 2–3 competing argument structures. Save the one you choose to `02-framing/CHOSEN.md`.
-
 **2. For section-length work (8–15 claims), arrange on Canvas before drafting.**
 
 Create a new `.canvas` file in `40-workbench/<project>/03-canvas/`. Drag claim notes from the file explorer onto the canvas. Group them by sub-argument, draw arrows for logical flow. Identify any gap (a text card pointing to an empty space) as a missing claim or source that needs work before drafting.
 
 **3. Start the drafting session.**
 
-Open the Writer profile:
-
-```bash
-hermes -p memoria-writer chat -s draft
-```
+Open the agent-client pane and switch to the **Writer** (`Ctrl+Shift+3`). Keep it open for the section.
 
 **4. Draft section by section.**
 
-Provide the Writer with your outline and relevant claim notes as context:
+In the Writer pane, attach your chosen framing (`02-framing/CHOSEN.md`) and the relevant claim notes via the paperclip, then ask it to draft each section — e.g. "write an introduction for: \<section topic\>". Write the resulting prose into `40-workbench/<project>/04-drafts/<section>.md`. Cite citekeys in-text (`[@mamykina2010sense]`). Edit freely — the Writer's output is a starting point.
+
+**From the terminal (fallback):**
 
 ```bash
+hermes -p memoria-writer chat -s draft
 /draft "write an introduction for: <section topic>" \
   --context 40-workbench/<project>/02-framing/CHOSEN.md \
   --context 30-synthesis/01-claims/<claim1>.md \
   --context 30-synthesis/01-claims/<claim2>.md
 ```
-
-Write the resulting prose into `40-workbench/<project>/04-drafts/<section>.md`. Cite citekeys in-text (`[@mamykina2010sense]`). Edit freely — the Writer's output is a starting point.
 
 **5. Do not draft past unsupported claims.**
 

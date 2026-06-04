@@ -31,7 +31,7 @@ Rule of thumb: reach for **Socratic** when *you* should do the synthesizing; rea
 
 **1. Ask your question via the agent-client pane in Obsidian.**
 
-Cmd-P → Memoria: ask a question (or open the ACP pane and switch to the Writer profile).
+Open the agent-client pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon) and switch to the **Writer** profile for a cited synthesis (or **Socratic** to be questioned). The active note auto-attaches; ask your question in the pane. *(A one-shot `Memoria: ask about this note` palette command is [deferred] — use the pane today.)*
 
 Type your question in natural language:
 

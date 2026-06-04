@@ -51,6 +51,25 @@
       }
     },
     {
+      "id": "f5be1f23-3244-4891-95d5-f48663d3df4c",
+      "name": "Memoria: capture source from URL",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: capture source from URL",
+        "id": "586d645a-c05b-4a22-b75f-aa3426802d21",
+        "commands": [
+          {
+            "name": "capture-from-url",
+            "type": "UserScript",
+            "id": "46a60438-5cfc-4bbe-b18d-f15a15b9bd89",
+            "path": "99-system/scripts/capture-from-url.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
       "name": "Memoria: write claim note",
       "type": "Template",
@@ -234,6 +253,25 @@
       },
       "fileExistsBehavior": {
         "kind": "prompt"
+      }
+    },
+    {
+      "id": "d099d928-847e-4c18-ae19-4ae61471f3ef",
+      "name": "Memoria: lint this note",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: lint this note",
+        "id": "d2a36144-a889-4c70-ac03-c6caa45f85e2",
+        "commands": [
+          {
+            "name": "lint-this-note",
+            "type": "UserScript",
+            "id": "01522e65-70a0-4b87-ac59-295ed66a8d42",
+            "path": "99-system/scripts/lint-this-note.js",
+            "settings": {}
+          }
+        ]
       }
     }
   ],
