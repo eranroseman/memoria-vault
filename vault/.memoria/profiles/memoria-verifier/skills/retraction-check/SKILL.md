@@ -1,6 +1,6 @@
 ---
 name: retraction-check
-description: "Check each paper-note's DOI against retraction databases (Open Retractions + CrossRef) and flag disagreements with the note's pub_status. Deterministic; dry-run; never auto-flips."
+description: "Check each paper-note's DOI against retraction sources (the Retraction Watch dataset + CrossRef + Open Retractions, via the verify MCP) and flag disagreements with the note's pub_status. Deterministic; dry-run; never auto-flips."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -15,8 +15,9 @@ metadata:
 
 Scan paper-notes for retractions and flag any source whose retraction status disagrees with
 its vault `pub_status`. **Fully deterministic** — the `retraction_check` MCP tool does the
-lookups (CrossRef + Open Retractions); you compare its verdict to `pub_status`. No LLM
-judgment. **Dry-run by default; never silently updates a note.**
+lookups (the authoritative Retraction Watch dataset + CrossRef + Open Retractions); you
+compare its verdict to `pub_status`. No LLM judgment. **Dry-run by default; never silently
+updates a note.**
 
 ## When to Use
 
@@ -32,7 +33,7 @@ judgment. **Dry-run by default; never silently updates a note.**
 | Action | Call |
 |--------|------|
 | Check one DOI | `retraction_check(doi)` — the `verify` MCP tool (`mcp_verify_retraction_check`) |
-| What it returns | `{retracted: true\|false\|null, agreement, retraction_doi, retraction_date, sources}` (CrossRef `update-to`/`is-retracted-by` + Open Retractions, combined) |
+| What it returns | `{retracted: true\|false\|null, agreement, nature, retraction_doi, retraction_date, sources}` (Retraction Watch dataset + CrossRef `update-to`/`is-retracted-by` + Open Retractions, combined) |
 | Resolve vault DOIs | read `doi:` from paper-note frontmatter (or the `pyzotero` MCP) |
 
 ## Inputs
@@ -44,7 +45,7 @@ judgment. **Dry-run by default; never silently updates a note.**
 ## Procedure
 
 1. **Collect DOIs.** Read `doi` from each paper-note's frontmatter in scope (skip notes with no DOI).
-2. **Query.** For each DOI, call the `retraction_check` MCP tool (`verify` server). It queries CrossRef (`update-to` / `is-retracted-by`) and Open Retractions and returns a combined verdict: `retracted` (true/false/null), `agreement` (agree / disagree / single-source / no-data), and the retraction DOI/date. Treat `retracted: null` (both sources errored) as **unknown** — never as clean.
+2. **Query.** For each DOI, call the `retraction_check` MCP tool (`verify` server). It checks the local Retraction Watch dataset (authoritative), then CrossRef (`update-to` / `is-retracted-by`, real-time delta) and Open Retractions (fallback), and returns a combined verdict: `retracted` (true/false/null), `agreement` (agree / disagree / single-source / no-data), `nature` (Retraction vs Expression of Concern), and the retraction DOI/date. Treat `retracted: null` (no source returned data) as **unknown** — never as clean.
 3. **Compare.** Diff each result against the note's `pub_status`:
    - external `retracted` but note is not `retracted`/`expression-of-concern` → **flag**;
    - note marked `retracted` but external says active → flag (possible stale/incorrect).

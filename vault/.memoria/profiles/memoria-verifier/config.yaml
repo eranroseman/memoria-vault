@@ -27,11 +27,14 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
   verify:
-    # Retraction lookup by DOI (CrossRef update-to / is-retracted-by + Open Retractions),
-    # deterministic and read-only — exposes retraction_check(doi). The Verifier can't exec
-    # scripts (code_execution disabled), so the check is reached over MCP. Local; no keys
-    # (optional MEMORIA_CONTACT_EMAIL for the CrossRef polite pool). No off-the-shelf MCP
-    # covers retraction-by-DOI, hence this thin server (.memoria/mcp/verify_mcp.py).
+    # Retraction lookup by DOI — exposes retraction_check(doi), deterministic + read-only.
+    # Sources, most-authoritative first: (1) the Retraction Watch dataset (Crossref-owned,
+    # CC; the local CSV at .memoria/data/retraction_watch.csv, override with MEMORIA_RW_CSV),
+    # (2) CrossRef update-to / is-retracted-by (real-time delta), (3) Open Retractions
+    # (fallback). The Verifier makes no direct API calls (web disabled), so the check is
+    # reached over MCP. Refresh the CSV on a cron: verify_mcp.py --refresh (see
+    # .memoria/scripts/refresh-retraction-watch.sh). Optional MEMORIA_CONTACT_EMAIL for the
+    # CrossRef polite pool. Works degraded (live sources only) if the CSV is absent.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/verify_mcp.py", "--serve"]
     timeout: 30
@@ -48,11 +51,14 @@ mcp_servers:
   # alternative, purpose-built bibliographic-verification MCP. Enable either after
   # installing it and confirming its run command.
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian/policy via
-# MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
-# vault-write path is the gated obsidian MCP. Update if Hermes adds toolsets.
+# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
+# verify / pyzotero via MCP). `web` is DISABLED: every external lookup (retraction,
+# Zotero, Semantic Scholar citation context) now goes through the verify + pyzotero MCP
+# servers — gated, audited, deterministic — so the agent makes no direct API calls and
+# the only vault-write path is the gated obsidian MCP. disabled_toolsets = every Hermes
+# toolset NOT in the keep-set. Update if Hermes adds toolsets.
 agent:
-  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, x_search, yuanbao]
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
 terminal:

@@ -32,6 +32,11 @@ __pycache__/
 # (.memoria/.venv). Per-machine, regenerable, never committed.
 .memoria/.venv/
 
+# Downloaded reference datasets the MCP servers refresh on a cron (e.g. the
+# Retraction Watch CSV pulled by verify_mcp.py --refresh). Large, regenerable,
+# not source — never committed.
+.memoria/data/
+
 # OS junk
 .DS_Store
 Thumbs.db
