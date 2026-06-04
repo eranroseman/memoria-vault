@@ -15,6 +15,14 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+  ingest:
+    # The deterministic ingest pipeline (ADR-30) — the Librarian can't exec scripts
+    # (code_execution disabled), so the pipeline is reached over MCP. Read+compute
+    # only; the agent fills the two holes and writes via the gated obsidian MCP.
+    # Generous timeout: enrich makes throttled scholarly-API calls + extraction.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 180
   obsidian:
     command: uvx
     args: ["mcp-obsidian"]

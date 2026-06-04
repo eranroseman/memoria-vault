@@ -21,7 +21,7 @@ run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /
 
 l1() {
   echo "── L1: component self-tests ──"
-  for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate \
+  for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate mcp/ingest_mcp \
            profiles/memoria-linter/detectors \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge \
