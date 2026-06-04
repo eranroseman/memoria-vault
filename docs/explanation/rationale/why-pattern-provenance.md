@@ -39,7 +39,7 @@ Patterns taken with modification. In each case, the mechanic is borrowed but the
 
 | Pattern | Source | Why adapt it | How |
 |---|---|---|---|
-| **ResearchArena-style discover / select / organize** | ResearchArena | Good conceptual pipeline shape, but needs a deeper human synthesis layer. | Map to: find → ingest → classify → discuss → synthesize → promote. The organize step becomes human-driven synthesis, not agent-driven organization. |
+| **ResearchArena-style discover / select / organize** | ResearchArena | Good conceptual pipeline shape, but needs a deeper human synthesis layer. | Map to: find → capture → enrich → classify → discuss → distill → connect. The organize step becomes human-driven distillation, not agent-driven organization. |
 | **AI Scientist modular roles** | AI Scientist [v1](../../reference/bibliography.md#lu2024aiscientist) + [v2](../../reference/bibliography.md#yamada2025aiscientistv2) (Sakana AI) | Useful role separation, but full autonomy is too broad for knowledge work. | Keep separate planner / writer / code-executor roles. Humans canonize. Tree-search over synthesis is refused (see Ignore). |
 | **Memory module + Meta-review artifact** | [AI co-scientist (Gottweis et al. 2025)](../../reference/bibliography.md#gottweis2025aicoscientist) | The Memory store + Meta-review research-overview pair is the same shape as Memoria's vault + MOC. Architectural validation of vault-plus-roles design from the most production-mature system in the survey. | Vault layer; MOC type. The tournament / evolution loop on top of the Memory module is not adapted — see Ignore. |
 | **Inspiration retrieval before drafting** | [SciMON (Wang et al. 2024)](../../reference/bibliography.md#wang2024scimon) | The "retrieve related prior ideas, then draft" mechanic improves grounding and reduces redundancy. The novelty optimizer (what drives keep/revert in SciMON) is refused. | Writer reads related claim notes as inspiration context before drafting. Novelty is not a stopping criterion — the human stops. |
@@ -103,7 +103,7 @@ The design shift versus a generic "agent-assisted knowledge base" is from agent-
 - The human remains the gatekeeper for meaning, promotion, and final structure.
 - Every borrowed pattern is adopted for its mechanic; every scalar-optimization loop that sits on top of that mechanic is stripped.
 
-This makes the architecture more reliable (errors surface at stage gates), easier to debug (each stage has traceable responsibility), and less likely to accumulate polished but untrusted content (nothing reaches canonical without human approval).
+This makes the architecture more reliable (errors surface at phase gates), easier to debug (each phase has traceable responsibility), and less likely to accumulate polished but untrusted content (nothing reaches canonical without human approval).
 
 ---
 
