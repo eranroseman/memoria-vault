@@ -52,19 +52,19 @@ One capability each, numbered. These follow the full [template](_template.md) â€
 
 ### Capability proposals
 
-Thematic surveys that bundle several related capabilities. Unnumbered; each capability carries its own What / Trade-offs / Adoption trigger / Guard block.
+Thematic surveys that bundle several related capabilities, kept in [surveys/](surveys/). Unnumbered; each capability carries its own What / Trade-offs / Adoption trigger / Guard block.
 
 | File | What it covers |
 |---|---|
-| [discovery-loop.md](discovery-loop.md) | Proactive nightly discovery; Coder experiment loop; agent-proposed claim candidates |
-| [measurement-and-verification.md](measurement-and-verification.md) | CiteME harness, chain-of-evidence taxonomy, fleet observability, propagation debts |
-| [publication-strategy.md](publication-strategy.md) | Four publication paths + shapes + sequence; the deferred analysis behind ADR-20 (Path 2/3 selection) |
-| [classical-method-displacements.md](classical-method-displacements.md) | NLI contradiction detection, learning-to-rank, claim-sentence classification |
-| [triage-improvements.md](triage-improvements.md) | Semi-autonomous triage, consensus pre-filter, tournament ranking |
-| [schema-and-retrieval.md](schema-and-retrieval.md) | Scenario-typed retrieval extensions, MASSW aspects, exploration-trace capture |
-| [integrations.md](integrations.md) | Inspector plugin, Todoist gap-cards, open-design, static reports |
-| [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
-| [multi-machine-deployment.md](multi-machine-deployment.md) | Deferred deployment topologies (local-mesh, obsidian-sync, always-on) and secondary-device patterns |
+| [discovery-loop.md](surveys/discovery-loop.md) | Proactive nightly discovery; Coder experiment loop; agent-proposed claim candidates |
+| [measurement-and-verification.md](surveys/measurement-and-verification.md) | CiteME harness, chain-of-evidence taxonomy, fleet observability, propagation debts |
+| [publication-strategy.md](surveys/publication-strategy.md) | Four publication paths + shapes + sequence; the deferred analysis behind ADR-20 (Path 2/3 selection) |
+| [classical-method-displacements.md](surveys/classical-method-displacements.md) | NLI contradiction detection, learning-to-rank, claim-sentence classification |
+| [triage-improvements.md](surveys/triage-improvements.md) | Semi-autonomous triage, consensus pre-filter, tournament ranking |
+| [schema-and-retrieval.md](surveys/schema-and-retrieval.md) | Scenario-typed retrieval extensions, MASSW aspects, exploration-trace capture |
+| [integrations.md](surveys/integrations.md) | Inspector plugin, Todoist gap-cards, open-design, static reports |
+| [multi-vault-and-multi-machine.md](surveys/multi-vault-and-multi-machine.md) | Cross-vault retrieval, session-history sync, shared memory server |
+| [multi-machine-deployment.md](surveys/multi-machine-deployment.md) | Deferred deployment topologies (local-mesh, obsidian-sync, always-on) and secondary-device patterns |
 
 > **Deployment:** the adopted `local-only` default and the conventions common to every sync pattern are documented in [docs: deployment options](../../docs/explanation/deployment/deployment-options.md); only the multi-machine topologies above remain a proposal.
 

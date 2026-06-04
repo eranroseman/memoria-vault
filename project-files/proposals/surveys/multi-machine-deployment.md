@@ -7,7 +7,7 @@ created: 2026-06-01
 
 # Multi-machine deployment
 
-The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([deployment options](../../docs/explanation/deployment/deployment-options.md)). This proposal covers everything past that default: the multi-machine sync topologies and the patterns by which a *secondary* device safely reads, edits, and (sometimes) dispatches against a shared vault. It is deferred because v0.1 ships single-device; the topologies are additive and cost nothing to defer.
+The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([deployment options](../../../docs/explanation/deployment/deployment-options.md)). This proposal covers everything past that default: the multi-machine sync topologies and the patterns by which a *secondary* device safely reads, edits, and (sometimes) dispatches against a shared vault. It is deferred because v0.1 ships single-device; the topologies are additive and cost nothing to defer.
 
 Adjacent: [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) covers cross-machine *capabilities* (cross-vault retrieval, session-history sync, a shared memory server). This file covers the *deployment substrate* those capabilities run on. The two are designed to move together.
 
@@ -21,7 +21,7 @@ Three sync topologies beyond `local-only`, plus a set of operating patterns for 
 | `obsidian-sync` | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access is needed; small team |
 | `always-on` | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent; recommended for the [discovery loop](discovery-loop.md) |
 
-**Migration path.** Start `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role. The conventions common to every pattern (Git as history layer, `memoria.bib` in-vault, per-session logs, **one Hermes dispatcher per vault**, `.env` per-machine) are documented as adopted design in [deployment options](../../docs/explanation/deployment/deployment-options.md) and are what make these patterns safe.
+**Migration path.** Start `local-only`; migrate to `local-mesh` when a second device enters the workflow; graduate to `always-on` when you need unattended automation. `local-mesh` is structurally `always-on` minus the VPS — same sync mechanism, same write-coordination concerns, just no rented machine carrying the always-on role. The conventions common to every pattern (Git as history layer, `memoria.bib` in-vault, per-session logs, **one Hermes dispatcher per vault**, `.env` per-machine) are documented as adopted design in [deployment options](../../../docs/explanation/deployment/deployment-options.md) and are what make these patterns safe.
 
 ## Why
 
@@ -117,7 +117,7 @@ Each added profile is an obligation the human is choosing to take on. Socratic-o
 
 #### Recommended secondary-device workflow
 
-Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../docs/how-to-guides/compile/discuss-a-paper.md). Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
+Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../../docs/how-to-guides/compile/discuss-a-paper.md). Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
 
 ### SSH-spawned ACP (no local Hermes install)
 
@@ -149,7 +149,7 @@ The VPS is the primary, and a VPS is always on. SSH-spawned ACP becomes the *rec
 1. **Start vault-only** if you don't need ACP at all.
 2. **SSH-spawned ACP** as the default ACP pattern. No local Hermes install on the laptop. The ACP plugin spawns the VPS's Hermes over Tailscale-bridged SSH. You can ACP with any profile because the VPS has the full suite. Zero install drift — the laptop always uses the primary's Hermes.
 3. **Local Socratic-only install** as an *offline fallback* if you regularly work where SSH to the VPS is unreliable (planes, trains, weak hotel wifi). Configure the `agent-client` plugin with two `command` entries — primary SSH command and a fallback local command — and switch when offline.
-4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../releases/v0.1/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
+4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../../releases/v0.1/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
 
 The architectural reason the recommendation differs: `local-mesh`'s primary is unreliable (desktop sleeps), so the laptop needs a local agent for ACP to be usable; `always-on`'s primary is reliable (VPS always on), so SSH-spawn removes the need for a local install entirely.
 
@@ -165,12 +165,12 @@ The VPS remains the primary dispatcher in either case. Developers iterate agains
 ## Dependencies
 
 - Syncthing (for `local-mesh` / `always-on`) and a rented VPS (for `always-on`); Tailscale for SSH-spawn reachability.
-- The adopted common conventions in [deployment options](../../docs/explanation/deployment/deployment-options.md) — especially **one dispatcher per vault** — which these patterns presuppose.
+- The adopted common conventions in [deployment options](../../../docs/explanation/deployment/deployment-options.md) — especially **one dispatcher per vault** — which these patterns presuppose.
 - [discovery-loop.md](discovery-loop.md) is the main thing that *motivates* `always-on`; adopting `always-on` before the discovery loop (or a real second device) is premature.
 
 ## Related
 
-- **Adopted baseline:** [deployment options](../../docs/explanation/deployment/deployment-options.md) (the `local-only` default and the common conventions).
+- **Adopted baseline:** [deployment options](../../../docs/explanation/deployment/deployment-options.md) (the `local-only` default and the common conventions).
 - **Cross-machine capabilities:** [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) (cross-vault retrieval, session-history sync, shared memory server) — the capabilities that ride this substrate.
-- **Install discipline:** [release-plan-v0.1-spillover.md](../releases/v0.1/release-plan-v0.1-spillover.md) (Phase 4 dev-install rules).
-- **Glossary:** [primary device](../../docs/reference/glossary.md#system).
+- **Install discipline:** [release-plan-v0.1-spillover.md](../../releases/v0.1/release-plan-v0.1-spillover.md) (Phase 4 dev-install rules).
+- **Glossary:** [primary device](../../../docs/reference/glossary.md#system).

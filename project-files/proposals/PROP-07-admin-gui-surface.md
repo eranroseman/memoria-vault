@@ -41,4 +41,4 @@ Whatever fills this gap stays a **forensic/admin browse surface only** — never
 
 - **Existing surfaces:** CLI (forensic), dashboards (state), Telegram (push) — see [human-channels.md](../../docs/explanation/architecture/human-channels.md)
 - **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../../docs/reference/policy-mcp.md)
-- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](integrations.md) covers part of the same forensic need from inside Obsidian
+- **Adjacent future idea:** the read-only [Memoria Inspector Obsidian plugin](surveys/integrations.md) covers part of the same forensic need from inside Obsidian

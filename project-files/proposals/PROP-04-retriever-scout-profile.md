@@ -23,7 +23,7 @@ At high discovery volume, one profile doing both `find` and `ingest` may have it
 
 ## Adoption trigger
 
-Discovery volume genuinely overwhelms the unified Librarian — e.g. the [discovery loop](discovery-loop.md) running at scale, where discovery scoring and classification visibly contend.
+Discovery volume genuinely overwhelms the unified Librarian — e.g. the [discovery loop](surveys/discovery-loop.md) running at scale, where discovery scoring and classification visibly contend.
 
 ## Guard
 

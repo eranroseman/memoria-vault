@@ -182,7 +182,7 @@ three-tier gate based on path sensitivity and author trust:
 
 | Decision | Trigger | Effect |
 |---|---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/plans/`, releases, proposals; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/releases/`, `project-files/proposals/`; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
 | `needs_human` | Safe paths but untrusted author, OR trusted author on sensitive paths (`vault/.memoria/`, `scripts/`, `project-files/decisions/`, `.github/`) | Check passes — human reviews and merges manually |
 | `block` | Untrusted author touching sensitive paths | Check fails — merge impossible |
 
@@ -252,7 +252,7 @@ reading it. Before opening a PR:
   there — Hermes never reads a standalone `mcp.json`; ADR-27).
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
-- **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
+- **Build state & known gaps:** `project-files/implementation-status.md` is the
   ledger — read it before relying on live agent writes. For the live blocker set,
   consult its `pending`/`broken` rows and the open
   [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
@@ -266,7 +266,7 @@ reading it. Before opening a PR:
   Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
   `mcp_servers` (ADR-27).
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
-  (ADRs); current build state is `project-files/plans/implementation-status.md`.
+  (ADRs); current build state is `project-files/implementation-status.md`.
 - **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
   findings, and distillation reports you produce belong in `_reports/` at the repo
   root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
@@ -348,10 +348,10 @@ created: YYYY-MM-DD
 ## Related
 ```
 
-### `project-files/plans/` — release-plan template
+### `project-files/releases/` — release-plan template
 
 One **single-file release plan per version**, structured by what a release needs.
-Full skeleton: `project-files/plans/release-plan-template.md` (copy it per
+Full skeleton: `project-files/releases/release-plan-template.md` (copy it per
 release; reset every Gate/Tier State to `todo`).
 
 ```markdown
@@ -373,7 +373,7 @@ long for a crisp plan (full phase steps, investigation notes) goes to a sibling
 
 The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
 (+ its `-spillover.md`); the per-artifact build ledger is
-[`implementation-status.md`](project-files/plans/implementation-status.md).
+[`implementation-status.md`](project-files/implementation-status.md).
 
 ## 9. Integration cadence — merge small, merge often
 
@@ -382,7 +382,7 @@ branches once grew off a frozen `main` in parallel (60 + 9 + 12 commits, none
 merged back), all touching the same ADR and files — ADR-27 was implemented
 *twice* — so consolidating them became a ~30-conflict semantic reconciliation,
 not a merge. Full post-mortem + human walkthrough:
-[git-workflow.md](project-files/plans/git-workflow.md). The rules:
+[git-workflow.md](project-files/process/git-workflow.md). The rules:
 
 - **Keep `main` moving.** A branch is one coherent unit → PR → squash-merge →
   delete. If it passes ~1 day or ~10 unmerged commits, it's already too big —

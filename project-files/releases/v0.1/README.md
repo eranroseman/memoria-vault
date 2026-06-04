@@ -1,8 +1,9 @@
 # Release v0.1
 
-Everything specific to the **v0.1** cut. Release-agnostic logistics (the reusable
-template, the living build ledger) stay in [`../../plans/`](../../plans/); per-artifact
-build state lives only in [implementation-status.md](../../plans/implementation-status.md).
+Everything specific to the **v0.1** cut. Release-agnostic logistics live elsewhere:
+the reusable [release-plan-template.md](../release-plan-template.md) in `releases/`, and
+the living build ledger [implementation-status.md](../../implementation-status.md) at the
+`project-files/` root — per-artifact build state lives only there.
 
 | File | What it covers |
 | --- | --- |

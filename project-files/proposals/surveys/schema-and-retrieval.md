@@ -35,7 +35,7 @@ The other two MASSW fields (`context` and `projected_impact`) are intentionally 
 
 **Trade-offs.** Adds LLM calls at ingest (one per paper for aspect extraction). Aspects extracted from an abstract are lower quality than from the full text; Marker-extracted body text improves accuracy when available.
 
-**Extraction mechanism.** For papers whose method or outcome is carried by a figure or table rather than prose, Hermes's `vision_analyze` reads the figure/table directly — making `_aspects.method` / `_aspects.outcome` figure-informed rather than abstract-only. It is available now but not wired into the v0.1 ingest pipeline; this proposal is the natural place it gets adopted (the [ingest reference](../../docs/reference/ingest.md) notes it as an available extraction path).
+**Extraction mechanism.** For papers whose method or outcome is carried by a figure or table rather than prose, Hermes's `vision_analyze` reads the figure/table directly — making `_aspects.method` / `_aspects.outcome` figure-informed rather than abstract-only. It is available now but not wired into the v0.1 ingest pipeline; this proposal is the natural place it gets adopted (the [ingest reference](../../../docs/reference/ingest.md) notes it as an available extraction path).
 
 **Adoption trigger.** The Librarian is regularly ingesting papers *and* the human notices wanting to filter by method or outcome and resorting to reading full summaries.
 

@@ -7,7 +7,7 @@ created: 2026-05-27
 
 # Publication strategy — paths, shapes, and sequence
 
-> **Path 1 is decided.** The recommendation distilled from this analysis — pursue the vault-eval / vault-CiteME benchmark first, and start the six-signal capture now — is adopted as [ADR-20](../decisions/20-publication-path.md). This proposal is retained for the **deferred** parts: the full four-path comparison, the per-path work-breakdowns, and the negative space, which inform the *next* publication decision (Path 2 vs. Path 3) once Path 1 has produced data. It is the source analysis behind ADR-20, not a competing decision.
+> **Path 1 is decided.** The recommendation distilled from this analysis — pursue the vault-eval / vault-CiteME benchmark first, and start the six-signal capture now — is adopted as [ADR-20](../../decisions/20-publication-path.md). This proposal is retained for the **deferred** parts: the full four-path comparison, the per-path work-breakdowns, and the negative space, which inform the *next* publication decision (Path 2 vs. Path 3) once Path 1 has produced data. It is the source analysis behind ADR-20, not a competing decision.
 
 ## What
 
@@ -36,7 +36,7 @@ Each shape has different evidence requirements; picking a shape decides what wor
 | Shape | What it needs | What Memoria has | What's missing |
 | --- | --- | --- | --- |
 | System paper | Working impl + capability evaluation vs. baseline | Design only | Implementation, baseline comparison, metric |
-| Benchmark paper | Public benchmark + frontier-model evaluation + dataset | A *designed harness* — [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md) + a CiteME-style fixture | Public artifact, frontier evals, release |
+| Benchmark paper | Public benchmark + frontier-model evaluation + dataset | A *designed harness* — [ADR-11 vault-eval](../../decisions/11-vault-eval-integration.md) + a CiteME-style fixture | Public artifact, frontier evals, release |
 | Method paper | A specific technical advance with measurement | None claimed today | A measurable novel technique |
 | Position / argument paper | A strong claim + supporting evidence + clear contrast | Strong design rationale | Empirical evidence, comparison data |
 | Tools / artifact paper | Mature open-source repo + adoption | None public | All of it |
@@ -51,7 +51,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 
 **Venue.** NeurIPS Datasets & Benchmarks Track; workshop tracks at ICLR / EMNLP for an earlier version.
 
-**Why it's the lowest bar.** CiteME (Press 2024) was already accepted at NeurIPS D&B — a clear comparable. The contribution is the *within-vault* variant: bounded candidate space, different failure mode, different operator stakes than public-corpus attribution. Frontier LMs get 4–18% on public CiteME (tooled CiteAgent ~35%, see [why-pattern-provenance.md](../../docs/explanation/rationale/why-pattern-provenance.md)); the within-vault number is unknown, and that gap is the paper's empirical core. Comparables sharpened by the benchmark review: **CiteGuard** (retrieval-aware attribution; extends CiteME) and **Wallat 2024** (correctness ≠ faithfulness — a *similar* note is not a *supporting* one).
+**Why it's the lowest bar.** CiteME (Press 2024) was already accepted at NeurIPS D&B — a clear comparable. The contribution is the *within-vault* variant: bounded candidate space, different failure mode, different operator stakes than public-corpus attribution. Frontier LMs get 4–18% on public CiteME (tooled CiteAgent ~35%, see [why-pattern-provenance.md](../../../docs/explanation/rationale/why-pattern-provenance.md)); the within-vault number is unknown, and that gap is the paper's empirical core. Comparables sharpened by the benchmark review: **CiteGuard** (retrieval-aware attribution; extends CiteME) and **Wallat 2024** (correctness ≠ faithfulness — a *similar* note is not a *supporting* one).
 
 **Work required (~3–4 months part-time).**
 1. Build a public 200-example vault-CiteME fixture (synthetic vaults or anonymized real-vault excerpts).
@@ -71,7 +71,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 
 **The honest catch.** A benchmark paper needs a public artifact and a clean comparable; vault-eval has neither natively — its gold set is, by design, your private single-user vault, and there is no prior "does-the-vault-compound" number to beat. To publish it you must manufacture both: a released synthetic/anonymized gold vault others can run, and a defensible baseline (e.g., the same metrics on an untyped or advisory-review variant). Strictly more work than vault-CiteME.
 
-**The resolution — not competing paths.** vault-CiteME is the tractable instance that grounds the methodology; vault-eval is the frame. The strongest single paper is "vault-eval, instantiated via two cells" — citation attribution (vault-CiteME) and claim staleness (FAMA exposure, [ADR-10](../decisions/10-claim-supersession.md)) — shipped with a released synthetic gold vault. Choose **Path 1** to land a paper fast; choose **Path 1′** for the more cited, more defensible contribution if you can absorb the extra fixture work.
+**The resolution — not competing paths.** vault-CiteME is the tractable instance that grounds the methodology; vault-eval is the frame. The strongest single paper is "vault-eval, instantiated via two cells" — citation attribution (vault-CiteME) and claim staleness (FAMA exposure, [ADR-10](../../decisions/10-claim-supersession.md)) — shipped with a released synthetic gold vault. Choose **Path 1** to land a paper fast; choose **Path 1′** for the more cited, more defensible contribution if you can absorb the extra fixture work.
 
 ### Path 2 — System paper anchored on a specific capability
 
@@ -82,9 +82,9 @@ The design rationale already written is worth 30–50% of any of these — none 
 **The hard problem.** Picking the right metric. Memoria's pitch is "bookkeeping, not intelligence" — the right comparison is *operator hours saved per unit of vault growth*, not *task accuracy*. That metric does not exist in the field; you would have to define and defend it.
 
 **Work required (~6–9 months).**
-1. Implement MVS + Librarian + Verifier + Linter (the minimum stack that demonstrates the blocking-review thesis, [ADR-03](../decisions/03-structural-review-gate.md)).
-2. Run 3 months of personal use with instrumented logging (the six-signal capture, now shipped — see [reference/telemetry.md](../../docs/reference/telemetry.md)).
-3. Run a 4–6 week comparison study — same vault, two operators, blocking vs. advisory review (or a generic-LLM-assistant baseline), see [PROP-08](PROP-08-configurable-review-gate-mode.md).
+1. Implement MVS + Librarian + Verifier + Linter (the minimum stack that demonstrates the blocking-review thesis, [ADR-03](../../decisions/03-structural-review-gate.md)).
+2. Run 3 months of personal use with instrumented logging (the six-signal capture, now shipped — see [reference/telemetry.md](../../../docs/reference/telemetry.md)).
+3. Run a 4–6 week comparison study — same vault, two operators, blocking vs. advisory review (or a generic-LLM-assistant baseline), see [PROP-08](../PROP-08-configurable-review-gate-mode.md).
 4. Quantify operator time-per-claim, false-promotion rate, vault link density, trust metrics over time.
 
 **Risk.** n=1 or n=2 operator studies are publishable at CHI but draw skepticism; mitigated by detailed logging and qualitative methodology.
@@ -97,7 +97,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 
 **Why it's harder than it looks.** Position papers without empirical work get rejected; with strong empirical work they compete with full system papers. The sweet spot is narrow.
 
-**Strengths Memoria already has.** The "synthesis quality is not scalar" argument in [why-not-autonomous.md](../../docs/explanation/rationale/why-not-autonomous.md); the borrow / adapt / ignore table in [why-pattern-provenance.md](../../docs/explanation/rationale/why-pattern-provenance.md); the intellectual-foundations framing in [intellectual-foundations.md](../../docs/explanation/overview/intellectual-foundations.md). The benchmark review independently *validates* the core posture (deterministic ingest, blocking gate, narrow per-lane profiles, vault-as-distilled-memory) — the external corroboration a "this design is correct" claim needs.
+**Strengths Memoria already has.** The "synthesis quality is not scalar" argument in [why-not-autonomous.md](../../../docs/explanation/rationale/why-not-autonomous.md); the borrow / adapt / ignore table in [why-pattern-provenance.md](../../../docs/explanation/rationale/why-pattern-provenance.md); the intellectual-foundations framing in [intellectual-foundations.md](../../../docs/explanation/overview/intellectual-foundations.md). The benchmark review independently *validates* the core posture (deterministic ingest, blocking gate, narrow per-lane profiles, vault-as-distilled-memory) — the external corroboration a "this design is correct" claim needs.
 
 **Work required (~9–12 months).**
 1. Everything in Path 2 (you need the empirical evidence).
@@ -119,13 +119,13 @@ The design rationale already written is worth 30–50% of any of these — none 
 Three superficially-attractive claims that would not survive review:
 
 - **The seven-profile design alone.** MetaGPT, AI co-scientist, and Agent Laboratory already published multi-role architectures; Memoria's profile design is internally consistent but not novel enough to anchor a paper.
-- **The Karpathy LLM-Wiki + Zettelkasten + Memex synthesis.** Argued in [intellectual-foundations.md](../../docs/explanation/overview/intellectual-foundations.md), but the three components are well-known; novelty has to be in what Memoria *does* with them.
+- **The Karpathy LLM-Wiki + Zettelkasten + Memex synthesis.** Argued in [intellectual-foundations.md](../../../docs/explanation/overview/intellectual-foundations.md), but the three components are well-known; novelty has to be in what Memoria *does* with them.
 - **Obsidian-as-substrate.** Many systems use Obsidian; operational, not contributory.
 
 The novelty Memoria *can* claim is a triad plus the data payoff:
 1. Policy-MCP-enforced zone permissions (per-folder write degradation, not per-agent prompt discipline).
 2. Structurally blocking review state (`awaiting-review → approved` as a state machine, not an annotation).
-3. Structural, human-set claim supersession ([ADR-10](../decisions/10-claim-supersession.md)) as the dependable answer to the FAMA failure mode the memory-benchmark cluster shows is least reliably automatable.
+3. Structural, human-set claim supersession ([ADR-10](../../decisions/10-claim-supersession.md)) as the dependable answer to the FAMA failure mode the memory-benchmark cluster shows is least reliably automatable.
 4. Measurable consequences for knowledge-work outcomes — the part that requires the data every path routes through.
 
 The first three are present in the design today; the fourth is what every publication path needs.
@@ -156,10 +156,10 @@ Do not commit to Path 2 or Path 3 before Path 1's data exists. Both depend on em
 
 ## Dependencies
 
-- [ADR-20](../decisions/20-publication-path.md) (the committed first paper this analysis sits behind).
-- [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../decisions/10-claim-supersession.md) (the FAMA cell).
-- The six-signal capture ([reference/telemetry.md](../../docs/reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../releases/v0.1/release-plan-v0.1-spillover.md)) — without populated logs, Paths 2/3 have no data.
-- [PROP-08](PROP-08-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [measurement-and-verification.md](measurement-and-verification.md) (the deferred analysis harnesses).
+- [ADR-20](../../decisions/20-publication-path.md) (the committed first paper this analysis sits behind).
+- [ADR-11 vault-eval](../../decisions/11-vault-eval-integration.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../../decisions/10-claim-supersession.md) (the FAMA cell).
+- The six-signal capture ([reference/telemetry.md](../../../docs/reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../../releases/v0.1/release-plan-v0.1-spillover.md)) — without populated logs, Paths 2/3 have no data.
+- [PROP-08](../PROP-08-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [measurement-and-verification.md](measurement-and-verification.md) (the deferred analysis harnesses).
 
 ## Source
 

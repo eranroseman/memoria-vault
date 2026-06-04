@@ -99,7 +99,7 @@ must re-run **all tiers green from a fresh clone** on a clean target box.
 
 Not enumerated here — a second list would drift. **By definition the blockers
 are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the
-build ledger ([implementation-status](implementation-status.md)) and any open
+build ledger ([implementation-status](../implementation-status.md)) and any open
 **P0** issue in the project issue tracker.
 
 ## 5. Out of scope (deferred)

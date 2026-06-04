@@ -39,7 +39,7 @@ and critical path detailed in the
 [shippability assessment](shippability-assessment-2026-06-03.md). `released:` flips to
 `true` only when **every** gate, floor and operability, is `done`.
 
-> **The core reframing.** Per [implementation-status.md](../../plans/implementation-status.md),
+> **The core reframing.** Per [implementation-status.md](../../implementation-status.md),
 > most artifacts are `shipped` — but its legend defines `shipped` as _in the vault,
 > not verified end-to-end_. So v0.1 is overwhelmingly **built but unverified**, and
 > #58 was a textbook case of the danger of stopping at `shipped`: a gate that existed
@@ -135,7 +135,7 @@ as tiers here.
 
 Not enumerated here — a second list would drift. **By definition the blockers
 are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the build
-ledger ([implementation-status.md](../../plans/implementation-status.md)) and any open
+ledger ([implementation-status.md](../../implementation-status.md)) and any open
 **P0** issue in the [tracker](https://github.com/eranroseman/memoria-vault/issues).
 
 **No open P0 remains** — #39, #51, and
@@ -151,7 +151,7 @@ The remaining blockers split in two:
 ## 5. Out of scope (deferred)
 
 The per-artifact deferred set lives in the `deferred` rows of
-[implementation-status.md](../../plans/implementation-status.md) and in
+[implementation-status.md](../../implementation-status.md) and in
 [proposals/](../../proposals/) — not duplicated here. At the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
@@ -180,7 +180,7 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
 6. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
-7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](../../plans/implementation-status.md) once the candidate passes.
+7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](../../implementation-status.md) once the candidate passes.
 
 ## 8. Roadmap after this release
 

@@ -33,7 +33,7 @@ Capabilities for working across multiple research vaults or multiple devices.
 
 ## 3. Scripted session-history sync
 
-**What.** `hermes profile export` / `import` snapshots carrying `state.db` chat history between machines, enabling session continuity across devices without a shared memory server. Extends the `memories/` junction sync pattern in [deployment options](../../docs/explanation/deployment/deployment-options.md).
+**What.** `hermes profile export` / `import` snapshots carrying `state.db` chat history between machines, enabling session continuity across devices without a shared memory server. Extends the `memories/` junction sync pattern in [deployment options](../../../docs/explanation/deployment/deployment-options.md).
 
 **Trade-offs.** Manual trigger (or cron). Sync conflicts are possible if two machines run sessions between sync cycles. The snapshot must exclude sensitive credentials.
 

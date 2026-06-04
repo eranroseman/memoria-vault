@@ -49,7 +49,7 @@ truly fail-closed at the Hermes layer. It fails closed on its own decisions --
 an unresolvable write (missing profile/path/task_id, or policy import failure)
 is blocked -- which is the strongest guarantee a hook can give. For hard
 enforcement, front the writes with a custom obsidian bridge that calls policy
-internally (see project-files/plans/implementation-status.md).
+internally (see project-files/implementation-status.md).
 
     python policy_hook.py --profile memoria-writer    # reads one JSON event on stdin
     python policy_hook.py --self-test                 # synthetic-event unit tests

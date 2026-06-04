@@ -11,7 +11,7 @@ Capabilities that make the Verifier measurable, the claim layer richer, and the 
 
 > **Status note (2026-06-01).** This proposal stays **deferred** for the six *analysis* capabilities below (CiteME harness, claim taxonomy, fleet dashboard, propagation debts, LLM-judge gate, reflection-on-retry) — each has an explicit adoption trigger that v0.1 has not tripped.
 >
-> What v0.1 **does** adopt is the **minimal capture** these analyses will later read: the six-signal operational log named as the single highest-leverage action in [publication-path-report §5](../../_notes/publication-path-report.md). All six signals now emit and are self-tested — state-transition timestamps + decision time (`board-transitions.jsonl`), cost per card (`cost.jsonl`), deny reasons (`audit.jsonl`), suggestion disposition / accept : edit : reject (`disposition.jsonl`, **un-backfillable**), and FAMA exposure (the `fama-exposure` detector → `lint-findings.jsonl`). Exact schemas are pinned in [reference/telemetry.md](../../docs/reference/telemetry.md). The rationale: capture cannot be back-filled, so it ships first; the analysis harnesses above can be built later against accumulated data.
+> What v0.1 **does** adopt is the **minimal capture** these analyses will later read: the six-signal operational log named as the single highest-leverage action in [publication-path-report §5](../../../_notes/publication-path-report.md). All six signals now emit and are self-tested — state-transition timestamps + decision time (`board-transitions.jsonl`), cost per card (`cost.jsonl`), deny reasons (`audit.jsonl`), suggestion disposition / accept : edit : reject (`disposition.jsonl`, **un-backfillable**), and FAMA exposure (the `fama-exposure` detector → `lint-findings.jsonl`). Exact schemas are pinned in [reference/telemetry.md](../../../docs/reference/telemetry.md). The rationale: capture cannot be back-filled, so it ships first; the analysis harnesses above can be built later against accumulated data.
 
 ---
 
@@ -43,7 +43,7 @@ Capabilities that make the Verifier measurable, the claim layer richer, and the 
 
 ## 3. Fleet observability dashboard
 
-**What.** Per-lane and per-skill metrics (cost, success rate, retry rate, latency) on daily/weekly/monthly cadence. Materializes the [fleet-health dashboard](../../docs/explanation/dashboards/operational-health/fleet-health.md) design.
+**What.** Per-lane and per-skill metrics (cost, success rate, retry rate, latency) on daily/weekly/monthly cadence. Materializes the [fleet-health dashboard](../../../docs/explanation/dashboards/operational-health/fleet-health.md) design.
 
 **Trade-offs.** Requires a scheduled aggregator that reads the audit log and board history. Until the aggregator exists, the dashboard is empty.
 
