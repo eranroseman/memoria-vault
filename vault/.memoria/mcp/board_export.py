@@ -32,6 +32,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from _shared import TestHarness, append_jsonl, now_iso, resolve_vault, safe_filename
+
 BOARD_RELDIR = "99-system/board"
 SNAPSHOT_RELPATH = "99-system/logs/board-state.jsonl"
 TRANSITIONS_RELPATH = "99-system/logs/board-transitions.jsonl"  # per-card status/review changes
@@ -148,8 +150,8 @@ def _yaml_scalar(v) -> str:
     return f'"{s}"'
 
 
-def _safe_name(task_id: str) -> str:
-    return "".join(c if c.isalnum() or c in "._-" else "_" for c in str(task_id))
+# _safe_name: use safe_filename from _shared
+_safe_name = safe_filename
 
 
 def card_markdown(card: dict) -> str:
@@ -197,24 +199,20 @@ def board_snapshot(cards: list[dict]) -> dict:
         if st == "done" and c["review_status"] in REVIEW_QUEUE_STATES:
             lane["review_queue"] += 1
             totals["review_queue"] += 1
-    return {"timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "lanes": lanes, "totals": totals}
+    return {"timestamp": now_iso(), "lanes": lanes, "totals": totals}
 
 
 def export_snapshot(vault: Path, cards: list[dict]) -> dict:
     snap = board_snapshot(cards)
-    out = vault / SNAPSHOT_RELPATH
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(snap, ensure_ascii=False) + "\n")
+    append_jsonl(vault / SNAPSHOT_RELPATH, [snap])
     return snap
 
 
 # --------------------------------------------------------------------------- #
 # Telemetry event logs (transitions / disposition / cost) -- diff vs last run
 # --------------------------------------------------------------------------- #
-def _ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+# _ts: use now_iso from _shared
+_ts = now_iso
 
 
 def load_state_cache(vault: Path) -> dict:
@@ -275,20 +273,14 @@ def compute_events(prev: dict, cards: list[dict]) -> dict:
     return {"transitions": transitions, "dispositions": dispositions, "costs": costs}
 
 
-def _append_jsonl(path: Path, rows: list[dict]) -> None:
-    if not rows:
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as fh:
-        for r in rows:
-            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+# _append_jsonl: use append_jsonl from _shared
 
 
 def export_events(vault: Path, prev: dict, cards: list[dict]) -> dict:
     ev = compute_events(prev, cards)
-    _append_jsonl(vault / TRANSITIONS_RELPATH, ev["transitions"])
-    _append_jsonl(vault / DISPOSITION_RELPATH, ev["dispositions"])
-    _append_jsonl(vault / COST_RELPATH, ev["costs"])
+    append_jsonl(vault / TRANSITIONS_RELPATH, ev["transitions"])
+    append_jsonl(vault / DISPOSITION_RELPATH, ev["dispositions"])
+    append_jsonl(vault / COST_RELPATH, ev["costs"])
     return {k: len(v) for k, v in ev.items()}
 
 
@@ -308,12 +300,8 @@ def run_export(vault: Path, from_json: Path | None = None) -> dict:
 def self_test() -> int:
     import tempfile
 
-    failures = 0
-
-    def check(name: str, cond: bool) -> None:
-        nonlocal failures
-        failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
+    t = TestHarness()
+    check = t.check
 
     sample = [
         {"task_id": "t_a1", "title": "Ingest smith2020", "status": "running",
@@ -416,8 +404,7 @@ def self_test() -> int:
         check("no spurious events on an unchanged re-run", export_events(vault, load_state_cache(vault), run2) ==
               {"transitions": 0, "dispositions": 0, "costs": 0})
 
-    print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
-    return failures
+    return t.summary()
 
 
 # --------------------------------------------------------------------------- #
@@ -433,9 +420,7 @@ def main() -> None:
         sys.exit(1 if self_test() else 0)
     if not args.vault:
         ap.error("provide --vault <path> or --self-test")
-    vault = Path(args.vault).expanduser().resolve()
-    if not vault.is_dir():
-        sys.exit(f"not a directory: {vault}")
+    vault = resolve_vault(args.vault)
 
     try:
         result = run_export(vault, args.from_json)

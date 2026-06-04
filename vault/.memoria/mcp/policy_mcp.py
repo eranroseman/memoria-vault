@@ -30,12 +30,19 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
+
+from _shared import (
+    TestHarness,
+    append_jsonl,
+    now_iso,  # re-exported: policy_hook imports it from here
+)
+from _shared import (
+    resolve_vault as _resolve_vault,
+)
 
 try:                                  # PyYAML is a runtime dep (see requirements.txt)
     import yaml  # but the core/self-test must run without it,
@@ -393,17 +400,13 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+# now_iso: imported from _shared (re-exported for policy_hook compatibility)
 
 
 def append_audit(vault: Path, entry: dict) -> None:
     """Append one JSON object (one line) to 99-system/logs/audit.jsonl. The
     append-only JSONL format survives crashes and is grep-friendly."""
-    audit = vault / AUDIT_RELPATH
-    audit.parent.mkdir(parents=True, exist_ok=True)
-    with audit.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    append_jsonl(vault / AUDIT_RELPATH, [entry])
 
 
 # --------------------------------------------------------------------------- #
@@ -567,13 +570,7 @@ def build_server(vault: Path):
 def resolve_vault(arg: str | None) -> Path:
     """--vault arg, else MEMORIA_VAULT_PATH env. The installer substitutes the
     real path into mcp.json's {{VAULT_PATH}} when wiring this server."""
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH")
-    if not raw:
-        sys.exit("no vault path: pass --vault <path> or set MEMORIA_VAULT_PATH")
-    vault = Path(raw).expanduser().resolve()
-    if not vault.is_dir():
-        sys.exit(f"not a directory: {vault}")
-    return vault
+    return _resolve_vault(arg, "MEMORIA_VAULT_PATH")
 
 
 # --------------------------------------------------------------------------- #
@@ -582,12 +579,8 @@ def resolve_vault(arg: str | None) -> Path:
 def self_test() -> int:
     import tempfile
 
-    failures = 0
-
-    def check(name: str, cond: bool) -> None:
-        nonlocal failures
-        failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
+    t = TestHarness()
+    check = t.check
 
     # ---- glob matcher ------------------------------------------------------ #
     check("glob: '**' matches anything",
@@ -781,9 +774,7 @@ def self_test() -> int:
         no_task = engine.check("memoria-coder", "write", "40-workbench/x/06-code/m.py", "")
         check("missing task_id -> deny", no_task["decision"] == "deny")
 
-    total = "all" if yaml is not None else "core"
-    print(f"\n{'FAILED' if failures else 'OK'}: {failures} failing check(s) [{total} suite].")
-    return failures
+    return t.summary(label="all" if yaml is not None else "core")
 
 
 # --------------------------------------------------------------------------- #
