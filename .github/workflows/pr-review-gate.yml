@@ -86,7 +86,7 @@ jobs:
       - name: Enable auto-merge (clean review)
         if: |
           steps.policy.outputs.decision == 'auto_approve' &&
-          (steps.kilo-review.outputs.kilo-conclusion == 'SUCCESS' || steps.kilo-review.outputs.kilo-conclusion == 'SKIPPED' || steps.kilo-review.outputs.kilo-conclusion == 'NEUTRAL')
+          (steps.kilo-review.outputs.kilo-conclusion == 'success' || steps.kilo-review.outputs.kilo-conclusion == 'skipped' || steps.kilo-review.outputs.kilo-conclusion == 'neutral')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
