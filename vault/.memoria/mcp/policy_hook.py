@@ -84,6 +84,13 @@ WRITE_KEYWORDS = {
 FILE_WRITE_TOOLS = {"write_file": "write", "patch": "write"}
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
+# Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
+# arbitrary Obsidian command and has no single path to gate (so the path matcher
+# can't bound it); `vault_delete`/`vault_move` are destructive ops the workflows
+# don't need (least privilege -- the prior uvx mcp-obsidian exposed only
+# read/write/append/patch). Matched as a substring after the `obsidian` prefix.
+DENY_OBSIDIAN = ("command_execute", "vault_delete", "vault_move")
+
 
 def classify(tool_name: str) -> str | None:
     """Policy action for a gated *write* tool, or None for reads / ungated tools.
@@ -158,7 +165,13 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
 
     Side effect on allow: stashes before_hash so the post_tool_call pass can
     complete the reversibility record. Pure enough to unit-test otherwise."""
-    action = classify(payload.get("tool_name", ""))
+    tool_name = payload.get("tool_name", "")
+    t = (tool_name or "").lower()
+    if "obsidian" in t and any(d in t for d in DENY_OBSIDIAN):
+        return {"decision": "block",                # hard deny -> never reaches a lane check
+                "reason": f"policy gate: '{tool_name}' is not permitted for any lane "
+                          f"(arbitrary command execution / destructive op has no path to gate)."}
+    action = classify(tool_name)
     if action is None:
         return {}                                  # read / terminal / ungated tool -> not our concern
 
@@ -326,6 +339,19 @@ def self_test() -> int:
                              "tool_input": {"filepath": "10-inbox/02-answers/a.md"}},
                             "memoria-writer", vault)
         check("missing task_id -> fail-closed block", r_fc.get("decision") == "block")
+
+        # native obsidian MCP (Local REST API plugin) tool names are gated the same -
+        check("native vault_write allowed zone -> {}",
+              ev("mcp_obsidian_vault_write", "10-inbox/02-answers/n.md") == {})
+        check("native vault_write denied zone -> block",
+              ev("mcp_obsidian_vault_write", "30-synthesis/01-claims/c.md").get("decision") == "block")
+        # hard-deny: blocked even in an ALLOWED zone (overrides the lane check)
+        check("native command_execute -> hard block",
+              ev("mcp_obsidian_command_execute", "").get("decision") == "block")
+        check("native vault_delete (allowed zone) -> hard block",
+              ev("mcp_obsidian_vault_delete", "10-inbox/02-answers/a.md").get("decision") == "block")
+        check("native vault_move (allowed zone) -> hard block",
+              ev("mcp_obsidian_vault_move", "10-inbox/02-answers/a.md").get("decision") == "block")
 
         # Hermes `file` toolset writes are gated the same way (#51, Coder/Linter) ---
         evf = lambda tool, path: evaluate_pre(
