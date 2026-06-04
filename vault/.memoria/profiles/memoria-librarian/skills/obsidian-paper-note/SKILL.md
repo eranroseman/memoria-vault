@@ -1,6 +1,6 @@
 ---
 name: obsidian-paper-note
-description: "Ingest a paper from a Zotero/BibTeX citekey into the vault — run the deterministic pipeline (scripts/pipeline.py: Tier-0 capture + Tier-1 enrich/extract/link), then fill the two holes it leaves (a vocabulary-constrained classification proposal and a comparative [!brief]) and apply the gated writes."
+description: "Ingest a paper from a Zotero/BibTeX citekey into the vault — call the ingest_pipeline MCP tool (the deterministic pipeline: Tier-0 capture + Tier-1 enrich/extract/link), then fill the two holes it leaves (a vocabulary-constrained classification proposal and a comparative [!brief]) and apply the gated writes."
 version: 2.0.0
 author: Memoria
 license: MIT
@@ -14,10 +14,12 @@ metadata:
 # obsidian-paper-note
 
 Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
-**deterministic and lives in `scripts/pipeline.py`** — you do not reimplement it.
-The pipeline returns a *draft bundle* with exactly **two holes** that only a
-model can fill: the classification proposal and the comparative `[!brief]`. Your
-job is to run the script, fill those two holes, and perform the gated writes.
+**deterministic and lives behind the `ingest_pipeline` MCP tool** (the
+`memoria-ingest` server wrapping `scripts/pipeline.py`) — you do not reimplement
+it, and you cannot run it as a script (`code_execution` is disabled for this
+profile). The tool returns a *draft bundle* with exactly **two holes** that only
+a model can fill: the classification proposal and the comparative `[!brief]`.
+Your job is to call the tool, fill those two holes, and perform the gated writes.
 
 This is ADR-30 (deterministic ingest pipeline). The contract: **every write
 gated and audited; nothing captured is ever lost; robust by redundancy.**
@@ -30,20 +32,23 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
 ## Procedure
 
-1. **Run the pipeline.** From the skill directory:
+1. **Run the pipeline** by calling the **`ingest_pipeline`** MCP tool (from the
+   `memoria-ingest` server) — you cannot execute scripts directly, so the
+   deterministic pipeline is exposed as a tool:
 
    ```
-   python3 scripts/pipeline.py --citekey <citekey> \
-       --bib <vault>/.memoria/memoria.bib --vault <vault> --enrich
+   ingest_pipeline(citekey="<citekey>", enrich=true)
    ```
 
-   (Drop `--enrich` for `--skip-enrichment`; add `--pdf <path>` if you hold the
-   local Zotero PDF.) It prints a JSON **bundle**: the assembled `frontmatter`
-   (`lifecycle: captured`, identity, merged metadata, `_enrichment`), the
-   `extract` status, the `link_plan` (entities + cites), `provenance`, and
-   `holes: ["_proposed_classification", "brief"]`. The script **writes nothing**
-   and never aborts the ingest — a Tier-1 miss degrades to the Tier-0 floor
-   (`ingest_status: tier0`), it does not fail.
+   (Set `enrich=false` for `--skip-enrichment`; pass `pdf_path="<path>"` if you
+   hold the local Zotero PDF.) It returns a JSON **bundle**: the assembled
+   `frontmatter` (`lifecycle: captured`, identity, merged metadata,
+   `_enrichment`), the `extract` status, the `link_plan` (entities + cites),
+   `provenance`, and `holes: ["_proposed_classification", "brief"]`. The tool
+   **reads + computes only — it writes nothing** — and never aborts the ingest: a
+   Tier-1 miss degrades to the Tier-0 floor (`ingest_status: tier0`), it does not
+   fail. If the bundle has an `error` key (`citekey-not-found` / `bib-not-found`),
+   stop and surface it.
 
 2. **Fill hole 1 — the classification proposal** (the only step that promotes
    `captured → proposed`). From the abstract / `_enrichment.tldr` / extract,

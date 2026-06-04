@@ -113,23 +113,27 @@ def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Deterministic ingest orchestrator (ADR-30)")
     ap.add_argument("--citekey")
-    ap.add_argument("--bib")
-    ap.add_argument("--vault")
+    ap.add_argument("--bib", help="default <vault>/.memoria/memoria.bib")
+    ap.add_argument("--vault", help="default $OBSIDIAN_VAULT_PATH from ~/.hermes/.env")
     ap.add_argument("--pdf")
     ap.add_argument("--enrich", action="store_true", help="run the Tier-1 network stages")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
     if a.self_test:
         return _self_test()
-    if not a.citekey or not a.bib:
-        ap.error("provide --citekey and --bib (or --self-test)")
-    bib = Path(a.bib)
+    # Resolve the vault root from the documented OBSIDIAN_VAULT_PATH convention so a
+    # dispatched worker (whose cwd is a scratch workspace) needn't know the path.
+    vault_str = a.vault or _env("OBSIDIAN_VAULT_PATH")
+    if not a.citekey or not vault_str:
+        ap.error("provide --citekey and --vault (or set OBSIDIAN_VAULT_PATH; or --self-test)")
+    vault = Path(vault_str)
+    bib = Path(a.bib) if a.bib else vault / ".memoria" / "memoria.bib"
     if not bib.is_file():
         print(f"bib not found: {bib}", file=sys.stderr)
         return 3
     try:
         b = run(a.citekey, bib.read_text(encoding="utf-8", errors="ignore"),
-                Path(a.vault) if a.vault else None, a.pdf, enrich=a.enrich)
+                vault, a.pdf, enrich=a.enrich)
     except KeyError:
         print(f"citekey not found: {a.citekey}", file=sys.stderr)
         return 2

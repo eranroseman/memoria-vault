@@ -35,6 +35,7 @@ jobs:
           python "$P/mcp/policy_hook.py" --self-test
           python "$P/mcp/board_export.py" --self-test
           python "$P/mcp/metrics_aggregate.py" --self-test
+          python "$P/mcp/ingest_mcp.py" --self-test
           python "$P/profiles/memoria-linter/detectors.py" --self-test
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" --self-test
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" --self-test
