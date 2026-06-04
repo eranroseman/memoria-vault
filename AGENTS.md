@@ -119,10 +119,10 @@ renames, a stash), **preserve it** (back it up / leave the stash) and surface it
 to the user. Never delete a branch or stash that holds work you didn't create
 without confirming its content is already on `main`.
 
-## 3. `main` is protected — use the PR flow
+## 3. `main` is protected by a ruleset — use the PR flow
 
-Direct `git push origin main` is **rejected** (`GH013` — repository ruleset). The
-flow is:
+Direct `git push origin main` is **rejected** by a repository ruleset (`GH013`:
+"Changes must be made through a pull request" + required status checks). The flow is:
 
 ```bash
 git push -u origin <branch>
@@ -145,12 +145,20 @@ aborting` — this is `gh` failing to update your *local* main; the merge still
 If a PR shows `BEHIND` (strict checks require an up-to-date branch), run
 `gh pr update-branch <n>` and wait for checks to re-run.
 
+**Emergency bypass (deadlock only):** when a PR touches `.github/scripts/` or
+`.github/workflows/` AND changes the `pr_policy.py` policy code itself, a circular
+dependency exists — `pr-policy` blocks changes to the policy. Temporarily disable
+the ruleset's **"Require a pull request before merging"** and **"Require status
+checks to pass"** restrictions, push the fix to main directly, then re-enable both.
+This is for policy-code fixes only — never for regular changes.
+
 ## 4. Required status checks
 
-These checks are **required** by the branch ruleset and must all pass:
+These checks are **required** by the ruleset and must all pass:
 
 | Check | Runs |
 | --- | --- |
+| `pr-policy` | three-tier gate: auto-approves docs-only PRs, blocks untrusted sensitive-path changes, flags everything else for human review (see below) |
 | `docs-doctor` | structural lint of `docs/` + `vault/` link text (broken links/anchors, README presence, frontmatter keys, link text = page title) |
 | `shellcheck (scripts/install.sh)` | shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
@@ -166,6 +174,38 @@ unconditionally. If you add a new required check, follow the same rule.
 **Linter notes:** `scripts/install.ps1` is an interactive installer, so `Write-Host` is
 intentional and excluded via `scripts/PSScriptAnalyzerSettings.psd1`; PowerShell
 functions must use approved verbs (`Install-`, not `Ensure-`).
+
+### PR gate policy — how `pr-policy` decides
+
+The `pr-policy` check (`pr-review-gate.yml` + `pr_policy.py`) implements a
+three-tier gate based on path sensitivity and author trust:
+
+| Decision | Trigger | Effect |
+|---|---|---|
+| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/plans/`, releases, proposals; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
+| `needs_human` | Safe paths but untrusted author, OR trusted author on sensitive paths (`vault/.memoria/`, `scripts/`, `project-files/decisions/`, `.github/`) | Check passes — human reviews and merges manually |
+| `block` | Untrusted author touching sensitive paths | Check fails — merge impossible |
+
+**Trusted authors:** `eranroseman`, `github-actions[bot]`.
+
+**Kilo Code Review integration:** on `auto_approve` PRs, the workflow polls the
+`Kilo Code Review` cloud check for up to 12 minutes. If the review finds warnings
+or above (based on the configured threshold at `app.kilo.ai/code-reviews`),
+`pr-policy` fails and blocks the merge. Clean reviews allow auto-merge to proceed.
+
+Kilo Code Reviews is configured at `app.kilo.ai/code-reviews`:
+- Model: Claude Sonnet 4.5, style: Balanced, focus: security / bugs / documentation
+- Threshold: Warnings and above
+- Markdown review: enabled
+- Custom instructions tuned to this repo's conventions (Diátaxis, terminology,
+  profile sync, ADR format, indexing rules)
+
+**Ruleset configuration** (`Settings → Rules → Rulesets → "main"`):
+- Required checks (6): `pr-policy`, `docs-doctor`, `docs-links`, `python-selftest`,
+  `shellcheck (scripts/install.sh)`, `PSScriptAnalyzer (scripts/install.ps1)`
+- "Require a pull request before merging": ON
+- "Require status checks to pass": ON
+- Approving reviews: NOT required (sole maintainer cannot self-approve)
 
 ## 5. Test before you commit
 
