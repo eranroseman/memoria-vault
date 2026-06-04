@@ -34,6 +34,15 @@ def _env(k: str) -> str:
     return resolve_merge._env(k)
 
 
+def _bib_field(citekey: str, bib_text: str, name: str) -> str:
+    """Raw value of a single named field from a bib entry ('' if absent)."""
+    entry = ingest_paper._find_entry(bib_text, citekey)
+    if not entry:
+        return ""
+    m = re.search(rf"\b{re.escape(name)}\s*=\s*\{{([^}}]*)\}}", entry[1], re.IGNORECASE)
+    return m.group(1).strip() if m else ""
+
+
 def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:
     """From the bib `file` field, recover (wsl_pdf_path, zotero_storage_key).
 
@@ -41,14 +50,10 @@ def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:
     `C:\\Users\\me\\Zotero\\storage\\ABCD1234\\paper.pdf`). The storage folder is the
     Zotero attachment key (→ `pdf_uri`), and the Windows path maps to its WSL mount
     (→ a real path the extractor can read). Both `""` if absent."""
-    entry = ingest_paper._find_entry(bib_text, citekey)
-    if not entry:
-        return "", ""
-    m = re.search(r"\bfile\s*=\s*\{([^}]*)\}", entry[1], re.IGNORECASE)
-    if not m:
+    raw = _bib_field(citekey, bib_text, "file")
+    if not raw:
         return "", ""
     # take the first .pdf among ';'-separated attachments; drop a trailing mime type
-    raw = m.group(1)
     first = next((p for p in raw.split(";") if p.strip().lower().endswith(".pdf")),
                  raw.split(";")[0]).strip().strip(":")
     if first.lower().endswith("application/pdf"):
@@ -65,6 +70,14 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     # Tier 0 — always
     note = ingest_paper.ingest_text(citekey, bib_text)
     fm = note["frontmatter"]
+    # Zotero-native fields straight from the Better BibTeX export (no Zotero API):
+    #   zotero_uri <- the `zoteroselect` postscript field; pdf_uri <- the `file` key.
+    zsel = _bib_field(citekey, bib_text, "zoteroselect")
+    if zsel and not fm.get("zotero_uri"):
+        fm["zotero_uri"] = zsel
+    _, zkey = _bib_local_pdf(citekey, bib_text)
+    if zkey and not fm.get("pdf_uri"):
+        fm["pdf_uri"] = f"zotero://open-pdf/library/items/{zkey}"
     bundle = {
         "citekey": citekey, "note_type": note["note_type"], "path": note["path"],
         "lifecycle": "captured", "ingest_status": "tier0",
@@ -107,11 +120,9 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     bundle["ingest_status"] = "enriched"
     bundle["lifecycle"] = "captured"   # still captured until classify (LLM #1) lands -> proposed
 
-    # local Zotero PDF from the bib `file` field — recover pdf_uri + feed extraction
+    # local Zotero PDF from the bib `file` field — feed extraction (pdf_uri set in Tier 0)
     if not pdf_path:
-        wsl_pdf, zkey = _bib_local_pdf(citekey, bib_text)
-        if zkey and not fm.get("pdf_uri"):
-            fm["pdf_uri"] = f"zotero://open-pdf/library/items/{zkey}"
+        wsl_pdf, _ = _bib_local_pdf(citekey, bib_text)
         if wsl_pdf and Path(wsl_pdf).is_file():
             pdf_path = wsl_pdf
 
@@ -139,14 +150,18 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
 def _self_test() -> int:
     """Offline test of the assembly: Tier-0 only (no network)."""
     fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
-               "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n}\n")
+               "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n"
+               "  zoteroselect = {zotero://select/library/items/ABCD1234},\n"
+               "  file = {C:\\Users\\me\\Zotero\\storage\\WXYZ5678\\A Test.pdf},\n}\n")
     b = run("x2024Test", fixture, enrich=False)
+    fm = b["frontmatter"]
     checks = [
         ("tier0 captured", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
         ("routes to paper-note", b["note_type"] == "paper-note"),
         ("two holes declared", b["holes"] == ["_proposed_classification", "brief"]),
-        ("frontmatter has identity", b["frontmatter"]["title"] == "A Test"
-         and b["frontmatter"]["doi"] == "10.1/x"),
+        ("frontmatter has identity", fm["title"] == "A Test" and fm["doi"] == "10.1/x"),
+        ("zotero_uri from zoteroselect (no API)", fm["zotero_uri"] == "zotero://select/library/items/ABCD1234"),
+        ("pdf_uri from bib file storage key", fm["pdf_uri"] == "zotero://open-pdf/library/items/WXYZ5678"),
         ("no enrichment without --enrich", b["extract"] is None and b["link_plan"] is None),
     ]
     pdf, key = _bib_local_pdf(
