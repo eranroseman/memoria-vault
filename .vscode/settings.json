@@ -1,7 +1,4 @@
 {
-  "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff"
-  },
   "search.exclude": {
     "**/_site/**": true,
     "docs/_site/**": true,
