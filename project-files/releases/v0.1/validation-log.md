@@ -6,7 +6,7 @@ title: v0.1 validation log
 # v0.1 validation log
 
 The **evidence** behind v0.1 gate sign-off: what has actually been exercised, by
-what method, with what result. Gate/tier *readiness* status lives in
+what method, with what result. Gate/stage *readiness* status lives in
 [release-plan-v0.1.md](release-plan-v0.1.md) §2/§3; build *gaps* are
 [GitHub issues](https://github.com/eranroseman/memoria-vault/issues). This log is the
 detail those point at. Distilled from the retired build ledger on retirement; the
@@ -67,7 +67,7 @@ All "verified" entries are against a **live Hermes on WSL2** unless noted.
 
 ## Still unverified at large (→ gates / runs)
 
-- GUI / dashboards (11) / Zotero bridge / ACP pane: attended per release (T5, G4) — see
-  the [GUI run record](gui-test-protocol_v0.1.md).
-- Full clean-install candidate run from a fresh clone (G2 / T4) — see the
+- GUI / dashboards (11) / Zotero bridge / ACP pane: attended per release (S5, G4) — see
+  the [GUI run record](gui-test-plan_v0.1.md).
+- Full clean-install candidate run from a fresh clone (G2 / S4) — see the
   [candidate-run-checklist](candidate-run-checklist.md).

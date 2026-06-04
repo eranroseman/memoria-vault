@@ -8,20 +8,20 @@ released: false      # machine cut-flag; true ONLY when every gate below is `don
 
 <!-- ===========================================================================
   THIS IS A TEMPLATE. It is a single, self-contained release plan: everything a
-  release NEEDS lives here, in one file. Bookkeeping (the gate/tier STATE tables)
+  release NEEDS lives here, in one file. Bookkeeping (the gate/stage STATE tables)
   and prose (scope, reasoning, cut steps) sit side by side. Placeholders are
   written as {{ fill me }}.
 
   ── To start a new release ──────────────────────────────────────────────────
   1. Copy this file to  release-plan-<version>.md  (e.g. release-plan-v0.2.md).
   2. Bump `release:` and set `released: false`.
-  3. Reset every Gate (§2) and Tier (§3) State to `todo`.
+  3. Reset every Gate (§2) and Stage (§3) State to `todo`.
   4. Rewrite the per-release prose (status line, scope, limitations).
   5. Start a sibling  release-plan-<version>-appendix.md  for anything too
      detailed to belong in a crisp plan (see §9).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
-  SINGLE SOURCE OF STATE. Gate (G#) and Tier (T#) state lives ONLY in the §2/§3
+  SINGLE SOURCE OF STATE. Gate (G#) and Stage (S#) state lives ONLY in the §2/§3
   tables of this file. No sibling doc may restate it — they point here. Likewise,
   build gaps live ONLY in GitHub issues; scope cuts in proposals/.
   Edit each fact in exactly one place. (A future status-doctor check can enforce
@@ -60,7 +60,7 @@ what is deliberately later. }}
 ## 2. Definition of done — gates
 
 <!-- BOOKKEEPING. The release ships when EVERY gate is `done`. State lives HERE
-     and nowhere else. Each gate maps to a validation tier (§3), a CI check, or a
+     and nowhere else. Each gate maps to a validation stage (§3), a CI check, or a
      manual step. Keep gates few and verifiable — a gate is a yes/no verdict. -->
 
 vX.Y.Z ships when **all gates (G1–G…) are green.**
@@ -73,24 +73,24 @@ _(Proposed gates — confirm/adjust the thresholds for this release.)_
 | G3 | todo | {{ … }} | {{ … }} | {{ … }} |
 <!-- add/remove gate rows as the release requires -->
 
-## 3. Validation — tiers
+## 3. Validation — stages
 
-<!-- BOOKKEEPING + procedure. The tiered test plan that turns built artifacts into
-     VERIFIED ones. Tier STATE lives HERE only. The table is state; the prose under
+<!-- BOOKKEEPING + procedure. The staged test plan that turns built artifacts into
+     VERIFIED ones. Stage STATE lives HERE only. The table is state; the prose under
      it is the (reusable) procedure. -->
 
-The tiered test plan that turns `shipped` into `approved`. A release candidate
-must re-run **all tiers green from a fresh clone** on a clean target box.
+The staged test plan that turns `shipped` into `approved`. A release candidate
+must re-run **all stages green from a fresh clone** on a clean target box.
 
-| Tier | State | Proves |
+| Stage | State | Proves |
 | --- | --- | --- |
-| T0 | todo | {{ static checks: parse, formatting, presence }} |
-| T1 | todo | {{ unit / self-test suites }} |
-| T2 | todo | {{ dry-run / substitution }} |
-| T3 | todo | {{ real install / integration }} |
-| T4 | todo | {{ live: connectivity, enforcement }} |
-| T5 | todo | {{ end-to-end / GUI / acceptance }} |
-<!-- tiers are cumulative; adjust the set per release -->
+| S0 | todo | {{ static checks: parse, formatting, presence }} |
+| S1 | todo | {{ unit / self-test suites }} |
+| S2 | todo | {{ dry-run / substitution }} |
+| S3 | todo | {{ real install / integration }} |
+| S4 | todo | {{ live: connectivity, enforcement }} |
+| S5 | todo | {{ end-to-end / GUI / acceptance }} |
+<!-- stages are cumulative; adjust the set per release -->
 
 ## 4. Blockers
 
@@ -120,8 +120,8 @@ per-artifact deferred set. }}
 
 <!-- NUMBERED steps. The reusable checklist for cutting THIS release. -->
 
-1. **Every gate (§2) and tier (§3) `done`; no P0 issues open.**
-2. **Re-run all tiers from a fresh clone** on a clean target → all green; record results in §3.
+1. **Every gate (§2) and stage (§3) `done`; no P0 issues open.**
+2. **Re-run all stages from a fresh clone** on a clean target → all green; record results in §3.
 3. **Confirm the version** is consistent across all version-bearing files.
 4. **Cut the `CHANGELOG` section** for this version.
 5. **Flip `released: false` → `true`** in this file's frontmatter.

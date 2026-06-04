@@ -1,14 +1,14 @@
 ---
 topic: plans
-title: GUI test protocol — v0.1 (T5 + G4)
+title: GUI test plan — v0.1 (S5 + G4)
 status: draft
 ---
 
-# GUI test protocol — v0.1 (Obsidian + Zotero)
+# GUI test plan — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI tier (**T5**) and the eleven Dataview dashboards
-rendering on real data (**G4**). Everything else (installer T0–T3, the policy
+shell: the Obsidian/Zotero GUI stage (**S5**) and the eleven Dataview dashboards
+rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
 **Where to run.** On the **Windows** machine, with the vault open in Obsidian and
@@ -39,7 +39,7 @@ end (the boxes are clickable in Obsidian).
 
 ---
 
-## Part A — Obsidian opens and the 8 bundled plugins load (T5)
+## Part A — Obsidian opens and the 8 bundled plugins load (S5)
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
@@ -163,7 +163,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 ---
 
-## Part D — Zotero + Better BibTeX → `memoria.bib` (T5)
+## Part D — Zotero + Better BibTeX → `memoria.bib` (S5)
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
@@ -231,6 +231,6 @@ Dashboard doesn't refresh automatically.
 | E2 | Denied write blocked; deny row in audit-log | Pass | |
 | E3 | Board-state shows a card after cron tick | Not run | E3 step left unticked — board telemetry round-trip not exercised |
 
-**T5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
+**S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/T5 rows of [release-plan-v0.1.md](release-plan-v0.1.md).
+G4/S5 rows of [release-plan-v0.1.md](release-plan-v0.1.md).

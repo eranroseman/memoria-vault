@@ -1,7 +1,7 @@
 ---
 topic: decisions
 id: 29
-title: A layered testing framework, not a pile of protocols
+title: A layered testing framework, not a pile of plans
 status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02
@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-Memoria has three good test protocols — [headless](../tests/protocols/headless-test-protocol.md) (static + schema), [hermes-cli](../tests/protocols/hermes-cli-test-protocol.md) (agent wiring + the policy gate), and [GUI](../tests/protocols/gui-test-protocol.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the protocols **drift** from the design (e.g. the CLI protocol still cited the dissolved `00-meta/04-reference/`, the GUI protocol still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+Memoria has three good test plans — [headless](../tests/plans/headless-test-plan.md) (static + schema), [hermes-cli](../tests/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](../tests/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
 
 ## Decision
 
@@ -21,24 +21,24 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 
 **Layers**
 
-| Layer | Covers | Protocol / owner | Trigger |
+| Layer | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
 | **L0 Static & schema** | the 5 CI checks + dashboard/telemetry schema-drift | headless | every commit (CI) |
 | **L1 Component** | Python `--self-test` ×5 (gate, hook, board, metrics, detectors) | headless §A | every commit (CI) |
 | **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
 | **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
-| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../tests/protocols/e2e-golden-path-protocol.md) | per release |
+| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../tests/plans/e2e-golden-path-plan.md) | per release |
 | **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-integration.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../tests/protocols/installer-test-protocol.md) (+ others as built) | on relevant change |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../tests/plans/installer-test-plan.md) (+ others as built) | on relevant change |
 
 **Disciplines**
 
-1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../tests/coverage-matrix.md) maps every design component → its layer/protocol → automated? → release gate. Gaps are tracked, not discovered by accident.
+1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../tests/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
-3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a protocol references resolves, so protocols can't rot silently; runs in CI alongside docs-doctor.
-4. **Explicit gate mapping.** Each release-plan Gate/Tier names the layer/protocol that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
+3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
+4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
 
-All protocols live in `project-files/tests/`, built from `test-protocol-template.md`.
+All plans live in `project-files/tests/`, built from `test-plan-template.md`.
 
 ## Why
 
@@ -48,9 +48,9 @@ All protocols live in `project-files/tests/`, built from `test-protocol-template
 
 ## Consequences
 
-- New artifacts: the coverage matrix, the installer and golden-path protocols, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately (`99-system/eval/` is empty until then).
+- New artifacts: the coverage matrix, the installer and golden-path plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately (`99-system/eval/` is empty until then).
 - The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
-- Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed protocol.
+- Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed plan.
 
 ## L2 implementation note
 
@@ -68,10 +68,10 @@ L2 ("wiring / contract") splits at the **model boundary**, and the two halves be
 
 **Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). For L2b, **build the unattended Option-B harness only for the smoke core** (§3 S1–S5 + one §4 case per profile) — that's the high-frequency signal a human shouldn't babysit. **Keep the full §4 matrix + the GUI/Zotero/dashboard tail attended, per release** — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class). The build decision is "is the per-PR smoke signal worth one harness?" — yes while iterating on the gate/lanes/skills, deferrable if L2 only matters at release.
 
-**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) an opt-in `scripts/test-l2.sh` smoke set on the cheap model against a disposable vault, with teardown — **nightly, not PR-blocking**. The full hermes-cli §4 matrix stays the attended protocol of record.
+**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) an opt-in `scripts/test-l2.sh` smoke set on the cheap model against a disposable vault, with teardown — **nightly, not PR-blocking**. The full hermes-cli §4 matrix stays the attended plan of record.
 
 ## Alternatives considered
 
-**Keep ad-hoc protocols (status quo).** Rejected: it's how the gaps and drift accrued — coverage is implicit and unmonitored.
+**Keep ad-hoc plans (status quo).** Rejected: it's how the gaps and drift accrued — coverage is implicit and unmonitored.
 
-**One exhaustive suite.** Rejected: a single mega-protocol is unmaintainable and ignores that different surfaces need different cadences (per-commit vs per-release vs per-model-swap). The pyramid matches cadence to cost.
+**One exhaustive suite.** Rejected: a single mega-plan is unmaintainable and ignores that different surfaces need different cadences (per-commit vs per-release vs per-model-swap). The pyramid matches cadence to cost.

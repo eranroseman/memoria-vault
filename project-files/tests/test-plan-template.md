@@ -1,14 +1,14 @@
 ---
 topic: tests
-title: "{{Subject}} test protocol"
+title: "{{Subject}} test plan"
 status: draft
 ---
 
 <!--
-TEMPLATE — derived from gui-test-protocol.md. Copy this file, rename it
-<subject>-test-protocol.md, and fill the {{placeholders}}. Delete these comments.
+TEMPLATE — derived from gui-test-plan.md. Copy this file, rename it
+<subject>-test-plan.md, and fill the {{placeholders}}. Delete these comments.
 
-Use a protocol like this for validation that a script/CI can't fully cover —
+Use a plan like this for validation that a script/CI can't fully cover —
 GUI flows, external services, human-in-the-loop steps, anything needing a real
 device or eyeball. Each step is written so a different person could run it and
 get the same verdict.
@@ -23,14 +23,14 @@ Conventions (keep them):
   • End with a results table the runner fills, then explicit green criteria.
 -->
 
-# {{Subject}} test protocol{{ — scope, e.g. "v0.1 (component X)"}}
+# {{Subject}} test plan{{ — scope, e.g. "v0.1 (component X)"}}
 
-{{One paragraph: what this protocol validates, and what is validated *elsewhere*
-(so the reader knows the boundary). Name the gate(s)/tier(s) it backs, e.g. **T5**,
+{{One paragraph: what this plan validates, and what is validated *elsewhere*
+(so the reader knows the boundary). Name the gate(s)/stage(s) it backs, e.g. **S5**,
 **G4**.}}
 
 **Where to run.** {{The environment — machine, OS, which shells/apps you bounce
-between. Be specific; this is why the protocol can't be headless/automated.}}
+between. Be specific; this is why the plan can't be headless/automated.}}
 
 **How to read each step.** **Action** → **✓ Pass** (the exact thing that means it
 worked) → **✗ If it fails** (first thing to check). Tick the boxes; fill the
@@ -50,7 +50,7 @@ results table at the end.
 
 ---
 
-## Part A — {{Group title, e.g. "App opens and plugins load"}} ({{gate/tier}})
+## Part A — {{Group title, e.g. "App opens and plugins load"}} ({{gate/stage}})
 
 **A1. {{Step title}}.** {{Action — the exact thing to do.}}
 - {{**Expected:** describe the result if it needs context.}}
@@ -74,7 +74,7 @@ results table at the end.
 
 ---
 
-## Part B — {{Group title}} ({{gate/tier}})
+## Part B — {{Group title}} ({{gate/stage}})
 
 **B1. {{Step title}}.** {{Action.}}
 ```
@@ -97,5 +97,5 @@ results table at the end.
 | B | {{what B proves}} | | |
 | {{…}} | {{…}} | | |
 
-**{{Gate/tier}} green** when {{the explicit condition across the Parts}}. Record the
+**{{Gate/stage}} green** when {{the explicit condition across the Parts}}. Record the
 outcome in the {{relevant rows}} of [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).

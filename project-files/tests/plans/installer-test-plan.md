@@ -1,16 +1,16 @@
 ---
 topic: tests
-title: Installer test protocol
+title: Installer test plan
 status: draft
 ---
 
-# Installer test protocol — v0.1 (T0–T3)
+# Installer test plan — v0.1 (S0–S3)
 
-The clean-install end-to-end the other protocols *assume has already happened*: `scripts/install.sh` (and the `install.ps1` launcher) deploying the seven profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **T0–T3**. Installer *lint* is covered headless ([headless-test-protocol.md](headless-test-protocol.md) §C); agent behaviour after install is the [Hermes CLI protocol](hermes-cli-test-protocol.md); this protocol is *the install itself*.
+The clean-install end-to-end the other plans *assume has already happened*: `scripts/install.sh` (and the `install.ps1` launcher) deploying the seven profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **S0–S3**. Installer *lint* is covered headless ([headless-test-plan.md](headless-test-plan.md) §C); agent behaviour after install is the [Hermes CLI plan](hermes-cli-test-plan.md); this plan is *the install itself*.
 
 **Where to run.** A **throwaway target** — never the real `~/Memoria`. Ubuntu/WSL2 for `install.sh`; a Windows machine (WSL2 behind it) for the `install.ps1` path (Part F). Use `--vault ~/Memoria-test` and discard it after (Part G).
 
-**How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Confirm exact flag names / output strings against `scripts/install.sh` source if one drifts — this protocol names behaviour, the script is canonical.
+**How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Confirm exact flag names / output strings against `scripts/install.sh` source if one drifts — this plan names behaviour, the script is canonical.
 
 ---
 
@@ -23,7 +23,7 @@ The clean-install end-to-end the other protocols *assume has already happened*: 
 
 ---
 
-## Part A — `install.sh` clean run (T0–T1)
+## Part A — `install.sh` clean run (S0–S1)
 
 **A1. Run the profiles install into a throwaway vault.**
 ```
@@ -41,7 +41,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ---
 
-## Part B — Substitution + secrets (T1–T2)
+## Part B — Substitution + secrets (S1–S2)
 
 **B1. `{{VAULT_PATH}}` substituted.** `grep -rn '{{VAULT_PATH}}' ~/.hermes/profiles/memoria-*/` 
 - ✓ Pass: **no matches** — every placeholder was replaced with the absolute vault path (the policy MCP launch line in `config.yaml`, hooks). A leftover `{{VAULT_PATH}}` means the deployed gate can't find `policy_mcp.py`.
@@ -55,7 +55,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ---
 
-## Part C — Plugins + MCP venv (T2)
+## Part C — Plugins + MCP venv (S2)
 
 **C1. Bundled plugins copied.** `ls ~/Memoria-test/.obsidian/plugins/`
 - ✓ Pass: the 8 plugin folders present; secret configs shipped as `data.json.example` (not real `data.json`) for `obsidian-local-rest-api` and `agent-client`.
@@ -65,7 +65,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ---
 
-## Part D — Idempotency (T3)
+## Part D — Idempotency (S3)
 
 **D1. Re-run is safe.** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` (second time)
 - ✓ Pass: exit 0; **`.env` secrets preserved** (re-read B2 — not clobbered); author-owned files re-staged without error; no duplicate profiles in `hermes profile list`.
@@ -83,7 +83,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ---
 
-## Part F — Windows launcher + bootstrap (T2–T3, Windows)
+## Part F — Windows launcher + bootstrap (S2–S3, Windows)
 
 **F1. `install.ps1` hands off to WSL2.** From PowerShell: `./scripts/install.ps1 -ProfilesOnly`
 - ✓ Pass: `wslpath`-converts the Windows vault path and runs `install.sh` inside WSL2; profiles deploy. (Gate: WSL2 present.)
@@ -111,4 +111,4 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | `install.ps1` WSL2 handoff (+ bootstrap) | | |
 
-**T0–T3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the T0–T3 rows of [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).
+**S0–S3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the S0–S3 rows of [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).

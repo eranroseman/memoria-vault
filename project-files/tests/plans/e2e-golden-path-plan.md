@@ -1,14 +1,14 @@
 ---
 topic: tests
-title: Golden-path end-to-end test protocol
+title: Golden-path end-to-end test plan
 status: draft
 ---
 
-# Golden-path E2E test protocol — v0.1 (L4)
+# Golden-path E2E test plan — v0.1 (L4)
 
-One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all seven profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI protocol](hermes-cli-test-protocol.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI protocol, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../../decisions/11-vault-eval-integration.md), L5).
+One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all seven profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI plan](hermes-cli-test-plan.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI plan, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../../decisions/11-vault-eval-integration.md), L5).
 
-**Where to run.** The integrated stack: Obsidian open (REST bridge up) + Hermes in WSL2 + a **disposable** vault seeded with the CLI protocol's fixtures (F1–F8). Run it after the CLI and GUI protocols pass — this is the capstone.
+**Where to run.** The integrated stack: Obsidian open (REST bridge up) + Hermes in WSL2 + a **disposable** vault seeded with the CLI plan's fixtures (F1–F8). Run it after the CLI and GUI plans pass — this is the capstone.
 
 **How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Each stage's output is the next stage's input; a stage failing **blocks** the rest — record where the chain broke.
 
@@ -16,7 +16,7 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 
 ## 0. Preconditions
 
-- [ ] CLI protocol green (commands work individually) and GUI protocol green (bridge + dashboards).
+- [ ] CLI plan green (commands work individually) and GUI plan green (bridge + dashboards).
 - [ ] Disposable vault with fixtures F1 (`smithA` w/ PDF), F2 (`research-focus`), F4 (project `test-proj`).
 - [ ] Gateway up (`hermes gateway status`) for `kanban dispatch`; cron tickable.
 

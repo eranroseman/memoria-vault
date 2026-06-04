@@ -1,10 +1,10 @@
 ---
-title: Hermes CLI test protocol
+title: Hermes CLI test plan
 status: draft
 created: 2026-06-02
 ---
 
-# Hermes CLI test protocol
+# Hermes CLI test plan
 
 A procedure for exercising **every Hermes CLI command documented in
 [docs/reference/hermes-cli.md](../../../docs/reference/hermes-cli.md)** against a disposable
@@ -12,7 +12,7 @@ test vault, on a cheap model, and verifying each result deterministically (file
 written, frontmatter correct, card transitioned, audit entry logged, or — for
 read-only/dry-run commands — *nothing* written).
 
-> **Scope.** This protocol covers behaviour and wiring, not model quality. On the
+> **Scope.** This plan covers behaviour and wiring, not model quality. On the
 > cheap test model the *prose* a command emits will be weaker than production; what
 > we assert is that the command **runs, writes to the right place under the policy
 > gate, and produces the right artifact shape** — never the eloquence of the output.
@@ -202,14 +202,14 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| T1 | `lint` | a vault with a planted defect (e.g. broken wikilink) | `lint` | findings written to `99-system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
-| T2 | `schema-check` | a note with an out-of-vocab `study_design` | `schema-check` | the schema violation flagged; no auto-fix |
-| T3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
-| T4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
-| T5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
+| S1 | `lint` | a vault with a planted defect (e.g. broken wikilink) | `lint` | findings written to `99-system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
+| S2 | `schema-check` | a note with an out-of-vocab `study_design` | `schema-check` | the schema violation flagged; no auto-fix |
+| S3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
+| S4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
+| S5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
 | T6 | `session-log` | — | `session-log` | a per-session summary at `99-system/logs/sessions/<id>.jsonl` |
 | T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
-| T8 | **Linter scope** | — | (during T1) | only `99-system/logs/**` writes occur for `memoria-linter`; cosmetic/log auto-fixes only |
+| T8 | **Linter scope** | — | (during S1) | only `99-system/logs/**` writes occur for `memoria-linter`; cosmetic/log auto-fixes only |
 
 ### 4.8 Board management — `hermes kanban …` (non-interactive)
 

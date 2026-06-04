@@ -1,14 +1,14 @@
 ---
 topic: tests
-title: "Headless test protocol"
+title: "Headless test plan"
 status: draft
 ---
 
-# Headless test protocol — v0.1
+# Headless test plan — v0.1
 
-The full **non-GUI** verification of the Memoria vault: every deterministic check that runs end-to-end with no Obsidian, no Hermes runtime, no Zotero, and no human eyeball. It is the suite **CI enforces** (the five required status checks) **plus** the schema-correctness checks that catch the silent dashboard/telemetry drift class. Run it after any change to the `.memoria/` tooling, the dashboards, the templates, or the docs — and as the **first gate when rebuilding the test vault**, before the GUI protocol.
+The full **non-GUI** verification of the Memoria vault: every deterministic check that runs end-to-end with no Obsidian, no Hermes runtime, no Zotero, and no human eyeball. It is the suite **CI enforces** (the five required status checks) **plus** the schema-correctness checks that catch the silent dashboard/telemetry drift class. Run it after any change to the `.memoria/` tooling, the dashboards, the templates, or the docs — and as the **first gate when rebuilding the test vault**, before the GUI plan.
 
-**Boundary — validated elsewhere.** Anything needing Obsidian (QuickAdd instantiation, Dataview rendering, the homepage), Hermes (profile dispatch, the live write-gate, cron), or Zotero is **out of scope here** — see the [GUI test protocol](gui-test-protocol.md) (backs **T5** / **G4**) and the [Hermes CLI test protocol](hermes-cli-test-protocol.md). This protocol is the prerequisite both of those build on: if the headless gate is red, don't bother with the GUI.
+**Boundary — validated elsewhere.** Anything needing Obsidian (QuickAdd instantiation, Dataview rendering, the homepage), Hermes (profile dispatch, the live write-gate, cron), or Zotero is **out of scope here** — see the [GUI test plan](gui-test-plan.md) (backs **S5** / **G4**) and the [Hermes CLI test plan](hermes-cli-test-plan.md). This plan is the prerequisite both of those build on: if the headless gate is red, don't bother with the GUI.
 
 **Where to run.** Repo root (`memoria-vault/`), any machine with Python 3.11+. Parts A/B/D/E need only Python; Part C additionally needs `shellcheck` and PowerShell + `PSScriptAnalyzer`. No vault runtime, no network except installing `requirements.txt`. The whole thing is scriptable — that's the point.
 
@@ -144,14 +144,14 @@ Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs Po
 | D2 | dashboard ↔ writer-schema audit | ☐ |
 | E1/E2 | Python + shell syntax | ☐ |
 
-**Green criteria.** Parts **A + B + C** all pass (this *is* the CI gate — the five required status checks), and Part **D** shows no schema drift. Only then is the [GUI protocol](gui-test-protocol.md) (T5 / G4) worth running.
+**Green criteria.** Parts **A + B + C** all pass (this *is* the CI gate — the five required status checks), and Part **D** shows no schema drift. Only then is the [GUI plan](gui-test-plan.md) (S5 / G4) worth running.
 
 ---
 
 ## Related
 
-- Human / GUI validation (T5, G4): [gui-test-protocol.md](gui-test-protocol.md)
-- Hermes CLI checks: [hermes-cli-test-protocol.md](hermes-cli-test-protocol.md)
-- The template these protocols share: [test-protocol-template.md](../test-protocol-template.md)
+- Human / GUI validation (S5, G4): [gui-test-plan.md](gui-test-plan.md)
+- Hermes CLI checks: [hermes-cli-test-plan.md](hermes-cli-test-plan.md)
+- The template these plans share: [test-plan-template.md](../test-plan-template.md)
 - CI that enforces A/B/C: `.github/workflows/{python-selftest,docs-doctor,docs-links,lint-installers}.yml`
 - Canonical telemetry schemas (for D2): [docs/reference/telemetry.md](../../../docs/reference/telemetry.md)

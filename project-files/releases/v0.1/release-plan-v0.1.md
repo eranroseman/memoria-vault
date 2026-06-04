@@ -26,7 +26,7 @@ not hub-installed. **No open P0 remains in the tracker — but what's left for t
 is not only verification; part of it is the product itself.** The *infrastructure*
 (installer, gate, bridge, dashboards, telemetry, CI) is built and largely verified —
 the remaining infra work is re-runs: dashboards (G4), telemetry cron (G5), the
-changelog (G8), the GUI tier (T5), and a fresh-clone re-run of the live gate (G2/T4).
+changelog (G8), the GUI stage (S5), and a fresh-clone re-run of the live gate (G2/S4).
 **Operability is now built and proven live:** the deterministic ingest pipeline
 ([ADR-30](../../decisions/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
 paper end-to-end on installer-deployed lanes — dispatch → `ingest_pipeline` MCP tool →
@@ -97,7 +97,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-protocol.md](../../tests/protocols/gui-test-protocol.md) Part C. A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
+| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-plan.md](../../tests/plans/gui-test-plan.md) Part C. A GUI run **was recorded** ([gui-test-plan_v0.1.md](gui-test-plan_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry — **four signals working live; two gated on an upstream Hermes change**. The board-export cron is wired (installer `wire_telemetry_cron`, `--no-agent`, 1-min) and validated against real ingest-card activity: `board-state` (snapshots), `board-transitions` (status changes), audit deny-reasons (policy gate), and Linter FAMA all emit. `disposition` + `cost` **cannot emit on the current Hermes**: `board_export.py` reads them from the card `metadata` overlay (`review_status`/`cost`/`tokens`), which this Hermes version does not surface in its serialized card JSON (verified — a card driven to `review_status: approved` logged a status transition but no disposition row). The exporter is correct and ready to consume both the instant Hermes exposes the overlay; tracked as a known limitation (§6). Only the fresh-clone candidate re-run of the four working signals remains | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
@@ -109,27 +109,27 @@ These prove an agent completes real work end-to-end, not that components exist. 
 
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
-| G9 | awaiting-verify | **Deterministic spine.** The dispatch → claim → run → gated write → audit → `done` loop is now **proven live** — the G10 ingest card completed it end-to-end on installer-deployed lanes. The dedicated zero-LLM run (Linter/Verifier, per the protocol) and the fresh-clone candidate re-run remain to record it cleanly | [G9 protocol](../../tests/protocols/g9-spine-protocol.md) | — |
-| G10 | awaiting-verify | **Ingest value loop** (the product) — **built and proven live.** A real paper ingested end-to-end on installer-deployed lanes: dispatch → `ingest_pipeline` MCP tool (Tier-0 capture + Tier-1 S2+OpenAlex+Crossref merge / extract / link) → the two LLM judgments (classify constrained to `vocabulary.md`; the comparative `[!brief]`) → gated multi-writes (paper-note + ID-keyed entity notes) → `lifecycle: proposed`, `ingest_status: complete`, `review_status: requested`. Delivered #100–#116 — the pipeline is reached as an **MCP tool** (#110, because the Librarian's allowlist disables `code_execution`), with 429-retry + capture-intake robustness (#114) and the re-ingest sweeps on cron (#116). The Tier-1 merge is grounded by the 867-paper spike. Only the fresh-clone candidate re-run remains; **ADR-30 is implemented — mark it `accepted`** | [G10 protocol](../../tests/protocols/g10-ingest-protocol.md) | — |
+| G9 | awaiting-verify | **Deterministic spine.** The dispatch → claim → run → gated write → audit → `done` loop is now **proven live** — the G10 ingest card completed it end-to-end on installer-deployed lanes. The dedicated zero-LLM run (Linter/Verifier, per the plan) and the fresh-clone candidate re-run remain to record it cleanly | [G9 plan](../../tests/plans/g9-spine-plan.md) | — |
+| G10 | awaiting-verify | **Ingest value loop** (the product) — **built and proven live.** A real paper ingested end-to-end on installer-deployed lanes: dispatch → `ingest_pipeline` MCP tool (Tier-0 capture + Tier-1 S2+OpenAlex+Crossref merge / extract / link) → the two LLM judgments (classify constrained to `vocabulary.md`; the comparative `[!brief]`) → gated multi-writes (paper-note + ID-keyed entity notes) → `lifecycle: proposed`, `ingest_status: complete`, `review_status: requested`. Delivered #100–#116 — the pipeline is reached as an **MCP tool** (#110, because the Librarian's allowlist disables `code_execution`), with 429-retry + capture-intake robustness (#114) and the re-ingest sweeps on cron (#116). The Tier-1 merge is grounded by the 867-paper spike. Only the fresh-clone candidate re-run remains; **ADR-30 is implemented — mark it `accepted`** | [G10 plan](../../tests/plans/g10-ingest-plan.md) | — |
 | G11 | awaiting-verify | **Review loop closes — proven end-to-end.** The G10 ingest card reached `done` + `review_status: requested`; a human review then promoted `_proposed_classification` into the main `study_design`/`methods`/`topic` fields and flipped `lifecycle: proposed → current` (proposal block removed), live on the sandbox. Only the fresh-clone candidate re-run remains | live agent run | — |
 
-## 3. Validation — tiers
+## 3. Validation — stages
 
-The tiered install-testing plan turns `shipped` rows into `approved` ones. A
-release candidate must re-run **T0–T5 green from a fresh clone** on a clean
-Ubuntu/WSL2 box. The tiers validate the **infrastructure floor**; the **operability
+The staged install-testing plan turns `shipped` rows into `approved` ones. A
+release candidate must re-run **S0–S5 green from a fresh clone** on a clean
+Ubuntu/WSL2 box. The stages validate the **infrastructure floor**; the **operability
 gates (G9–G11)** are validated by live *agent* runs — an extension of Tier 4 from
 "the gate fires" to "a workflow completes" — and are tracked in §2, not duplicated
-as tiers here.
+as stages here.
 
-| Tier | State | Proves |
+| Stage | State | Proves |
 | --- | --- | --- |
-| T0 | done | Static: parse, LF endings, profile files present |
-| T1 | done | Python `--self-test`: all five suites green (policy_mcp, policy_hook, board_export, metrics_aggregate, detectors) |
-| T2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
-| T3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
-| T4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| T5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-protocol.md](../../tests/protocols/gui-test-protocol.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-protocol_v0.1.md](gui-test-protocol_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
+| S0 | done | Static: parse, LF endings, profile files present |
+| S1 | done | Python `--self-test`: all five suites green (policy_mcp, policy_hook, board_export, metrics_aggregate, detectors) |
+| S2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
+| S3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
+| S4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
+| S5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-plan.md](../../tests/plans/gui-test-plan.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-plan_v0.1.md](gui-test-plan_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
 
 ## 4. Blockers
 
@@ -144,8 +144,8 @@ and the `memoria-policy-gate` plugin enforces on it — validated live,
 installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
 
 The remaining blockers split in two:
-- **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and tiers (T4, T5) — re-runs to confirm what's built.
-- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/T4). The substantive construction risk the [release readiness review](release-readiness-review-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
+- **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and stages (S4, S5) — re-runs to confirm what's built.
+- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/S4). The substantive construction risk the [release readiness review](release-readiness-review-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
 
 ## 5. Out of scope (deferred)
 
@@ -172,8 +172,8 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 ## 7. Cut procedure
 
-1. **Every gate (§2 — floor G1–G8 *and* operability G9–G11) and tier (§3) `done`; no P0 issues open.** The floor gates are verification (G2/T4 fresh-clone live re-run; G4/G5/G8/T5 dashboards/telemetry/changelog/GUI). The operability gates require a real workflow proven end-to-end: **G9** deterministic spine, **G10** ingest value loop, **G11** review loop closes — a release on green floor gates alone ships zero proven research value.
-2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3. Follow the [candidate-run checklist](candidate-run-checklist.md) — the ordered T0–T5 + G9–G11 run sheet with exact commands and a per-gate sign-off table.
+1. **Every gate (§2 — floor G1–G8 *and* operability G9–G11) and stage (§3) `done`; no P0 issues open.** The floor gates are verification (G2/S4 fresh-clone live re-run; G4/G5/G8/S5 dashboards/telemetry/changelog/GUI). The operability gates require a real workflow proven end-to-end: **G9** deterministic spine, **G10** ingest value loop, **G11** review loop closes — a release on green floor gates alone ships zero proven research value.
+2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3. Follow the [candidate-run checklist](candidate-run-checklist.md) — the ordered S0–S5 + G9–G11 run sheet with exact commands and a per-gate sign-off table.
 3. **Confirm version `0.1.0`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
