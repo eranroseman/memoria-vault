@@ -66,7 +66,7 @@ jobs:
           for i in $(seq 1 24); do
             conclusion=$(gh api \
               "repos/${{ github.repository }}/commits/$commit_sha/check-runs" \
-              --jq '.check_runs[] | select(.name == "Kilo Code Review") | .conclusion')
+              --jq '[.check_runs[] | select(.name == "Kilo Code Review") | .conclusion] | last // empty')
             if [ -z "$conclusion" ]; then
               echo "Waiting for Kilo Code Review to start... ($i/24)"
               sleep 30
