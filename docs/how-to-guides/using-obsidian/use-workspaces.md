@@ -1,7 +1,7 @@
 ---
 title: Workspaces
 parent: Using Obsidian
-nav_order: 3
+nav_order: 2
 ---
 
 # Workspaces
@@ -32,11 +32,11 @@ The three workspaces ship pre-configured in the vault's `.obsidian/workspaces.js
 
 Settings → Hotkeys → search `workspace` → assign:
 
-| Workspace | Hotkey |
-| --- | --- |
-| Load workspace: Human | `Cmd-1` / `Ctrl-1` |
+| Workspace                            | Hotkey             |
+| ------------------------------------ | ------------------ |
+| Load workspace: Human                | `Cmd-1` / `Ctrl-1` |
 | Load workspace: Reading & Processing | `Cmd-2` / `Ctrl-2` |
-| Load workspace: Drafting | `Cmd-3` / `Ctrl-3` |
+| Load workspace: Drafting             | `Cmd-3` / `Ctrl-3` |
 
 **4. Switch workspaces during a session.**
 

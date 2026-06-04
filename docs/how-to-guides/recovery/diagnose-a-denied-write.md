@@ -38,7 +38,7 @@ Read the fields ([full schema](../../reference/memory.md#audit-log-event-fields)
 | `reason` | the human-readable cause |
 
 - **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `30-synthesis/01-claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
-- **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../writing/work-the-review-queue.md).
+- **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../compose/work-the-review-queue.md).
 
 **3. No matching entry at all? The write never reached the gate.**
 
@@ -66,7 +66,7 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 ## Related
 
-- Approving a held (`dry_run`) write: [Work the review queue](../writing/work-the-review-queue.md)
+- Approving a held (`dry_run`) write: [Work the review queue](../compose/work-the-review-queue.md)
 - Other recovery procedures: [recovery guides](README.md)
 - The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
 - The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)

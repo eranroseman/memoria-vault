@@ -17,7 +17,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Decision
 
-**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md).
+**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../../docs/how-to-guides/compose/create-a-code-artifact.md).
 
 > **Current vs. planned agents.** The shipped Coder lane wires **`codex` and `claude-code`** as the current external coding agents (`opencode` also available) — the real Hermes `autonomous-ai-agents` skill IDs in [memoria-coder SOUL.md](../../vault/.memoria/profiles/memoria-coder/SOUL.md) and `lane-overrides/coder.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Coder's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
 
@@ -26,7 +26,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 - The Coder profile stays narrow (scaffold + document); doesn't accumulate coding complexity it wasn't designed for.
 - Human can use whichever coding agent fits the project (Claude Code for unfamiliar codebases, Aider for fast diffs, etc.).
 - Adds a tool dependency — the human must install and configure one of the external agents.
-- The same parallel-agents-with-shared-filesystem pattern generalizes to rendering agents ([open-design](../../docs/how-to-guides/writing/create-a-code-artifact.md)).
+- The same parallel-agents-with-shared-filesystem pattern generalizes to rendering agents ([open-design](../../docs/how-to-guides/compose/create-a-code-artifact.md)).
 
 ## Alternatives considered
 
@@ -34,5 +34,5 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Related
 
-- **Workflows affected:** [Code](../../docs/how-to-guides/writing/create-a-code-artifact.md)
-- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/writing/create-a-code-artifact.md), `99-system/templates/code-note.md` (in the starter vault)
+- **Workflows affected:** [Code](../../docs/how-to-guides/compose/create-a-code-artifact.md)
+- **Files affected:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), [create a code artifact](../../docs/how-to-guides/compose/create-a-code-artifact.md), `99-system/templates/code-note.md` (in the starter vault)

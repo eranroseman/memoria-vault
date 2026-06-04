@@ -5,7 +5,7 @@ parent: Reference
 
 # Ingest routing
 
-Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
 
 ---
 
@@ -89,7 +89,7 @@ Fields the Librarian populates on the new note at creation:
 | Field | Value | Notes |
 | --- | --- | --- |
 | `type` | Detected type (see table above) | Set once; never changed. |
-| `lifecycle` | `captured` | The Tier-0 floor. The classification proposal promotes `captured → proposed`; the human promotes `proposed → current` at [Classify](../how-to-guides/sources/classify-a-source.md). |
+| `lifecycle` | `captured` | The Tier-0 floor. The classification proposal promotes `captured → proposed`; the human promotes `proposed → current` at [Classify](../how-to-guides/compile/classify-a-source.md). |
 | `ingest_status` | `tier0` → `enriched` → `complete` | Pipeline progress while `captured`; `needs-human` is the terminal floor after bounded failed re-ingest. See [Frontmatter fields](frontmatter.md#ingest_status-values-ingested-source-notes). |
 | `created` | Today's date | `updated` is set to the same date at creation. |
 | `citekey` | From `.bib` | Paper notes only. |
@@ -131,7 +131,7 @@ The pipeline reads only the `.bib`, so Zotero-native fields come from the Better
 | `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
 | `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
-For the step-by-step ingest procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+For the step-by-step ingest procedure see [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
 
 ---
 

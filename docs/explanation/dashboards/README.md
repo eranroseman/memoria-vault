@@ -1,7 +1,7 @@
 ---
 title: Dashboards
 parent: Explanation
-nav_order: 9
+nav_order: 8
 has_children: true
 permalink: /explanation/dashboards/
 ---
@@ -10,12 +10,12 @@ permalink: /explanation/dashboards/
 
 Memoria ships ten dashboards in `00-meta/01-dashboards/`. Each answers one type of question about the vault. They are grouped by the kind of attention they demand — four groups, each with its own page. (The Daily Health view is the `daily-health.md` dashboard.)
 
-| Group | Dashboards | When you look |
-|---|---|---|
-| [Daily glance](daily-glance/README.md) | Daily Health, Board state | Start of every session — "is anything wrong?" |
-| [Synthesis agenda](synthesis-agenda/README.md) | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
-| [Structural health](structural-health/README.md) | Drift watch, Loose ends, Weekly review | Maintenance — the Friday ritual and drift checks |
-| [Operational health](operational-health/README.md) | Fleet health, Audit log | When checking how the agent fleet is performing |
+| Group                                              | Dashboards                                                      | When you look                                     |
+| -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
+| [Daily glance](daily-glance/README.md)             | Daily Health, Board state                                       | Start of every session — "is anything wrong?"     |
+| [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
+| [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
+| [Operational health](operational-health/README.md) | Fleet health, Audit log                                         | When checking how the agent fleet is performing   |
 
 ## Why the dashboards are designed the way they are
 
@@ -35,4 +35,4 @@ When a dependency is missing (a plugin not installed, a log file not yet created
 
 - Dashboard lookup table (source files, sort orders, verdict band, trust score): [Dashboards](../../reference/dashboards.md)
 - How to operate the dashboards: [Navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
-- The primary weekly entry point: [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- The primary weekly entry point: [Run the weekly review](../../how-to-guides/maintain/run-the-weekly-review.md)

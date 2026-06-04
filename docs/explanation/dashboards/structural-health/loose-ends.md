@@ -33,4 +33,4 @@ Unlike most dashboards, loose-ends has no dependencies — no plugin, no log fil
 
 - [The weekly-review dashboard](weekly-review.md) — the Friday ritual that includes a loose-ends pass
 - [The Linter](../../profiles/linter.md) — `orphan-working-files` detector, the structural counterpart
-- Archiving surfaced sources: [Archive a source](../../../how-to-guides/sources/archive-a-source.md)
+- Archiving surfaced sources: [Archive a source](../../../how-to-guides/compile/archive-a-source.md)

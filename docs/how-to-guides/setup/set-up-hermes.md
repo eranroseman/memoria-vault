@@ -114,7 +114,7 @@ auxiliary:
   # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
 ```
 
-Restart Hermes after editing the global config. Full rationale (split reasoning, the GLM-context caveat, the GLM-5-turbo cost trap): [configuration.md § Auxiliary models](../using-hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
+Restart Hermes after editing the global config. Full rationale (split reasoning, the GLM-context caveat, the GLM-5-turbo cost trap): [configuration.md § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
 
 ## Verify
 
@@ -135,6 +135,6 @@ Each line should have `"decision": "allow_with_log"` and `"profile": "memoria-li
 ## Related
 
 - API key sources: [set-up-zotero.md § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
-- Re-deploying after profile edits: [Redeploy profiles](../maintenance/redeploy-profiles.md)
+- Re-deploying after profile edits: [Redeploy profiles](../maintain/redeploy-profiles.md)
 - Hermes CLI reference: [External integrations](../../reference/integrations.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles/) (Librarian, Mapper, etc.)

@@ -45,4 +45,4 @@ The Writer turns evidence into structured prose — answer drafts, reference-rea
 
 **How-to**
 
-- Workflows: [draft with the Writer](../../how-to-guides/writing/draft-with-writer.md), [frame a project](../../how-to-guides/writing/frame-a-project.md)
+- Workflows: [draft with the Writer](../../how-to-guides/compose/draft-with-writer.md), [frame a project](../../how-to-guides/compose/frame-a-project.md)

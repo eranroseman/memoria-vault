@@ -116,7 +116,7 @@ So far every write in this tutorial landed in the workbench (`40-workbench/`), w
 
 To see where these land: open `home.md` — the front-door note that opens on startup — and go to the **board-state dashboard**. Any card waiting on you appears under the review-queue count. When you start promoting claims, you'll clear them here: **approve** to let the write land, **reject** to send it back as a fresh task.
 
-This is the human gate that makes Memoria safe to run unattended — agents propose, you dispose; nothing reaches synthesis or deliverables without passing through you. Full procedure when you get there: [Work the review queue](../how-to-guides/writing/work-the-review-queue.md).
+This is the human gate that makes Memoria safe to run unattended — agents propose, you dispose; nothing reaches synthesis or deliverables without passing through you. Full procedure when you get there: [Work the review queue](../how-to-guides/compose/work-the-review-queue.md).
 
 ---
 

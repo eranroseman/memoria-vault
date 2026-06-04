@@ -86,6 +86,6 @@ Track individual exclusion reasons below, or use the Zotero RIS-tag method
 
 ---
 
-**Related:** [Run a systematic review](https://eranroseman.github.io/memoria-vault/how-to-guides/sources/run-a-systematic-review) (the workflow that consumes this protocol);
+**Related:** [Run a systematic review](https://eranroseman.github.io/memoria-vault/how-to-guides/compile/run-a-systematic-review) (the workflow that consumes this protocol);
 ADR-12 (systematic-review mode) and ADR-19 (pre-ingest screening — PRISMA + ASReview);
 ASReview + the Zotero RIS round-trip for the screening pass.

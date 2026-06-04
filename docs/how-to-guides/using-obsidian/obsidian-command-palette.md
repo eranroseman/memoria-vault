@@ -1,9 +1,8 @@
 ---
 title: Command palette
 parent: Using Obsidian
-nav_order: 5
+nav_order: 4
 ---
-
 
 # Command palette
 
@@ -19,7 +18,7 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 
 **1. Open the palette and confirm the pre-wired commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Mem`. **Seven note-creation commands ship pre-wired** in the starter vault — each a QuickAdd *Template* choice that instantiates one of the raw-note templates in `99-system/templates/`:
+`Cmd-P` (or `Ctrl-P`) → type `Mem`. **Seven note-creation commands ship pre-wired** in the starter vault — each a QuickAdd _Template_ choice that instantiates one of the raw-note templates in `99-system/templates/`:
 
 - `Memoria: capture fleeting` — fleeting note in `10-inbox/01-fleeting/`
 - `Memoria: write claim note` — claim note in `30-synthesis/01-claims/`

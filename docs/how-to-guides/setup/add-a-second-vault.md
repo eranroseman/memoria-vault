@@ -4,8 +4,7 @@ parent: Setup
 nav_order: 9
 ---
 
-
-# Add a second vault
+# Add a second vault [deferred]
 
 Fork the starter vault for a separate project or research area, keeping it independent from your primary vault while sharing the same Hermes profiles.
 
@@ -77,5 +76,5 @@ The dry-run output should show paths inside `my-second-vault/vault/`, not your p
 ## Related
 
 - First vault setup: [Set up the vault](set-up-the-vault.md)
-- Redeploying after profile edits: [Redeploy profiles](../maintenance/redeploy-profiles.md)
+- Redeploying after profile edits: [Redeploy profiles](../maintain/redeploy-profiles.md)
 - Distribution model explanation: [Distribution model](../../explanation/deployment/distribution-model.md)

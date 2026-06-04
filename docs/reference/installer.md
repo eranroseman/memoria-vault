@@ -102,11 +102,11 @@ Profiles also carry `skills/` and `cron/` directories.
 
 ## Models and ACP
 
-Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [Configure a profile](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
+Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [Configure a profile](../how-to-guides/hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
 
 ## Related
 
 - **Design rationale:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
-- **Redeploy path:** [Redeploy profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
+- **Redeploy path:** [Redeploy profiles](../how-to-guides/maintain/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
 - **Setup guides:** [Set up the vault](../how-to-guides/setup/set-up-the-vault.md), [Set up Hermes](../how-to-guides/setup/set-up-hermes.md), [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 - **Telemetry shipped by v0.1:** [Telemetry & logs](telemetry.md).

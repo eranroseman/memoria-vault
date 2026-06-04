@@ -1,10 +1,10 @@
 ---
-title: Set up a VPS for always-on operation
+title: Set up a VPS
 parent: Setup
 nav_order: 8
 ---
 
-# Set up a VPS for always-on operation
+# Set up a VPS for always-on operation [deferred]
 
 Move Hermes from local WSL2 to a persistent VPS so the system runs overnight batch jobs, handles scheduled tasks, and stays reachable from any device. This is the always-on deployment option.
 
@@ -215,15 +215,15 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 
 ## What runs where
 
-| Component | Runs on |
-| --- | --- |
-| Obsidian, Zotero, Syncthing | Desktop (Windows) |
-| Hermes, cron jobs, qmd index | VPS |
-| vault files | Syncthing-synced between both |
+| Component                    | Runs on                       |
+| ---------------------------- | ----------------------------- |
+| Obsidian, Zotero, Syncthing  | Desktop (Windows)             |
+| Hermes, cron jobs, qmd index | VPS                           |
+| vault files                  | Syncthing-synced between both |
 
 ## Related
 
 - Local install prerequisite: [Quickstart](quickstart.md)
-- Profile configuration: [Configure a profile](../using-hermes-agent/configuration.md)
-- Redeploying profiles after vault changes: [Redeploy profiles](../maintenance/redeploy-profiles.md)
+- Profile configuration: [Configure a profile](../hermes-agent/configuration.md)
+- Redeploying profiles after vault changes: [Redeploy profiles](../maintain/redeploy-profiles.md)
 - Tunnel drops on restart: [Failure modes](../../reference/failure-modes.md) — see `VPS tunnel drops`

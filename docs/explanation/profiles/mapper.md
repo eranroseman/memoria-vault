@@ -43,4 +43,4 @@ The Mapper is the lens on what the human already has. It produces scope reports,
 
 **How-to**
 
-- Workflow: [assess your corpus](../../how-to-guides/writing/assess-your-corpus.md)
+- Workflow: [assess your corpus](../../how-to-guides/compose/assess-your-corpus.md)

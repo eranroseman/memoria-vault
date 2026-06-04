@@ -21,7 +21,7 @@ Quick checks that the system itself is up (run from a terminal):
 
 Profiles: `memoria-{librarian, mapper, socratic, writer, verifier, coder, linter}`.
 
-Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/maintenance/return-to-work).
+Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/maintain/return-to-work).
 
 ## Symptoms → diagnosis
 
@@ -42,7 +42,7 @@ Step-by-step recipes for the common ones: [stuck card](https://eranroseman.githu
 
 The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/safe-mode); the essentials:
 
-**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `20-sources/01-papers/<citekey>.md` from the [[paper-note|paper-note template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/sources/capture-and-ingest).)
+**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `20-sources/01-papers/<citekey>.md` from the [[paper-note|paper-note template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/compile/capture-and-ingest).)
 
 **Review ([policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** the runtime gate is bypassed — **treat every write as if it could land somewhere it shouldn't.** Edit carefully, `git commit` often; replay the audit log when the MCP returns.
 
