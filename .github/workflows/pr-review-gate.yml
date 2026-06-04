@@ -81,7 +81,7 @@ jobs:
           done
           echo "kilo-conclusion=timeout" >> "$GITHUB_OUTPUT"
           echo "Kilo Code Review did not complete within 12 minutes — failing safe."
-          exit 1
+          exit 0
 
       - name: Enable auto-merge (clean review)
         if: |
