@@ -210,7 +210,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 - ✓ Pass: **no `gui-denied.md` is created**, and a `deny` row for it appears in audit-log.
 - [ ] **E2 Pass**
 
-**E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
+**E3. Board telemetry round-trip.** Create a card (`hermes kanban create …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
 - ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
 - [ ] **E3 Pass**
