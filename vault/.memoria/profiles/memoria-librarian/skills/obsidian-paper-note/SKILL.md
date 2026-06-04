@@ -67,8 +67,10 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    meaningful neighbours.
 
 4. **Apply the link plan** (`bundle.link_plan`, all deterministic — do not
-   invent edges). Find-or-create each entity by its stable ID (venue=ISSN,
-   person=ORCID, org=ROR) at `lifecycle: proposed`; entities under
+   invent edges). Find-or-create each entity **at the exact `path` the plan gives**
+   (it is ID-keyed — venue=ISSN, person=ORCID, org=ROR — so the same entity always
+   resolves to the same file and never duplicates; **do not rename it after the
+   entity's display name**) at `lifecycle: proposed`. Entities under
    `recorded_by_name` are recorded by name only, never node-created. Apply each
    `cites` edge **bidirectionally** (`this.cites += X`, `X.cited_by += this`).
    Link the note to relevant synthesis notes / MOCs where applicable.

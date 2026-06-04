@@ -64,6 +64,11 @@ def index_vault(vault: Path) -> dict:
     return idx
 
 
+# entity note_type -> its folder under 20-sources/03-entities/
+ENTITY_FOLDER = {"person-note": "01-people", "organization-note": "02-organizations",
+                 "venue-note": "03-venues"}
+
+
 def plan_entities(merged: dict) -> dict:
     entities, by_key = [], {}
     by_name = {"authors": [], "venues": [], "orgs": []}
@@ -74,7 +79,10 @@ def plan_entities(merged: dict) -> dict:
             return False
         key = (note_type, idval)
         if key not in by_key:
-            rec = {"note_type": note_type, "id_type": idtype, "id": idval, "name": name or ""}
+            # path is keyed on the stable id (not the name) so find-or-create is
+            # idempotent — same ORCID/ROR/ISSN always resolves to the same file.
+            rec = {"note_type": note_type, "id_type": idtype, "id": idval, "name": name or "",
+                   "path": f"20-sources/03-entities/{ENTITY_FOLDER[note_type]}/{idval}.md"}
             by_key[key] = rec
             entities.append(rec)
         return True
@@ -149,9 +157,12 @@ def _self_test() -> int:
     nt = lambda t: [e for e in ents if e["note_type"] == t]
     checks = [
         ("venue note by ISSN", len(nt("venue-note")) == 1 and nt("venue-note")[0]["id"] == "2398-6352"),
+        ("venue path is ID-keyed", nt("venue-note")[0]["path"] == "20-sources/03-entities/03-venues/2398-6352.md"),
         ("person notes only for ORCID authors (2 of 3)", len(nt("person-note")) == 2),
         ("ORCID kept bare (no URI)", all("/" not in e["id"] for e in nt("person-note"))),
+        ("person path is ID-keyed (ORCID)", all(e["path"] == f"20-sources/03-entities/01-people/{e['id']}.md" for e in nt("person-note"))),
         ("org deduped by ROR (1, not 2)", len(nt("organization-note")) == 1),
+        ("org path is ID-keyed (ROR)", nt("organization-note")[0]["path"] == "20-sources/03-entities/02-organizations/042nb2s44.md"),
         ("no-ORCID author recorded by name", ep["recorded_by_name"]["authors"] == ["Bob B"]),
         ("no-ROR affiliation recorded by name", "Acme Lab" in ep["recorded_by_name"]["orgs"]),
         ("cites matched + deduped (2 edges)", len(cites) == 2),
