@@ -32,6 +32,25 @@
       }
     },
     {
+      "id": "2cc964f1-b720-468b-8d2e-b5b14a890127",
+      "name": "Memoria: capture from Zotero selection",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: capture from Zotero selection",
+        "id": "e156d7fa-acbd-4523-a237-a64f8142655a",
+        "commands": [
+          {
+            "name": "capture-from-zotero",
+            "type": "UserScript",
+            "id": "21c15756-9c6b-4b24-a709-f4944200fa8a",
+            "path": "99-system/scripts/capture-from-zotero.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
       "name": "Memoria: write claim note",
       "type": "Template",

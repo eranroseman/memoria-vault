@@ -7,7 +7,7 @@ parent: Reference
 
 Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [Hermes CLI](hermes-cli.md). For invocation patterns and hotkey discipline see [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md).
 
-> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **seven note-creation commands** so far — `Memoria: capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note` — each a QuickAdd **Template** choice that instantiates a raw-note template from `99-system/templates/`. The remaining commands below (API-POST, ACP-pane, and macro choices) are added as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
+> **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **seven note-creation commands** — `Memoria: capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note` (each a QuickAdd **Template** choice that instantiates a raw-note template from `99-system/templates/`) — plus the `Memoria: capture from Zotero selection` **Macro** (a UserScript at `99-system/scripts/capture-from-zotero.js`: Better BibTeX CAYW → `hermes kanban create`). The remaining commands below (API-POST and ACP-pane choices) are added as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
 
 Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds the top five to physical ribbon buttons.
 
@@ -19,7 +19,7 @@ Invoked via `Cmd-P → Memoria: …`. Registered by QuickAdd. Commander binds th
 | --- | --- | --- |
 | `Memoria: capture fleeting` | New note in `10-inbox/01-fleeting/` with timestamp. | QuickAdd Template (fleeting note) |
 | `Memoria: capture source from URL` | `intake:source` card on Librarian lane queue; Librarian picks it up within 60 s. | QuickAdd → POST Hermes API |
-| `Memoria: capture from Zotero selection` | `intake:source` card with citekey pre-populated from current Zotero selection. | QuickAdd → Zotero local API → POST Hermes API |
+| `Memoria: capture from Zotero selection` | `intake:source` card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → Better BibTeX CAYW (`?selected=true`) → `hermes kanban create` (WSL on Windows) |
 
 ## Processing
 
