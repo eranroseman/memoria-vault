@@ -421,8 +421,11 @@ question, or doc fix is an **issue**, never a line in a file.
   backlog.* Assigning a milestone **is** the act of scheduling — that scoping
   decision is made per release (review ADRs + proposals + docs, then assign), not by
   defaulting everything into the next version.
-- **One Project board** (`Inbox → Scheduled → In progress → In review → Done`) is the
-  kanban view over the issues — fitting, since the product itself is kanban-driven.
+- **One Project board** — "Memoria backlog", <https://github.com/users/eranroseman/projects/1> —
+  is the kanban view over the issues. Its `Status` field has five columns: **Inbox**
+  (untriaged, no milestone) → **Scheduled** (milestoned) → **In progress** (branch open)
+  → **In review** (PR open) → **Done** (merged/closed). Fitting, since the product itself
+  is kanban-driven.
 - Issue templates live in `.github/ISSUE_TEMPLATE/` (`bug_report.yml`,
   `feature_request.yml`). A bug report states **Expected / Actual / Vault state**.
 

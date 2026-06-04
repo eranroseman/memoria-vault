@@ -63,6 +63,38 @@ their work and races HEAD. Each session gets its own
 scope. See AGENTS.md §0. (A local `git reset` in a shared checkout also silently
 reverts the other session's uncommitted edits — commit and push early.)
 
+## Tracking — issues, milestones, the board
+
+Work is tracked in **GitHub**, not in files. Every actionable item — bug,
+enhancement, doc fix, question — is a **GitHub issue** (the single inbox); durable
+rationale stays in the repo (`decisions/`, `proposals/`, `releases/`).
+
+**Labels.** `bug` · `enhancement` · `documentation` · `question` · `research`
+(open-ended investigation) · priority `P0` / `P1` / `P2`. Issue templates live in
+`.github/ISSUE_TEMPLATE/` (`bug_report.yml`, `feature_request.yml`); a bug report
+states **Expected / Actual / Vault state**.
+
+**Milestones are releases** (`v0.1`, `v0.2`, …). **No milestone = unscheduled
+backlog.** Assigning a milestone *is* the act of scheduling — done per release, not by
+dumping everything into the next version.
+
+**The board** — a single GitHub Project, **"Memoria backlog"**
+(<https://github.com/users/eranroseman/projects/1>) — has a `Status` field of five
+columns:
+
+| Column | Means |
+|---|---|
+| **Inbox** | Untriaged — needs scheduling (no milestone yet) |
+| **Scheduled** | Assigned to a milestone |
+| **In progress** | A branch is open for it |
+| **In review** | Its PR is open |
+| **Done** | Merged / closed |
+
+**How it rides the git flow.** Pick an issue → move its card to **In progress** and
+branch (§The workflow above). Open the PR with `Closes #N` → **In review**.
+Squash-merge → the issue auto-closes → **Done**. One issue → one branch → one PR keeps
+the board, the history, and the issue state aligned.
+
 ## Checklists
 
 **Starting a branch**
