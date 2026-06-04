@@ -405,3 +405,43 @@ not a merge. Full post-mortem + human walkthrough:
   mis-amends, vanished edits, a file deleted twice). Stop-check: if `git log -3` on
   the tip shows a co-author who isn't you, you're on someone else's branch — make
   your own.
+
+## 10. Tracking work — transient goes to GitHub, durable stays in the repo
+
+One rule resolves where a piece of work lives: **transient, discrete work → GitHub;
+durable rationale and state → the repo.** Don't recreate a flat `TODO` brain-dump —
+that swamp (release tasks, bugs, research, and ideas in one ungoverned list) is what
+this section retires.
+
+**GitHub is the single inbox for actionable work** — every bug, enhancement,
+question, or doc fix is an **issue**, never a line in a file.
+
+- **Labels** classify: `bug` / `enhancement` / `documentation` / `question` +
+  `research` (open-ended investigation) + priority `P0` / `P1` / `P2`.
+- **Milestones are releases** (`v0.1`, `v0.2`, …). *No milestone = unscheduled
+  backlog.* Assigning a milestone **is** the act of scheduling — that scoping
+  decision is made per release (review ADRs + proposals + docs, then assign), not by
+  defaulting everything into the next version.
+- **One Project board** (`Inbox → Scheduled → In progress → In review → Done`) is the
+  kanban view over the issues — fitting, since the product itself is kanban-driven.
+- Issue templates live in `.github/ISSUE_TEMPLATE/` (`bug_report.yml`,
+  `feature_request.yml`). A bug report states **Expected / Actual / Vault state**.
+
+**The repo holds only durable artifacts — each with one job, none restating another:**
+
+| Artifact | Holds | Not for |
+| --- | --- | --- |
+| `project-files/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
+| `project-files/proposals/` (PROP-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
+| `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | per-artifact build state |
+| `implementation-status.md` | Per-artifact build state | release gates |
+| `_reports/`, `_notes/`, `/TODO` | Gitignored personal scratch | anything canonical or shared |
+
+**Routing a new item:** discrete and actionable → **issue** (label it; milestone only
+if scheduled). A big capability worth weighing trade-offs on → **PROP** (it graduates
+to issues + a milestone when scheduled). A choice just made → **ADR**. Release
+readiness → the **release plan**. A release-blocking issue is linked from the release
+plan §4 (Blockers); the status ledger rows already cite `#NN` — keep both directions.
+
+**Never** track shared work in `/TODO` or `_notes/` — they are gitignored scratch and
+invisible to everyone else. If you find actionable work there, move it to an issue.
