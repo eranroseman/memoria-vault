@@ -48,7 +48,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 **B2. `.env` bootstrapped + shared keys seeded.** `cat ~/.hermes/profiles/memoria-librarian/.env`
 - ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_EMAIL` for the Librarian.
-- ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../decisions/27-hermes-native-config-and-gate-enforcement.md), #39).
+- ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../decisions/27-hermes-native-config-and-gate-enforcement.md), #39).
 
 **B3. Profile config is valid.** `hermes profile show memoria-librarian`
 - ✓ Pass: shows `SOUL.md`, the model block, `mcp_servers` (`policy`, `obsidian`) from `config.yaml`, allowed skills, and `.env` key **names** (values redacted). No parse error.
@@ -111,4 +111,4 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | `install.ps1` WSL2 handoff (+ bootstrap) | | |
 
-**T0–T3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the T0–T3 rows of [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).
+**T0–T3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the T0–T3 rows of [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).

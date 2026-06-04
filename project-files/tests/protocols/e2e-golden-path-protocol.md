@@ -6,7 +6,7 @@ status: draft
 
 # Golden-path E2E test protocol — v0.1 (L4)
 
-One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all seven profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI protocol](hermes-cli-test-protocol.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI protocol, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../decisions/11-vault-eval-integration.md), L5).
+One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all seven profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI protocol](hermes-cli-test-protocol.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI protocol, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../../decisions/11-vault-eval-integration.md), L5).
 
 **Where to run.** The integrated stack: Obsidian open (REST bridge up) + Hermes in WSL2 + a **disposable** vault seeded with the CLI protocol's fixtures (F1–F8). Run it after the CLI and GUI protocols pass — this is the capstone.
 
@@ -91,4 +91,4 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 | E | gate blocks promote → approve → export | | |
 | F | board / audit / gate / dashboards held | | |
 
-**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record in [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).
+**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record in [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).

@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "ms-vscode-remote.remote-wsl",
+    "github.vscode-pull-request-github",
+    "github.vscode-github-actions",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "davidanson.vscode-markdownlint",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml",
+    "timonwong.shellcheck",
+    "foxundermoon.shell-format",
+    "streetsidesoftware.code-spell-checker",
+    "kilocode.kilo-code"
+  ]
+}

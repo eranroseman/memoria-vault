@@ -14,25 +14,25 @@ Every design component → the layer/protocol that covers it → whether it's au
 
 | # | Component | Layer | Protocol / where | Automated | Status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | L1 | [headless](headless-test-protocol.md) §A (`--self-test` ×5) · `python-selftest` CI | ✅ | ✅ |
+| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | L1 | [headless](protocols/headless-test-protocol.md) §A (`--self-test` ×5) · `python-selftest` CI | ✅ | ✅ |
 | 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
 | 3 | vault→site links + wikilink resolution | L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
 | 5 | Dashboard ↔ writer-schema drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
-| 6 | 7 profiles — every documented CLI command | L2 | [hermes-cli](hermes-cli-test-protocol.md) §4 | manual | ✅ |
+| 6 | 7 profiles — every documented CLI command | L2 | [hermes-cli](protocols/hermes-cli-test-protocol.md) §4 | manual | ✅ |
 | 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all 7 lanes' write-walls self-tested, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
 | 9 | Audit chain — `before_hash`/`after_hash`, `vault-hash-drift` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
 | 11 | Profile mgmt, skills, cron | L2 | hermes-cli §4.9–4.11 | manual | ✅ |
-| 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](gui-test-protocol.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
+| 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](protocols/gui-test-protocol.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
 | 13 | 11 dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
 | 14 | 8 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |
 | 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
-| 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](installer-test-protocol.md) | manual | 🟡 (protocol new; lint-only before) |
-| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](e2e-golden-path-protocol.md) | manual | 🟡 (protocol new) |
+| 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](protocols/installer-test-protocol.md) | manual | 🟡 (protocol new; lint-only before) |
+| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](protocols/e2e-golden-path-protocol.md) | manual | 🟡 (protocol new) |
 | 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../decisions/11-vault-eval-integration.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
@@ -54,5 +54,5 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../dec
 ## Related
 
 - Framework + layer definitions: [ADR-29](../decisions/29-testing-framework.md)
-- Protocols: [headless](headless-test-protocol.md) · [hermes-cli](hermes-cli-test-protocol.md) · [GUI](gui-test-protocol.md) · [installer](installer-test-protocol.md) · [e2e-golden-path](e2e-golden-path-protocol.md)
+- Protocols: [headless](protocols/headless-test-protocol.md) · [hermes-cli](protocols/hermes-cli-test-protocol.md) · [GUI](protocols/gui-test-protocol.md) · [installer](protocols/installer-test-protocol.md) · [e2e-golden-path](protocols/e2e-golden-path-protocol.md)
 - Shared template: [test-protocol-template.md](test-protocol-template.md)

@@ -56,7 +56,7 @@ bash scripts/install.sh --vault "$RV"      # re-run: must be idempotent (no erro
 - [ ] Telemetry + sweeps crons wired: `hermes cron list` shows `memoria-board-export` and `memoria-sweeps`.
 - [ ] **Ingest runtime deps:** `"$RV/.memoria/.venv/bin/python" -c "import pymupdf4llm"` succeeds (local-PDF extraction; from `requirements.txt`).
 
-Detail: [installer-test-protocol.md](../../tests/installer-test-protocol.md).
+Detail: [installer-test-protocol.md](../../tests/protocols/installer-test-protocol.md).
 
 ## T4 — live: model, bridge, gate enforcement  → records G2, G3, T4
 
@@ -64,7 +64,7 @@ Detail: [installer-test-protocol.md](../../tests/installer-test-protocol.md).
 - [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../decisions/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
-Detail: [hermes-cli-test-protocol.md](../../tests/hermes-cli-test-protocol.md), [headless-test-protocol.md](../../tests/headless-test-protocol.md).
+Detail: [hermes-cli-test-protocol.md](../../tests/protocols/hermes-cli-test-protocol.md), [headless-test-protocol.md](../../tests/protocols/headless-test-protocol.md).
 
 ## G9 — deterministic spine (zero-LLM card)  → records G9
 
@@ -74,7 +74,7 @@ hermes kanban create "spine check" --assignee memoria-linter --skill <health-rep
 
 - [ ] A *dispatched, zero-LLM* card (Linter `health-report` or Verifier `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
-Detail: [g9-spine-protocol.md](../../tests/g9-spine-protocol.md).
+Detail: [g9-spine-protocol.md](../../tests/protocols/g9-spine-protocol.md).
 
 ## G10 — ingest value loop (the product)  → records G10
 
@@ -88,7 +88,7 @@ Detail: [g9-spine-protocol.md](../../tests/g9-spine-protocol.md).
 - [ ] Dispatch ingests through the `ingest_pipeline` MCP tool → the Librarian fills the two holes (vocabulary-constrained `_proposed_classification`; comparative `[!brief]`) → gated write → `lifecycle: proposed`, `ingest_status: complete`.
 - [ ] Note is complete: identity + merged metadata (S2/OpenAlex/Crossref), stable IDs (`openalex_id`/`semantic_scholar_id`/`pmid`/`pmcid`), `zotero_uri` + `pdf_uri`, full-text extract saved under `90-assets/extracts/`, ID-keyed entity notes (`03-entities/<id>.md`), `[!brief]` leads the body.
 
-Detail: [g10-ingest-protocol.md](../../tests/g10-ingest-protocol.md).
+Detail: [g10-ingest-protocol.md](../../tests/protocols/g10-ingest-protocol.md).
 
 ## G11 — review loop closes  → records G11
 
@@ -96,7 +96,7 @@ Detail: [g10-ingest-protocol.md](../../tests/g10-ingest-protocol.md).
 
 ## T5 — Obsidian + Zotero GUI  → records T5, G4
 
-Run [gui-test-protocol.md](../../tests/gui-test-protocol.md) on the Windows side and **fully complete its Results table**:
+Run [gui-test-protocol.md](../../tests/protocols/gui-test-protocol.md) on the Windows side and **fully complete its Results table**:
 
 - [ ] **Part A** — all bundled plugins load/enable; REST round-trip; settings verified (no "didn't verify" caveat).
 - [ ] **Part B** — Zotero + Better BibTeX export works; the capture macro fires.

@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROTOCOLS = sorted((ROOT / "project-files" / "tests").glob("*.md"))
+PROTOCOLS = sorted((ROOT / "project-files" / "tests").rglob("*.md"))
 
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
 REPO_PATH = re.compile(r"`((?:docs|project-files)/[A-Za-z0-9/_.-]+\.md)`")

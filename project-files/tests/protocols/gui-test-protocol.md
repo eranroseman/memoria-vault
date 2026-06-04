@@ -7,7 +7,7 @@ status: draft
 # GUI test protocol — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI tier (**T5**) and the ten Dataview dashboards
+shell: the Obsidian/Zotero GUI tier (**T5**) and the eleven Dataview dashboards
 rendering on real data (**G4**). Everything else (installer T0–T3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -125,7 +125,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 ---
 
-## Part C — The ten dashboards render (G4)
+## Part C — The eleven dashboards render (G4)
 
 Open each file under `00-meta/01-dashboards/` (Reading view). For **every** ```dataview```
 block: it must render a table or placeholder, **never a query error**.
@@ -223,7 +223,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 | --- | --- | --- | --- |
 | A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 10 dashboards' Dataview blocks resolve | | |
+| C / G4 | All 11 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |
@@ -232,4 +232,4 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 
 **T5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/T5 rows of [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).
+G4/T5 rows of [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).

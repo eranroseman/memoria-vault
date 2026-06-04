@@ -11,4 +11,4 @@ carries its own lighter What / Trade-offs / Adoption trigger / Guard block — s
 the convention in [../_template.md](../_template.md).
 
 These are unnumbered (no `PROP-NN`), to distinguish them from the single-capability
-proposals one level up. The full index lives in the [proposals README](../README.md#capability-proposals).
+proposals [one level up](../README.md). Browse this directory for the full set.
