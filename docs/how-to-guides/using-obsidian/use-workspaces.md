@@ -53,7 +53,7 @@ Switch when your cognitive mode changes — not per task within a mode.
 ## Verify
 
 - `Ctrl/Cmd-1`, `Ctrl/Cmd-2`, `Ctrl/Cmd-3` each load a distinct pane layout without reloading Obsidian
-- The ACP profile-switch bindings (`Ctrl+Shift+1–4`) still work independently from within the Reading workspace
+- The ACP profile picker switches the active Hermes profile independently of the workspace layout
 
 ## Related
 

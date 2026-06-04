@@ -39,6 +39,8 @@ Commander binds the top five to physical ribbon buttons.
 | ✓ | `Memoria: scaffold code note` | New note from the code-note template in a chosen `40-workbench/<project>/06-code/` folder. | QuickAdd Template (code note) |
 | ✓ | `Memoria: write project note` | New project note in a chosen `40-workbench/<project>/`. | QuickAdd Template (project note) |
 
+> **These four prompt for a destination folder under `40-workbench/`.** They write *into a project*, so the project folder must already exist — the folder picker is choosing *which active project* the draft/canvas/code-note/project-note belongs to, not creating one. If you have no project yet, create the `40-workbench/<project>/` folder first (or run `write project note` and point it at a new project folder). The picker is empty-looking until at least one workbench project exists.
+
 ## Interactive retrieval (transient ACP — no file artifact, no card)
 
 Each is conversational. **Today, use the ACP pane** (open the named profile and ask) — the one-shot palette command is `[deferred]`.

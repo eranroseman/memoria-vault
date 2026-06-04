@@ -1,13 +1,13 @@
 ---
-title: Chat with Hermes
+title: Run a CLI chat session
 parent: Hermes Agent
 nav_order: 2
 ---
 
 
-# Chat with Hermes
+# Run a CLI chat session
 
-Start a CLI chat session with a specific Memoria profile to run skills, ingest sources, lint the vault, or run any other profile-specific command.
+Start a terminal chat session with a specific Memoria profile to run skills, ingest sources, lint the vault, or run any other profile-specific command. (This is the `hermes … chat` CLI — not the Telegram messaging gateway, which is covered in [Set up messaging](../setup/set-up-messaging.md).)
 
 ## When to use the CLI vs. Obsidian
 

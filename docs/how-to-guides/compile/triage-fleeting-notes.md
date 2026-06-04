@@ -18,7 +18,7 @@ Clear the fleeting inbox: promote each note to something durable, attach it to a
 
 **1. Open the Reading Pipeline dashboard.**
 
-Cmd-P → Memoria: open reading pipeline (or navigate to `00-meta/01-dashboards/reading-pipeline.md`).
+Open `00-meta/01-dashboards/reading-pipeline.md` (the Reading Pipeline dashboard) from the file explorer or your homepage. *(A `Memoria: open reading pipeline` palette command is [deferred].)*
 
 The dashboard surfaces fleeting notes older than a few days. Any note sitting in `01-fleeting/` beyond that threshold is stale capture.
 

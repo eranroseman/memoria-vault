@@ -35,7 +35,7 @@ A small input box appears. Type your thought in one or two sentences. Press Ente
 
 With the fleeting note open:
 
-Open the agent-client pane (`Cmd+P` → **Agent Client: Open chat view**, or click the Hermes ribbon icon) and switch to **Socratic** (`Ctrl+Shift+1`). *(A one-shot `Memoria: ask about this note` command is [deferred] — use the pane today.)*
+Open the agent-client pane (`Cmd+P` → **Agent Client: Open chat view**, or click the Hermes ribbon icon) and switch to **Socratic** (via the pane’s profile picker). *(A one-shot `Memoria: ask about this note` command is [deferred] — use the pane today.)*
 
 **What you'll see:** The ACP pane opens on the right side of Obsidian. The Socratic profile greets you, with your fleeting note already attached as context.
 

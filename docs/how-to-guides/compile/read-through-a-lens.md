@@ -30,9 +30,9 @@ Choose by the question in your head, not by the paper on screen — the point of
 
 **2. Open the session in that lens.**
 
-Open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (`Ctrl+Shift+1`) — the active paper note auto-attaches — and ask it to read through the lens by slug, e.g. «read this through the `mamykina-sensemaking` lens».
+Open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (via the pane’s profile picker) — the active paper note auto-attaches — and ask it to read through the lens by slug, e.g. «read this through the `mamykina-sensemaking` lens».
 
-The `Memoria: read through <X> lens` palette command *(deferred — use the ACP pane / terminal today)* is not wired yet. From the terminal (fallback):
+The `Memoria: read through <X> lens` palette command *(deferred — use the ACP pane / terminal today)* is not wired yet. From the terminal (fallback — full syntax in [Hermes CLI](../../reference/hermes-cli.md#socratic)):
 
 ```bash
 hermes -p memoria-socratic chat -s lens-reading

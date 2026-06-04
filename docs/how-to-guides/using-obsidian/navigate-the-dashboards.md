@@ -48,7 +48,7 @@ All sources with `lifecycle: proposed`. Sort is oldest-first — clear the oldes
 
 **Discuss Queue** — Reading & Processing workspace, left pane top (`Ctrl+2`).
 
-Paper notes that are `lifecycle: current` but haven't had a Socratic discussion pass. Sort is oldest-first. Open a paper from this queue, then open the ACP pane with **Memoria: ask about this note**. See [Discuss a paper](../compile/discuss-a-paper.md).
+Paper notes that are `lifecycle: current` but haven't had a Socratic discussion pass. Sort is oldest-first. Open a paper from this queue, then open the ACP pane (**Agent Client: Open chat view**) and switch to Socratic — the active note auto-attaches. See [Discuss a paper](../compile/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 

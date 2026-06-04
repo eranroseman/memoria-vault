@@ -26,7 +26,7 @@ Before invoking the Socratic profile, orient yourself in the paper. The `[!brief
 
 **3. Open the agent-client pane and switch to Socratic.**
 
-Open the ACP pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon), then switch to **Socratic** with `Ctrl+Shift+1`. The active paper note auto-attaches as context. Then ask it to discuss the note. *(`Memoria: ask about this note` is deferred — use the ACP pane today.)*
+Open the ACP pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon), then switch to **Socratic** via the pane’s profile picker. The active paper note auto-attaches as context. Then ask it to discuss the note. *(`Memoria: ask about this note` is deferred — use the ACP pane today.)*
 
 **4. Let the profile run its opening questions.**
 

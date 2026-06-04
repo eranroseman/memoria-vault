@@ -7,7 +7,11 @@ nav_order: 4
 
 # Classify a source
 
-Promote the Librarian's proposed classification into the note's canonical metadata and mark the source as reviewed. This is a human-only step — no profile touches the note during classification.
+When the Librarian ingests a paper it doesn't decide the final metadata — it only *proposes*. It writes its best guess into a sandboxed `_proposed_classification` block in the frontmatter and leaves the note at `lifecycle: proposed`.
+
+**Classifying is the human step that turns that proposal into the note's real metadata.** You review each proposed field, copy the ones you accept (edited for accuracy) into the main frontmatter, delete the proposal block, and flip the note to `lifecycle: current`. No profile writes to the note while you do this — it's a deliberate checkpoint so the agent's guess never becomes canonical without your review.
+
+The steps below are that loop: **review → promote → clean up → mark done.**
 
 ## Prerequisites
 
@@ -39,8 +43,6 @@ Compare the proposed values against the paper itself. The Librarian extracts the
 - **topic:** Is this the right concept vocabulary term? If the paper is about JITAI receptivity, `receptivity-detection` is correct; `jitai` alone is too broad.
 - **methods:** Is `field-study` accurate, or was it also a `qualitative-interview` study? Add precision.
 - **study_design:** `observational` vs. `experimental` — confirm from the methods section.
-
-(`projects` is yours to set, not the agent's — decide which active project this feeds when you fill in the main frontmatter below.)
 
 **4. Promote accepted fields to main frontmatter.**
 

@@ -32,30 +32,22 @@ For the design rationale behind the picker — why three profiles are absent and
 ## Opening the pane
 
 **From the Reading & Processing workspace** (`Ctrl+2` on Windows, `Cmd+2` on Mac):
-The ACP pane appears in the right column. If it's not visible, click the Hermes icon in the left ribbon, or `Cmd/Ctrl+P` → **Agent Client: Open pane**.
+The ACP pane appears in the right column. If it's not visible, click the Hermes icon in the left ribbon, or `Cmd/Ctrl+P` → **Agent Client: Open chat view**.
 
 **From any other workspace:**
-`Cmd/Ctrl+P` → **Agent Client: Open pane**.
+`Cmd/Ctrl+P` → **Agent Client: Open chat view**, or click the Hermes ribbon icon.
 
 ## Switching profiles
 
-**Keyboard bindings** (fastest):
+Click the profile name at the top of the ACP pane to open the dropdown, then select a different profile.
 
-| Binding        | Profile  |
-| -------------- | -------- |
-| `Ctrl+Shift+1` | Socratic |
-| `Ctrl+Shift+2` | Mapper   |
-| `Ctrl+Shift+3` | Writer   |
-| `Ctrl+Shift+4` | Verifier |
-
-**From the picker:** click the profile name at the top of the ACP pane to open the dropdown and select a different profile.
+> The pane has no profile-switch keyboard shortcut. Obsidian doesn't ship one, and the plugin exposes no per-profile command to bind in Settings → Hotkeys — switch from the picker.
 
 Switch profiles between tasks, not mid-conversation. The conversation history clears on switch — this is intentional. A Mapper session's context should not bleed into a Socratic session.
 
 ## Attaching a note as context
 
-**Via the command palette (standard path):**
-Open the note you want to discuss. `Cmd/Ctrl+P` → **Memoria: ask about this note**. This opens the ACP pane, activates Socratic, and attaches the current note automatically.
+**Auto-mention (default).** With `autoMentionActiveNote` on, the note open in your editor is attached automatically when you open the pane or send a message — it arrives as a context card with no extra step. Open the note you want to discuss first, then open the pane (or just type, if the pane is already open).
 
 **Via the pane directly:**
 Click the paperclip icon at the top of the ACP pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
@@ -97,8 +89,8 @@ On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** a
 
 ## Verify
 
-- `Ctrl+Shift+1` switches the pane to Socratic without reloading Obsidian
-- **Memoria: ask about this note** opens the pane with the current note in the context card
+- Selecting **Socratic** from the picker switches the pane without reloading Obsidian
+- Opening the pane with a note active attaches it as a context card (auto-mention)
 - After a Mapper query, the `[!corpus-map]` callout appears in the response area
 - Pressing **Clear** empties the pane and resets the session
 
