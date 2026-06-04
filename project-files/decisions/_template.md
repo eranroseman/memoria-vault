@@ -2,7 +2,7 @@
 topic: decisions
 id: NN
 title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
-status: proposed
+status: accepted  # accepted | rejected | superseded — only accepted decisions live here; proposed ideas go in proposals/
 date_proposed: YYYY-MM-DD
 date_resolved:
 supersedes: []

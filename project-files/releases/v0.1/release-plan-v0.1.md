@@ -7,7 +7,7 @@ released: false
 # Release plan — v0.1.0
 
 **Current status: pre-release — v0.1.0 has _not_ shipped.** No `v0.1.0` tag or
-GitHub release exists, and the build ledger lists nothing as `approved`. **All
+GitHub release exists, and nothing is yet verified end-to-end. **All
 three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery —
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
@@ -36,7 +36,7 @@ re-run and closing the **human** half of the review loop (G11). This plan theref
 separates two kinds of done — the infrastructure **floor** (§2, G1–G8) and the
 **operability** gates that prove a workflow actually runs (§2, G9–G11) — with the bar
 and critical path detailed in the
-[shippability assessment](shippability-assessment-2026-06-03.md). `released:` flips to
+[release readiness review](release-readiness-review-2026-06-03.md). `released:` flips to
 `true` only when **every** gate, floor and operability, is `done`.
 
 > **The core reframing.** Most of v0.1 is **built but not verified end-to-end** —
@@ -73,14 +73,14 @@ schema contract, the full vault structure, all **seven** profiles (`librarian`,
 `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`), the policy gate,
 the bundled Obsidian plugins, the Kanban board, and the six-signal telemetry
 capture. Density-gated automation and multi-device are later phases (see §8 and the
-spillover), not v0.1 scope.
+appendix), not v0.1 scope.
 
 **Operability bar (what "shippable" means).** The bundle above is what *installs*;
 it is not what makes v0.1 *usable*. v0.1 is shippable when **one agent workflow runs
 end-to-end — through a real trigger, gated, audited, queued for human review — on the
 hand-usable vault scaffold.** Not seven polished agents; one *operable, verified loop*
 plus the scaffold underneath it. The seven profiles are *configured*; one workflow must
-be *operable*. See the [shippability assessment](shippability-assessment-2026-06-03.md)
+be *operable*. See the [release readiness review](release-readiness-review-2026-06-03.md)
 for the bar and its dependency-ordered critical path.
 
 ## 2. Definition of done — gates
@@ -105,7 +105,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 
 ### Operability gates (G9–G11) — the product (the real release blockers)
 
-These prove an agent completes real work end-to-end, not that components exist. Sourced from the [shippability assessment](shippability-assessment-2026-06-03.md) Gates 1–3 — the dependency-ordered critical path. **These are the substantive distance to a shippable cut.**
+These prove an agent completes real work end-to-end, not that components exist. Sourced from the [release readiness review](release-readiness-review-2026-06-03.md) Gates 1–3 — the dependency-ordered critical path. **These are the substantive distance to a shippable cut.**
 
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
@@ -145,7 +145,7 @@ installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
 
 The remaining blockers split in two:
 - **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and tiers (T4, T5) — re-runs to confirm what's built.
-- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/T4). The substantive construction risk the [shippability assessment](shippability-assessment-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
+- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/T4). The substantive construction risk the [release readiness review](release-readiness-review-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
 
 ## 5. Out of scope (deferred)
 
@@ -190,10 +190,10 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 | Phase 4 — Multi-device | When a 2nd device enters regular use | Extend to a second machine without fragmenting dispatch ownership. |
 
 Full phase steps, exit criteria, and the week-by-week ramp:
-[release-plan-v0.1-spillover.md](release-plan-v0.1-spillover.md).
+[release-plan-v0.1-appendix.md](release-plan-v0.1-appendix.md).
 
-## 9. Spillover
+## 9. Appendix
 
 Detailed phase steps, exit criteria, and migration detail live in
-[release-plan-v0.1-spillover.md](release-plan-v0.1-spillover.md). This plan
+[release-plan-v0.1-appendix.md](release-plan-v0.1-appendix.md). This plan
 summarizes (§8) and links rather than absorbing them.

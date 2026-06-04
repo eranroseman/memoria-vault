@@ -17,7 +17,7 @@ released: false      # machine cut-flag; true ONLY when every gate below is `don
   2. Bump `release:` and set `released: false`.
   3. Reset every Gate (§2) and Tier (§3) State to `todo`.
   4. Rewrite the per-release prose (status line, scope, limitations).
-  5. Start a sibling  release-plan-<version>-spillover.md  for anything too
+  5. Start a sibling  release-plan-<version>-appendix.md  for anything too
      detailed to belong in a crisp plan (see §9).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
@@ -52,7 +52,7 @@ release plan is self-contained.)
 ## 1. Scope — what this release is
 
 <!-- PROSE. What the release IS (the unit of delivery) and what it explicitly is
-     NOT. One paragraph. Out-of-scope detail → §5 + the build ledger's deferred rows. -->
+     NOT. One paragraph. Out-of-scope detail → §5 + proposals/. -->
 
 {{ What this version delivers, in one paragraph. Name the boundary: what is in,
 what is deliberately later. }}
@@ -104,10 +104,10 @@ issue tracker.
 ## 5. Out of scope (deferred)
 
 <!-- PROSE. What this release consciously leaves out. Per-artifact deferred set lives
-     in the build ledger's `deferred` rows — point, don't duplicate. -->
+     in proposals/ — point, don't duplicate. -->
 
-{{ Scope-level exclusions for this release. Point to the ledger / proposals for
-the per-artifact deferred set. }}
+{{ Scope-level exclusions for this release. Point to proposals/ for the
+per-artifact deferred set. }}
 
 ## 6. Known limitations (state in the release notes)
 
@@ -126,28 +126,28 @@ the per-artifact deferred set. }}
 4. **Cut the `CHANGELOG` section** for this version.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
 6. **Tag and publish** the release with curated notes (§6 limitations included).
-7. **Flip the relevant `shipped` rows to `approved`** in the build ledger once the candidate passes.
+7. **Close the milestone**, rolling any unfinished issues to the next release.
 
 ## 8. Roadmap after this release
 
 <!-- BRIEF summary only — a few rows. The full phase steps / week-by-week detail go
-     in the spillover file (§9), not here. -->
+     in the appendix file (§9), not here. -->
 
 | Phase | When | Goal |
 | --- | --- | --- |
 | {{ phase }} | {{ when }} | {{ goal in one line }} |
 
-Full phase steps and detail: see the spillover file (§9).
+Full phase steps and detail: see the appendix file (§9).
 
-## 9. Spillover — what does NOT belong in this file
+## 9. Appendix — what does NOT belong in this file
 
 <!-- The release plan stays crisp and reusable. Anything that is detailed,
-     long-lived, or version-specific lives in a sibling spillover file:
-       release-plan-<version>-spillover.md
-     Typical spillover: exhaustive per-phase steps & exit criteria, deep
+     long-lived, or version-specific lives in a sibling appendix file:
+       release-plan-<version>-appendix.md
+     Typical appendix: exhaustive per-phase steps & exit criteria, deep
      investigation write-ups, migration notes, raw test logs. The plan SUMMARIZES
-     and links; the spillover holds the long tail. Nothing is lost — it just
+     and links; the appendix holds the long tail. Nothing is lost — it just
      doesn't crowd the plan. -->
 
 Detailed phase steps, investigation notes, and migration detail live in
-`release-plan-vX.Y.Z-spillover.md`. This plan links to it rather than absorbing it.
+`release-plan-vX.Y.Z-appendix.md`. This plan links to it rather than absorbing it.

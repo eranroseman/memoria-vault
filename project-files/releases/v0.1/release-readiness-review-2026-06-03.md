@@ -1,4 +1,4 @@
-# Memoria v0.1 — shippability assessment
+# Memoria v0.1 — release readiness review
 
 **Date:** 2026-06-03
 **Question it answers:** "Can we ship?" — as a checklist with a critical path, not a gut call.

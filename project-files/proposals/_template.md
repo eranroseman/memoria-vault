@@ -11,7 +11,7 @@ Section conventions for a single-capability proposal:
   Required     — What, Why, Trade-offs, Adoption trigger, Guard
   Recommended  — Alternatives considered, Related
   Optional     — Dependencies (only when something must be in place first)
-A thematic survey that bundles several capabilities drops `id` from the
+A thematic exploration that bundles several capabilities drops `id` from the
 frontmatter (keep `title`) and repeats a lighter What / Trade-offs / Adoption
 trigger / Guard block per capability instead of these top-level sections.
 -->

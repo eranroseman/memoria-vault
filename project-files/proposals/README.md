@@ -12,7 +12,7 @@ its trigger fires.
 Two kinds, both browsable in this directory:
 
 - **Single-capability proposals** — `PROP-NN-*.md`, one capability each, following the full [_template.md](_template.md).
-- **Capability surveys** — thematic bundles of several related capabilities, in [surveys/](surveys/); unnumbered, each capability carrying its own lighter What / Trade-offs / Adoption trigger / Guard block.
+- **Capability explorations** — thematic bundles of several related capabilities, in [explorations/](explorations/); unnumbered, each capability carrying its own lighter What / Trade-offs / Adoption trigger / Guard block.
 
 ---
 

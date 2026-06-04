@@ -2,7 +2,7 @@
 topic: proposals
 ---
 
-# Capability surveys
+# Capability explorations
 
 Thematic proposals that bundle several related capabilities, rather than a single
 one. Each file groups its capabilities under one theme (discovery, measurement,

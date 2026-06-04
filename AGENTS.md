@@ -363,16 +363,16 @@ released: false      # cut-flag; true only when every gate is `done`
 ---
 # Release plan — vX.Y.Z
 ## 1. Scope   ## 2. Gates (G# state)   ## 3. Tiers (T# state)   ## 4. Blockers
-## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Spillover
+## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Appendix
 ```
 
 **Single source of state — prevents drift.** Gate/tier state lives ONLY in §2/§3 of
 the release-plan file; build *gaps* are GitHub issues; scope *cuts* are proposals.
 Every other doc *points* — never restates. Detail too long for a crisp plan (full
-phase steps, investigation notes) goes to a sibling `release-plan-<version>-spillover.md`.
+phase steps, investigation notes) goes to a sibling `release-plan-<version>-appendix.md`.
 
 The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
-(+ its `-spillover.md`).
+(+ its `-appendix.md`).
 
 ## 9. Integration cadence — merge small, merge often
 
@@ -439,7 +439,7 @@ question, or doc fix is an **issue**, never a line in a file.
 if scheduled). A big capability worth weighing trade-offs on → **PROP** (it graduates
 to issues + a milestone when scheduled). A choice just made → **ADR**. Release
 readiness → the **release plan**. A release-blocking issue is linked from the release
-plan §4 (Blockers); the status ledger rows already cite `#NN` — keep both directions.
+plan §4 (Blockers); issues reference the relevant ADR / PROP / gate IDs — keep both directions.
 
 **Never** track shared work in `/TODO` or `_notes/` — they are gitignored scratch and
 invisible to everyone else. If you find actionable work there, move it to an issue.

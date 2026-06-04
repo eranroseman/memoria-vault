@@ -18,7 +18,7 @@ that folder; the reusable plan body lives in
 3. **Create the GitHub milestone** `vX.Y` and assign the issues that scope it
    (see [AGENTS.md §10](../../AGENTS.md)). The milestone — not this folder — is the
    live scope list; the plan's §4 Blockers *links* the release-blocking issues.
-4. **Add detail overflow** (optional) to `release-plan-vX.Y-spillover.md` when the
+4. **Add detail overflow** (optional) to `release-plan-vX.Y-appendix.md` when the
    plan's phase/exit-criteria detail gets too long for a crisp plan.
 
 ## Standard contents of a `releases/vX.Y/` folder
@@ -27,7 +27,7 @@ that folder; the reusable plan body lives in
 |---|---|
 | `README.md` | Thin index of this release's files |
 | `release-plan-vX.Y.md` | The plan: scope, gates (G#), tiers (T#), blockers, cut procedure, roadmap |
-| `release-plan-vX.Y-spillover.md` | *(optional)* phase roadmap + investigation detail the plan summarizes |
+| `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail the plan summarizes |
 | *run records* | *(optional)* completed test-protocol runs and sign-off sheets for the cut (the reusable protocols live in [../tests/](../tests/)) |
 
 ## Single source of state

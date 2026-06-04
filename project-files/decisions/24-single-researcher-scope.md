@@ -36,5 +36,5 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 
 - **Supporting rationale:** [what-memoria-is.md](../../docs/explanation/overview/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-auto-classification.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
-- **Proposals bounded by this ADR:** [multi-vault-and-multi-machine.md](../proposals/surveys/multi-vault-and-multi-machine.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
+- **Proposals bounded by this ADR:** [multi-vault-and-multi-machine.md](../proposals/explorations/multi-vault-and-multi-machine.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
 - **Source discussion:** retroactively records the scope boundary already stated in `what-memoria-is.md`.
