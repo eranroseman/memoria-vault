@@ -121,7 +121,7 @@ The Citation Plugin needs to know where your BibTeX file lives. Most of this is 
 Better BibTeX needs to auto-export your library to `.memoria/memoria.bib`.
 
 1. In Zotero, open **Edit → Preferences → Better BibTeX**.
-2. Under the **Citation keys** tab, confirm the citation key formula is: `[auth:lower][year][shorttitle1_0]`
+2. Under the **Citation keys** tab, confirm the citation key formula is: `[auth.lower][year][shorttitle1_0]`
    - If it's different, update it. This is the citekey format Memoria expects.
 3. Right-click your library in the left panel → **Export Library**.
 4. Format: **Better BibLaTeX**. Check **Keep updated**.

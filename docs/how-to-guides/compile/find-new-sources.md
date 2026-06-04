@@ -16,11 +16,15 @@ Run a discovery search — forward citations, backward citations, or concept-dri
 
 ## Steps
 
-**1. Start a Librarian session with the `find` skill.**
+**1. Run a discovery search.** *(deferred — no wired palette command today; use the terminal)*
+
+Librarian discovery is a worker task dispatched against a seed or query. There is no interactive palette command for it yet, so run it from the terminal:
 
 ```bash
 hermes -p memoria-librarian chat -s find
 ```
+
+Then issue one of the search modes below in the session.
 
 **2. Choose a search mode and run it.**
 

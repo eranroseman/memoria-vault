@@ -92,7 +92,7 @@ For each included paper:
 3. Let the `.bib` auto-export trigger Librarian ingest, or run manually:
 
 ```bash
-hermes -p memoria-librarian chat -s ingest
+hermes -p memoria-librarian chat -s obsidian-paper-note
 /ingest --source <citekey>
 ```
 

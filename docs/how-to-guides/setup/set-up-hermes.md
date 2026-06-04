@@ -127,7 +127,7 @@ All seven `memoria-*` profiles show `status: registered`.
 Check the audit log after the first real ingest (remove `--dry-run` when you're ready):
 
 ```powershell
-Get-Content vault\00-meta\02-logs\audit.jsonl | Select-Object -Last 5
+Get-Content vault\99-system\logs\audit.jsonl | Select-Object -Last 5
 ```
 
 Each line should have `"decision": "allow_with_log"` and `"profile": "memoria-librarian"`.
