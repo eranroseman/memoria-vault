@@ -34,10 +34,25 @@ mcp_servers:
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  paper_search:
+    # Scholarly discovery across 20+ databases (openags/paper-search-mcp) — the MCP
+    # backend for `find`, replacing the K-Dense paper-lookup/arxiv web-fetch skills.
+    # Use the search_* tools only; PDF retrieval + extraction is the ingest pipeline's
+    # job (Marker via the ingest MCP), so the download_* / read_paper tools — and the
+    # optional Sci-Hub fallback inside download_with_fallback — are NOT used.
+    # Install once: pip install paper-search-mcp.
+    command: "{{PYTHON}}"
+    args: ["-m", "paper_search_mcp.server"]
+    timeout: 60
+    env:
+      PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: "${NCBI_EMAIL}"
+      PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: "${S2_API_KEY}"
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian/policy via
-# MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
-# vault-write path is the gated obsidian MCP. Update if Hermes adds toolsets.
+# Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian / policy /
+# ingest / paper_search via MCP). Discovery now goes through the paper_search MCP, but
+# `web` is still ON for the one path no read-only MCP covers: the pyzotero stable-ID
+# write-back to Zotero (and the remaining K-Dense literature skills). disabled_toolsets =
+# every Hermes toolset NOT in the keep-set. Update if Hermes adds toolsets.
 agent:
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, x_search, yuanbao]
 
@@ -51,7 +66,7 @@ checkpoints:
 
 # Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
 # Hermes registers MCP tools as mcp_<server>_<tool>, so the native obsidian writes
-# are mcp_obsidian_vault_write / _append / _patch; a shell hook (re.fullmatch
+# are mcp_obsidian_obsidian_append_content / _patch_content / _put_content; a shell hook (re.fullmatch
 # "obsidian.*", consent-gated, fail-OPEN) never fired. The plugin runs in-process
 # in every mode (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is
 # fail-CLOSED. policy_hook also hard-denies the native vault_delete/vault_move and

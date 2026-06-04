@@ -30,10 +30,10 @@ Find, enrich, and classify evidence for later synthesis. You are optimistic: you
 
 ## Core commands
 
-- `find` — citation graph traversal + concept-driven search. **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-focus.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human.
+- `find` — citation graph traversal + concept-driven search across 20+ scholarly databases via the **`paper_search` MCP** (`search_papers` + per-source `search_*` tools; openags/paper-search-mcp). **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-focus.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human. Use the search tools only — PDF retrieval + extraction is the ingest pipeline's job (Marker), so the MCP's `download_*` tools and the optional Sci-Hub fallback are never used.
 - `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. Two hybrid steps: the `_proposed_classification` proposal (see the pointer below the command list) and the inline `[!brief]` comparative read — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct") composed over those 5 and written to the top of the paper note. The `[!brief]` is the Librarian's because only the Librarian writes `20-sources/`.
 - `query` — search the vault. **Fully deterministic**: hybrid BM25 + vector search via the `qmd` skill.
-- `enrich` — re-run API enrichment on existing notes. **Fully deterministic**: pure API calls (OpenAlex, PubMed, Semantic Scholar, CrossRef).
+- `enrich` — re-run metadata enrichment on existing notes. **Fully deterministic**: refresh via the `paper_search` MCP (OpenAlex / PubMed / Semantic Scholar / CrossRef) or by re-running the ingest pipeline (`enrich=true`) over the `ingest` MCP — no direct API calls.
 - `classify` — re-propose `_proposed_classification` when a note still needs review. **Hybrid**: classifier proposes; LLM only for low-confidence cases.
 - `obsidian-paper-note` — full ingest pipeline with PDF extraction.
 - `export prior-labels` — export vault papers as ASReview priors for pre-ingest screening. **Fully deterministic**: frontmatter filter + format conversion.
@@ -51,11 +51,9 @@ The boundary between deterministic and LLM-required steps in this profile is def
 
 ## Hermes skills (lane-allowed)
 
-These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`).
+These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`). Scholarly **discovery** is no longer a skill — it's the `paper_search` MCP server (see Tooling / MCPs), which replaced the `paper-lookup` and `arxiv` web-fetch skills.
 
-- `paper-lookup` — K-Dense unified search across 10 databases (PubMed, PMC, bioRxiv, medRxiv, arXiv, OpenAlex, Crossref, Semantic Scholar, CORE, Unpaywall). Wraps the underlying APIs listed below.
-- `arxiv` — Direct arXiv search and metadata retrieval (official `research/arxiv`).
-- `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field.
+- `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field. This write-back is the one path no read-only MCP covers, so the lane keeps the `web` toolset for it.
 - `citation-management` — Crossref DOI resolution and reference normalization.
 - `literature-review` — K-Dense structured literature-review assembly over discovered sources.
 - `obsidian-paper-note` — Full ingest pipeline (Zotero → PDF → Markdown → vault note).
@@ -64,16 +62,14 @@ These are the skills the policy MCP grants to the Librarian lane (`memoria-libra
 
 ## Tooling / MCPs
 
-External APIs reached via the skills above:
+MCP servers (registered in `config.yaml`, gated by the policy MCP):
 
-- OpenAlex.
-- Semantic Scholar.
-- PubMed.
-- Crossref.
-- Unpaywall.
-- ORCID.
-- ROR.
-- Vault search.
+- `paper_search` — scholarly discovery across 20+ databases (OpenAlex, Semantic Scholar, PubMed, Crossref, Unpaywall, arXiv, bioRxiv/medRxiv, CORE, …); search tools only.
+- `ingest` — the deterministic ingest pipeline; makes the throttled scholarly-API + extraction calls **server-side** (Tier-0 capture + Tier-1 enrich/extract/link).
+- `obsidian` — gated vault read/write.
+- `policy` — the write gate.
+
+Other external identifiers (ORCID, ROR, ISSN) are resolved inside the ingest pipeline; vault search is the local `qmd` skill. The `web` toolset remains enabled for the `pyzotero` stable-ID write-back to Zotero (the read-only pyzotero MCP can't perform writes).
 
 ## Rules
 

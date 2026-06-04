@@ -5,10 +5,10 @@ profile: memoria-librarian
 
 policy:
   allow:
+    # Discovery (`find`) is served by the paper_search MCP server (openags/paper-search-mcp,
+    # registered in config.yaml) — it replaced the paper-lookup/arxiv web-fetch skills.
     skills:
-      - paper-lookup           # K-Dense
-      - arxiv                  # was arxiv-search (official research/arxiv)
-      - pyzotero               # K-Dense
+      - pyzotero               # K-Dense — read + stable-ID write-back to Zotero (needs web)
       - citation-management    # K-Dense
       - literature-review      # K-Dense
       - obsidian-paper-note    # authored skill: ingest pipeline (ocr-and-documents + pyzotero + obsidian)
