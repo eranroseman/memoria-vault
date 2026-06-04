@@ -83,10 +83,44 @@ jobs:
           echo "Kilo Code Review did not complete within 12 minutes — failing safe."
           exit 0
 
+      - name: Check Kilo Code Review findings
+        id: kilo-findings
+        if: |
+          steps.policy.outputs.decision == 'auto_approve' &&
+          steps.kilo-review.outputs.kilo-conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_num=${{ github.event.pull_request.number }}
+          for i in $(seq 1 8); do
+            comment=$(gh api \
+              "repos/${{ github.repository }}/issues/$pr_num/comments?per_page=100" \
+              --jq '[.[] | select(.user.login == "kilo-code-bot" and (.body | startswith("<!-- kilo-review -->")))] | last | .body // empty')
+            if [ -n "$comment" ]; then
+              if echo "$comment" | grep -Fq "0 Issues Found"; then
+                echo "kilo-findings=clean" >> "$GITHUB_OUTPUT"
+                echo "Kilo Code Review: 0 issues found — clean."
+                exit 0
+              else
+                issues=$(echo "$comment" | grep -oP '\*\*Status:\*\* \K\d+(?= Issues Found)' || echo "issues")
+                echo "kilo-findings=$issues" >> "$GITHUB_OUTPUT"
+                echo "Kilo Code Review: $issues issue(s) found — blocking merge."
+                exit 0
+              fi
+            fi
+            echo "Waiting for Kilo Code Review comment... ($i/8)"
+            sleep 15
+          done
+          echo "kilo-findings=timeout" >> "$GITHUB_OUTPUT"
+          echo "Kilo Code Review comment not found within 2 min — blocking safe."
+          exit 0
+
       - name: Enable auto-merge (clean review)
         if: |
           steps.policy.outputs.decision == 'auto_approve' &&
-          (steps.kilo-review.outputs.kilo-conclusion == 'success' || steps.kilo-review.outputs.kilo-conclusion == 'skipped' || steps.kilo-review.outputs.kilo-conclusion == 'neutral')
+          (steps.kilo-findings.outputs.kilo-findings == 'clean' ||
+           steps.kilo-review.outputs.kilo-conclusion == 'skipped' ||
+           steps.kilo-review.outputs.kilo-conclusion == 'neutral')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -94,14 +128,24 @@ jobs:
             --repo ${{ github.repository }} \
             --auto --squash
 
-      - name: Block (Code Review found warnings)
+      - name: Block (Code Review found issues)
+        if: |
+          steps.policy.outputs.decision == 'auto_approve' &&
+          steps.kilo-review.outputs.kilo-conclusion == 'success' &&
+          steps.kilo-findings.outputs.kilo-findings != 'clean'
+        run: |
+          echo "Kilo Code Review found issues (${{ steps.kilo-findings.outputs.kilo-findings }}). Merge blocked."
+          echo "Review findings at https://app.kilo.ai/code-reviews"
+          exit 1
+
+      - name: Block (Code Review check failed or timed out)
         if: |
           steps.policy.outputs.decision == 'auto_approve' &&
           steps.kilo-review.outputs.kilo-conclusion != 'success' &&
           steps.kilo-review.outputs.kilo-conclusion != 'skipped' &&
           steps.kilo-review.outputs.kilo-conclusion != 'neutral'
         run: |
-          echo "Kilo Code Review blocked merge (conclusion: ${{ steps.kilo-review.outputs.kilo-conclusion }})."
+          echo "Kilo Code Review check blocked merge (conclusion: ${{ steps.kilo-review.outputs.kilo-conclusion }})."
           echo "Review findings at https://app.kilo.ai/code-reviews"
           exit 1
 
