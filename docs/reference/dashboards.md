@@ -5,7 +5,7 @@ parent: Reference
 
 # Dashboards
 
-The ten dashboards shipped in `00-meta/01-dashboards/`: source file, sort order, and what each reads. For *why* each exists and when to open it, see [explanation/dashboards/](../explanation/dashboards/) — this page is the lookup.
+The eleven dashboards shipped in `00-meta/01-dashboards/`: source file, sort order, and what each reads. For *why* each exists and when to open it, see [explanation/dashboards/](../explanation/dashboards/) — this page is the lookup.
 
 Dashboards are Dataview / DataviewJS views. They render existing vault state and logs; they never write. A dashboard with no data yet shows a placeholder, not an error.
 
@@ -37,9 +37,9 @@ Rollup of the Linter's eight structural detectors:
 
 | Band | Condition | Effect |
 | --- | --- | --- |
-| `PASS` | No HIGH or CRITICAL findings | — |
-| `REVIEW` | MEDIUM findings present, no HIGH | Advisory |
-| `FAIL` | Any HIGH or CRITICAL finding | Scheduled work pauses until resolved |
+| `PASS` | Only LOW/INFO findings (or none) | — |
+| `REVIEW` | Any HIGH or MEDIUM finding, no CRITICAL | Advisory (a HIGH-only vault is `REVIEW`, not `FAIL`) |
+| `FAIL` | Any CRITICAL finding | Scheduled work pauses until resolved |
 
 Daily Health shows only the last-24h HIGH/CRITICAL subset; drift-watch shows the full per-detector view.
 
@@ -121,4 +121,4 @@ Keep dashboards responsive as the vault grows:
 - The structural detectors behind the verdict band: [Linter: detectors and auto-fix](linter.md)
 - The audit-log event schema and rotation: [Memory substrates](memory.md#audit-log-event-fields)
 - The status-line counters board-state feeds: [Obsidian status line](obsidian-status-line.md)
-- Operating the dashboards: [How to navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- Operating the dashboards: [Navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)

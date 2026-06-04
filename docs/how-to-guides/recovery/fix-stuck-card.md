@@ -1,10 +1,11 @@
 ---
-title: How to fix a stuck card
+title: Fix a stuck card
 parent: Recovery
+nav_order: 2
 ---
 
 
-# How to fix a stuck card
+# Fix a stuck card
 
 Resolve a Kanban card that won't advance — sitting in `running`, `ready`, or `blocked` without progressing.
 

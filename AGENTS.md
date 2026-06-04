@@ -189,7 +189,8 @@ reading it. Before opening a PR:
   Hermes config, skills, profiles, hooks, MCP, or runtime is made without first
   consulting the authoritative sources — the local docs (`~/.hermes/hermes-agent/website/docs/`),
   `cli-config.yaml.example`, and the bundled + optional **skills catalogs**
-  (`docs/reference/skills-catalog.md`, `optional-skills-catalog.md`). Do **not** guess
+  (`skills-catalog.md` and `optional-skills-catalog.md`, in the `reference/` folder of
+  the Hermes docs above — **not** Memoria's `docs/`). Do **not** guess
   where Hermes reads config or infer it from Memoria's existing files — Memoria has
   repeatedly mis-guessed (mcp.json never loaded; per-profile `.env`; the `obsidian.*`
   fullmatch; `ocr-and-documents`/`github-repo-management` are official *bundled* skills,
@@ -251,9 +252,16 @@ reading it. Before opening a PR:
 - `docs/` files → **relative links** (developers have the full repo locally).
 - `vault/` files → **absolute website URLs** (`https://eranroseman.github.io/memoria-vault/…`) because the vault installs standalone to `~/Memoria` where repo-relative paths don't resolve.
 
-**Indexing.** Every new page must be added to its section README. New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`.
+**Indexing & ordering.** Every new page must be added to its section README — and, if it's a how-to, to the guide map in `how-to-guides/README.md` too (keep that map complete). New subsections need a `README.md` with `parent`, `has_children: true`, and an explicit `permalink`. Section READMEs are **navigation hubs**: a brief intro + a described child table + an optional "where to go next" — not article-length prose (that belongs in the child pages). Give every page a `nav_order` so each folder reads top-to-bottom in a logical sequence, and keep the README child-table order matching that sidebar order. How-to page titles are **concise** (no "How to …" prefix) and match their README link text and filename.
 
 **Adding a citation to `reference/bibliography.md`.** When a doc cites a new work, add its ACM author-date entry with an `<a id="…"></a>` anchor and link the in-text mention to `[bibliography.md#anchor](../reference/bibliography.md#anchor)` (relative path from the citing file).
+
+### Terminology — name the two flows correctly
+
+Memoria's **knowledge cycle** has two flows: **Compile** (knowledge *in* — sources are found, captured, enriched, classified, distilled, and connected into claims) and **Compose** (knowledge *out* — claims are assessed, framed, drafted, verified, and exported). "Compile" is deliberate: it echoes the *compiled memory* thesis (Karpathy's LLM-wiki) the design is built on. Each flow has one reflective phase the human engages by judgment — `discuss` (Compile) and `sketch` (Compose) — not optional extras but where the method's thinking happens.
+
+- **Never** name these the "upstream/downstream pipeline" or "the two pipelines" — that naming was retired (see [compile-and-compose.md](docs/explanation/workflows/compile-and-compose.md)). Use **Compile flow** / **Compose flow**, or **the knowledge cycle** for the pair.
+- `pipeline`, `upstream`, `downstream` stay fine in *other* senses — the ingest pipeline, a Pandoc/export pipeline, an upstream dependency, a downstream consumer. The rule is narrow: don't use them to name the two flows.
 
 ### `project-files/decisions/` — ADR template
 
@@ -323,7 +331,7 @@ the release-plan file; per-artifact build state lives ONLY in
 long for a crisp plan (full phase steps, investigation notes) goes to a sibling
 `release-plan-<version>-spillover.md`.
 
-The current release plan is [`release-plan-v0.1.md`](project-files/plans/release-plan-v0.1.md)
+The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
 (+ its `-spillover.md`); the per-artifact build ledger is
 [`implementation-status.md`](project-files/plans/implementation-status.md).
 

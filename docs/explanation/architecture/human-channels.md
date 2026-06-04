@@ -1,6 +1,7 @@
 ---
 title: Interaction channels
 parent: Architecture
+nav_order: 4
 ---
 
 # Interaction channels
@@ -14,7 +15,12 @@ The organizing principle: **each channel owns one mode.** Using one for another'
 | **Obsidian** | Desktop, focused, deliberate | Daily triage, reading, authoring, agent conversations on the active note |
 | **CLI** (`hermes …`) | Desktop, occasional, precise | Forensic queries, profile administration, manual dispatch, backup |
 | **Telegram** | Mobile, async, lightweight | Fleeting capture, source-URL queuing, urgent push notifications |
-| **API server** (port 8642) | Programmatic, integration | File-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch |
+
+The three rows above are the human channels. The API server (port 8642) is listed separately below because it is *not* a human-operated channel — it is a programmatic integration surface that programs use and humans never operate directly:
+
+| Integration surface | Mode | Purpose |
+| --- | --- | --- |
+| **API server** (port 8642) | Programmatic, integration (not human-operated) | File-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch |
 
 ---
 
@@ -42,7 +48,7 @@ The mobile capture mode takes advantage of the phone's always-accessible nature:
 
 Confining Telegram to one messaging channel is also intentional. Each additional channel — Discord, Slack, WhatsApp — competes for attention and demands its own notification discipline. Until there is a concrete need that Telegram cannot serve, additional channels add noise without value.
 
-For Telegram configuration and the recommended per-profile toolset, see [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
+For Telegram configuration and the recommended per-profile toolset, see [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
 
 ---
 
@@ -58,7 +64,7 @@ Security-wise, the API passes every write through the policy MCP — it does not
 
 ## Related
 
-- Messaging gateway setup: [How to set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
+- Messaging gateway setup: [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
 - Obsidian UI components: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
 - Policy MCP (what API calls go through): [Policy MCP](../../reference/policy-mcp.md)

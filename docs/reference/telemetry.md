@@ -20,15 +20,17 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 
 | File | Writer | Cadence | One row = |
 | --- | --- | --- | --- |
-| `audit.jsonl` | policy MCP | per gated write | one `allow_with_log` / `deny` decision |
+| `audit.jsonl` | policy MCP | per gated decision | one policy decision (`allow` / `allow_with_log` / `deny` / `dry_run`) |
 | `board-state.jsonl` | `board_export.py` | per export run | a snapshot of per-lane queue counts |
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
-| `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome |
-| `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion |
+| `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
+| `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
 | `lint-findings.jsonl` | `memoria-linter` | per Linter run | one detector finding |
 | `sessions/<id>.jsonl` | `memoria-linter` | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
 
 Derived, not raw: `99-system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
+
+> **Hermes dependency — `disposition.jsonl` and `cost.jsonl`.** `board_export.py` derives these two from the card `metadata` overlay (`review_status`, `cost`, `tokens`). The current Hermes does not surface that overlay in its serialized card JSON, so both files stay empty regardless of board activity — a card driven to `review_status: approved` logs a *status* transition but no disposition row. This is an upstream limitation, not a Memoria defect: the exporter is wired to emit both the moment Hermes exposes the overlay. The other signals (`board-state`, `board-transitions` status changes, `audit`, `lint-findings`) are unaffected.
 
 ## audit.jsonl
 
@@ -48,7 +50,7 @@ The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy M
 }
 ```
 
-Only `allow_with_log` and `deny` decisions are logged. `dry_run` previews and plain `allow` (no `audit_log` requirement) write nothing.
+Every gated decision is logged when the lane requires `audit_log` (all shipped Memoria lanes do), and `allow_with_log` / `deny` / `dry_run` are logged unconditionally. So for the shipped lanes every decision — `allow`, `allow_with_log`, `deny`, and `dry_run` — appends a row. Only a plain `allow` on a lane that does *not* require `audit_log` would write nothing.
 
 ## board-state.jsonl
 

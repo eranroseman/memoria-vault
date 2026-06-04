@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 10 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See [Release plan — v0.1.0](../../project-files/plans/release-plan-v0.1.md).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See the [v0.1 release set](../../project-files/releases/v0.1/).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -64,7 +64,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **WIP limit** — a work-in-progress cap: *active-per-profile* (1 `running` card, Hermes-enforced); *review-queue depth* (bounded; dispatcher delays new done cards once queue is full).
 
-**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret hits**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
+**Trust score** — 0–100 per-lane operational health aggregate on the [fleet-health dashboard](../explanation/dashboards/operational-health/fleet-health.md); the operational sibling of the verdict band. Combines audit **deny rate**, **retry rate**, **success rate**, structural **drift incidents**, **secret-field access attempts**, and (for lanes producing human-approvable suggestions) **accept/reject ratios**. Bands: **90+ healthy · 70–89 watch · <70 act**. Computed by `.memoria/mcp/metrics_aggregate.py` into `99-system/metrics/lane-<lane>-<period>.md` notes (the inputs and bands are fixed; the weights live in that script).
 
 ---
 
@@ -72,7 +72,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Claim** (three senses) — (1) *to claim a card*: the dispatcher atomically claims a `ready` card and spawns the assigned profile; (2) *a substantive claim*: an assertion in a draft that Verifier traces; (3) **claim-note**: a `claim-note` in `30-synthesis/01-claims/`.
 
-**Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
+**Lifecycle** (three senses) — (1) the board's two lifecycle tracks (`status` + `review_status`); (2) a note's `lifecycle` field (`captured` / `proposed` / `current` / `dormant` / `archived`); (3) the vault's lifecycle stages (the numbered folders `10-` through `95-`).
 
 **Note type** — one of the 16 defined types a vault note can be. Set by the `type` frontmatter field at creation; never changed. See [Note types](note-types.md).
 
@@ -116,17 +116,39 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
-## Pipeline stages
+## Cycle phases
 
-**Discuss stage** — upstream pipeline stage between classify and distill. Paper note is read through the Socratic profile (write-denied vault-wide) before any claim note is written.
+The knowledge cycle runs as two flows. **Compile** (sources → claims): `find → capture → enrich → classify → discuss → distill → connect`. **Compose** (claims → deliverables): `assess → frame → sketch → draft → verify → export`. Each flow has one **reflective phase** — `discuss` / `sketch` — engaged by judgment, not run on every item.
 
-**Assess stage** — first downstream stage. Mapper runs `scope-project` and produces `corpus-map.md`. Human decides whether corpus is ready to write or needs more reading.
+### Compile
 
-**Frame stage** — second downstream stage. Writer generates competing outlines via `counter-outline`; Socratic optionally produces lens-based framings. Human commits to one via `framing/CHOSEN.md`.
+**Find** — the Librarian surfaces candidate sources (citation / concept search) into `10-inbox/03-candidates/`; the human selects which to pursue.
 
-**Verify stage** — downstream stage after draft. Verifier traces every claim to a claim note; failed traces spawn `gap:` cards.
+**Capture** — a chosen source is landed as a `paper-note` from the local `.bib` alone (offline, no-ML); `lifecycle: captured` — the guaranteed, nothing-lost floor.
 
-**Revise stage** — downstream stage between verify and export. Human addresses verification findings until the verify→revise loop closes.
+**Enrich** — network metadata (Semantic Scholar / OpenAlex / Crossref), full text, and ID-keyed entity + citation links are added, and a classification is proposed; `captured → proposed` (progress tracked by `ingest_status`). Best-effort and retryable; never load-bearing for capture.
+
+**Classify** — the human accepts or edits the proposed classification, making the note canonical (`proposed → current`). The first human gate.
+
+**Discuss** *(reflective)* — the paper is questioned through the Socratic profile (write-denied vault-wide) before any claim note is written. Produces sharpened thinking, not a file; engaged by judgment, not every source.
+
+**Distill** — the human writes a `claim-note` grounded in the source (`30-synthesis/01-claims/`). The second human gate and the Compile→knowledge transition; no agent can write claims.
+
+**Connect** — the human relates the new claim into the graph with typed `relations:` (`supports` / `contradicts`) and accepts the Librarian's `[!suggestions]`. (Distinct from the mechanical entity/citation linking done during Enrich.)
+
+### Compose
+
+**Assess** — first Compose phase. Mapper runs `scope-project` and produces `corpus-map.md`; the human decides whether the corpus is ready to write or needs more reading (gaps route back to Compile).
+
+**Frame** — the Writer generates competing outlines via `counter-outline` (Socratic optionally adds lens-based framings); the human commits to one via `framing/CHOSEN.md`.
+
+**Sketch** *(reflective)* — the chosen claims are laid out spatially (a JSON Canvas in `40-workbench/<project>/03-canvas/`) to find the argument's structure before prose. The Compose-side mirror of Discuss; engaged by judgment, not every project.
+
+**Draft** — the Writer produces prose from the chosen framing and the cited claims.
+
+**Verify** — the Verifier traces every claim to a claim note and flags gaps (`gap:` cards); the human closes them. A check ↔ fix loop, not a single pass; the review gate sits at its exit.
+
+**Export** — a Pandoc render turns the approved draft into the final artifact (`50-deliverables/`).
 
 ---
 

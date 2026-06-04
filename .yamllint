@@ -1,0 +1,22 @@
+# Lints the authored YAML: profile config.yaml / distribution.yaml, lane-overrides,
+# cron schedules, GitHub workflows, and issue templates. These configs are
+# load-bearing — a bad indent or duplicate key breaks the Hermes runtime or CI.
+#
+# Relaxed: flag real problems (syntax, duplicate keys, bad indentation, trailing
+# spaces, mis-nested blocks) but not line length — many config lines are long by
+# design.
+#
+# Never lint vendored or scratch areas: vault/.obsidian/ holds vendored plugin
+# files (we lint only our own .obsidian/*.json, elsewhere), and _*/ are local
+# gitignored scratch dirs. This guards any bare `yamllint .` too — the CI/hook
+# invocations additionally scope to tracked, non-.obsidian YAML.
+extends: relaxed
+ignore: |
+  vault/.obsidian/
+  _archived/
+  _papers/
+  _reports/
+  _notes/
+rules:
+  line-length: disable
+  colons: disable   # values are intentionally column-aligned (e.g. tool-registry.yaml)

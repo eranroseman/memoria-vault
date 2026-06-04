@@ -1,5 +1,6 @@
 ---
 title: ""
+type: paper-note
 authors: []
 year:
 citekey: ""
@@ -15,6 +16,7 @@ pmid: ""
 arxiv_id: ""
 pub_status: active
 lifecycle: proposed
+ingest_status: ""
 full_text_reviewed: false
 created:
 updated:
@@ -25,7 +27,6 @@ topic: []
 moc: []
 projects: []
 schema_version: 1
-type: paper-note
 _proposed_classification:
   study_design:
   methods: []

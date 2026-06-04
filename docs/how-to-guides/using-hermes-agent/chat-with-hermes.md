@@ -1,10 +1,11 @@
 ---
-title: How to chat with a Hermes profile
+title: Chat with Hermes
 parent: Using Hermes Agent
+nav_order: 2
 ---
 
 
-# How to chat with a Hermes profile
+# Chat with Hermes
 
 Start a CLI chat session with a specific Memoria profile to run skills, ingest sources, lint the vault, or run any other profile-specific command.
 
@@ -79,7 +80,7 @@ Or run the session normally and copy the output — the profile logs session out
 
 ## Related
 
-- Profile configuration: [How to configure a Hermes profile](configuration.md)
-- Ingest: [How to capture and ingest a source](../sources/capture-and-ingest.md)
-- Lint: [How to run the Linter](../maintenance/run-the-linter.md)
+- Profile configuration: [Configure a profile](configuration.md)
+- Ingest: [Capture and ingest a source](../sources/capture-and-ingest.md)
+- Lint: [Run the Linter](../maintenance/run-the-linter.md)
 - Administrative CLI commands (profile, kanban, skills, cron): [Hermes CLI](../../reference/hermes-cli.md)

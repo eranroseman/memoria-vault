@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [Hermes CLI](hermes-cli.md). For invocation patterns and hotkey discipline see [How to use the Memoria command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md).
+Every Obsidian command-palette entry Memoria registers (the `Memoria:` prefix). These are the **in-Obsidian UI** surface — invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management, etc.) see [Hermes CLI](hermes-cli.md). For invocation patterns and hotkey discipline see [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md).
 
 > **v0.1 status.** This page is the **designed** palette surface. The shipped QuickAdd config wires **seven note-creation commands** — `Memoria: capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note` (each a QuickAdd **Template** choice that instantiates a raw-note template from `99-system/templates/`) — plus the `Memoria: capture from Zotero selection` **Macro** (a UserScript at `99-system/scripts/capture-from-zotero.js`: Better BibTeX CAYW → `hermes kanban create`). The remaining commands below (API-POST and ACP-pane choices) are added as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
 
@@ -76,4 +76,4 @@ Each lens is one command. Adding a lens = adding one QuickAdd entry.
 
 - Hermes CLI commands (per-profile + board management): [Hermes CLI](hermes-cli.md)
 - Policy on commands that target review-gated zones: [policy-mcp.md — Review-gated zones](policy-mcp.md)
-- Invocation patterns and hotkey discipline: [How to use the Memoria command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md)
+- Invocation patterns and hotkey discipline: [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md)

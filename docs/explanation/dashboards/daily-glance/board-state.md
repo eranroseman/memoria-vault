@@ -1,6 +1,7 @@
 ---
 title: The board-state dashboard
 parent: Daily glance
+nav_order: 2
 grand_parent: Dashboards
 ---
 
@@ -19,17 +20,17 @@ Four sections, each answering a different question about work in flight: **activ
 
 ## What this dashboard is not
 
-**Not the authoritative board.** The authoritative board lives in Hermes (or in `99-system/board/` as markdown cards, depending on configuration). Board-state is a *read view*. State changes happen through Hermes commands or by editing card files directly, not through this dashboard.
+**Not the authoritative board.** The authoritative board lives in `kanban.db` (Hermes); the `99-system/board/` markdown cards are read-only projections (no configuration makes them authoritative). Board-state is a *read view*. State changes happen through Hermes commands, not through this dashboard — and not by editing the projected card files, which does nothing.
 
 **Not [Daily Health](daily-health.md)'s "today's queue."** Daily Health shows only `blocked` cards and those awaiting review, capped at ten. Board-state shows the full board across all states — every active card, every lane, everything in retry watch.
 
-**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is an upstream-cognitive-discipline view — paper notes classified but not yet Socratically processed. Board-state is a workflow-execution view — cards moving through states regardless of content type.
+**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is a Compile-side cognitive-discipline view — paper notes classified but not yet Socratically processed. Board-state is a workflow-execution view — cards moving through states regardless of content type.
 
 ---
 
 ## Why it's designed this way
 
-**Three sections, three distinct failure modes.** Active cards surface work-in-flight visibility. The review queue shows who owes what review — the human's obligation toward agent output. Retry watch shows which cards are accumulating retries — the signal that something is broken rather than just slow. Each section names a different thing that can go wrong; separating them prevents the human from having to parse a single mixed list.
+**Four sections, four distinct concerns.** Active cards surface work-in-flight visibility. The review queue shows who owes what review — the human's obligation toward agent output. Retry watch shows which cards are accumulating retries — the signal that something is broken rather than just slow. The claim-note maturity histogram shows whether the board is actually advancing the knowledge graph (covered just below). Each section names a different thing to watch; separating them prevents the human from having to parse a single mixed list.
 
 **The claim-note maturity histogram is an end-of-board signal.** The board processes upstream work; claim notes at `maturity: seedling → budding → evergreen` are the downstream output of that work. A board that flows cards without producing maturity is a board that is not advancing the knowledge graph. Showing both on the same dashboard makes the throughput relationship visible.
 
@@ -40,6 +41,6 @@ Four sections, each answering a different question about work in flight: **activ
 ## Related
 
 - Filtered daily subset: [Daily Health](daily-health.md)
-- Upstream-discipline complement: [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md)
+- Compile-discipline complement: [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md)
 - Recovery guides for board problems: [fix a stuck card](../../../how-to-guides/recovery/fix-stuck-card.md)
 - Kanban state machine explanation: `kanban-board/README.md`

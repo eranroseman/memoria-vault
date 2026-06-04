@@ -1,6 +1,7 @@
 ---
 title: Session logging
 parent: Architecture
+nav_order: 5
 ---
 
 # Session logging
@@ -32,7 +33,7 @@ Combining them would make the audit log verbose (session narrative) and would ma
 
 ## Why the sessions directory is not pre-created
 
-The `99-system/logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [How to set up the vault](../../how-to-guides/setup/set-up-the-vault.md) covers this.
+The `99-system/logs/sessions/` directory is not pre-created in the starter vault. This is an intentional omission — including the directory in the vault repository would populate it with an empty tracked folder, which creates noise in git history as session files accumulate. The installer creates the directory on first setup. If the directory is missing, session logging silently fails; the setup guide at [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md) covers this.
 
 ---
 

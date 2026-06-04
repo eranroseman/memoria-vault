@@ -93,7 +93,7 @@ The recommended install tiers:
 | --- | --- | --- |
 | **Socratic** | Write-denied (`policy.allow.write: []`) and `routing.invocation: interactive_only`. Cannot write to the vault or claim cards by lane policy. The constraints below (no cron, no `serve`, no claim) are *vacuously satisfied* — there's nothing to disable. | **Always install.** |
 | **Mapper** | Read-only across the vault except project-scratch (`40-workbench/<project>/01-map/corpus-map.md`, `*/01-map/gap-report.md`). Two Mapper instances writing the same project's scratch can collide. | **Borderline.** Install for read-only scope queries only; never run during active project work the primary is also handling. |
-| **Verifier** | Read-only except `40-workbench/*/05-verification/`. Can spawn upstream gap cards. Two Verifier instances on the same draft is collision-prone. | **Borderline.** Install for ad-hoc `similarity-check` before filing a new claim; skip if the primary is running full `cite-check` against the same drafts. |
+| **Verifier** | Read-only except `40-workbench/*/05-verification/`. Can spawn Compile-flow gap cards. Two Verifier instances on the same draft is collision-prone. | **Borderline.** Install for ad-hoc `similarity-check` before filing a new claim; skip if the primary is running full `cite-check` against the same drafts. |
 | **Writer** | Writes drafts to `10-inbox/02-answers/` and `40-workbench/*/04-drafts/`. Creates synthesis cards. Two-machine drafting on the same chapter is the most likely real-world collision. | **Borderline.** Install for `hermes -p memoria-writer chat` (interactive drafting Q&A); never use `run draft` on the secondary. |
 | **Librarian** | Network-active — external APIs cost real money. Writes to `10-inbox/` and `20-sources/`. The primary's overnight discovery loop already covers this lane. A secondary Librarian run duplicates work, creates conflicting candidate cards, and double-charges the API budget. | **Don't install.** Use the primary via Telegram or API client when you need Librarian work from the laptop. |
 | **Coder** | Writes to `40-workbench/*/06-code/`; spawns external coding agents (Codex, Claude Code; Kilo Code and Aider planned) with their own heavy install footprints. Only relevant if the human codes on the secondary. | **Don't install** unless you actively code on the secondary. |
@@ -149,7 +149,7 @@ The VPS is the primary, and a VPS is always on. SSH-spawned ACP becomes the *rec
 1. **Start vault-only** if you don't need ACP at all.
 2. **SSH-spawned ACP** as the default ACP pattern. No local Hermes install on the laptop. The ACP plugin spawns the VPS's Hermes over Tailscale-bridged SSH. You can ACP with any profile because the VPS has the full suite. Zero install drift — the laptop always uses the primary's Hermes.
 3. **Local Socratic-only install** as an *offline fallback* if you regularly work where SSH to the VPS is unreliable (planes, trains, weak hotel wifi). Configure the `agent-client` plugin with two `command` entries — primary SSH command and a fallback local command — and switch when offline.
-4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../plans/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
+4. **Local full install** only for a *developer* role (see [Phase 4 install discipline](../releases/v0.1/release-plan-v0.1-spillover.md)), never for the principal investigator's laptop in human-as-reader mode. The dev install must use `HERMES_HOME` isolation and point at a *test vault*, never the production vault.
 
 The architectural reason the recommendation differs: `local-mesh`'s primary is unreliable (desktop sleeps), so the laptop needs a local agent for ACP to be usable; `always-on`'s primary is reliable (VPS always on), so SSH-spawn removes the need for a local install entirely.
 
@@ -172,5 +172,5 @@ The VPS remains the primary dispatcher in either case. Developers iterate agains
 
 - **Adopted baseline:** [deployment options](../../docs/explanation/deployment/deployment-options.md) (the `local-only` default and the common conventions).
 - **Cross-machine capabilities:** [multi-vault-and-multi-machine.md](multi-vault-and-multi-machine.md) (cross-vault retrieval, session-history sync, shared memory server) — the capabilities that ride this substrate.
-- **Install discipline:** [release-plan-v0.1-spillover.md](../plans/release-plan-v0.1-spillover.md) (Phase 4 dev-install rules).
+- **Install discipline:** [release-plan-v0.1-spillover.md](../releases/v0.1/release-plan-v0.1-spillover.md) (Phase 4 dev-install rules).
 - **Glossary:** [primary device](../../docs/reference/glossary.md#system).

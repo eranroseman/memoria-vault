@@ -5,7 +5,7 @@ parent: Reference
 
 # Ingest routing
 
-Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
 
 ---
 
@@ -89,7 +89,8 @@ Fields the Librarian populates on the new note at creation:
 | Field | Value | Notes |
 | --- | --- | --- |
 | `type` | Detected type (see table above) | Set once; never changed. |
-| `lifecycle` | `proposed` | Promoted to `current` by the human at [Classify](../how-to-guides/sources/classify-a-source.md). |
+| `lifecycle` | `captured` | The Tier-0 floor. The classification proposal promotes `captured → proposed`; the human promotes `proposed → current` at [Classify](../how-to-guides/sources/classify-a-source.md). |
+| `ingest_status` | `tier0` → `enriched` → `complete` | Pipeline progress while `captured`; `needs-human` is the terminal floor after bounded failed re-ingest. See [Frontmatter fields](frontmatter.md#ingest_status-values-ingested-source-notes). |
 | `created` | Today's date | `updated` is set to the same date at creation. |
 | `citekey` | From `.bib` | Paper notes only. |
 | `doi` | From `.bib` or OpenAlex | Promoted from `_enrichment` once verified. |
@@ -102,6 +103,23 @@ Fields the Librarian populates on the new note at creation:
 
 **Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [Obsidian callouts](obsidian-callouts.md).
 
+### Zotero fields without the Zotero API
+
+The pipeline reads only the `.bib`, so Zotero-native fields come from the Better BibTeX export — no live Zotero API dependency:
+
+- **`pdf_uri`** and the local PDF (for full-text extraction) are recovered from the bib `file` field — it carries the attachment path, whose `storage/<KEY>/` segment is the Zotero attachment key.
+- **`zotero_uri`** (the select-into-Zotero link) needs the *parent* item key, which a normal `.bib` omits. Add it with a one-line Better BibTeX **postscript** (Zotero → Better BibTeX → Preferences → Export → Postscript), which the pipeline reads from a `zoteroselect` field:
+
+  ```js
+  if (Translator.BetterBibTeX || Translator.BetterBibLaTeX) {
+    if (zotero.uri) {
+      tex.add({ name: 'zoteroselect',
+        value: zotero.uri.replace(/^https?:\/\/zotero\.org\/(?:users|groups)\/\w+\/items\/(\w+)$/,
+                                  'zotero://select/library/items/$1') })
+    }
+  }
+  ```
+
 ---
 
 ## Card states during ingest
@@ -113,7 +131,26 @@ Fields the Librarian populates on the new note at creation:
 | `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
 | `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
 
-For the step-by-step ingest procedure see [How to capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+For the step-by-step ingest procedure see [Capture and ingest a source](../how-to-guides/sources/capture-and-ingest.md).
+
+---
+
+## Durability: the capture-intake log and the two sweeps
+
+Capture commits first. Before the gated note write, the capture entry point appends one line to `99-system/logs/capture-intake.jsonl` (un-gated — it is the durability anchor, so a failure anywhere downstream loses nothing):
+
+```json
+{"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero", "note_path": "20-sources/01-papers/<citekey>.md"}
+```
+
+Two backstops recover anything that stalls. Neither writes the vault — re-ingest must be **board-serialized** (single-lane WIP=1 makes find-or-create safe), so each is a detector that enqueues an **idempotent** re-ingest card (`hermes kanban create --idempotency-key reingest:<citekey>`). The board then provides dedup, backoff, and the failure circuit-breaker (the `needs-human` floor). Both live in `obsidian-paper-note/scripts/sweeps.py`:
+
+| Sweep | Detects | Re-drives |
+| --- | --- | --- |
+| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed) | Enqueues a re-ingest card so the first write is retried |
+| `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed) | Enqueues a re-ingest card to re-run enrichment |
+
+Run with `--dry-run` to report what would be enqueued without touching the board. The installer wires both passes as a deterministic, no-LLM cron (`memoria-sweeps`, every 15 minutes) that recovers stalled captures automatically.
 
 ---
 

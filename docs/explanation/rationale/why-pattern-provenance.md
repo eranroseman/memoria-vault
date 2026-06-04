@@ -1,6 +1,7 @@
 ---
 title: "Pattern provenance: borrow, adapt, ignore"
 parent: Design rationale
+nav_order: 7
 ---
 
 # Pattern provenance: borrow, adapt, ignore
@@ -17,7 +18,7 @@ Patterns adopted as-is. Each one solves a real problem; none required modificati
 
 | Pattern | Source | Why borrow it | Where it fits |
 |---|---|---|---|
-| **Stage-gated pipeline** | ResearchArena, MLR-Copilot, AutoResearchClaw | Prevents everything from collapsing into one giant prompt. Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape across every end-to-end system surveyed. | Upstream: ingest → classify → discuss → synthesize. Downstream: scope → frame → draft → verify → export. |
+| **Stage-gated pipeline** | ResearchArena, MLR-Copilot, AutoResearchClaw | Prevents everything from collapsing into one giant prompt. Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape across every end-to-end system surveyed. | Compile: ingest → classify → discuss → synthesize. Compose: scope → frame → draft → verify → export. |
 | **Explicit roles per agent** | [AI Scientist v2](../../reference/bibliography.md#yamada2025aiscientistv2), [LatteReview](../../reference/bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](../../reference/bibliography.md#schmidgall2025agentlaboratory) | Keeps planning, execution, review, and writing separate. Each role has narrow permissions and traceable quality responsibility. | Seven Hermes profiles; see [Why specialist profiles, not a generalist agent](why-specialist-profiles.md). |
 | **Strong schema with validated handoffs** | AI Scientist, AutoResearchClaw | Structured outputs at inter-agent boundaries reduce cascading hallucinations and make automation debuggable. Free-text handoffs compound errors; typed frontmatter catches mismatches early. | Frontmatter namespaces, `_proposed_classification`, `_enrichment.*`, `_aspects.*`; see [Frontmatter fields](../../reference/frontmatter.md). |
 | **Persistent knowledge graph** | [OmegaWiki](../../reference/bibliography.md#qian2026omegawiki), Idea2Story | Preserves relationships instead of re-searching at every query. The graph accumulates; each new source adds to an existing network rather than sitting in isolation. | Wikilinks, typed relations (`supports` / `contradicts`), MOCs, entity notes. |
@@ -28,7 +29,7 @@ Patterns adopted as-is. Each one solves a real problem; none required modificati
 | **Structured outputs at handoff boundaries** | [MetaGPT (Hong et al. 2024)](../../reference/bibliography.md#hong2024metagpt) | Independent validation that typed structured outputs at inter-agent boundaries (vs. free-text chat) reduce cascading hallucination across roles. | Frontmatter schema discipline; profile handoff contracts. |
 | **Cross-run knowledge accumulation** | [PARNESS (Wang and Luan 2026)](../../reference/bibliography.md#wang2026parness) | Third independent corroboration of the durable-state thesis. PARNESS names "no existing tool persists cross-run knowledge in a form retrievable into a finite LLM context" as one of five structural problems in the field and addresses it with a persistent knowledge layer. | Vault layer; see [Why three layers, not one](why-three-layers.md). |
 | **Paper ↔ code repository linking** | [PARNESS (Wang and Luan 2026)](../../reference/bibliography.md#wang2026parness) | A paper's open-source repository is often the only complete specification of its experimental scheme; PARNESS makes the paper↔code correspondence a typed object in the knowledge graph. | Paper-note enrichment: when ingesting a paper, search for and link its code repository when available. See [Profiles](../profiles/README.md). |
-| **Claim-to-evidence chain by construction** | [ScientistOne (Meng et al. 2026)](../../reference/bibliography.md#meng2026scientistone), [AutoResearchClaw (Liu et al. 2026)](../../reference/bibliography.md#liu2026autoresearchclaw) | ScientistOne defines verifiability as "every claim traces through a recorded evidence chain to a grounding source" and reaches 0/337 hallucinated references where baselines hit up to 21%. AutoResearchClaw ties every reported number to a registry of executed outputs before it can enter a draft. Fourth independent corroboration of the durable-state thesis at the claim grain. | Verifier profile: claim-trace and citation sub-checks. See [Profiles](../profiles/README.md). |
+| **Claim-to-evidence chain by construction** | [ScientistOne (Meng et al. 2026)](../../reference/bibliography.md#meng2026scientistone), [AutoResearchClaw (Liu et al. 2026)](../../reference/bibliography.md#liu2026autoresearchclaw) | ScientistOne defines verifiability as "every claim traces through a recorded evidence chain to a grounding source" and reaches 0/337 hallucinated references where baselines hit up to 21%. AutoResearchClaw ties every reported number to a registry of executed outputs before it can enter a draft. A further independent corroboration of the durable-state thesis at the claim grain. | Verifier profile: claim-trace and citation sub-checks. See [Profiles](../profiles/README.md). |
 
 ---
 
@@ -38,7 +39,7 @@ Patterns taken with modification. In each case, the mechanic is borrowed but the
 
 | Pattern | Source | Why adapt it | How |
 |---|---|---|---|
-| **ResearchArena-style discover / select / organize** | ResearchArena | Good conceptual pipeline shape, but needs a deeper human synthesis layer. | Map to: find → ingest → classify → discuss → synthesize → promote. The organize step becomes human-driven synthesis, not agent-driven organization. |
+| **ResearchArena-style discover / select / organize** | ResearchArena | Good conceptual pipeline shape, but needs a deeper human synthesis layer. | Map to: find → capture → enrich → classify → discuss → distill → connect. The organize step becomes human-driven distillation, not agent-driven organization. |
 | **AI Scientist modular roles** | AI Scientist [v1](../../reference/bibliography.md#lu2024aiscientist) + [v2](../../reference/bibliography.md#yamada2025aiscientistv2) (Sakana AI) | Useful role separation, but full autonomy is too broad for knowledge work. | Keep separate planner / writer / code-executor roles. Humans canonize. Tree-search over synthesis is refused (see Ignore). |
 | **Memory module + Meta-review artifact** | [AI co-scientist (Gottweis et al. 2025)](../../reference/bibliography.md#gottweis2025aicoscientist) | The Memory store + Meta-review research-overview pair is the same shape as Memoria's vault + MOC. Architectural validation of vault-plus-roles design from the most production-mature system in the survey. | Vault layer; MOC type. The tournament / evolution loop on top of the Memory module is not adapted — see Ignore. |
 | **Inspiration retrieval before drafting** | [SciMON (Wang et al. 2024)](../../reference/bibliography.md#wang2024scimon) | The "retrieve related prior ideas, then draft" mechanic improves grounding and reduces redundancy. The novelty optimizer (what drives keep/revert in SciMON) is refused. | Writer reads related claim notes as inspiration context before drafting. Novelty is not a stopping criterion — the human stops. |
@@ -61,8 +62,8 @@ Papers that inform framing or positioning without contributing a borrowable desi
 
 | Contribution | Source | Why referenced |
 |---|---|---|
-| **L1–L5 autonomy taxonomy** | Chen 2026 (*From Copilots to Colleagues*) | Vocabulary for positioning Memoria precisely on the autonomy spectrum. Memoria targets L3 with a structurally enforced ceiling. See [What Memoria is](../overview/what-memoria-is.md). |
-| **"Persistent knowledge accumulation is the #1 barrier to L5"** | Chen 2026 | Independent validation of Memoria's vault-as-load-bearing-piece thesis from a 95-paper survey. Chen identifies as the field's open problem exactly what Memoria's central commitment addresses. |
+| **L1–L5 autonomy taxonomy** | [Chen 2026](../../reference/bibliography.md#chen2026copilots) (*From Copilots to Colleagues*) | Vocabulary for positioning Memoria precisely on the autonomy spectrum. Memoria targets L3 with a structurally enforced ceiling. See [What Memoria is](../overview/what-memoria-is.md). |
+| **"Persistent knowledge accumulation is a primary barrier to L5 autonomy"** | [Chen 2026](../../reference/bibliography.md#chen2026copilots) (*From Copilots to Colleagues*) | Independent validation of Memoria's vault-as-load-bearing-piece thesis: a ~95-paper survey that names persistent knowledge accumulation (with self-evaluation and architecture scaling) as the critical barrier to L5 — exactly what Memoria's central commitment addresses. |
 | **Deep Research as a sibling-but-distinct category** | [Huang et al. 2025](../../reference/bibliography.md#huang2025deepresearch); [Xu and Peng 2025](../../reference/bibliography.md#xu2025deepresearch) | Defines a category (query-driven, ephemeral-report agents like OpenAI DR / Gemini DR) that Memoria explicitly is not. Corpus-curating and durable vs. query-driven and ephemeral are different tools for different needs. |
 | **Autonomous-vs-collaborative axis** | [Gridach et al. 2025](../../reference/bibliography.md#gridach2025agentic) | Positions Memoria unambiguously on the collaborative side. Survey findings that literature-review automation is the field's weakest sub-task reinforce the "agent does bookkeeping; human owns judgment" thesis. |
 | **Co-scientist (not autonomous) thesis + four challenges** | [Bisht et al. 2026](../../reference/bibliography.md#bisht2026agentic) | Position paper concluding current agentic systems are co-scientists, not autonomous scientists. Its recommended "persistent world model carrying epistemic state across an investigation" is structurally the vault. Its hypothesis-hivemind finding (independent models converge semantically even when diversity is wanted) is a documented caution on the consensus pre-filter. |
@@ -102,7 +103,7 @@ The design shift versus a generic "agent-assisted knowledge base" is from agent-
 - The human remains the gatekeeper for meaning, promotion, and final structure.
 - Every borrowed pattern is adopted for its mechanic; every scalar-optimization loop that sits on top of that mechanic is stripped.
 
-This makes the architecture more reliable (errors surface at stage gates), easier to debug (each stage has traceable responsibility), and less likely to accumulate polished but untrusted content (nothing reaches canonical without human approval).
+This makes the architecture more reliable (errors surface at phase gates), easier to debug (each phase has traceable responsibility), and less likely to accumulate polished but untrusted content (nothing reaches canonical without human approval).
 
 ---
 
@@ -116,7 +117,7 @@ This makes the architecture more reliable (errors surface at stage gates), easie
 
 **Runtime and orchestration substrates:** AutoGen (Wu et al. 2023), OpenHands (Wang et al. 2025), CycleResearcher (Weng et al. 2025).
 
-**Surveys, positions, and evaluations:** Gridach et al. (ICLR 2025), Chen 2026 (*From Copilots to Colleagues*), Huang et al. 2025 (*Deep Research Agents*), Ren et al. 2025 (*Scientific Intelligence*), Xu & Peng 2025 (*Deep Research Systems*), MASSW (Zhang et al. 2024), Qi et al. 2023, Bisht et al. 2026 (*Not built for autonomous discovery*), Feng & Liu 2026 (*Vibe Researching*), Yue et al. 2026 (*MCP-native ecosystems*), Zhang et al. 2026 (*How Far Are We From True Auto-Research*), AutoResearchBench (Xiong et al. 2026).
+**Surveys, positions, and evaluations:** Gridach et al. (ICLR 2025), [Chen 2026](../../reference/bibliography.md#chen2026copilots) (*From Copilots to Colleagues*), Huang et al. 2025 (*Deep Research Agents*), Ren et al. 2025 (*Scientific Intelligence*), Xu & Peng 2025 (*Deep Research Systems*), MASSW (Zhang et al. 2024), Qi et al. 2023, Bisht et al. 2026 (*Not built for autonomous discovery*), Feng & Liu 2026 (*Vibe Researching*), Yue et al. 2026 (*MCP-native ecosystems*), Zhang et al. 2026 (*How Far Are We From True Auto-Research*), AutoResearchBench (Xiong et al. 2026).
 
 ---
 

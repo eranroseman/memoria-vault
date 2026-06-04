@@ -1,9 +1,10 @@
 ---
-title: How to pin a citekey in Zotero
+title: Pin a citekey
 parent: Sources
+nav_order: 5
 ---
 
-# How to pin a citekey in Zotero
+# Pin a citekey
 
 This guide shows you how to lock a paper's Better BibTeX citekey so it never regenerates when metadata changes.
 
@@ -45,5 +46,5 @@ This produces `mamykina2010sense`, `chen2021pipeline`, `klasnja2019microrandomiz
 
 ## Related
 
-- Pinning is step 2 of ingest: [How to capture and ingest a source](capture-and-ingest.md)
+- Pinning is step 2 of ingest: [Capture and ingest a source](capture-and-ingest.md)
 - The unpinned-citekey pitfall this fixes: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)

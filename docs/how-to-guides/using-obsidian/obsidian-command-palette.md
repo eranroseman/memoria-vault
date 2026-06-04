@@ -1,17 +1,18 @@
 ---
-title: How to use the Memoria command palette
+title: Command palette
 parent: Using Obsidian
+nav_order: 5
 ---
 
 
-# How to use the Memoria command palette
+# Command palette
 
 Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leaving Obsidian. This guide covers the pre-wired commands and how to add the rest.
 
 ## Prerequisites
 
 - Obsidian open with the vault
-- QuickAdd ships bundled and enabled with the starter vault — no install needed (see [How to set up Obsidian](../setup/set-up-obsidian.md))
+- QuickAdd ships bundled and enabled with the starter vault — no install needed (see [Set up Obsidian](../setup/set-up-obsidian.md))
 - The Memoria command catalog open for reference: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 
 ## Steps

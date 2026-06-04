@@ -1,16 +1,17 @@
 ---
-title: How to write a claim note
+title: Write a claim note
 parent: Sources
+nav_order: 8
 ---
 
 
-# How to write a claim note
+# Write a claim note
 
 Distill a discussed source into a single, durable claim in `30-synthesis/01-claims/`. One claim per note; no more than 2–3 claims per source.
 
 ## Prerequisites
 
-- The source has been discussed and you've decided it yields a claim ([How to discuss a paper](discuss-a-paper.md))
+- The source has been discussed and you've decided it yields a claim ([Discuss a paper](discuss-a-paper.md))
 - The Writer profile is installed (for optional prose assistance)
 - The Verifier profile is installed (for the similarity check)
 

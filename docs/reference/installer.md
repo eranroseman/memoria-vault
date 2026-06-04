@@ -49,7 +49,7 @@ The Hermes installer auto-provisions uv, Python 3.11, Node.js 22, ripgrep, and f
 | Hermes runtime | upstream installer (WSL2 on Win) | ✅ |
 | `.memoria` MCP servers (`policy_mcp.py`, `policy_hook.py`) | `pip install -r requirements.txt` | ✅ |
 | Seven Hermes profiles | stage + `{{VAULT_PATH}}` + `hermes profile install` | ✅ |
-| Skills — installable | clone K-Dense (5) + `hermes skills install` official (2) | ✅ |
+| Skills — installable | clone K-Dense (7) + `hermes skills install` official (2) | ✅ |
 | Skills — Memoria-custom | authored as `SKILL.md` in the profile `skills/` dirs | ✅ (ship in vault) |
 | Per-profile `.env` | bootstrap from `.env.EXAMPLE` if absent | ✅ create / ❌ fill |
 | Zotero app + Better BibTeX (required), MarkDB-Connect, RTF/ODF Scan | detect; download `.xpi` + GUI install | ⚠️ |
@@ -67,16 +67,16 @@ The installer prints this checklist and the exact paths; it writes nothing. **v0
 | `OBSIDIAN_API_KEY` | Obsidian → Local REST API (first launch) | every profile `.env` |
 | `OPENALEX_API_KEY` | [openalex.org/settings/api](https://openalex.org/settings/api) (required since 2026-02) | Librarian `.env` |
 | `S2_API_KEY`, `NCBI_API_KEY`, `NCBI_EMAIL` | Semantic Scholar / NCBI account pages | Librarian `.env` (optional) |
-| Zotero | local desktop API, no key (`pyzotero` read-only) — see [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md) | — |
+| Zotero | local desktop API, no key (`pyzotero` read-only) — see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md) | — |
 | `GITHUB_TOKEN`, `OPENAI_API_KEY` | GitHub PAT / OpenAI dashboard | Coder `.env` (optional) |
 
 Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
 
 ## Skills provisioning
 
-The seven profiles' lane-overrides name **28 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
+The seven profiles' lane-overrides name **30 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
 
-- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`.
+- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`, `scikit-learn`, `umap-learn`. The last two are the Python clustering/dimensionality-reduction libraries the Mapper drives for `cluster-map` (HDBSCAN + UMAP); they are granted in `mapper.yaml` and installed on the same K-Dense `git clone` path.
 - **Installable from the official Hermes registry** (`hermes skills install official/...`): `arxiv` (lane name `arxiv-search`), `llm-wiki` (lane name `llm-wiki-draft`), plus `obsidian`, `ocr-and-documents`, `github-repo-management`, `codex`, `claude-code`.
 - **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): the two real thin skills `obsidian-paper-note` (Librarian) and `retraction-check` (Verifier); the rest are handled by adapting the design — prompt-only behaviors in `SOUL.md`, lane-overrides pointing at a real skill ID, QuickAdd templates, or `detectors.py` functions (the Linter runs `detectors.py`, not Hermes skills).
 - **Not a skill:** `rest-passthrough` is a lane-override capability token.
@@ -102,11 +102,11 @@ Profiles also carry `skills/` and `cron/` directories.
 
 ## Models and ACP
 
-Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [How to configure a Hermes profile](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
+Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [Configure a profile](../how-to-guides/using-hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
 
 ## Related
 
 - **Design rationale:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
-- **Redeploy path:** [How to redeploy profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
-- **Setup guides:** [How to set up the vault](../how-to-guides/setup/set-up-the-vault.md), [How to set up Hermes](../how-to-guides/setup/set-up-hermes.md), [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+- **Redeploy path:** [Redeploy profiles](../how-to-guides/maintenance/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
+- **Setup guides:** [Set up the vault](../how-to-guides/setup/set-up-the-vault.md), [Set up Hermes](../how-to-guides/setup/set-up-hermes.md), [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 - **Telemetry shipped by v0.1:** [Telemetry & logs](telemetry.md).

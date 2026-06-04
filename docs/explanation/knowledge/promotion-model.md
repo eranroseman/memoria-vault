@@ -1,6 +1,7 @@
 ---
 title: Why promotion is gated
 parent: Knowledge
+nav_order: 5
 ---
 
 # Why promotion is gated

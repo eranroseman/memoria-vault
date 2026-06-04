@@ -1,6 +1,7 @@
 ---
 title: The control plane
 parent: Architecture
+nav_order: 3
 ---
 
 # The control plane

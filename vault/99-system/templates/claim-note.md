@@ -9,6 +9,7 @@ sources: []
 moc: []
 projects: []
 lifecycle: current
+promoted_date:
 superseded_by:
 relations:
   supports: []

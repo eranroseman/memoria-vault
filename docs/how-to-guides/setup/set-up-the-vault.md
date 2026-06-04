@@ -1,10 +1,11 @@
 ---
-title: How to set up the vault
+title: Set up the vault
 parent: Setup
+nav_order: 2
 ---
 
 
-# How to set up the vault
+# Set up the vault
 
 Run the bootstrap installer to provision the runtime, lay the vault down, and register the profiles. This is the foundation step — all other setup guides build on it.
 

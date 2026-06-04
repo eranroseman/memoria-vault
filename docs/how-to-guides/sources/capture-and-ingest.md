@@ -1,17 +1,18 @@
 ---
-title: How to capture and ingest a source
+title: Capture and ingest a source
 parent: Sources
+nav_order: 3
 ---
 
 
-# How to capture and ingest a source
+# Capture and ingest a source
 
 Move a paper, repository, or other source from discovery into the vault as a reviewed note. This is the complete intake path: Zotero first, then the Librarian.
 
 ## Prerequisites
 
-- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([How to set up Zotero](../setup/set-up-zotero.md))
-- The Librarian profile installed and secrets filled ([How to set up Hermes](../setup/set-up-hermes.md))
+- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([Set up Zotero](../setup/set-up-zotero.md))
+- The Librarian profile installed and secrets filled ([Set up Hermes](../setup/set-up-hermes.md))
 
 ## Steps
 
@@ -75,6 +76,6 @@ For multiple sources, run `/obsidian-paper-note --source <citekey>` once per sou
 
 - Next step: [Classify a source](classify-a-source.md)
 - If the citekey isn't found: [Fix a stale .bib](../recovery/fix-stale-bib.md)
-- Pin the citekey (step 2): [How to pin a citekey in Zotero](pin-a-citekey.md)
+- Pin the citekey (step 2): [Pin a citekey](pin-a-citekey.md)
 - Ingest reference (routing table, per-type enrichment): [Ingest routing](../../reference/ingest.md)
 - Source types and note formats: [Note types](../../reference/note-types.md)

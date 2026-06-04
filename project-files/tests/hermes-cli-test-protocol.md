@@ -76,7 +76,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | Hermes ≥ 0.12 installed; 7 `memoria-*` profiles registered | `hermes profile list` shows all seven |
 | Obsidian open with Local REST API on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` set | `curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
 | Hermes gateway on `:8642` (needed for `kanban dispatch`) | `hermes gateway status` |
-| Zotero running with Better BibTeX; `.memoria/library.bib` present | file exists, contains the F1 citekeys |
+| Zotero running with Better BibTeX; `.memoria/memoria.bib` present | file exists, contains the F1 citekeys |
 | `KILOCODE_API_KEY`, `OPENALEX_API_KEY` set per profile `.env` | `hermes profile show memoria-librarian` lists the keys (values redacted) |
 | **Disposable test vault** (clone/fixture, never the real research vault) | `HERMES_HOME` / vault path points at the test copy |
 
@@ -84,7 +84,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 
 | ID | Fixture |
 |---|---|
-| **F1** | Two Zotero items with pinned BBT citekeys exported to `.memoria/library.bib` — one with an open-access PDF (call it `smithA`) and one without (`jonesB`). |
+| **F1** | Two Zotero items with pinned BBT citekeys exported to `.memoria/memoria.bib` — one with an open-access PDF (call it `smithA`) and one without (`jonesB`). |
 | **F2** | `research-focus.md` with ≥ 1 concrete priority topic. |
 | **F3** | ≥ 5 `claim-note`s in `30-synthesis/01-claims/` on a shared topic (for Mapper/Writer/Verifier). |
 | **F4** | A project at `40-workbench/test-proj/` with a `README.md` (`type: project-note`) and the canonical subfolders `01-map … 06-code`. |

@@ -1,6 +1,7 @@
 ---
 title: Bootstrap installer
 parent: Deployment
+nav_order: 2
 ---
 
 # Bootstrap installer
@@ -87,4 +88,4 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-26 the repo is the install unit](../../../project-files/decisions/26-repo-as-install-unit.md).
 - **Explanation:** [Distribution model](distribution-model.md) (the repo as install unit), [Why Hermes](../rationale/why-hermes.md) (the runtime the installer provisions).
-- **How-to:** [How to install Memoria: quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).
+- **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [tutorial: set up from zero](../../tutorials/01-set-up-from-zero.md).

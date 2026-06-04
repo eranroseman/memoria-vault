@@ -11,7 +11,7 @@ superseded_by: []
 
 # ADR-23: Memory is seven scoped substrates, not one store
 
-> **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it.
+> **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it. (The filename retains `six` for link stability; the title, body, and count are authoritative at **seven**.)
 
 ## Context
 
@@ -19,7 +19,7 @@ superseded_by: []
 
 ## Decision
 
-Memoria's memory is **seven distinct substrates**, each with its own scope, lifespan, backing store, and owner — two provided by Hermes natively, five added by Memoria:
+Memoria's memory is **seven distinct substrates**, each with its own scope, lifespan, backing store, and owner — **three** provided by Hermes natively (Working memory, Agent memory, Session history), **four** added by Memoria:
 
 1. **Working memory** (Hermes) — one session, cleared on `/clear`; active reasoning state.
 2. **Agent memory** `MEMORY.md` + `USER.md` (Hermes) — one agent (profile), durable, injected as a *frozen snapshot* into the system prompt under hard token caps (~800 / ~500); stable facts only.

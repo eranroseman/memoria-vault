@@ -6,7 +6,6 @@ venue_type: conference
 website: ""
 issn: ""
 lifecycle: proposed
-scope: ""
 parent_moc: ""
 moc: []
 projects: []

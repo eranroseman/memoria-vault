@@ -1,10 +1,11 @@
 ---
-title: How to work the review queue
+title: Work the review queue
 parent: Writing
+nav_order: 8
 ---
 
 
-# How to work the review queue
+# Work the review queue
 
 When an agent finishes a task that writes to a review-gated zone (`30-synthesis/01-claims/`, `02-reference/`, `03-moc/`, or `50-deliverables/`), its card lands in `done` with `review_status: requested` and **blocks** — the write is held in `dry_run` until you decide. This guide is how you, the human, clear that queue: inspect each card, then approve (let the write land) or reject (nothing lands, and you choose what happens next).
 

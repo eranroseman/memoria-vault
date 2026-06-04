@@ -1,10 +1,11 @@
 ---
-title: How to archive a source
+title: Archive a source
 parent: Sources
+nav_order: 12
 ---
 
 
-# How to archive a source
+# Archive a source
 
 Retire a source note that is no longer active — superseded, irrelevant to current projects, or fully processed with nothing new to extract.
 
@@ -65,6 +66,6 @@ Do not archive a source just to clear it from a queue. If the discuss card has b
 
 ## Related
 
-- Weekly review (surfaces stale sources): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Weekly review (surfaces stale sources): [Run the weekly review](../maintenance/run-the-weekly-review.md)
 - Lifecycle field values: [Frontmatter fields](../../reference/frontmatter.md)
 - Why archived notes aren't deleted: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

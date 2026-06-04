@@ -1,10 +1,11 @@
 ---
-title: How to assess your corpus for a project
+title: Assess your corpus
 parent: Writing
+nav_order: 2
 ---
 
 
-# How to assess your corpus for a project
+# Assess your corpus
 
 Run the Mapper's `scope-project` command to get a corpus map — a structured report of what claim notes and sources you have, where coverage is dense, and where the gaps are. The corpus map is the decision point before framing or drafting.
 
@@ -49,7 +50,7 @@ The output is written to `40-workbench/<project-slug>/01-map/corpus-map.md`. Ope
 **4. Decide: write now or read more?**
 
 - **Dense enough:** proceed to [frame the project](frame-a-project.md)
-- **Gaps that matter:** return to the upstream pipeline — run [find new sources](../sources/find-new-sources.md) or add specific papers to Zotero
+- **Gaps that matter:** return to the Compile flow — run [find new sources](../sources/find-new-sources.md) or add specific papers to Zotero
 
 Don't proceed to framing until the gaps are either filled or explicitly accepted as out-of-scope for this deliverable.
 
@@ -68,7 +69,7 @@ Whichever you run, read the output by pattern:
 - **Dense + recent cluster** — draft from it; the evidence is there and current.
 - **Dense + stale cluster** — well-read a while ago; check for newer work before drafting (run [find new sources](../sources/find-new-sources.md)).
 - **Thin cluster** — mentioned but under-evidenced; read more before you lean on it.
-- **Gap the brief requires** — fill it via the upstream pipeline, or explicitly scope it out. A gap you neither fill nor acknowledge becomes an unsupported section later.
+- **Gap the brief requires** — fill it via the Compile flow, or explicitly scope it out. A gap you neither fill nor acknowledge becomes an unsupported section later.
 
 ## Verify
 
@@ -79,5 +80,5 @@ Whichever you run, read the output by pattern:
 
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Frame a project](frame-a-project.md)
-- Find new sources (if gaps need filling): [How to find new sources](../sources/find-new-sources.md)
+- Find new sources (if gaps need filling): [Find new sources](../sources/find-new-sources.md)
 - Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/mapper.md)

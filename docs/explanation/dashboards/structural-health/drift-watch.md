@@ -1,6 +1,7 @@
 ---
 title: drift-watch dashboard
 parent: Structural health
+nav_order: 1
 grand_parent: Dashboards
 ---
 

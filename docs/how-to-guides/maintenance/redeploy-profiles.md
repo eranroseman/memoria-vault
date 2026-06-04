@@ -1,10 +1,11 @@
 ---
-title: How to redeploy profiles
+title: Redeploy profiles
 parent: Maintenance
+nav_order: 8
 ---
 
 
-# How to redeploy profiles
+# Redeploy profiles
 
 Push vault source edits — to `SOUL.md`, `config.yaml`, skills, or cron tasks — out to the installed copies in `~/.hermes/profiles/`.
 
@@ -74,7 +75,7 @@ Output should show no drift for any profile.
 
 ## Related
 
-- Profile configuration guide: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
-- Fix profile drift: [How to fix profile drift](../recovery/fix-profile-drift.md)
-- Set up profiles (first install): [How to set up Hermes](../setup/set-up-hermes.md)
+- Profile configuration guide: [Configure a profile](../using-hermes-agent/configuration.md)
+- Fix profile drift: [Fix profile drift](../recovery/fix-profile-drift.md)
+- Set up profiles (first install): [Set up Hermes](../setup/set-up-hermes.md)
 - The idempotency mechanism: [Distribution model](../../explanation/deployment/distribution-model.md)

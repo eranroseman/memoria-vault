@@ -1,10 +1,11 @@
 ---
-title: How to fix a stale .bib
+title: Fix a stale .bib
 parent: Recovery
+nav_order: 5
 ---
 
 
-# How to fix a stale `.bib`
+# Fix a stale .bib
 
 Resolve "citekey not found" errors at ingest caused by Zotero's auto-export not having run or by the Hermes node not having pulled the latest `.bib`.
 
@@ -69,5 +70,5 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 
 ## Related
 
-- Zotero setup: [How to set up Zotero](../setup/set-up-zotero.md)
+- Zotero setup: [Set up Zotero](../setup/set-up-zotero.md)
 - Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)

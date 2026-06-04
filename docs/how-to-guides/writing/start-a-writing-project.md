@@ -1,10 +1,11 @@
 ---
-title: How to start a writing project
+title: Start a writing project
 parent: Writing
+nav_order: 1
 ---
 
 
-# How to start a writing project
+# Start a writing project
 
 Scaffold the workbench folder structure for a new paper, chapter, or long-form output. This is the setup step before running Assess, drafting, or exporting.
 
@@ -87,5 +88,5 @@ Open `01-map/corpus-map.md`. If there are major gaps (a claim you need but don't
 ## Related
 
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- The rest of the downstream pipeline: [Assess your corpus](assess-your-corpus.md) → [Frame a project](frame-a-project.md) → [Draft with the Writer](draft-with-writer.md)
+- The rest of the Compose flow: [Assess your corpus](assess-your-corpus.md) → [Frame a project](frame-a-project.md) → [Draft with the Writer](draft-with-writer.md)
 - The workbench subfolder structure: [The vault](../../explanation/architecture/vault.md)

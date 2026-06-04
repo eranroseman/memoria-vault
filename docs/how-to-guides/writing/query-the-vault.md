@@ -1,10 +1,11 @@
 ---
-title: How to query the vault
+title: Query the vault
 parent: Writing
+nav_order: 5
 ---
 
 
-# How to query the vault
+# Query the vault
 
 Ask the vault a research question and get a cited synthesis — an answer-note with every assertion tagged to a source. Query is a read operation: it doesn't create claim notes; it produces a draft answer for your review.
 
@@ -78,7 +79,7 @@ Same result, different surface.
 
 ## Related
 
-- Promote to claim note: [How to write a claim note](../sources/write-a-claim-note.md)
-- Weekly review (step 2 — unreviewed synthesis): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
+- Promote to claim note: [Write a claim note](../sources/write-a-claim-note.md)
+- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../maintenance/run-the-weekly-review.md)
 - The profile running the query: [The Writer](../../explanation/profiles/writer.md)
 - Query vs Socratic discussion: [The Socratic](../../explanation/profiles/socratic.md)

@@ -1,11 +1,22 @@
 ---
 title: The board as a state machine (the control plane)
 parent: Workflows
+nav_order: 2
 ---
 
 # The board as a state machine (the control plane)
 
-The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and pipelines. Every long-lived task lives on the board until a human approves it into the vault or archives it.
+The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until a human approves it into the vault or archives it.
+
+---
+
+## Procedure vs. state-machine path
+
+A scripted procedure says: "do step 1, then step 2, then step 3." If step 2 fails, the script fails. The state of the work lives implicitly in how far along the script got.
+
+A state-machine path says: "a card in state A, assigned to profile P, moves to state B when condition C is met." The state of the work is **explicit, persistent, and queryable**. If something fails, the card stays in its current state, the failure is recorded, and dispatch retries or escalates.
+
+The difference matters most in long-horizon work. A research task doesn't complete in one session. Sources are found over days, synthesis develops over weeks, verification happens in parallel with drafting. A scripted procedure can't represent "this task is in progress across three sessions" — a state machine can.
 
 ---
 
@@ -29,7 +40,7 @@ A card is not just a task title. It carries:
 
 **Execution state** — `status` (the fixed Hermes enum: `triage` → `todo` → `ready` → `running` → `done` → `archived`). This answers "where is the work?" at any moment.
 
-**Review state** — `review_status` (a Memoria overlay on `done` cards: `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
+**Review state** — `review_status` (a Memoria overlay: `unreviewed` (the default) → `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
 
 **Agent recommendation** — `agent_recommendation` (optional, from Verifier or Linter). This answers "what does the checking agent advise?" — separate from the human's decision.
 

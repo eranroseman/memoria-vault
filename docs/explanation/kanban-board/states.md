@@ -1,6 +1,7 @@
 ---
 title: Board states and the review gate
 parent: Kanban board
+nav_order: 1
 ---
 
 
@@ -46,7 +47,7 @@ Three distinct caps, each motivated by a different failure mode:
 
 **Active per profile = 1.** The strictest cap, and the only one Hermes enforces natively. Parallel runs of the same profile would contend for the same write scope and make the audit trail ambiguous about which run touched what file. Keeping one `running` card per profile at a time keeps the per-write attribution unambiguous.
 
-**Review-queue depth (bounded).** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than a human can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue depth exceeds its cap, the dispatcher delays new card creation on that lane — back-pressure that forces the queue depth to become visible before it becomes invisible.
+**Review-queue depth (bounded).** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than a human can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue depth exceeds its cap, the dispatcher slows new work on that lane — back-pressure that forces the queue depth to become visible before it becomes invisible.
 
 **Writer lane (bounded).** Too many drafts in flight simultaneously means synthesis quality drops because evidence cannot be fully integrated. A writer working on many drafts integrates none of them well. The cap protects synthesis quality, not throughput.
 
@@ -64,7 +65,8 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 
 - Conceptual overview: [Kanban board](README.md)
 - Card fields: [Why the card schema is split](card-schema.md)
-- Why no Reviewer: [README.md § why no Reviewer and no Orchestrator](README.md#why-no-reviewer-and-no-orchestrator)
+- Why review is human-only (no Reviewer profile): [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why routing is by rule (no Orchestrator): [The board as a state machine § Why no Orchestrator](../workflows/board-as-state-machine.md#why-no-orchestrator)
 - The review dimension over these states: [Review as a first-class state](../workflows/review-as-state.md)
 - The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
 

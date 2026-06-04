@@ -34,5 +34,5 @@ When a dependency is missing (a plugin not installed, a log file not yet created
 ## Related
 
 - Dashboard lookup table (source files, sort orders, verdict band, trust score): [Dashboards](../../reference/dashboards.md)
-- How to operate the dashboards: [How to navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
-- The primary weekly entry point: [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- How to operate the dashboards: [Navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- The primary weekly entry point: [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)

@@ -1,6 +1,7 @@
 ---
 title: Why three layers, not one
 parent: Design rationale
+nav_order: 1
 ---
 
 # Why three layers, not one
@@ -36,7 +37,7 @@ Task history pollutes the knowledge graph. In-flight notes get confused with set
 
 ## Thin control over thick state
 
-The three-layer design follows a principle that three independent research systems identified from different starting points:
+The three-layer design follows a principle that several independent research systems identified from different starting points:
 
 **[Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
 
@@ -44,7 +45,7 @@ The three-layer design follows a principle that three independent research syste
 
 **PARNESS** ([Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The architecture is near-identical to Memoria's three-layer split; the defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
 
-Three unrelated systems, three architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files.
+Unrelated systems, different architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. (A further corroboration at the claim grain is catalogued in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md).)
 
 ---
 

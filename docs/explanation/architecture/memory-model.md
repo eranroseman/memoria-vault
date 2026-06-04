@@ -1,6 +1,7 @@
 ---
 title: The memory model
 parent: Architecture
+nav_order: 2
 ---
 
 # The memory model
@@ -17,7 +18,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 | --- | --- | --- | --- |
 | **Program memory** | Your program-wide steering — `research-focus` (discovery priorities) and `screening-protocol` (review mode). The main lever you have over what the system pursues. | whole research program · persistent | Memoria — vault files |
 | **Project memory** | One sub-project's cross-lane working state: open questions, decisions, framing. | one sub-project · archives with the project | Memoria — vault files |
-| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); only the Linter writes it. | whole vault · append-only | Memoria — vault files |
+| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); the Policy MCP writes an entry at every gated write, and the Linter rotates the log weekly. | whole vault · append-only | Memoria — vault files |
 
 ## The ones the runtime manages
 
@@ -40,7 +41,7 @@ The scoping isn't arbitrary — it follows from what each substrate holds, and t
 
 **Project memory** is scoped to a single sub-project and archives with it. A project in `40-workbench/<project>/` is a bounded, transient effort; its open questions and decisions are working state that matters while the project is live and becomes provenance once it ships. Keeping it separate from program memory holds "what I want pursued overall" apart from "where this one project's thinking is" — different scope, different lifespan.
 
-**Audit memory** is append-only because its value is the complete, unmodified chain. Profiles read it; only the Linter writes to it. The constraint is enforced, not advisory — the Linter's `vault-hash-drift` detector catches files modified outside the trail. Capture must start from day one, because the cost and human-loop trends it tracks can't be reconstructed retroactively.
+**Audit memory** is append-only because its value is the complete, unmodified chain. Profiles read it; the Policy MCP writes an entry at every gated write, and the Linter only rotates the log weekly (it does not write the entries). The constraint is enforced, not advisory — the Linter's `vault-hash-drift` detector catches files modified outside the trail. Capture must start from day one, because the cost and human-loop trends it tracks can't be reconstructed retroactively.
 
 **Handoff memory** is per-card rather than per-profile because the handoff is the unit of cross-profile communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-profile handoffs reliable without profiles sharing session state.
 
@@ -74,7 +75,7 @@ A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
 | Which topics map to which project | `.memoria/project-hints.yaml` (config) | a memory substrate |
 | A synthesized claim or finding | Vault notes (`30-synthesis/`) | any memory substrate |
 
-The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [How to configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
+The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
 
 ---
 
@@ -87,7 +88,7 @@ The test: **memory is read back as recall; configuration is read as rules.** "To
 
 **How-to**
 
-- Configuring project hints (the config example above): [How to configure project hints](../../how-to-guides/setup/configure-project-hints.md)
+- Configuring project hints (the config example above): [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)
 
 **Reference**
 

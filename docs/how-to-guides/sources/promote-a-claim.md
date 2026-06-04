@@ -1,10 +1,11 @@
 ---
-title: How to promote a claim to canonical reference
+title: Promote a claim to canonical reference
 parent: Sources
+nav_order: 11
 ---
 
 
-# How to promote a claim to canonical reference
+# Promote a claim to canonical reference
 
 Move an evergreen claim note from `30-synthesis/01-claims/` to `30-synthesis/02-reference/` once it has enough cross-links to be treated as settled knowledge.
 
@@ -59,7 +60,7 @@ If no MOC exists yet and this is the third or fourth note on this topic, conside
 ## Related
 
 - Previous step: [Write a claim note](write-a-claim-note.md) (maturity accumulates there)
-- Weekly review (step 5 — promote evergreen claims): [How to run the weekly review](../maintenance/run-the-weekly-review.md)
-- Add the MOC entry (step 5): [How to build a Map of Content](../maintenance/build-a-moc.md)
+- Weekly review (step 5 — promote evergreen claims): [Run the weekly review](../maintenance/run-the-weekly-review.md)
+- Add the MOC entry (step 5): [Build a Map of Content](../maintenance/build-a-moc.md)
 - MOC creation thresholds: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
 - The rules promotion enforces: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)

@@ -1,6 +1,7 @@
 ---
 title: Why folders encode lifecycle, not topic
 parent: Knowledge
+nav_order: 4
 ---
 
 # Why folders encode lifecycle, not topic
@@ -45,15 +46,15 @@ The numbers are not just labels — they encode a one-way progression. Moving fo
 
 ---
 
-## The workbench: web upstream, thread downstream
+## The workbench: the web and the thread
 
-`40-workbench/` looks like an exception to the lifecycle principle, but it is better understood as its second half. Both the upstream zones (`10-inbox/`, `20-sources/`, `30-synthesis/`) and the workbench subdivide internally — sources split into papers/items/entities, the workbench into `01-map/`, `02-framing/`, `03-canvas/`, `04-drafts/`, `05-verification/`, `06-code/`. What differs is the *shape* of the organization, not whether it encodes lifecycle.
+`40-workbench/` looks like an exception to the lifecycle principle, but it is better understood as its second half. Both the web zones (`10-inbox/`, `20-sources/`, `30-synthesis/`) and the workbench subdivide internally — sources split into papers/items/entities, the workbench into `01-map/`, `02-framing/`, `03-canvas/`, `04-drafts/`, `05-verification/`, `06-code/`. What differs is the *shape* of the organization, not whether it encodes lifecycle.
 
-Upstream, notes form a **web**. A paper note connects to many claim notes, a claim note to many sources and MOCs — all many-to-many. You find an upstream note by querying the graph or following a MOC; its folder tells you its lifecycle stage, and its links tell you what it relates to. There is no single reading order, because the knowledge isn't a single argument.
+In the knowledge base, notes form a **web**. A paper note connects to many claim notes, a claim note to many sources and MOCs — all many-to-many. You find a note in the web by querying the graph or following a MOC; its folder tells you its lifecycle stage, and its links tell you what it relates to. There is no single reading order, because the knowledge isn't a single argument.
 
-The workbench is the **downstream**, where one project distills a single train of thought. Its sub-folders aren't a smaller web — they are the stages of one argument: map the terrain, frame the question, draft, verify, build. Notes are grouped by that one thread because a draft, its framing, and its verification all belong to exactly one effort. This is why the workbench groups by project: not because it breaks the "lifecycle, not topic" rule (a project is not a topic — it's a bounded, transient effort), but because a single line of reasoning is organized linearly, while a knowledge base is organized as a web.
+The workbench is the **thread**, where one project distills a single train of thought. Its sub-folders aren't a smaller web — they are the stages of one argument: map the terrain, frame the question, draft, verify, build. Notes are grouped by that one thread because a draft, its framing, and its verification all belong to exactly one effort. This is why the workbench groups by project: not because it breaks the "lifecycle, not topic" rule (a project is not a topic — it's a bounded, transient effort), but because a single line of reasoning is organized linearly, while a knowledge base is organized as a web.
 
-This also dissolves the apparent anti-duplication tension. The rule against topic folders exists because a source has many topics and so can't live in one folder. Workbench artifacts are single-project by construction, so the many-to-many problem never arises. When the project ships, its durable output migrates back into the upstream web — claim notes to `30-synthesis/01-claims/`, paper notes to `20-sources/01-papers/`, the deliverable to `50-deliverables/` — and the project folder archives as a unit. The workbench is temporary; the web is permanent.
+This also dissolves the apparent anti-duplication tension. The rule against topic folders exists because a source has many topics and so can't live in one folder. Workbench artifacts are single-project by construction, so the many-to-many problem never arises. When the project ships, its durable output migrates back into the web — claim notes to `30-synthesis/01-claims/`, paper notes to `20-sources/01-papers/`, the deliverable to `50-deliverables/` — and the project folder archives as a unit. The workbench is temporary; the web is permanent.
 
 ---
 

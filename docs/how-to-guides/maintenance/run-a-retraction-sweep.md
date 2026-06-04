@@ -1,9 +1,10 @@
 ---
-title: How to run a retraction sweep
+title: Run a retraction sweep
 parent: Maintenance
+nav_order: 6
 ---
 
-# How to run a retraction sweep
+# Run a retraction sweep
 
 This guide shows you how to identify papers in your vault that have been retracted, corrected, or flagged since you ingested them, and update any claim notes that cite them.
 
@@ -46,7 +47,7 @@ The Verifier detects and flags status changes. You decide what to do with affect
 
 ## Related
 
-- [How to verify and revise a draft](../writing/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
+- [Verify and revise a draft](../writing/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
 - [Frontmatter fields](../../reference/frontmatter.md) — `pub_status` values (`active`, `preprint`, `retracted`, `deprecated`, `expression-of-concern`)
 - The failure mode sweeps prevent: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
 - The profile running the sweep: [The Verifier](../../explanation/profiles/verifier.md)

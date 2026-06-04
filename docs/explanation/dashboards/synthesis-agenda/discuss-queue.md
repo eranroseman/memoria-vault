@@ -1,13 +1,14 @@
 ---
 title: The discuss-queue dashboard
 parent: Synthesis agenda
+nav_order: 2
 grand_parent: Dashboards
 ---
 
 
 # The discuss-queue dashboard
 
-It is the **upstream-cognitive-discipline dashboard**: a long queue means the human's processing is falling behind their ingest rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
+It is the **Compile-side cognitive-discipline dashboard**: a long queue means the human's processing is falling behind their ingest rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
 
 ---
 

@@ -1,10 +1,11 @@
 ---
-title: How to configure a Hermes profile
+title: Configure a profile
 parent: Using Hermes Agent
+nav_order: 1
 ---
 
 
-# How to configure a Hermes profile
+# Configure a profile
 
 Edit a profile's `.env`, `config.yaml`, or `lane-overrides` to change its behavior — model routing, allowed skills, write permissions, or API credentials.
 
@@ -127,7 +128,7 @@ For lane-override changes, check the audit log after the next write operation to
 
 ## Related
 
-- Deploy vault source to profiles: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
-- Fix profile drift (deployed ≠ source): [How to fix profile drift](../recovery/fix-profile-drift.md)
+- Deploy vault source to profiles: [Redeploy profiles](../maintenance/redeploy-profiles.md)
+- Fix profile drift (deployed ≠ source): [Fix profile drift](../recovery/fix-profile-drift.md)
 - Lane override reference: [Policy MCP](../../reference/policy-mcp.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles/)

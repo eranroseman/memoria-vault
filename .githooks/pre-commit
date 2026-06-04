@@ -8,9 +8,9 @@
 # Each block runs ONLY when relevant files are staged (so unrelated commits stay
 # fast). Bypass any block (rarely) with:  git commit --no-verify
 #
-# Mirrors the required checks: docs-doctor, shellcheck (install.sh),
-# PSScriptAnalyzer (install.ps1 — CI only; not run here), python-selftest,
-# check-test-refs, dashboard schema-drift.
+# Mirrors the CI checks: docs-doctor, shellcheck (install.sh), PSScriptAnalyzer
+# (install.ps1 — CI only; not run here), python-selftest, ruff, check-test-refs,
+# dashboard schema-drift, yamllint, JSON syntax, markdownlint structural.
 
 fail=0
 staged() { git diff --cached --name-only; }
@@ -53,6 +53,12 @@ if staged | grep -qE '\.py$'; then
     done
   else
     echo "pre-commit: python not found; skipping self-tests" >&2
+  fi
+  # ruff lint over the Python tooling (mirrors the `ruff` CI job; config in ruff.toml).
+  if command -v ruff >/dev/null 2>&1; then
+    ruff check scripts vault/.memoria || { echo "pre-commit: ruff found issues (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: ruff not installed; skipping (CI enforces it)" >&2
   fi
 fi
 
@@ -103,6 +109,40 @@ if staged | grep -qE '^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/temp
       || { echo "pre-commit: dashboard schema-drift (above)." >&2; fail=1; }
   else
     echo "pre-commit: python not found; skipping schema-drift" >&2
+  fi
+fi
+
+# --- 7. yamllint (when a staged YAML is not under vault/.obsidian) ----------
+# Profile config / lane-override / cron / workflow YAML is load-bearing. Lints
+# only the staged, non-.obsidian YAML (vault/.obsidian is vendored); uses
+# .yamllint. Mirrors the lint-config CI job. Skipped with a notice if absent.
+yml_staged=$(staged | grep -E '\.ya?ml$' | grep -v 'vault/\.obsidian/')
+if [ -n "$yml_staged" ]; then
+  if command -v yamllint >/dev/null 2>&1; then
+    echo "$yml_staged" | xargs -r yamllint || { echo "pre-commit: yamllint found issues (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: yamllint not installed; skipping (CI enforces it)" >&2
+  fi
+fi
+
+# --- 8. JSON syntax (when an authored .json is staged) ----------------------
+if staged | grep -E '\.json$' | grep -qv '.obsidian/plugins/'; then
+  if [ -n "$PY" ]; then
+    for f in $(staged | grep -E '\.json$' | grep -v '.obsidian/plugins/'); do
+      [ -f "$f" ] || continue
+      "$PY" -m json.tool "$f" >/dev/null || { echo "pre-commit: invalid JSON: $f" >&2; fail=1; }
+    done
+  fi
+fi
+
+# --- 9. markdownlint structural rules (when a docs/ .md is staged) ----------
+# Mirrors the markdownlint CI job (MD011/039/042/056/058 — real rendering bugs).
+if staged | grep -qE '^docs/.*\.md$'; then
+  if command -v npx >/dev/null 2>&1; then
+    npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-structural.json 'docs/**/*.md' \
+      || { echo "pre-commit: markdownlint structural rules failed (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: npx not found; skipping markdownlint (CI enforces it)" >&2
   fi
 fi
 

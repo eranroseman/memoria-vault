@@ -5,7 +5,7 @@ parent: Reference
 
 # Zotero plugins
 
-Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [Obsidian plugins](obsidian-plugins.md). For setup steps see [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [Obsidian plugins](obsidian-plugins.md). For setup steps see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ---
 
@@ -16,7 +16,7 @@ Required or recommended alongside the Obsidian plugin set.
 | Add-on | Install in | Status | Purpose |
 | --- | --- | --- | --- |
 | Better BibTeX | Zotero | **Required** | Stable citekeys; auto-export `.bib` to vault; `zotero.lua` Lua filter for live Word export. |
-| MarkDB-Connect | Zotero | Recommended | Tags Zotero items that have a vault note; right-click → jump to note. Setup: [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
+| MarkDB-Connect | Zotero | Recommended | Tags Zotero items that have a vault note; right-click → jump to note. Setup: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
 | RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
 
 ---
@@ -32,7 +32,7 @@ Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-c
 | **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
 | **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
 
-For guidance on choosing between these connectors see [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+For guidance on choosing between these connectors see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ### Evaluated, not in the install set
 
@@ -47,4 +47,4 @@ For guidance on choosing between these connectors see [How to set up Zotero](../
 ## Related
 
 - Obsidian plugin set and load-bearing settings: [Obsidian plugins](obsidian-plugins.md)
-- Zotero setup how-to: [How to set up Zotero](../how-to-guides/setup/set-up-zotero.md)
+- Zotero setup how-to: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md)

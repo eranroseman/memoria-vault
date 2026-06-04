@@ -1,0 +1,30 @@
+name: markdownlint
+
+# A curated set of *structural* markdownlint rules over docs/ — each catches a
+# real rendering bug, convention-agnostically, so (unlike the rest of markdownlint)
+# they have no Obsidian false positives:
+#   MD011  reversed link syntax  (text)[url]
+#   MD039  spaces inside link text  [ text ](url)
+#   MD042  empty links            [text]()
+#   MD056  table column count      (a row with the wrong cell count drops data)
+#   MD058  blanks around tables    (a table glued to text fails to render)
+# Everything else (style) stays the editor's job (.markdownlint.jsonc), not CI's.
+#
+# Runs unconditionally (no `paths:` filter) so it can back a required check —
+# same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  markdownlint:
+    name: markdownlint structural (docs/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: markdownlint structural rules over docs/
+        run: npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-structural.json 'docs/**/*.md'

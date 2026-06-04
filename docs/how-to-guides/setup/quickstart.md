@@ -1,12 +1,13 @@
 ---
-title: "How to install Memoria: quickstart"
+title: Quickstart
 parent: Setup
+nav_order: 1
 ---
 
 
-# How to install Memoria: quickstart
+# Quickstart
 
-Five steps from zero to a working vault with one source ingested. For the full step-by-step guide with explanations, see [How to set up the vault](set-up-the-vault.md) through [How to set up Hermes](set-up-hermes.md).
+Five steps from zero to a working vault with one source ingested. For the full step-by-step guide with explanations, see [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
 
 ## Prerequisites
 
@@ -58,7 +59,7 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 
 ## Related
 
-- Full install walkthrough: [How to set up the vault](set-up-the-vault.md)
-- Plugin install details: [How to set up Obsidian](set-up-obsidian.md)
-- Zotero configuration: [How to set up Zotero](set-up-zotero.md)
-- API keys and profile secrets: [How to set up Hermes](set-up-hermes.md)
+- Full install walkthrough: [Set up the vault](set-up-the-vault.md)
+- Plugin install details: [Set up Obsidian](set-up-obsidian.md)
+- Zotero configuration: [Set up Zotero](set-up-zotero.md)
+- API keys and profile secrets: [Set up Hermes](set-up-hermes.md)

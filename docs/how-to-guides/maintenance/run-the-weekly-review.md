@@ -1,10 +1,11 @@
 ---
-title: How to run the weekly review
+title: Run the weekly review
 parent: Maintenance
+nav_order: 1
 ---
 
 
-# How to run the weekly review
+# Run the weekly review
 
 Walk through the Friday ritual: clear classification debt, process the discuss queue, promote evergreen claims, and run a lint check. The whole session takes up to ~90 minutes — closer to 30–60 once the vault is established and classification debt is low.
 
@@ -43,7 +44,7 @@ Don't leave this queue growing unbounded — it becomes invisible background deb
 
 All notes at `lifecycle: proposed` with a `_proposed_classification` block. For each:
 
-- Run the [How to classify a source](../sources/classify-a-source.md) steps: review, promote, set `lifecycle: current`
+- Run the [Classify a source](../sources/classify-a-source.md) steps: review, promote, set `lifecycle: current`
 
 Target: zero notes in this queue by end of session. If you can't finish all, accept the residual and note the count.
 
@@ -90,6 +91,6 @@ Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM
 
 ## Related
 
-- Classify a source: [How to classify a source](../sources/classify-a-source.md)
-- Run the Linter: [How to run the Linter](run-the-linter.md)
+- Classify a source: [Classify a source](../sources/classify-a-source.md)
+- Run the Linter: [Run the Linter](run-the-linter.md)
 - Dashboard explanation: [The weekly-review dashboard](../../explanation/dashboards/structural-health/weekly-review.md)

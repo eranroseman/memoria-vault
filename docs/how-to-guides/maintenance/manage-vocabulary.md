@@ -1,10 +1,11 @@
 ---
-title: How to manage your topic vocabulary
+title: Manage your topic vocabulary
 parent: Maintenance
+nav_order: 5
 ---
 
 
-# How to manage your topic vocabulary
+# Manage your topic vocabulary
 
 This guide shows you how to keep the `topic`, `study_design`, and `methods` fields consistent across your corpus — so Dataview queries stay reliable and classification stays navigable as your vault grows.
 
@@ -199,7 +200,7 @@ Once a year (or after a major reading batch), open `vocabulary.md` and walk thro
 
 ## Related
 
-- Classify a source: [How to classify a source](../sources/classify-a-source.md)
-- Run the Linter: [How to run the Linter](run-the-linter.md)
+- Classify a source: [Classify a source](../sources/classify-a-source.md)
+- Run the Linter: [Run the Linter](run-the-linter.md)
 - Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
 - Vocabulary discipline (why three fields, why open): [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)

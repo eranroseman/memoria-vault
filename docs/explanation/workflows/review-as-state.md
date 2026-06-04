@@ -1,6 +1,7 @@
 ---
 title: Review as a first-class state
 parent: Workflows
+nav_order: 3
 ---
 
 # Review as a first-class state

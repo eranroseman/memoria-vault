@@ -1,16 +1,17 @@
 ---
-title: How to frame a writing project
+title: Frame a project
 parent: Writing
+nav_order: 3
 ---
 
 
-# How to frame a writing project
+# Frame a project
 
 Generate 2–3 competing argument structures, optionally run a lens reading through the Socratic profile, and commit to one framing before drafting. This prevents the first outline from winning by default.
 
 ## Prerequisites
 
-- A corpus map exists for this project ([How to assess your corpus for a project](assess-your-corpus.md))
+- A corpus map exists for this project ([Assess your corpus](assess-your-corpus.md))
 - The Writer and Socratic profiles are installed
 
 ## Steps

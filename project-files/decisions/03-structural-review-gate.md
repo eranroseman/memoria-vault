@@ -38,7 +38,7 @@ The cost is that the human is a bottleneck. This is the point: the human must st
 
 ## Promotion within synthesis is also manual
 
-The same principle governs promotion *between* synthesis layers, not just writes *into* them: a `claim-note` graduates to the `reference` layer only by a human setting `maturity: evergreen` in the weekly review — never by an automatic maturity threshold or a link-density heuristic. (Inlink count signals "well-cited," not "stable enough for reference"; contested claims accumulate inlinks too.) *Folded in from the former ADR-2 (auto-promotion threshold), which was only ever `proposed`.*
+The same principle governs promotion *between* synthesis layers, not just writes *into* them: a `claim-note` graduates to the `reference` layer only by a human setting `maturity: evergreen` in the weekly review — never by an automatic maturity threshold or a link-density heuristic. (Inlink count signals "well-cited," not "stable enough for reference"; contested claims accumulate inlinks too.) *Folded in from the former ADR-2 (a renumbered draft on auto-promotion, unrelated to the current [ADR-02](02-seven-specialist-profiles.md)), which was only ever `proposed`.*
 
 ## Alternatives considered
 

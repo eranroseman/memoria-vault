@@ -1,6 +1,7 @@
 ---
 title: The vault
 parent: Architecture
+nav_order: 1
 ---
 
 # The vault
@@ -52,7 +53,7 @@ Folders encode **lifecycle stage**, not subject area. The top-level number indic
 │   ├── metrics/
 │   ├── eval/
 │   ├── skills/
-│   └── templates/      ← 16 note templates (QuickAdd instantiates these)
+│   └── templates/      ← 17 template files: 16 note-type templates (QuickAdd instantiates these) + screening-protocol.md (a program-control template)
 ├── .obsidian/           ← Obsidian config (auto-hidden)
 └── .memoria/            ← Memoria tooling (auto-hidden)
     ├── profiles/        ← seven Hermes profile directories
@@ -71,7 +72,7 @@ The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-ref
 
 **`30-synthesis/` is human territory** — claim notes and MOCs are human-authored. Agents draft candidates that land in `10-inbox/`; the human writes the canonical synthesis. The review-gated-zone deny rule enforces this structurally.
 
-**`40-workbench/` groups by project — the downstream half of the same principle.** The upstream zones (`10`–`30`) hold a *web* of notes, navigated many-to-many through MOCs and queries; the workbench holds the *downstream*, where one project distills a single train of thought. Its sub-folders (`01-map`, `02-framing`, `04-drafts`, …) are the stages of that one thread, and the whole project archives as a unit when it ships. A project is not a topic — it's a bounded, transient effort. See [lifecycle-over-topic.md → "The workbench"](../knowledge/lifecycle-over-topic.md#the-workbench-web-upstream-thread-downstream).
+**`40-workbench/` groups by project — the downstream half of the same principle.** The web zones (`10`–`30`) hold a *web* of notes, navigated many-to-many through MOCs and queries; the workbench holds the *thread*, where one project distills a single train of thought. Its sub-folders (`01-map`, `02-framing`, `04-drafts`, …) are the stages of that one thread, and the whole project archives as a unit when it ships. A project is not a topic — it's a bounded, transient effort. See [lifecycle-over-topic.md → "The workbench"](../knowledge/lifecycle-over-topic.md#the-workbench-the-web-and-the-thread).
 
 **`90-assets/` does not hold PDFs** — PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`. `90-assets/` holds Marker-extracted markdown and binary attachments.
 

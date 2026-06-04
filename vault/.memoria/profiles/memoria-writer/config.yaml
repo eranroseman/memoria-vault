@@ -24,11 +24,11 @@ mcp_servers:
       OBSIDIAN_HOST: "127.0.0.1"
       OBSIDIAN_PORT: "27124"
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian/policy via
+# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian/policy via
 # MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
 # vault-write path is the gated obsidian MCP. Update if Hermes adds toolsets.
 agent:
-  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, x_search, yuanbao]
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
 terminal:

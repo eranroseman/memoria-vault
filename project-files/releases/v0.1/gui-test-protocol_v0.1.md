@@ -7,7 +7,7 @@ status: draft
 # GUI test protocol — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI tier (**T5**) and the ten Dataview dashboards
+shell: the Obsidian/Zotero GUI tier (**T5**) and the eleven Dataview dashboards
 rendering on real data (**G4**). Everything else (installer T0–T3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -94,13 +94,13 @@ Tick each plugin that is enabled and validated:
 
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
-- [ V] **B1 Pass**
+- [x] **B1 Pass**
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
-- [V ] **B2 Pass**
+- [x] **B2 Pass**
 
 **B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:
 
@@ -111,7 +111,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
-- [ V] **B3 Pass**
+- [x] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -121,11 +121,11 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
-- [ V] **B4 Pass**
+- [x] **B4 Pass**
 
 ---
 
-## Part C — The ten dashboards render (G4)
+## Part C — The eleven dashboards render (G4)
 
 Open each file under `00-meta/01-dashboards/` (Reading view). For **every** ```dataview```
 block: it must render a table or placeholder, **never a query error**.
@@ -159,7 +159,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [x] 9 · `weekly-review.md`
 - [x] 10 · `fleet-health.md`
 - [x] 11 · `audit-log.md`
-- [x] **Part C / G4 Pass (all 10 resolve)**
+- [x] **Part C / G4 Pass (all 11 resolve)**
 
 ---
 
@@ -167,12 +167,12 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
-- [ V] **D1 Pass**
+- [x] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
 `C:\Users\eranr\Memoria-test\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
 
-- [ V] **D2 Pass**
+- [x] **D2 Pass**
 
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
 
@@ -214,7 +214,7 @@ Dashboard doesn't refresh automatically.
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban add …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
 - ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
-- [ ] **E3 Pass**
+- [x] **E3 Pass**
 
 ---
 
@@ -222,14 +222,14 @@ Dashboard doesn't refresh automatically.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
-| B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 10 dashboards' Dataview blocks resolve | | |
-| C | Seeded items appear (board-state, audit-log, loose-ends) | | |
-| D | `memoria.bib` auto-exports; citation resolves | | |
-| E1 | ACP pane returns a model response | | |
-| E2 | Denied write blocked; deny row in audit-log | | |
-| E3 | Board-state shows a card after cron tick | | |
+| A | 8/8 plugins enabled, no load errors | Pass | Didn't verify the per-plugin settings |
+| B | REST authenticated (B3) + round-trip write appears (B4) | Pass | B1–B4 all passed |
+| C / G4 | All 11 dashboards' Dataview blocks resolve | Pass | All 11 ticked, no query errors |
+| C | Seeded items appear (board-state, audit-log, loose-ends) | Partial | audit-log (E2) + loose-ends seeded OK; board-state seed not done (depends on E3, below) |
+| D | `memoria.bib` auto-exports; citation resolves | Pass | D1–D5 all passed |
+| E1 | ACP pane returns a model response | Pass | |
+| E2 | Denied write blocked; deny row in audit-log | Pass | |
+| E3 | Board-state shows a card after cron tick | Not run | E3 step left unticked — board telemetry round-trip not exercised |
 
 **T5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the

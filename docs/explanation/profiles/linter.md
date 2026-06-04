@@ -1,6 +1,7 @@
 ---
 title: The Linter
 parent: Profiles
+nav_order: 7
 ---
 
 

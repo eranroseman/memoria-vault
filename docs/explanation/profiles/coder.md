@@ -1,6 +1,7 @@
 ---
 title: The Coder
 parent: Profiles
+nav_order: 6
 ---
 
 

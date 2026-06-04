@@ -1,6 +1,7 @@
 ---
 title: loose-ends dashboard
 parent: Structural health
+nav_order: 2
 grand_parent: Dashboards
 ---
 
@@ -32,4 +33,4 @@ Unlike most dashboards, loose-ends has no dependencies — no plugin, no log fil
 
 - [The weekly-review dashboard](weekly-review.md) — the Friday ritual that includes a loose-ends pass
 - [The Linter](../../profiles/linter.md) — `orphan-working-files` detector, the structural counterpart
-- Archiving surfaced sources: [How to archive a source](../../../how-to-guides/sources/archive-a-source.md)
+- Archiving surfaced sources: [Archive a source](../../../how-to-guides/sources/archive-a-source.md)

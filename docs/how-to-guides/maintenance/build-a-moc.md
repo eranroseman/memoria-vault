@@ -1,9 +1,10 @@
 ---
-title: How to build a Map of Content
+title: Build a Map of Content
 parent: Maintenance
+nav_order: 4
 ---
 
-# How to build a Map of Content
+# Build a Map of Content
 
 This guide shows you how to create a navigational hub note that gives a dense claim cluster a stable entry point.
 
@@ -42,7 +43,7 @@ You author and curate the MOC. The Linter's `skeleton-drift` detector will flag 
 
 ## Related
 
-- Promotion adds MOC entries (step 5): [How to promote a claim to canonical reference](../sources/promote-a-claim.md)
+- Promotion adds MOC entries (step 5): [Promote a claim to canonical reference](../sources/promote-a-claim.md)
 - MOC creation thresholds and link vocabulary: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
 - The MOC as a note type: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)
 - Why hubs matter to the knowledge cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

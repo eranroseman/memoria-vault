@@ -1,16 +1,17 @@
 ---
-title: How to classify a source
+title: Classify a source
 parent: Sources
+nav_order: 4
 ---
 
 
-# How to classify a source
+# Classify a source
 
 Promote the Librarian's proposed classification into the note's canonical metadata and mark the source as reviewed. This is a human-only step — no profile touches the note during classification.
 
 ## Prerequisites
 
-- The source has been ingested and is at `lifecycle: proposed` with a `_proposed_classification` block ([How to capture and ingest a source](capture-and-ingest.md))
+- The source has been ingested and is at `lifecycle: proposed` with a `_proposed_classification` block ([Capture and ingest a source](capture-and-ingest.md))
 
 ## Steps
 

@@ -64,7 +64,7 @@ Dry-run is the default. Auto-fix is allowed only for **well-defined structural r
 
 | Class | Examples | Auto-fix? |
 | --- | --- | --- |
-| **Safe & unambiguous** | Removing duplicate trailing whitespace, fixing trailing newlines, normalizing list bullet style | Yes, with a per-change log entry. |
+| **Safe & unambiguous** | Removing duplicate trailing whitespace, fixing trailing newlines, normalizing list bullet style, adding a missing required template field that has one obvious value (e.g. the `created` timestamp) | Yes, with a per-change log entry. |
 | **Authorized targeted fixes** | "Fix dangling backlinks under `20-sources/03-entities/01-people/`" — scoped, explicit, reversible | Yes, with a per-change log entry and a summary report. |
 | **Schema / content changes** | Promoting `_proposed_classification` fields, rewriting frontmatter, moving notes between folders | Never. Report only. |
 | **Review-gated-zone edits** | Anything in `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | Never. Report only. |
@@ -120,7 +120,7 @@ These are the concrete checks the Linter runs, with thresholds. Each is a *repor
 | Check | Threshold | Action |
 | --- | --- | --- |
 | Orphan claim / reference notes | `length(file.inlinks) = 0` and `type != "moc"` | Report — surface in weekly dashboard. |
-| Stale enrichment (literature) | `enriched_date` older than 90 days | Report — flag for `enrich` re-run. |
+| Stale enrichment (literature) | `enriched_date` older than the per-type threshold in [Enrichment staleness by type](#enrichment-staleness-by-type) (Article 180d; Preprint / Repository / Package 30d; Person 90d; Organization 365d) | Report — flag for `enrich` re-run. |
 | Classification debt per project | > 30% of notes with `lifecycle: proposed` | Report — surface in weekly dashboard. |
 | Broken wikilinks | Any `[[name]]` that doesn't resolve | Report. Auto-fix only if explicitly authorized for a scoped folder. |
 | FAMA exposure (obsolete-memory reuse) | A downstream note (`draft` / `answer-note` / `reference-note` / …) wikilinks a claim that is `lifecycle: archived` or carries `superseded_by` | Report the citing note + the superseded claim; the human re-points or drops the citation. Never auto-edit. The `fama_exposure` function in `detectors.py` ([ADR-10](../../../project-files/decisions/10-claim-supersession.md) supersession makes it measurable — a publication-grade signal). |

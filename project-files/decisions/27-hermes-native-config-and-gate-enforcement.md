@@ -6,12 +6,17 @@ status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
 supersedes: []
-superseded_by: []
+superseded_by: [28]
 ---
 
 # ADR-27: Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the only write path
 
-> **Correction (2026-06-02, [ADR-28](28-write-gate-as-plugin.md)).** This ADR's
+> **Partial supersession (2026-06-02, [ADR-28](28-write-gate-as-plugin.md)).** ADR-28
+> supersedes **only this ADR's *enforcement mechanism*** (shell hook → Python plugin);
+> the `superseded_by: [28]` frontmatter scopes to that mechanism, **not** to the ADR
+> as a whole. ADR-27's config-model decisions — `mcp_servers` in `config.yaml`, the
+> `agent.disabled_toolsets` allowlist, obsidian as the only write path — **all stand**.
+> Concretely, this ADR's
 > *enforcement mechanism* — the `pre_tool_call` **shell hook** with
 > `matcher: "obsidian.*"` — does **not** fire on live agent writes: Hermes registers
 > the obsidian tool as `mcp_obsidian_obsidian_append_content`, and the shell-hook
@@ -138,7 +143,10 @@ non-terminal lane has.** Concretely:
    fires in CLI, gateway, cron, and ACP via the shared `AIAgent` dispatch. The
    matcher is `obsidian.*` (fullmatch). The custom-bridge alternative is
    **rejected** — it was only ever needed under the withdrawn "hooks don't fire"
-   premise.
+   premise. *(Enforcement mechanism superseded by [ADR-28](28-write-gate-as-plugin.md):
+   the shell hook never fired on live writes — it is replaced by the
+   `memoria-policy-gate` Python plugin. The config-model decisions 1, 2, 4–6 below
+   are unaffected.)*
 
 4. **Coder and Linter keep `terminal`+`file` (they need git / `detectors.py`).**
    Their file writes are gated by the hook (`write_file|patch` matcher) and
@@ -200,7 +208,7 @@ Installer (`scripts/install.sh`) and profile sources (`vault/.memoria/profiles/*
    non-terminal lanes have no `code_execution`/`file`/`terminal`.
 6. Then correct `#39`/`#58`, `policy-mcp.md`, and the ledger.
 
-Sequencing lives in [release-plan-v0.1.md](../plans/release-plan-v0.1.md); this ADR records the
+Sequencing lives in [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md); this ADR records the
 choices, not the schedule.
 
 ## Alternatives considered

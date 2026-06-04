@@ -7,11 +7,14 @@ package_name: ""
 vendor: ""
 license: ""
 lifecycle: proposed
+ingest_status: ""
 maintenance_status: active
 role_in_stack: primary-tool
+full_text_reviewed: false
 relevance_to_projects: []
 maintainer: ""
 last_checked:
+enriched_date:
 moc: []
 projects: []
 schema_version: 1

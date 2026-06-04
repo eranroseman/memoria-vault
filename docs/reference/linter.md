@@ -13,7 +13,7 @@ Structural detectors, auto-fix classes, and severity scale for the Memoria Linte
 
 Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
 
-**Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps).
+**Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps). `detectors.py` itself defines nine functions in total — these three structural detectors plus six housekeeping checks (broken-wikilink, fama-exposure, graph-analyze, orphan-working-files, schema-check, stale-answer-drafts, stale-fleeting) — so the "nine functions vs. eight structural detectors" counts measure different things and do not contradict.
 
 | Slug | Severity | Implementation | Catches |
 | --- | --- | --- | --- |
@@ -39,9 +39,9 @@ Every proposed fix carries a class, hard-coded by the detector. The class determ
 | `safe-and-unambiguous` | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value | **Auto-fix** (granted; delegated to Templater) |
 | `authorized-targeted` | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh | **Auto-fix** (granted; Linter's own logs/dashboards only) |
 | `schema-content` | Frontmatter field rename, value-set change, deprecated field removal | **Dry-run always** (not granted; requires `schema-migrate`) |
-| `review-gated-edit` | Any write to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | **Deny** (policy MCP forces `dry_run` regardless of class) |
+| `review-gated-edit` | Any write to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | **Deny** |
 
-Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml` — the two granted classes; the other two appear under `deny.auto_fix.classes`.
+Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml` — the two granted classes; the other two appear under `deny.auto_fix.classes`. The `review-gated-edit` *class* is denied outright (`AUTO_FIX_DENY_CLASSES`). Separately, a mutating write to a review-gated *zone* (a different mechanism) degrades to `dry_run` — see [Policy MCP](policy-mcp.md#auto-fix-policy).
 
 ---
 
@@ -54,7 +54,21 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 | `HIGH` | Active or imminent breakage. | Surfaced in Daily Health and `drift-watch`; pushed to Telegram. |
 | `CRITICAL` | System integrity at risk. Blocks dispatch until acknowledged. | Always pushed to Telegram. |
 
-**Verdict band rollup:** `PASS` if no HIGH or CRITICAL findings. `REVIEW` if any MEDIUM but no HIGH. `FAIL` if any HIGH or CRITICAL.
+**Verdict band rollup:** `PASS` if only LOW/INFO findings (or none). `REVIEW` if any HIGH or MEDIUM and no CRITICAL. `FAIL` only if any CRITICAL. A HIGH-only run is `REVIEW`, never `FAIL`.
+
+---
+
+## Schedule
+
+The Linter is the first lane cleared for scheduled dispatch (read-mostly, low blast radius). Its jobs are defined in the profile's `cron/scheduled.yaml`:
+
+| Cron | Card | Cadence |
+| --- | --- | --- |
+| `0 2 * * *` | `nightly-hygiene` | Nightly 02:00 |
+| `0 5 * * *` | `fleeting-staleness-report` | Nightly 05:00 |
+| `0 4 * * MON` | `weekly-drift-report` | Weekly, Monday 04:00 |
+
+Dispatch stays **disabled** until the lane has produced stable dry-run reports (`approvals.cron_mode` defaults to `deny`); it is enabled deliberately, not on install. The Linter also runs on demand and after each ingest batch.
 
 ---
 

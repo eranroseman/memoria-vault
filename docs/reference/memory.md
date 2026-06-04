@@ -31,7 +31,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate as of the current Hermes r
 | --- | --- |
 | Program memory is the human's steering | The human authors `research-focus` / `screening-protocol`; every profile reads it; it never archives — the program outlives any one project. |
 | Project memory is the per-project cross-lane channel | One project's working state — anything that must survive across lanes *within that project*. Archives with the project. |
-| Audit memory is append-only | Profiles read it; only the Linter writes to it. |
+| Audit memory is append-only | Profiles read it; the Policy MCP writes an audit entry at every gated write. The Linter does not write entries — it only rotates the log. |
 | Handoff memory is per-card, not per-profile | When a card moves from Librarian → Writer lane, the handoff payload travels with it. Writer does not inherit Librarian's working memory. |
 | Agent memory is frozen at session start | Mid-session writes are not visible until the next session. Keep it small and stable — not in-flight task state. |
 | Session history is read-only history | Never gates promotion; never authoritative over the vault. |
@@ -87,7 +87,7 @@ The `before_hash` / `after_hash` chain must be unbroken across the entire log. `
 
 | Setting | Value |
 | --- | --- |
-| Schedule | Sunday 00:00 local time |
+| Schedule | Monday 00:00 (start of the ISO week) — the Linter cron runs `0 4 * * MON` |
 | Trigger (size) | When `audit.jsonl` exceeds 50 MB |
 | Archive path | `99-system/logs/archive/audit-YYYY-WW.jsonl` (ISO week-numbered) |
 | Retention | Indefinite (configurable via `.memoria/log-retention.yaml`) |

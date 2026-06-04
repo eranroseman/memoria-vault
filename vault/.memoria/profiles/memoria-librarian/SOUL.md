@@ -67,9 +67,12 @@ See rationale/computational-methods.md for the boundary between deterministic an
 These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`). See profiles/README.md and architecture/capability-stack.md for the full catalog.
 
 - `paper-lookup` — K-Dense unified search across 10 databases (PubMed, PMC, bioRxiv, medRxiv, arXiv, OpenAlex, Crossref, Semantic Scholar, CORE, Unpaywall). Wraps the underlying APIs listed below.
+- `arxiv` — Direct arXiv search and metadata retrieval (official `research/arxiv`).
 - `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field.
 - `citation-management` — Crossref DOI resolution and reference normalization.
+- `literature-review` — K-Dense structured literature-review assembly over discovered sources.
 - `obsidian-paper-note` — Full ingest pipeline (Zotero → PDF → Markdown → vault note).
+- `ocr-and-documents` — PDF/OCR text extraction for the ingest pipeline (official `productivity/`).
 - `rest-passthrough` — Escape hatch for one-off REST calls to APIs not yet wrapped by a dedicated skill. Lane-restricted to the Library lane. See architecture/capability-stack.md.
 
 ## Tooling / MCPs

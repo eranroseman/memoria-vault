@@ -146,9 +146,9 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 **How-to**
 
-- How to start a chat session: [How to chat with a Hermes profile](../how-to-guides/using-hermes-agent/chat-with-hermes.md)
-- How to configure a profile: [How to configure a Hermes profile](../how-to-guides/using-hermes-agent/configuration.md)
-- Kanban how-to (stuck cards, unblocking): [How to fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
+- How to start a chat session: [Chat with Hermes](../how-to-guides/using-hermes-agent/chat-with-hermes.md)
+- How to configure a profile: [Configure a profile](../how-to-guides/using-hermes-agent/configuration.md)
+- Kanban how-to (stuck cards, unblocking): [Fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
 
 **Explanation**
 

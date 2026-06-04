@@ -5,7 +5,6 @@ lifecycle: current
 project_phase: active
 start_date:
 due_date:
-scope: ""
 research_question: ""
 moc: []
 related_notes: []

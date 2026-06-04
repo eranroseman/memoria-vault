@@ -2,7 +2,7 @@
 title: "{{VALUE:draft title}}"
 type: draft
 lifecycle: proposed
-draft_stage: in-progress
+draft_stage: rough
 project: ""
 chapter: ""
 target_venue: ""

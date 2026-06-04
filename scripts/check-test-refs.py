@@ -11,6 +11,7 @@ Exit 0 if clean, 1 if any reference is broken.
 Usage: python scripts/check-test-refs.py
 """
 from __future__ import annotations
+
 import re
 import sys
 from pathlib import Path

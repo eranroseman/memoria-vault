@@ -1,6 +1,7 @@
 ---
 title: Why the card schema is split
 parent: Kanban board
+nav_order: 2
 ---
 
 

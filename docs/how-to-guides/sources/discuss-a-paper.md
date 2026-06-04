@@ -1,16 +1,17 @@
 ---
-title: How to discuss a paper
+title: Discuss a paper
 parent: Sources
+nav_order: 6
 ---
 
 
-# How to discuss a paper
+# Discuss a paper
 
 Run a Socratic session on a classified source to sharpen your understanding before writing a claim. The Socratic profile asks questions; it cannot write anything — the thinking and the eventual claim note are yours.
 
 ## Prerequisites
 
-- The source is classified (`lifecycle: current`) ([How to classify a source](classify-a-source.md))
+- The source is classified (`lifecycle: current`) ([Classify a source](classify-a-source.md))
 - The `agent-client` Obsidian plugin is installed and connected
 
 ## Steps

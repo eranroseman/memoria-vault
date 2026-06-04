@@ -1,10 +1,11 @@
 ---
-title: How to fix broken frontmatter
+title: Fix broken frontmatter
 parent: Recovery
+nav_order: 3
 ---
 
 
-# How to fix broken frontmatter
+# Fix broken frontmatter
 
 Repair a YAML parse error that prevents a note from appearing in Dataview queries or triggers an error in Obsidian's Properties panel.
 
@@ -28,7 +29,7 @@ Common YAML errors:
 | Error | Example |
 | --- | --- |
 | Unclosed string | `title: "Unterminated title` |
-| List indentation error | `methods:` followed by `  - field-study` at wrong indent |
+| List indentation error | `methods:` followed by `- field-study` at wrong indent |
 | Missing closing `---` delimiter | Frontmatter block never ends |
 | Colon in value without quoting | `title: A Study of AI: Methods` (colon in title) |
 | Tab character instead of spaces | YAML requires spaces, not tabs |
@@ -48,7 +49,7 @@ code "vault\20-sources\01-papers\<citekey>.md"
 The Linter's output names the specific line or field. Common fixes:
 
 - Wrap strings containing colons, brackets, or special characters in double quotes: `title: "A Study of AI: Methods"`
-- Fix list indentation — each item should be two spaces in, with a hyphen: `  - field-study`
+- Fix list indentation — each item should be two spaces in, with a hyphen: `- field-study`
 - Ensure the frontmatter ends with a closing `---` on its own line
 - Replace any tab characters with two spaces
 

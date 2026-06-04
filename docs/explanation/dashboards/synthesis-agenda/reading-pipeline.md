@@ -1,6 +1,7 @@
 ---
 title: The reading-pipeline dashboard
 parent: Synthesis agenda
+nav_order: 1
 grand_parent: Dashboards
 ---
 
@@ -13,13 +14,13 @@ Open the reading-pipeline dashboard during a reading session when the inbox feel
 
 ## What it shows
 
-It shows what is actively in flight through the upstream pipeline and what has come out the other side — answering two questions at once: "what should I read next?" (papers in active processing, by lifecycle stage) and "what came out of my recent reading?" (claim notes grouped by maturity). The two halves together make visible whether reading is converting into synthesis.
+It shows what is actively in flight through the Compile flow and what has come out the other side — answering two questions at once: "what should I read next?" (papers in active processing, by lifecycle stage) and "what came out of my recent reading?" (claim notes grouped by maturity). The two halves together make visible whether reading is converting into synthesis.
 
 ---
 
 ## What this dashboard is not
 
-**Not [The discuss-queue dashboard](discuss-queue.md).** The discuss-queue is narrowly scoped to fully-classified paper notes that haven't had a Socratic pass — one specific upstream debt. Reading-pipeline is the broader working surface: papers still in active processing plus downstream claim-note maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
+**Not [The discuss-queue dashboard](discuss-queue.md).** The discuss-queue is narrowly scoped to fully-classified paper notes that haven't had a Socratic pass — one specific Compile-side debt. Reading-pipeline is the broader working surface: papers still in active processing plus the resulting claim-note maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
 
 **Not [The weekly-review dashboard](../structural-health/weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
 
@@ -39,7 +40,7 @@ It shows what is actively in flight through the upstream pipeline and what has c
 
 ## Related
 
-- Narrower upstream-discipline sibling: [The discuss-queue dashboard](discuss-queue.md)
+- Narrower Compile-discipline sibling: [The discuss-queue dashboard](discuss-queue.md)
 - Weekly entry point that links to this: [The weekly-review dashboard](../structural-health/weekly-review.md)
 - Lifecycle stages explained: [knowledge/lifecycle-over-topic](../../knowledge/lifecycle-over-topic.md)
 - Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)

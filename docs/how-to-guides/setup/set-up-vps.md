@@ -1,15 +1,16 @@
 ---
-title: How to set up a VPS for always-on operation
+title: Set up a VPS for always-on operation
 parent: Setup
+nav_order: 8
 ---
 
-# How to set up a VPS for always-on operation
+# Set up a VPS for always-on operation
 
 Move Hermes from local WSL2 to a persistent VPS so the system runs overnight batch jobs, handles scheduled tasks, and stays reachable from any device. This is the always-on deployment option.
 
 ## Prerequisites
 
-- A working local install ([How to install Memoria: quickstart](quickstart.md)) confirmed end-to-end
+- A working local install ([Quickstart](quickstart.md)) confirmed end-to-end
 - A VPS running Ubuntu 24.04 (minimum: 2 vCPU, 4 GB RAM, 40 GB disk)
 - SSH access to the VPS from your Windows/WSL2 machine
 - Syncthing installed on your desktop (for vault sync)
@@ -222,7 +223,7 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 
 ## Related
 
-- Local install prerequisite: [How to install Memoria: quickstart](quickstart.md)
-- Profile configuration: [How to configure a Hermes profile](../using-hermes-agent/configuration.md)
-- Redeploying profiles after vault changes: [How to redeploy profiles](../maintenance/redeploy-profiles.md)
+- Local install prerequisite: [Quickstart](quickstart.md)
+- Profile configuration: [Configure a profile](../using-hermes-agent/configuration.md)
+- Redeploying profiles after vault changes: [Redeploy profiles](../maintenance/redeploy-profiles.md)
 - Tunnel drops on restart: [Failure modes](../../reference/failure-modes.md) — see `VPS tunnel drops`

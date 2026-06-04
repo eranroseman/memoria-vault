@@ -1,6 +1,7 @@
 ---
 title: Deployment options
 parent: Deployment
+nav_order: 3
 ---
 
 # Deployment options

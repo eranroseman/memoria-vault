@@ -1,6 +1,7 @@
 ---
 title: Operational health
 parent: Dashboards
+nav_order: 4
 grand_parent: Explanation
 has_children: true
 permalink: /explanation/dashboards/operational-health/

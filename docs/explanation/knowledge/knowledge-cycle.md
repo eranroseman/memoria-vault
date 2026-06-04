@@ -1,6 +1,7 @@
 ---
 title: The knowledge cycle
 parent: Knowledge
+nav_order: 2
 ---
 
 # The knowledge cycle
@@ -9,9 +10,9 @@ Every note in the vault is somewhere in a long-term progression from ingested so
 
 ## The progression
 
-The cycle moves through seven broad stages: ingest, classify, synthesize, develop, promote, write, export. A new source arrives as a candidate, becomes a paper-note after the Librarian processes it, gets classified by the human, generates claim notes through Socratic discussion and synthesis, those claims mature and cross-link into the existing graph, stable claims get promoted to reference notes, and eventually assembled into a deliverable.
+The cycle runs as two flows. **Compile** turns sources into claims — `find → capture → enrich → classify → discuss → distill → connect` — and **Compose** turns claims into deliverables — `assess → frame → sketch → draft → verify → export` (see [The Compile and Compose flows](../workflows/compile-and-compose.md)). Each flow has one reflective phase — `discuss` / `sketch` — engaged by judgment. A new source arrives as a candidate, is captured and enriched into a paper-note, is classified by the human, is questioned through Socratic discussion when it warrants it, and is distilled into claim notes that the human connects into the existing graph. Those claims mature, cross-link, and — when stable — are promoted to reference notes; once enough accumulate, a writing project assesses the corpus, frames an argument, drafts, verifies, and exports a deliverable.
 
-This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one pipeline but many running concurrently.
+This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one flow but many running concurrently.
 
 ## Why the cycle is not a linear path
 
@@ -39,7 +40,7 @@ Notes that are no longer useful do not become invisible by deletion — they bec
 
 Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
 
-For the archive procedure, see [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md).
+For the archive procedure, see [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md).
 
 ## Related
 
@@ -52,5 +53,5 @@ For the archive procedure, see [How to run the weekly review](../../how-to-guide
 
 **How-to**
 
-- The ritual that keeps the cycle from stalling: [How to run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
-- The cycle's key transition: [How to write a claim note](../../how-to-guides/sources/write-a-claim-note.md)
+- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/maintenance/run-the-weekly-review.md)
+- The cycle's key transition: [Write a claim note](../../how-to-guides/sources/write-a-claim-note.md)
