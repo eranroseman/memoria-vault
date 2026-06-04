@@ -37,5 +37,5 @@ Keep Librarian unified until that bottleneck is real. The split has a clean futu
 
 ## Related
 
-- **Workflows:** [Find](../../docs/how-to-guides/sources/find-new-sources.md), [Ingest](../../docs/how-to-guides/sources/capture-and-ingest.md)
+- **Workflows:** [Find](../../docs/how-to-guides/compile/find-new-sources.md), [Ingest](../../docs/how-to-guides/compile/capture-and-ingest.md)
 - **Files:** [profiles/README.md](../../docs/explanation/profiles/README.md), [profiles/librarian.md](../../docs/explanation/profiles/librarian.md)

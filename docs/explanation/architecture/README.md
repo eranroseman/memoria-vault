@@ -1,14 +1,14 @@
 ---
 title: Architecture
 parent: Explanation
-nav_order: 3
+nav_order: 2
 has_children: true
 permalink: /explanation/architecture/
 ---
 
 # Architecture
 
-Memoria separates three concerns into three layers: a Kanban **board** that orchestrates active work, seven Hermes **profiles** that execute it, and an Obsidian **vault** that stores durable knowledge. The layers connect through explicit handoffs but are never collapsed into one. This section describes what each layer and surface *is* — the structural pages; the *why* behind the split (and the research behind it) lives in [Why three layers, not one](../rationale/why-three-layers.md).
+Memoria separates three concerns into three layers: a Kanban **board** that orchestrates active work, seven Hermes **profiles** that execute it, and an Obsidian **vault** that stores durable knowledge. The layers connect through explicit handoffs but are never collapsed into one. This section describes what each layer and surface _is_ — the structural pages; the _why_ behind the split (and the research behind it) lives in [Why three layers, not one](../rationale/why-three-layers.md).
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
@@ -34,13 +34,13 @@ Memoria separates three concerns into three layers: a Kanban **board** that orch
 
 ## Documents in this section
 
-| Page | What it covers |
-|---|---|
-| [The vault](vault.md) | The vault as a knowledge structure: lifecycle folders, review-gated zones, special root files, and the promotion path in prose. |
-| [The memory model](memory-model.md) | The seven memory substrates — their scope, owner, and lifespan — and why configuration is not memory. |
-| [The control plane](control-plane.md) | How a human request reaches Hermes: the thin UI → API → MCP → worker chain, and why it is fail-closed and per-profile. |
-| [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram, and the programs-only API server — and the one-mode-per-channel principle. |
-| [Session logging](session-logging.md) | What each agent session records, why per-session summaries and the audit log are kept separate, and why one file per session. |
+| Page                                      | What it covers                                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [The vault](vault.md)                     | The vault as a knowledge structure: lifecycle folders, review-gated zones, special root files, and the promotion path in prose. |
+| [The memory model](memory-model.md)       | The seven memory substrates — their scope, owner, and lifespan — and why configuration is not memory.                           |
+| [The control plane](control-plane.md)     | How a human request reaches Hermes: the thin UI → API → MCP → worker chain, and why it is fail-closed and per-profile.          |
+| [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram, and the programs-only API server — and the one-mode-per-channel principle.  |
+| [Session logging](session-logging.md)     | What each agent session records, why per-session summaries and the audit log are kept separate, and why one file per session.   |
 
 ## Where to go next
 

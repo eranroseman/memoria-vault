@@ -117,7 +117,7 @@ Each added profile is an obligation the human is choosing to take on. Socratic-o
 
 #### Recommended secondary-device workflow
 
-Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../docs/how-to-guides/sources/discuss-a-paper.md). Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
+Read a paper note on the laptop → open the ACP pane → run a `socratic-processing` conversation → write the resulting claim-note yourself (human's hands, not Socratic's) → sync carries the new note back to the primary, where the Librarian runs enrichment overnight. See the [Discuss workflow](../../docs/how-to-guides/compile/discuss-a-paper.md). Socratic's write-denial is what makes this *architecturally* safe — even with a buggy plugin or a misconfigured skill, the policy MCP returns `deny` before any bytes reach disk.
 
 ### SSH-spawned ACP (no local Hermes install)
 

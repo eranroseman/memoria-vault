@@ -67,7 +67,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 
 > Auxiliary slots (title/approval/mcp/skills-hub/compression) are already cheap and
 > set in the **global** `~/.hermes/config.yaml`; leave them. See
-> [configuration.md § Auxiliary models](../../docs/how-to-guides/using-hermes-agent/configuration.md).
+> [configuration.md § Auxiliary models](../../docs/how-to-guides/hermes-agent/configuration.md).
 
 ### 1.2 Runtime prerequisites
 

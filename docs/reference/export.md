@@ -5,7 +5,7 @@ parent: Reference
 
 # Export routes and formats
 
-Citation states, export routes, editor feature comparison, and deliverable folder targets. For choosing between routes and failure modes see [Export a draft](../how-to-guides/writing/export-a-draft.md).
+Citation states, export routes, editor feature comparison, and deliverable folder targets. For choosing between routes and failure modes see [Export a draft](../how-to-guides/compose/export-a-draft.md).
 
 ---
 
@@ -94,4 +94,4 @@ A `deliverable` note is `current` immediately on creation; it is never edited af
 ## Related
 
 - The bibliography rendering depends on: [Bibliography](bibliography.md)
-- The export how-to: [Export a draft](../how-to-guides/writing/export-a-draft.md)
+- The export how-to: [Export a draft](../how-to-guides/compose/export-a-draft.md)

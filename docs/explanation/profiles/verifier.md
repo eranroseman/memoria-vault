@@ -44,7 +44,7 @@ The Verifier interrupts the publish-then-regret loop. It traces every substantiv
 
 **How-to**
 
-- Workflow: [verify and revise a draft](../../how-to-guides/writing/verify-and-revise.md)
+- Workflow: [verify and revise a draft](../../how-to-guides/compose/verify-and-revise.md)
 
 **Reference**
 

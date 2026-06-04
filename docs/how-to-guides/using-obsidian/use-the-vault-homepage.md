@@ -68,4 +68,4 @@ The **Common operations** section lists the Memoria command-palette shortcuts. U
 - Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards/)
 - Workspace layout for the Human workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Updating research focus on schedule: [Run the weekly review](../maintenance/run-the-weekly-review.md)
+- Updating research focus on schedule: [Run the weekly review](../maintain/run-the-weekly-review.md)

@@ -1,9 +1,8 @@
 ---
 title: Agent-client pane
 parent: Using Obsidian
-nav_order: 4
+nav_order: 3
 ---
-
 
 # Agent-client pane
 
@@ -19,12 +18,12 @@ Drive Memoria's conversational profiles from inside Obsidian without switching t
 
 Four profiles appear in the ACP picker. Choose based on what you're about to do:
 
-| Profile | Use it for | Pattern |
-| --- | --- | --- |
-| **Socratic** | Thinking through a paper or claim in conversation | Sustained — keep open across notes |
-| **Mapper** | Asking what's ready, thin, or missing in your corpus | One-shot — clear after each task |
-| **Writer** | Drafting a claim note or outline section | One-shot — clear after each task |
-| **Verifier** | Checking if a draft claim duplicates an existing note | One-shot — clear after each task |
+| Profile      | Use it for                                            | Pattern                            |
+| ------------ | ----------------------------------------------------- | ---------------------------------- |
+| **Socratic** | Thinking through a paper or claim in conversation     | Sustained — keep open across notes |
+| **Mapper**   | Asking what's ready, thin, or missing in your corpus  | One-shot — clear after each task   |
+| **Writer**   | Drafting a claim note or outline section              | One-shot — clear after each task   |
+| **Verifier** | Checking if a draft claim duplicates an existing note | One-shot — clear after each task   |
 
 Start with Socratic by default. Switch to the others only when you have a specific one-shot task.
 
@@ -42,11 +41,11 @@ The ACP pane appears in the right column. If it's not visible, click the Hermes 
 
 **Keyboard bindings** (fastest):
 
-| Binding | Profile |
-| --- | --- |
+| Binding        | Profile  |
+| -------------- | -------- |
 | `Ctrl+Shift+1` | Socratic |
-| `Ctrl+Shift+2` | Mapper |
-| `Ctrl+Shift+3` | Writer |
+| `Ctrl+Shift+2` | Mapper   |
+| `Ctrl+Shift+3` | Writer   |
 | `Ctrl+Shift+4` | Verifier |
 
 **From the picker:** click the profile name at the top of the ACP pane to open the dropdown and select a different profile.
@@ -69,10 +68,10 @@ The attached note appears as a named context card at the top of the conversation
 
 The transient profiles return structured outputs:
 
-| Profile | Output format | What to do with it |
-| --- | --- | --- |
-| Mapper | `[!corpus-map]` callout — dense clusters, thin topics, gaps | Read the gap list before framing a writing project |
-| Writer | Draft prose or outline, written directly in the response | Copy the sections you want into your draft file |
+| Profile  | Output format                                                        | What to do with it                                         |
+| -------- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Mapper   | `[!corpus-map]` callout — dense clusters, thin topics, gaps          | Read the gap list before framing a writing project         |
+| Writer   | Draft prose or outline, written directly in the response             | Copy the sections you want into your draft file            |
 | Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.8 before writing a new claim |
 
 A similarity score ≥ 0.8 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
@@ -105,7 +104,7 @@ On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** a
 
 ## Related
 
-- Discussing a paper end-to-end: [Discuss a paper](../sources/discuss-a-paper.md)
+- Discussing a paper end-to-end: [Discuss a paper](../compile/discuss-a-paper.md)
 - Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Profile picker design: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)

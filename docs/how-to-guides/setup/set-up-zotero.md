@@ -102,7 +102,7 @@ Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes]
 ## Related
 
 - Next step: [Set up Hermes](set-up-hermes.md)
-- What ingest does with the `.bib`: [Capture and ingest a source](../sources/capture-and-ingest.md)
+- What ingest does with the `.bib`: [Capture and ingest a source](../compile/capture-and-ingest.md)
 - Fixing a stale `.bib`: [Fix a stale .bib](../recovery/fix-stale-bib.md)
-- Pin the citekey after import: [Pin a citekey](../sources/pin-a-citekey.md)
+- Pin the citekey after import: [Pin a citekey](../compile/pin-a-citekey.md)
 - Citekey naming convention: [ADR-6](../../../project-files/decisions/06-citekey-naming-convention.md)

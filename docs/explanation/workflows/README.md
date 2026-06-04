@@ -1,7 +1,7 @@
 ---
 title: Workflows
 parent: Explanation
-nav_order: 7
+nav_order: 6
 has_children: true
 permalink: /explanation/workflows/
 ---
@@ -14,11 +14,11 @@ Two flows run on the board: a **Compile** flow that brings new knowledge into th
 
 ## Documents in this section
 
-| Page | What it covers |
-| --- | --- |
-| [The Compile and Compose flows](compile-and-compose.md) | The Compile (find → distill) and Compose (assess → export) flows, what each phase means, and why they run continuously rather than as one sequential script. |
-| [The board as a state machine (the control plane)](board-as-state-machine.md) | Why Kanban is the coordination layer (not chat), what a card carries, the card lifecycle, why cards and notes differ, and why there is no Orchestrator. |
-| [Review as a first-class state](review-as-state.md) | Why review is a structured field rather than a convention, what "blocking" means technically, and the post-rejection paths. |
-| [Verify-on-commit](verify-on-commit.md) | Why committing a draft auto-creates a verification card, why the trigger is a git hook rather than a cron job, and why automatic creation is not automatic approval. |
+| Page                                                                          | What it covers                                                                                                                                                       |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [The Compile and Compose flows](compile-and-compose.md)                       | The Compile (find → distill) and Compose (assess → export) flows, what each phase means, and why they run continuously rather than as one sequential script.         |
+| [The board as a state machine (the control plane)](board-as-state-machine.md) | Why Kanban is the coordination layer (not chat), what a card carries, the card lifecycle, why cards and notes differ, and why there is no Orchestrator.              |
+| [Review as a first-class state](review-as-state.md)                           | Why review is a structured field rather than a convention, what "blocking" means technically, and the post-rejection paths.                                          |
+| [Verify-on-commit](verify-on-commit.md)                                       | Why committing a draft auto-creates a verification card, why the trigger is a git hook rather than a cron job, and why automatic creation is not automatic approval. |
 
 For step-by-step workflow recipes, see [how-to guides](../../how-to-guides/).

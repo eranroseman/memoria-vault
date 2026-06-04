@@ -1,13 +1,12 @@
 ---
-title: Set up the messaging gateway
+title: Set up messaging
 parent: Setup
 nav_order: 7
 ---
 
+# Set up the messaging gateway [deferred]
 
-# Set up the messaging gateway
-
-> **v0.1 status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component. This guide documents the intended setup; the bot wiring and inbound capture path are not validated end-to-end in v0.1. Use Obsidian capture ([Triage fleeting notes](../sources/triage-fleeting-notes.md)) as the supported path until this lands.
+> **v0.1 status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component. This guide documents the intended setup; the bot wiring and inbound capture path are not validated end-to-end in v0.1. Use Obsidian capture ([Triage fleeting notes](../compile/triage-fleeting-notes.md)) as the supported path until this lands.
 
 Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's inbox.
 
@@ -73,7 +72,7 @@ Send any message to your bot in Telegram. Within a few seconds, a `.md` file sho
 
 ## Related
 
-- Fleeting note triage workflow: [Triage fleeting notes](../../how-to-guides/sources/triage-fleeting-notes.md)
+- Fleeting note triage workflow: [Triage fleeting notes](../../how-to-guides/compile/triage-fleeting-notes.md)
 - Vault-access and agent-interface integrations: [External integrations](../../reference/integrations.md)
 - The two HTTP roles of the gateway: [Distribution model](../../explanation/deployment/distribution-model.md)
 - Hermes gateway docs: [hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs)

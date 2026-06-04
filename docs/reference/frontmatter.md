@@ -149,7 +149,7 @@ Fields specific to ingested sources (`paper-note`, `item-note`, entities).
 - `expression-of-concern` — flagged by the publisher but not retracted.
 - `deprecated` — superseded by a stronger synthesis or newer paper (use `superseded_by:` to point at the superseding note).
 
-Retraction tracking lives **outside** the vault: Zotero 9 with retraction monitoring (`extensions.zotero.retractionWatch.enabled: true`) checks CrossRef and Retraction Watch automatically, and the Verifier's `retraction-check` skill surfaces disagreements so the human can update `pub_status`. The agent never silently flips a note to `retracted` — see [Run a retraction sweep](../how-to-guides/maintenance/run-a-retraction-sweep.md).
+Retraction tracking lives **outside** the vault: Zotero 9 with retraction monitoring (`extensions.zotero.retractionWatch.enabled: true`) checks CrossRef and Retraction Watch automatically, and the Verifier's `retraction-check` skill surfaces disagreements so the human can update `pub_status`. The agent never silently flips a note to `retracted` — see [Run a retraction sweep](../how-to-guides/maintain/run-a-retraction-sweep.md).
 
 ### `role_in_stack` values (item-note)
 

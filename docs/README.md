@@ -53,13 +53,13 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 [Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Set up the vault homepage](how-to-guides/using-obsidian/use-the-vault-homepage.md) · [Use workspaces](how-to-guides/using-obsidian/use-workspaces.md)
 
 **Daily work — sources**
-[Find new sources](how-to-guides/sources/find-new-sources.md) · [Capture and ingest](how-to-guides/sources/capture-and-ingest.md) · [Classify a source](how-to-guides/sources/classify-a-source.md) · [Write a claim note](how-to-guides/sources/write-a-claim-note.md)
+[Find new sources](how-to-guides/compile/find-new-sources.md) · [Capture and ingest](how-to-guides/compile/capture-and-ingest.md) · [Classify a source](how-to-guides/compile/classify-a-source.md) · [Write a claim note](how-to-guides/compile/write-a-claim-note.md)
 
 **Daily work — writing**
-[Query the vault](how-to-guides/writing/query-the-vault.md) · [Assess your corpus](how-to-guides/writing/assess-your-corpus.md) · [Draft with Writer](how-to-guides/writing/draft-with-writer.md) · [Verify and revise](how-to-guides/writing/verify-and-revise.md)
+[Query the vault](how-to-guides/compose/query-the-vault.md) · [Assess your corpus](how-to-guides/compose/assess-your-corpus.md) · [Draft with Writer](how-to-guides/compose/draft-with-writer.md) · [Verify and revise](how-to-guides/compose/verify-and-revise.md)
 
 **Weekly**
-[Return to work](how-to-guides/maintenance/return-to-work.md) · [Weekly review](how-to-guides/maintenance/run-the-weekly-review.md) · [Run the Linter](how-to-guides/maintenance/run-the-linter.md)
+[Return to work](how-to-guides/maintain/return-to-work.md) · [Weekly review](how-to-guides/maintain/run-the-weekly-review.md) · [Run the Linter](how-to-guides/maintain/run-the-linter.md)
 
 **Recovery**
 [Safe mode](how-to-guides/recovery/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)

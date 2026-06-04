@@ -49,7 +49,7 @@ This posture is a deliberate design choice, not a shortcut. The cost of a missin
 
 **How-to**
 
-- Workflows the Librarian drives: [capture and ingest](../../how-to-guides/sources/capture-and-ingest.md), [find new sources](../../how-to-guides/sources/find-new-sources.md)
+- Workflows the Librarian drives: [capture and ingest](../../how-to-guides/compile/capture-and-ingest.md), [find new sources](../../how-to-guides/compile/find-new-sources.md)
 
 **Reference**
 

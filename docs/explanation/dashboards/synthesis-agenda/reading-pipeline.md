@@ -43,4 +43,4 @@ It shows what is actively in flight through the Compile flow and what has come o
 - Narrower Compile-discipline sibling: [The discuss-queue dashboard](discuss-queue.md)
 - Weekly entry point that links to this: [The weekly-review dashboard](../structural-health/weekly-review.md)
 - Lifecycle stages explained: [knowledge/lifecycle-over-topic](../../knowledge/lifecycle-over-topic.md)
-- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)
+- Next step after the reading-pipeline surfaces a paper: [discuss a paper](../../../how-to-guides/compile/discuss-a-paper.md)

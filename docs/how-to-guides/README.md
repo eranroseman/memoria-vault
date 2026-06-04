@@ -18,10 +18,10 @@ For the *why* behind any design choice, see [Explanation](../explanation/). For 
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](sources/) and [Writing](writing/) are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](compile/) and [Writing](compose/) are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
-Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintenance/), and [Recovery](recovery/) are written for this mode.
+Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintain/), and [Recovery](recovery/) are written for this mode.
 
 ---
 
@@ -59,8 +59,8 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 
 | Guide | What it covers |
 | --- | --- |
-| [Configure a profile](using-hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
-| [Chat with Hermes](using-hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
+| [Configure a profile](hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
+| [Chat with Hermes](hermes-agent/chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
 
 Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [Hermes CLI](../reference/hermes-cli.md).
 
@@ -70,19 +70,19 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
-| [Find new sources](sources/find-new-sources.md) | Forward/backward citation search, concept queries, candidate queue | Find |
-| [Triage fleeting notes](sources/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Triage (on-ramp) |
-| [Capture and ingest a source](sources/capture-and-ingest.md) | Zotero → vault: the complete intake path | Capture + Enrich |
-| [Classify a source](sources/classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
-| [Pin a citekey](sources/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Capture (prep) |
-| [Discuss a paper](sources/discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
-| [Read a paper through a Socratic lens](sources/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
-| [Write a claim note](sources/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
-| [Link related claims](sources/link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Connect |
-| [Review link suggestions](sources/review-link-suggestions.md) | Triage the Librarian's `[!suggestions]` callout — approve / reject candidate links | Connect |
-| [Promote a claim to canonical reference](sources/promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Maintenance |
-| [Archive a source](sources/archive-a-source.md) | Retire an outdated or superseded source | Maintenance |
-| [Run a systematic review](sources/run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Screen (opt-in) |
+| [Find new sources](compile/find-new-sources.md) | Forward/backward citation search, concept queries, candidate queue | Find |
+| [Triage fleeting notes](compile/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Triage (on-ramp) |
+| [Capture and ingest a source](compile/capture-and-ingest.md) | Zotero → vault: the complete intake path | Capture + Enrich |
+| [Classify a source](compile/classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
+| [Pin a citekey](compile/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Capture (prep) |
+| [Discuss a paper](compile/discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
+| [Read a paper through a Socratic lens](compile/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
+| [Write a claim note](compile/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
+| [Link related claims](compile/link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Connect |
+| [Review link suggestions](compile/review-link-suggestions.md) | Triage the Librarian's `[!suggestions]` callout — approve / reject candidate links | Connect |
+| [Promote a claim to canonical reference](compile/promote-a-claim.md) | Move evergreen claims to `30-synthesis/02-reference/` | Maintenance |
+| [Archive a source](compile/archive-a-source.md) | Retire an outdated or superseded source | Maintenance |
+| [Run a systematic review](compile/run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Screen (opt-in) |
 
 ### Writing (Compose)
 
@@ -90,16 +90,16 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
-| [Start a writing project](writing/start-a-writing-project.md) | Scaffold a workbench project folder | — |
-| [Assess your corpus](writing/assess-your-corpus.md) | Mapper corpus map: dense clusters, thin coverage, gaps | Assess |
-| [Frame a project](writing/frame-a-project.md) | Generate competing outlines, choose one framing | Frame |
-| [Use canvas for argument mapping](writing/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Sketch |
-| [Query the vault](writing/query-the-vault.md) | Ask a question, get a cited synthesis in your inbox | Query (aid) |
-| [Draft with the Writer](writing/draft-with-writer.md) | Use the Writer profile for prose and outlines | Draft |
-| [Verify and revise a draft](writing/verify-and-revise.md) | Run Verify, read the callout, close gaps | Verify |
-| [Work the review queue](writing/work-the-review-queue.md) | Approve or reject agent writes held at the review gate | Review (gate) |
-| [Export a draft](writing/export-a-draft.md) | Pandoc export to Word, PDF, or plain Markdown | Export |
-| [Create a code artifact](writing/create-a-code-artifact.md) | Scaffold a code-note and delegate to an external coding agent | Code (branch) |
+| [Start a writing project](compose/start-a-writing-project.md) | Scaffold a workbench project folder | — |
+| [Assess your corpus](compose/assess-your-corpus.md) | Mapper corpus map: dense clusters, thin coverage, gaps | Assess |
+| [Frame a project](compose/frame-a-project.md) | Generate competing outlines, choose one framing | Frame |
+| [Use canvas for argument mapping](compose/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Sketch |
+| [Query the vault](compose/query-the-vault.md) | Ask a question, get a cited synthesis in your inbox | Query (aid) |
+| [Draft with the Writer](compose/draft-with-writer.md) | Use the Writer profile for prose and outlines | Draft |
+| [Verify and revise a draft](compose/verify-and-revise.md) | Run Verify, read the callout, close gaps | Verify |
+| [Work the review queue](compose/work-the-review-queue.md) | Approve or reject agent writes held at the review gate | Review (gate) |
+| [Export a draft](compose/export-a-draft.md) | Pandoc export to Word, PDF, or plain Markdown | Export |
+| [Create a code artifact](compose/create-a-code-artifact.md) | Scaffold a code-note and delegate to an external coding agent | Code (branch) |
 
 ### Maintenance
 
@@ -107,16 +107,16 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 
 | Guide | What it covers |
 | --- | --- |
-| [Run the weekly review](maintenance/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
-| [Run the Linter](maintenance/run-the-linter.md) | On-demand or scheduled structural health check |
-| [Refactor claim notes](maintenance/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
-| [Build a Map of Content](maintenance/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
-| [Manage your topic vocabulary](maintenance/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
-| [Run a retraction sweep](maintenance/run-a-retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
-| [Run a schema migration](maintenance/run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
-| [Redeploy profiles](maintenance/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
-| [Rebuild the search index](maintenance/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
-| [Return to work](maintenance/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
+| [Run the weekly review](maintain/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
+| [Run the Linter](maintain/run-the-linter.md) | On-demand or scheduled structural health check |
+| [Refactor claim notes](maintain/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
+| [Build a Map of Content](maintain/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
+| [Manage your topic vocabulary](maintain/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
+| [Run a retraction sweep](maintain/run-a-retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
+| [Run a schema migration](maintain/run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
+| [Redeploy profiles](maintain/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
+| [Rebuild the search index](maintain/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
+| [Return to work](maintain/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
 
 ### Recovery
 

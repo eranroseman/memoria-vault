@@ -40,5 +40,5 @@ Every fully-classified paper note (`lifecycle: current`) that hasn't yet had a S
 
 - Broader sibling: [The reading-pipeline dashboard](reading-pipeline.md)
 - The profile invoked to drain this queue: [Socratic](../../profiles/socratic.md)
-- Workflow: [discuss a paper](../../../how-to-guides/sources/discuss-a-paper.md)
+- Workflow: [discuss a paper](../../../how-to-guides/compile/discuss-a-paper.md)
 - The workspace this dashboard anchors: [workspaces](../../../reference/obsidian-workspaces.md)
