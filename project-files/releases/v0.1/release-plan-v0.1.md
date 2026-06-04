@@ -103,7 +103,7 @@ These prove an agent completes real work end-to-end, not that components exist. 
 
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
-| G9 | todo | **Deterministic spine.** A *dispatched* deterministic agent (Linter `health-report` or Verifier `similarity-check` — zero-LLM, no external API) completes a board card live: dispatch → claim → run → gated write → audit → `done`. Isolates "does the spine work live" from ingest risk — the #1 thing to prove, and the cheapest | live agent run | — |
+| G9 | todo | **Deterministic spine.** A *dispatched* deterministic agent (Linter `health-report` or Verifier `similarity-check` — zero-LLM, no external API) completes a board card live: dispatch → claim → run → gated write → audit → `done`. Isolates "does the spine work live" from ingest risk — the #1 thing to prove, and the cheapest | [G9 protocol](../../tests/g9-spine-protocol.md) | — |
 | G10 | in-progress | **Ingest value loop** (the product). capture → ingest → gated write → review. ADR-30 Tier-0/1 scripts shipped + `--self-test` green (#93–#100; see ledger), but the LLM classify + `[!brief]`, the gated writes (`pipeline.py` writes nothing today), the capture glue, and one end-to-end run remain. Part **construction**, not just verification. ADR-30 stays `proposed` until a Tier-1 correctness spike (round-2 red-team R2-1 merge / R2-4 tags) | live agent run | — |
 | G11 | todo | **Review loop closes.** Card → `done` → `review_status: requested` → human approves → lifecycle `current`, observed end-to-end. The review gate is policy-tested but **not** e2e-verified | live agent run | — |
 
