@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-05
+id: RFC-05
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: deferred
 created: 2026-05-30
 ---
 
-# PROP-05: Ratchet — a qmd similarity gate before filing a synthesis note
+# RFC-05: Ratchet — a qmd similarity gate before filing a synthesis note
 
 ## What
 
@@ -51,7 +51,7 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 
 ## Related
 
-- **Pairs with:** [PROP-06 — frozen-evaluator checklist (deferred)](PROP-06-frozen-evaluator-deferred.md)
+- **Pairs with:** [RFC-06 — frozen-evaluator checklist (deferred)](RFC-06-frozen-evaluator-deferred.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
 - **Profiles:** [Linter](../../docs/explanation/profiles/linter.md), [Mapper](../../docs/explanation/profiles/mapper.md)
 - **Note types gated:** [claim-note, reference-note](../../docs/reference/note-types.md)

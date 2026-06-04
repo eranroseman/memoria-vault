@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-01
+id: RFC-01
 title: Code-artifact autopilot
 status: deferred
 created: 2026-05-15
 ---
 
-# PROP-01: Code-artifact autopilot
+# RFC-01: Code-artifact autopilot
 
 ## What
 

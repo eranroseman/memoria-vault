@@ -84,7 +84,7 @@ The design rationale already written is worth 30–50% of any of these — none 
 **Work required (~6–9 months).**
 1. Implement MVS + Librarian + Verifier + Linter (the minimum stack that demonstrates the blocking-review thesis, [ADR-03](../../decisions/03-structural-review-gate.md)).
 2. Run 3 months of personal use with instrumented logging (the six-signal capture, now shipped — see [reference/telemetry.md](../../../docs/reference/telemetry.md)).
-3. Run a 4–6 week comparison study — same vault, two operators, blocking vs. advisory review (or a generic-LLM-assistant baseline), see [PROP-08](../PROP-08-configurable-review-gate-mode.md).
+3. Run a 4–6 week comparison study — same vault, two operators, blocking vs. advisory review (or a generic-LLM-assistant baseline), see [RFC-08](../RFC-08-configurable-review-gate-mode.md).
 4. Quantify operator time-per-claim, false-promotion rate, vault link density, trust metrics over time.
 
 **Risk.** n=1 or n=2 operator studies are publishable at CHI but draw skepticism; mitigated by detailed logging and qualitative methodology.
@@ -159,7 +159,7 @@ Do not commit to Path 2 or Path 3 before Path 1's data exists. Both depend on em
 - [ADR-20](../../decisions/20-publication-path.md) (the committed first paper this analysis sits behind).
 - [ADR-11 vault-eval](../../decisions/11-vault-eval-integration.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../../decisions/10-claim-supersession.md) (the FAMA cell).
 - The six-signal capture ([reference/telemetry.md](../../../docs/reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../../releases/v0.1/release-plan-v0.1-appendix.md)) — without populated logs, Paths 2/3 have no data.
-- [PROP-08](../PROP-08-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [measurement-and-verification.md](measurement-and-verification.md) (the deferred analysis harnesses).
+- [RFC-08](../RFC-08-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [measurement-and-verification.md](measurement-and-verification.md) (the deferred analysis harnesses).
 
 ## Source
 

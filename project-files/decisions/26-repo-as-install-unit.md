@@ -20,7 +20,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 **The repo (`memoria-vault`) is the install unit.** A user clones it (or runs the one-line bootstrap that clones it), and the bootstrap installer at the repo root (`scripts/install.sh`, with `scripts/install.ps1` as a thin WSL2 launcher) deploys everything. The repo has three parts with distinct audiences: `scripts/install.sh`/`scripts/install.ps1` (bootstrap), `vault/` (the runtime artifact deployed to a working location off OneDrive on Windows), and `docs/` (developer-facing, not deployed). Consequences that follow as rules:
 
 - **`vault/` is not independently installable** — installing requires the whole repo, and any reference from a vault-resident file to `docs/` or `project-files/` is a **GitHub URL, never a relative path**, because the deployed vault does not carry them.
-- **Profiles are hand-authored**, not compiled. The seven profile directories under `.memoria/profiles/` are maintained by hand; a profile compiler is **deferred** ([PROP-09-profile-compilation.md](../proposals/PROP-09-profile-compilation.md)) because seven-profile scale does not yet justify the complexity.
+- **Profiles are hand-authored**, not compiled. The seven profile directories under `.memoria/profiles/` are maintained by hand; a profile compiler is **deferred** ([RFC-09-profile-compilation.md](../proposals/RFC-09-profile-compilation.md)) because seven-profile scale does not yet justify the complexity.
 - **Profile install is idempotent.** The profile-install step (re-runnable on its own via `--profiles-only`) refreshes every author-owned file on each `git pull` and leaves human-owned secrets (`.env`, local overrides) untouched.
 
 ## Consequences
@@ -35,13 +35,13 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 **Ship `vault/` as the independently installable unit (the earlier vault-centric framing).** Superseded by the bootstrap model: the installers live at the repo root because the clone is the entry point, which makes the repo — not the vault alone — the install unit. The vault-as-carrier framing is retained only as history.
 
-**Generate profiles from a shared base via a compiler.** Deferred, not rejected: it would eliminate the seven-way duplication, but at seven-profile scale the duplication is not yet painful enough to justify a build step. Held as [PROP-09-profile-compilation.md](../proposals/PROP-09-profile-compilation.md) with hand-authoring as the current state.
+**Generate profiles from a shared base via a compiler.** Deferred, not rejected: it would eliminate the seven-way duplication, but at seven-profile scale the duplication is not yet painful enough to justify a build step. Held as [RFC-09-profile-compilation.md](../proposals/RFC-09-profile-compilation.md) with hand-authoring as the current state.
 
 ## Related
 
 - **Supporting rationale:** [distribution-model.md](../../docs/explanation/deployment/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
 - **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
 - **Installer design:** [bootstrap-installer.md](../../docs/explanation/deployment/bootstrap-installer.md) (rationale) + [reference/installer.md](../../docs/reference/installer.md) (inventories).
-- **Proposals:** [PROP-09-profile-compilation.md](../proposals/PROP-09-profile-compilation.md) (the deferred compiler).
+- **Proposals:** [RFC-09-profile-compilation.md](../proposals/RFC-09-profile-compilation.md) (the deferred compiler).
 - **How-to:** [redeploy-profiles.md](../../docs/how-to-guides/maintain/redeploy-profiles.md), [set-up-the-vault.md](../../docs/how-to-guides/setup/set-up-the-vault.md).
 - **Source discussion:** retroactively records the distribution model in `distribution-model.md`; note this ADR follows the *current* repo-as-install-unit model, which has moved past the earlier vault-as-carrier framing.

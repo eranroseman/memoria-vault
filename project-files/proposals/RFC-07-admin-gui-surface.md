@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-07
+id: RFC-07
 title: Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt
 status: deferred
 created: 2026-05-30
 ---
 
-# PROP-07: Admin/forensic GUI surface (`hermes-workspace`)
+# RFC-07: Admin/forensic GUI surface (`hermes-workspace`)
 
 ## What
 

@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-03
+id: RFC-03
 title: Dedicated review-note type
 status: deferred
 created: 2026-05-15
 ---
 
-# PROP-03: Dedicated review-note type
+# RFC-03: Dedicated review-note type
 
 ## What
 

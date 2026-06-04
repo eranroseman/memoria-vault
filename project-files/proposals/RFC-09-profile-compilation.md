@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-09
+id: RFC-09
 title: Profile compilation from a shared base
 status: deferred
 created: 2026-05-31
 ---
 
-# PROP-09: Profile compilation from a shared base
+# RFC-09: Profile compilation from a shared base
 
 The seven SOUL.md files are hand-authored and hand-maintained. This proposal describes a build step that would generate the shared sections from a common base, reducing inter-profile drift.
 

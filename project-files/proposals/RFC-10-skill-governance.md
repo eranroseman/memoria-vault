@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-10
+id: RFC-10
 title: Skill governance and lifecycle
 status: deferred
 created: 2026-05-31
 ---
 
-# PROP-10: Skill governance and lifecycle
+# RFC-10: Skill governance and lifecycle
 
 Not part of the active design. Adding a skill today means editing `policy.allow.skills` in a lane-override file and dropping the `SKILL.md` into the right profile's `skills/` folder. That's sufficient until the human is regularly graduating passthrough-skills to dedicated ones or coordinating cross-lane permission changes.
 

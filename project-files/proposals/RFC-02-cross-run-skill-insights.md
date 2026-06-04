@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-02
+id: RFC-02
 title: Cross-run skill-insights memory
 status: deferred
 created: 2026-05-15
 ---
 
-# PROP-02: Cross-run skill-insights memory
+# RFC-02: Cross-run skill-insights memory
 
 ## What
 

@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-08
+id: RFC-08
 title: Configurable review-gate mode (blocking | advisory) for comparison studies
 status: deferred
 created: 2026-05-31
 ---
 
-# PROP-08: Configurable review-gate mode (blocking | advisory) for comparison studies
+# RFC-08: Configurable review-gate mode (blocking | advisory) for comparison studies
 
 > **Naming.** This is **not** [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 

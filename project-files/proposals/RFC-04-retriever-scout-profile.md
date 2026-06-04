@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-04
+id: RFC-04
 title: Retriever / Scout as a separate profile
 status: deferred
 created: 2026-05-15
 ---
 
-# PROP-04: Retriever / Scout as a separate profile
+# RFC-04: Retriever / Scout as a separate profile
 
 ## What
 

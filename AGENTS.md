@@ -327,18 +327,18 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-### `project-files/proposals/` — PROP template
+### `project-files/proposals/` — RFC template
 
 ```markdown
 ---
 topic: proposals
-id: PROP-<NN>
+id: RFC-<NN>
 title: <Short title>
 status: open | deferred | adopted | rejected
 created: YYYY-MM-DD
 ---
 
-# PROP-<NN>: <Title>
+# RFC-<NN>: <Title>
 
 ## What
 ## Why
@@ -431,15 +431,15 @@ question, or doc fix is an **issue**, never a line in a file.
 | Artifact | Holds | Not for |
 | --- | --- | --- |
 | `project-files/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
-| `project-files/proposals/` (PROP-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
+| `project-files/proposals/` (RFC-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
 | `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | build gaps (→ issues) |
 | `_reports/`, `_notes/`, `/TODO` | Gitignored personal scratch | anything canonical or shared |
 
 **Routing a new item:** discrete and actionable → **issue** (label it; milestone only
-if scheduled). A big capability worth weighing trade-offs on → **PROP** (it graduates
+if scheduled). A big capability worth weighing trade-offs on → **RFC** (it graduates
 to issues + a milestone when scheduled). A choice just made → **ADR**. Release
 readiness → the **release plan**. A release-blocking issue is linked from the release
-plan §4 (Blockers); issues reference the relevant ADR / PROP / gate IDs — keep both directions.
+plan §4 (Blockers); issues reference the relevant ADR / RFC / gate IDs — keep both directions.
 
 **Never** track shared work in `/TODO` or `_notes/` — they are gitignored scratch and
 invisible to everyone else. If you find actionable work there, move it to an issue.

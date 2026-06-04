@@ -1,12 +1,12 @@
 ---
 topic: proposals
-id: PROP-06
+id: RFC-06
 title: Per-note-type acceptance checklists ("frozen evaluator") — deferred
 status: deferred
 created: 2026-05-30
 ---
 
-# PROP-06: Per-note-type acceptance checklists ("frozen evaluator")
+# RFC-06: Per-note-type acceptance checklists ("frozen evaluator")
 
 ## What
 
@@ -14,7 +14,7 @@ Explicit, per-note-type acceptance criteria the agent checks before filing — t
 
 ## Why
 
-Quality standards are currently implicit and human-judged. Making them explicit and uniform would catch under-supported or mis-shaped notes before they are filed, and pairs naturally with the ratchet gate ([PROP-05](PROP-05-ratchet-duplicate-gate.md)), which could use the checklist to decide what to flag.
+Quality standards are currently implicit and human-judged. Making them explicit and uniform would catch under-supported or mis-shaped notes before they are filed, and pairs naturally with the ratchet gate ([RFC-05](RFC-05-ratchet-duplicate-gate.md)), which could use the checklist to decide what to flag.
 
 ## Trade-offs
 
@@ -38,6 +38,6 @@ Do not codify criteria early: what makes a *good* note in this corpus is knowled
 
 ## Related
 
-- **Pairs with:** [PROP-05 — ratchet duplicate gate](PROP-05-ratchet-duplicate-gate.md)
+- **Pairs with:** [RFC-05 — ratchet duplicate gate](RFC-05-ratchet-duplicate-gate.md)
 - **Note type concerned:** [claim-note](../../docs/reference/note-types.md)
 - **Re-entry trigger:** 50+ claim-notes in `30-synthesis/01-claims/`
