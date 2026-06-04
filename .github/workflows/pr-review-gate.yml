@@ -40,10 +40,13 @@ jobs:
 
       - name: Post policy summary
         uses: actions/github-script@v7
+        env:
+          DECISION: ${{ steps.policy.outputs.decision }}
+          REASON: ${{ steps.policy.outputs.reason }}
         with:
           script: |
-            const decision = '${{ steps.policy.outputs.decision }}';
-            const reason   = '${{ steps.policy.outputs.reason }}';
+            const decision = process.env.DECISION;
+            const reason   = process.env.REASON;
             const icon = { auto_approve: '✅', needs_human: '👤', block: '🚫' }[decision] ?? '❓';
             await github.rest.issues.createComment({
               owner: context.repo.owner,
