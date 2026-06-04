@@ -91,3 +91,4 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 [**Explanation**](explanation/README.md) — Why Memoria is built the way it is. Architecture · Knowledge model · Profiles · Workflows · Obsidian surfaces.
 
 [**Reference**](reference/README.md) — Exact values, schemas, commands. Frontmatter · Note types · Profiles · Hermes CLI · Policy MCP · Failure modes · Glossary.
+
