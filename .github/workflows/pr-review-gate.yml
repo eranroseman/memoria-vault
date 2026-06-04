@@ -98,7 +98,7 @@ jobs:
         if: |
           steps.policy.outputs.decision == 'auto_approve' &&
           steps.kilo-review.outputs.kilo-conclusion != 'success' &&
-          steps.kilo-review.outputs.kilo-conclusion != 'SKIPPED' &&
+          steps.kilo-review.outputs.kilo-conclusion != 'skipped' &&
           steps.kilo-review.outputs.kilo-conclusion != 'NEUTRAL'
         run: |
           echo "Kilo Code Review blocked merge (conclusion: ${{ steps.kilo-review.outputs.kilo-conclusion }})."
