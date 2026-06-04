@@ -381,7 +381,7 @@ branches once grew off a frozen `main` in parallel (60 + 9 + 12 commits, none
 merged back), all touching the same ADR and files — ADR-27 was implemented
 *twice* — so consolidating them became a ~30-conflict semantic reconciliation,
 not a merge. Full post-mortem + human walkthrough:
-[git-workflow.md](project-files/process/git-workflow.md). The rules:
+[git-workflow.md](project-files/git-workflow.md). The rules:
 
 - **Keep `main` moving.** A branch is one coherent unit → PR → squash-merge →
   delete. If it passes ~1 day or ~10 unmerged commits, it's already too big —
