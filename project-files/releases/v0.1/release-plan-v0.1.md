@@ -27,11 +27,15 @@ is not only verification; part of it is the product itself.** The *infrastructur
 (installer, gate, bridge, dashboards, telemetry, CI) is built and largely verified —
 the remaining infra work is re-runs: dashboards (G4), telemetry cron (G5), the
 changelog (G8), the GUI tier (T5), and a fresh-clone re-run of the live gate (G2/T4).
-**What is not yet built or proven is operability:** no agent has completed a real
-workflow end-to-end, so the loop that makes v0.1 *usable* is still partly
-construction. This plan therefore separates two kinds of done — the infrastructure
-**floor** (§2, G1–G8) and the **operability** gates that prove a workflow actually
-runs (§2, G9–G11) — with the bar and critical path detailed in the
+**Operability is now built and proven live:** the deterministic ingest pipeline
+([ADR-30](../../decisions/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
+paper end-to-end on installer-deployed lanes — dispatch → `ingest_pipeline` MCP tool →
+vocabulary-constrained classify + `[!brief]` → ID-keyed entity links → gated writes →
+`review_status: requested`. What remains for operability is the fresh-clone candidate
+re-run and closing the **human** half of the review loop (G11). This plan therefore
+separates two kinds of done — the infrastructure **floor** (§2, G1–G8) and the
+**operability** gates that prove a workflow actually runs (§2, G9–G11) — with the bar
+and critical path detailed in the
 [shippability assessment](shippability-assessment-2026-06-03.md). `released:` flips to
 `true` only when **every** gate, floor and operability, is `done`.
 
@@ -42,11 +46,13 @@ runs (§2, G9–G11) — with the bar and critical path detailed in the
 > but didn't fire (it took ADR-27 _and_ the ADR-28 plugin to actually fire it).
 > **But "verify what's built" is only half the gate.** The other half is
 > **operability**: the command/invocation surface that lets an agent actually run a
-> workflow is _designed, not shipped_ for all seven agents, and the ingest value loop
-> (ADR-30, still `proposed`) has unbuilt steps. So the release gate is **both** — turn
-> `shipped` infrastructure into `approved` (§2 G1–G8, §3), **and** prove one workflow
-> operable end-to-end (§2 G9–G11). Shipping on green plumbing alone would ship zero
-> proven research value.
+> workflow. The **ingest value loop (ADR-30) is now built and ran end-to-end live**
+> (#100–#116) — vocabulary-constrained classify + `[!brief]` + gated multi-writes
+> through the `ingest_pipeline` MCP tool; what remains is the fresh-clone re-run and
+> the human review-approval half (G11). So the release gate is **both** — turn
+> `shipped` infrastructure into `approved` (§2 G1–G8, §3), **and** record the operable
+> workflow green from a candidate (§2 G9–G11). Shipping on green plumbing alone would
+> ship zero proven research value.
 
 ## State values
 
@@ -103,9 +109,9 @@ These prove an agent completes real work end-to-end, not that components exist. 
 
 | Gate | State | Proves | Verified by | Issue |
 | --- | --- | --- | --- | --- |
-| G9 | todo | **Deterministic spine.** A *dispatched* deterministic agent (Linter `health-report` or Verifier `similarity-check` — zero-LLM, no external API) completes a board card live: dispatch → claim → run → gated write → audit → `done`. Isolates "does the spine work live" from ingest risk — the #1 thing to prove, and the cheapest | [G9 protocol](../../tests/g9-spine-protocol.md) | — |
-| G10 | in-progress | **Ingest value loop** (the product). capture → ingest → Tier-1 enrich → classify → gated write → queued for review. The `ingest_pipeline` MCP tool (Tier-0/1 assembly) is shipped + `--self-test` green (#93–#100, #105, #110); by design it **writes nothing** — the worker performs the two LLM judgments (classify against `vocabulary.md`; the `[!brief]`) and all gated multi-writes, and **those have never run live**, plus the capture front-end is unbuilt (citekey path is operable). Part **construction**, not just verification. ADR-30 stays `proposed` until a Tier-1 correctness spike (round-2 red-team R2-1 merge / R2-4 tags) | [G10 protocol](../../tests/g10-ingest-protocol.md) | — |
-| G11 | todo | **Review loop closes.** Card → `done` → `review_status: requested` → human approves → lifecycle `current`, observed end-to-end. The review gate is policy-tested but **not** e2e-verified | live agent run | — |
+| G9 | awaiting-verify | **Deterministic spine.** The dispatch → claim → run → gated write → audit → `done` loop is now **proven live** — the G10 ingest card completed it end-to-end on installer-deployed lanes. The dedicated zero-LLM run (Linter/Verifier, per the protocol) and the fresh-clone candidate re-run remain to record it cleanly | [G9 protocol](../../tests/g9-spine-protocol.md) | — |
+| G10 | awaiting-verify | **Ingest value loop** (the product) — **built and proven live.** A real paper ingested end-to-end on installer-deployed lanes: dispatch → `ingest_pipeline` MCP tool (Tier-0 capture + Tier-1 S2+OpenAlex+Crossref merge / extract / link) → the two LLM judgments (classify constrained to `vocabulary.md`; the comparative `[!brief]`) → gated multi-writes (paper-note + ID-keyed entity notes) → `lifecycle: proposed`, `ingest_status: complete`, `review_status: requested`. Delivered #100–#116 — the pipeline is reached as an **MCP tool** (#110, because the Librarian's allowlist disables `code_execution`), with 429-retry + capture-intake robustness (#114) and the re-ingest sweeps on cron (#116). The Tier-1 merge is grounded by the 867-paper spike. Only the fresh-clone candidate re-run remains; **ADR-30 is implemented — mark it `accepted`** | [G10 protocol](../../tests/g10-ingest-protocol.md) | — |
+| G11 | in-progress | **Review loop closes.** The machine half is **proven** — the G10 ingest card reached `done` with `review_status: requested`. The **human** half (approve → promote `_proposed_classification` to main YAML → `lifecycle: current`) remains to be observed end-to-end | live agent run | — |
 
 ## 3. Validation — tiers
 
@@ -140,7 +146,7 @@ installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
 
 The remaining blockers split in two:
 - **Infrastructure (verification, not defects):** the not-yet-`done` floor gates (G2, G4, G5, G8) and tiers (T4, T5) — re-runs to confirm what's built.
-- **Operability (the substantive distance):** the release-blocking gates **G9** (deterministic spine), **G10** (ingest value loop — part construction: classify, gated writes, capture glue), and **G11** (review loop closes). These are P0-level work, distinct from the tracker P0 *issues* (all closed) that G7 covers. No agent has completed a verified workflow yet; this is where the real work and risk concentrate (see the [shippability assessment](shippability-assessment-2026-06-03.md) risks).
+- **Operability (now largely retired):** **G9** (deterministic spine) and **G10** (ingest value loop) are **built and proven live** — a real paper completed the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` loop on installer-deployed lanes (#100–#116). What remains is the fresh-clone candidate re-run (with G2/T4) and **G11**'s human-approval half. The substantive construction risk the [shippability assessment](shippability-assessment-2026-06-03.md) flagged is resolved.
 
 ## 5. Out of scope (deferred)
 
@@ -153,8 +159,8 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 - The **ACP-pane interactive surface** for Mapper/Writer/Verifier — and therefore the **session-skill / pane-readonly hardening** (the ephemeral-engine + unwired `set_session_skill` gap found this session). The pane isn't advertised in v0.1; a dispatched-only slice doesn't need it.
 - The **other six agents' full command sets** — prove one workflow, not seven.
-- **ADR-30 Tier 2** (NLI contradiction, KeyBERT, the comparative `[!brief]`) and heavy NLP.
-- **Multi-source merge sophistication** (ADR-30 R2-1) — start single-source-with-fallback; validate the merge later.
+- **ADR-30 Tier 2** (NLI contradiction, KeyBERT) and heavy NLP. _(The comparative `[!brief]` was **not** cut — it shipped as the second hole of the loop.)_
+- **Multi-source merge** was **not** cut after all — the S2 + OpenAlex + Crossref per-field best-source merge (reference union deduped by DOI) shipped, grounded by the 867-paper spike. _(Originally planned as single-source-with-fallback.)_
 - **API-POST capture transport** — the script/CLI/QuickAdd front-end ships first.
 
 ## 6. Known limitations (state in the release notes)
