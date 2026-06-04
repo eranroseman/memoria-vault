@@ -26,6 +26,7 @@ import os
 import random
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -53,13 +54,25 @@ def _env(key: str) -> str:
     return ""
 
 
-def _get(url: str, headers: dict | None = None, data: bytes | None = None):
+def _get(url: str, headers: dict | None = None, data: bytes | None = None, retries: int = 3):
+    """GET/POST JSON. Retries on HTTP 429 (rate limit) with Retry-After / backoff so
+    a single burst-throttle doesn't silently drop a co-primary source (S2 is the
+    chief offender). Other errors return None (treated as not-found by callers)."""
     req = urllib.request.Request(url, headers=headers or {}, data=data)
-    try:
-        with urllib.request.urlopen(req, timeout=25) as r:
-            return json.load(r)
-    except Exception:
-        return None
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=25) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < retries:
+                ra = (e.headers or {}).get("Retry-After", "")
+                wait = float(ra) if ra.isdigit() else min(2 ** attempt, 8)
+                time.sleep(wait + random.random())
+                continue
+            return None
+        except Exception:
+            return None
+    return None
 
 
 # --------------------------------------------------------------------------- #
@@ -330,7 +343,35 @@ def _self_test() -> int:
     }
     m = merge(parts)
     m0 = merge({"s2": {"found": False}, "openalex": {"found": False}, "crossref": {"found": False}})
+
+    # _get must retry a 429 then succeed, rather than silently dropping the source
+    _calls = [0]
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b'{"ok": true}'
+
+    def _fake(req, timeout=25):
+        _calls[0] += 1
+        if _calls[0] == 1:
+            raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {"Retry-After": "0"}, None)
+        return _Resp()
+
+    _orig = urllib.request.urlopen
+    urllib.request.urlopen = _fake
+    try:
+        _retried = _get("https://example/x")
+    finally:
+        urllib.request.urlopen = _orig
+
     checks = [
+        ("429 retried then succeeded", _retried == {"ok": True} and _calls[0] == 2),
         ("authors<-openalex (most ORCIDs)", m["provenance"]["authors"] == "openalex" and len(m["authors"]) == 2),
         ("title<-crossref (precedence)", m["title"] == "CR Title" and m["provenance"]["title"] == "crossref"),
         ("venue<-openalex", m["venue"] == "Some Venue" and m["provenance"]["venue"] == "openalex"),
