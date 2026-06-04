@@ -1,12 +1,16 @@
-# Default owner for everything
-*                               @eranroseman
+# Default owner — everything requires @eranroseman unless overridden below
+* @eranroseman
 
-# Install scripts — high blast radius, always needs owner review
-install.sh                      @eranroseman
-install.ps1                     @eranroseman
+# Install scripts — high blast radius
+scripts/install.sh @eranroseman
+scripts/install.ps1 @eranroseman
 
-# Agent profiles — core product
-project-files/                  @eranroseman
+# CI workflows and policy scripts
+.github/workflows/ @eranroseman
+.github/scripts/ @eranroseman
 
-# CI workflows
-.github/workflows/              @eranroseman
+# Agent profiles and vault machinery — core product logic
+vault/.memoria/ @eranroseman
+
+# Signed-off architecture decisions
+project-files/decisions/ @eranroseman
