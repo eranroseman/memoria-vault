@@ -23,7 +23,7 @@ released: false      # machine cut-flag; true ONLY when every gate below is `don
   ── The one rule that keeps this from rotting ───────────────────────────────
   SINGLE SOURCE OF STATE. Gate (G#) and Tier (T#) state lives ONLY in the §2/§3
   tables of this file. No sibling doc may restate it — they point here. Likewise,
-  per-artifact build state lives ONLY in the build ledger (implementation-status).
+  build gaps live ONLY in GitHub issues; scope cuts in proposals/.
   Edit each fact in exactly one place. (A future status-doctor check can enforce
   this; see the README.)
 ============================================================================ -->
@@ -98,9 +98,8 @@ must re-run **all tiers green from a fresh clone** on a clean target box.
      gate table and the issue tracker. State the rule, then point. -->
 
 Not enumerated here — a second list would drift. **By definition the blockers
-are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the
-build ledger ([implementation-status](../implementation-status.md)) and any open
-**P0** issue in the project issue tracker.
+are** any gate in §2 not yet `done`, plus any open **P0** issue in the project
+issue tracker.
 
 ## 5. Out of scope (deferred)
 

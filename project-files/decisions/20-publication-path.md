@@ -43,7 +43,7 @@ Memoria commits to a **two-part publication strategy**:
 
 ## Related
 
-- **Files affected:** [reference/telemetry.md](../../docs/reference/telemetry.md) (the six-signal schemas), [releases/v0.1/release-plan-v0.1-spillover.md](../releases/v0.1/release-plan-v0.1-spillover.md) (step 8, six-signal capture; board-export cron is the prerequisite), [implementation-status.md](../implementation-status.md) (six-signal capture row).
+- **Files affected:** [reference/telemetry.md](../../docs/reference/telemetry.md) (the six-signal schemas), [releases/v0.1/release-plan-v0.1-spillover.md](../releases/v0.1/release-plan-v0.1-spillover.md) (step 8, six-signal capture; board-export cron is the prerequisite).
 - **Related decisions / Depends on:** [ADR-11 vault-eval](11-vault-eval-integration.md) (the eval program this paper instantiates); [ADR-10 claim supersession](10-claim-supersession.md) (the FAMA-exposure signal and a novelty-triad pillar); [ADR-03 structural review gate](03-structural-review-gate.md) (the blocking-review thesis the later system/position paper would test).
 - **Proposals:** [measurement-and-verification.md](../proposals/surveys/measurement-and-verification.md) (analysis harnesses, deferred); [PROP-08](../proposals/PROP-08-configurable-review-gate-mode.md) (the comparison arm).
 - **Supporting rationale:** [why-not-autonomous.md](../../docs/explanation/rationale/why-not-autonomous.md), [why-pattern-provenance.md](../../docs/explanation/rationale/why-pattern-provenance.md), [why-human-gate.md](../../docs/explanation/rationale/why-human-gate.md), [intellectual-foundations.md](../../docs/explanation/overview/intellectual-foundations.md).

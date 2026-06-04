@@ -252,12 +252,12 @@ reading it. Before opening a PR:
   there — Hermes never reads a standalone `mcp.json`; ADR-27).
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
-- **Build state & known gaps:** `project-files/implementation-status.md` is the
-  ledger — read it before relying on live agent writes. For the live blocker set,
-  consult its `pending`/`broken` rows and the open
-  [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
-  list restated here. (#39/#51/#58 are closed — ADR-27 made the review gate enforce
-  live in all run modes; obsidian is each lane's only write path.)
+- **Build state & known gaps:** before relying on live agent writes, consult the
+  open [issues](https://github.com/eranroseman/memoria-vault/issues) (build gaps) and
+  the [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md) (gates,
+  blockers, known limitations) rather than any list restated here. (#39/#51/#58 are
+  closed — ADR-27 made the review gate enforce live in all run modes; obsidian is each
+  lane's only write path.)
 
 ## 7. Profiles and the vault
 
@@ -266,7 +266,8 @@ reading it. Before opening a PR:
   Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
   `mcp_servers` (ADR-27).
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
-  (ADRs); current build state is `project-files/implementation-status.md`.
+  (ADRs); current build state is tracked in the open issues + the
+  [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md).
 - **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
   findings, and distillation reports you produce belong in `_reports/` at the repo
   root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
@@ -366,14 +367,12 @@ released: false      # cut-flag; true only when every gate is `done`
 ```
 
 **Single source of state — prevents drift.** Gate/tier state lives ONLY in §2/§3 of
-the release-plan file; per-artifact build state lives ONLY in
-`implementation-status.md`. Every other doc *points* — never restates. Detail too
-long for a crisp plan (full phase steps, investigation notes) goes to a sibling
-`release-plan-<version>-spillover.md`.
+the release-plan file; build *gaps* are GitHub issues; scope *cuts* are proposals.
+Every other doc *points* — never restates. Detail too long for a crisp plan (full
+phase steps, investigation notes) goes to a sibling `release-plan-<version>-spillover.md`.
 
 The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
-(+ its `-spillover.md`); the per-artifact build ledger is
-[`implementation-status.md`](project-files/implementation-status.md).
+(+ its `-spillover.md`).
 
 ## 9. Integration cadence — merge small, merge often
 
@@ -433,8 +432,7 @@ question, or doc fix is an **issue**, never a line in a file.
 | --- | --- | --- |
 | `project-files/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
 | `project-files/proposals/` (PROP-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
-| `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | per-artifact build state |
-| `implementation-status.md` | Per-artifact build state | release gates |
+| `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | build gaps (→ issues) |
 | `_reports/`, `_notes/`, `/TODO` | Gitignored personal scratch | anything canonical or shared |
 
 **Routing a new item:** discrete and actionable → **issue** (label it; milestone only

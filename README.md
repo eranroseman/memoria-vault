@@ -13,7 +13,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See [implementation-status.md](project-files/implementation-status.md) for current build state before installing.
+> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See the [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md) for current build state before installing.
 
 ---
 

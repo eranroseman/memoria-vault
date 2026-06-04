@@ -32,6 +32,5 @@ that folder; the reusable plan body lives in
 
 ## Single source of state
 
-Gate/tier state lives **only** in the plan's §2/§3; per-artifact build state lives
-**only** in [implementation-status.md](../implementation-status.md). Everything else
-points — never restates.
+Gate/tier state lives **only** in the plan's §2/§3; build gaps live **only** in
+GitHub issues; scope cuts in `proposals/`. Everything else points — never restates.

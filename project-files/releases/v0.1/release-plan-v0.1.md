@@ -39,9 +39,9 @@ and critical path detailed in the
 [shippability assessment](shippability-assessment-2026-06-03.md). `released:` flips to
 `true` only when **every** gate, floor and operability, is `done`.
 
-> **The core reframing.** Per [implementation-status.md](../../implementation-status.md),
-> most artifacts are `shipped` — but its legend defines `shipped` as _in the vault,
-> not verified end-to-end_. So v0.1 is overwhelmingly **built but unverified**, and
+> **The core reframing.** Most of v0.1 is **built but not verified end-to-end** —
+> present in the vault, but never exercised against a live Hermes. So v0.1 is
+> overwhelmingly **built but unverified**, and
 > #58 was a textbook case of the danger of stopping at `shipped`: a gate that existed
 > but didn't fire (it took ADR-27 _and_ the ADR-28 plugin to actually fire it).
 > **But "verify what's built" is only half the gate.** The other half is
@@ -134,9 +134,8 @@ as tiers here.
 ## 4. Blockers
 
 Not enumerated here — a second list would drift. **By definition the blockers
-are** any gate in §2 not yet `done`, plus the `pending`/`broken` rows in the build
-ledger ([implementation-status.md](../../implementation-status.md)) and any open
-**P0** issue in the [tracker](https://github.com/eranroseman/memoria-vault/issues).
+are** any gate in §2 not yet `done`, plus any open **P0** issue in the
+[tracker](https://github.com/eranroseman/memoria-vault/issues).
 
 **No open P0 remains** — #39, #51, and
 [#58](https://github.com/eranroseman/memoria-vault/issues/58) are all closed (#58
@@ -150,9 +149,8 @@ The remaining blockers split in two:
 
 ## 5. Out of scope (deferred)
 
-The per-artifact deferred set lives in the `deferred` rows of
-[implementation-status.md](../../implementation-status.md) and in
-[proposals/](../../proposals/) — not duplicated here. At the scope level:
+The deferred set lives in [proposals/](../../proposals/) — not duplicated here. At
+the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 **Cut from the first operable slice** — what keeps "ship one loop" (G9–G11) tractable. None blocks a defensible v0.1; re-open each once a workflow ships:
@@ -180,7 +178,7 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
 6. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
-7. **Flip the relevant `shipped` rows to `approved`** in [implementation-status.md](../../implementation-status.md) once the candidate passes.
+7. **Close the `v0.1` milestone** once the candidate passes, rolling any unfinished issues to the next milestone.
 
 ## 8. Roadmap after this release
 

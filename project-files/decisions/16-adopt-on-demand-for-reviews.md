@@ -34,7 +34,7 @@ The reasoning is identical across all four:
 
 ## Relationship to ADR-17
 
-[ADR-17 (shared candidate frontmatter)](17-shared-candidate-frontmatter.md) is adjacent but **not** part of this deferred cluster — it was **adopted into baseline v0.1** (independent of any formal review), because the shared `type: candidate-note` schema pays off for everyday `find` on its own. The `candidate-note` template ships and the type is registered (see [implementation-status.md](../implementation-status.md)). This cluster's pre-ingest screening pipeline consumes that schema once *it* activates.
+[ADR-17 (shared candidate frontmatter)](17-shared-candidate-frontmatter.md) is adjacent but **not** part of this deferred cluster — it was **adopted into baseline v0.1** (independent of any formal review), because the shared `type: candidate-note` schema pays off for everyday `find` on its own. The `candidate-note` template ships and the type is registered. This cluster's pre-ingest screening pipeline consumes that schema once *it* activates.
 
 ## See also
 

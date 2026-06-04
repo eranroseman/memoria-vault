@@ -124,7 +124,7 @@ Only after every row above is green:
 - [ ] Cut `CHANGELOG.md`: move `[Unreleased]` items into a dated `[0.1.0]` section; re-point the links.
 - [ ] Flip `released: false → true` in `release-plan-v0.1.md` frontmatter.
 - [ ] Tag `v0.1.0`; create the GitHub release with the curated notes (§6 limitations included).
-- [ ] Flip the relevant `shipped` rows to `approved` in [implementation-status.md](../../implementation-status.md).
+- [ ] Close the `v0.1` milestone, rolling any unfinished issues to the next milestone.
 
 ## Sign-off
 

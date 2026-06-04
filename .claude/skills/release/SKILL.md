@@ -16,7 +16,7 @@ Stand up or cut a Memoria release. The conventions are in [AGENTS.md](../../../A
 ## Single source of state
 
 - Gate/tier state lives **only** in the plan §2/§3.
-- Per-artifact build state lives **only** in `project-files/implementation-status.md`.
+- Build gaps are tracked as GitHub issues; release validation lives in the gates/tiers.
 - Everything else points — never restates.
 
 ## Cutting a release

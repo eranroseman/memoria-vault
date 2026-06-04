@@ -9,7 +9,6 @@ One job each.
 | [releases/](releases/) | Per-version release plans + readiness, and the reusable [release-plan template](releases/release-plan-template.md) | You want to know what a release covers or how to cut one |
 | [process/](process/) | Contributor process docs (e.g. the [git workflow](process/git-workflow.md) post-mortem) | You want to know *how* we work in this repo |
 | [tests/](tests/) | Reusable test protocols | You want to verify or validate the system |
-| [implementation-status.md](implementation-status.md) | The living build-state ledger (per-artifact status) | You want to know what's built vs pending |
 
 Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](decisions/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
 

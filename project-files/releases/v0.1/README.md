@@ -1,9 +1,8 @@
 # Release v0.1
 
-Everything specific to the **v0.1** cut. Release-agnostic logistics live elsewhere:
-the reusable [release-plan-template.md](../release-plan-template.md) in `releases/`, and
-the living build ledger [implementation-status.md](../../implementation-status.md) at the
-`project-files/` root — per-artifact build state lives only there.
+Everything specific to the **v0.1** cut. The reusable
+[release-plan-template.md](../release-plan-template.md) lives one level up in
+`releases/`; build gaps are tracked as GitHub issues.
 
 | File | What it covers |
 | --- | --- |

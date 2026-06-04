@@ -25,7 +25,7 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 - `Memoria: write MOC` — Map of Content in `30-synthesis/03-moc/`
 - `Memoria: write draft` · `Memoria: scaffold canvas` · `Memoria: scaffold code note` · `Memoria: write project note` — workbench notes (you pick the `40-workbench/<project>/` subfolder)
 
-Each stamps `created`/`updated` automatically and takes its title from a prompt (`capture fleeting` uses a timestamp instead). The **agent-driven** commands in the catalog (`ask about this note`, `lint this note`, `find related notes`, …) are **not yet wired** — they need QuickAdd Macros plus user scripts that POST to the Hermes API, tracked as a build gap (see [Implementation status](../../../project-files/implementation-status.md)). Add the ones you need per step 2.
+Each stamps `created`/`updated` automatically and takes its title from a prompt (`capture fleeting` uses a timestamp instead). The **agent-driven** commands in the catalog (`ask about this note`, `lint this note`, `find related notes`, …) are **not yet wired** — they need QuickAdd Macros plus user scripts that POST to the Hermes API, tracked as a build gap ([#203](https://github.com/eranroseman/memoria-vault/issues/203)). Add the ones you need per step 2.
 
 **2. Add a QuickAdd entry for each agent command you use.**
 
