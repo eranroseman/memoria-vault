@@ -29,10 +29,18 @@ def _bare(uri: str) -> str:
     return (uri or "").rstrip("/").rsplit("/", 1)[-1].strip()
 
 
+_yaml_warned = False
+
+
 def read_frontmatter(md: Path) -> dict:
+    global _yaml_warned
     try:
         import yaml
     except ImportError:
+        if not _yaml_warned:
+            print("[link] PyYAML not installed; frontmatter parsing disabled",
+                  file=sys.stderr)
+            _yaml_warned = True
         return {}
     text = md.read_text(encoding="utf-8", errors="ignore")
     if not text.startswith("---"):
@@ -43,7 +51,8 @@ def read_frontmatter(md: Path) -> dict:
     try:
         d = yaml.safe_load(text[3:end])
         return d if isinstance(d, dict) else {}
-    except yaml.YAMLError:
+    except yaml.YAMLError as exc:
+        print(f"[link] YAML parse error in {md}: {exc}", file=sys.stderr)
         return {}
 
 

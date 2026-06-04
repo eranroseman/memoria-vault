@@ -240,13 +240,11 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         import policy_mcp
         policy_mcp.PolicyEngine(vault).complete_write(
             profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256))
-    except Exception:
-        # Never break the agent loop on the audit-completion path. Under
-        # --self-test (HOOK_SELFTEST=1) print the cause — otherwise a swallowed
-        # failure here surfaces downstream as a confusing missing-audit-file error.
-        if os.environ.get("HOOK_SELFTEST"):
-            import traceback
-            traceback.print_exc()
+    except Exception as exc:
+        # Never break the agent loop on the audit-completion path, but always
+        # log the failure to stderr so it is diagnosable in Hermes logs.
+        print(f"[policy_hook] audit completion failed for {profile}/{path}: "
+              f"{type(exc).__name__}: {exc}", file=sys.stderr)
     finally:
         try:
             pend.unlink()
@@ -269,8 +267,9 @@ def main() -> None:
 
     try:
         payload = json.load(sys.stdin)
-    except (json.JSONDecodeError, ValueError):
-        print("{}")                                  # malformed event: let Hermes proceed
+    except (json.JSONDecodeError, ValueError) as exc:
+        print(f"[policy_hook] malformed stdin payload: {exc}", file=sys.stderr)
+        print("{}")                                  # let Hermes proceed
         return
     event = payload.get("hook_event_name", "pre_tool_call")
     handler = evaluate_post if event == "post_tool_call" else evaluate_pre

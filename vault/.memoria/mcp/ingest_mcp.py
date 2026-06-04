@@ -87,6 +87,12 @@ def build_server(vault: Path):
             bundle = pipeline.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
+        except Exception as exc:
+            print(f"[ingest_mcp] pipeline.run failed for {citekey}: "
+                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
+            return {"error": "pipeline-error",
+                    "citekey": citekey,
+                    "detail": f"{type(exc).__name__}: {exc}"}
         # persist the full-text extract to 90-assets/ (outside the agent's write lane,
         # so the tool writes it, not the worker) and strip the bulk text from the reply
         ex = bundle.get("extract")
