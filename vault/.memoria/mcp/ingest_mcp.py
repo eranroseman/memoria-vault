@@ -8,9 +8,11 @@ do — over **MCP**. This thin server wraps `pipeline.run()` as a single tool:
 
     ingest_pipeline(citekey, enrich=True) -> the draft bundle (with two holes)
 
-The tool only **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link);
-it performs no vault writes. The agent fills the two holes (_proposed_classification
-and the [!brief]) and writes through the gated obsidian MCP, exactly as before.
+The tool **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link); its
+only write is the *un-gated* capture-intake anchor (a durability backstop for
+board/manual ingest — see `append_intake_anchor`). It makes no vault-note writes:
+the agent fills the two holes (_proposed_classification and the [!brief]) and
+writes notes through the gated obsidian MCP, exactly as before.
 
     python ingest_mcp.py --vault <path>      # run the server over stdio
     python ingest_mcp.py --self-test         # synthetic, offline; no mcp pkg needed
@@ -18,8 +20,10 @@ and the [!brief]) and writes through the gated obsidian MCP, exactly as before.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # pipeline.py (and the modules it imports) live in the skill's scripts dir, which
@@ -29,6 +33,32 @@ SCRIPTS_DIR = (Path(__file__).resolve().parent.parent
                / "profiles/memoria-librarian/skills/obsidian-paper-note/scripts")
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
+
+INTAKE_LOG = "99-system/logs/capture-intake.jsonl"
+
+
+def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
+    """Append a capture-intake durability anchor for a citekey, idempotently.
+
+    The Zotero macro writes this anchor at capture (before the note). For ingest
+    that did NOT come through the macro (a board re-ingest or a manual card), this
+    backstops it so the reconcile sweep can recover the citekey. Append-only and
+    de-duped by citekey; this is the explicitly *un-gated* durability log, the one
+    write this server makes. Returns True if a line was appended."""
+    log = vault / INTAKE_LOG
+    if log.is_file():
+        for line in log.read_text(encoding="utf-8", errors="ignore").splitlines():
+            try:
+                if json.loads(line).get("citekey") == citekey:
+                    return False  # already anchored
+            except json.JSONDecodeError:
+                continue
+    rec = {"ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+           "citekey": citekey, "source": "ingest-tool", "note_path": note_path}
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(rec) + "\n")
+    return True
 
 
 def build_server(vault: Path):
@@ -51,9 +81,12 @@ def build_server(vault: Path):
             return {"error": "bib-not-found", "bib": str(bib_path)}
         bib_text = bib_path.read_text(encoding="utf-8", errors="ignore")
         try:
-            return pipeline.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
+            bundle = pipeline.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
+        # backstop the durability anchor for non-macro ingest (board / manual cards)
+        append_intake_anchor(vault, citekey, bundle.get("path", ""))
+        return bundle
 
     return server
 
@@ -74,11 +107,22 @@ def self_test() -> int:
     fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
                "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n}\n")
     b = pipeline.run("x2024Test", fixture, enrich=False)
+
+    # capture-intake anchor: appended once, idempotent on a second call
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        v = Path(td)
+        first = append_intake_anchor(v, "x2024Test", "20-sources/01-papers/x2024Test.md")
+        second = append_intake_anchor(v, "x2024Test", "20-sources/01-papers/x2024Test.md")
+        lines = (v / INTAKE_LOG).read_text().splitlines()
+        anchor_ok = first and not second and len(lines) == 1 and json.loads(lines[0])["citekey"] == "x2024Test"
+
     checks = [
         ("scripts dir importable", SCRIPTS_DIR.is_dir()),
         ("pipeline runs Tier-0", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
         ("bundle declares the two holes", b["holes"] == ["_proposed_classification", "brief"]),
         ("identity assembled", b["frontmatter"]["title"] == "A Test"),
+        ("intake anchor appended once + idempotent", anchor_ok),
     ]
     bad = [n for n, ok in checks if not ok]
     for n, ok in checks:
