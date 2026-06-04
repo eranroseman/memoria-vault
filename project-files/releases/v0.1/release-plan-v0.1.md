@@ -175,7 +175,7 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 ## 7. Cut procedure
 
 1. **Every gate (§2 — floor G1–G8 *and* operability G9–G11) and tier (§3) `done`; no P0 issues open.** The floor gates are verification (G2/T4 fresh-clone live re-run; G4/G5/G8/T5 dashboards/telemetry/changelog/GUI). The operability gates require a real workflow proven end-to-end: **G9** deterministic spine, **G10** ingest value loop, **G11** review loop closes — a release on green floor gates alone ships zero proven research value.
-2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3.
+2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3. Follow the [candidate-run checklist](candidate-run-checklist.md) — the ordered T0–T5 + G9–G11 run sheet with exact commands and a per-gate sign-off table.
 3. **Confirm version `0.1.0`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
 4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
