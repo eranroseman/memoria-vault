@@ -40,7 +40,9 @@ For each flagged item:
 
 **4. Run Revise for larger gaps** (optional).
 
-For systematic gap-closing rather than line edits, use the Revise workflow:
+For systematic gap-closing rather than line edits, open the agent-client pane (`Agent Client: Open chat view`), switch to the **Writer** (`Ctrl+Shift+3`), attach the draft and its verification report (`05-verification/<section>.md`) via the paperclip, and ask it to suggest edits that close each flagged gap. Review and accept the edits manually.
+
+**From the terminal (fallback):**
 
 ```bash
 hermes -p memoria-writer chat -s revise
@@ -48,8 +50,6 @@ hermes -p memoria-writer chat -s revise
 /revise --draft 40-workbench/<project>/04-drafts/<section>.md \
         --verification 40-workbench/<project>/05-verification/<section>.md
 ```
-
-The Writer reads the verification callout and suggests specific edits to close each gap. Review and accept edits manually.
 
 **5. Re-commit after revisions.**
 

@@ -12,7 +12,7 @@ The `Memoria:` command-palette surface — the **in-Obsidian UI** for capture, n
 > - **✓ wired** — registered today (a QuickAdd Template or Macro). These work.
 > - **`[deferred]`** — designed, not yet wired. Where the task is conversational, the **agent-client (ACP) pane** is the working path *today* (open *Agent Client: Open chat view*, switch to the named profile — the active note auto-attaches); where it produces a vault artifact, use the **[Hermes CLI](hermes-cli.md)** until the command lands.
 >
-> Wired today: seven QuickAdd **Templates** (`capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note`) and three **Macros** (`capture from Zotero selection`, `capture source from URL`, `lint this note` — each a QuickAdd UserScript → `hermes kanban create`). The three macros and the URL/lint additions were wired in the obsidian-first reconciliation; **confirm them in your next Obsidian session** (run each once). The rest land as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
+> Wired today: seven QuickAdd **Templates** (`capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note`) and three **Macros** (`capture from Zotero selection`, `capture source from URL`, `lint this note` — each a QuickAdd UserScript → `hermes kanban create`). **Confirmed live:** `lint this note` runs the Linter end-to-end; `capture source from URL` creates the card but the Librarian **blocks bare/proxied URLs** pending DOI resolution (see its row). The rest land as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
 
 Commander binds the top five to physical ribbon buttons.
 
@@ -24,7 +24,7 @@ Commander binds the top five to physical ribbon buttons.
 | --- | --- | --- | --- |
 | ✓ | `Memoria: capture fleeting` | New note in `10-inbox/01-fleeting/` with timestamp. | QuickAdd Template (fleeting note) |
 | ✓ | `Memoria: capture from Zotero selection` | `intake:source` card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → Better BibTeX CAYW (`?selected=true`) → `hermes kanban create` (WSL on Windows) |
-| ✓ | `Memoria: capture source from URL` | `intake:source` card on the Librarian lane, the pasted URL in the body for the Librarian to resolve. | QuickAdd Macro → prompt for URL → `hermes kanban create` |
+| ✓ macro / ingest `[partial]` | `Memoria: capture source from URL` | `intake:source` card on the Librarian lane with the pasted URL. **The macro is wired**, but the Librarian's pipeline is citekey/`.bib`-driven: a URL **with a resolvable DOI** can be ingested, while a **bare/library-proxied URL, a repo, or a webpage blocks** asking for the DOI or citekey (full URL→metadata resolution is [deferred]). | QuickAdd Macro → prompt for URL → `hermes kanban create` |
 
 ## Processing
 
