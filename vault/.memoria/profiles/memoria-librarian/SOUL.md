@@ -51,25 +51,27 @@ The boundary between deterministic and LLM-required steps in this profile is def
 
 ## Hermes skills (lane-allowed)
 
-These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`). Scholarly **discovery** is no longer a skill — it's the `paper_search` MCP server (see Tooling / MCPs), which replaced the `paper-lookup` and `arxiv` web-fetch skills.
+External access is **MCP-only** — the `web` toolset is disabled, so the Librarian makes no direct API calls. Discovery is the `paper_search` MCP, Zotero reads are the **read-only** `pyzotero` MCP (Zotero's local API has no write path — there is no Zotero write-back), and enrichment/extraction is the `ingest` MCP (server-side). See Tooling / MCPs.
 
-- `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field. This write-back is the one path no read-only MCP covers, so the lane keeps the `web` toolset for it.
-- `citation-management` — Crossref DOI resolution and reference normalization.
-- `literature-review` — K-Dense structured literature-review assembly over discovered sources.
-- `obsidian-paper-note` — Full ingest pipeline (Zotero → PDF → Markdown → vault note).
-- `ocr-and-documents` — PDF/OCR text extraction for the ingest pipeline (official `productivity/`).
-- `rest-passthrough` — Escape hatch for one-off REST calls to APIs not yet wrapped by a dedicated skill. Lane-restricted to the Library lane.
+The lane-granted skills (none need the network):
+
+- `obsidian-paper-note` — the authored ingest skill: calls the `ingest` MCP, fills the two model holes, writes via the `obsidian` MCP.
+- `obsidian` — gated vault read/write.
+- `qmd` — the `query` command (hybrid BM25 + vector vault search; local).
+
+The web-fetch K-Dense skills (`paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `rest-passthrough`) were retired — their capabilities are served by the MCP servers or composed from them.
 
 ## Tooling / MCPs
 
 MCP servers (registered in `config.yaml`, gated by the policy MCP):
 
 - `paper_search` — scholarly discovery across 20+ databases (OpenAlex, Semantic Scholar, PubMed, Crossref, Unpaywall, arXiv, bioRxiv/medRxiv, CORE, …); search tools only.
+- `pyzotero` — read-only Zotero (local API) for citekey / metadata resolution.
 - `ingest` — the deterministic ingest pipeline; makes the throttled scholarly-API + extraction calls **server-side** (Tier-0 capture + Tier-1 enrich/extract/link).
 - `obsidian` — gated vault read/write.
 - `policy` — the write gate.
 
-Other external identifiers (ORCID, ROR, ISSN) are resolved inside the ingest pipeline; vault search is the local `qmd` skill. The `web` toolset remains enabled for the `pyzotero` stable-ID write-back to Zotero (the read-only pyzotero MCP can't perform writes).
+Other external identifiers (ORCID, ROR, ISSN) are resolved inside the ingest pipeline; vault search is the local `qmd` skill. `web` is disabled — the Librarian makes no direct API calls.
 
 ## Rules
 

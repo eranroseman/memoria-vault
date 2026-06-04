@@ -47,14 +47,21 @@ mcp_servers:
     env:
       PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: "${NCBI_EMAIL}"
       PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: "${S2_API_KEY}"
+  pyzotero:
+    # Upstream read-only Zotero MCP (Zotero 7 local API at localhost:23119) — citekey /
+    # metadata resolution for ingest reads. Memoria uses Zotero read-only (the local API
+    # has no write path), so this fully replaces the pyzotero web-fetch skill — there is
+    # no Zotero write-back. Install once: pip install "pyzotero[mcp]".
+    command: "pyzotero-mcp"
+    timeout: 30
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian / policy /
-# ingest / paper_search via MCP). Discovery now goes through the paper_search MCP, but
-# `web` is still ON for the one path no read-only MCP covers: the pyzotero stable-ID
-# write-back to Zotero (and the remaining K-Dense literature skills). disabled_toolsets =
+# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
+# ingest / paper_search / pyzotero via MCP). `web` is DISABLED: discovery -> paper_search
+# MCP, Zotero reads -> pyzotero MCP, enrich/extract -> ingest MCP (server-side), vault
+# search -> qmd (local). The Librarian now makes no direct API calls. disabled_toolsets =
 # every Hermes toolset NOT in the keep-set. Update if Hermes adds toolsets.
 agent:
-  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, x_search, yuanbao]
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
 terminal:
