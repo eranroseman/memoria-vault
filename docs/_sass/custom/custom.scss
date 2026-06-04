@@ -1,0 +1,14 @@
+// Memoria — tagline rendered under the sidebar site title (just-the-docs
+// auto-imports _sass/custom/custom.scss). Plain hex (no theme var) so a theme
+// change can't break the SCSS build.
+.site-title::after {
+  content: "a research operating system · version 0.1";
+  display: block;
+  margin-top: 0.25em;
+  font-size: 0.62rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: #6c6a73;
+  white-space: normal;
+}
