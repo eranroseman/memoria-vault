@@ -133,8 +133,11 @@ def fetch_s2(ids: dict, key: str) -> dict:
                 "orcid": (a.get("externalIds") or {}).get("ORCID", "")}
                for a in d.get("authors") or []]
     refs = _norm_refs_s2(d.get("references"))
+    ext = d.get("externalIds") or {}
     return {
         "source": "s2", "found": True,
+        "s2_id": d.get("paperId", ""),
+        "pmid": str(ext.get("PubMed") or ""), "pmcid": str(ext.get("PubMedCentral") or ""),
         "title": d.get("title", ""), "year": d.get("year"),
         "authors": authors, "orcid_count": sum(1 for a in authors if a["orcid"]),
         "tldr": (d.get("tldr") or {}).get("text", ""),
@@ -166,8 +169,12 @@ def fetch_openalex(ids: dict, key: str, email: str) -> dict:
                 if a.get("institutions") else ""}
                for a in d.get("authorships") or []]
     src = (d.get("primary_location") or {}).get("source") or {}
+    oaids = d.get("ids") or {}
     return {
         "source": "openalex", "found": True,
+        "openalex_id": (d.get("id") or "").rsplit("/", 1)[-1],
+        "pmid": (oaids.get("pmid") or "").rsplit("/", 1)[-1],
+        "pmcid": (oaids.get("pmcid") or "").rsplit("/", 1)[-1],
         "title": d.get("title", ""), "year": d.get("publication_year"),
         "authors": authors, "orcid_count": sum(1 for a in authors if a["orcid"]),
         "venue": src.get("display_name", ""), "issn": (src.get("issn_l") or ""),
@@ -244,6 +251,10 @@ def merge(parts: dict) -> dict:
     return {
         "title": title, "year": year, "venue": venue,
         "issn": parts.get("openalex", {}).get("issn") or parts.get("crossref", {}).get("issn", ""),
+        "s2_id": parts.get("s2", {}).get("s2_id", ""),
+        "openalex_id": parts.get("openalex", {}).get("openalex_id", ""),
+        "pmid": parts.get("openalex", {}).get("pmid") or parts.get("s2", {}).get("pmid", ""),
+        "pmcid": parts.get("openalex", {}).get("pmcid") or parts.get("s2", {}).get("pmcid", ""),
         "authors": authors,
         "tldr": parts.get("s2", {}).get("tldr", ""),
         "fields_of_study": parts.get("s2", {}).get("fields_of_study") or [],
@@ -325,13 +336,15 @@ def diagnose(bib_path: Path, n: int, seed: int = 13) -> int:
 def _self_test() -> int:
     """No-network test of the merge logic (fetchers are validated by --diagnose)."""
     parts = {
-        "s2": {"found": True, "title": "S2 Title", "year": 2020,
+        "s2": {"found": True, "title": "S2 Title", "year": 2020, "s2_id": "S2PAPER1",
+               "pmid": "111", "pmcid": "",
                "authors": [{"name": "A", "orcid": ""}, {"name": "B", "orcid": ""}],
                "orcid_count": 0, "tldr": "a tldr", "fields_of_study": ["Computer Science"],
                "publication_types": ["JournalArticle"], "citation_count": 5,
                "refs": [{"doi": "10.1/a", "arxiv": "", "title": ""},
                         {"doi": "10.1/b", "arxiv": "", "title": ""}], "refs_returned": 2},
         "openalex": {"found": True, "title": "OA Title", "year": 2020,
+                     "openalex_id": "W123", "pmid": "222", "pmcid": "PMC999",
                      "authors": [{"name": "Alice", "orcid": "x"}, {"name": "Bob", "orcid": "y"}],
                      "orcid_count": 2, "venue": "Some Venue", "issn": "1234-5678",
                      "topics": ["Topic A"], "referenced_works": ["W1", "W2"]},
@@ -379,7 +392,10 @@ def _self_test() -> int:
         ("fields<-s2, topics<-openalex", m["fields_of_study"] == ["Computer Science"] and m["topics"] == ["Topic A"]),
         ("refs union deduped by DOI = 3", len(m["references"]) == 3),
         ("shared ref tagged both sources", any(set(r["sources"]) == {"s2", "crossref"} for r in m["references"])),
-        ("all-missing -> empty merge", m0["title"] == "" and m0["references"] == [] and m0["authors"] == []),
+        ("stable IDs surfaced (s2/openalex)", m["s2_id"] == "S2PAPER1" and m["openalex_id"] == "W123"),
+        ("pmid/pmcid prefer openalex", m["pmid"] == "222" and m["pmcid"] == "PMC999"),
+        ("all-missing -> empty merge", m0["title"] == "" and m0["references"] == [] and m0["authors"] == []
+         and m0["s2_id"] == "" and m0["openalex_id"] == ""),
     ]
     bad = [name for name, ok in checks if not ok]
     for name, ok in checks:
