@@ -45,6 +45,12 @@ gate handled in `SOUL.md`. This skill owns the other four.
 Detailed procedures, trace order, thresholds, failure modes, and false-positive handling are
 in `references/sub-checks.md`.
 
+cite-check and similarity-check run **locally** — citekeys resolve against `.memoria/memoria.bib`
+and the paper notes; similarity uses the `qmd` embedding index. When claim-trace needs external
+citation context (a cited source's references or citing papers), it comes from the `pyzotero`
+MCP's Semantic Scholar tools (`get_references`, `get_citations`, `find_related`) — **not** direct
+HTTP; `code_execution`/`terminal` stay disabled.
+
 ## Procedure
 
 Run each check deterministic-first; reach for the LLM only on the single ambiguous band.

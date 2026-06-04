@@ -26,6 +26,27 @@ mcp_servers:
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  verify:
+    # Retraction lookup by DOI (CrossRef update-to / is-retracted-by + Open Retractions),
+    # deterministic and read-only — exposes retraction_check(doi). The Verifier can't exec
+    # scripts (code_execution disabled), so the check is reached over MCP. Local; no keys
+    # (optional MEMORIA_CONTACT_EMAIL for the CrossRef polite pool). No off-the-shelf MCP
+    # covers retraction-by-DOI, hence this thin server (.memoria/mcp/verify_mcp.py).
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/verify_mcp.py", "--serve"]
+    timeout: 30
+  pyzotero:
+    # Upstream read-only Zotero MCP (Zotero 7 local API) + Semantic Scholar citation tools
+    # (get_citations / get_references / find_related / search_semantic_scholar) — backs
+    # DOI/metadata resolution + citation context for cite-check and claim-trace without a
+    # terminal grant. Install once: pip install "pyzotero[mcp]" (or uv tool install).
+    command: "pyzotero-mcp"
+    timeout: 30
+  # academic (optional, not yet installed): hunter-heidenreich/academic-tools-mcp adds
+  # CrossRef + OpenCitations reference resolution (get_paper_references,
+  # search_crossref_by_title) for deeper cite-check; arXiv 2603.17339 `citecheck` is an
+  # alternative, purpose-built bibliographic-verification MCP. Enable either after
+  # installing it and confirming its run command.
 
 # Capability allowlist (ADR-27): keep toolsets = skills, todo, web (+ obsidian/policy via
 # MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
@@ -43,7 +64,7 @@ checkpoints:
 
 # Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
 # Hermes registers MCP tools as mcp_<server>_<tool>, so the obsidian write is
-# mcp_obsidian_vault_write / _append / _patch; a shell hook (re.fullmatch "obsidian.*",
+# mcp_obsidian_obsidian_append_content / _patch_content / _put_content; a shell hook (re.fullmatch "obsidian.*",
 # consent-gated, fail-OPEN) never fired. The plugin runs in-process in every mode
 # (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is fail-CLOSED.
 # Deployed per lane by the installer (deploy_policy_plugin); see .memoria/plugins/.

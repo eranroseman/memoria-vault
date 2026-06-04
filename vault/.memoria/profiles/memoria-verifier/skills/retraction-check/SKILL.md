@@ -14,8 +14,9 @@ metadata:
 # retraction-check
 
 Scan paper-notes for retractions and flag any source whose retraction status disagrees with
-its vault `pub_status`. **Fully deterministic** — HTTP lookups + DOI match + boolean
-comparison; no LLM. **Dry-run by default; never silently updates a note.**
+its vault `pub_status`. **Fully deterministic** — the `retraction_check` MCP tool does the
+lookups (CrossRef + Open Retractions); you compare its verdict to `pub_status`. No LLM
+judgment. **Dry-run by default; never silently updates a note.**
 
 ## When to Use
 
@@ -30,9 +31,9 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 
 | Action | Call |
 |--------|------|
-| Check one DOI (Open Retractions) | `GET https://openretractions.com/api/doi/{doi}/data.json` → `.retracted` (bool) |
-| Cross-check (CrossRef) | `GET https://api.crossref.org/works/{doi}` → look for `update-to` with `type: retraction` |
-| Resolve vault DOIs | the `pyzotero` skill / read `doi:` from paper-note frontmatter |
+| Check one DOI | `retraction_check(doi)` — the `verify` MCP tool (`mcp_verify_retraction_check`) |
+| What it returns | `{retracted: true\|false\|null, agreement, retraction_doi, retraction_date, sources}` (CrossRef `update-to`/`is-retracted-by` + Open Retractions, combined) |
+| Resolve vault DOIs | read `doi:` from paper-note frontmatter (or the `pyzotero` MCP) |
 
 ## Inputs
 
@@ -43,7 +44,7 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 ## Procedure
 
 1. **Collect DOIs.** Read `doi` from each paper-note's frontmatter in scope (skip notes with no DOI).
-2. **Query.** For each DOI, GET the Open Retractions API; on a hit (`retracted: true`) record it. Optionally cross-check CrossRef's retraction metadata for corroboration.
+2. **Query.** For each DOI, call the `retraction_check` MCP tool (`verify` server). It queries CrossRef (`update-to` / `is-retracted-by`) and Open Retractions and returns a combined verdict: `retracted` (true/false/null), `agreement` (agree / disagree / single-source / no-data), and the retraction DOI/date. Treat `retracted: null` (both sources errored) as **unknown** — never as clean.
 3. **Compare.** Diff each result against the note's `pub_status`:
    - external `retracted` but note is not `retracted`/`expression-of-concern` → **flag**;
    - note marked `retracted` but external says active → flag (possible stale/incorrect).
@@ -54,8 +55,8 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 
 - **Flag, don't fix.** The agent never flips `pub_status: retracted`; that is a human decision (matches the Verifier's "mechanical first, interpretive never" rule).
 - Deterministic: the same DOIs + same external state produce the same report every run.
-- External HTTP is allowed only under the Verifier's `external_api_policy: explicit_only`.
-- Be polite to the APIs (include a contact `mailto` on CrossRef; rate-limit batches).
+- You make **no HTTP calls yourself** — the `verify` MCP server does (CrossRef polite-pool via `MEMORIA_CONTACT_EMAIL` + Open Retractions); you call the tool and read the verdict. `code_execution`/`terminal` stay disabled.
+- On `agreement: disagree` (one source flags a retraction the other misses), flag it for human review rather than treating it as definitive either way.
 
 ## Verification
 
