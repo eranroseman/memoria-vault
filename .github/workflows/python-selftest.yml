@@ -43,6 +43,9 @@ jobs:
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" --self-test
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" --self-test
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py" --self-test
+          python scripts/docs-doctor.py --self-test
+          python scripts/check-test-refs.py --self-test
+          python .github/scripts/pr_policy.py --self-test
       - name: Gate dashboard schema-drift (real vault)
         # Only dashboard-field-drift blocks; vault content findings (broken
         # wikilinks, schema-check) stay advisory — they're not this gate's job.
