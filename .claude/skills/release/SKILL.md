@@ -5,7 +5,7 @@ description: Scaffold and track a new Memoria release (vX.Y) — create the rele
 
 # release
 
-Stand up or cut a Memoria release. The conventions are in [AGENTS.md](../../../AGENTS.md) §10 (tracking) and the scaffold is [project-files/releases/_template.md](../../../project-files/releases/_template.md).
+Stand up or cut a Memoria release. The conventions are in [AGENTS.md](../../../AGENTS.md) §10 (tracking) and the scaffold is [project-files/releases/README.md](../../../project-files/releases/README.md).
 
 ## Starting a new release vX.Y
 

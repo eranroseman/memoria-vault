@@ -2,15 +2,15 @@
 topic: releases
 ---
 
-# Starting a new release — vX.Y
+# Releases
 
-Each release gets its own folder, `releases/vX.Y/`. This file is the scaffold for
-that folder; the reusable plan body lives in
-[release-plan-template.md](release-plan-template.md).
+One folder per version, `releases/vX.Y/`, holding everything specific to that cut.
+The reusable plan body is [release-plan-template.md](release-plan-template.md); the
+current release is [v0.1/](v0.1/).
 
-## Steps
+## Starting a new release — vX.Y
 
-1. **Create the folder** `releases/vX.Y/` and a `README.md` (copy an existing
+1. **Create the folder** `releases/vX.Y/` with a `README.md` (copy an existing
    release README; it's a thin index of the files below).
 2. **Copy the plan:** [release-plan-template.md](release-plan-template.md) →
    `releases/vX.Y/release-plan-vX.Y.md`. Reset every Gate (`G#`) and Stage (`S#`)
