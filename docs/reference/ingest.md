@@ -133,7 +133,7 @@ Two backstops recover anything that stalls. Neither writes the vault — re-inge
 | `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed) | Enqueues a re-ingest card so the first write is retried |
 | `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed) | Enqueues a re-ingest card to re-run enrichment |
 
-Run with `--dry-run` to report what would be enqueued without touching the board.
+Run with `--dry-run` to report what would be enqueued without touching the board. The installer wires both passes as a deterministic, no-LLM cron (`memoria-sweeps`, every 15 minutes) that recovers stalled captures automatically.
 
 ---
 
