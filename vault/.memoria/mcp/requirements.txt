@@ -11,5 +11,11 @@ mcp>=1.2.0
 # its --self-test run without PyYAML; only the live server's lane loading needs it.
 PyYAML>=6.0
 
+# Local-PDF full-text extraction for the ingest pipeline (extract.py, the
+# memoria-ingest MCP server). Lazy-imported, so ingest still runs without it
+# (PMC / pre-extracted tiers); installing it enables the local Zotero-PDF
+# fallback for papers not in an open-access full-text source.
+pymupdf4llm>=0.0.17
+
 # NOTE: tasks_mcp.py is not yet authored (it fronts the Hermes Kanban, which is
 # Phase-4 / deferred). When it lands, add its dependencies here.
