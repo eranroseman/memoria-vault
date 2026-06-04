@@ -66,6 +66,27 @@ module.exports = async (params) => {
     new Notice(`${items.length} items selected — capturing the first (${citekey}).`, 6000);
   }
 
+  // 1b. Capture commits first — append the durability anchor to the intake log
+  //     BEFORE the gated write, so a failure downstream loses nothing (the
+  //     reconcile sweep re-drives any logged citekey with no note on disk).
+  const app = params.app || globalThis.app;
+  const LOG = "99-system/logs/capture-intake.jsonl";
+  try {
+    const rec = JSON.stringify({
+      ts: new Date().toISOString(),
+      citekey,
+      source: "zotero",
+      note_path: `20-sources/01-papers/${citekey}.md`,
+    }) + "\n";
+    const adapter = app.vault.adapter;
+    let prev = "";
+    try { prev = await adapter.read(LOG); } catch (e) { /* first capture — file absent */ }
+    await adapter.write(LOG, prev + rec);
+  } catch (e) {
+    // Non-fatal: warn but still create the card (don't block capture on a log write).
+    new Notice(`Capture-intake log write failed for ${citekey} (continuing): ${e.message}`.slice(0, 200), 6000);
+  }
+
   // 2. Create the intake:source card on the Librarian lane
   const cardTitle = `Ingest source: ${citekey}`;
   const body =
