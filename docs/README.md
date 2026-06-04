@@ -8,6 +8,11 @@ permalink: /
 
 A research operating system for a single researcher — seven AI agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
+**[Read about what Memoria is](explanation/overview/what-memoria-is.md)**, what it's not, and why it exists. Everything else builds on this.
+If you want a guided first experience, see [Tutorials](tutorials/).
+If you need to _do_ something, see [how-to guides](how-to-guides/).
+If you need exact values, field names, or configuration formats, see [Reference](reference/).
+
 **v0.1** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
 <!-- SCREENSHOT: Replace this comment with ![Memoria vault](assets/screenshot.png) once the system is running. -->
@@ -16,13 +21,13 @@ A research operating system for a single researcher — seven AI agents that rea
 
 ## Where do you want to go?
 
-| I want to… | Go here |
-|---|---|
-| **Get set up for the first time** | [Tutorial 01 — Set up from zero](tutorials/01-set-up-from-zero.md) |
-| **Do something specific** | [How-to guides](how-to-guides/README.md) |
-| **Look up a field, command, or schema** | [Reference](reference/README.md) |
-| **Understand why something works this way** | [Explanation](explanation/README.md) |
-| **Fix something broken** | [Failure modes](reference/failure-modes.md) · [Recovery guides](how-to-guides/recovery/README.md) |
+| I want to…                                  | Go here                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Get set up for the first time**           | [Tutorial 01 — Set up from zero](tutorials/01-set-up-from-zero.md)                                |
+| **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
+| **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
+| **Understand why something works this way** | [Explanation](explanation/README.md)                                                              |
+| **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Recovery guides](how-to-guides/recovery/README.md) |
 
 ---
 
@@ -30,15 +35,15 @@ A research operating system for a single researcher — seven AI agents that rea
 
 Seven tutorials, each building on the last. Start at 01 and follow the sequence — or jump in at whichever step matches where you are.
 
-| Tutorial | What you'll do | You'll end with |
-|---|---|---|
-| [01 — Set up from zero](tutorials/01-set-up-from-zero.md) | Clone the vault, run the installer, wire Zotero | A working vault, all plugins, all seven profiles |
-| [02 — Your first note](tutorials/02-your-first-note.md) | Capture a thought, discuss it, write a claim note | One permanent claim note in your own words |
-| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md) | Ingest one Zotero paper, classify it, distill one claim | One paper-note and one linked claim-note |
-| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md) | Ingest five papers, write three linked claim notes | Your first connected knowledge cluster |
-| [05 — Start a writing project](tutorials/05-start-a-writing-project.md) | Read the corpus map, commit a framing | A project folder with map and chosen outline |
-| [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Write a draft paragraph, run verification, close the gap | A verified draft with a complete citation trail |
-| [07 — Find new sources](tutorials/07-find-new-sources.md) | Run forward-citation search, triage candidates | A populated candidates queue and one new paper-note |
+| Tutorial                                                                 | What you'll do                                           | You'll end with                                     |
+| ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------- |
+| [01 — Set up from zero](tutorials/01-set-up-from-zero.md)                | Clone the vault, run the installer, wire Zotero          | A working vault, all plugins, all seven profiles    |
+| [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a thought, discuss it, write a claim note        | One permanent claim note in your own words          |
+| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Ingest one Zotero paper, classify it, distill one claim  | One paper-note and one linked claim-note            |
+| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ingest five papers, write three linked claim notes       | Your first connected knowledge cluster              |
+| [05 — Start a writing project](tutorials/05-start-a-writing-project.md)  | Read the corpus map, commit a framing                    | A project folder with map and chosen outline        |
+| [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Write a draft paragraph, run verification, close the gap | A verified draft with a complete citation trail     |
+| [07 — Find new sources](tutorials/07-find-new-sources.md)                | Run forward-citation search, triage candidates           | A populated candidates queue and one new paper-note |
 
 ---
 
@@ -63,15 +68,15 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 
 ## The seven agents
 
-| Agent | What it does |
-|---|---|
-| **Librarian** | Fetches sources, enriches metadata, proposes classifications — intake layer |
-| **Mapper** | Produces corpus maps, gap reports, and cluster maps — read-only |
-| **Socratic** | Asks questions to sharpen your thinking — architecturally write-denied |
-| **Writer** | Turns evidence into draft prose — lands in review, never direct to canonical |
-| **Verifier** | Traces claims to sources, flags retractions, catches near-duplicates |
-| **Coder** | Scaffolds handoffs to external coding agents (Claude Code, Aider) |
-| **Linter** | Zero-LLM structural validator — frontmatter, links, schema, audit logs |
+| Agent         | What it does                                                                 |
+| ------------- | ---------------------------------------------------------------------------- |
+| **Librarian** | Fetches sources, enriches metadata, proposes classifications — intake layer  |
+| **Mapper**    | Produces corpus maps, gap reports, and cluster maps — read-only              |
+| **Socratic**  | Asks questions to sharpen your thinking — architecturally write-denied       |
+| **Writer**    | Turns evidence into draft prose — lands in review, never direct to canonical |
+| **Verifier**  | Traces claims to sources, flags retractions, catches near-duplicates         |
+| **Coder**     | Scaffolds handoffs to external coding agents (Claude Code, Aider)            |
+| **Linter**    | Zero-LLM structural validator — frontmatter, links, schema, audit logs       |
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
 
