@@ -4,6 +4,8 @@ nav_order: 1
 permalink: /
 ---
 
+<!-- test: Kilo Code Review verification -->
+
 # Memoria
 
 A research operating system for a single researcher — seven AI agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
