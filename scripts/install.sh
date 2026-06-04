@@ -706,6 +706,37 @@ wire_telemetry_cron() {
 }
 
 # =============================================================================
+# Step 6c — re-ingest sweeps cron (ADR-30). A deterministic, no-LLM cron that
+# runs the two backstops (reconcile + retry), each enqueueing idempotent
+# re-ingest cards. Global (not per-lane). Idempotent.
+# =============================================================================
+wire_sweeps_cron() {
+  hdr "Re-ingest sweeps cron"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the sweeps cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/sweeps-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-sweeps.sh"
+  if [ ! -f "$src" ]; then
+    warn "sweeps cron wrapper missing at $src — sweeps cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  # Create the recurring no-agent job (idempotent — skip if one already exists).
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-sweeps"; then
+    say "  sweeps cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '*/15 * * * *' --script memoria-sweeps.sh --no-agent \
+      --name memoria-sweeps --deliver local \
+      || warn "could not create the sweeps cron — create it manually (see docs/reference/ingest.md)"
+  fi
+  say "  (recovers stalled captures every 15 min via idempotent re-ingest cards)"
+  ok "Sweeps cron wired"
+}
+
+# =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
 main() {
@@ -716,6 +747,7 @@ main() {
     install_mcp_deps
     install_profiles
     wire_telemetry_cron
+    wire_sweeps_cron
     print_next_steps
     return
   fi
@@ -730,6 +762,7 @@ main() {
   install_profiles
   install_skills
   wire_telemetry_cron
+  wire_sweeps_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
     ensure_zotero
