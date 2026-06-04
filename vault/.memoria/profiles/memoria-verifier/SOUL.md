@@ -28,9 +28,9 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 
 ## Core commands
 
-- `cite-check` — verify citations in drafts before export. Every `[@citekey]` must resolve to a real paper note; flag those that don't. **Hybrid method**: citation token extraction is pure regex; claim-source matching uses embedding similarity as a pre-filter (auto-clean above ~0.75, auto-fail below ~0.4, LLM-judge the middle band). See rationale/computational-methods.md.
+- `cite-check` — verify citations in drafts before export. Every `[@citekey]` must resolve to a real paper note; flag those that don't. **Hybrid method**: citation token extraction is pure regex; claim-source matching uses embedding similarity as a pre-filter (auto-clean above ~0.75, auto-fail below ~0.4, LLM-judge the middle band).
 - `claim-trace` — for each substantive claim, trace it to a supporting claim note in `30-synthesis/01-claims/`. Trace order: (a) explicit `[[wikilink]]` — deterministic graph walk; (b) `[@citekey]` mention + prose embedding similarity to the cited source's claim notes — deterministic; (c) similarity search across all claim notes if no citekey context — deterministic ranking, then optional LLM verdict on top candidates only when similarity is ambiguous.
-- `similarity-check` — point-of-action check before a new claim note is filed: cosine similarity between the new claim's embedding and the existing claim-note embedding index. Returns top 3 by score; flags at threshold ~0.8; never blocks. **Fully deterministic — no LLM call.** See reference/computational-toolbox.md. Human-invoked variant available via `Memoria: similarity-check this claim` command in the command palette — that surface returns results in a transient ACP chat without writing an audit entry, useful for pre-filing duplicate checks. The card-time `similarity-check` (this command) is the one that produces the audit-trail entry.
+- `similarity-check` — point-of-action check before a new claim note is filed: cosine similarity between the new claim's embedding and the existing claim-note embedding index. Returns top 3 by score; flags at threshold ~0.8; never blocks. **Fully deterministic — no LLM call.** Human-invoked variant available via `Memoria: similarity-check this claim` command in the command palette — that surface returns results in a transient ACP chat without writing an audit entry, useful for pre-filing duplicate checks. The card-time `similarity-check` (this command) is the one that produces the audit-trail entry.
 - `find-duplicates` — monthly retrospective sweep for near-duplicate claim notes. Embedding-based clustering (HDBSCAN or pairwise similarity) over the claim-note embedding index; output is a ranked list of candidate clusters for human review. **Fully deterministic — no LLM call**, dry-run only.
 - `retraction-check` — scan paper notes against Zotero retraction alerts and CrossRef. **Fully deterministic** — API call + DOI match + boolean comparison against `pub_status`.
 
@@ -41,7 +41,7 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 - Similarity retrieval — cosine similarity over sentence-transformer embeddings via the `qmd` skill (hybrid BM25 + vector; `vsearch`/`search` modes are deterministic — no LLM rerank). Used for duplicate detection (`similarity-check`, `find-duplicates`) and for claim-source matching.
 - Retraction lookup — the `retraction-check` authored skill (open-retractions API + CrossRef) with `pyzotero` resolving Zotero items / DOIs.
 
-These are **deterministic by design** with one explicit hybrid step (the ambiguous-band claim-source match). See rationale/computational-methods.md for the boundary rules and why Memoria avoids LLM-as-similarity-judge.
+These are **deterministic by design** with one explicit hybrid step (the ambiguous-band claim-source match); the boundary rules — and why Memoria avoids LLM-as-similarity-judge — are in the project's computational-methods design notes (not shipped to the runtime vault).
 
 ## Tooling / MCPs
 

@@ -4,6 +4,7 @@ name: memoria-mapper
 version: 0.1.0
 description: "Memoria Mapper — writes corpus-maps, gap-reports, and cluster-maps to 40-workbench/*/01-map/."
 author: "Memoria"
+license: "MIT"
 hermes_requires: ">=0.12.0"
 env_requires:
   - name: KILOCODE_API_KEY

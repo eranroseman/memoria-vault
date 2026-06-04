@@ -4,6 +4,7 @@ name: memoria-coder
 version: 0.1.0
 description: "Memoria Coder — scaffolds code notes, coordinates the external coding agent, and commits in 40-workbench/*/06-code/."
 author: "Memoria"
+license: "MIT"
 hermes_requires: ">=0.12.0"
 env_requires:
   - name: KILOCODE_API_KEY

@@ -4,6 +4,7 @@ name: memoria-verifier
 version: 0.1.0
 description: "Memoria Verifier — checks claims, citations, duplicates, and retractions; writes reports to 40-workbench/*/05-verification/."
 author: "Memoria"
+license: "MIT"
 hermes_requires: ">=0.12.0"
 env_requires:
   - name: KILOCODE_API_KEY

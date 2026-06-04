@@ -33,7 +33,7 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 - `gap-report` — identify thin-coverage topics adjacent to a project brief. **Hybrid method**: TF-IDF or BERTopic over note bodies identifies topics; thresholding by note count surfaces underrepresented topics; LLM composes the narrative (which topics matter for the project, in what order). Topic identification is deterministic; topic-importance ranking is the LLM step.
 - `cluster-map` — render a density / recency map for an arbitrary topic. **Deterministic**: HDBSCAN + UMAP over embeddings; density and recency are aggregations. The output is a structured table or figure, not generative prose.
 
-The per-source comparative read (the `[!brief]` callout on a new paper note) is **not** a Mapper command — it is part of the Librarian's ingest, which owns `20-sources/` writes. See [The Librarian](../../../../docs/explanation/profiles/librarian.md).
+The per-source comparative read (the `[!brief]` callout on a new paper note) is **not** a Mapper command — it is part of the Librarian's ingest, which owns `20-sources/` writes (the Librarian composes the per-source `[!brief]` callout during ingest).
 
 ## Core skills
 
@@ -43,7 +43,7 @@ The per-source comparative read (the `[!brief]` callout on a new paper note) is 
 - Recency / staleness distribution — frontmatter date aggregation over note collections. Deterministic.
 - Narrative composition — LLM step over the deterministic outputs above. Used to compose `corpus-map.md` prose and `gap-report.md` narrative.
 
-See rationale/computational-methods.md for the full LLM-vs-classical boundary. Mapper's value is the deterministic ML layer producing reproducible maps; the LLM only composes prose over those maps.
+The full LLM-vs-classical boundary is defined in the project's computational-methods design notes (not shipped to the runtime vault). Mapper's value is the deterministic ML layer producing reproducible maps; the LLM only composes prose over those maps.
 
 ## Tooling / MCPs
 

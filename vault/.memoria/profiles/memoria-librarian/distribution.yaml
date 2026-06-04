@@ -5,6 +5,7 @@ name: memoria-librarian
 version: 0.1.0
 description: "Memoria Librarian — finds, ingests, enriches, and draft-classifies evidence into 10-inbox/ and 20-sources/."
 author: "Memoria"
+license: "MIT"
 hermes_requires: ">=0.12.0"
 env_requires:
   - name: KILOCODE_API_KEY
