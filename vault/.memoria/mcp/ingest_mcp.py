@@ -8,11 +8,12 @@ do — over **MCP**. This thin server wraps `pipeline.run()` as a single tool:
 
     ingest_pipeline(citekey, enrich=True) -> the draft bundle (with two holes)
 
-The tool **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link); its
-only write is the *un-gated* capture-intake anchor (a durability backstop for
-board/manual ingest — see `append_intake_anchor`). It makes no vault-note writes:
-the agent fills the two holes (_proposed_classification and the [!brief]) and
-writes notes through the gated obsidian MCP, exactly as before.
+The tool **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link). It
+writes no vault notes — but it does persist the *un-gated derived artifacts* the
+agent can't: the full-text extract under `90-assets/extracts/` (outside the
+librarian write lane) and the capture-intake anchor (see `append_intake_anchor`).
+The agent fills the two holes (_proposed_classification and the [!brief]) and
+writes the notes through the gated obsidian MCP, exactly as before.
 
     python ingest_mcp.py --vault <path>      # run the server over stdio
     python ingest_mcp.py --self-test         # synthetic, offline; no mcp pkg needed
@@ -75,8 +76,10 @@ def build_server(vault: Path):
         """Run the deterministic ingest pipeline for a citekey and return the draft
         bundle: the assembled paper/item note (lifecycle: captured), merged
         metadata + _enrichment, the extract status, the link plan, and
-        holes=[_proposed_classification, brief] for the agent to fill. Reads and
-        computes only — writes nothing. Set enrich=False for the Tier-0 floor."""
+        holes=[_proposed_classification, brief] for the agent to fill. Writes no
+        vault notes; it does persist the un-gated derived artifacts (the full-text
+        extract under 90-assets/ and the capture-intake anchor). Set enrich=False
+        for the Tier-0 floor."""
         if not bib_path.is_file():
             return {"error": "bib-not-found", "bib": str(bib_path)}
         bib_text = bib_path.read_text(encoding="utf-8", errors="ignore")
@@ -84,6 +87,15 @@ def build_server(vault: Path):
             bundle = pipeline.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
+        # persist the full-text extract to 90-assets/ (outside the agent's write lane,
+        # so the tool writes it, not the worker) and strip the bulk text from the reply
+        ex = bundle.get("extract")
+        if isinstance(ex, dict):
+            text = ex.pop("text", "")
+            if text:
+                dest = vault / "90-assets" / "extracts" / f"{citekey}.md"
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(text, encoding="utf-8")
         # backstop the durability anchor for non-macro ingest (board / manual cards)
         append_intake_anchor(vault, citekey, bundle.get("path", ""))
         return bundle
