@@ -19,7 +19,9 @@ the gated writes; this script writes nothing.
 from __future__ import annotations
 
 import json
+import re
 import sys
+from datetime import date
 from pathlib import Path
 
 import extract
@@ -30,6 +32,32 @@ import resolve_merge
 
 def _env(k: str) -> str:
     return resolve_merge._env(k)
+
+
+def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:
+    """From the bib `file` field, recover (wsl_pdf_path, zotero_storage_key).
+
+    Better BibTeX exports the local attachment path (e.g.
+    `C:\\Users\\me\\Zotero\\storage\\ABCD1234\\paper.pdf`). The storage folder is the
+    Zotero attachment key (→ `pdf_uri`), and the Windows path maps to its WSL mount
+    (→ a real path the extractor can read). Both `""` if absent."""
+    entry = ingest_paper._find_entry(bib_text, citekey)
+    if not entry:
+        return "", ""
+    m = re.search(r"\bfile\s*=\s*\{([^}]*)\}", entry[1], re.IGNORECASE)
+    if not m:
+        return "", ""
+    # take the first .pdf among ';'-separated attachments; drop a trailing mime type
+    raw = m.group(1)
+    first = next((p for p in raw.split(";") if p.strip().lower().endswith(".pdf")),
+                 raw.split(";")[0]).strip().strip(":")
+    if first.lower().endswith("application/pdf"):
+        first = first.rsplit(":", 1)[0]
+    key_m = re.search(r"[/\\]storage[/\\]([A-Za-z0-9]{8})[/\\]", first)
+    key = key_m.group(1) if key_m else ""
+    win = re.match(r"^([A-Za-z]):[\\/](.*)$", first)
+    wsl = f"/mnt/{win.group(1).lower()}/" + win.group(2).replace("\\", "/") if win else first
+    return wsl, key
 
 
 def run(citekey: str, bib_text: str, vault: Path | None = None,
@@ -69,12 +97,28 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
         "sources_found": [s for s in ("s2", "openalex", "crossref")
                           if r["parts"].get(s, {}).get("found")],
     }
+    # promote stable IDs the APIs resolved (only if the bib didn't already set them)
+    for fld, mkey in (("semantic_scholar_id", "s2_id"), ("openalex_id", "openalex_id"),
+                      ("pmid", "pmid"), ("pmcid", "pmcid")):
+        if not fm.get(fld) and m.get(mkey):
+            fm[fld] = m[mkey]
+    fm["enriched_date"] = date.today().isoformat()
     fm["ingest_status"] = "enriched"
     bundle["ingest_status"] = "enriched"
     bundle["lifecycle"] = "captured"   # still captured until classify (LLM #1) lands -> proposed
 
-    # extract (full text)
-    ex = extract.extract(ids, pdf_path, _env("NCBI_EMAIL"))
+    # local Zotero PDF from the bib `file` field — recover pdf_uri + feed extraction
+    if not pdf_path:
+        wsl_pdf, zkey = _bib_local_pdf(citekey, bib_text)
+        if zkey and not fm.get("pdf_uri"):
+            fm["pdf_uri"] = f"zotero://open-pdf/library/items/{zkey}"
+        if wsl_pdf and Path(wsl_pdf).is_file():
+            pdf_path = wsl_pdf
+
+    # extract (full text) — use the enrichment-resolved PMCID/PMID when the bib lacked them
+    ex_ids = {**ids, "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
+              "pmid": ids.get("pmid") or m.get("pmid", "")}
+    ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"))
     bundle["extract"] = {"source": ex["source"], "chars": ex["chars"], "degraded": ex["degraded"]}
     if ex["degraded"]:
         bundle["degraded"].append("extract")
@@ -102,6 +146,13 @@ def _self_test() -> int:
          and b["frontmatter"]["doi"] == "10.1/x"),
         ("no enrichment without --enrich", b["extract"] is None and b["link_plan"] is None),
     ]
+    pdf, key = _bib_local_pdf(
+        "y2024Pdf",
+        "@article{y2024Pdf,\n  title = {P},\n"
+        "  file = {C:\\Users\\me\\Zotero\\storage\\ABCD1234\\My Paper - 2024.pdf},\n}\n")
+    checks.append(("bib file -> wsl path + zotero storage key",
+                   key == "ABCD1234"
+                   and pdf == "/mnt/c/Users/me/Zotero/storage/ABCD1234/My Paper - 2024.pdf"))
     bad = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {n}")
