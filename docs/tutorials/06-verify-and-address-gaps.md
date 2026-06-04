@@ -44,7 +44,7 @@ Save the file when you have at least 150 words.
 
 With `draft-01.md` open:
 
-Press `Cmd+P` → type `verify this draft` → select **Memoria: verify this draft**.
+`Memoria: verify this draft` is [deferred]. Verification also runs automatically when you **commit** the draft (the Verify hook). To run it on demand now, dispatch a Verifier card from the terminal — `hermes -p memoria-verifier chat` — and ask it to verify `draft-01.md`.
 
 **What happens:** A card goes to the Verifier lane. Verifier reads the draft, parses it into discrete claims, and for each claim traces back to claim notes in `30-synthesis/01-claims/` that support it.
 
@@ -87,7 +87,7 @@ Save the file.
 
 ## Step 6 — Re-verify
 
-Press `Cmd+P` → type `verify this draft` → select **Memoria: verify this draft** again.
+Re-run verification: **commit** the revised draft (the Verify hook re-runs), or dispatch another Verifier card from the terminal. *(The `Memoria: verify this draft` palette command is [deferred].)*
 
 Wait for the new report. The verification callout at the top of the draft should now show:
 

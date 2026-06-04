@@ -34,15 +34,15 @@ Open the framing options in Obsidian. Don't commit immediately — let them sit 
 
 **3. Optionally, run a lens reading with the Socratic profile.**
 
-If you want to stress-test one of the framings through a specific theoretical lens:
+To stress-test a framing through a specific theoretical lens, open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (`Ctrl+Shift+1`), and ask it to read the framing through the lens — e.g. "read this through an equity lens" or "…through an ecological-validity lens". *(The `Memoria: read through <X> lens` palette commands are [deferred] — use the pane today.)*
+
+**From the terminal (fallback):**
 
 ```bash
 hermes -p memoria-socratic chat -s lens-reading
 # then, in the session:
 /lens <lens-name> --project <project-slug>
 ```
-
-Examples: `/lens equity --project jitai-receptivity-review` or `/lens ecological-validity --project jitai-receptivity-review`.
 
 The Socratic profile is write-denied — its outputs appear in the ACP pane only. Copy or paraphrase anything useful into a new `02-framing/lens-notes.md` file manually.
 

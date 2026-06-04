@@ -18,9 +18,7 @@ parent: Tutorials
 
 ## Step 1 — Create the project
 
-Press `Cmd+P` → type `new project` → select **Memoria: new project**.
-
-Obsidian prompts you for a project name. Type: `first-synthesis`
+Scaffold the project with the wired **Memoria: write project note** (`Cmd+P` → type `write project`) — it creates the `40-workbench/<name>/` folder and the project note. Name it `first-synthesis`. *(A single `Memoria: new project` command that also kicks off corpus scoping is [deferred] — Step 2 scopes it.)*
 
 **What happens:**
 
@@ -80,7 +78,13 @@ Look for the sub-topic with the most claim notes. If you have at least 3 claim n
 
 With `corpus-map.md` open:
 
-Press `Cmd+P` → type `frame this` → select **Memoria: frame this section**.
+`Memoria: frame this section` is [deferred]. For now, dispatch the framing from the terminal:
+
+```bash
+hermes -p memoria-writer chat -s counter-outline
+# then, in the session:
+/counter-outline --project first-synthesis
+```
 
 **What happens:** A card goes to the Writer lane with the `counter-outline` skill loaded. Writer reads your brief and corpus map, then generates 2–3 competing outlines — each one organizes the same material in a fundamentally different way.
 
