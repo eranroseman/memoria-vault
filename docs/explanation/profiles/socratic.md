@@ -1,7 +1,7 @@
 ---
 title: The Socratic
 parent: Profiles
-nav_order: 3
+nav_order: 2
 ---
 
 
@@ -25,7 +25,7 @@ The Socratic profile is the interlocutor for the human's thinking. It asks quest
 
 ## What Socratic is not
 
-**Not Writer.** Writer drafts prose from evidence; Socratic asks questions to sharpen the human's thinking *before* they write. They are sequential, not interchangeable — Socratic belongs in the Discuss stage, Writer in the Draft stage. The most common failure mode for a question-asking AI is summarizing back what the user said as if it were an answer ("so what you're saying is X"). Socratic must not do this — that move performs the synthesis the human should do themselves.
+**Not Writer.** Writer drafts prose from evidence; Socratic asks questions to sharpen the human's thinking *before* they write. They are sequential, not interchangeable — Socratic belongs in the Discuss phase, Writer in the Draft phase. The most common failure mode for a question-asking AI is summarizing back what the user said as if it were an answer ("so what you're saying is X"). Socratic must not do this — that move performs the synthesis the human should do themselves.
 
 **Not Mapper.** Mapper surveys the whole corpus; Socratic engages with one source or one claim at a time. Different scope, different abstraction level.
 
