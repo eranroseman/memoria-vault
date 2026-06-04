@@ -119,7 +119,10 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     ex_ids = {**ids, "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
               "pmid": ids.get("pmid") or m.get("pmid", "")}
     ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"))
-    bundle["extract"] = {"source": ex["source"], "chars": ex["chars"], "degraded": ex["degraded"]}
+    # carry the text so the caller can persist it (90-assets is outside the agent's
+    # write lane, so the ingest tool writes the extract file, not the worker)
+    bundle["extract"] = {"source": ex["source"], "chars": ex["chars"],
+                         "degraded": ex["degraded"], "text": ex.get("text", "")}
     if ex["degraded"]:
         bundle["degraded"].append("extract")
     fm["extract_path"] = f"90-assets/extracts/{citekey}.md" if ex["chars"] else ""
