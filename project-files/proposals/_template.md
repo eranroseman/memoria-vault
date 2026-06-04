@@ -1,6 +1,6 @@
 ---
 topic: proposals
-id: PROP-NN  # next available PROP number; a separate sequence from ADR ids
+id: RFC-NN  # next available RFC number; a separate sequence from ADR ids
 title: <short phrase, e.g. "Cross-run skill-insights memory">
 status: deferred  # deferred | under-consideration | adopted | rejected
 created: YYYY-MM-DD
@@ -11,7 +11,7 @@ Section conventions for a single-capability proposal:
   Required     — What, Why, Trade-offs, Adoption trigger, Guard
   Recommended  — Alternatives considered, Related
   Optional     — Dependencies (only when something must be in place first)
-A thematic survey that bundles several capabilities drops `id` from the
+A thematic exploration that bundles several capabilities drops `id` from the
 frontmatter (keep `title`) and repeats a lighter What / Trade-offs / Adoption
 trigger / Guard block per capability instead of these top-level sections.
 -->

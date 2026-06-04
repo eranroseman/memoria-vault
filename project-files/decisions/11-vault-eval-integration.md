@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-`vault-eval` (an eval-harness scaffold) is Memoria's system-level evaluation — a small hand-curated gold set per workflow that measures whether the *deployed system* finds, verifies, answers, and remembers correctly *on this vault*, as opposed to off-the-shelf benchmarks that score a model on a foreign corpus (see [measurement-and-verification.md](../proposals/measurement-and-verification.md)). To be useful it must run against the live profiles and live with the vault, not persist as an external script. The question is how to host it without standing up a parallel subsystem; it splits into three sub-decisions — who owns it, whether it gates, and where the gold set lives.
+`vault-eval` (an eval-harness scaffold) is Memoria's system-level evaluation — a small hand-curated gold set per workflow that measures whether the *deployed system* finds, verifies, answers, and remembers correctly *on this vault*, as opposed to off-the-shelf benchmarks that score a model on a foreign corpus (see [measurement-and-verification.md](../proposals/explorations/measurement-and-verification.md)). To be useful it must run against the live profiles and live with the vault, not persist as an external script. The question is how to host it without standing up a parallel subsystem; it splits into three sub-decisions — who owns it, whether it gates, and where the gold set lives.
 
 ## Decision
 
@@ -30,7 +30,7 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 - Reuses board dispatch, the Linter's health-reporting + broken-link detector, the Policy MCP, and the metrics log — no parallel system, and the harness tests the *deployed* profiles on the *real* vault.
 - Gold-set rot (renamed/deleted target notes) is caught by machinery already running.
 - Requires profiles to support a non-committing eval/dry-run mode — a real implementation cost — and adds one scheduled task, a scratch namespace, and gold-set upkeep.
-- Diagnostic-only means a capability regression won't auto-halt work; the human must notice it on the dashboard. This is intentional, per [measurement-and-verification.md](../proposals/measurement-and-verification.md) ("diagnostic, not contract").
+- Diagnostic-only means a capability regression won't auto-halt work; the human must notice it on the dashboard. This is intentional, per [measurement-and-verification.md](../proposals/explorations/measurement-and-verification.md) ("diagnostic, not contract").
 
 ## Alternatives considered
 
@@ -45,6 +45,6 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 ## Related
 
 - **Workflows affected:** [Verify](../../docs/how-to-guides/compose/verify-and-revise.md) (the eval reuses `cite-check`); the maintenance/`lint` surface (the Linter scores + reports).
-- **Files affected:** [measurement-and-verification.md](../proposals/measurement-and-verification.md), [architecture/on-disk-layout.md](../../docs/reference/on-disk-layout.md) (`99-system/eval/`, `99-system/metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
+- **Files affected:** [measurement-and-verification.md](../proposals/explorations/measurement-and-verification.md), [architecture/on-disk-layout.md](../../docs/reference/on-disk-layout.md) (`99-system/eval/`, `99-system/metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
 - **Related decisions / Depends on:** [ADR-10 claim supersession](10-claim-supersession.md) (the drift gold tasks exercise its FAMA check); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) and [ADR-8 typed relations](08-typed-relations-frontmatter.md) (shared observability lineage).
-- **Source discussion:** [measurement-and-verification.md](../proposals/measurement-and-verification.md) (Observability + Integration); the `vault-eval` scaffold.
+- **Source discussion:** [measurement-and-verification.md](../proposals/explorations/measurement-and-verification.md) (Observability + Integration); the `vault-eval` scaffold.

@@ -43,7 +43,7 @@ checkpoints:
 
 # Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
 # Hermes registers MCP tools as mcp_<server>_<tool>, so the obsidian write is
-# mcp_obsidian_vault_write / _append / _patch; a shell hook (re.fullmatch "obsidian.*",
+# mcp_obsidian_obsidian_append_content / _patch_content / _put_content; a shell hook (re.fullmatch "obsidian.*",
 # consent-gated, fail-OPEN) never fired. The plugin runs in-process in every mode
 # (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is fail-CLOSED.
 # Deployed per lane by the installer (deploy_policy_plugin); see .memoria/plugins/.

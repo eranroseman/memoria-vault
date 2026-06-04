@@ -6,7 +6,7 @@ nav_order: 2
 
 # Bootstrap installer
 
-The bootstrap installer — [`scripts/install.sh`](../../../scripts/install.sh) at the repo root, with [`scripts/install.ps1`](../../../scripts/install.ps1) as a thin WSL2 launcher — takes a user from nothing to a runnable Memoria install in one command: it installs the desktop apps (Obsidian, Zotero), provisions the Hermes runtime and the seven profiles, lays the vault down off OneDrive, and walks the user through the few steps that cannot be automated (secrets, Zotero GUI clicks).
+The bootstrap installer — [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) at the repo root, with [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) as a thin WSL2 launcher — takes a user from nothing to a runnable Memoria install in one command: it installs the desktop apps (Obsidian, Zotero), provisions the Hermes runtime and the seven profiles, lays the vault down off OneDrive, and walks the user through the few steps that cannot be automated (secrets, Zotero GUI clicks).
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../reference/installer.md).
 

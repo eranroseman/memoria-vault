@@ -16,12 +16,23 @@ Thanks for your interest in contributing. Memoria is a research operating system
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
+# One-time: wire the local quality gate (activates the pre-commit hook, installs
+# ruff + yamllint + MCP self-test deps). Git does NOT activate repo hooks on clone.
+bash scripts/dev-setup.sh
+
 # Validate the installer without running it
 bash -n scripts/install.sh
 
 # Dry-run (shows every command, changes nothing)
 bash scripts/install.sh --dry-run
 ```
+
+`dev-setup.sh` sets up the **contributor toolchain** only; it does not install or run
+the Memoria product (that's `scripts/install.sh`). The pre-commit hook it enables is a
+fast local mirror of the required CI checks — bypass a single block, rarely, with
+`git commit --no-verify`. Recommended VS Code extensions are listed in
+[.vscode/extensions.json](.vscode/extensions.json) (VS Code prompts to install them on
+first open).
 
 See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md) for a full walkthrough.
 

@@ -39,7 +39,7 @@ l0() {
   run bash scripts/check-vault-links.sh
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py"
+  run python3 -m py_compile "$P"/mcp/*.py "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py"
   run bash -n scripts/install.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh "$P"/scripts/*.sh
@@ -47,7 +47,7 @@ l0() {
   # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
   # querying a field no template emits is a silent failure — CI gates it too);
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/profiles/memoria-linter/detectors.py" --vault vault --gate dashboard-field-drift
+  run python3 "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" --vault vault --gate dashboard-field-drift
 }
 
 case "${1:-all}" in

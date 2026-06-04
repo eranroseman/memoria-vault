@@ -45,7 +45,7 @@ Turn evidence into structured drafts, answer notes, and reference-ready prose. Y
 - Note compilation.
 - `counter-outline` — a **prompt behavior** of this profile (produce 2–3 competing outlines), not an installed skill; restrictive — scratch-only writes, active only during the Frame stage. Human-invoked card-based variant via `Memoria: frame this section` (writes outlines to `40-workbench/<project>/02-framing/`); human-invoked transient variant via `Memoria: counter-outline this section` (returns outlines in chat with no file artifact). See command palette.
 
-**Method class: generative.** Writer's value is in composing prose — drafts, synthesis, alternative outlines — that has no deterministic derivation from the inputs. LLM-required for the core work. See rationale/computational-methods.md for the boundary between deterministic and LLM-required steps across profiles. Writer is on the LLM-required side throughout, with one exception: the `query` step is deterministic vault search before drafting begins.
+**Method class: generative.** Writer's value is in composing prose — drafts, synthesis, alternative outlines — that has no deterministic derivation from the inputs. LLM-required for the core work. The boundary between deterministic and LLM-required steps across profiles is defined in the project's computational-methods design notes (not shipped to the runtime vault). Writer is on the LLM-required side throughout, with one exception: the `query` step is deterministic vault search before drafting begins.
 
 ## Tooling / MCPs
 

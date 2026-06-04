@@ -1,12 +1,14 @@
 # Project files
 
-Three folders. One job each.
+One job each.
 
-| Folder | What it holds | When to look here |
+| Path | What it holds | When to look here |
 |---|---|---|
-| [decisions/](decisions/) | Accepted architectural decisions | You want to know *why* something is the way it is |
-| [proposals/](proposals/) | Deferred capabilities and ideas under consideration | You want to add a feature or understand what's been considered |
-| [plans/](plans/) | Release plans, build status, and the roadmap | You want to know what's built and what to do next |
+| [decisions/](decisions/) | Accepted architectural decisions (ADRs) | You want to know *why* something is the way it is |
+| [proposals/](proposals/) | Deferred capabilities and ideas under consideration (single-capability `RFC-NN` + thematic [explorations/](proposals/explorations/)) | You want to add a feature or understand what's been considered |
+| [releases/](releases/) | Per-version release plans + readiness, and the reusable [release-plan template](releases/release-plan-template.md) | You want to know what a release covers or how to cut one |
+| [git-workflow.md](git-workflow.md) | The git-workflow post-mortem + checklists (human version of AGENTS §9) | You want to know *how* we work in this repo |
+| [tests/](tests/) | Reusable test plans | You want to verify or validate the system |
 
 Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](decisions/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
 

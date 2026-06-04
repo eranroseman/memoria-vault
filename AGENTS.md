@@ -182,7 +182,7 @@ three-tier gate based on path sensitivity and author trust:
 
 | Decision | Trigger | Effect |
 |---|---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/plans/`, releases, proposals; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/releases/`, `project-files/proposals/`; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
 | `needs_human` | Safe paths but untrusted author, OR trusted author on sensitive paths (`vault/.memoria/`, `scripts/`, `project-files/decisions/`, `.github/`) | Check passes — human reviews and merges manually |
 | `block` | Untrusted author touching sensitive paths | Check fails — merge impossible |
 
@@ -252,12 +252,12 @@ reading it. Before opening a PR:
   there — Hermes never reads a standalone `mcp.json`; ADR-27).
 - Secrets live only in `~/.hermes/profiles/<profile>/.env` and gitignored vault
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
-- **Build state & known gaps:** `project-files/plans/implementation-status.md` is the
-  ledger — read it before relying on live agent writes. For the live blocker set,
-  consult its `pending`/`broken` rows and the open
-  [P0 issues](https://github.com/eranroseman/memoria-vault/issues) rather than any
-  list restated here. (#39/#51/#58 are closed — ADR-27 made the review gate enforce
-  live in all run modes; obsidian is each lane's only write path.)
+- **Build state & known gaps:** before relying on live agent writes, consult the
+  open [issues](https://github.com/eranroseman/memoria-vault/issues) (build gaps) and
+  the [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md) (gates,
+  blockers, known limitations) rather than any list restated here. (#39/#51/#58 are
+  closed — ADR-27 made the review gate enforce live in all run modes; obsidian is each
+  lane's only write path.)
 
 ## 7. Profiles and the vault
 
@@ -266,7 +266,8 @@ reading it. Before opening a PR:
   Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
   `mcp_servers` (ADR-27).
 - Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
-  (ADRs); current build state is `project-files/plans/implementation-status.md`.
+  (ADRs); current build state is tracked in the open issues + the
+  [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md).
 - **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
   findings, and distillation reports you produce belong in `_reports/` at the repo
   root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
@@ -326,18 +327,18 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-### `project-files/proposals/` — PROP template
+### `project-files/proposals/` — RFC template
 
 ```markdown
 ---
 topic: proposals
-id: PROP-<NN>
+id: RFC-<NN>
 title: <Short title>
 status: open | deferred | adopted | rejected
 created: YYYY-MM-DD
 ---
 
-# PROP-<NN>: <Title>
+# RFC-<NN>: <Title>
 
 ## What
 ## Why
@@ -348,10 +349,10 @@ created: YYYY-MM-DD
 ## Related
 ```
 
-### `project-files/plans/` — release-plan template
+### `project-files/releases/` — release-plan template
 
 One **single-file release plan per version**, structured by what a release needs.
-Full skeleton: `project-files/plans/release-plan-template.md` (copy it per
+Full skeleton: `project-files/releases/release-plan-template.md` (copy it per
 release; reset every Gate/Tier State to `todo`).
 
 ```markdown
@@ -362,18 +363,16 @@ released: false      # cut-flag; true only when every gate is `done`
 ---
 # Release plan — vX.Y.Z
 ## 1. Scope   ## 2. Gates (G# state)   ## 3. Tiers (T# state)   ## 4. Blockers
-## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Spillover
+## 5. Deferred   ## 6. Known limitations   ## 7. Cut procedure   ## 8. Roadmap   ## 9. Appendix
 ```
 
 **Single source of state — prevents drift.** Gate/tier state lives ONLY in §2/§3 of
-the release-plan file; per-artifact build state lives ONLY in
-`implementation-status.md`. Every other doc *points* — never restates. Detail too
-long for a crisp plan (full phase steps, investigation notes) goes to a sibling
-`release-plan-<version>-spillover.md`.
+the release-plan file; build *gaps* are GitHub issues; scope *cuts* are proposals.
+Every other doc *points* — never restates. Detail too long for a crisp plan (full
+phase steps, investigation notes) goes to a sibling `release-plan-<version>-appendix.md`.
 
 The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
-(+ its `-spillover.md`); the per-artifact build ledger is
-[`implementation-status.md`](project-files/plans/implementation-status.md).
+(+ its `-appendix.md`).
 
 ## 9. Integration cadence — merge small, merge often
 
@@ -382,7 +381,7 @@ branches once grew off a frozen `main` in parallel (60 + 9 + 12 commits, none
 merged back), all touching the same ADR and files — ADR-27 was implemented
 *twice* — so consolidating them became a ~30-conflict semantic reconciliation,
 not a merge. Full post-mortem + human walkthrough:
-[git-workflow.md](project-files/plans/git-workflow.md). The rules:
+[git-workflow.md](project-files/git-workflow.md). The rules:
 
 - **Keep `main` moving.** A branch is one coherent unit → PR → squash-merge →
   delete. If it passes ~1 day or ~10 unmerged commits, it's already too big —
@@ -422,8 +421,11 @@ question, or doc fix is an **issue**, never a line in a file.
   backlog.* Assigning a milestone **is** the act of scheduling — that scoping
   decision is made per release (review ADRs + proposals + docs, then assign), not by
   defaulting everything into the next version.
-- **One Project board** (`Inbox → Scheduled → In progress → In review → Done`) is the
-  kanban view over the issues — fitting, since the product itself is kanban-driven.
+- **One Project board** — "Memoria backlog", <https://github.com/users/eranroseman/projects/1> —
+  is the kanban view over the issues. Its `Status` field has five columns: **Inbox**
+  (untriaged, no milestone) → **Scheduled** (milestoned) → **In progress** (branch open)
+  → **In review** (PR open) → **Done** (merged/closed). Fitting, since the product itself
+  is kanban-driven.
 - Issue templates live in `.github/ISSUE_TEMPLATE/` (`bug_report.yml`,
   `feature_request.yml`). A bug report states **Expected / Actual / Vault state**.
 
@@ -432,16 +434,15 @@ question, or doc fix is an **issue**, never a line in a file.
 | Artifact | Holds | Not for |
 | --- | --- | --- |
 | `project-files/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
-| `project-files/proposals/` (PROP-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
-| `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | per-artifact build state |
-| `implementation-status.md` | Per-artifact build state | release gates |
+| `project-files/proposals/` (RFC-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
+| `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | build gaps (→ issues) |
 | `_reports/`, `_notes/`, `/TODO` | Gitignored personal scratch | anything canonical or shared |
 
 **Routing a new item:** discrete and actionable → **issue** (label it; milestone only
-if scheduled). A big capability worth weighing trade-offs on → **PROP** (it graduates
+if scheduled). A big capability worth weighing trade-offs on → **RFC** (it graduates
 to issues + a milestone when scheduled). A choice just made → **ADR**. Release
 readiness → the **release plan**. A release-blocking issue is linked from the release
-plan §4 (Blockers); the status ledger rows already cite `#NN` — keep both directions.
+plan §4 (Blockers); issues reference the relevant ADR / RFC / gate IDs — keep both directions.
 
 **Never** track shared work in `/TODO` or `_notes/` — they are gitignored scratch and
 invisible to everyone else. If you find actionable work there, move it to an issue.

@@ -6,13 +6,13 @@ status: draft
 # v0.1.0 release-candidate run checklist
 
 A mechanical, ordered run sheet to take a **fresh clone on a clean Ubuntu/WSL2 box**
-through tiers **T0–T5** and the operability gates **G9–G11**, recording each
+through stages **S0–S5** and the operability gates **G9–G11**, recording each
 [release gate](release-plan-v0.1.md#2-definition-of-done--gates) green. Work top to
 bottom; record outcomes in the [sign-off table](#sign-off) at the end. If a step
 fails, stop and file it — a candidate is green only when every row is.
 
-The per-area detail lives in the linked protocol docs; this sheet sequences them
-and adds the exact commands plus the ingest/runtime setup the older protocols
+The per-area detail lives in the linked plan docs; this sheet sequences them
+and adds the exact commands plus the ingest/runtime setup the older plans
 predate.
 
 ## 0. Preconditions
@@ -24,17 +24,17 @@ predate.
 - [ ] Fresh clone: `git clone https://github.com/eranroseman/memoria-vault.git && cd memoria-vault` — record the commit (`git rev-parse --short HEAD`).
 - [ ] `~/.hermes/.env` has the scholarly-API keys (`S2_API_KEY`, `OPENALEX_API_KEY`, `NCBI_EMAIL`) and `OBSIDIAN_API_KEY`; the installer sets `OBSIDIAN_VAULT_PATH`. **Never print key values.**
 
-## T0–T1 — static + self-tests  → records G6 (partial), T0, T1
+## S0–S1 — static + self-tests  → records G6 (partial), S0, S1
 
 ```bash
 bash scripts/test.sh all          # l1 (all --self-test suites) + l0 (static)
 ```
 
-- [ ] **T0** static (parse, LF endings, profile files present) — PASS.
-- [ ] **T1** every Python `--self-test` green: `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
+- [ ] **S0** static (parse, LF endings, profile files present) — PASS.
+- [ ] **S1** every Python `--self-test` green: `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
 - [ ] Confirm CI is green on the same commit (the required checks gate — G6): `gh pr checks` / the Actions tab.
 
-## T2 — installer dry-run  → records T2
+## S2 — installer dry-run  → records S2
 
 ```bash
 bash scripts/install.sh --dry-run --vault "$RV"
@@ -42,7 +42,7 @@ bash scripts/install.sh --dry-run --vault "$RV"
 
 - [ ] Prints `DRY RUN — nothing will be changed`; `{{VAULT_PATH}}` / `{{PYTHON}}` substitutions resolve; no errors.
 
-## T3 — real install into the throwaway vault  → records T3, G1
+## S3 — real install into the throwaway vault  → records S3, G1
 
 ```bash
 bash scripts/install.sh --vault "$RV"      # full install
@@ -50,21 +50,21 @@ hermes profile list                         # expect all 7
 bash scripts/install.sh --vault "$RV"      # re-run: must be idempotent (no errors, no dupes)
 ```
 
-- [ ] **G1 / T3** — installer completes; **all 7 profiles register** (`librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`); the vault venv exists (`$RV/.memoria/.venv`); idempotent re-run is clean.
+- [ ] **G1 / S3** — installer completes; **all 7 profiles register** (`librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`); the vault venv exists (`$RV/.memoria/.venv`); idempotent re-run is clean.
 - [ ] `memoria-policy-gate` plugin deployed + enabled for all 7 (substituted `{{PROFILE}}`/`{{VAULT_PATH}}` per lane).
 - [ ] Bundled official skills verified present (no hub-install 404s) — [#59](https://github.com/eranroseman/memoria-vault/issues/59).
 - [ ] Telemetry + sweeps crons wired: `hermes cron list` shows `memoria-board-export` and `memoria-sweeps`.
 - [ ] **Ingest runtime deps:** `"$RV/.memoria/.venv/bin/python" -c "import pymupdf4llm"` succeeds (local-PDF extraction; from `requirements.txt`).
 
-Detail: [installer-test-protocol.md](../../tests/installer-test-protocol.md).
+Detail: [installer-test-plan.md](../../tests/plans/installer-test-plan.md).
 
-## T4 — live: model, bridge, gate enforcement  → records G2, G3, T4
+## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
 - [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../decisions/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
-Detail: [hermes-cli-test-protocol.md](../../tests/hermes-cli-test-protocol.md), [headless-test-protocol.md](../../tests/headless-test-protocol.md).
+Detail: [hermes-cli-test-plan.md](../../tests/plans/hermes-cli-test-plan.md), [headless-test-plan.md](../../tests/plans/headless-test-plan.md).
 
 ## G9 — deterministic spine (zero-LLM card)  → records G9
 
@@ -74,7 +74,7 @@ hermes kanban create "spine check" --assignee memoria-linter --skill <health-rep
 
 - [ ] A *dispatched, zero-LLM* card (Linter `health-report` or Verifier `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
-Detail: [g9-spine-protocol.md](../../tests/g9-spine-protocol.md).
+Detail: [g9-spine-plan.md](../../tests/plans/g9-spine-plan.md).
 
 ## G10 — ingest value loop (the product)  → records G10
 
@@ -88,15 +88,15 @@ Detail: [g9-spine-protocol.md](../../tests/g9-spine-protocol.md).
 - [ ] Dispatch ingests through the `ingest_pipeline` MCP tool → the Librarian fills the two holes (vocabulary-constrained `_proposed_classification`; comparative `[!brief]`) → gated write → `lifecycle: proposed`, `ingest_status: complete`.
 - [ ] Note is complete: identity + merged metadata (S2/OpenAlex/Crossref), stable IDs (`openalex_id`/`semantic_scholar_id`/`pmid`/`pmcid`), `zotero_uri` + `pdf_uri`, full-text extract saved under `90-assets/extracts/`, ID-keyed entity notes (`03-entities/<id>.md`), `[!brief]` leads the body.
 
-Detail: [g10-ingest-protocol.md](../../tests/g10-ingest-protocol.md).
+Detail: [g10-ingest-plan.md](../../tests/plans/g10-ingest-plan.md).
 
 ## G11 — review loop closes  → records G11
 
 - [ ] Card reaches `done` with the review requested; a **human review** promotes `_proposed_classification` into the main `study_design`/`methods`/`topic` fields, removes the proposal block, and flips `lifecycle: proposed → current`. Observed end-to-end.
 
-## T5 — Obsidian + Zotero GUI  → records T5, G4
+## S5 — Obsidian + Zotero GUI  → records S5, G4
 
-Run [gui-test-protocol.md](../../tests/gui-test-protocol.md) on the Windows side and **fully complete its Results table**:
+Run [gui-test-plan.md](../../tests/plans/gui-test-plan.md) on the Windows side and **fully complete its Results table**:
 
 - [ ] **Part A** — all bundled plugins load/enable; REST round-trip; settings verified (no "didn't verify" caveat).
 - [ ] **Part B** — Zotero + Better BibTeX export works; the capture macro fires.
@@ -124,24 +124,24 @@ Only after every row above is green:
 - [ ] Cut `CHANGELOG.md`: move `[Unreleased]` items into a dated `[0.1.0]` section; re-point the links.
 - [ ] Flip `released: false → true` in `release-plan-v0.1.md` frontmatter.
 - [ ] Tag `v0.1.0`; create the GitHub release with the curated notes (§6 limitations included).
-- [ ] Flip the relevant `shipped` rows to `approved` in [implementation-status.md](../../plans/implementation-status.md).
+- [ ] Close the `v0.1` milestone, rolling any unfinished issues to the next milestone.
 
 ## Sign-off
 
 Record commit `__________` and date `__________`.
 
-| Gate / tier | Records | Result | Notes |
+| Gate / stage | Records | Result | Notes |
 | --- | --- | --- | --- |
-| T0 | static | ☐ | |
-| T1 | self-tests | ☐ | |
-| T2 | dry-run install | ☐ | |
-| T3 / G1 | real install, 7 profiles, idempotent | ☐ | |
-| T4 / G3 | model + REST bridge live | ☐ | |
+| S0 | static | ☐ | |
+| S1 | self-tests | ☐ | |
+| S2 | dry-run install | ☐ | |
+| S3 / G1 | real install, 7 profiles, idempotent | ☐ | |
+| S4 / G3 | model + REST bridge live | ☐ | |
 | G2 | gate enforced (`-z` / gateway / cron) | ☐ | |
 | G9 | deterministic spine card | ☐ | |
 | G10 | ingest value loop end-to-end | ☐ | |
 | G11 | review loop closes | ☐ | |
-| T5 / G4 | GUI + 11 dashboards render | ☐ | |
+| S5 / G4 | GUI + 11 dashboards render | ☐ | |
 | G5 | four telemetry signals emit | ☐ | disposition/cost = known limitation |
 | G6 | CI green on the commit | ☐ | |
 | G7 | no open P0 | ☐ | |

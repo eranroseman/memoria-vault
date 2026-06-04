@@ -33,21 +33,18 @@ You also own **session and audit-trail housekeeping**: writing per-session log f
 - `dry-run`
 - `report`
 
-`lint` and `health-report` accept severity and detector filters: `--min-severity {critical|high|medium|low|info}` to suppress lower bands, `--detectors profile-install-drift,skeleton-drift` to scope to a subset of the structural detectors below. Both flags compose; both default to "all severities, all detectors."
+`lint` and `health-report` accept severity and detector filters: `--min-severity {critical|high|medium|low|info}` to suppress lower bands, `--detectors profile-install-drift,skeleton-drift` to scope to a subset of detectors. Both flags compose; both default to "all severities, all detectors."
 
-**Implementation.** These commands are the shipped `detectors.py`, not coined skills. `schema-check`, the `health-report` verdict band, and `graph-analyze` (orphan-synthesis-note detection) all live there now; `session-log` writes the per-session summary. The drift checks that need runtime context (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `command-vocab-drift`, `plugin-config-drift`) run in the live Linter rather than `detectors.py` — see [Structural detectors: silent-failure checks](structural-detectors.md).
+**Implementation.** These commands are served by the **`structural-detectors` skill** (`skills/structural-detectors/`), not by model judgment. Its deterministic engine, `scripts/detectors.py`, runs the self-contained checks — `schema-check`, the `health-report` verdict band, and `graph-analyze` (orphan-synthesis-note detection) all live there; `session-log` writes the per-session summary. The five drift checks that need runtime context (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `command-vocab-drift`, `plugin-config-drift`) can't run in the script — you perform them per the skill's `references/structural-detectors.md`.
 
 ## Core skills
 
-- Structural validation.
-- Metadata hygiene.
-- Orphan detection.
-- Schema compliance.
+- `structural-detectors` — the Linter's one skill: structural validation, metadata hygiene, orphan detection, schema compliance, and drift detection. See `skills/structural-detectors/SKILL.md`.
 
 ## Tooling / MCPs
 
-- **`detectors.py`** (shipped in this profile dir) — the deterministic, zero-LLM, **pure-stdlib** detector engine. Run with `--vault <path>`; `--self-test` runs synthetic-fixture unit tests. It implements every self-contained check below, **including `schema-check` (`frontmatter_schema_check`), the `health-report` verdict band (`run_all()` + `verdict()`), and `graph-analyze` (`graph_analyze` — orphan-synthesis-note detection over the wikilink graph)** — none need a separate skill. Executed via the profile's terminal capability, not a Hermes skill.
-- **No external skills.** The Linter invokes no Hermes skills — `graph-analyze` uses stdlib in-degree arithmetic, not `networkx`. (Advanced graph community-detection could reintroduce `networkx` later; orphans/density don't need it.)
+- **`structural-detectors` skill** — bundles the deterministic, zero-LLM, **pure-stdlib** detector engine (`scripts/detectors.py`) with the drift-detection procedures (`references/structural-detectors.md`). The engine runs with `--vault <path>` (`--self-test` runs synthetic-fixture unit tests) and implements every self-contained check, **including `schema-check` (`frontmatter_schema_check`), the `health-report` verdict band (`run_all()` + `verdict()`), and `graph-analyze` (`graph_analyze` — orphan-synthesis-note detection over the wikilink graph)**. The script runs via the profile's terminal capability; the skill is the discoverable, cron-dispatchable wrapper around it. Packaging it as a skill changes nothing about its determinism — the check stays zero-LLM; only the dispatch joins the skill system.
+- **No other skills.** `graph-analyze` uses stdlib in-degree arithmetic, not `networkx`. (Advanced graph community-detection could reintroduce `networkx` later; orphans/density don't need it.)
 - Read-only vault scan + file indexer; Git (for the drift checks); scheduled (cron) checks.
 
 ## Rules
@@ -69,87 +66,15 @@ Dry-run is the default. Auto-fix is allowed only for **well-defined structural r
 | **Schema / content changes** | Promoting `_proposed_classification` fields, rewriting frontmatter, moving notes between folders | Never. Report only. |
 | **Review-gated-zone edits** | Anything in `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | Never. Report only. |
 
-When in doubt, dry-run.
+When in doubt, dry-run. The safe-fix Templater recipe and the audit-log rotation procedure are in the skill's `references/operations.md`.
 
-### Implementing safe-and-unambiguous fixes via Templater
+## Checks
 
-For in-vault structural repairs, prefer a Templater script over a Hermes-side write whenever the fix is local to a single note. This runs inside Obsidian, uses `app.fileManager.processFrontMatter()` (which races safely with Obsidian's save cycle), and stays inside the safe-and-unambiguous class by construction.
+The full catalog of checks with thresholds, the substrate that runs each (engine / agent procedure / dashboard signal), and the per-type enrichment-staleness cadences live in the skill's `references/check-catalog.md`. The five context-dependent drift detectors' procedures are in `references/structural-detectors.md`.
 
-```javascript
-<%*
-// Normalize frontmatter on the active note. Safe-and-unambiguous only.
-tp.hooks.on_all_templates_executed(async () => {
-  const file = app.workspace.getActiveFile();
-  if (!file) return;
+The eight **structural detectors** (`profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, `extract-path-broken`) differ from the data-hygiene checks in three ways: they're deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to the single verdict band that gates scheduled work.
 
-  await app.fileManager.processFrontMatter(file, (fm) => {
-    // Fill required keys without overwriting existing values.
-    if (!fm.type) fm.type = "note";
-    if (!fm.created) fm.created = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
-
-    // Touch updated on every run.
-    fm.updated = tp.date.now("YYYY-MM-DDTHH:mm:ssZ");
-
-    // Coerce tags to a deduplicated list. Coerce, never invent.
-    if (typeof fm.tags === "string") fm.tags = [fm.tags];
-    if (Array.isArray(fm.tags)) fm.tags = [...new Set(fm.tags)];
-  });
-});
-%>
-```
-
-Rules for what this script may do:
-
-- **Add missing keys with defaults.** Only keys defined as required in the authoritative schema.
-- **Coerce types.** String → list when the schema expects a list. Never the reverse (don't collapse lists).
-- **Deduplicate list values.** Tags, aliases, links.
-- **Touch `updated`.**
-
-Rules for what it must not do:
-
-- **Never overwrite a non-empty value.** That's a schema/content change — `Report only`.
-- **Never set `type` if one is already present.** That's also `Report only`.
-- **Never delete keys.** Removal is `authorized-targeted` at best.
-
-This script is the implementation of the safe-and-unambiguous row in the auto-fix table. The `authorized-targeted` row (e.g., "fix dangling backlinks under `20-sources/03-entities/01-people/`") needs scoped, one-off scripts written per request — there's no general template.
-
-## Lint checks and thresholds
-
-These are the concrete checks the Linter runs, with thresholds. Each is a *report* by default; auto-fix is gated by the auto-fix policy table above.
-
-| Check | Threshold | Action |
-| --- | --- | --- |
-| Orphan claim / reference notes | `length(file.inlinks) = 0` and `type != "moc"` | Report — surface in weekly dashboard. |
-| Stale enrichment (literature) | `enriched_date` older than the per-type threshold in [Enrichment staleness by type](#enrichment-staleness-by-type) (Article 180d; Preprint / Repository / Package 30d; Person 90d; Organization 365d) | Report — flag for `enrich` re-run. |
-| Classification debt per project | > 30% of notes with `lifecycle: proposed` | Report — surface in weekly dashboard. |
-| Broken wikilinks | Any `[[name]]` that doesn't resolve | Report. Auto-fix only if explicitly authorized for a scoped folder. |
-| FAMA exposure (obsolete-memory reuse) | A downstream note (`draft` / `answer-note` / `reference-note` / …) wikilinks a claim that is `lifecycle: archived` or carries `superseded_by` | Report the citing note + the superseded claim; the human re-points or drops the citation. Never auto-edit. The `fama_exposure` function in `detectors.py` ([ADR-10](../../../project-files/decisions/10-claim-supersession.md) supersession makes it measurable — a publication-grade signal). |
-| Author entity gaps | A paper note's author exists but has no `person-note` note | Report — proposal to create. |
-| `pub_status` anomalies | Zotero retraction alert disagrees with vault `pub_status` | Report — never silently update. |
-| Scite contrast | `> 15%` contrasting citations on a paper | Report — surface for human attention. |
-| Schema version mismatch | `schema_version` differs from current schema | Report — propose `schema-migrate --dry-run`. |
-| Promote-to-reference queue | `maturity: evergreen` notes still in `30-synthesis/01-claims/` | Report — surface in promotion backlog. |
-| MOC threshold crossed | A `topic` has ≥ 15 notes (papers + claim notes combined) and no `moc` covering it ([MOC thresholds](https://eranroseman.github.io/memoria-vault/reference/linking#moc-thresholds)) | Report — surface "consider a MOC for topic X" in the weekly dashboard. **Report-only (Tier 1)**; never auto-create or draft a MOC (curation is human-owned). |
-| Stale inbox | `answer-note` with `lifecycle: proposed` older than 7 days | Report — surface in weekly dashboard. |
-| Answer-draft retention | `answer-note` in `10-inbox/02-answers/` older than 90 days (mtime) — the `stale-answer-drafts` detector | Report — flag for keep / promote / discard; **never auto-archive**. Surface in weekly dashboard. |
-| Stale items | Item note's `last_checked` older than 90 days | Report. |
-| Stale literature | Paper note with `file.mtime` older than 180 days and `lifecycle: current` | Report. |
-| Profile install drift | A deployed `~/.hermes/profiles/memoria-<name>/` file (SOUL.md, config.yaml, mcp.json, anything under skills/ or cron/) has a different SHA-256 than its source at `.memoria/profiles/memoria-<name>/` (mcp.json compared after `{{VAULT_PATH}}` substitution) | Report — surface the affected profile and file; the human must either re-run `scripts/install.ps1` to refresh the deployed copy or revert the hand-edit. Never auto-install. |
-| Vault hash drift | A vault file's current SHA-256 doesn't match the last `after_hash` recorded for that path in `audit.jsonl` | Report — file was modified outside the policy MCP. Surface in the [audit-log dashboard](../../../00-meta/01-dashboards/audit-log.md). |
-| Skeleton note drift | A vault-skeleton human note in `00-meta/` (e.g., `agent-roles.md`, `profile-policies.md`) has `updated` older than the corresponding file's last commit in this repo's `docs/` | Report — surface as a "skeleton out of sync" item. Never auto-update; the human note's wording is human-owned. |
-| Dashboard field drift | A field referenced in a Dataview query under `00-meta/01-dashboards/` does not appear in any template's frontmatter | Report — surface the dashboard, the query, and the missing field. The query is silently broken (returns zero rows in a real vault) until either the field is added to the relevant template or the query is corrected. Never auto-rewrite the query. |
-| Command vocabulary drift | A command name in `docs/how-to-guides/` or `docs/reference/obsidian-command-palette.md` does not appear in the Core commands section of its owner profile's `.memoria/profiles/memoria-<profile>/SOUL.md` (or vice versa) | Report — surface the command name, the source file, and the owner-profile's SOUL.md. Never auto-add commands to SOUL.md files; command surface changes are a design decision. |
-| Plugin-config drift | The human's working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD for the same path. Human-extra keys (e.g., `agent-client`'s `savedSessions`) are ignored. Variant files with `.example` or `.TODO` suffixes (e.g., `data.json.example`, `data.json.TODO`) follow modified rules — see the `data.json` conventions in `docs/reference/obsidian-plugins.md`. | Report — surface the plugin, the key, and the expected vs actual value. Never auto-update either side; either the human's choice is deliberate (commit the change) or it's drift (revert the working file to git HEAD). |
-| Orphan working files | A file matches a transient-artifact pattern (`*.tmp.*`, `*.OLD.*`, `*.bak`, `*.lessOLD.*`, `*~`, `.#*`) and resides outside the permitted transient zones (`10-inbox/`, `40-workbench/`, `99-system/logs/`). Most often: an editor backup or a half-renamed scratch file that the human left behind after a manual rename. | Report — surface the path and the matching pattern. Never auto-delete; the file may be the human's in-progress work. |
-| Extract path broken link | A paper-note's `extract_path` frontmatter field is set (non-empty) but the referenced file does not exist on disk. The path was populated during ingest but the extract is missing — either Marker silently failed, an aborted ingest left orphaned state, the human renamed a citekey without renaming the extract, or the extract was deleted. | Report — surface the paper-note path, the broken `extract_path` value, and the citekey. Severity HIGH (silent-failure mode). Never auto-rewrite the field; the human decides whether to re-run Marker, clear the field, or remove the paper-note. |
-
-### Structural detectors and verdicts
-
-The eight drift checks at the bottom of the table above are **structural detectors** with descriptive slug IDs. They differ from the data-hygiene checks earlier in the table (orphans, stale enrichment, broken wikilinks) in three ways: they are deterministic and zero-LLM, they catch silent-failure modes the human wouldn't notice otherwise, and they roll up to a single verdict band that gates scheduled work.
-
-**See [Structural detectors: silent-failure checks](structural-detectors.md)** for the per-detector severity table and the procedural detail (procedure, false-positive rules, remediation paths) for `profile-install-drift`, `vault-hash-drift`, `skeleton-drift`, `dashboard-field-drift`, `command-vocab-drift`, `plugin-config-drift`, `orphan-working-files`, and `extract-path-broken`.
-
-#### Severity scale
+## Severity scale
 
 | Level | Meaning |
 | --- | --- |
@@ -159,51 +84,19 @@ The eight drift checks at the bottom of the table above are **structural detecto
 | **LOW** | Recoverable in one command; usually expected after a routine change. |
 | **INFO** | Status, cadence, summary. No action required. |
 
-Data-hygiene checks earlier in the lint table inherit the same scale but aren't structural detectors. The structural-detector set is reserved for checks that catch structural drift between the vault source, the deployed Hermes profiles, and the human's working vault state.
+The structural-detector set is reserved for checks that catch structural drift between the vault source, the deployed Hermes profiles, and the human's working vault state; data-hygiene checks inherit the same scale but aren't structural detectors.
 
-#### Verdict band
+## Verdict band
 
-Each lint run produces a single verdict from the findings. The verdict gates scheduled work and is the headline number on the [`audit-log` dashboard](../../../00-meta/01-dashboards/audit-log.md).
+Each lint run produces a single verdict from the findings. The verdict gates scheduled work and is the headline number on the audit-log dashboard.
 
 | Verdict | Condition | Action |
 | --- | --- | --- |
 | **PASS** | Only LOW or INFO findings. | Scheduled work continues; nothing required from the human. |
-| **REVIEW** | At least one MEDIUM finding (no HIGH or CRITICAL). | Human should reconcile before the next scheduled run. The system stays operational. |
-| **FAIL** | At least one HIGH or CRITICAL finding. | Pause scheduled work (the discovery loop, batch enrichment, the Linter's own next sweep) until resolved. Surface in the daily dashboard. |
+| **REVIEW** | At least one HIGH or MEDIUM finding (no CRITICAL). | Human should reconcile before the next scheduled run. The system stays operational. A HIGH-only run is REVIEW, never FAIL. |
+| **FAIL** | At least one CRITICAL finding. | Pause scheduled work (the discovery loop, batch enrichment, the Linter's own next sweep) until resolved. Surface in the daily dashboard. |
 
-The verdict is computed deterministically from the findings; an human can recompute it from the report. There is no fudge factor and no LLM judgment in the rollup. This is the design parallel to the [trust score](../../../00-meta/01-dashboards/fleet-health.md#system-trust-score) for the fleet — both are headline numbers, but the trust score is an operational aggregate and the verdict is a structural aggregate.
-
-### Enrichment staleness by type
-
-Different note types decay at different rates. Use these cadences for re-enrichment scheduling:
-
-| Type | Re-enrichment cadence | What changes |
-| --- | --- | --- |
-| Article | 180 days | Citation count, related papers |
-| Preprint | 30 days | May have been published; check for journal version |
-| Person | 90 days | New papers, affiliation changes |
-| Organization | 365 days | Rarely changes |
-| Repository | 30 days | Stars, issues, releases, maintenance status |
-| Package | 30 days | New versions, deprecation |
-
-Surface stale notes in the weekly dashboard. The agent never re-enriches without a trigger — either scheduled or explicitly invoked.
-
-## Log rotation
-
-You own rotation of operational logs under `99-system/logs/`. The policy MCP audit log grows append-only and must not be allowed to balloon.
-
-| Log | Cadence | Rotation target |
-| --- | --- | --- |
-| `audit.jsonl` (policy MCP decisions) | Weekly | `99-system/logs/archive/audit-YYYY-WW.jsonl` |
-| Lint reports | On creation, no rotation | Stay in `99-system/logs/` until archived per-project |
-
-Procedure for `audit.jsonl`:
-
-1. At the start of each ISO week, rename the current `audit.jsonl` to `99-system/logs/archive/audit-YYYY-WW.jsonl` (where `YYYY-WW` is the previous ISO week).
-2. Create a new empty `audit.jsonl`.
-3. Append one bootstrap event marking the rotation, so the file is never zero-byte.
-
-This action is classed as **`authorized-targeted`** in the auto-fix table — scoped, explicit, and reversible — so the policy MCP allows it without escalation. The rotation event itself is logged to the new `audit.jsonl`, which makes the rotation visible in the [audit-log dashboard](../../../00-meta/01-dashboards/audit-log.md).
+The verdict is computed deterministically from the findings; a human can recompute it from the report. There is no fudge factor and no LLM judgment in the rollup. This is the design parallel to the fleet trust score — both are headline numbers, but the trust score is an operational aggregate and the verdict is a structural aggregate.
 
 ## Exit conditions
 
