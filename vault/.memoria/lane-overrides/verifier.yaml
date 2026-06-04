@@ -7,6 +7,7 @@ policy:
   allow:
     skills:
       - qmd                 # similarity-check + find-duplicates (hybrid BM25+vector vault search; skills.sh skill)
+      - claim-checks        # authored skill: cite-check + claim-trace + similarity-check + find-duplicates
       - retraction-check    # authored skill: open-retractions API + crossref + pyzotero
       - pyzotero            # retraction-check + cite-check: resolve citekeys / Zotero items
       - obsidian            # read vault + write verification reports / candidate cards

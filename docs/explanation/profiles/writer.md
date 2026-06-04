@@ -17,7 +17,7 @@ The Writer turns evidence into structured prose — answer drafts, reference-rea
 
 **No external API access.** Unlike Librarian (network-heavy) or Verifier (external retraction checks), Writer doesn't reach outside the vault. Its inputs are entirely what the human has already accumulated — sources, claim notes, MOCs. This keeps the cost surface predictable, prevents prompt-injection via fetched content, and keeps the writing grounded in the human's own corpus rather than freshly retrieved material.
 
-**The `counter-outline` skill narrows Writer further.** When the `counter-outline` skill loads during the Frame phase, it adds deny rules that restrict Writer's write scope to `40-workbench/<project>/02-framing/` only. This makes "explore competing framings before committing" a structurally enforced step rather than an optional good habit — a skill that tightens the host lane, never loosens it.
+**The `counter-outline` behavior narrows Writer further.** `counter-outline` is a Writer prompt behavior (not an installed skill); while it is active during the Frame phase it restricts Writer's write scope to `40-workbench/<project>/02-framing/` only. This makes "explore competing framings before committing" a focused step rather than an optional good habit — a behavior that tightens the host lane, never loosens it.
 
 ---
 

@@ -37,13 +37,7 @@ The per-source comparative read (the `[!brief]` callout on a new paper note) is 
 
 ## Core skills
 
-- Corpus retrieval — `qmd` skill: hybrid BM25 + vector search. Deterministic (`search`/`vsearch` modes).
-- Cluster density analysis — HDBSCAN clustering (`scikit-learn` skill) over sentence-transformer embeddings, with UMAP (`umap-learn` skill) for visualization. Deterministic for fixed parameters.
-- Topic modeling — BERTopic / LDA/NMF over TF-IDF (`scikit-learn`) for smaller corpora. Used by `gap-report` for thin-coverage detection.
-- Recency / staleness distribution — frontmatter date aggregation over note collections. Deterministic.
-- Narrative composition — LLM step over the deterministic outputs above. Used to compose `corpus-map.md` prose and `gap-report.md` narrative.
-
-The full LLM-vs-classical boundary is defined in the project's computational-methods design notes (not shipped to the runtime vault). Mapper's value is the deterministic ML layer producing reproducible maps; the LLM only composes prose over those maps.
+The clustering/topic-modeling methods (HDBSCAN, UMAP, BERTopic, recency aggregation) and the deterministic-vs-LLM split are documented in the `cluster-mapping` skill's `references/methods.md`.
 
 ## Tooling / MCPs
 

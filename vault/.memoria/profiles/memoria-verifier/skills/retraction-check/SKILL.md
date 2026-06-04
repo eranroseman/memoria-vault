@@ -17,6 +17,15 @@ Scan paper-notes for retractions and flag any source whose retraction status dis
 its vault `pub_status`. **Fully deterministic** — HTTP lookups + DOI match + boolean
 comparison; no LLM. **Dry-run by default; never silently updates a note.**
 
+## When to Use
+
+- **Before export** — sweep the paper-notes a draft references so a retraction or
+  expression-of-concern surfaces before the draft leaves the workbench.
+- **Monthly** — run a periodic sweep over `20-sources/01-papers/` (optionally `--since` the
+  last sweep) to catch newly retracted sources in the existing library.
+- **On a flagged DOI** — re-check a single source when a human flags it or when its
+  `pub_status` is in doubt.
+
 ## Quick reference
 
 | Action | Call |
@@ -47,3 +56,12 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 - Deterministic: the same DOIs + same external state produce the same report every run.
 - External HTTP is allowed only under the Verifier's `external_api_policy: explicit_only`.
 - Be polite to the APIs (include a contact `mailto` on CrossRef; rate-limit batches).
+
+## Verification
+
+- A clean run reports **zero `pub_status` disagreements** — every in-scope DOI's external
+  retraction state matches the note's `pub_status`, and nothing is flagged.
+- **Deterministic** — re-running the same DOIs against the same external state yields
+  identical output every time.
+- **Never auto-flips a note** — the check only reports; a human updates `pub_status`. A run
+  that wrote to a note would be a defect, not a pass.

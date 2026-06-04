@@ -48,7 +48,7 @@ Each is conversational. **Today, use the ACP pane** (open the named profile and 
 | Status | Command | Profile | Output |
 | --- | --- | --- | --- |
 | `[deferred]` | `Memoria: find related notes` | Mapper | Top 5–10 related notes by similarity, in chat. No file written. |
-| `[deferred]` | `Memoria: counter-outline this section` | Writer (`counter-outline` skill) | 2–3 competing outlines in chat. No file written. |
+| `[deferred]` | `Memoria: counter-outline this section` | Writer (`counter-outline` behavior) | 2–3 competing outlines in chat. No file written. |
 | `[deferred]` | `Memoria: similarity-check this claim` | Verifier | Top 3 most-similar claim notes, in chat. No audit entry. |
 
 ## Project (card-based — produces file artifacts, Kanban-tracked)

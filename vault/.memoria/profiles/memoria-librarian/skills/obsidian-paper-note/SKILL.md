@@ -24,11 +24,23 @@ Your job is to call the tool, fill those two holes, and perform the gated writes
 This is ADR-30 (deterministic ingest pipeline). The contract: **every write
 gated and audited; nothing captured is ever lost; robust by redundancy.**
 
-## Inputs
+## When to Use
 
-- `citekey` (required) — Better BibTeX citekey; resolves in `.memoria/memoria.bib`.
-- `--skip-enrichment` (optional) — Tier-0 floor only (offline capture); defer Tier-1.
-- `--dry-run` (optional) — report the bundle + planned writes; write nothing.
+- **A new citekey to ingest** — a paper (or software/dataset) is in Zotero/BibTeX
+  and needs a populated vault note.
+- **A recovery / re-ingest** — a prior capture stalled at `captured` /
+  `ingest_status: tier0` / `needs-human`, or a note must be rebuilt from its
+  citekey.
+- **Post-capture enrichment** — a Tier-0 floor capture exists offline and now
+  needs Tier-1 enrich/extract/link to be filled in.
+
+## Quick Reference
+
+| Input | Required | Meaning |
+| --- | --- | --- |
+| `citekey` | yes | Better BibTeX citekey; resolves in `.memoria/memoria.bib`. |
+| `--skip-enrichment` | no | Tier-0 floor only (offline capture); defer Tier-1. |
+| `--dry-run` | no | Report the bundle + planned writes; write nothing. |
 
 ## Procedure
 
@@ -102,3 +114,14 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 - On a hard pipeline failure after bounded retries, leave the note at
   `captured` + `ingest_status: needs-human` so the retry-sweep stops and the
   human is surfaced — do not silently drop a capture.
+
+## Verification
+
+- The note exists at `20-sources/01-papers/<citekey>.md` (or `02-items/<citekey>.md`
+  for software/datasets) with `lifecycle: proposed` and `ingest_status: complete` —
+  confirming the classification proposal landed and the gated writes applied.
+- A capture record (citekey, path, sources, timestamp) was appended to
+  `99-system/logs/capture-intake.jsonl` — the durability anchor the
+  log-reconciliation sweep reconciles against.
+- A `--dry-run` invocation reports the bundle + planned writes (and surfaces any
+  `error` key) without writing anything to the vault.
