@@ -29,7 +29,7 @@ _Not tested_
 
 ### Vault homepage
 
-remove link to the plugih page and rewrite sentence
+remove link to the plugin page and rewrite sentence
 Ass that you can always get back to the homepage view by right clicking on a tab header and choosing close all. It will close all open tabs and launch the home page
 Research focus - the open fields have text in them, that you need to delete before you can type in your own text. This occurs in various places in the vault and we should find a better solution. Maybe using something like <https://github.com/danielo515/obsidian-modal-form>
 
@@ -54,7 +54,7 @@ should 2. Add a QuickAdd entry for each agent command you use. be here?
 
 ### find new sources
 
-All CLI commands shoud be moved to HERMES CLI page and linked from here.
+All CLI commands should be moved to HERMES CLI page and linked from here.
 
 ### triage fleeting notes
 
@@ -75,7 +75,7 @@ all zotero how to need to be in their own folder
 
 ### Read a paper through a Socratic lens
 
-this doens't seem to be implemented yet. has CLI command and the whole concept behind it isn't clear
+this doesn't seem to be implemented yet. has CLI command and the whole concept behind it isn't clear
 
 ### Write a claim note
 
