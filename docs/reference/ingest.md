@@ -38,13 +38,13 @@ If the type is ambiguous, the Librarian asks before proceeding. The agent never 
 | Article / preprint | OpenAlex + Semantic Scholar + PubMed | Marker extracts full text → `90-assets/extracts/<citekey>.md`; summary in note body | Authors → person-notes; cited works → existing paper citekeys |
 | Repository | GitHub API (REST or GraphQL) | `README.md` + `CHANGELOG.md` retrieved; summary into "What it is" | Primary maintainer → person-note; org owner → organization-note |
 | Package | PyPI / npm / CRAN API | Package description + project links | Maintainer → person-note; underlying repo → repo item-note |
-| Product | Vendor URL via `rest-passthrough` or MarkItDown fallback | Homepage text → summary | Vendor org → organization-note (if applicable) |
+| Product | Homepage text via the ingest pipeline's MarkItDown extraction (HTML → Markdown) | Homepage text → summary | Vendor org → organization-note (if applicable) |
 | Standard | Standards body URL (IEEE, RFC, W3C) | MarkItDown for HTML standards docs | Issuing org → organization-note |
 | Person | ORCID API + OpenAlex Authors | (none — entity note) | Co-authors derived from shared paper-notes; affiliations → organization-notes |
 | Organization | ROR API + OpenAlex Institutions | (none — entity note) | Affiliated people → person-notes |
 | Venue | OpenAlex Venues + DBLP | (none — entity note) | (none) |
 
-**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../../project-files/proposals/schema-and-retrieval.md)).
+**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../../project/rfc/explorations/schema-and-retrieval.md)).
 
 ### PDF extraction tools
 

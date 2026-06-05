@@ -16,8 +16,6 @@ desktop.ini
 *.swp
 *~
 
-# Editor local settings
-.vscode/settings.json
 
 # Scratch at repo root — underscore-prefixed working dirs/files, never committed.
 # Root-anchored (leading /) and listed explicitly, NOT a `_*` glob: docs/_config.yml

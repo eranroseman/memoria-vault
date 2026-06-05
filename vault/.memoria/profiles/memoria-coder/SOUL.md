@@ -15,7 +15,7 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - `20-sources/01-papers/` — read only for context.
 - `20-sources/02-items/` — read only for context.
 - `20-sources/03-entities/` — read only for context.
-- `50-deliverables/` — read only. Exports here are review-gated: the policy MCP degrades any write to a dry-run (Pandoc renders beside the note in `01`–`03`; code, data, and model releases in `04-releases/`). The Coder never writes `50-deliverables/` directly — a human approves the dry-run diff.
+- `50-deliverables/` — read only; writes are denied by the lane policy. The Coder never publishes deliverables.
 
 ## Disallowed folders
 
@@ -43,7 +43,7 @@ Build and maintain code artifacts, scripts, and project-level technical outputs.
 - Artifact generation.
 - Git workflow.
 
-**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent invoked through Hermes's **`autonomous-ai-agents` skills**. The default lane allowlist grants `codex` and `claude-code` (use whichever is configured); `opencode` is an optional alternative, not in the default allowlist. The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats it as an opaque tool with a shared filesystem, reached via the Hermes skill rather than a bespoke integration. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. See rationale/computational-methods.md.
+**Method class: delegated to external coding agent.** Coder's Hermes-side responsibilities (scaffold a code-note, commit, document) are deterministic scripting. The substantive coding work — generating code, debugging logic, restructuring modules — is delegated to an external coding agent invoked through Hermes's **`autonomous-ai-agents` skills**. The default lane allowlist grants `codex` and `claude-code` (use whichever is configured); `opencode` is an optional alternative, not in the default allowlist. The external agent is itself LLM-driven, but that LLM is *not* Memoria's concern — Memoria treats it as an opaque tool with a shared filesystem, reached via the Hermes skill rather than a bespoke integration. The Hermes-side Coder profile is on the deterministic side; the external agent does the generative work outside Memoria's runtime. (The deterministic/delegated boundary is defined in the project's computational-methods design notes, not shipped to the runtime vault.)
 
 ## Tooling / MCPs
 

@@ -39,7 +39,7 @@ hermes -p memoria-socratic chat -s lens-reading
 # then load the lens by slug, e.g. mamykina-sensemaking
 ```
 
-The `lens-reading` skill provides the framing; you provide the questions through that frame.
+The `lens-reading` behavior provides the framing; you provide the questions through that frame.
 
 **3. Stay in one frame per session.**
 
@@ -57,7 +57,7 @@ Socratic can't write, by design. When the frame surfaces something worth keeping
 
 **6. Define the framing.**
 
-A lens is a named frame the `lens-reading` skill provides. Add your framing to the Socratic profile's lens skill with a new slug (kebab-case, e.g. `<author>-<concept>`). Keep it to the theoretical stance and the *kinds of questions* the frame privileges — not a summary of any one paper.
+A lens is a named frame the `lens-reading` behavior provides. Add your framing to the Socratic profile's lens behavior with a new slug (kebab-case, e.g. `<author>-<concept>`). Keep it to the theoretical stance and the *kinds of questions* the frame privileges — not a summary of any one paper.
 
 **7. (Optional) Register a palette entry.**
 

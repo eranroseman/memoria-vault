@@ -7,7 +7,7 @@ parent: Reference
 
 Every YAML field Memoria uses, its type, allowed values, who owns it, and which note types carry it. For the field-namespace model see [Namespace ownership](#namespace-ownership). For per-type lifecycle refinements see [Note types](note-types.md).
 
-**Precedence.** When a runtime template (`99-system/templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, [Implementation status](../../project-files/plans/implementation-status.md) tracks build state.
+**Precedence.** When a runtime template (`99-system/templates/*.md`) disagrees with this file, this file governs — the template is what must change. When in doubt, the [v0.1 release plan](../../project/release/v0.1/release-plan-v0.1.md) tracks build state.
 
 ---
 
@@ -278,7 +278,7 @@ canvas         draft          deliverable    candidate-note
 
 ### Candidate-note fields
 
-Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — shared candidate frontmatter](../../project-files/decisions/17-shared-candidate-frontmatter.md)).
+Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — shared candidate frontmatter](../../project/adr/17-shared-candidate-frontmatter.md)).
 
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |

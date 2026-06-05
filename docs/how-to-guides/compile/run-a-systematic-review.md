@@ -112,4 +112,4 @@ The paper-note lands in `20-sources/01-papers/` after classification.
 - Exploratory discovery (no protocol needed): [Find new sources](find-new-sources.md)
 - After ingest, classify each paper: [Classify a source](classify-a-source.md)
 - The screening-protocol template: `99-system/templates/screening-protocol.md`
-- The adopt-on-demand decision: [ADR-16](../../../project-files/decisions/16-adopt-on-demand-for-reviews.md)
+- The adopt-on-demand decision: [ADR-16](../../../project/adr/16-adopt-on-demand-for-reviews.md)

@@ -17,13 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROTOCOLS = sorted((ROOT / "project-files" / "tests").glob("*.md"))
-# Also validate any versioned working copy of the GUI protocol kept under plans/
-# (e.g. gui-test-protocol_v0.1.md). The reusable template lives in tests/ and is
-# already covered by the glob above; run records live in plans/ as _v0.x.
-for extra in sorted((ROOT / "project-files" / "plans").glob("gui-test-protocol*.md")):
-    if extra not in PROTOCOLS:
-        PROTOCOLS.append(extra)
+PROTOCOLS = sorted((ROOT / "project-files" / "tests").rglob("*.md"))
 
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
 REPO_PATH = re.compile(r"`((?:docs|project-files)/[A-Za-z0-9/_.-]+\.md)`")

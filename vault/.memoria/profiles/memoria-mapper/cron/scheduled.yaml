@@ -1,6 +1,7 @@
-# stub — verify lane and schedule against Hermes cron docs before enabling
+# Skill `cluster-mapping` is now authored (skills/cluster-mapping/SKILL.md);
+# verify lane and schedule against Hermes cron docs before enabling.
 cron:
   - schedule: "0 3 * * MON"        # weekly Monday 03:00
-    skill: cluster-mapping-scan
+    skill: cluster-mapping
     assignee: memoria-mapper
     creates_card: {task: weekly-cluster-report, state: ready}

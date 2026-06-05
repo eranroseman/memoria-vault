@@ -12,6 +12,7 @@ policy:
       - qmd                 # hybrid BM25+vector retrieval for gap-report + corpus retrieval (skills.sh skill)
       - scikit-learn        # HDBSCAN clustering + topic modeling (K-Dense)
       - umap-learn          # cluster-map dimensionality reduction (K-Dense)
+      - cluster-mapping     # Mapper packaged skill: scope-project / gap-report / cluster-map procedures
     write:
       - "40-workbench/*/01-map/corpus-map.md"
       - "40-workbench/*/01-map/gap-report.md"

@@ -95,9 +95,9 @@ jobs:
           for i in $(seq 1 8); do
             comment=$(gh api \
               "repos/${{ github.repository }}/issues/$pr_num/comments?per_page=100" \
-              --jq '[.[] | select(.user.login == "kilo-code-bot" and (.body | startswith("<!-- kilo-review -->")))] | last | .body // empty')
+              --jq '[.[] | select(.user.login == "kilo-code-bot[bot]" and (.body | startswith("<!-- kilo-review -->")))] | last | .body // empty')
             if [ -n "$comment" ]; then
-              if echo "$comment" | grep -Fq "0 Issues Found"; then
+              if echo "$comment" | grep -Eq "No Issues Found|0 Issues Found"; then
                 echo "kilo-findings=clean" >> "$GITHUB_OUTPUT"
                 echo "Kilo Code Review: 0 issues found — clean."
                 exit 0
