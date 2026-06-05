@@ -54,9 +54,17 @@ def load_cards(from_json: Path | None = None) -> list[dict]:
     if from_json is not None:
         raw = from_json.read_text(encoding="utf-8")
     else:
-        proc = subprocess.run(
-            ["hermes", "kanban", "list", "--json"],
-            capture_output=True, text=True, check=True)
+        try:
+            proc = subprocess.run(
+                ["hermes", "kanban", "list", "--json"],
+                capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as exc:
+            print(f"[board_export] hermes kanban list failed (exit {exc.returncode}): "
+                  f"{exc.stderr.strip()}", file=sys.stderr)
+            raise
+        except FileNotFoundError:
+            print("[board_export] 'hermes' not found on PATH", file=sys.stderr)
+            raise
         raw = proc.stdout
     data = json.loads(raw)
     # Hermes may return a bare list or {"tasks": [...]}; accept both.
@@ -224,7 +232,9 @@ def load_state_cache(vault: Path) -> dict:
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
             return data if isinstance(data, dict) else {}
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            print(f"[board_export] corrupt state cache ({p}), resetting: {exc}",
+                  file=sys.stderr)
             return {}
     return {}
 

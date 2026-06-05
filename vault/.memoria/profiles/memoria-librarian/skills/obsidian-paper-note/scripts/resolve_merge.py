@@ -69,8 +69,12 @@ def _get(url: str, headers: dict | None = None, data: bytes | None = None, retri
                 wait = float(ra) if ra.isdigit() else min(2 ** attempt, 8)
                 time.sleep(wait + random.random())
                 continue
+            if e.code not in (404, 429):
+                print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
             return None
-        except Exception:
+        except Exception as exc:
+            print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}",
+                  file=sys.stderr)
             return None
     return None
 
