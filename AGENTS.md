@@ -107,7 +107,7 @@ All must pass before merge:
 Sensitive paths: `vault/.memoria/`, `scripts/`, `project/decisions/`, `.github/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`.
 
-On `auto_approve` PRs, the workflow polls the Kilo Code Review cloud check (up to 12 min); warnings or above block the merge.
+On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
 ---
 
