@@ -38,7 +38,7 @@ Pick an issue → move to **In progress**, open a branch. Open the PR with `Clos
 
 **Landing** (`main` is protected — no direct push; see AGENTS.md "PR flow")
 - [ ] `git push -u origin <branch>` → `gh pr create --base main`
-- [ ] required checks green (AGENTS.md §5)
+- [ ] required checks green (AGENTS.md "Required CI checks")
 - [ ] `gh pr merge --squash --delete-branch`
 - [ ] `git checkout main && git fetch origin && git reset --hard origin/main`
 
