@@ -46,4 +46,4 @@ The same principle governs promotion *between* synthesis layers, not just writes
 
 **Advisory LLM reviewer** — confidently wrong on exactly the inputs the gate needs to catch. Converts a structural guarantee into a probabilistic one.
 
-**Confidence-routed gate (SmartPause)** — routes to human only when agent confidence is low. Fails because hallucinated citations are emitted with high confidence. See ../../docs/explanation/architecture/why-not-autonomous.md.
+**Confidence-routed gate (SmartPause)** — routes to human only when agent confidence is low. Fails because hallucinated citations are emitted with high confidence. See [why-not-autonomous.md](../../docs/explanation/rationale/why-not-autonomous.md).

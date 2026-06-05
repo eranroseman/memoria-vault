@@ -29,7 +29,7 @@ Citation Keys tab → Citation key formula:
 [auth.lower][year][shorttitle1_0]
 ```
 
-This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula in [ADR-6](../../../project/decisions/06-citekey-naming-convention.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
+This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula in [ADR-6](../../../project/adr/06-citekey-naming-convention.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
 
 **3. Enable automatic export.**
 
@@ -105,4 +105,4 @@ Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes]
 - What ingest does with the `.bib`: [Capture and ingest a source](../compile/capture-and-ingest.md)
 - Fixing a stale `.bib`: [Fix a stale .bib](../recovery/fix-stale-bib.md)
 - Pin the citekey after import: [Pin a citekey](../compile/pin-a-citekey.md)
-- Citekey naming convention: [ADR-6](../../../project/decisions/06-citekey-naming-convention.md)
+- Citekey naming convention: [ADR-6](../../../project/adr/06-citekey-naming-convention.md)

@@ -10,7 +10,7 @@ permalink: /explanation/rationale/
 
 The `why-*` pages: the durable conceptual arguments behind Memoria's core design choices. Each answers "why is it shaped this way?" and is written to be read and re-read. These carry no date and no status — they are the canonical reasoning, maintained over time.
 
-> **`why-*` explanations vs. ADRs.** A `why-*` page holds the _argument_; an [ADR](../../../project/decisions/) holds the _dated decision_. When both cover the same ground, the explanation carries the reasoning and the ADR carries the record — each links to the other rather than restating it. Change the reasoning → update the `why-*` page; reverse the decision → supersede the ADR.
+> **`why-*` explanations vs. ADRs.** A `why-*` page holds the _argument_; an [ADR](../../../project/adr/) holds the _dated decision_. When both cover the same ground, the explanation carries the reasoning and the ADR carries the record — each links to the other rather than restating it. Change the reasoning → update the `why-*` page; reverse the decision → supersede the ADR.
 
 ## The arguments
 
@@ -34,5 +34,5 @@ The `why-*` pages: the durable conceptual arguments behind Memoria's core design
 ## Related
 
 - The structures these arguments shape: [Architecture](../architecture/README.md)
-- The dated decisions they pair with: [ADRs](../../../project/decisions/)
+- The dated decisions they pair with: [ADRs](../../../project/adr/)
 - The cross-cutting principles they share: [Design principles](../overview/design-principles.md)

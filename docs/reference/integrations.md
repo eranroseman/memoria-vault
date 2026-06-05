@@ -13,7 +13,7 @@ APIs and tools the Librarian profile reaches during ingest and enrichment. All e
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [Citekey naming convention](../../project/decisions/06-citekey-naming-convention.md). |
+| **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [Citekey naming convention](../../project/adr/06-citekey-naming-convention.md). |
 | **`.memoria/memoria.bib`** | Auto-exported BibTeX from Zotero | Librarian reads this; never writes to it. Excluded from git (user-specific). |
 
 ---
@@ -84,7 +84,7 @@ Tools evaluated and not in the current design:
 
 | Tool | Why not |
 |---|---|
-| **ZotLit** | Obsidian-native Zotero integration — evaluated, held as a future migration target. See [ADR-05](../../project/decisions/05-zotero-as-bibliographic-backbone.md) and the [connector comparison](zotero-plugins.md). |
+| **ZotLit** | Obsidian-native Zotero integration — evaluated, held as a future migration target. See [ADR-05](../../project/adr/05-zotero-as-bibliographic-backbone.md) and the [connector comparison](zotero-plugins.md). |
 
 ---
 
