@@ -30,6 +30,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from _shared import (
+    TestHarness,
+    parse_iso,
+    resolve_vault,
+)
+from _shared import (
+    iter_jsonl as _iter_jsonl_raw,
+)
+
 METRICS_RELDIR = "99-system/metrics"
 AUDIT_RELPATH = "99-system/logs/audit.jsonl"
 LINT_RELPATH = "99-system/logs/lint-findings.jsonl"
@@ -60,31 +69,15 @@ def iso_period(dt: datetime) -> str:
     return f"{y}-W{w:02d}"
 
 
-def _parse_ts(s: str) -> datetime | None:
-    try:
-        return datetime.fromisoformat(str(s).replace("Z", "+00:00"))
-    except (ValueError, TypeError):
-        return None
+# _parse_ts: delegate to _shared.parse_iso
+_parse_ts = parse_iso
 
 
 def read_audit(vault: Path, period: str) -> dict[str, dict]:
     """Per-profile mutating-decision counts for `period` from audit.jsonl."""
     out: dict[str, dict] = {}
-    audit = vault / AUDIT_RELPATH
-    if not audit.is_file():
-        return out
-    for line in audit.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            e = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    for e in _iter_jsonl(vault, AUDIT_RELPATH, period):
         if e.get("action") not in MUTATING:
-            continue
-        ts = _parse_ts(e.get("timestamp", ""))
-        if ts is None or iso_period(ts) != period:
             continue
         lane = e.get("profile", "unknown")
         rec = out.setdefault(lane, {"total": 0, "deny": 0, "dry_run": 0})
@@ -119,20 +112,7 @@ def read_drift(vault: Path, period: str) -> dict[str, int]:
     """Per-lane drift-incident counts from lint-findings.jsonl, if present.
     Falls back to {} when the Linter hasn't produced findings yet."""
     out: dict[str, int] = {}
-    lint = vault / LINT_RELPATH
-    if not lint.is_file():
-        return out
-    for line in lint.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            e = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        ts = _parse_ts(e.get("timestamp", ""))
-        if ts is not None and iso_period(ts) != period:
-            continue
+    for e in _iter_jsonl(vault, LINT_RELPATH, period):
         lane = e.get("lane") or e.get("profile") or "fleet"
         out[lane] = out.get(lane, 0) + 1
     return out
@@ -175,17 +155,7 @@ def lint_verdict_note(v: dict, period: str, now: datetime) -> str:
 
 def _iter_jsonl(vault: Path, relpath: str, period: str | None):
     """Yield JSON rows from a JSONL log, filtered to `period` (None = all)."""
-    p = vault / relpath
-    if not p.is_file():
-        return
-    for line in p.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            e = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    for e in _iter_jsonl_raw(vault / relpath):
         if period is not None:
             ts = _parse_ts(e.get("timestamp", ""))
             if ts is None or iso_period(ts) != period:
@@ -384,12 +354,8 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
 def self_test() -> int:
     import tempfile
 
-    failures = 0
-
-    def check(name: str, cond: bool) -> None:
-        nonlocal failures
-        failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
+    t = TestHarness()
+    check = t.check
 
     # trust-score math + bands
     check("clean lane -> healthy 100", trust_score(0, 0, 1.0) == (100, "healthy"))
@@ -487,8 +453,7 @@ def self_test() -> int:
         check("lint-verdict note written with type + verdict",
               'type: "lint-verdict"' in vnote and 'verdict: "REVIEW"' in vnote)
 
-    print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
-    return failures
+    return t.summary()
 
 
 # --------------------------------------------------------------------------- #
@@ -504,9 +469,7 @@ def main() -> None:
         sys.exit(1 if self_test() else 0)
     if not args.vault:
         ap.error("provide --vault <path> or --self-test")
-    vault = Path(args.vault).expanduser().resolve()
-    if not vault.is_dir():
-        sys.exit(f"not a directory: {vault}")
+    vault = resolve_vault(args.vault)
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import board_export

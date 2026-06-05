@@ -62,6 +62,8 @@ import os
 import sys
 from pathlib import Path
 
+from _shared import TestHarness, safe_filename
+
 # obsidian (mcp-obsidian) tool-name keyword -> policy action. Matched by substring
 # so it survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools
 # (get / list / search) contain none of these keywords -> not gated (return {}).
@@ -156,8 +158,7 @@ def _stash_key(payload: dict) -> str:
 
 
 def _pending_file(vault: Path, key: str) -> Path:
-    safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in key)
-    return vault / "99-system" / "logs" / ".pending" / f"{safe}.json"
+    return vault / "99-system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
 
 
 def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
@@ -281,12 +282,8 @@ def main() -> None:
 def self_test() -> int:
     import tempfile
 
-    failures = 0
-
-    def check(name: str, cond: bool) -> None:
-        nonlocal failures
-        failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
+    t = TestHarness()
+    check = t.check
 
     # classify / extract_path -------------------------------------------------
     check("classify: patch -> write", classify("obsidian_patch_content") == "write")
@@ -315,8 +312,11 @@ def self_test() -> int:
         lanes.mkdir(parents=True)
         (vault / ".memoria" / "mcp").mkdir(parents=True)
         import shutil
-        shutil.copy(Path(__file__).resolve().parent / "policy_mcp.py",
+        mcp_src = Path(__file__).resolve().parent
+        shutil.copy(mcp_src / "policy_mcp.py",
                     vault / ".memoria" / "mcp" / "policy_mcp.py")
+        shutil.copy(mcp_src / "_shared.py",
+                    vault / ".memoria" / "mcp" / "_shared.py")
         (lanes / "writer.yaml").write_text(
             "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
             "      - \"10-inbox/02-answers/**\"\n      - \"30-synthesis/02-reference/**\"\n"
@@ -394,8 +394,7 @@ def self_test() -> int:
         check("write_complete pairs before+after", bool(completes and completes[0]["before_hash"] and completes[0]["after_hash"] and completes[0]["before_hash"] != completes[0]["after_hash"]))
         check("post cleaned up the stash", not stash.is_file())
 
-    print(f"\n{'OK' if not failures else 'FAILED'}: {failures} failing check(s).")
-    return failures
+    return t.summary()
 
 
 if __name__ == "__main__":

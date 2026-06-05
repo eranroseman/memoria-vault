@@ -417,14 +417,11 @@ def verdict(findings: list[Finding]) -> str:
 def self_test() -> int:
     import tempfile
 
-    failures = 0
-    checks_run = 0
+    sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
+    from _shared import TestHarness
 
-    def check(name, cond):
-        nonlocal failures, checks_run
-        checks_run += 1
-        failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
+    t = TestHarness()
+    check = t.check
 
     with tempfile.TemporaryDirectory() as td:
         v = Path(td)
@@ -507,8 +504,7 @@ def self_test() -> int:
         check("fama-exposure ignores live claim good", not any("good" in x.message for x in by("fama-exposure")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-    print(f"\n{checks_run - failures}/{checks_run} detector checks passed.")
-    return failures
+    return t.summary(label="detectors")
 
 
 # --------------------------------------------------------------------------- #
