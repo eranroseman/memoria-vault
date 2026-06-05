@@ -68,7 +68,7 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 
 ## Enable the local API (for the `pyzotero` MCP)
 
-The Librarian and Verifier resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 7+; if it isn't already on, enable local API access under **Settings → Advanced**).
+The Librarian and Verifier resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 9; if it isn't already on, enable local API access under **Settings → Advanced**).
 
 - Zotero must be **running** for the MCP to reach it.
 - The MCP itself is installed during [Set up Hermes](set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
