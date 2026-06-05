@@ -38,7 +38,6 @@ TRUSTED_AUTHORS = {
 # A path is safe if it matches any prefix or suffix below.
 SAFE_PREFIXES = (
     "docs/",
-    "project-files/plans/",
     "project-files/releases/",
     "project-files/proposals/",
     "_notes/",

@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "six-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `../../project/rfc/explorations/measurement-and-verification.md` (the "six-signal log").
 
 ## Conventions (apply to every log)
 
@@ -112,7 +112,7 @@ API spend and token counts, captured once, at the transition into `status: done`
 
 ## lint-findings.jsonl
 
-One row per detector finding from a `memoria-linter` run. The in-memory shape is the `Finding` dataclass in [`detectors.py`](../../vault/.memoria/profiles/memoria-linter/detectors.py); serialized as:
+One row per detector finding from a `memoria-linter` run. The in-memory shape is the `Finding` dataclass in [`detectors.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py); serialized as:
 
 ```json
 {"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "40-workbench/draft-x/01-notes/n.md", "message": "cites superseded claim [[oldclaim]]"}

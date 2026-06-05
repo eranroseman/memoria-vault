@@ -7,7 +7,7 @@ parent: Reference
 
 All known failure modes, sorted by severity. Each entry: symptom, severity, cause, and fix. For full Detect / Fix / Verify recipes on the most common failures see [how-to-guides/recovery/](../how-to-guides/recovery/).
 
-**Severity scale** (matches the [Linter severity scale](profiles.md#linter-severity-scale)):
+**Severity scale** (matches the [Linter severity scale](linter.md#severity-scale)):
 
 | Severity | Meaning |
 | --- | --- |

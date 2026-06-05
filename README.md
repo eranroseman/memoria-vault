@@ -13,7 +13,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See [implementation-status.md](project-files/plans/implementation-status.md) for current build state before installing.
+> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See the [v0.1 release plan](project/release/v0.1/release-plan-v0.1.md) for current build state before installing.
 
 ---
 
@@ -90,7 +90,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 | `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
 | `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
 | `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/` |
-| `project-files/` | Decisions, proposals, and operations notes |
+| `project/` | Decisions, proposals, and operations notes |
 
 ## Documentation
 

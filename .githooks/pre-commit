@@ -47,7 +47,8 @@ if staged | grep -qE '\.py$'; then
   if [ -n "$PY" ]; then
     P=vault/.memoria
     for t in "$P/mcp/policy_mcp.py" "$P/mcp/policy_hook.py" "$P/mcp/board_export.py" \
-             "$P/mcp/metrics_aggregate.py" "$P/profiles/memoria-linter/detectors.py"; do
+             "$P/mcp/metrics_aggregate.py" "$P/mcp/verify_mcp.py" \
+             "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py"; do
       [ -f "$t" ] || continue
       "$PY" "$t" --self-test >/dev/null 2>&1 || { echo "pre-commit: self-test FAILED: $t" >&2; fail=1; }
     done
@@ -87,10 +88,10 @@ for f in $(staged | grep -E '\.(md|py|ya?ml)$'); do
 done
 
 # --- 5. test-protocol reference resolution (staged test protocols) ----------
-# The protocols under project-files/tests/ (and the GUI working copies in plans/)
-# name many repo paths; check-test-refs ensures each resolves, so a rename can't
-# leave a protocol pointing at a dead file. Mirrors the check-test-refs CI job.
-if staged | grep -qE '^project-files/tests/.*\.md$|^project-files/plans/gui-test-protocol.*\.md$|^scripts/check-test-refs\.py$'; then
+# The protocols under project-files/tests/ name many repo paths; check-test-refs
+# ensures each resolves, so a rename can't leave a protocol pointing at a dead
+# file. Mirrors the check-test-refs CI job.
+if staged | grep -qE '^project-files/tests/.*\.md$|^scripts/check-test-refs\.py$'; then
   if [ -n "$PY" ]; then
     "$PY" scripts/check-test-refs.py || { echo "pre-commit: check-test-refs failed (above)." >&2; fail=1; }
   else
@@ -105,7 +106,7 @@ fi
 # blocks; other vault findings stay advisory. Mirrors the gated CI step.
 if staged | grep -qE '^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/templates/.*\.md$'; then
   if [ -n "$PY" ]; then
-    "$PY" vault/.memoria/profiles/memoria-linter/detectors.py --vault vault --gate dashboard-field-drift \
+    "$PY" vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault --gate dashboard-field-drift \
       || { echo "pre-commit: dashboard schema-drift (above)." >&2; fail=1; }
   else
     echo "pre-commit: python not found; skipping schema-drift" >&2

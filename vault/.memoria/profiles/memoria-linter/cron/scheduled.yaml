@@ -8,18 +8,20 @@
 #
 # approvals.cron_mode stays at its `deny` default (set in config.yaml): these jobs
 # run unattended but cannot execute approval-gated commands.
+#
+# Both jobs dispatch the one Linter skill, `structural-detectors`. The card task selects
+# the scope (the skill branches on it — see skills/structural-detectors/SKILL.md):
+#   - nightly-lint      → run the detectors.py engine only (the 9 self-contained checks).
+#   - weekly-drift-report → engine PLUS the five agent-procedure drift detectors, which are
+#                           heavier (git diffs, SHA-256 over ~/.hermes, an audit-log pass)
+#                           and so run weekly, not nightly.
 cron:
-  - schedule: "0 2 * * *"          # nightly 02:00
-    skill: hygiene-sweep
+  - schedule: "0 2 * * *"          # nightly 02:00 — engine sweep (detectors.py only)
+    skill: structural-detectors
     assignee: memoria-linter
-    creates_card: {task: nightly-hygiene, state: ready}
+    creates_card: {task: nightly-lint, state: ready}
 
-  - schedule: "0 4 * * MON"        # weekly Monday 04:00
-    skill: drift-detector
+  - schedule: "0 4 * * MON"        # weekly Monday 04:00 — full sweep + drift procedures
+    skill: structural-detectors
     assignee: memoria-linter
     creates_card: {task: weekly-drift-report, state: ready}
-
-  - schedule: "0 5 * * *"          # nightly 05:00
-    skill: stale-fleeting-check
-    assignee: memoria-linter
-    creates_card: {task: fleeting-staleness-report, state: ready}

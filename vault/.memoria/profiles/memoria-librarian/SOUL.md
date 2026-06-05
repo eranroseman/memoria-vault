@@ -30,28 +30,15 @@ Find, enrich, and classify evidence for later synthesis. You are optimistic: you
 
 ## Core commands
 
-- `find` — citation graph traversal + concept-driven search. **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-focus.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human.
-- `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. Two hybrid steps: the `_proposed_classification` proposal (see below) and the inline `[!brief]` comparative read — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct") composed over those 5 and written to the top of the paper note. The `[!brief]` is the Librarian's because only the Librarian writes `20-sources/`.
+- `find` — citation graph traversal + concept-driven search across 20+ scholarly databases via the **`paper_search` MCP** (`search_papers` + per-source `search_*` tools; openags/paper-search-mcp). **Mostly deterministic**: graph walks over OpenAlex citation edges, concept matching via embedding similarity to `research-focus.md`. LLM step only for synthesizing candidate notes' relevance descriptions when surfacing to the human. Use the search tools only — PDF retrieval + extraction is the ingest pipeline's job (Marker), so the MCP's `download_*` tools and the optional Sci-Hub fallback are never used.
+- `ingest` — create a note from a citekey or URL. **Mostly deterministic**: type detection via rule-based dispatch table (DOI → article, github.com → repo, etc.); metadata enrichment via API calls; PDF extraction via Marker. Two hybrid steps: the `_proposed_classification` proposal (see the pointer below the command list) and the inline `[!brief]` comparative read — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct") composed over those 5 and written to the top of the paper note. The `[!brief]` is the Librarian's because only the Librarian writes `20-sources/`.
 - `query` — search the vault. **Fully deterministic**: hybrid BM25 + vector search via the `qmd` skill.
-- `enrich` — re-run API enrichment on existing notes. **Fully deterministic**: pure API calls (OpenAlex, PubMed, Semantic Scholar, CrossRef).
+- `enrich` — re-run metadata enrichment on existing notes. **Fully deterministic**: refresh via the `paper_search` MCP (OpenAlex / PubMed / Semantic Scholar / CrossRef) or by re-running the ingest pipeline (`enrich=true`) over the `ingest` MCP — no direct API calls.
 - `classify` — re-propose `_proposed_classification` when a note still needs review. **Hybrid**: classifier proposes; LLM only for low-confidence cases.
 - `obsidian-paper-note` — full ingest pipeline with PDF extraction.
 - `export prior-labels` — export vault papers as ASReview priors for pre-ingest screening. **Fully deterministic**: frontmatter filter + format conversion.
 
-## How `_proposed_classification` works (hybrid method)
-
-The classification step is the most cost-sensitive part of ingest because every new source gets one. Memoria uses the **hybrid pattern** described in rationale/computational-methods.md:
-
-1. **Classifier proposal (deterministic).** A small multi-label classifier trained on the human's past `lifecycle: current` paper-notes proposes values for `topic`, `methods`, and `study_design`. The classifier emits a calibrated softmax probability per label.
-2. **Confidence gate.** If the classifier's confidence exceeds the threshold (default 0.85), accept the proposal directly into `_proposed_classification`.
-3. **LLM fallback.** For sources where classifier confidence is below the threshold, fall back to an LLM proposal. This usually means the source is genuinely novel in topic or methodology — the classifier hasn't seen enough similar examples yet.
-4. **Human review.** Either way, `_proposed_classification` is a *proposal*, not canonical. The human confirms during classification; their confirmations become tomorrow's training data.
-
-The retraining loop runs monthly on a cron (or when override rate crosses 25%). As the corpus grows, the classifier becomes more accurate and the LLM-fallback rate drops. This is calibrated learning, not LLM self-reported confidence — see rationale/computational-methods.md anti-patterns for why that distinction matters.
-
-For the initial corpus (first ~200 paper-notes), the classifier hasn't trained yet; all proposals go through the LLM path. After ~500 classified paper-notes the classifier becomes useful; after ~1,000 it's calibrated.
-
-This pattern is also the resolution to the design question of confidence scoring on `_proposed_classification` — see decisions/ for the current ADRs.
+The `_proposed_classification` hybrid method (classifier + confidence gate + LLM fallback + human review, with the retraining cadence and corpus milestones) is documented in the `obsidian-paper-note` skill's `references/classification.md`.
 
 ## Core skills
 
@@ -60,33 +47,31 @@ This pattern is also the resolution to the design question of confidence scoring
 - Citation graph exploration — graph algorithms over OpenAlex / Semantic Scholar / CrossRef edges.
 - Source classification — multi-label classifier trained on human's past classification decisions, with LLM fallback for low-confidence cases.
 
-See rationale/computational-methods.md for the boundary between deterministic and LLM-required steps in this profile.
+The boundary between deterministic and LLM-required steps in this profile is defined in the project's computational-methods design notes (not shipped to the runtime vault).
 
 ## Hermes skills (lane-allowed)
 
-These are the skills the policy MCP grants to the Librarian lane (`memoria-librarian`). See profiles/README.md and architecture/capability-stack.md for the full catalog.
+External access is **MCP-only** — the `web` toolset is disabled, so the Librarian makes no direct API calls. Discovery is the `paper_search` MCP, Zotero reads are the **read-only** `pyzotero` MCP (Zotero's local API has no write path — there is no Zotero write-back), and enrichment/extraction is the `ingest` MCP (server-side). See Tooling / MCPs.
 
-- `paper-lookup` — K-Dense unified search across 10 databases (PubMed, PMC, bioRxiv, medRxiv, arXiv, OpenAlex, Crossref, Semantic Scholar, CORE, Unpaywall). Wraps the underlying APIs listed below.
-- `arxiv` — Direct arXiv search and metadata retrieval (official `research/arxiv`).
-- `pyzotero` — Read/write Zotero, including writing stable IDs back to the `Extra` field.
-- `citation-management` — Crossref DOI resolution and reference normalization.
-- `literature-review` — K-Dense structured literature-review assembly over discovered sources.
-- `obsidian-paper-note` — Full ingest pipeline (Zotero → PDF → Markdown → vault note).
-- `ocr-and-documents` — PDF/OCR text extraction for the ingest pipeline (official `productivity/`).
-- `rest-passthrough` — Escape hatch for one-off REST calls to APIs not yet wrapped by a dedicated skill. Lane-restricted to the Library lane. See architecture/capability-stack.md.
+The lane-granted skills (none need the network):
+
+- `obsidian-paper-note` — the authored ingest skill: calls the `ingest` MCP, fills the two model holes, writes via the `obsidian` MCP.
+- `obsidian` — gated vault read/write.
+- `qmd` — the `query` command (hybrid BM25 + vector vault search; local).
+
+The web-fetch K-Dense skills (`paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `rest-passthrough`) were retired — their capabilities are served by the MCP servers or composed from them.
 
 ## Tooling / MCPs
 
-External APIs reached via the skills above:
+MCP servers (registered in `config.yaml`, gated by the policy MCP):
 
-- OpenAlex.
-- Semantic Scholar.
-- PubMed.
-- Crossref.
-- Unpaywall.
-- ORCID.
-- ROR.
-- Vault search.
+- `paper_search` — scholarly discovery across 20+ databases (OpenAlex, Semantic Scholar, PubMed, Crossref, Unpaywall, arXiv, bioRxiv/medRxiv, CORE, …); search tools only.
+- `pyzotero` — read-only Zotero (local API) for citekey / metadata resolution.
+- `ingest` — the deterministic ingest pipeline; makes the throttled scholarly-API + extraction calls **server-side** (Tier-0 capture + Tier-1 enrich/extract/link).
+- `obsidian` — gated vault read/write.
+- `policy` — the write gate.
+
+Other external identifiers (ORCID, ROR, ISSN) are resolved inside the ingest pipeline; vault search is the local `qmd` skill. `web` is disabled — the Librarian makes no direct API calls.
 
 ## Rules
 

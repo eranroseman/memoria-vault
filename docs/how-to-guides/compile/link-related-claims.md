@@ -77,4 +77,4 @@ For a `contradicts` link, open the [contradictions dashboard](../../explanation/
 
 **Background**
 
-- Why typed links are human-set and opt-in: [ADR-08](../../../project-files/decisions/08-typed-relations-frontmatter.md)
+- Why typed links are human-set and opt-in: [ADR-08](../../../project/adr/08-typed-relations-frontmatter.md)

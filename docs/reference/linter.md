@@ -11,7 +11,7 @@ Structural detectors, auto-fix classes, and severity scale for the Memoria Linte
 
 ## The eight structural detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](../../vault/.memoria/profiles/memoria-linter/structural-detectors.md).
+Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](https://github.com/eranroseman/memoria-vault/blob/main/vault/.memoria/profiles/memoria-linter/skills/structural-detectors/references/structural-detectors.md).
 
 **Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps). `detectors.py` itself defines nine functions in total — these three structural detectors plus six housekeeping checks (broken-wikilink, fama-exposure, graph-analyze, orphan-working-files, schema-check, stale-answer-drafts, stale-fleeting) — so the "nine functions vs. eight structural detectors" counts measure different things and do not contradict.
 
@@ -62,13 +62,12 @@ Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorize
 
 The Linter is the first lane cleared for scheduled dispatch (read-mostly, low blast radius). Its jobs are defined in the profile's `cron/scheduled.yaml`:
 
-| Cron | Card | Cadence |
-| --- | --- | --- |
-| `0 2 * * *` | `nightly-hygiene` | Nightly 02:00 |
-| `0 5 * * *` | `fleeting-staleness-report` | Nightly 05:00 |
-| `0 4 * * MON` | `weekly-drift-report` | Weekly, Monday 04:00 |
+| Cron | Card | Cadence | Scope |
+| --- | --- | --- | --- |
+| `0 2 * * *` | `nightly-lint` | Nightly 02:00 | engine only (`detectors.py` — the 9 self-contained checks) |
+| `0 4 * * MON` | `weekly-drift-report` | Weekly, Monday 04:00 | engine + the 5 agent-procedure drift detectors |
 
-Dispatch stays **disabled** until the lane has produced stable dry-run reports (`approvals.cron_mode` defaults to `deny`); it is enabled deliberately, not on install. The Linter also runs on demand and after each ingest batch.
+Both jobs dispatch the one `structural-detectors` skill; the card task selects the scope. The five drift detectors (git diff, SHA-256 over `~/.hermes`, audit-log pass) are heavier, so they run weekly, not nightly. Dispatch stays **disabled** until the lane has produced stable dry-run reports (`approvals.cron_mode` defaults to `deny`); it is enabled deliberately, not on install. The Linter also runs on demand and after each ingest batch.
 
 ---
 

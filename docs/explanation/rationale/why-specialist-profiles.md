@@ -6,7 +6,7 @@ nav_order: 2
 
 # Why specialist profiles, not a generalist agent
 
-Memoria uses seven specialist profiles instead of one generalist agent. Each specialist has a focused mission, narrow folder permissions, and a clear exit condition. This is not an organizational preference — it is the mechanism that makes quality responsibility traceable and permission enforcement practical.
+Memoria uses seven specialist profiles instead of one generalist agent. Each specialist has a focused mission, narrow folder permissions, and a clear exit condition. This is not an organizational preference — it is the mechanism that makes quality responsibility traceable and permission enforcement practical. The dividing line is **posture and write-permission, not capability or tool**: the same cut — optimistic vs. conservative, read-only vs. scratch-write vs. review-gated — runs through every split below.
 
 ---
 
@@ -85,6 +85,16 @@ Several profiles are most easily understood by the tensions they represent:
 Socratic is write-denied entirely. It cannot write anywhere in the vault — `policy.allow.write: []` is enforced at the policy MCP. This is architecturally significant: Socratic's value is in the quality of questions it asks, not in anything it produces. A Socratic session that writes a note has pre-empted the human's own thinking — the human should be the one deciding what to record from a Socratic conversation.
 
 Socratic is also never queue-dispatched. It is only invoked synchronously by the human. A misconfigured cron job can't send work to a write-denied conversational profile.
+
+---
+
+## The cost: capability duplication
+
+Dividing by posture instead of capability has a real price: the same *technique* can live in several profiles. Embedding similarity drives the Mapper's clustering, the Verifier's duplicate detection, and the Librarian's comparative `[!brief]`; vault search (`qmd`) is granted to four lanes. A capability-first design would centralize each technique in one "retrieval" or "similarity" agent called from everywhere — strictly less duplication.
+
+Memoria takes the duplication on purpose. A shared capability-agent would become a bottleneck and, worse, a permission blur — it would need the union of every caller's access, dissolving exactly the per-lane write boundaries the split exists to make legible. For a human-gated system whose security model *is* per-lane permissions, legible trust boundaries are worth more than DRY capability. A throughput-maximizing autonomous fleet would make the opposite trade.
+
+The reconciliation is to separate the two layers. Capability increasingly lives in **shared MCP servers** — `pyzotero`, `verify`, `paper_search` — that any lane reaches through the gated policy plugin, while the **profiles stay posture-pure**: identity, write zone, and stance, not tools. Shared capability at the MCP layer, posture isolation at the agent layer (see [ADR-32](../../../project/adr/32-external-access-over-mcp.md)).
 
 ---
 

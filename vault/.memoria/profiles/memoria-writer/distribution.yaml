@@ -4,6 +4,7 @@ name: memoria-writer
 version: 0.1.0
 description: "Memoria Writer — drafts answers and synthesis into 10-inbox/02-answers/ and 40-workbench/ drafts (review-gated)."
 author: "Memoria"
+license: "MIT"
 hermes_requires: ">=0.12.0"
 env_requires:
   - name: KILOCODE_API_KEY

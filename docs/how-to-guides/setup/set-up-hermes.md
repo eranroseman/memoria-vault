@@ -84,7 +84,24 @@ Pick a citekey from `.memoria/memoria.bib` and run:
 
 `--dry-run` reports what the Librarian *would* write without actually writing anything. Confirm the output shows the expected note path and metadata fields.
 
-**6. Enable the Obsidian chat pane (ACP).**
+**6. Install the upstream MCP servers (Librarian + Verifier).**
+
+The research lanes reach external services over MCP, not direct HTTP (their `web` toolset is disabled — see [ADR-32](../../../project/adr/32-external-access-over-mcp.md)). Two of those servers are upstream `pip` installs; the rest ship in the vault. Install them into the same environment Hermes launches MCP servers from (the vault venv):
+
+```bash
+pip install paper-search-mcp          # Librarian: scholarly discovery across 20+ databases
+pip install "pyzotero[mcp]"           # Librarian + Verifier: read-only Zotero (local desktop API)
+```
+
+Then seed the Verifier's retraction dataset (a monthly cron refreshes it thereafter):
+
+```bash
+python "$VAULT_PATH/.memoria/mcp/verify_mcp.py" --refresh   # downloads the Retraction Watch CSV
+```
+
+Until the CSV is present, the `verify` MCP degrades to live CrossRef + Open Retractions.
+
+**7. Enable the Obsidian chat pane (ACP).**
 
 The `agent-client` plugin talks to Hermes over **ACP** (Agent Client Protocol), which is an optional Hermes extra — install it so `hermes acp` exists:
 
@@ -100,7 +117,7 @@ hermes -p memoria-socratic acp
 
 It should start an ACP stdio server (it logs to stderr; stdout is reserved for JSON-RPC). In Obsidian, the `agent-client` picker then offers Socratic / Mapper / Writer / Verifier. ACP reuses the same `~/.hermes/{.env,config.yaml,skills/}` you configured above — no separate credentials.
 
-**7. Route the auxiliary models to cheap flash tiers (cost efficiency).**
+**8. Route the auxiliary models to cheap flash tiers (cost efficiency).**
 
 Hermes runs cheap, high-frequency bookkeeping tasks (title generation, context compression, command approval, MCP routing, skills-hub search) through *auxiliary* model slots that default to the profile's main model — so a Verifier or Socratic compression call would otherwise burn **Opus**. These are set **globally** (not per-profile — Hermes replaces a config section wholesale). Use a split: GLM 4.7 Flash for the light slots (cheapest input), DeepSeek V4 Flash for compression (its 1M context safely holds the conversation being summarized). Add this block to your **global** `~/.hermes/config.yaml`:
 

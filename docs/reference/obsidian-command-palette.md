@@ -12,7 +12,7 @@ The `Memoria:` command-palette surface — the **in-Obsidian UI** for capture, n
 > - **✓ wired** — registered today (a QuickAdd Template or Macro). These work.
 > - **`[deferred]`** — designed, not yet wired. Where the task is conversational, the **agent-client (ACP) pane** is the working path *today* (open *Agent Client: Open chat view*, switch to the named profile — the active note auto-attaches); where it produces a vault artifact, use the **[Hermes CLI](hermes-cli.md)** until the command lands.
 >
-> Wired today: seven QuickAdd **Templates** (`capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note`) and three **Macros** (`capture from Zotero selection`, `capture source from URL`, `lint this note` — each a QuickAdd UserScript → `hermes kanban create`). **Confirmed live:** `lint this note` runs the Linter end-to-end; `capture source from URL` creates the card but the Librarian **blocks bare/proxied URLs** pending DOI resolution (see its row). The rest land as the system fills in; see [Implementation status](../../project-files/plans/implementation-status.md).
+> Wired today: seven QuickAdd **Templates** (`capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note`) and three **Macros** (`capture from Zotero selection`, `capture source from URL`, `lint this note` — each a QuickAdd UserScript → `hermes kanban create`). **Confirmed live:** `lint this note` runs the Linter end-to-end; `capture source from URL` creates the card but the Librarian **blocks bare/proxied URLs** pending DOI resolution (see its row). The rest land as the system fills in; see the [v0.1 release plan](../../project/release/v0.1/release-plan-v0.1.md).
 
 Commander binds the top five to physical ribbon buttons.
 
@@ -48,7 +48,7 @@ Each is conversational. **Today, use the ACP pane** (open the named profile and 
 | Status | Command | Profile | Output |
 | --- | --- | --- | --- |
 | `[deferred]` | `Memoria: find related notes` | Mapper | Top 5–10 related notes by similarity, in chat. No file written. |
-| `[deferred]` | `Memoria: counter-outline this section` | Writer (`counter-outline` skill) | 2–3 competing outlines in chat. No file written. |
+| `[deferred]` | `Memoria: counter-outline this section` | Writer (`counter-outline` behavior) | 2–3 competing outlines in chat. No file written. |
 | `[deferred]` | `Memoria: similarity-check this claim` | Verifier | Top 3 most-similar claim notes, in chat. No audit entry. |
 
 ## Project (card-based — produces file artifacts, Kanban-tracked)
