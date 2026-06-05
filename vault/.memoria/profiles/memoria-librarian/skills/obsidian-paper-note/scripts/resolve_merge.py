@@ -70,7 +70,7 @@ def _get(url: str, headers: dict | None = None, data: bytes | None = None, retri
                 time.sleep(wait + random.random())
                 continue
             if e.code not in (404, 429):
-                print(f"[resolve_merge] HTTP {e.code} from {url}", file=sys.stderr)
+                print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
             return None
         except Exception as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}",

@@ -262,7 +262,6 @@ def main() -> None:
     args = ap.parse_args()
 
     if args.self_test:
-        os.environ["HOOK_SELFTEST"] = "1"   # surface swallowed completion errors
         sys.exit(1 if self_test() else 0)
 
     try:
