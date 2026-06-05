@@ -32,7 +32,7 @@ The 16 note types, their canonical folders, templates, lifecycle, and ownership.
 
 All 16 note-type templates live in `99-system/templates/` (alongside `screening-protocol.md`, a program-control template that is not a typed note — 17 template files total). See [Template locations](#template-locations).
 
-> **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project-files/decisions/17-shared-candidate-frontmatter.md).
+> **`candidate-note` is transient** — a discovery lead or ingestion dead-letter awaiting a human include/exclude decision. Carries `source` (`find` / `database-search` / `manual` / `capture-timeout` / `gap`), `candidate_status`, and `exclusion_reason`. It unifies the Librarian's discovery candidates and the Verifier's gap-cards. See [ADR — shared candidate frontmatter](../../project/decisions/17-shared-candidate-frontmatter.md).
 
 ---
 

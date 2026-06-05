@@ -67,7 +67,7 @@ The required plugins ship with their settings pre-configured in `.obsidian/plugi
 
 **7. Do not install the frontend Obsidian Linter.**
 
-Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../../project-files/decisions/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `40-workbench/` drafts are both human-edited and agent-written, so no exclusion list is safe.
+Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../../project/decisions/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `40-workbench/` drafts are both human-edited and agent-written, so no exclusion list is safe.
 
 Memoria's linting is the `memoria-linter` Hermes profile (structural validation under the policy MCP); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 

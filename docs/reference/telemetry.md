@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project-files/proposals/measurement-and-verification.md` (the "six-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement proposal `project/proposals/measurement-and-verification.md` (the "six-signal log").
 
 ## Conventions (apply to every log)
 

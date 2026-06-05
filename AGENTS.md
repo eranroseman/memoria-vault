@@ -88,7 +88,7 @@ commits the whole git working tree every ~30 min — you'll see commits titled
 (`~/Memoria` on Windows), where auto-backup is a wanted feature. It turns hostile
 only if someone **opens a checkout of this dev repo as an Obsidian vault** (e.g.
 points Windows-Obsidian at a `\\wsl$\…\memoria-vault` path) — then the timer
-auto-commits the entire source tree (`scripts/install.sh`, `project-files/`, `docs/`…),
+auto-commits the entire source tree (`scripts/install.sh`, `project/`, `docs/`…),
 bundling your in-progress edits with unrelated work and sometimes spawning phantom
 branches that orphan work.
 
@@ -110,7 +110,7 @@ churn. Stage only the files you changed:
 
 ```bash
 git add scripts/install.sh                      # yes — explicit
-git add project-files/decisions/24-*.md # yes
+git add project/decisions/24-*.md # yes
 git add -A                              # NO — sweeps in others' work
 ```
 
@@ -182,8 +182,8 @@ three-tier gate based on path sensitivity and author trust:
 
 | Decision | Trigger | Effect |
 |---|---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project-files/releases/`, `project-files/proposals/`; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
-| `needs_human` | Safe paths but untrusted author, OR trusted author on sensitive paths (`vault/.memoria/`, `scripts/`, `project-files/decisions/`, `.github/`) | Check passes — human reviews and merges manually |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project/releases/`, `project/proposals/`; `.md`, `.txt` suffixes) | Enables squash auto-merge **after Kilo Code Review passes clean** (see below) |
+| `needs_human` | Safe paths but untrusted author, OR trusted author on sensitive paths (`vault/.memoria/`, `scripts/`, `project/decisions/`, `.github/`) | Check passes — human reviews and merges manually |
 | `block` | Untrusted author touching sensitive paths | Check fails — merge impossible |
 
 **Trusted authors:** `eranroseman`, `github-actions[bot]`.
@@ -254,7 +254,7 @@ reading it. Before opening a PR:
   files (shipped as `.example`). **Never** commit a real key; if one leaks, rotate it.
 - **Build state & known gaps:** before relying on live agent writes, consult the
   open [issues](https://github.com/eranroseman/memoria-vault/issues) (build gaps) and
-  the [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md) (gates,
+  the [v0.1 release plan](project/releases/v0.1/release-plan-v0.1.md) (gates,
   blockers, known limitations) rather than any list restated here. (#39/#51/#58 are
   closed — ADR-27 made the review gate enforce live in all run modes; obsidian is each
   lane's only write path.)
@@ -265,13 +265,13 @@ reading it. Before opening a PR:
   `SOUL.md` / `config.yaml` / `distribution.yaml` structure (+ `cron/`, `skills/`).
   Keep the seven in sync. There is no per-profile `mcp.json` — `config.yaml` carries
   `mcp_servers` (ADR-27).
-- Authoritative design is in `docs/` (Diátaxis) and `project-files/decisions/`
+- Authoritative design is in `docs/` (Diátaxis) and `project/decisions/`
   (ADRs); current build state is tracked in the open issues + the
-  [v0.1 release plan](project-files/releases/v0.1/release-plan-v0.1.md).
+  [v0.1 release plan](project/releases/v0.1/release-plan-v0.1.md).
 - **Generated reports go in `_reports/`, never the tracked tree.** Analysis,
   findings, and distillation reports you produce belong in `_reports/` at the repo
   root — a gitignored scratch dir (alongside `_notes/`, `_papers/`). Don't write a
-  report to the repo root or into `project-files/`: those are canon, `_reports/` is
+  report to the repo root or into `project/`: those are canon, `_reports/` is
   scratch. Once its findings are integrated into docs/ADRs/proposals, the report has
   served its purpose. Treat nothing under `_reports/` / `_notes/` as canon.
 
@@ -304,7 +304,7 @@ Memoria's **knowledge cycle** has two flows: **Compile** (knowledge *in* — sou
 - **Never** name these the "upstream/downstream pipeline" or "the two pipelines" — that naming was retired (see [compile-and-compose.md](docs/explanation/workflows/compile-and-compose.md)). Use **Compile flow** / **Compose flow**, or **the knowledge cycle** for the pair.
 - `pipeline`, `upstream`, `downstream` stay fine in *other* senses — the ingest pipeline, a Pandoc/export pipeline, an upstream dependency, a downstream consumer. The rule is narrow: don't use them to name the two flows.
 
-### `project-files/decisions/` — ADR template
+### `project/decisions/` — ADR template
 
 ```markdown
 ---
@@ -327,7 +327,7 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-### `project-files/proposals/` — RFC template
+### `project/proposals/` — RFC template
 
 ```markdown
 ---
@@ -349,10 +349,10 @@ created: YYYY-MM-DD
 ## Related
 ```
 
-### `project-files/releases/` — release-plan template
+### `project/releases/` — release-plan template
 
 One **single-file release plan per version**, structured by what a release needs.
-Full skeleton: `project-files/releases/release-plan-template.md` (copy it per
+Full skeleton: `project/releases/release-plan-template.md` (copy it per
 release; reset every Gate/Tier State to `todo`).
 
 ```markdown
@@ -371,7 +371,7 @@ the release-plan file; build *gaps* are GitHub issues; scope *cuts* are proposal
 Every other doc *points* — never restates. Detail too long for a crisp plan (full
 phase steps, investigation notes) goes to a sibling `release-plan-<version>-appendix.md`.
 
-The current release plan is [`release-plan-v0.1.md`](project-files/releases/v0.1/release-plan-v0.1.md)
+The current release plan is [`release-plan-v0.1.md`](project/releases/v0.1/release-plan-v0.1.md)
 (+ its `-appendix.md`).
 
 ## 9. Integration cadence — merge small, merge often
@@ -381,7 +381,7 @@ branches once grew off a frozen `main` in parallel (60 + 9 + 12 commits, none
 merged back), all touching the same ADR and files — ADR-27 was implemented
 *twice* — so consolidating them became a ~30-conflict semantic reconciliation,
 not a merge. Full post-mortem + human walkthrough:
-[git-workflow.md](project-files/git-workflow.md). The rules:
+[git-workflow.md](project/git-workflow.md). The rules:
 
 - **Keep `main` moving.** A branch is one coherent unit → PR → squash-merge →
   delete. If it passes ~1 day or ~10 unmerged commits, it's already too big —
@@ -433,8 +433,8 @@ question, or doc fix is an **issue**, never a line in a file.
 
 | Artifact | Holds | Not for |
 | --- | --- | --- |
-| `project-files/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
-| `project-files/proposals/` (RFC-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
+| `project/decisions/` (ADR-NN) | *Why* — closed decisions + rationale | open work |
+| `project/proposals/` (RFC-NN) | Big deferred *ideas* — the strategic backlog | discrete tasks |
 | `release-plan-<v>.md` §2/§3 | Gate/tier readiness state | build gaps (→ issues) |
 | `_reports/`, `_notes/`, `/TODO` | Gitignored personal scratch | anything canonical or shared |
 

@@ -40,4 +40,4 @@ On a freshly cloned vault, before any data exists, Home shows mostly empty state
 
 - What Home links *to*: [the dashboards](../dashboards/README.md)
 - The visual restraint Home participates in: [Visual-style discipline](visual-discipline.md)
-- The startup mechanism and ADR: [Obsidian plugins](../../reference/obsidian-plugins.md) (obsidian-homepage), [ADR-13](../../../project-files/decisions/13-homepage-front-door.md)
+- The startup mechanism and ADR: [Obsidian plugins](../../reference/obsidian-plugins.md) (obsidian-homepage), [ADR-13](../../../project/decisions/13-homepage-front-door.md)
