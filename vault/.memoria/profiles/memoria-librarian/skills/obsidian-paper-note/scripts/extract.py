@@ -57,7 +57,8 @@ def _get(url: str, timeout: int = 25) -> str | None:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             return r.read().decode("utf-8", errors="ignore")
-    except Exception:
+    except Exception as exc:
+        print(f"[extract] GET {url}: {type(exc).__name__}: {exc}", file=sys.stderr)
         return None
 
 
@@ -89,7 +90,9 @@ def from_pdf(path: Path) -> tuple[str | None, str]:
     try:
         return pymupdf4llm.to_markdown(str(path)), "pymupdf4llm"
     except Exception as e:
-        return None, f"pdf-error:{type(e).__name__}"
+        print(f"[extract] PDF parse failed for {path}: {type(e).__name__}: {e}",
+              file=sys.stderr)
+        return None, f"pdf-error:{type(e).__name__}:{e}"
 
 
 def extract(ids: dict, pdf_path: str | None = None, email: str = "") -> dict:

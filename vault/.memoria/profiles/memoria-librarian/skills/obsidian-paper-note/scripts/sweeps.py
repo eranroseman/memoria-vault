@@ -99,8 +99,17 @@ def enqueue_reingest(citekey: str, reason: str, dry_run: bool = False) -> str:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=True)
         obj = json.loads(r.stdout or "{}")
         return str(obj.get("id") or obj.get("task_id") or "queued")
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-        return f"error:{type(e).__name__}"
+    except subprocess.CalledProcessError as e:
+        detail = (e.stderr or e.stdout or "").strip()[:200]
+        print(f"[sweeps] enqueue failed for {citekey} (exit {e.returncode}): {detail}",
+              file=sys.stderr)
+        return f"error:CalledProcessError:exit{e.returncode}"
+    except subprocess.TimeoutExpired:
+        print(f"[sweeps] enqueue timed out for {citekey}", file=sys.stderr)
+        return "error:TimeoutExpired"
+    except FileNotFoundError:
+        print("[sweeps] 'hermes' not found on PATH", file=sys.stderr)
+        return "error:FileNotFoundError:hermes-not-found"
 
 
 def reconcile(log_path: Path, vault: Path, dry_run: bool = False) -> dict:

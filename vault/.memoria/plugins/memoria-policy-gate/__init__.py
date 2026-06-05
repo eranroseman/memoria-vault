@@ -20,6 +20,7 @@ It reuses the tested decision core verbatim — `policy_hook.evaluate_pre` /
 The installer substitutes {{PROFILE}} and {{VAULT_PATH}} per lane at deploy time.
 """
 import sys
+import traceback
 from pathlib import Path
 
 PROFILE = "{{PROFILE}}"
@@ -55,7 +56,9 @@ def _complete(tool_name, args, task_id, **kwargs):
         import policy_hook
         policy_hook.evaluate_post(_payload(tool_name, args, task_id), PROFILE, VAULT)
     except Exception:
-        pass
+        # Never block the agent on audit-completion failures, but log so the
+        # operator can diagnose missing audit records.
+        traceback.print_exc(file=sys.stderr)
     return None
 
 

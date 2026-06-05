@@ -82,12 +82,17 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
 def get_pr_files(session, repo: str, pr_number: str) -> list:
     files, page = [], 1
     while True:
-        r = session.get(
-            f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files",
-            params={"per_page": 100, "page": page},
-            timeout=30,
-        )
-        r.raise_for_status()
+        try:
+            r = session.get(
+                f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files",
+                params={"per_page": 100, "page": page},
+                timeout=30,
+            )
+            r.raise_for_status()
+        except requests.RequestException as exc:
+            raise SystemExit(
+                f"pr_policy: failed to fetch PR #{pr_number} files (page {page}): {exc}"
+            ) from exc
         batch = r.json()
         if not batch:
             break
