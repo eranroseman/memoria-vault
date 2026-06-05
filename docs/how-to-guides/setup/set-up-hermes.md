@@ -96,7 +96,7 @@ pip install "pyzotero[mcp]"           # Librarian + Verifier: read-only Zotero (
 Then seed the Verifier's retraction dataset (a monthly cron refreshes it thereafter):
 
 ```bash
-python "$VAULT/.memoria/mcp/verify_mcp.py" --refresh   # downloads the Retraction Watch CSV
+python "$VAULT_PATH/.memoria/mcp/verify_mcp.py" --refresh   # downloads the Retraction Watch CSV
 ```
 
 Until the CSV is present, the `verify` MCP degrades to live CrossRef + Open Retractions.
