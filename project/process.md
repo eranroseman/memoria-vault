@@ -36,7 +36,7 @@ Pick an issue → move to **In progress**, open a branch. Open the PR with `Clos
 - [ ] still small? (< ~1 day, < ~10 commits) — if not, split
 - [ ] any structural change already landed in its own PR?
 
-**Landing** (`main` is protected — no direct push; see AGENTS.md §4)
+**Landing** (`main` is protected — no direct push; see AGENTS.md "PR flow")
 - [ ] `git push -u origin <branch>` → `gh pr create --base main`
 - [ ] required checks green (AGENTS.md §5)
 - [ ] `gh pr merge --squash --delete-branch`
