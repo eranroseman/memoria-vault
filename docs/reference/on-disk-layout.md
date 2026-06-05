@@ -7,7 +7,7 @@ parent: Reference
 
 Where every file lives across the two filesystem roots: the starter vault (versioned, distributable) and `.memoria/` (tooling layer). For the design rationale see [explanation/architecture/](../explanation/architecture/).
 
-**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See the [v0.1 release plan](../../project-files/releases/v0.1/release-plan-v0.1.md) for build state.
+**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See the [v0.1 release plan](../../project/release/v0.1/release-plan-v0.1.md) for build state.
 
 ---
 
@@ -26,7 +26,7 @@ memoria-vault/                       # repo root — the install unit (clone any
 │   ├── install.ps1                 # thin Windows launcher (gates WSL2, runs install.sh)
 │   └── PSScriptAnalyzerSettings.psd1  # PSScriptAnalyzer lint config
 ├── docs/                           # engineering spec (NOT copied to the runtime vault)
-├── project-files/                  # decisions, proposals, operations
+├── project/                  # decisions, proposals, operations
 │
 └── vault/                          # the Obsidian vault — the runtime artifact
     ├── home.md                     # vault front door (obsidian-homepage opens it on launch)

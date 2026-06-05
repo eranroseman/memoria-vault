@@ -47,7 +47,8 @@ if staged | grep -qE '\.py$'; then
   if [ -n "$PY" ]; then
     P=vault/.memoria
     for t in "$P/mcp/policy_mcp.py" "$P/mcp/policy_hook.py" "$P/mcp/board_export.py" \
-             "$P/mcp/metrics_aggregate.py" "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py"; do
+             "$P/mcp/metrics_aggregate.py" "$P/mcp/verify_mcp.py" \
+             "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py"; do
       [ -f "$t" ] || continue
       "$PY" "$t" --self-test >/dev/null 2>&1 || { echo "pre-commit: self-test FAILED: $t" >&2; fail=1; }
     done

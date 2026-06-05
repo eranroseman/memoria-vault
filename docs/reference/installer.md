@@ -72,14 +72,27 @@ The installer prints this checklist and the exact paths; it writes nothing. **v0
 
 Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
 
-## Skills provisioning
+## Skills and MCP servers
 
-The seven profiles' lane-overrides name **30 distinct skills**. Only a minority are installable from a registry; the rest are Memoria-coined and ship authored in the vault:
+External access is **MCP-only** for the research lanes (Librarian, Mapper, Verifier) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers, not web-fetch skills (see [ADR-32](../../project/adr/32-external-access-over-mcp.md)). What still installs as a *skill* is a small set:
 
-- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `paper-lookup`, `pyzotero`, `citation-management`, `literature-review`, `scientific-writing`, `scikit-learn`, `umap-learn`. The last two are the Python clustering/dimensionality-reduction libraries the Mapper drives for `cluster-map` (HDBSCAN + UMAP); they are granted in `mapper.yaml` and installed on the same K-Dense `git clone` path.
-- **Installable from the official Hermes registry** (`hermes skills install official/...`): `arxiv` (lane name `arxiv-search`), `llm-wiki` (lane name `llm-wiki-draft`), plus `obsidian`, `ocr-and-documents`, `github-repo-management`, `codex`, `claude-code`.
-- **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): the two real thin skills `obsidian-paper-note` (Librarian) and `retraction-check` (Verifier); the rest are handled by adapting the design — prompt-only behaviors in `SOUL.md`, lane-overrides pointing at a real skill ID, QuickAdd templates, or `detectors.py` functions (the Linter runs `detectors.py`, not Hermes skills).
-- **Not a skill:** `rest-passthrough` is a lane-override capability token.
+- **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): `obsidian-paper-note` (Librarian), `retraction-check` + `claim-checks` (Verifier), `cluster-mapping` (Mapper), `structural-detectors` (Linter — wraps `detectors.py`).
+- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `scientific-writing` (Writer); `scikit-learn` + `umap-learn` (the Python clustering/dimensionality-reduction libraries the Mapper's `cluster-mapping` drives for HDBSCAN + UMAP).
+- **Installable from the official Hermes registry** (`hermes skills install official/...`): `obsidian`, `qmd`, `llm-wiki` (Writer), `obsidian-markdown` (Writer), `github-repo-management`, `codex`, `claude-code` (Coder).
+- **Retired** (replaced by MCP servers / the ingest pipeline): `paper-lookup`, `arxiv`, `citation-management`, `literature-review`, `ocr-and-documents`, the `pyzotero` web-fetch skill, and the `rest-passthrough` token.
+
+### MCP servers
+
+Each profile's `config.yaml` `mcp_servers` block wires the gated servers. Two are external `pip` installs; the rest ship in the vault and run from the vault venv.
+
+| Server | Source | Profiles | Install / setup |
+|---|---|---|---|
+| `policy` | vault `policy_mcp.py` | all | `requirements.txt` |
+| `obsidian` | Local REST API plugin (native MCP) | all | Obsidian plugin |
+| `ingest` | vault `ingest_mcp.py` | Librarian | `requirements.txt` |
+| `verify` | vault `verify_mcp.py` (retraction) | Verifier | `requirements.txt`; seed data with `verify_mcp.py --refresh` (Retraction Watch CSV) |
+| `paper_search` | upstream `openags/paper-search-mcp` | Librarian | `pip install paper-search-mcp` |
+| `pyzotero` | upstream read-only Zotero MCP | Librarian, Verifier | `pip install "pyzotero[mcp]"` |
 
 ## `.memoria/mcp/requirements.txt`
 
@@ -88,7 +101,7 @@ The dependency list for Memoria's MCP servers, installed in step 5 before profil
 - `mcp>=1.2.0` — the Model Context Protocol SDK; provides the thin server wrapper around `policy_mcp.py`.
 - `PyYAML>=6.0` — parses the lane-override files the live policy server loads at startup.
 
-`.memoria/mcp/` also ships `policy_mcp.py`, `policy_hook.py`, `board_export.py`, and `metrics_aggregate.py`.
+`.memoria/mcp/` also ships `policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`, `ingest_mcp.py` (the Librarian's deterministic ingest pipeline), and `verify_mcp.py` (the Verifier's retraction server — stdlib-only). The two upstream MCP servers (`paper-search-mcp`, `pyzotero[mcp]`) are separate `pip` installs, not part of `requirements.txt`.
 
 ## Per-profile wiring
 

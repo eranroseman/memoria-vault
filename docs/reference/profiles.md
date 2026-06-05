@@ -34,11 +34,11 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | File | Status | Notes |
 | --- | --- | --- |
 | `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model), the `mcp_servers` block (`policy` + `obsidian`; `{{VAULT_PATH}}` substitution target), and a `plugins` block enabling the `memoria-policy-gate` write gate. Required by the profile-install step. |
+| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model), the `mcp_servers` block (`policy` + `obsidian`, plus per-profile servers — e.g. `ingest`/`paper_search`/`pyzotero` for the Librarian, `verify`/`pyzotero` for the Verifier; `{{VAULT_PATH}}` substitution target), the `agent.disabled_toolsets` allowlist (`web` disabled fleet-wide — external access is MCP-only; `terminal` only on Coder/Linter), and a `plugins` block enabling the `memoria-policy-gate` write gate. Required by the profile-install step. |
 | `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
 | `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
 | `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
-| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`; Linter: `structural-detectors`); the other four ship as `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
+| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`, `claim-checks`; Mapper: `cluster-mapping`; Linter: `structural-detectors`); Coder/Socratic/Writer ship `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
 
 ---
 
@@ -46,15 +46,15 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 | Profile | Primary role | Core commands | Allowed skills | Invocation level |
 | --- | --- | --- | --- | --- |
-| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query`, `export prior-labels` | `paper-lookup`, `arxiv`, `pyzotero`, `citation-management`, `literature-review`, `ocr-and-documents`, `obsidian`, `qmd`, `obsidian-paper-note`, `rest-passthrough` | Level 2 (Kanban) |
-| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map` | `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 1 (cron) + Level 2 (Kanban) |
+| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query`, `export prior-labels` | `obsidian-paper-note`, `obsidian`, `qmd` — discovery via the `paper_search` MCP, Zotero via the read-only `pyzotero` MCP | Level 2 (Kanban) |
+| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map` | `cluster-mapping`, `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 1 (cron) + Level 2 (Kanban) |
 | **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `obsidian` (read-only) | Level 3 (interactive only) |
 | **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
-| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `qmd`, `pyzotero`, `obsidian`, `retraction-check` | Level 2 (Kanban) |
+| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `claim-checks`, `retraction-check`, `qmd`, `obsidian` — retraction via the `verify` MCP, Zotero/citation context via the read-only `pyzotero` MCP | Level 2 (Kanban) |
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
 | **Linter** | Validate and report | `lint`, `report`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | `structural-detectors` | Level 1 (cron) |
 
-> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
+> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, `claim-checks`, `cluster-mapping`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. **External access is MCP-only for the Librarian, Mapper, and Verifier** (their `web` toolset is disabled) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers (`paper_search`, `pyzotero`, `verify`), not skills; see [ADR-32](../../project/adr/32-external-access-over-mcp.md). Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
 
@@ -72,7 +72,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 
 | Profile | Hard denials |
 | --- | --- |
-| **Librarian** | Review-gated publish, destructive shell, unrestricted HTTP |
+| **Librarian** | Review-gated publish, destructive shell, all direct HTTP (`web` disabled — discovery/Zotero/enrich go through MCP servers) |
 | **Mapper** | All write tools outside its scratch paths, external APIs, drafting |
 | **Socratic** | All write tools (`policy.allow.write: []`); all external APIs; queue dispatch |
 | **Writer** | `rest-passthrough`; external-API skills; publish without review gate |

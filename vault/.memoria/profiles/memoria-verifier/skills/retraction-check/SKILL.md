@@ -1,6 +1,6 @@
 ---
 name: retraction-check
-description: "Check each paper-note's DOI against retraction databases (Open Retractions + CrossRef) and flag disagreements with the note's pub_status. Deterministic; dry-run; never auto-flips."
+description: "Check each paper-note's DOI against retraction sources (the Retraction Watch dataset + CrossRef + Open Retractions, via the verify MCP) and flag disagreements with the note's pub_status. Deterministic; dry-run; never auto-flips."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -14,16 +14,27 @@ metadata:
 # retraction-check
 
 Scan paper-notes for retractions and flag any source whose retraction status disagrees with
-its vault `pub_status`. **Fully deterministic** — HTTP lookups + DOI match + boolean
-comparison; no LLM. **Dry-run by default; never silently updates a note.**
+its vault `pub_status`. **Fully deterministic** — the `retraction_check` MCP tool does the
+lookups (the authoritative Retraction Watch dataset + CrossRef + Open Retractions); you
+compare its verdict to `pub_status`. No LLM judgment. **Dry-run by default; never silently
+updates a note.**
+
+## When to Use
+
+- **Before export** — sweep the paper-notes a draft references so a retraction or
+  expression-of-concern surfaces before the draft leaves the workbench.
+- **Monthly** — run a periodic sweep over `20-sources/01-papers/` (optionally `--since` the
+  last sweep) to catch newly retracted sources in the existing library.
+- **On a flagged DOI** — re-check a single source when a human flags it or when its
+  `pub_status` is in doubt.
 
 ## Quick reference
 
 | Action | Call |
 |--------|------|
-| Check one DOI (Open Retractions) | `GET https://openretractions.com/api/doi/{doi}/data.json` → `.retracted` (bool) |
-| Cross-check (CrossRef) | `GET https://api.crossref.org/works/{doi}` → look for `update-to` with `type: retraction` |
-| Resolve vault DOIs | the `pyzotero` skill / read `doi:` from paper-note frontmatter |
+| Check one DOI | `retraction_check(doi)` — the `verify` MCP tool (`mcp_verify_retraction_check`) |
+| What it returns | `{retracted: true\|false\|null, agreement, nature, retraction_doi, retraction_date, sources}` (Retraction Watch dataset + CrossRef `update-to`/`is-retracted-by` + Open Retractions, combined) |
+| Resolve vault DOIs | read `doi:` from paper-note frontmatter (or the `pyzotero` MCP) |
 
 ## Inputs
 
@@ -34,7 +45,7 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 ## Procedure
 
 1. **Collect DOIs.** Read `doi` from each paper-note's frontmatter in scope (skip notes with no DOI).
-2. **Query.** For each DOI, GET the Open Retractions API; on a hit (`retracted: true`) record it. Optionally cross-check CrossRef's retraction metadata for corroboration.
+2. **Query.** For each DOI, call the `retraction_check` MCP tool (`verify` server). It checks the local Retraction Watch dataset (authoritative), then CrossRef (`update-to` / `is-retracted-by`, real-time delta) and Open Retractions (fallback), and returns a combined verdict: `retracted` (true/false/null), `agreement` (agree / disagree / single-source / no-data), `nature` (Retraction vs Expression of Concern), and the retraction DOI/date. Treat `retracted: null` (no source returned data) as **unknown** — never as clean.
 3. **Compare.** Diff each result against the note's `pub_status`:
    - external `retracted` but note is not `retracted`/`expression-of-concern` → **flag**;
    - note marked `retracted` but external says active → flag (possible stale/incorrect).
@@ -45,5 +56,14 @@ comparison; no LLM. **Dry-run by default; never silently updates a note.**
 
 - **Flag, don't fix.** The agent never flips `pub_status: retracted`; that is a human decision (matches the Verifier's "mechanical first, interpretive never" rule).
 - Deterministic: the same DOIs + same external state produce the same report every run.
-- External HTTP is allowed only under the Verifier's `external_api_policy: explicit_only`.
-- Be polite to the APIs (include a contact `mailto` on CrossRef; rate-limit batches).
+- You make **no HTTP calls yourself** — the `verify` MCP server does (CrossRef polite-pool via `MEMORIA_CONTACT_EMAIL` + Open Retractions); you call the tool and read the verdict. `code_execution`/`terminal` stay disabled.
+- On `agreement: disagree` (one source flags a retraction the other misses), flag it for human review rather than treating it as definitive either way.
+
+## Verification
+
+- A clean run reports **zero `pub_status` disagreements** — every in-scope DOI's external
+  retraction state matches the note's `pub_status`, and nothing is flagged.
+- **Deterministic** — re-running the same DOIs against the same external state yields
+  identical output every time.
+- **Never auto-flips a note** — the check only reports; a human updates `pub_status`. A run
+  that wrote to a note would be a defect, not a pass.

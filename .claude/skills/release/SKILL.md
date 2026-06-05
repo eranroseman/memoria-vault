@@ -5,11 +5,11 @@ description: Scaffold and track a new Memoria release (vX.Y) — create the rele
 
 # release
 
-Stand up or cut a Memoria release. The conventions are in [AGENTS.md](../../../AGENTS.md) §10 (tracking) and the scaffold is [project-files/releases/README.md](../../../project-files/releases/README.md).
+Stand up or cut a Memoria release. The conventions are in [AGENTS.md](../../../AGENTS.md) §10 (tracking) and the scaffold is [project/releases/README.md](../../../project/releases/README.md).
 
 ## Starting a new release vX.Y
 
-1. **Folder + plan.** Create `project-files/releases/vX.Y/` with a thin `README.md`. Copy `project-files/releases/release-plan-template.md` → `releases/vX.Y/release-plan-vX.Y.md`. Reset every Gate (`G#`) and Tier (`T#`) to `todo`; frontmatter `status: draft`, `released: false`.
+1. **Folder + plan.** Create `project/releases/vX.Y/` with a thin `README.md`. Copy `project/releases/release-plan-template.md` → `releases/vX.Y/release-plan-vX.Y.md`. Reset every Gate (`G#`) and Tier (`T#`) to `todo`; frontmatter `status: draft`, `released: false`.
 2. **Milestone = scope.** Create the GitHub milestone `vX.Y` (`gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`). Assigning an issue to it is how it gets scheduled — the milestone, not the plan, is the live scope list. Link release-blocking issues from the plan's §4 Blockers.
 3. **Overflow** (optional) goes in `release-plan-vX.Y-appendix.md`.
 

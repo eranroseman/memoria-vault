@@ -29,7 +29,7 @@ The lane-override file enforces `policy.require: read_only_mode` outside the lis
 
 ## Core commands
 
-- `scope-project` — produce a corpus-map for a project. Inputs: project brief. Output: `corpus-map.md`. **Hybrid method**: HDBSCAN over note embeddings produces clusters; recency / density / source-diversity stats are pure aggregations; LLM composes the narrative summary over the cluster output. The cluster identification itself is deterministic and reproducible. Human-invoked transient variant via `Memoria: find related notes` command in the command palette — same retrieval mechanism, but returns top-N related notes directly in a transient ACP chat without producing a `corpus-map.md` artifact, useful for quick lookups.
+- `scope-project` — produce a corpus-map for a project. Inputs: project brief. Output: `corpus-map.md`. **Hybrid method**: HDBSCAN over note embeddings produces clusters; recency / density / source-diversity stats are pure aggregations; LLM composes the narrative summary over the cluster output. The cluster identification itself is deterministic and reproducible. Human-invoked transient variant via `Memoria: find related notes` command in the command palette — the **shared `qmd` vector index** (the same similarity primitive the Librarian's `[!brief]` and the Verifier's duplicate checks use), returning top-N related notes directly in a transient ACP chat without producing a `corpus-map.md` artifact, useful for quick lookups.
 - `gap-report` — identify thin-coverage topics adjacent to a project brief. **Hybrid method**: TF-IDF or BERTopic over note bodies identifies topics; thresholding by note count surfaces underrepresented topics; LLM composes the narrative (which topics matter for the project, in what order). Topic identification is deterministic; topic-importance ranking is the LLM step.
 - `cluster-map` — render a density / recency map for an arbitrary topic. **Deterministic**: HDBSCAN + UMAP over embeddings; density and recency are aggregations. The output is a structured table or figure, not generative prose.
 
@@ -37,13 +37,7 @@ The per-source comparative read (the `[!brief]` callout on a new paper note) is 
 
 ## Core skills
 
-- Corpus retrieval — `qmd` skill: hybrid BM25 + vector search. Deterministic (`search`/`vsearch` modes).
-- Cluster density analysis — HDBSCAN clustering (`scikit-learn` skill) over sentence-transformer embeddings, with UMAP (`umap-learn` skill) for visualization. Deterministic for fixed parameters.
-- Topic modeling — BERTopic / LDA/NMF over TF-IDF (`scikit-learn`) for smaller corpora. Used by `gap-report` for thin-coverage detection.
-- Recency / staleness distribution — frontmatter date aggregation over note collections. Deterministic.
-- Narrative composition — LLM step over the deterministic outputs above. Used to compose `corpus-map.md` prose and `gap-report.md` narrative.
-
-The full LLM-vs-classical boundary is defined in the project's computational-methods design notes (not shipped to the runtime vault). Mapper's value is the deterministic ML layer producing reproducible maps; the LLM only composes prose over those maps.
+The clustering/topic-modeling methods (HDBSCAN, UMAP, BERTopic, recency aggregation) and the deterministic-vs-LLM split are documented in the `cluster-mapping` skill's `references/methods.md`.
 
 ## Tooling / MCPs
 
