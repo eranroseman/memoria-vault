@@ -66,6 +66,14 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 - The citekey in `.bib` matches the `mamykina2010sense` shape.
 - The key is pinned (shown with a lock icon in Zotero's item list, and `extra: bibtex: mamykina2010sense` in the item's Extra field).
 
+## Enable the local API (for the `pyzotero` MCP)
+
+The Librarian and Verifier resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 7+; if it isn't already on, enable local API access under **Settings → Advanced**).
+
+- Zotero must be **running** for the MCP to reach it.
+- The MCP itself is installed during [Set up Hermes](set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
+- It is **read-only** — Memoria reads from Zotero but never writes back to it.
+
 ## Close the loop: install MarkDB-Connect (recommended)
 
 MarkDB-Connect is a Zotero plugin (not an Obsidian plugin). It scans your vault, finds notes that contain a citekey, and tags the corresponding Zotero item — so you can see at a glance which items have notes and jump from Zotero directly to the vault note.

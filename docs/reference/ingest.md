@@ -38,7 +38,7 @@ If the type is ambiguous, the Librarian asks before proceeding. The agent never 
 | Article / preprint | OpenAlex + Semantic Scholar + PubMed | Marker extracts full text → `90-assets/extracts/<citekey>.md`; summary in note body | Authors → person-notes; cited works → existing paper citekeys |
 | Repository | GitHub API (REST or GraphQL) | `README.md` + `CHANGELOG.md` retrieved; summary into "What it is" | Primary maintainer → person-note; org owner → organization-note |
 | Package | PyPI / npm / CRAN API | Package description + project links | Maintainer → person-note; underlying repo → repo item-note |
-| Product | Vendor URL via `rest-passthrough` or MarkItDown fallback | Homepage text → summary | Vendor org → organization-note (if applicable) |
+| Product | Homepage text via the ingest pipeline's MarkItDown extraction (HTML → Markdown) | Homepage text → summary | Vendor org → organization-note (if applicable) |
 | Standard | Standards body URL (IEEE, RFC, W3C) | MarkItDown for HTML standards docs | Issuing org → organization-note |
 | Person | ORCID API + OpenAlex Authors | (none — entity note) | Co-authors derived from shared paper-notes; affiliations → organization-notes |
 | Organization | ROR API + OpenAlex Institutions | (none — entity note) | Affiliated people → person-notes |
