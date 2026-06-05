@@ -273,7 +273,7 @@ def compute_events(prev: dict, cards: list[dict]) -> dict:
     return {"transitions": transitions, "dispositions": dispositions, "costs": costs}
 
 
-# _append_jsonl: use append_jsonl from _shared
+_append_jsonl = append_jsonl
 
 
 def export_events(vault: Path, prev: dict, cards: list[dict]) -> dict:

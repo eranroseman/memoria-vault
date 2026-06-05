@@ -38,7 +38,7 @@ from pathlib import Path
 from _shared import (
     TestHarness,
     append_jsonl,
-    now_iso,  # re-exported: policy_hook imports it from here
+    now_iso,
 )
 from _shared import (
     resolve_vault as _resolve_vault,

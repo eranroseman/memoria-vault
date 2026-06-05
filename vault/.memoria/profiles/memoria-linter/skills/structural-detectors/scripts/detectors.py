@@ -417,7 +417,7 @@ def verdict(findings: list[Finding]) -> str:
 def self_test() -> int:
     import tempfile
 
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "mcp"))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
     from _shared import TestHarness
 
     t = TestHarness()
