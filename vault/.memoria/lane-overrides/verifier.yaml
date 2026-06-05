@@ -5,11 +5,13 @@ profile: memoria-verifier
 
 policy:
   allow:
+    # External access is MCP-only (web disabled): retraction -> verify MCP, Zotero +
+    # Semantic Scholar citation context -> pyzotero MCP, similarity -> qmd. These skills
+    # need no direct network; the pyzotero web-fetch skill was retired for the MCP.
     skills:
       - qmd                 # similarity-check + find-duplicates (hybrid BM25+vector vault search; skills.sh skill)
       - claim-checks        # authored skill: cite-check + claim-trace + similarity-check + find-duplicates
-      - retraction-check    # authored skill: open-retractions API + crossref + pyzotero
-      - pyzotero            # retraction-check + cite-check: resolve citekeys / Zotero items
+      - retraction-check    # authored skill: retraction_check via the verify MCP
       - obsidian            # read vault + write verification reports / candidate cards
       # cite-check is a SOUL.md procedure: resolve every citekey against .bib + paper notes.
     write:
@@ -30,7 +32,7 @@ policy:
 
 routing:
   invocation: dispatched
-  external_api_policy: explicit_only  # blocked | explicit_only | open (search_web, fetch_url for retraction checks)
+  external_api_policy: explicit_only  # external lookups go through the verify + pyzotero MCP servers (server-side); the agent makes no direct calls (web disabled)
   write_scope:
     - "40-workbench/*/05-verification/"
     - "10-inbox/03-candidates/"
