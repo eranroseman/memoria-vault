@@ -63,13 +63,48 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 
 ## Commit style
 
-Use short, lowercase imperative subject lines:
+Use short, lowercase imperative subject lines following [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 fix: installer fails when KILOCODE_API_KEY is unset
 docs: add WSL2 troubleshooting section
 profiles: extend Librarian skill for Zotero groups
 ```
+
+| Type | Use for | Version intent |
+|---|---|---|
+| `feat` | New capability or integration | Minor |
+| `fix` | Bug fix, regression, broken automation | Patch |
+| `docs` | Documentation only | — |
+| `refactor` | Code change with no behavior change | — |
+| `chore` | Tooling, deps, config, maintenance | — |
+| `test` | Test plans or `--self-test` coverage | — |
+| `research` | Evaluation or investigation outcomes | — |
+
+### Breaking changes
+
+Mark a breaking change with `!` in the header or a `BREAKING CHANGE:` footer:
+
+```text
+feat!: rename profile config field `enabled_agents` → `agents.enabled`
+
+BREAKING CHANGE: existing config.yaml files must rename the field before upgrading.
+```
+
+State **what changed**, **who is affected**, **what action is required**, and **the replacement path**.
+
+## Changelog
+
+User-visible changes go in [CHANGELOG.md](CHANGELOG.md) at the repo root, which follows
+[Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/). Keep an
+`[Unreleased]` section at the top; entries move into a versioned section when a release is cut.
+
+- **Sections:** Added · Changed · Fixed · Removed · Deprecated · Security.
+- **Each bullet** starts with a verb, names the affected system, and explains user impact
+  (not implementation detail). Include migration guidance for breaking changes.
+- **Include:** new user-facing features, behavior/schema changes, breaking changes, and
+  integration changes (GitHub, vault, Hermes).
+- **Exclude:** pure refactors, routine dependency bumps, and test-only changes.
 
 ## Questions?
 
