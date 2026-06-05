@@ -39,8 +39,8 @@ gate handled in `SOUL.md`. This skill owns the other four.
 |-------|-------------------|
 | `cite-check` | Regex-extract every `[@citekey]`; resolve against `.memoria/memoria.bib` + paper notes. Claim-source match uses embedding similarity as a pre-filter: **auto-clean above ~0.75, auto-fail below ~0.4, LLM-judge the middle band**. |
 | `claim-trace` | Trace each substantive claim by (a) explicit `[[wikilink]]`, (b) `[@citekey]` + prose embedding match, then (c) similarity search — deterministic ranking, LLM verdict only on ambiguous top candidates. |
-| `similarity-check` | Cosine similarity of the new claim's embedding against the claim-note index. Top 3 by score; **flags at ~0.8**; never blocks. Fully deterministic — no LLM. |
-| `find-duplicates` | Embedding clustering over the claim-note index; ranked candidate clusters. Fully deterministic — no LLM, dry-run only. |
+| `similarity-check` | Cosine similarity against the **shared `qmd` vector index** (the same primitive the Librarian's `[!brief]` and Mapper's `find related` use — one mechanism, per-lane threshold). Top 3 by score; **flags at ~0.8**; never blocks. Fully deterministic — no LLM. |
+| `find-duplicates` | The same `qmd` similarity, swept over **all** claim notes: high-similarity pairs (above the dup threshold) grouped by transitive linkage into ranked candidate clusters. No HDBSCAN (lane has no `scikit-learn`; pairwise is the right tool for dedup). Fully deterministic — no LLM, dry-run only. |
 
 Detailed procedures, trace order, thresholds, failure modes, and false-positive handling are
 in `references/sub-checks.md`.

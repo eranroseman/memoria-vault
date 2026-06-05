@@ -64,9 +64,11 @@ rather than auto-failing).
 ## 3. Duplicate check, filing-time (similarity-check)
 
 A point-of-action check run when a new claim note is about to be filed. It computes cosine
-similarity between the new claim's embedding and the existing claim-note embedding index,
-returns the top 3 by score, and flags at a threshold of roughly 0.8. It is **fully
-deterministic — no LLM call** — and it never blocks filing.
+similarity between the new claim's embedding and the existing claim notes through the **shared
+`qmd` vector index** — the same similarity primitive the Librarian uses for the `[!brief]`
+neighbours and the Mapper for `find related`, just with the Verifier's own threshold — returns
+the top 3 by score, and flags at roughly 0.8. It is **fully deterministic — no LLM call** —
+and it never blocks filing.
 
 A flag attaches a `near-duplicate-candidate` marker to the card and surfaces the top matches
 as a callout comment. The human decides whether to file, merge, or extend; the check never
@@ -84,16 +86,19 @@ informational rather than blocking — surface it and let the human judge.
 
 ## 4. Duplicate sweep, retrospective (find-duplicates)
 
-A monthly retrospective sweep for near-duplicate claim notes across the whole index. It runs
-embedding-based clustering (HDBSCAN or pairwise similarity) over the claim-note embedding
-index and outputs a ranked list of candidate clusters for human review. Like the filing-time
-check it is **fully deterministic — no LLM call — and dry-run only**: it never merges,
-deletes, or edits a claim note.
+A monthly retrospective sweep for near-duplicate claim notes across the whole index. It is the
+**same `qmd` similarity primitive as the filing-time `similarity-check`, swept over every
+claim note** instead of one: collect each note's high-similarity neighbours (those above the
+dup threshold) and group the resulting pairs by transitive linkage into candidate clusters,
+emitted as a ranked list for human review. (No HDBSCAN — true density clustering would need
+`scikit-learn`, which this lane doesn't grant, and pairwise near-duplicate detection is the
+right tool for dedup regardless.) Like the filing-time check it is **fully deterministic — no
+LLM call — and dry-run only**: it never merges, deletes, or edits a claim note.
 
 The output is written to the monthly report (e.g.
 `40-workbench/maintenance/duplicates-<YYYY-MM>.md`); the human-side ritual is the monthly
-review of those clusters. Ranking is by cluster cohesion, so the densest near-duplicate
-clusters surface first and the long tail of weak pairs sinks.
+review of those groups. Ranking is by group similarity, so the tightest near-duplicate groups
+surface first and the long tail of weak pairs sinks.
 
 False-positive handling: clusters of claims that share boilerplate phrasing but cite
 different sources are common; the ranked output is meant to be skimmed, not actioned wholesale
