@@ -26,7 +26,6 @@ TRUSTED_AUTHORS = {
 # A path is safe if it matches any prefix or suffix below.
 SAFE_PREFIXES = (
     "docs/",
-    "project-files/plans/",
     "project-files/releases/",
     "project-files/proposals/",
     "_notes/",
@@ -109,7 +108,6 @@ def _self_test() -> int:
 
     # --- is_safe ---
     check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
-    check("is_safe: plans/ prefix", is_safe("project-files/plans/status.md"))
     check("is_safe: releases/ prefix", is_safe("project-files/releases/v0.1.md"))
     check("is_safe: proposals/ prefix", is_safe("project-files/proposals/idea.md"))
     check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
@@ -133,11 +131,11 @@ def _self_test() -> int:
     check("is_sensitive: README NOT sensitive", not is_sensitive("README.md"))
 
     # --- decide: trusted author, docs-only ---
-    d, r = decide(["docs/reference/policy-mcp.md", "docs/tutorials/install.md"], "eranroseman", False)
+    d, r = decide(["docs/reference/policy-mcp.md", "docs/reference/profiles.md"], "eranroseman", False)
     check("decide: trusted + all safe -> auto_approve", d == "auto_approve")
 
     # --- decide: trusted author, sensitive paths ---
-    d, r = decide(["scripts/install.sh", "docs/reference/x.md"], "eranroseman", False)
+    d, r = decide(["scripts/install.sh", "docs/reference/policy-mcp.md"], "eranroseman", False)
     check("decide: trusted + sensitive -> needs_human", d == "needs_human")
     check("decide: reason mentions sensitive paths", "sensitive" in r.lower() or "Sensitive" in r)
 
@@ -146,12 +144,12 @@ def _self_test() -> int:
     check("decide: untrusted + sensitive -> block", d == "block")
 
     # --- decide: untrusted author, safe paths only -> needs_human ---
-    d, r = decide(["docs/tutorials/guide.md"], "random-user", False)
+    d, r = decide(["docs/reference/glossary.md"], "random-user", False)
     check("decide: untrusted + safe -> needs_human", d == "needs_human")
     check("decide: reason mentions untrusted", "not on the trusted" in r)
 
     # --- decide: draft PR -> needs_human ---
-    d, r = decide(["docs/reference/x.md"], "eranroseman", True)
+    d, r = decide(["docs/reference/policy-mcp.md"], "eranroseman", True)
     check("decide: draft PR -> needs_human", d == "needs_human")
     check("decide: draft reason", "Draft" in r)
 
@@ -160,7 +158,7 @@ def _self_test() -> int:
     check("decide: empty changeset -> needs_human", d == "needs_human")
 
     # --- decide: mixed safe + non-safe, non-sensitive -> needs_human ---
-    d, r = decide(["docs/x.md", "vault/.memoria/plugins/__init__.py"], "eranroseman", False)
+    d, r = decide(["docs/reference/glossary.md", "vault/.memoria/plugins/__init__.py"], "eranroseman", False)
     check("decide: mixed (non-sensitive, non-all-safe) -> needs_human", d == "needs_human")
 
     # --- edge: .md file in sensitive prefix is both safe and sensitive ---
@@ -176,7 +174,7 @@ def _self_test() -> int:
     return failures
 
 
-def main() -> None:
+def main() -> int:
     if "--self-test" in sys.argv:
         sys.exit(1 if _self_test() else 0)
 
@@ -201,6 +199,7 @@ def main() -> None:
     decision, reason = decide(changed_paths, pr_author, pr_draft)
     print(f"decision={decision}")
     print(f"reason={reason}")
+    return 0
 
 
 if __name__ == "__main__":
