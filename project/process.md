@@ -1,6 +1,6 @@
 # Contributing workflow
 
-How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md §1–§3 and §9**; this file is the human-facing complement with checklists and recovery.
+How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md** (§§1–3, "PR flow", "Merge discipline"); this file is the human-facing complement with checklists and recovery.
 
 ## Branch discipline
 
