@@ -157,8 +157,9 @@ def fetch_openalex(ids: dict, key: str, email: str) -> dict:
         sel = "doi:10.48550/arXiv." + ids["arxiv"]
     if not sel:
         return {"source": "openalex", "found": False}
-    q = f"?mailto={email}" + (f"&api_key={key}" if key else "")
-    d = _get(f"{OA_BASE}/works/{urllib.parse.quote(sel, safe=':')}{q}")
+    q = f"?mailto={email}"
+    hdrs = {"Authorization": f"Bearer {key}"} if key else {}
+    d = _get(f"{OA_BASE}/works/{urllib.parse.quote(sel, safe=':')}{q}", headers=hdrs)
     if not d or not d.get("id"):
         return {"source": "openalex", "found": False}
     authors = [{"name": a.get("author", {}).get("display_name", ""),

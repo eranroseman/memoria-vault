@@ -81,12 +81,28 @@ LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 # --------------------------------------------------------------------------- #
 def normalize_path(path: str) -> str:
     """Normalize to a vault-relative POSIX path: forward slashes, no leading
-    ``./`` or ``/``. Matches the request contract ("normalized relative to the
-    vault root, forward slashes only")."""
+    ``./`` or ``/``, and no ``..`` traversal segments. Matches the request
+    contract ("normalized relative to the vault root, forward slashes only").
+
+    Raises ``ValueError`` if the resolved path escapes the vault root (i.e.
+    more ``..`` segments than real parents).
+    """
     p = (path or "").strip().replace("\\", "/")
     while p.startswith("./"):
         p = p[2:]
-    return p.lstrip("/")
+    p = p.lstrip("/")
+    # Collapse '..' segments so a path like 'a/b/../../c' becomes 'c' and
+    # paths that escape the root ('../../etc/passwd') are rejected.
+    parts: list[str] = []
+    for seg in p.split("/"):
+        if seg == "..":
+            if parts:
+                parts.pop()
+            else:
+                raise ValueError(f"path escapes vault root: {path!r}")
+        elif seg and seg != ".":
+            parts.append(seg)
+    return "/".join(parts)
 
 
 def glob_to_regex(pattern: str) -> str:
@@ -458,11 +474,14 @@ class PolicyEngine:
             return {"decision": "deny", "policy_rule": "request.no-task-id",
                     "message": "task_id is required on every request"}
         try:
+            npath = normalize_path(path)
+        except ValueError as exc:
+            return {"decision": "deny", "policy_rule": "path.traversal",
+                    "message": str(exc)}
+        try:
             lane = self.lane(profile)
         except (FileNotFoundError, RuntimeError) as exc:
             return {"decision": "deny", "policy_rule": "lane.load-error", "message": str(exc)}
-
-        npath = normalize_path(path)
         skill_deny = self._session_skill_deny.get(task_id)
         dec = decide(profile, action, npath, lane, flags=flags, skill_deny_write=skill_deny)
 
@@ -507,7 +526,10 @@ class PolicyEngine:
         write completes. before_hash + the prior entry's after_hash pin the prior
         state, making every write reversible. (See open questions: whether the
         policy MCP should instead *front* the write so this is atomic.)"""
-        npath = normalize_path(path)
+        try:
+            npath = normalize_path(path)
+        except ValueError as exc:
+            return {"ok": False, "message": str(exc)}
         try:
             after_hash = sha256_file(self.vault / npath)
         except OSError as exc:
@@ -603,6 +625,34 @@ def self_test() -> int:
           and not path_matches("40-workbench/p/01-map/other.md", ["40-workbench/*/01-map/corpus-map.md"]))
     check("glob: '**/' matches zero middle segments",
           path_matches("a/b.md", ["a/**/b.md"]) and path_matches("a/x/y/b.md", ["a/**/b.md"]))
+
+    # ---- normalize_path: collapse '..' and reject traversal escapes -------- #
+    check("normalize_path: collapse interior '..'",
+          normalize_path("a/b/../../c") == "c")
+    check("normalize_path: collapse multiple '..'",
+          normalize_path("40-workbench/x/../../30-synthesis/c.md") == "30-synthesis/c.md")
+    check("normalize_path: strip leading './'",
+          normalize_path("./a/b.md") == "a/b.md")
+    check("normalize_path: strip leading '/'",
+          normalize_path("/a/b.md") == "a/b.md")
+    try:
+        normalize_path("../../etc/passwd")
+        check("normalize_path: reject escape above root", False)
+    except ValueError:
+        check("normalize_path: reject escape above root", True)
+    try:
+        normalize_path("a/../../../etc/passwd")
+        check("normalize_path: reject deep escape above root", False)
+    except ValueError:
+        check("normalize_path: reject deep escape above root", True)
+
+    # ---- engine: traversal attempt -> deny --------------------------------- #
+    with tempfile.TemporaryDirectory() as td_trav:
+        trav_vault = Path(td_trav)
+        eng_trav = PolicyEngine(trav_vault)
+        trav_resp = eng_trav.check("memoria-coder", "write", "../../etc/passwd", "T-TRAV")
+        check("engine denies path-traversal escape",
+              trav_resp["decision"] == "deny" and trav_resp["policy_rule"] == "path.traversal")
 
     # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
     coder = LanePolicy(

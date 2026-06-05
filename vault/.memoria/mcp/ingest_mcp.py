@@ -93,7 +93,11 @@ def build_server(vault: Path):
         if isinstance(ex, dict):
             text = ex.pop("text", "")
             if text:
-                dest = vault / "90-assets" / "extracts" / f"{citekey}.md"
+                safe_ck = citekey.replace("/", "_").replace("..", "_").replace("\\", "_")
+                dest = vault / "90-assets" / "extracts" / f"{safe_ck}.md"
+                if not dest.resolve().is_relative_to((vault / "90-assets").resolve()):
+                    return {"error": "invalid-citekey", "citekey": citekey,
+                            "message": "citekey would escape the assets directory"}
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_text(text, encoding="utf-8")
         # backstop the durability anchor for non-macro ingest (board / manual cards)
@@ -129,12 +133,17 @@ def self_test() -> int:
         lines = (v / INTAKE_LOG).read_text().splitlines()
         anchor_ok = first and not second and len(lines) == 1 and json.loads(lines[0])["citekey"] == "x2024Test"
 
+    # citekey sanitization: slashes and '..' are replaced so the path stays inside 90-assets/
+    safe_ck = "../../etc/passwd".replace("/", "_").replace("..", "_").replace("\\", "_")
+    sanitize_ok = "/" not in safe_ck and ".." not in safe_ck
+
     checks = [
         ("scripts dir importable", SCRIPTS_DIR.is_dir()),
         ("pipeline runs Tier-0", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
         ("bundle declares the two holes", b["holes"] == ["_proposed_classification", "brief"]),
         ("identity assembled", b["frontmatter"]["title"] == "A Test"),
         ("intake anchor appended once + idempotent", anchor_ok),
+        ("citekey sanitization strips traversal chars", sanitize_ok),
     ]
     bad = [n for n, ok in checks if not ok]
     for n, ok in checks:
