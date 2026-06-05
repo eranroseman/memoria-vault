@@ -24,6 +24,31 @@ Every actionable item is a GitHub issue. The board is **"Memoria backlog"** at <
 
 Pick an issue → move to **In progress**, open a branch. Open the PR with `Closes #N` → **In review**. Squash-merge → issue auto-closes → **Done**.
 
+## Issue triage
+
+Triage keeps the backlog actionable. The label set is defined in AGENTS.md ("Work routing").
+
+- **New issue** (within ~48h): add a category label, set a priority, and assign a milestone only if it's scheduled (no milestone = unscheduled backlog).
+- **Weekly:** groom the Inbox — move ready, milestoned items to Scheduled; re-prioritize.
+- **Monthly:** sweep stale issues (no activity in 30+ days) — close or refresh.
+
+Priority labels:
+
+| Label | Criteria |
+|---|---|
+| `P0` | Blocks a core workflow or risks data loss |
+| `P1` | Significantly degrades a workflow; no workaround |
+| `P2` | Minor inconvenience or future improvement |
+
+Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` label. Won't-fix → close with `wontfix` and a brief reason (keeps the decision on record).
+
+## Versioning
+
+- Stay on `v0.x` while pre-stable; `v1.0.0` signals the agent architecture and workflow are stable.
+- `fix` → patch, `feat` → minor, breaking change → major (post-stable). Pre-release suffixes (`-alpha`/`-beta`/`-rc`) are fine for experimental builds.
+- Cut a release at the end of a meaningful milestone, not on a calendar cadence. Milestones are releases (AGENTS.md "Work routing").
+- A **breaking change** in Memoria is: renaming a profile `config.yaml` field, restructuring the vault folder layout, removing a profile capability or skill, or changing ADR-frontmatter required fields.
+
 ## Checklists
 
 **Starting a branch**
