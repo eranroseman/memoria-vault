@@ -12,6 +12,12 @@
     "docs/_site/**": true,
     "_papers/**": true
   },
+  "shellcheck.customArgs": ["--severity=warning"],
+  "powershell.scriptAnalysis.enable": true,
+  "powershell.scriptAnalysis.settingsPath": "scripts/PSScriptAnalyzerSettings.psd1",
+  "[python]": {
+    "editor.formatOnSave": false
+  },
   "cSpell.ignorePaths": [
     "docs/reference/bibliography.md",
     "vault/.obsidian/**",

@@ -52,7 +52,7 @@ See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.m
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
 - **Profiles:** Agent profiles live under `vault/.memoria/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the other seven profiles.
 - **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
-- **Markdown:** Enforced by `.markdownlint.jsonc` at the repo root. Run `markdownlint '**/*.md'` before pushing.
+- **Markdown:** the editor lints with the full `.markdownlint.jsonc` (style aids — code-fence languages, trailing whitespace, etc.). **CI enforces only** the structural subset in `.github/markdownlint/docs-structural.json` (5 rules that catch real rendering bugs on `docs/`, with no Obsidian false positives). So the editor intentionally flags more than CI gates — by design; only the structural rules block a PR.
 
 ## Submitting a pull request
 
