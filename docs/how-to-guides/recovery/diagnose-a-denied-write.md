@@ -46,7 +46,7 @@ Hermes fails open on hook errors, so a broken hook or unregistered MCP can let a
 
 - Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
 - Run the self-tests: `python .memoria/mcp/policy_mcp.py --self-test` and `python .memoria/mcp/policy_hook.py --self-test`. A failure here means the gate isn't enforcing.
-- Did the Obsidian Local REST API (port 27124) or a plugin error? The agent may report success while the write silently failed upstream of the gate.
+- Did the Obsidian Local REST API native MCP (loopback HTTP, `OBSIDIAN_MCP_PORT`, default 27123) or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's insecure HTTP server is on and the port matches `OBSIDIAN_MCP_PORT`.
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.
 

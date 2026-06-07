@@ -18,6 +18,10 @@ env_requires:
   - name: OBSIDIAN_API_KEY
     description: "Obsidian Local REST API key (64-char hex from the plugin) — vault read/write via the `obsidian` MCP server."
     required: true
+  - name: OBSIDIAN_MCP_PORT
+    description: "Port of the Local REST API plugin's insecure HTTP server, where its native MCP is served (http://127.0.0.1:<port>/mcp). Must match insecurePort in the plugin's data.json (default 27123). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
+    required: false
+    default: "27123"
   - name: OPENALEX_API_KEY
     description: "OpenAlex API key (openalex.org/settings/api), sent as the ?api_key= query param — enrichment (citation count, abstract, OA status) at ingest, read by the `paper-lookup` skill. As of 2026-02 OpenAlex requires a key; the former polite-pool contact email (OPENALEX_EMAIL) is discontinued."
     required: true
