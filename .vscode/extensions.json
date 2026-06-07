@@ -9,6 +9,7 @@
     "davidanson.vscode-markdownlint",
     "yzhang.markdown-all-in-one",
     "redhat.vscode-yaml",
+    "fnando.linter",
     "timonwong.shellcheck",
     "foxundermoon.shell-format",
     "streetsidesoftware.code-spell-checker",
