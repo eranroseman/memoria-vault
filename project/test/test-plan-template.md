@@ -98,4 +98,4 @@ results table at the end.
 | {{…}} | {{…}} | | |
 
 **{{Gate/stage}} green** when {{the explicit condition across the Parts}}. Record the
-outcome in the {{relevant rows}} of [release-plan-v0.1.md](../releases/v0.1/release-plan-v0.1.md).
+outcome in the {{relevant rows}} of [release-plan-v0.1.md](../release/v0.1/release-plan-v0.1.md).
