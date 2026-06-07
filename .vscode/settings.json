@@ -15,6 +15,11 @@
   "shellcheck.customArgs": ["--severity=warning"],
   "powershell.scriptAnalysis.enable": true,
   "powershell.scriptAnalysis.settingsPath": "scripts/PSScriptAnalyzerSettings.psd1",
+  "linter.linters": {
+    "yamllint": {
+      "enabled": true
+    }
+  },
   "[python]": {
     "editor.formatOnSave": false
   },
