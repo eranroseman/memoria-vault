@@ -5,6 +5,7 @@
     "github.vscode-github-actions",
     "ms-python.python",
     "charliermarsh.ruff",
+    "ms-vscode.powershell",
     "davidanson.vscode-markdownlint",
     "yzhang.markdown-all-in-one",
     "redhat.vscode-yaml",
