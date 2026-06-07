@@ -20,10 +20,10 @@ Citekeys are the load-bearing identifier for every paper-note (`@mamykina2010sen
 Adopt **`authoryearword`** as the standard citekey format. Exact BBT format string (paste into Better BibTeX → Citation key formula):
 
 ```text
-[auth.lower][year][title.lower:select,1,1]
+[auth.lower][year][shorttitle1_0]
 ```
 
-This produces `mamykina2010sense` from a Mamykina 2010 paper titled "Sense and sensibility..." — surname lowercase, four-digit year, first significant word of the title lowercased. **Pin the key in Zotero immediately after import** so subsequent metadata edits don't regenerate it.
+This produces `mamykina2010sense` from a Mamykina 2010 paper titled "Sense and sensibility..." — surname lowercase, four-digit year, and the first significant title word via `shorttitle(1,0)` (one whole word, no fixed character count — do **not** substitute `condense:N`). **Pin the key in Zotero immediately after import** so subsequent metadata edits don't regenerate it.
 
 ## Consequences
 
