@@ -260,6 +260,54 @@ ensure_hermes() {
 # =============================================================================
 # Step 4 — copy the runtime vault to its target  (sets VAULT_PATH)
 # =============================================================================
+# Canonical empty-folder skeleton. Git can't track empty dirs, so the repo
+# image used to keep these alive with ~39 `.keep` placeholders that rode along
+# to every target. We drop the `.keep`s and recreate the skeleton here instead,
+# so a fresh deploy still has the full layout (and the linter can restore it).
+# Keep this list in sync with vault/ — these are the dirs that hold no tracked
+# content of their own.
+SKELETON_DIRS=(
+  .memoria/csl
+  .memoria/lane-overrides
+  .memoria/profiles/memoria-coder/cron
+  .memoria/profiles/memoria-coder/skills
+  .memoria/profiles/memoria-librarian/cron
+  .memoria/profiles/memoria-librarian/skills
+  .memoria/profiles/memoria-linter/cron
+  .memoria/profiles/memoria-mapper/cron
+  .memoria/profiles/memoria-mapper/skills
+  .memoria/profiles/memoria-socratic/cron
+  .memoria/profiles/memoria-socratic/skills
+  .memoria/profiles/memoria-verifier/cron
+  .memoria/profiles/memoria-verifier/skills
+  .memoria/profiles/memoria-writer/cron
+  .memoria/profiles/memoria-writer/skills
+  10-inbox/01-fleeting
+  10-inbox/02-answers
+  10-inbox/03-candidates
+  20-sources/01-papers
+  20-sources/02-items
+  20-sources/03-entities/01-people
+  20-sources/03-entities/02-organizations
+  20-sources/03-entities/03-venues
+  30-synthesis/01-claims
+  30-synthesis/02-reference
+  30-synthesis/03-moc
+  40-workbench
+  50-deliverables/01-manuscripts
+  50-deliverables/02-presentations
+  50-deliverables/03-media
+  50-deliverables/04-releases
+  90-assets/extracts
+  95-archive
+  99-system/board
+  99-system/eval
+  99-system/logs
+  99-system/logs/sessions
+  99-system/metrics
+  99-system/skills
+)
+
 copy_vault() {
   hdr "Runtime vault"
   local target="$VAULT_OVERRIDE"
@@ -288,6 +336,15 @@ copy_vault() {
     run_sh "cp -R \"$src\"/. \"$VAULT_PATH\"/"
   fi
   ok "Vault deployed to $VAULT_PATH"
+
+  # Recreate the empty-folder skeleton. The repo no longer ships `.keep`
+  # placeholders, so these dirs would otherwise be missing on a fresh target.
+  # mkdir -p is idempotent — safe on refresh and on dirs that already exist.
+  local d
+  for d in "${SKELETON_DIRS[@]}"; do
+    run mkdir -p "$VAULT_PATH/$d"
+  done
+  ok "Folder skeleton ensured (${#SKELETON_DIRS[@]} dirs)"
 
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
