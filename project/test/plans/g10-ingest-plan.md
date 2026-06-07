@@ -6,11 +6,11 @@ status: draft
 
 # Ingest-value-loop test plan — v0.1 (G10)
 
-The product loop: one real source carried **capture → ingest → Tier-1 enrich → classify → gated write → queued for review**, producing a *correct* `proposed` paper-note — gated and audited at every write, nothing captured ever lost. Where [G9](../../releases/v0.1/release-plan-v0.1.md) proves the spine *runs* with a zero-LLM agent, G10 proves the spine carries *value*: the two LLM judgments land, the multi-source enrichment is correct, and a human gets a reviewable note. This is the **least-built** operability gate ([ADR-30](../../decisions/30-deterministic-ingest-pipeline.md) is still `proposed`) and carries the real risk — run [G9](../../releases/v0.1/release-plan-v0.1.md) green first so the dispatch/gate/write spine is trusted before betting it on ingest.
+The product loop: one real source carried **capture → ingest → Tier-1 enrich → classify → gated write → queued for review**, producing a *correct* `proposed` paper-note — gated and audited at every write, nothing captured ever lost. Where [G9](../../release/v0.1/release-plan-v0.1.md) proves the spine *runs* with a zero-LLM agent, G10 proves the spine carries *value*: the two LLM judgments land, the multi-source enrichment is correct, and a human gets a reviewable note. This is the **least-built** operability gate ([ADR-30](../../adr/30-deterministic-ingest-pipeline.md) is still `proposed`) and carries the real risk — run [G9](../../release/v0.1/release-plan-v0.1.md) green first so the dispatch/gate/write spine is trusted before betting it on ingest.
 
 **Run G9 first.** G10 assumes dispatch → claim → gated write → audit → `done` already works (that is G9). If G9 isn't green, a G10 failure is ambiguous.
 
-**This overlaps [golden-path](e2e-golden-path-plan.md) Part A** but is narrower and deeper: it isolates the ingest lane, adds the Tier-1 **correctness** check the golden path assumes, and ends at the review handoff (the loop *closing* — human approve → `current` — is [G11](../../releases/v0.1/release-plan-v0.1.md)).
+**This overlaps [golden-path](e2e-golden-path-plan.md) Part A** but is narrower and deeper: it isolates the ingest lane, adds the Tier-1 **correctness** check the golden path assumes, and ends at the review handoff (the loop *closing* — human approve → `current` — is [G11](../../release/v0.1/release-plan-v0.1.md)).
 
 ---
 
@@ -87,7 +87,7 @@ G10 is `in-progress`, not awaiting-verify: part of it is unbuilt. The honest dec
 ## Part E — Review handoff
 
 **E1.** The `proposed` paper-note, carrying `_proposed_classification`, is queued for the human (its card `done`, classification awaiting promotion).
-- ✓ Pass: the note surfaces in the reading/review pipeline; a human can approve the classification (`_proposed_classification` → main YAML, `lifecycle: proposed → current`). *The loop fully closing is [G11](../../releases/v0.1/release-plan-v0.1.md); G10 ends at a correct, reviewable `proposed` note.*
+- ✓ Pass: the note surfaces in the reading/review pipeline; a human can approve the classification (`_proposed_classification` → main YAML, `lifecycle: proposed → current`). *The loop fully closing is [G11](../../release/v0.1/release-plan-v0.1.md); G10 ends at a correct, reviewable `proposed` note.*
 
 ---
 
@@ -125,4 +125,4 @@ Not a pass/fail of the run but of the **data** — ADR-30 mandates it before bui
 | F | Tier-1 correctness spike (merge / tags / extract) | | |
 | G | nothing-lost / scriptable-first / gate / serialized | | |
 
-**G10 green** when one real source traverses A → E producing a correct `proposed` paper-note, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record in [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md) (gate G10).
+**G10 green** when one real source traverses A → E producing a correct `proposed` paper-note, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record in [release-plan-v0.1.md](../../release/v0.1/release-plan-v0.1.md) (gate G10).

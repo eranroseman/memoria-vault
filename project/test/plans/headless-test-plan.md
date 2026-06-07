@@ -121,7 +121,7 @@ scripts/test.sh l1     # Part A only — the five component self-tests
 scripts/test.sh l0     # Parts B + C + E, plus the D1 informational run
 ```
 
-It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../decisions/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
+It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../adr/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
 
 Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs PowerShell, and shellcheck (C1) is skipped with a notice when absent (CI still enforces both); the Part **D2** schema audit carries judgment — run it separately.
 

@@ -6,9 +6,9 @@ status: draft
 
 # Test coverage matrix
 
-Every design component → the layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../decisions/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
+Every design component → the layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../adr/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
 
-**Layers** (see [ADR-29](../decisions/29-testing-framework.md)): **L0** static+schema · **L1** component self-tests · **L2** agent wiring + policy gate · **L3** system/GUI · **L4** golden-path E2E · **L5** quality/eval · **X** cross-cutting.
+**Layers** (see [ADR-29](../adr/29-testing-framework.md)): **L0** static+schema · **L1** component self-tests · **L2** agent wiring + policy gate · **L3** system/GUI · **L4** golden-path E2E · **L5** quality/eval · **X** cross-cutting.
 
 **Status:** ✅ covered · 🟡 partial · ⛔ gap (no coverage yet).
 
@@ -33,7 +33,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
 | 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](plans/installer-test-plan.md) | manual | 🟡 (plan new; lint-only before) |
 | 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) | manual | 🟡 (plan new) |
-| 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../decisions/11-vault-eval-integration.md) vault-eval | — | ⛔ (harness empty) |
+| 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../adr/11-vault-eval-integration.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |
@@ -42,7 +42,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 
 ## L2 — automating the wiring layer
 
-L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../decisions/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all 7 lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half is settled too: driver `hermes -z` / `hermes chat -q` (not ACP), and it needs **no Obsidian** — the gate is transport-agnostic, so a filesystem-backed `obsidian` MCP shim (Option B) lets it run on any box. It lands as an opt-in `scripts/test-l2.sh` smoke set (§3 S1–S5 + one §4 case per profile) — nightly, not PR-blocking. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
+L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all 7 lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half is settled too: driver `hermes -z` / `hermes chat -q` (not ACP), and it needs **no Obsidian** — the gate is transport-agnostic, so a filesystem-backed `obsidian` MCP shim (Option B) lets it run on any box. It lands as an opt-in `scripts/test-l2.sh` smoke set (§3 S1–S5 + one §4 case per profile) — nightly, not PR-blocking. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
 
 ## Open gaps (⛔ / 🟡), prioritized
 
@@ -53,6 +53,6 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../dec
 
 ## Related
 
-- Framework + layer definitions: [ADR-29](../decisions/29-testing-framework.md)
+- Framework + layer definitions: [ADR-29](../adr/29-testing-framework.md)
 - Plans: [headless](plans/headless-test-plan.md) · [hermes-cli](plans/hermes-cli-test-plan.md) · [GUI](plans/gui-test-plan.md) · [installer](plans/installer-test-plan.md) · [e2e-golden-path](plans/e2e-golden-path-plan.md)
 - Shared template: [test-plan-template.md](test-plan-template.md)
