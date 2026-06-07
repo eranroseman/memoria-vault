@@ -460,6 +460,20 @@ class PolicyEngine:
     def clear_session_skill(self, task_id: str) -> None:
         self._session_skill_deny.pop(task_id, None)
 
+    def _audit_traversal(self, profile: str, action: str, path: str, task_id: str, message: str) -> None:
+        """Log a path-traversal denial. The raw `path` is recorded because
+        normalization failed; this is the one request class most worth auditing."""
+        append_audit(self.vault, {
+            "timestamp": now_iso(),
+            "profile": profile,
+            "action": action,
+            "path": path,            # raw -- normalization failed
+            "task_id": task_id,
+            "decision": "deny",
+            "policy_rule": "path.traversal",
+            "message": message,
+        })
+
     def check(
         self,
         profile: str,
@@ -479,6 +493,9 @@ class PolicyEngine:
         try:
             npath = normalize_path(path)
         except ValueError as exc:
+            # A traversal attempt is the request most worth logging. Audit it with
+            # the raw path (normalization failed) before returning the deny.
+            self._audit_traversal(profile, action, path, task_id, str(exc))
             return {"decision": "deny", "policy_rule": "path.traversal",
                     "message": str(exc)}
         try:
@@ -532,6 +549,7 @@ class PolicyEngine:
         try:
             npath = normalize_path(path)
         except ValueError as exc:
+            self._audit_traversal(profile, action, path, task_id, str(exc))
             return {"ok": False, "message": str(exc)}
         try:
             after_hash = sha256_file(self.vault / npath)
@@ -646,6 +664,16 @@ def self_test() -> int:
         trav_resp = eng_trav.check("memoria-coder", "write", "../../etc/passwd", "T-TRAV")
         check("engine denies path-traversal escape",
               trav_resp["decision"] == "deny" and trav_resp["policy_rule"] == "path.traversal")
+        # The traversal attempt must be audited (#214) -- exactly one deny entry,
+        # carrying the raw path and the task_id, so intrusion probes leave a trace.
+        trav_lines = (trav_vault / AUDIT_RELPATH).read_text(encoding="utf-8").splitlines()
+        trav_entry = json.loads(trav_lines[-1]) if trav_lines else {}
+        check("engine audits the traversal attempt",
+              len(trav_lines) == 1
+              and trav_entry["decision"] == "deny"
+              and trav_entry["policy_rule"] == "path.traversal"
+              and trav_entry["path"] == "../../etc/passwd"
+              and trav_entry["task_id"] == "T-TRAV")
 
     # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
     coder = LanePolicy(
