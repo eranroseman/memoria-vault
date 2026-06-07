@@ -1,20 +1,16 @@
-# Dependabot version-update PRs for the two dependency surfaces that exist:
-# GitHub Actions pinned in .github/workflows/, and the MCP Python deps the
-# installer pip-installs. Monthly + a small PR cap keeps the noise low; commit
+# Dependabot version-update PRs for the GitHub Actions pinned in
+# .github/workflows/. Monthly + a small PR cap keeps the noise low; commit
 # messages use the `chore` prefix to match the repo's Conventional Commits.
+#
+# The `pip` ecosystem (the MCP deps under vault/.memoria/mcp) is deliberately
+# NOT tracked: Dependabot mis-resolves them (e.g. it proposed pymupdf4llm
+# >=1.27.2.3, a PyMuPDF version that doesn't exist for that package). The small,
+# hand-managed MCP dep set is updated manually instead.
 # (Security-fix PRs from Dependabot alerts are separate and not gated here.)
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: "/"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: chore
-
-  - package-ecosystem: pip
-    directory: /vault/.memoria/mcp
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
