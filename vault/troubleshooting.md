@@ -5,7 +5,7 @@ updated: 2026-06-02
 
 # Troubleshooting
 
-The one help note kept in-vault — for when you're offline or something's broken. Verify the system is up, fall back to manual workflows, recover. Step-by-step recipes for the common failures: [recovery how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/). The full catalog of every known failure (symptom · severity · cause · fix): [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+The one help note kept in-vault — for when you're offline or something's broken. Verify the system is up, fall back to manual workflows, recover. Step-by-step recipes for the common failures: [troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/). The full catalog of every known failure (symptom · severity · cause · fix): [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
 
 ## Verify the plumbing
 
@@ -36,11 +36,11 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |
 
-Step-by-step recipes for the common ones: [stuck card](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/fix-stuck-card) · [broken frontmatter](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/fix-broken-frontmatter) · [profile drift](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/fix-profile-drift) · [stale `.bib`](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/fix-stale-bib) · [denied write](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/diagnose-a-denied-write).
+Step-by-step recipes for the common ones: [stuck card](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-stuck-card) · [broken frontmatter](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-broken-frontmatter) · [profile drift](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-profile-drift) · [stale `.bib`](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-stale-bib) · [denied write](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/diagnose-a-denied-write).
 
 ## Working in safe mode
 
-The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/safe-mode); the essentials:
+The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/safe-mode); the essentials:
 
 **Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `20-sources/01-papers/<citekey>.md` from the [[paper-note|paper-note template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/compile/capture-and-ingest).)
 
@@ -70,4 +70,4 @@ git stash          # save in-flight changes
 git stash pop
 ```
 
-Still broken? → the [recovery how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/recovery/) (Detect / Fix / Verify per failure), or the full [failure-modes catalog](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+Still broken? → the [troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/) (symptom → diagnosis → fix per failure), or the full [failure-modes catalog](https://eranroseman.github.io/memoria-vault/reference/failure-modes).

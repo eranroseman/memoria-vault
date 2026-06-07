@@ -1,12 +1,16 @@
 ---
 title: Safe mode
-parent: Recovery
+parent: Troubleshooting
 nav_order: 1
 ---
 
 # Safe mode
 
-When optional tooling is unavailable, these three workflows must still function. For each: the command that must work, the named fallbacks, and the one thing never to run automatically.
+**Symptom:** Hermes, ACP, or some optional tool is down, and you still need to ingest, triage, or export.
+
+**Diagnosis:** the integration layer is unreachable, but the underlying operations don't depend on it — every core workflow has a terminal-level fallback.
+
+**Fix:** for each of the three workflows below — the command that must work, the named fallbacks, and the one thing never to run automatically.
 
 ## Ingest a source
 

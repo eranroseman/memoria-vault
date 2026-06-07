@@ -86,7 +86,7 @@ If the diff is wrong, `git reset --hard HEAD~1` returns you to the pre-migration
 
 - Renaming a single vocabulary term (lighter path): [Manage your topic vocabulary](manage-vocabulary.md)
 - The structural health check that flags schema drift: [Run the Linter](run-the-linter.md)
-- Recovering from broken frontmatter after a bad edit: [Fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
+- Recovering from broken frontmatter after a bad edit: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 
 **Reference**
 

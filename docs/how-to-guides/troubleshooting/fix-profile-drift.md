@@ -1,15 +1,19 @@
 ---
 title: Fix profile drift
-parent: Recovery
+parent: Troubleshooting
 nav_order: 6
 ---
 
 
 # Fix profile drift
 
-Resolve a mismatch where the deployed profile in `~/.hermes/profiles/` doesn't match the vault source in `vault/.memoria/profiles/`.
+**Symptom:** the deployed Hermes instance runs stale behavior, or the Linter's `profile-install-drift` detector reports a SHA-256 mismatch — the deployed profile in `~/.hermes/profiles/` no longer matches the vault source in `vault/.memoria/profiles/`.
 
-## Symptom
+**Diagnosis:** either the vault source changed and the install script hasn't been re-run, or someone edited the deployed copy directly. Run the health report to confirm, then decide which case you're in before fixing.
+
+**Fix:** resolve the cause, then re-run the profile-install to bring the deployed copy back in sync.
+
+## Detect
 
 The Linter's `profile-install-drift` detector reports a SHA-256 mismatch:
 
@@ -19,9 +23,7 @@ MEDIUM: profile-install-drift — memoria-linter/SOUL.md hash mismatch
   deployed copy:  3b2c...
 ```
 
-Or you edited a profile in the vault and the deployed Hermes instance is running stale behavior.
-
-## Detect
+Run it on demand to confirm:
 
 ```bash
 hermes -p memoria-linter chat -s health-report

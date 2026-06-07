@@ -21,7 +21,7 @@ Memoria has two distinct modes of use, each with its own tooling:
 Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](compile/) and [Writing](compose/) are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
-Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintain/), and [Recovery](recovery/) are written for this mode.
+Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintain/), and [Troubleshooting](troubleshooting/) are written for this mode.
 
 ---
 
@@ -118,15 +118,15 @@ Recurring operational tasks. Run on a schedule or when prompted by a failure.
 | [Rebuild the search index](maintain/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
 | [Return to work](maintain/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
 
-### Recovery
+### Troubleshooting
 
-Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one failure mode.
+Start from the symptom you're seeing. Each guide takes one failure mode from symptom → diagnosis → fix.
 
-| Guide | What it covers |
+| Guide | When to reach for it |
 | --- | --- |
-| [Safe mode](recovery/safe-mode.md) | Minimal working paths for ingest, triage, and export when optional tooling is down |
-| [Fix a stuck card](recovery/fix-stuck-card.md) | Card won't advance on the Kanban board |
-| [Fix broken frontmatter](recovery/fix-broken-frontmatter.md) | YAML parse error; note missing from Dataview queries |
-| [Diagnose a denied or blocked write](recovery/diagnose-a-denied-write.md) | Trace a missing write: policy denial vs. wiring failure |
-| [Fix a stale `.bib`](recovery/fix-stale-bib.md) | Citekey not found at ingest |
-| [Fix profile drift](recovery/fix-profile-drift.md) | Deployed profile doesn't match vault source |
+| [Safe mode](troubleshooting/safe-mode.md) | Hermes or ACP is down and you still need to ingest, triage, or export |
+| [Fix a stuck card](troubleshooting/fix-stuck-card.md) | A card won't advance on the Kanban board |
+| [Fix broken frontmatter](troubleshooting/fix-broken-frontmatter.md) | YAML parse error; a note is missing from Dataview queries |
+| [Diagnose a denied or blocked write](troubleshooting/diagnose-a-denied-write.md) | A write didn't land: policy denial vs. wiring failure |
+| [Fix a stale `.bib`](troubleshooting/fix-stale-bib.md) | "Citekey not found" at ingest |
+| [Fix profile drift](troubleshooting/fix-profile-drift.md) | Deployed profile doesn't match the vault source |

@@ -1,19 +1,21 @@
 ---
 title: Fix broken frontmatter
-parent: Recovery
+parent: Troubleshooting
 nav_order: 3
 ---
 
 
 # Fix broken frontmatter
 
-Repair a YAML parse error that prevents a note from appearing in Dataview queries or triggers an error in Obsidian's Properties panel.
-
-## Symptom
+**Symptom:** a note disappears from Dataview queries, or Obsidian's Properties panel shows a YAML parse error.
 
 - The Obsidian Properties panel shows a YAML parse error on a note
 - The note does not appear in Dataview queries that should include it
 - `/lint --dry-run` reports "YAML structure issue" on this note
+
+**Diagnosis:** the note's frontmatter contains malformed YAML, so the parser skips the whole block. Run the Linter to confirm and pinpoint the bad line.
+
+**Fix:** edit the raw file outside Obsidian, correct the malformed line, and re-check.
 
 ## Detect
 

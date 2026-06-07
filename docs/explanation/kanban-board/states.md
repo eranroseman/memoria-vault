@@ -72,7 +72,7 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 
 **How-to**
 
-- Recovery for stuck cards: [how-to-guides/recovery/fix-stuck-card](../../how-to-guides/recovery/fix-stuck-card.md)
+- Troubleshooting for stuck cards: [how-to-guides/troubleshooting/fix-stuck-card](../../how-to-guides/troubleshooting/fix-stuck-card.md)
 
 **Reference**
 

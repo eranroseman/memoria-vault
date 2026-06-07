@@ -29,7 +29,7 @@ If you need exact values, field names, or configuration formats, see [Reference]
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand why something works this way** | [Explanation](explanation/README.md)                                                              |
-| **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Recovery guides](how-to-guides/recovery/README.md) |
+| **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
 
 ---
 
@@ -63,8 +63,8 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 **Weekly**
 [Return to work](how-to-guides/maintain/return-to-work.md) · [Weekly review](how-to-guides/maintain/run-the-weekly-review.md) · [Run the Linter](how-to-guides/maintain/run-the-linter.md)
 
-**Recovery**
-[Safe mode](how-to-guides/recovery/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
+**Troubleshooting**
+[Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
 
 ---
 
