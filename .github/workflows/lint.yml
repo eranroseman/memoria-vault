@@ -1,0 +1,44 @@
+name: lint
+
+# One job for the fast Python checks — ruff, docs-doctor, docs-links (vault link
+# resolution), check-test-refs — sharing a single runner + checkout + Python
+# setup instead of four separate workflows. Replaces ruff.yml, docs-doctor.yml,
+# docs-links.yml, check-test-refs.yml.
+#
+# RULESET COORDINATION (required before merge): the branch ruleset still requires
+# `docs-doctor` and `docs-links` by name. Update Settings → Rules → Rulesets →
+# "main" → Require status checks: remove `docs-doctor` and `docs-links`, add
+# `lint`. (ruff + check-test-refs were advisory; folding them in makes them gate,
+# which is intended.) No `paths:` filter — reports on every PR (AGENTS.md §4).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install --quiet ruff==0.15.15
+      - name: ruff
+        run: ruff check scripts vault/.memoria
+      - name: docs-doctor
+        run: python scripts/docs-doctor.py docs
+      - name: docs-links
+        run: bash scripts/check-vault-links.sh
+      - name: check-test-refs
+        run: python scripts/check-test-refs.py
