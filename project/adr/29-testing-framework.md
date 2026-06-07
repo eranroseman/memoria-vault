@@ -13,7 +13,7 @@ superseded_by: []
 
 ## Context
 
-Memoria has three good test plans — [headless](../tests/plans/headless-test-plan.md) (static + schema), [hermes-cli](../tests/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](../tests/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+Memoria has three good test plans — [headless](../test/plans/headless-test-plan.md) (static + schema), [hermes-cli](../test/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](../test/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
 
 ## Decision
 
@@ -27,13 +27,13 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 | **L1 Component** | Python `--self-test` ×5 (gate, hook, board, metrics, detectors) | headless §A | every commit (CI) |
 | **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
 | **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
-| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../tests/plans/e2e-golden-path-plan.md) | per release |
+| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../test/plans/e2e-golden-path-plan.md) | per release |
 | **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-integration.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../tests/plans/installer-test-plan.md) (+ others as built) | on relevant change |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../test/plans/installer-test-plan.md) (+ others as built) | on relevant change |
 
 **Disciplines**
 
-1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../tests/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
+1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../test/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
 3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
 4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
