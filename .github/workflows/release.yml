@@ -1,0 +1,37 @@
+name: release
+
+# Cut a GitHub Release from a version tag. The release flow is otherwise manual
+# (AGENTS.md / project/process.md "Versioning"): when a milestone's gates are
+# done, push a SemVer tag and this creates the Release with notes auto-generated
+# from merged PRs, grouped per .github/release.yml. A tag with a pre-release
+# suffix (e.g. v0.5.0-alpha.1) is marked as a pre-release.
+#
+# Tag-triggered only — it never runs on a PR, so it backs no required check and
+# needs no `paths:` filter.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          flags=(--title "$TAG" --generate-notes)
+          case "$TAG" in
+            *-*) flags+=(--prerelease) ;;
+          esac
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" "${flags[@]}"

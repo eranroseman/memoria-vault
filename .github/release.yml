@@ -1,0 +1,25 @@
+# Groups GitHub's auto-generated release notes (used by `gh release create
+# --generate-notes`, wired in .github/workflows/release.yml) by PR label. Labels
+# mirror the repo taxonomy (see AGENTS.md "Work routing"). Anything unlabelled
+# falls through to "Other changes"; duplicate/wontfix PRs are excluded.
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - wontfix
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+    - title: Fixes
+      labels:
+        - bug
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Research
+      labels:
+        - research
+    - title: Other changes
+      labels:
+        - "*"

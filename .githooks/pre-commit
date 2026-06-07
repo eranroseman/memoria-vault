@@ -147,6 +147,18 @@ if staged | grep -qE '^docs/.*\.md$'; then
   fi
 fi
 
+# --- 10. ADR index current (when an ADR or the generator is staged) ---------
+# The ADR table in project/adr/README.md is generated from each ADR's frontmatter;
+# a new/renamed/superseded ADR leaves it stale. Mirrors the python-selftest gate.
+if staged | grep -qE '^project/adr/.*\.md$|^scripts/gen-adr-index\.py$'; then
+  if [ -n "$PY" ]; then
+    "$PY" scripts/gen-adr-index.py --check \
+      || { echo "pre-commit: ADR index stale — run: python scripts/gen-adr-index.py" >&2; fail=1; }
+  else
+    echo "pre-commit: python not found; skipping ADR index check" >&2
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "" >&2
   echo "pre-commit: blocked. Fix the above, or bypass with: git commit --no-verify" >&2

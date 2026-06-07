@@ -46,7 +46,10 @@ jobs:
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py" --self-test
           python scripts/docs-doctor.py --self-test
           python scripts/check-test-refs.py --self-test
+          python scripts/gen-adr-index.py --self-test
           python .github/scripts/pr_policy.py --self-test
+      - name: Check ADR index is current
+        run: python scripts/gen-adr-index.py --check
       - name: Gate dashboard schema-drift (real vault)
         # Only dashboard-field-drift blocks; vault content findings (broken
         # wikilinks, schema-check) stay advisory — they're not this gate's job.
