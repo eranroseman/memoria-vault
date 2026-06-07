@@ -20,7 +20,7 @@ jobs:
     name: yamllint (config + workflows)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -32,7 +32,7 @@ jobs:
     name: actionlint (.github/workflows)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.7
         with:
@@ -42,7 +42,7 @@ jobs:
     name: json syntax (authored)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"

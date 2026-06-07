@@ -17,6 +17,6 @@ jobs:
   docs-links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check vault/ docs references resolve
         run: bash scripts/check-vault-links.sh
