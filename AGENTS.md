@@ -100,11 +100,11 @@ All must pass before merge:
 
 | Decision | Trigger |
 |---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project/releases/`, `project/proposals/`; `.md`/`.txt`) |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project/release/`, `project/rfc/`; `.md`/`.txt`) |
 | `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault/.memoria/`, `scripts/`, `project/decisions/`, `.github/`.
+Sensitive paths: `vault/.memoria/`, `scripts/`, `project/adr/`, `project/test/`, `.github/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -139,7 +139,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
 - **Profiles:** `vault/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
-- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](project/releases/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
+- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](project/release/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
 
 ---
 
@@ -166,7 +166,7 @@ Mixed-quadrant pages are wrong — split them.
 Two flows: **Compile** (knowledge in) and **Compose** (knowledge out). Together: **the knowledge cycle**.
 Never name these "upstream/downstream pipeline" or "the two pipelines". `pipeline`, `upstream`, `downstream` are fine in all other senses.
 
-### ADR template (`project/decisions/`)
+### ADR template (`project/adr/`)
 
 ```markdown
 ---
@@ -189,7 +189,7 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-### RFC template (`project/proposals/`)
+### RFC template (`project/rfc/`)
 
 ```markdown
 ---
@@ -211,9 +211,9 @@ created: YYYY-MM-DD
 ## Related
 ```
 
-### Release plans (`project/releases/`)
+### Release plans (`project/release/`)
 
-One file per version, copied from `project/releases/release-plan-template.md`. Gate/tier state lives **only** in §2/§3 of the release-plan file — never restated elsewhere. Build gaps go to GitHub issues; scope cuts go to proposals.
+One file per version, copied from `project/release/release-plan-template.md`. Gate/tier state lives **only** in §2/§3 of the release-plan file — never restated elsewhere. Build gaps go to GitHub issues; scope cuts go to proposals.
 
 ---
 
@@ -222,8 +222,8 @@ One file per version, copied from `project/releases/release-plan-template.md`. G
 | Item | Goes to |
 |---|---|
 | Bug, enhancement, doc fix, question | GitHub issue (label; milestone only if scheduled) |
-| Large capability worth weighing trade-offs | RFC in `project/proposals/` |
-| Closed decision + rationale | ADR in `project/decisions/` |
+| Large capability worth weighing trade-offs | RFC in `project/rfc/` |
+| Closed decision + rationale | ADR in `project/adr/` |
 | Release gate/tier readiness | `release-plan-<v>.md` §2/§3 |
 | Analysis, findings, scratch | `_reports/` / `_notes/` (gitignored) |
 
