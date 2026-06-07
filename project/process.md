@@ -24,6 +24,23 @@ Every actionable item is a GitHub issue. The board is **"Memoria backlog"** at <
 
 Pick an issue → move to **In progress**, open a branch. Open the PR with `Closes #N` → **In review**. Squash-merge → issue auto-closes → **Done**.
 
+### Board automation
+
+The board's **Status** field is kept in sync by the Project's built-in workflows
+(Project → ⚙ Settings → Workflows) — don't hand-move cards for these transitions:
+
+| Automation (enabled) | Effect |
+|---|---|
+| Auto-add to project / Auto-add sub-issues | Every new repo issue (and sub-issue) lands on the board |
+| Item added to project | New item → **Inbox** |
+| Pull request linked to issue | Issue with an open linked PR → **In review** |
+| Item closed / Pull request merged | → **Done** |
+| Auto-close issue | Setting Status **Done** closes the issue |
+
+Only two steps are manual: **Inbox → Scheduled** (assigning a milestone *is* the
+scheduling act — see AGENTS.md "Work routing") and **Scheduled → In progress**
+(when you open the branch). Everything downstream of opening a PR is automatic.
+
 ## Issue triage
 
 Triage keeps the backlog actionable. The label set is defined in AGENTS.md ("Work routing").
