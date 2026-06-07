@@ -3,6 +3,7 @@ topic: proposals
 id: RFC-05
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: deferred
+folded_into: memoria-redesign  # near-tie/dedup residue (R2) + Fact-checker similarity-check
 created: 2026-05-30
 ---
 

@@ -1,7 +1,7 @@
 ---
 topic: proposals
 title: Schema and retrieval extensions
-status: deferred
+status: resolved-by-redesign  # D2/D3/D5 + Find/Search; reconcile any remainder
 created: 2026-05-31
 ---
 

@@ -1,7 +1,7 @@
 ---
 topic: proposals
 title: Triage improvements
-status: deferred
+status: resolved-by-redesign  # Inbox (D6) + homepage "what needs me"
 created: 2026-05-31
 ---
 
