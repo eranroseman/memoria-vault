@@ -19,6 +19,9 @@ Checks:
   5. Link text        — across docs/ AND vault/, a link's visible text must be the
                         target's page title, not its filename; bare [[wikilinks]] in
                         vault notes must be aliased with the title.
+  6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
+                        vault note (an aliased link to a missing note is otherwise
+                        silent).
 
 Exit 0 if clean, 1 if any error.
 Usage: python scripts/docs-doctor.py [docs_root]   (default: docs)
@@ -220,6 +223,20 @@ def check_wikilink_aliases(md: Path, errors: list[str]) -> None:
             errors.append(f"{md}: bare wikilink [[{inner}]] shows the filename — alias it with the page title ([[{tgt}|…]])")
 
 
+def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[str]) -> None:
+    # Vault only: a [[note]]/[[note|alias]] must resolve to an existing vault note.
+    # check_wikilink_aliases catches a *missing alias*, but an aliased link to a
+    # missing note ([[ghost|Title]]) passes it silently — this closes that gap,
+    # mirroring the Linter's broken_wikilinks detector. Asset paths are not notes.
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for inner in WIKILINK_RE.findall(text):
+        tgt = inner.replace("\\|", "|").split("|")[0].split("#")[0].strip().rstrip("\\")
+        if not tgt or tgt.startswith("90-assets/"):
+            continue
+        if Path(tgt).stem.lower() not in vault_stems:
+            errors.append(f"{md}: wikilink [[{inner}]] resolves to no vault note")
+
+
 def _self_test() -> int:
     """Synthetic-fixture unit tests for every check function."""
     import tempfile
@@ -414,6 +431,45 @@ def _self_test() -> int:
         check_wikilink_aliases(md3, errs3)
         check("check_wikilink_aliases: anchor-only wikilink passes", len(errs3) == 0)
 
+    # --- check_broken_vault_wikilinks ---
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        stems = {"real-note", "good"}
+        # aliased link to a MISSING note -> error (the gap check_wikilink_aliases misses)
+        md = root / "test.md"
+        md.write_text("See [[ghost-note|A Title]] here.\n")
+        errs = []
+        check_broken_vault_wikilinks(md, errs, stems)
+        check("check_broken_vault_wikilinks: aliased link to missing note flagged", len(errs) == 1)
+
+        # aliased link to an EXISTING note -> ok
+        md2 = root / "test2.md"
+        md2.write_text("See [[real-note|A Title]] here.\n")
+        errs2 = []
+        check_broken_vault_wikilinks(md2, errs2, stems)
+        check("check_broken_vault_wikilinks: aliased link to existing note passes", len(errs2) == 0)
+
+        # bare link to existing note (with #anchor) -> ok
+        md3 = root / "test3.md"
+        md3.write_text("See [[good#section]] here.\n")
+        errs3: list[str] = []
+        check_broken_vault_wikilinks(md3, errs3, stems)
+        check("check_broken_vault_wikilinks: link with anchor to existing note passes", len(errs3) == 0)
+
+        # asset path -> not a note, ignored
+        md4 = root / "test4.md"
+        md4.write_text("![[90-assets/img.png]]\n")
+        errs4: list[str] = []
+        check_broken_vault_wikilinks(md4, errs4, stems)
+        check("check_broken_vault_wikilinks: asset path ignored", len(errs4) == 0)
+
+        # wikilink inside inline code -> ignored
+        md5 = root / "test5.md"
+        md5.write_text("Use `[[ghost-note]]` syntax.\n")
+        errs5: list[str] = []
+        check_broken_vault_wikilinks(md5, errs5, stems)
+        check("check_broken_vault_wikilinks: wikilink in inline code ignored", len(errs5) == 0)
+
     # --- check_template_frontmatter ---
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
@@ -493,11 +549,13 @@ def main() -> int:
     # title — markdown link text and wikilink aliases — never the bare filename.
     vault = root.parent / "vault"
     if vault.is_dir():
+        vault_stems = {p.stem.lower() for p in vault.rglob("*.md") if ".obsidian" not in p.parts}
         for md in sorted(vault.rglob("*.md")):
             if ".obsidian" in md.parts or "templates" in md.parts:
                 continue
             check_link_text(md, errors)
             check_wikilink_aliases(md, errors)
+            check_broken_vault_wikilinks(md, errors, vault_stems)
 
     if errors:
         print(f"docs-doctor: {len(errors)} issue(s)\n")
