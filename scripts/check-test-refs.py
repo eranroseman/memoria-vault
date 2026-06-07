@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""check-test-refs — every path a test protocol references must resolve.
+"""check-test-refs — every path a test plan references must resolve.
 
-Test protocols rot when the design moves under them (a renamed or dissolved path
+Test plans rot when the design moves under them (a renamed or dissolved path
 they still cite — e.g. `00-meta/04-reference/` after it was dissolved). This checks
-the resolvable classes — relative Markdown links and bare `docs/…`/`project-files/…`
-repo-path mentions — across every protocol in project-files/tests/ (and the GUI
-protocol wherever it lives), so the rot fails CI instead of misleading a tester.
+the resolvable classes — relative Markdown links and bare `docs/…`/`project/…`
+repo-path mentions — across every plan in project/test/, so the rot fails CI
+instead of misleading a tester. A lingering `project-files/…` mention (the
+pre-reorg path) is also caught: it matches the pattern but no longer resolves.
 
 Exit 0 if clean, 1 if any reference is broken.
 Usage: python scripts/check-test-refs.py
@@ -17,10 +18,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROTOCOLS = sorted((ROOT / "project-files" / "tests").rglob("*.md"))
+PROTOCOLS = sorted((ROOT / "project" / "test").rglob("*.md"))
 
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
-REPO_PATH = re.compile(r"`((?:docs|project-files)/[A-Za-z0-9/_.-]+\.md)`")
+REPO_PATH = re.compile(r"`((?:docs|project|project-files)/[A-Za-z0-9/_.-]+\.md)`")
 
 
 def check_protocol(p: Path, root: Path) -> list[str]:
