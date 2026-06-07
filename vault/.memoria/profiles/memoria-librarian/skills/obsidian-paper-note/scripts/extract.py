@@ -21,7 +21,9 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -79,20 +81,55 @@ def from_pmc(pmcid: str, email: str = "") -> str | None:
     return text or None
 
 
+# PDF parsing runs in a resource-limited subprocess (ADR-30): a malformed or
+# malicious PDF is a known MuPDF CVE surface, so it must not parse in-process where
+# a crash, infinite loop, or memory bomb would take down the agent. The child caps
+# CPU + address space via rlimit; the parent caps wall-clock and isolates any temp
+# files in a throwaway cwd.
+PDF_CPU_SECONDS = 60
+PDF_AS_BYTES = 4 * 1024 * 1024 * 1024   # 4 GiB address-space ceiling
+PDF_WALL_TIMEOUT = 120                  # seconds
+
+_PDF_CHILD = """
+import sys, resource
+try:
+    resource.setrlimit(resource.RLIMIT_CPU, ({cpu}, {cpu}))
+    resource.setrlimit(resource.RLIMIT_AS, ({asb}, {asb}))
+except (ValueError, OSError):
+    pass
+import pymupdf4llm
+sys.stdout.write(pymupdf4llm.to_markdown(sys.argv[1]))
+"""
+
+
 def from_pdf(path: Path) -> tuple[str | None, str]:
-    """Local PDF -> markdown via pymupdf4llm (lazy import). Returns (text, note)."""
+    """Local PDF -> markdown via pymupdf4llm, parsed in a resource-limited
+    subprocess (ADR-30 -- MuPDF CVE surface). Returns (text, note)."""
     if not path or not path.is_file():
         return None, "no-pdf"
+    child = _PDF_CHILD.format(cpu=PDF_CPU_SECONDS, asb=PDF_AS_BYTES)
     try:
-        import pymupdf4llm
-    except ImportError:
+        with tempfile.TemporaryDirectory() as td:
+            proc = subprocess.run(
+                [sys.executable, "-c", child, str(path)],
+                capture_output=True, encoding="utf-8", errors="replace",
+                timeout=PDF_WALL_TIMEOUT, cwd=td,
+            )
+    except subprocess.TimeoutExpired:
+        return None, "pdf-timeout"
+    except OSError as e:
+        return None, f"pdf-spawn-error:{type(e).__name__}"
+    if proc.returncode == 0:
+        return proc.stdout, "pymupdf4llm"
+    stderr = proc.stderr or ""
+    if "ModuleNotFoundError" in stderr and "pymupdf4llm" in stderr:
         return None, "pymupdf4llm-not-installed"
-    try:
-        return pymupdf4llm.to_markdown(str(path)), "pymupdf4llm"
-    except Exception as e:
-        print(f"[extract] PDF parse failed for {path}: {type(e).__name__}: {e}",
-              file=sys.stderr)
-        return None, f"pdf-error:{type(e).__name__}:{e}"
+    if proc.returncode < 0:                 # killed by a signal (rlimit / OOM / crash)
+        return None, f"pdf-resource-exceeded:sig{-proc.returncode}"
+    last = stderr.strip().splitlines()[-1] if stderr.strip() else ""
+    print(f"[extract] PDF parse failed for {path}: rc={proc.returncode}: {last}",
+          file=sys.stderr)
+    return None, f"pdf-error:rc{proc.returncode}"
 
 
 def extract(ids: dict, pdf_path: str | None = None, email: str = "") -> dict:
@@ -131,6 +168,15 @@ def _self_test() -> int:
          and extract({}, None)["source"] == "none"),
         ("missing pdf path -> from_pdf no-pdf", from_pdf(Path("/no/such.pdf"))[1] == "no-pdf"),
     ]
+    # ADR-30: a malformed PDF is parsed in the resource-limited subprocess and
+    # degrades gracefully (the parent never crashes) — note moves past "no-pdf".
+    _bad_pdf = Path(tempfile.gettempdir()) / "memoria-extract-selftest.pdf"
+    _bad_pdf.write_bytes(b"%PDF-1.4 not a real pdf\n")
+    try:
+        _txt, _note = from_pdf(_bad_pdf)
+        checks.append(("garbage pdf -> sandboxed + handled, no crash", _note != "no-pdf"))
+    finally:
+        _bad_pdf.unlink(missing_ok=True)
     bad = [n for n, ok in checks if not ok]
     for n, ok in checks:
         print(f"  {'PASS' if ok else 'FAIL'}  {n}")
