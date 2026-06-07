@@ -26,6 +26,27 @@ from pathlib import Path
 
 SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = ("10-inbox/", "40-workbench/", "99-system/logs/")
+# A typed note legitimately leaves its type-home only while it is work-in-flight
+# (inbox/workbench/logs) or after it is archived; the misplaced-note detector
+# skips both so it never flags those moves.
+MISPLACED_SKIP_PREFIXES = (*TRANSIENT_PREFIXES, "95-archive/")
+# Canonical type -> expected folder prefix (docs/explanation/architecture/vault.md,
+# ADR-11/ADR-30). The entity rows mirror ENTITY_FOLDER in the Librarian's link.py.
+TYPE_HOME = {
+    "paper-note": "20-sources/01-papers/",
+    "item-note": "20-sources/02-items/",
+    "person-note": "20-sources/03-entities/01-people/",
+    "organization-note": "20-sources/03-entities/02-organizations/",
+    "venue-note": "20-sources/03-entities/03-venues/",
+    "claim-note": "30-synthesis/01-claims/",
+    "reference-note": "30-synthesis/02-reference/",
+    "moc": "30-synthesis/03-moc/",
+}
+# Top-level folders the vault schema permits; anything else at the root is stray.
+KNOWN_TOP_DIRS = {
+    "00-meta", "10-inbox", "20-sources", "30-synthesis", "40-workbench",
+    "50-deliverables", "90-assets", "95-archive", "99-system",
+}
 # Scaffolding, not authored notes: skeleton folders, assets, and the note
 # templates (raw notes full of placeholder [[links]]). Detectors that assert
 # things about *real* notes (broken wikilinks, type schema) skip these. Templates
@@ -381,6 +402,33 @@ def fama_exposure(vault: Path) -> list[Finding]:
     return out
 
 
+def misplaced_note(vault: Path) -> list[Finding]:
+    """A typed note (or stray top-level folder) outside its schema home.
+
+    Report-only, mirroring fama-exposure / broken-wikilinks discipline -- never
+    auto-move; the human decides. Skips scaffolding (templates/assets/skeleton),
+    vault-root nav pages, and the work-in-flight / archive zones where a note
+    legitimately lives outside its type-home (see MISPLACED_SKIP_PREFIXES)."""
+    out = []
+    for p in iter_notes(vault):
+        rp = relpath(vault, p)
+        if rp.startswith(SCAFFOLD_PREFIXES) or "/" not in rp:
+            continue
+        if rp.startswith(MISPLACED_SKIP_PREFIXES):
+            continue
+        ntype = parse_frontmatter(read(p)).get("type")
+        home = TYPE_HOME.get(ntype)
+        if home and not rp.startswith(home):
+            out.append(Finding("misplaced-note", "MEDIUM", rp,
+                               f"{ntype} should live under {home}"))
+    # Stray top-level folders: any vault-root dir outside the numbered schema set.
+    for d in vault.iterdir():
+        if d.is_dir() and d.name not in SKIP_DIRS and d.name not in KNOWN_TOP_DIRS:
+            out.append(Finding("misplaced-note", "LOW", relpath(vault, d),
+                               "stray top-level folder not in the vault schema"))
+    return out
+
+
 def out_empty() -> list[Finding]:
     return []
 
@@ -388,7 +436,7 @@ def out_empty() -> list[Finding]:
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
     frontmatter_schema_check, broken_wikilinks, dashboard_field_drift, graph_analyze,
-    fama_exposure,
+    fama_exposure, misplaced_note,
 ]
 
 
@@ -481,6 +529,14 @@ def self_test() -> int:
         (v / "00-meta/01-dashboards/d.md").write_text(
             "```dataview\nTABLE maturity, projct\nFROM \"30-synthesis\"\nSORT file.mtime DESC\n```\n",
             encoding="utf-8")
+        # claim-note sitting under 20-sources/ -> misplaced-note finding. The
+        # correctly-placed claims above (good.md/bad.md) must NOT fire.
+        (v / "20-sources/01-papers/stray-claim.md").write_text(
+            "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\nClaim in the wrong home.\n",
+            encoding="utf-8")
+        # stray top-level folder -> misplaced-note LOW finding
+        (v / "70-misc").mkdir(parents=True, exist_ok=True)
+        (v / "70-misc/scratch.md").write_text("notes", encoding="utf-8")
 
         f = run_all(v)
         by = lambda name: [x for x in f if x.detector == name]
@@ -502,6 +558,9 @@ def self_test() -> int:
         check("graph-analyze ignores linked good.md", not any("good.md" in x.path for x in by("graph-analyze")))
         check("fama-exposure flags draft citing superseded claim", any("oldclaim" in x.message for x in by("fama-exposure")))
         check("fama-exposure ignores live claim good", not any("good" in x.message for x in by("fama-exposure")))
+        check("misplaced-note flags claim under 20-sources/", any("stray-claim.md" in x.path for x in by("misplaced-note")))
+        check("misplaced-note ignores correctly-placed claim", not any("01-claims/good.md" in x.path for x in by("misplaced-note")))
+        check("misplaced-note flags stray top-level folder", any(x.path == "70-misc" for x in by("misplaced-note")))
         check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
     return t.summary(label="detectors")
