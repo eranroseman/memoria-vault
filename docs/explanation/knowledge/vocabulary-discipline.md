@@ -36,5 +36,5 @@ This is the class of failure the Linter's `schema-check` command is designed to 
 
 - The Linter's schema-check command: [The Linter](../profiles/linter.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
-- The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/maintain/manage-vocabulary.md)
+- The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/curate/manage-vocabulary.md)
 - Field definitions and the open `study_design` vocabulary: [Frontmatter fields](../../reference/frontmatter.md)

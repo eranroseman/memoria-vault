@@ -225,5 +225,5 @@ If the VPS goes down, start Hermes locally and point the agent-client at `http:/
 
 - Local install prerequisite: [Quickstart](quickstart.md)
 - Profile configuration: [Configure a profile](../hermes-agent/configuration.md)
-- Redeploying profiles after vault changes: [Redeploy profiles](../maintain/redeploy-profiles.md)
+- Redeploying profiles after vault changes: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Tunnel drops on restart: [Failure modes](../../reference/failure-modes.md) — see `VPS tunnel drops`

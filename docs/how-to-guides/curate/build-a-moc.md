@@ -1,7 +1,7 @@
 ---
 title: Build a Map of Content
-parent: Maintain
-nav_order: 4
+parent: Curate
+nav_order: 3
 ---
 
 # Build a Map of Content

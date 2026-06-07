@@ -64,7 +64,7 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 **How-to**
 
 - Write a claim note: [Write a claim note](write-a-claim-note.md)
-- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../maintain/run-the-weekly-review.md)
+- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../curate/run-the-weekly-review.md)
 - Messaging gateway (how fleeting notes arrive): [Set up the messaging gateway](../setup/set-up-messaging.md)
 
 **Reference**

@@ -65,7 +65,7 @@ The lens is usable as soon as its slug ships — invoke it from the Socratic ACP
 
 **8. Redeploy and test.**
 
-Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](../maintain/redeploy-profiles.md)), then open a session in the new lens against a paper you know well to sanity-check that the framing produces the questions you intended.
+Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](../operate/redeploy-profiles.md)), then open a session in the new lens against a paper you know well to sanity-check that the framing produces the questions you intended.
 
 ## Verify
 
@@ -77,6 +77,6 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
-- Redeploy after adding a lens: [Redeploy profiles](../maintain/redeploy-profiles.md)
+- Redeploy after adding a lens: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [Command palette](../using-obsidian/obsidian-command-palette.md)
 - The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)

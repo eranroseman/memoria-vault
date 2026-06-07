@@ -1,7 +1,7 @@
 ---
 title: Rebuild the search index
-parent: Maintain
-nav_order: 9
+parent: Operate
+nav_order: 5
 ---
 
 

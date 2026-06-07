@@ -1,6 +1,6 @@
 ---
 title: Run the weekly review
-parent: Maintain
+parent: Curate
 nav_order: 1
 ---
 
@@ -92,5 +92,5 @@ Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM
 ## Related
 
 - Classify a source: [Classify a source](../compile/classify-a-source.md)
-- Run the Linter: [Run the Linter](run-the-linter.md)
+- Run the Linter: [Run the Linter](../operate/run-the-linter.md)
 - Dashboard explanation: [The weekly-review dashboard](../../explanation/dashboards/structural-health/weekly-review.md)
