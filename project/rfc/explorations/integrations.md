@@ -2,6 +2,7 @@
 topic: proposals
 title: Integrations and adjacent surfaces
 status: deferred
+folded_into: memoria-redesign  # partial - pattern library (D11) + Catalog (#220 biblib)
 created: 2026-05-31
 ---
 

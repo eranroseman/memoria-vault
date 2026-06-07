@@ -2,6 +2,7 @@
 topic: proposals
 title: Discovery loop and autonomy within the boundary
 status: deferred
+folded_into: memoria-redesign  # partial - Find/candidate loop + RFC-04
 created: 2026-05-31
 ---
 

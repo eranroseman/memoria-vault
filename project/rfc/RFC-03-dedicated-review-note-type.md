@@ -3,6 +3,7 @@ topic: proposals
 id: RFC-03
 title: Dedicated review-note type
 status: deferred
+folded_into: memoria-redesign  # subsumed by the Inbox review-request type (D6)
 created: 2026-05-15
 ---
 

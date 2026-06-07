@@ -3,6 +3,7 @@ topic: proposals
 id: RFC-04
 title: Retriever / Scout as a separate profile
 status: deferred
+folded_into: memoria-redesign  # Find assist / Librarian discovery / Analyst (D7/D8)
 created: 2026-05-15
 ---
 
