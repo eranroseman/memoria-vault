@@ -592,7 +592,7 @@ ensure_obsidian() {
       say "  (.deb:  sudo apt-get install -y ./Obsidian-*.deb )"
     fi
   fi
-  say "  On first launch: turn off Restricted mode so the eight bundled plugins load."
+  say "  On first launch: turn off Restricted mode so the nine bundled plugins load."
 }
 
 ensure_zotero() {

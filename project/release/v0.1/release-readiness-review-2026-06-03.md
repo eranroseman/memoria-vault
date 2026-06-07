@@ -25,7 +25,7 @@ By that bar, **today: not yet.** Gate 0 ~green, Gate 1 partial, Gates 2–4 red 
 | 7 profiles configured (SOUL + config + mcp + distribution + lane-overrides) | **shipped (present, not e2e-verified)** | rows 22, 25–27, 36 |
 | Installer (bootstrap + Windows launcher) | **shipped, Tier-3 verified** | rows 43–44 |
 
-The **floor and the plumbing are real and partly proven.** What's missing is the agents taking a verified step on them.
+The **mandatory group and the plumbing are real and partly proven.** What's missing is the agents taking a verified step on them.
 
 ---
 

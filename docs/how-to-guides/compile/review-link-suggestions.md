@@ -10,6 +10,8 @@ Work through the `[!suggestions]` callout the Librarian attaches to a note — a
 
 This is different from [linking related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` relation you've decided on; this one is for *triaging the agent's proposals*.
 
+> **`[deferred]` — not yet wired.** Nothing produces the `[!suggestions]` callout today: the Librarian's linker is Tier-1 *deterministic citation linking* (ADR-30), not a similarity-ranked suggestion pass, and the `Memoria: approve all link suggestions` command is itself `[deferred]` ([command palette](../../reference/obsidian-command-palette.md)). The shipped similarity surface today is the **`[!brief]` callout** at the top of each paper note — the Librarian's top-5 comparative read composed during ingest ([Capture and ingest a source](capture-and-ingest.md), [Obsidian callouts](../../reference/obsidian-callouts.md)). This guide describes the designed curation step; the producer is a scoped follow-up. The steps below are the intended workflow once it lands.
+
 ## Prerequisites
 
 - A note carrying a `[!suggestions]` callout (the Librarian attaches one after an `enrich` or weekly link pass)
