@@ -232,4 +232,4 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 
 **S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/S5 rows of [release-plan-v0.1.md](../../releases/v0.1/release-plan-v0.1.md).
+G4/S5 rows of [release-plan-v0.1.md](../../release/v0.1/release-plan-v0.1.md).

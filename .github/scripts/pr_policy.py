@@ -17,10 +17,13 @@ ADRs) is blocked regardless of author, requiring a human decision.
 import os
 import sys
 
-# Authors whose docs-only PRs may be auto-approved.
+# Trusted authors: docs-only PRs auto-approve; sensitive-path PRs fall to
+# needs_human (a human reviews/merges) rather than being blocked. dependabot[bot]
+# is here so its dependency PRs are reviewable, not hard-blocked on sensitive paths.
 TRUSTED_AUTHORS = {
     "eranroseman",
     "github-actions[bot]",
+    "dependabot[bot]",
 }
 
 # A path is safe if it matches any prefix or suffix below.

@@ -87,11 +87,11 @@ for f in $(staged | grep -E '\.(md|py|ya?ml)$'); do
   fi
 done
 
-# --- 5. test-protocol reference resolution (staged test protocols) ----------
-# The protocols under project-files/tests/ name many repo paths; check-test-refs
-# ensures each resolves, so a rename can't leave a protocol pointing at a dead
-# file. Mirrors the check-test-refs CI job.
-if staged | grep -qE '^project-files/tests/.*\.md$|^scripts/check-test-refs\.py$'; then
+# --- 5. test-plan reference resolution (staged test plans) ------------------
+# The plans under project/test/ name many repo paths; check-test-refs ensures
+# each resolves, so a rename can't leave a plan pointing at a dead file.
+# Mirrors the check-test-refs CI job.
+if staged | grep -qE '^project/test/.*\.md$|^scripts/check-test-refs\.py$'; then
   if [ -n "$PY" ]; then
     "$PY" scripts/check-test-refs.py || { echo "pre-commit: check-test-refs failed (above)." >&2; fail=1; }
   else

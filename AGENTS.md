@@ -105,7 +105,7 @@ All must pass before merge:
 | `block` | Untrusted author on sensitive paths |
 
 Sensitive paths: `vault/.memoria/`, `scripts/`, `project/decisions/`, `.github/`.
-Trusted authors: `eranroseman`, `github-actions[bot]`.
+Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
