@@ -11,15 +11,12 @@ Switch between Memoria's three cognitive-mode workspaces — Human, Reading & Pr
 ## Prerequisites
 
 - The vault open in Obsidian
-- **Workspaces** core plugin enabled (Settings → Core plugins → Workspaces)
+
+The **Workspaces** core plugin ships pre-enabled in the vault (`.obsidian/core-plugins.json`), so the workspaces icon is already in the left ribbon — no first-run toggle needed.
 
 ## Steps
 
-**1. Enable the Workspaces plugin** (first time only).
-
-Settings → Core plugins → scroll to **Workspaces** → toggle on. Once enabled, a workspaces icon appears in the left ribbon.
-
-**2. Open each workspace by name.**
+**1. Open each workspace by name.**
 
 The three workspaces ship pre-configured in the vault's `.obsidian/workspaces.json`. Load them:
 
@@ -28,7 +25,7 @@ The three workspaces ship pre-configured in the vault's `.obsidian/workspaces.js
 - Load **Reading & Processing** — verifies the discuss-queue + ACP pane open on the right
 - Load **Drafting** — verifies the project tree opens on the left
 
-**3. Bind the hotkeys** (first time only).
+**2. Bind the hotkeys** (first time only).
 
 Settings → Hotkeys → search `workspace` → assign:
 
@@ -38,7 +35,7 @@ Settings → Hotkeys → search `workspace` → assign:
 | Load workspace: Reading & Processing | `Cmd-2` / `Ctrl-2` |
 | Load workspace: Drafting             | `Cmd-3` / `Ctrl-3` |
 
-**4. Switch workspaces during a session.**
+**3. Switch workspaces during a session.**
 
 - `Cmd/Ctrl-1` — Human (morning glance, board review)
 - `Cmd/Ctrl-2` — Reading & Processing (one source, full context)
@@ -46,7 +43,7 @@ Settings → Hotkeys → search `workspace` → assign:
 
 Switch when your cognitive mode changes — not per task within a mode.
 
-**5. Save changes to a workspace** (when you've rearranged panes).
+**4. Save changes to a workspace** (when you've rearranged panes).
 
 `Cmd/Ctrl-P` → **Manage workspaces** → click **Save** next to the workspace name. Unsaved layout changes revert when you next switch away.
 

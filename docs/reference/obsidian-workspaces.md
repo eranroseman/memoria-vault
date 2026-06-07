@@ -8,7 +8,7 @@ parent: Reference
 
 Three saved Obsidian workspace layouts, bound to hotkeys. One per cognitive mode.
 
-**Prerequisite:** The Workspaces core plugin must be enabled (Settings → Core plugins → Workspaces). The bindings have nothing to bind to until the plugin is on.
+**Prerequisite:** The Workspaces core plugin ships pre-enabled in the vault (`.obsidian/core-plugins.json`); the three layouts ship in `.obsidian/workspaces.json`. If you ever disable the plugin, the bindings have nothing to bind to until you re-enable it (Settings → Core plugins → Workspaces).
 
 ---
 
