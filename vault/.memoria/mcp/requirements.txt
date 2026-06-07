@@ -9,7 +9,7 @@ mcp>=1.2.0
 
 # Lane-override (.memoria/lane-overrides/*.yaml) parsing. The decision core and
 # its --self-test run without PyYAML; only the live server's lane loading needs it.
-PyYAML>=6.0
+PyYAML>=6.0.3
 
 # Local-PDF full-text extraction for the ingest pipeline (extract.py, the
 # memoria-ingest MCP server). Lazy-imported, so ingest still runs without it
