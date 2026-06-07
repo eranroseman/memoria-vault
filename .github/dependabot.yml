@@ -1,0 +1,22 @@
+# Dependabot version-update PRs for the two dependency surfaces that exist:
+# GitHub Actions pinned in .github/workflows/, and the MCP Python deps the
+# installer pip-installs. Monthly + a small PR cap keeps the noise low; commit
+# messages use the `chore` prefix to match the repo's Conventional Commits.
+# (Security-fix PRs from Dependabot alerts are separate and not gated here.)
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: pip
+    directory: /vault/.memoria/mcp
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
