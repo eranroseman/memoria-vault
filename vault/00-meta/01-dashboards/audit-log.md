@@ -7,6 +7,11 @@ Policy-MCP write decisions, from `99-system/logs/audit.jsonl`. Open when a write
 Writes the policy MCP refused or downgraded. Anything here > 1 day without a board card is an unhandled escalation.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/audit.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
@@ -25,6 +30,11 @@ dv.table(
 Should be near zero. Each row is an approved promotion (`allow_with_log` + `task_id`) or an attempted bypass (`deny` / `dry_run`). A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/audit.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
@@ -47,6 +57,11 @@ dv.table(
 Is each profile writing where expected? Smells: any `memoria-socratic` write (write-denied), any `memoria-mapper`/`memoria-verifier` write outside its scratch path, a Librarian writing thousands/hour.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/audit.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
@@ -68,6 +83,11 @@ dv.table(["Profile", "Action", "Decision", "Count (24h)"], rows);
 A path's last recorded `after_hash` should match the file's current SHA-256. A mismatch means a write outside the audit trail (non-MCP tool or direct human edit) — investigate; it breaks reversibility. Cross-reference the Linter's drift report.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/audit.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
@@ -97,6 +117,11 @@ Patterns the query flags — each is a configuration bug; see [policy MCP](https
 - Any allowed write missing `before_hash` / `after_hash`.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/audit.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
