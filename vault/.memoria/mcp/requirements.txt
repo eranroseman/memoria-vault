@@ -5,17 +5,18 @@
 
 # Model Context Protocol SDK -- provides mcp.server.fastmcp.FastMCP, the thin
 # server wrapper around the policy decision engine.
-mcp>=1.2.0
+mcp>=1.27.2
 
 # Lane-override (.memoria/lane-overrides/*.yaml) parsing. The decision core and
 # its --self-test run without PyYAML; only the live server's lane loading needs it.
-PyYAML>=6.0
+PyYAML>=6.0.3
 
 # Local-PDF full-text extraction for the ingest pipeline (extract.py, the
 # memoria-ingest MCP server). Lazy-imported, so ingest still runs without it
 # (PMC / pre-extracted tiers); installing it enables the local Zotero-PDF
 # fallback for papers not in an open-access full-text source.
-pymupdf4llm>=0.0.17
+# (pymupdf4llm realigned its versioning to track PyMuPDF: 0.3.x -> 1.27.x.x.)
+pymupdf4llm>=1.27.2.3
 
 # NOTE: tasks_mcp.py is not yet authored (it fronts the Hermes Kanban, which is
 # Phase-4 / deferred). When it lands, add its dependencies here.
