@@ -15,6 +15,9 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: chore
+    groups:
+      actions:
+        patterns: ["*"]
 
   - package-ecosystem: pip
     directory: /vault/.memoria/mcp
@@ -23,3 +26,6 @@ updates:
     open-pull-requests-limit: 3
     commit-message:
       prefix: chore
+    groups:
+      python:
+        patterns: ["*"]
