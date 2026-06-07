@@ -3,6 +3,7 @@ topic: proposals
 id: RFC-10
 title: Skill governance and lifecycle
 status: deferred
+folded_into: memoria-redesign  # the pattern-library governance (D11)
 created: 2026-05-31
 ---
 

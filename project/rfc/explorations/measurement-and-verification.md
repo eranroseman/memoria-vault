@@ -2,6 +2,7 @@
 topic: proposals
 title: Measurement, quality, and verification
 status: deferred
+folded_into: memoria-redesign  # partial - calibration/guardrails (D11/D12)
 created: 2026-05-31
 ---
 

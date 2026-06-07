@@ -3,6 +3,7 @@ topic: proposals
 id: RFC-09
 title: Profile compilation from a shared base
 status: deferred
+folded_into: memoria-redesign  # how the renamed team-role profiles are defined (D8)
 created: 2026-05-31
 ---
 
