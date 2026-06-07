@@ -30,6 +30,7 @@ Set these values:
 ```env
 KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
 OBSIDIAN_API_KEY=<64-char hex apiKey from Obsidian REST API plugin>
+OBSIDIAN_MCP_PORT=27123               # plugin's insecure HTTP port serving the native MCP; change only if you moved it or run a 2nd vault
 OPENALEX_API_KEY=...                  # openalex.org/settings/api — required since 2026-02 (sent as ?api_key=)
 S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
 NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
@@ -45,6 +46,7 @@ The other six profiles share a common minimum set. Open each `.env` and set at m
 ```env
 KILOCODE_API_KEY=<same Kilo Code key>
 OBSIDIAN_API_KEY=<same 64-char hex token>
+OBSIDIAN_MCP_PORT=27123              # same port as the Librarian (the plugin's HTTP MCP port)
 ```
 
 The profiles with their `.env` paths:

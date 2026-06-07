@@ -20,6 +20,10 @@ env_requires:
   # Zotero: the `pyzotero` skill runs in local read-only mode against the Zotero
   # desktop API (http://localhost:23119) — no ZOTERO_API_KEY / _LIBRARY_ID /
   # _LIBRARY_TYPE needed. Add a Web API key only if you switch to the cloud API.
+  - name: OBSIDIAN_MCP_PORT
+    description: "Port of the Local REST API plugin's insecure HTTP server, where its native MCP is served (http://127.0.0.1:<port>/mcp). Must match insecurePort in the plugin's data.json (default 27123). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
+    required: false
+    default: "27123"
   - name: OPENALEX_API_KEY
     description: "OpenAlex API key (?api_key= query param) — cross-checks during cite-check / retraction-check. As of 2026-02 OpenAlex requires a key; the former polite-pool email (OPENALEX_EMAIL) is discontinued."
     required: false
