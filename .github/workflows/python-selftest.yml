@@ -10,11 +10,12 @@ name: python-selftest
 # rather than rely on stdlib-only behavior.
 #
 # This backs a REQUIRED status check, so — like docs-doctor and lint-installers —
-# it must run on EVERY push/PR (no `paths:` filter), or path-unrelated PRs would
+# it must report on EVERY PR (no `paths:` filter), or path-unrelated PRs would
 # be permanently blocked on a check that never reports. See AGENTS.md §4.
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:

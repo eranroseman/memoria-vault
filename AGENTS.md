@@ -94,7 +94,7 @@ All must pass before merge:
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` on vault Python tooling |
 
-**CI invariant:** required-check workflows must have **no** `paths:` filter — a path-filtered required check permanently blocks PRs that don't touch those paths.
+**CI invariant:** required-check workflows must have **no** `paths:` filter — a path-filtered required check permanently blocks PRs that don't touch those paths. Trigger them with `on: { pull_request:, push: { branches: [main] } }` — `pull_request` (unfiltered) reports on every PR; scoping `push` to `main` validates the post-merge state without a redundant second run on every feature-branch push (the `.githooks/pre-commit` hook already gives pre-push feedback). Add a `concurrency` group (`cancel-in-progress` except on `main`) so superseded runs are dropped.
 
 ### `pr-policy` tiers
 

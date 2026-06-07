@@ -5,12 +5,13 @@ name: docs-links
 # the per-diff .githooks/pre-commit guard — programmatic commits (obsidian-git
 # auto-backup) and --no-verify skip the hook, but cannot skip a required check.
 #
-# Required status check, so it must run on EVERY push/PR (no `paths:` filter) or
+# Required status check, so it must report on EVERY PR (no `paths:` filter) or
 # path-unrelated PRs would be permanently blocked on a check that never reports.
 # See AGENTS.md §4.
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
