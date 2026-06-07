@@ -1,7 +1,7 @@
 ---
 title: Refactor claim notes
-parent: Maintain
-nav_order: 3
+parent: Curate
+nav_order: 2
 ---
 
 # Refactor claim notes
@@ -55,7 +55,7 @@ The Verifier surfaces candidates. You make every structural decision — merge, 
 
 ## Related
 
-- Run the Linter after structural edits: [Run the Linter](run-the-linter.md)
+- Run the Linter after structural edits: [Run the Linter](../operate/run-the-linter.md)
 - The compound-note failure refactoring fixes: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
 - The note structure you are refactoring toward: [Note body structure](../../explanation/knowledge/note-body-structure.md)
 - Note types and their boundaries: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)

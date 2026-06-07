@@ -1,7 +1,7 @@
 ---
 title: Return to work
-parent: Maintain
-nav_order: 10
+parent: Curate
+nav_order: 5
 ---
 
 # Return to work
@@ -45,7 +45,7 @@ Expected: either "Already up to date" or a list of fast-forward changes. A merge
 
 **ACP pane not responding** — all workflows have a terminal equivalent. `Cmd-P` commands that invoke Hermes can also be run from the CLI. The ACP pane is a convenience layer, not a requirement.
 
-**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [Rebuild the search index](rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
+**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [Rebuild the search index](../operate/rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
 
 **Syncthing not synced** — check the Syncthing status bar in Obsidian or open `http://localhost:8384`. Notes created on another device won't be queryable until sync completes.
 
@@ -56,7 +56,7 @@ See [Safe mode](../troubleshooting/safe-mode.md) — the three core workflows (i
 ## Related
 
 - Safe mode (when tools are broken): [Safe mode](../troubleshooting/safe-mode.md)
-- Rebuild search index: [Rebuild the search index](rebuild-the-search-index.md)
+- Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
 - Fix a stale .bib: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
 - Reinstall missing profiles: [Set up Hermes](../setup/set-up-hermes.md)
 - The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)

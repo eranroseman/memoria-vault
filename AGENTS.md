@@ -157,6 +157,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 Mixed-quadrant pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `vault/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
+  - From `docs/`, cross-folder repo references follow the target: links to `project/` (ADRs, RFCs, release plans) are **relative** (`../../project/…`) — both trees ship in the repo and `docs/` renders on GitHub; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.

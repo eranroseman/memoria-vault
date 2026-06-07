@@ -1,7 +1,7 @@
 ---
 title: Redeploy profiles
-parent: Maintain
-nav_order: 8
+parent: Operate
+nav_order: 4
 ---
 
 

@@ -7,6 +7,11 @@ Open every morning, glance ~30 seconds, close if nothing's red. The **system-hea
 Cards needing you: `blocked` (your decision) or a `done` card with `review_status: requested` (awaiting approval). Oldest first; ≥ 3 rows is the signal to clear them before larger work.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const q = dv.pages('"99-system/board"')
   .where(c => c.status === "blocked" || c.review_status === "requested")
   .sort(c => c.last_updated, "asc");
@@ -20,6 +25,11 @@ else dv.table(["State", "Lane", "Card", "Waiting since", "Reason"],
 HIGH/CRITICAL structural-detector findings from the latest lint — these pause scheduled work (verdict `FAIL`). If anything appears, treat the day as diagnostic. Full view: [[drift-watch|Drift watch]].
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
@@ -36,6 +46,11 @@ dv.table(
 Per-lane trust score. Bands: **90+** healthy · **70–89** watch · **<70** act (pause scheduled work). Empty = the aggregator hasn't run this week. Contributing inputs: [[fleet-health|Fleet Health]].
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const wk = dv.luxon.DateTime.now().toFormat("kkkk-'W'WW");
 const lanes = dv.pages('"99-system/metrics"')
   .where(p => p.type === "lane-metric" && p.period === wk)
@@ -50,6 +65,11 @@ else dv.table(["Lane", "Trust", "Tasks", "Success%"],
 Last/next run for the standard tasks (`nightly-lint`, `weekly-drift-report`, `weekly-cluster-report`). A missing row = cron not enabled for that lane; ✗ = last run failed. Stays empty until the Hermes cron runtime writes `cron-history.jsonl` — unlike the other feeds, this one is logged by Hermes when it dispatches a scheduled job, not by a vault script.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/cron-history.jsonl");
 if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));

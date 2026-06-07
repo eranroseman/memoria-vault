@@ -45,7 +45,7 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 
 **How-to**
 
-- How to run the ritual: [run the weekly review](../../../how-to-guides/maintain/run-the-weekly-review.md)
+- How to run the ritual: [run the weekly review](../../../how-to-guides/curate/run-the-weekly-review.md)
 
 **Background**
 

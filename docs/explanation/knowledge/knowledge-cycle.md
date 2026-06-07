@@ -40,7 +40,7 @@ Notes that are no longer useful do not become invisible by deletion — they bec
 
 Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
 
-For the archive procedure, see [Run the weekly review](../../how-to-guides/maintain/run-the-weekly-review.md).
+For the archive procedure, see [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md).
 
 ## Related
 
@@ -53,5 +53,5 @@ For the archive procedure, see [Run the weekly review](../../how-to-guides/maint
 
 **How-to**
 
-- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/maintain/run-the-weekly-review.md)
+- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md)
 - The cycle's key transition: [Write a claim note](../../how-to-guides/compile/write-a-claim-note.md)

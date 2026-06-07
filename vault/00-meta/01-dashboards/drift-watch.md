@@ -7,6 +7,11 @@ The Linter's eight structural-detector findings in one view — silent drift bet
 Empty is the goal. Each finding links to its detector — remediation lives in the [Linter reference](https://eranroseman.github.io/memoria-vault/reference/linter).
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
 const rank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
@@ -41,6 +46,11 @@ LIMIT 8
 Recurring offenders: a detector firing repeatedly with the same finding is a systemic issue to fix at the source, not re-clear one by one.
 
 ```dataviewjs
+if (!dv.container.dataset.poll) {
+  dv.container.dataset.poll = '1';
+  const id = setInterval(() => dv.component.load(), 30000);
+  dv.component.register(() => clearInterval(id));
+}
 const text = await dv.io.load("99-system/logs/lint-findings.jsonl");
 if (!text || !text.trim()) { dv.paragraph("✅ No findings."); return; }
 const cutoff = new Date(Date.now() - 28 * 864e5).toISOString();

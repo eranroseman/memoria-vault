@@ -59,6 +59,6 @@ A profile compiler that generates profile directories from a shared base plus pe
 
 - Profile structure: [Profiles](../profiles/README.md)
 - Install steps: [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md)
-- Operationalizes idempotent deployment: [Redeploy profiles](../../how-to-guides/maintain/redeploy-profiles.md)
+- Operationalizes idempotent deployment: [Redeploy profiles](../../how-to-guides/operate/redeploy-profiles.md)
 - The one-liner install entry point: [Quickstart](../../how-to-guides/setup/quickstart.md)
 - On-disk layout reference: [On-disk layout](../../reference/on-disk-layout.md)

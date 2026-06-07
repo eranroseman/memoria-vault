@@ -18,10 +18,10 @@ For the *why* behind any design choice, see [Explanation](../explanation/). For 
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](compile/) and [Writing](compose/) are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian. The command palette and agent-client pane are your primary controls. The guides in [Sources](compile/), [Writing](compose/), and [Curate](curate/) are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
-Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Maintenance](maintain/), and [Troubleshooting](troubleshooting/) are written for this mode.
+Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup/), [Operate](operate/), and [Troubleshooting](troubleshooting/) are written for this mode.
 
 ---
 
@@ -101,32 +101,39 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 | [Export a draft](compose/export-a-draft.md) | Pandoc export to Word, PDF, or plain Markdown | Export |
 | [Create a code artifact](compose/create-a-code-artifact.md) | Scaffold a code-note and delegate to an external coding agent | Code (branch) |
 
-### Maintenance
+### Curate
 
-Recurring operational tasks. Run on a schedule or when prompted by a failure.
+Human curation of the knowledge base — recurring rituals performed inside Obsidian.
 
 | Guide | What it covers |
 | --- | --- |
-| [Run the weekly review](maintain/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
-| [Run the Linter](maintain/run-the-linter.md) | On-demand or scheduled structural health check |
-| [Refactor claim notes](maintain/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
-| [Build a Map of Content](maintain/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
-| [Manage your topic vocabulary](maintain/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
-| [Run a retraction sweep](maintain/run-a-retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
-| [Run a schema migration](maintain/run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
-| [Redeploy profiles](maintain/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
-| [Rebuild the search index](maintain/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
-| [Return to work](maintain/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
+| [Run the weekly review](curate/run-the-weekly-review.md) | Friday ritual: classify debt, promote claims, run lint |
+| [Refactor claim notes](curate/refactor-a-note.md) | Merge near-duplicates or split compound claims using the Verifier |
+| [Build a Map of Content](curate/build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
+| [Manage your topic vocabulary](curate/manage-vocabulary.md) | Add terms, rename safely, prune the active list |
+| [Return to work](curate/return-to-work.md) | Three pre-session checks after any break — takes under two minutes |
 
-### Troubleshooting
+### Operate
 
-Start from the symptom you're seeing. Each guide takes one failure mode from symptom → diagnosis → fix.
+Terminal-side system upkeep. Run on a schedule or when prompted by a failure.
 
-| Guide | When to reach for it |
+| Guide | What it covers |
 | --- | --- |
-| [Safe mode](troubleshooting/safe-mode.md) | Hermes or ACP is down and you still need to ingest, triage, or export |
-| [Fix a stuck card](troubleshooting/fix-stuck-card.md) | A card won't advance on the Kanban board |
-| [Fix broken frontmatter](troubleshooting/fix-broken-frontmatter.md) | YAML parse error; a note is missing from Dataview queries |
-| [Diagnose a denied or blocked write](troubleshooting/diagnose-a-denied-write.md) | A write didn't land: policy denial vs. wiring failure |
-| [Fix a stale `.bib`](troubleshooting/fix-stale-bib.md) | "Citekey not found" at ingest |
-| [Fix profile drift](troubleshooting/fix-profile-drift.md) | Deployed profile doesn't match the vault source |
+| [Run the Linter](operate/run-the-linter.md) | On-demand or scheduled structural health check |
+| [Run a retraction sweep](operate/run-a-retraction-sweep.md) | Check ingested papers against retraction registries; update affected claims |
+| [Run a schema migration](operate/run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
+| [Redeploy profiles](operate/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
+| [Rebuild the search index](operate/rebuild-the-search-index.md) | Re-run `qmd embed` when Writer search returns stale results |
+
+### Recovery
+
+Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one failure mode.
+
+| Guide | What it covers |
+| --- | --- |
+| [Safe mode](troubleshooting/safe-mode.md) | Minimal working paths for ingest, triage, and export when optional tooling is down |
+| [Fix a stuck card](troubleshooting/fix-stuck-card.md) | Card won't advance on the Kanban board |
+| [Fix broken frontmatter](troubleshooting/fix-broken-frontmatter.md) | YAML parse error; note missing from Dataview queries |
+| [Diagnose a denied or blocked write](troubleshooting/diagnose-a-denied-write.md) | Trace a missing write: policy denial vs. wiring failure |
+| [Fix a stale `.bib`](troubleshooting/fix-stale-bib.md) | Citekey not found at ingest |
+| [Fix profile drift](troubleshooting/fix-profile-drift.md) | Deployed profile doesn't match vault source |

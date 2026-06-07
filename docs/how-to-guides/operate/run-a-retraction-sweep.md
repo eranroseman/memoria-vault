@@ -1,7 +1,7 @@
 ---
 title: Run a retraction sweep
-parent: Maintain
-nav_order: 6
+parent: Operate
+nav_order: 2
 ---
 
 # Run a retraction sweep

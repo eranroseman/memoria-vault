@@ -84,7 +84,7 @@ Per-decision forensics. Open when a write operation didn't happen as expected â€
 
 **Weekly Review** â€” open on Fridays.
 
-Consolidated weekly agenda: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [Run the weekly review](../maintain/run-the-weekly-review.md) guide walks through it step by step.
+Consolidated weekly agenda: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks through it step by step.
 
 ### "What orphan or noise files are in the vault?"
 
@@ -112,6 +112,6 @@ Files named `TODO`, `tmp`, `untitled`, or matching other noise patterns. More th
 
 ## Related
 
-- Weekly review procedure: [Run the weekly review](../maintain/run-the-weekly-review.md)
+- Weekly review procedure: [Run the weekly review](../curate/run-the-weekly-review.md)
 - Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Dashboard design rationale: [Dashboards](../../explanation/dashboards/README.md)

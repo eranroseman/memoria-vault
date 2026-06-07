@@ -16,7 +16,7 @@ these lists.
 
 Each term carries a one-line definition so classification is grounded rather than
 guessed. Keep `topic` to ~30 terms; consolidate drift at roughly fifty papers
-(see [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/maintain/manage-vocabulary/)
+(see [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/curate/manage-vocabulary/)
 and [Vocabulary discipline](https://eranroseman.github.io/memoria-vault/explanation/knowledge/vocabulary-discipline/)).
 
 Reference taxonomies (MeSH, ACM CCS, OpenAlex fields-of-study) are **not** here —

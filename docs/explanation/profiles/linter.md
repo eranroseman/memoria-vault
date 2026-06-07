@@ -43,8 +43,8 @@ The Linter is Memoria's deterministic conscience. It validates structure (frontm
 
 **How-to**
 
-- Workflow: [run the Linter](../../how-to-guides/maintain/run-the-linter.md)
-- Troubleshooting: [fix broken frontmatter](../../how-to-guides/troubleshooting/fix-broken-frontmatter.md), [fix profile drift](../../how-to-guides/troubleshooting/fix-profile-drift.md)
+- Workflow: [run the Linter](../../how-to-guides/operate/run-the-linter.md)
+- Recovery: [fix broken frontmatter](../../how-to-guides/troubleshooting/fix-broken-frontmatter.md), [fix profile drift](../../how-to-guides/troubleshooting/fix-profile-drift.md)
 
 **Reference**
 

@@ -65,6 +65,6 @@ For the explicit mapping of tasks to their appropriate owner, see [Profile capab
 ## Related
 
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
-- The fix for compound notes: [Refactor claim notes](../../how-to-guides/maintain/refactor-a-note.md)
-- Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/maintain/run-a-retraction-sweep.md)
+- The fix for compound notes: [Refactor claim notes](../../how-to-guides/curate/refactor-a-note.md)
+- Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
 - Lane permissions referenced here: [Profile capabilities](../../reference/profiles.md)

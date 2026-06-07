@@ -60,7 +60,7 @@ If no MOC exists yet and this is the third or fourth note on this topic, conside
 ## Related
 
 - Previous step: [Write a claim note](write-a-claim-note.md) (maturity accumulates there)
-- Weekly review (step 5 — promote evergreen claims): [Run the weekly review](../maintain/run-the-weekly-review.md)
-- Add the MOC entry (step 5): [Build a Map of Content](../maintain/build-a-moc.md)
+- Weekly review (step 5 — promote evergreen claims): [Run the weekly review](../curate/run-the-weekly-review.md)
+- Add the MOC entry (step 5): [Build a Map of Content](../curate/build-a-moc.md)
 - MOC creation thresholds: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
 - The rules promotion enforces: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)
