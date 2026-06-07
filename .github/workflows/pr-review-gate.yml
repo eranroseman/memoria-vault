@@ -39,7 +39,7 @@ jobs:
         run: python .github/scripts/pr_policy.py >> "$GITHUB_OUTPUT"
 
       - name: Post policy summary
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           DECISION: ${{ steps.policy.outputs.decision }}
           REASON: ${{ steps.policy.outputs.reason }}
