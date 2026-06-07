@@ -5,7 +5,7 @@
 
 # Model Context Protocol SDK -- provides mcp.server.fastmcp.FastMCP, the thin
 # server wrapper around the policy decision engine.
-mcp>=1.2.0
+mcp>=1.27.2
 
 # Lane-override (.memoria/lane-overrides/*.yaml) parsing. The decision core and
 # its --self-test run without PyYAML; only the live server's lane loading needs it.
