@@ -14,6 +14,12 @@ Scaffold the workbench folder structure for a new paper, chapter, or long-form o
 - You have a topic with at least 5 claim notes at `maturity: seedling` or higher
 - The Mapper and Writer profiles are installed
 
+## Fastest path: the `Memoria: new project` command
+
+`Cmd-P` (or `Ctrl-P`) → `Memoria: new project`. The QuickAdd macro prompts for the project title, research question, and output type, then does steps 1–4 for you: it creates `40-workbench/<slug>/` with the six canonical subfolders, writes `README.md` from the `project-note` template, and creates the Mapper scope card (which produces `01-map/corpus-map.md`). Skip to step 5 to review the corpus map.
+
+The manual steps below are the fallback if the command isn't wired in your vault.
+
 ## Steps
 
 **1. Create the project folder in the workbench.**
@@ -67,7 +73,7 @@ Add a brief scope statement: what question this project addresses and what the e
 
 **4. Run Assess to get a corpus map.**
 
-`Memoria: scope this project` *(deferred — use the ACP pane / terminal today)*. For this card-producing Mapper task, the working path today is the CLI (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
+`Memoria: new project` already created this scope card for you. To re-run it on an existing project, open a note inside `40-workbench/<project>/` and run `Memoria: scope this project`. The CLI is the equivalent fallback (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
 
 ```bash
 hermes -p memoria-mapper chat -s scope-project

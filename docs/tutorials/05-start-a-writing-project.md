@@ -18,7 +18,7 @@ parent: Tutorials
 
 ## Step 1 — Create the project
 
-Scaffold the project with the wired **Memoria: write project note** (`Cmd+P` → type `write project`) — it creates the `40-workbench/<name>/` folder and the project note. Name it `first-synthesis`. *(A single `Memoria: new project` command that also kicks off corpus scoping is [deferred] — Step 2 scopes it.)*
+Scaffold the project in one step with **Memoria: new project** (`Cmd+P` → type `new project`) — it prompts for the title, research question, and output type, then creates `40-workbench/<slug>/` with its subfolders, the project note (`README.md`), and the Mapper scope card that produces the corpus map in Step 2. Name it `first-synthesis`. *(The narrower **Memoria: write project note** just creates the folder and note without the scope card.)*
 
 **What happens:**
 
@@ -78,7 +78,7 @@ Look for the sub-topic with the most claim notes. If you have at least 3 claim n
 
 With `corpus-map.md` open:
 
-`Memoria: frame this section` is [deferred]. For now, dispatch the framing from the terminal:
+Run **Memoria: frame this section** (with a note in the project open) — it creates the Writer card that produces the outlines under `02-framing/`. The terminal is the equivalent fallback:
 
 ```bash
 hermes -p memoria-writer chat -s counter-outline

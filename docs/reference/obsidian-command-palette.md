@@ -53,14 +53,14 @@ Each is conversational. **Today, use the ACP pane** (open the named profile and 
 
 ## Project (card-based — produces file artifacts, Kanban-tracked)
 
-`[deferred]` — until wired, dispatch these via the [Hermes CLI](hermes-cli.md) (`hermes -p <profile> chat -s <skill>`).
+These are wired as QuickAdd Macros → user scripts that `hermes kanban create` a card on the matching lane (the dispatcher then claims it). `new project` scaffolds the `40-workbench/<slug>/` tree and its `README.md` first; the other three read the active note's `40-workbench/<project>/` path for context.
 
 | Status | Command | Output | Assignee |
 | --- | --- | --- | --- |
-| `[deferred]` | `Memoria: new project` | `40-workbench/<name>/` + `README.md` (`project-note`); Mapper scope card. | `memoria-mapper` |
-| `[deferred]` | `Memoria: scope this project` | `corpus-map.md` in `40-workbench/<project>/01-map/`. | `memoria-mapper` |
-| `[deferred]` | `Memoria: frame this section` | Outlines in `40-workbench/<project>/02-framing/`. | `memoria-writer` |
-| `[deferred]` | `Memoria: verify this draft` | Verification report in `40-workbench/<project>/05-verification/`. | `memoria-verifier` |
+| ✓ | `Memoria: new project` | `40-workbench/<name>/` + `README.md` (`project-note`); Mapper scope card. | `memoria-mapper` |
+| ✓ | `Memoria: scope this project` | `corpus-map.md` in `40-workbench/<project>/01-map/`. | `memoria-mapper` |
+| ✓ | `Memoria: frame this section` | Outlines in `40-workbench/<project>/02-framing/`. | `memoria-writer` |
+| ✓ | `Memoria: verify this draft` | Verification report in `40-workbench/<project>/05-verification/`. | `memoria-verifier` |
 
 ## Maintenance
 
