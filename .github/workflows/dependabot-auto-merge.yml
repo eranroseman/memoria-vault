@@ -1,0 +1,37 @@
+name: dependabot-auto-merge
+
+# Auto-merge Dependabot's GitHub Actions update PRs once all required checks pass.
+# These are low-risk version bumps of pinned actions, and CI runs the workflows
+# with the new versions — so a green run is the gate. pr-policy already lets them
+# through as needs_human (dependabot[bot] is trusted, see pr_policy.py); this just
+# enables GitHub's native auto-merge so a green PR lands without a manual click.
+#
+# Scoped to the github-actions ecosystem only — the pip ecosystem is not tracked
+# (see .github/dependabot.yml). pull_request_target gives Dependabot PRs the write
+# token auto-merge needs; we only read metadata and call gh, never check out PR code.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: enable auto-merge (github-actions only)
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable auto-merge for GitHub Actions updates
+        if: ${{ steps.meta.outputs.package-ecosystem == 'github_actions' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
