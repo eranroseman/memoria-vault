@@ -51,12 +51,12 @@ Expected: either "Already up to date" or a list of fast-forward changes. A merge
 
 ## If something is broken
 
-See [Safe mode](../recovery/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
+See [Safe mode](../troubleshooting/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
 
 ## Related
 
-- Safe mode (when tools are broken): [Safe mode](../recovery/safe-mode.md)
+- Safe mode (when tools are broken): [Safe mode](../troubleshooting/safe-mode.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- Fix a stale .bib: [Fix a stale .bib](../recovery/fix-stale-bib.md)
+- Fix a stale .bib: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
 - Reinstall missing profiles: [Set up Hermes](../setup/set-up-hermes.md)
 - The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)

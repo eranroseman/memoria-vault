@@ -91,7 +91,7 @@ git commit -m "maintenance: resolve lint findings"
 ## Related
 
 - Weekly review (lint is step 8): [Run the weekly review](../curate/run-the-weekly-review.md)
-- Fix broken frontmatter: [Fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
-- Fix profile drift: [Fix profile drift](../recovery/fix-profile-drift.md)
+- Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
+- Fix profile drift: [Fix profile drift](../troubleshooting/fix-profile-drift.md)
 - Linter profile design: [The Linter](../../explanation/profiles/linter.md)
 - Severity scale: [explanation/profiles/linter.md § severity-scale](../../explanation/profiles/linter.md)

@@ -79,7 +79,7 @@ Add each source to Zotero and pin its citekey; the `.bib` auto-export enqueues o
 ## Related
 
 - Next step: [Classify a source](classify-a-source.md)
-- If the citekey isn't found: [Fix a stale .bib](../recovery/fix-stale-bib.md)
+- If the citekey isn't found: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
 - Pin the citekey (step 2): [Pin a citekey](pin-a-citekey.md)
 - Ingest reference (routing table, per-type enrichment): [Ingest routing](../../reference/ingest.md)
 - Source types and note formats: [Note types](../../reference/note-types.md)

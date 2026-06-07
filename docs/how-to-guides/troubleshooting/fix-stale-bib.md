@@ -1,17 +1,17 @@
 ---
 title: Fix a stale .bib
-parent: Recovery
+parent: Troubleshooting
 nav_order: 5
 ---
 
 
 # Fix a stale .bib
 
-Resolve "citekey not found" errors at ingest caused by Zotero's auto-export not having run or by the Hermes node not having pulled the latest `.bib`.
+**Symptom:** running `/obsidian-paper-note --source <citekey>` returns `"citekey not found"` or `"not in memoria.bib"` at ingest.
 
-## Symptom
+**Diagnosis:** the citekey is missing from `memoria.bib` — either Zotero's auto-export hasn't run, or the Hermes node hasn't pulled the latest `.bib`. Confirm with a `grep` before reaching for a fix.
 
-Running `/obsidian-paper-note --source <citekey>` returns `"citekey not found"` or `"not in memoria.bib"`.
+**Fix:** re-export from Zotero, pull on the agent node, or commit and push the file — whichever step is missing.
 
 ## Detect
 

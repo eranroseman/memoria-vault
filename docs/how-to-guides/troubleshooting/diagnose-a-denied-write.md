@@ -1,18 +1,20 @@
 ---
 title: Diagnose a denied or blocked write
-parent: Recovery
+parent: Troubleshooting
 nav_order: 4
 ---
 
 
 # Diagnose a denied or blocked write
 
-When an agent's write doesn't show up, there are two very different causes, and they need opposite fixes:
+**Symptom:** an agent reports a write, but it never shows up in the vault.
+
+**Diagnosis:** there are two very different causes, and they need opposite fixes:
 
 1. The policy MCP **denied** it — a deliberate decision, recorded in the audit log.
 2. The write **never reached the gate** — a wiring or plugin failure. Because Hermes fails *open* on hook errors, these can be silent.
 
-This guide uses the audit log to tell them apart and find the reason.
+**Fix:** use the audit log to tell the two apart, then act on the cause — read the policy `reason`, or repair the wiring.
 
 ## Prerequisites
 
@@ -67,7 +69,7 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 ## Related
 
 - Approving a held (`dry_run`) write: [Work the review queue](../compose/work-the-review-queue.md)
-- Other recovery procedures: [recovery guides](README.md)
+- Other troubleshooting procedures: [Troubleshooting](README.md)
 - The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
 - The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
 - The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)

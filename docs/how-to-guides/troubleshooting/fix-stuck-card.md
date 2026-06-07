@@ -1,13 +1,17 @@
 ---
 title: Fix a stuck card
-parent: Recovery
+parent: Troubleshooting
 nav_order: 2
 ---
 
 
 # Fix a stuck card
 
-Resolve a Kanban card that won't advance — sitting in `running`, `ready`, or `blocked` without progressing.
+**Symptom:** a Kanban card won't advance — it sits in `running`, `ready`, or `blocked` without progressing, and a queue may be backing up behind it.
+
+**Diagnosis:** the state the card is stuck in names the cause — a crashed worker, an unresolvable `assignee`, or an exhausted retry budget awaiting a human decision.
+
+**Fix:** identify the state below, then apply the matching remedy.
 
 ## Detect
 

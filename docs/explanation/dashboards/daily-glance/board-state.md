@@ -42,5 +42,5 @@ Four sections, each answering a different question about work in flight: **activ
 
 - Filtered daily subset: [Daily Health](daily-health.md)
 - Compile-discipline complement: [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md)
-- Recovery guides for board problems: [fix a stuck card](../../../how-to-guides/recovery/fix-stuck-card.md)
+- Troubleshooting guides for board problems: [fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
 - Kanban state machine explanation: `kanban-board/README.md`

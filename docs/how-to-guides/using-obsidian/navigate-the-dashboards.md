@@ -36,7 +36,7 @@ Glance at the start of every session. Shows today's HIGH and CRITICAL lint findi
 
 **Board State** — Human workspace right pane (`Ctrl+1`).
 
-Kanban lane counts and oldest card per lane. If a card has sat in one lane more than 3 days, it's likely stuck. See [Fix a stuck card](../recovery/fix-stuck-card.md).
+Kanban lane counts and oldest card per lane. If a card has sat in one lane more than 3 days, it's likely stuck. See [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
 ### "What papers are waiting for me to classify?"
 
@@ -66,7 +66,7 @@ This dashboard lists every pair of claim notes joined by a **human-set** `relati
 
 **Drift Watch** — open manually.
 
-Verdict band at the top: PASS / REVIEW / FAIL. FAIL means structural desynchronization between the vault source, deployed Hermes profiles, and working vault state. Open when profiles behave unexpectedly or when commands fire but produce wrong results. See [Fix profile drift](../recovery/fix-profile-drift.md).
+Verdict band at the top: PASS / REVIEW / FAIL. FAIL means structural desynchronization between the vault source, deployed Hermes profiles, and working vault state. Open when profiles behave unexpectedly or when commands fire but produce wrong results. See [Fix profile drift](../troubleshooting/fix-profile-drift.md).
 
 ### "Are my agents performing well? Is API cost increasing?"
 

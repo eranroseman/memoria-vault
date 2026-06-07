@@ -158,7 +158,7 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 - How to start a chat session: [Run a CLI chat session](../how-to-guides/hermes-agent/chat-with-hermes.md)
 - How to configure a profile: [Configure a profile](../how-to-guides/hermes-agent/configuration.md)
-- Kanban how-to (stuck cards, unblocking): [Fix a stuck card](../how-to-guides/recovery/fix-stuck-card.md)
+- Kanban how-to (stuck cards, unblocking): [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md)
 
 **Explanation**
 
