@@ -3,55 +3,31 @@
 
   "_customAgents_note": "Memoria configures four interactive agents in the picker, labeled by identity (not action): Socratic (default — persistent thinking chat), Mapper (transient corpus queries), Writer (distill + drafting), Verifier (transient cite/similarity check). The three batch profiles — Librarian, Coder, Linter — are intentionally absent; they run via Kanban dispatch or cron, not interactive ACP chat. On secondary devices that don't have all four profiles installed, delete the entries for profiles not installed. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md for per-profile rationale and the mode-switching hotkey conventions.",
 
-  "claude": {
-    "id": "claude-code-acp",
-    "displayName": "Claude Code",
-    "apiKey": "",
-    "command": "{{HOME}}/.hermes/node/bin/claude-agent-acp",
-    "args": [],
-    "env": []
-  },
-  "codex": {
-    "id": "codex-acp",
-    "displayName": "Codex",
-    "apiKey": "",
-    "command": "codex-acp",
-    "args": [],
-    "env": []
-  },
-  "gemini": {
-    "id": "gemini-cli",
-    "displayName": "Gemini CLI",
-    "apiKey": "",
-    "command": "gemini",
-    "args": ["--experimental-acp"],
-    "env": []
-  },
   "customAgents": [
     {
       "id": "memoria-socratic",
-      "displayName": "Socratic — Think a source through in conversation before you distill it.",
+      "displayName": "Socratic",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-socratic", "acp"],
       "env": []
     },
     {
       "id": "memoria-mapper",
-      "displayName": "Mapper — Map a project's corpus — what's ready, thin, missing — before writing.",
+      "displayName": "Mapper",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-mapper", "acp"],
       "env": []
     },
     {
       "id": "memoria-writer",
-      "displayName": "Writer — Distill sources into claim notes; turn framings into drafts.",
+      "displayName": "Writer",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-writer", "acp"],
       "env": []
     },
     {
       "id": "memoria-verifier",
-      "displayName": "Verifier — Trace a draft's claims back to their sources; flag the gaps.",
+      "displayName": "Verifier",
       "command": "{{HOME}}/.local/bin/hermes",
       "args": ["-p", "memoria-verifier", "acp"],
       "env": []
