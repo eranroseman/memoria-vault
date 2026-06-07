@@ -156,7 +156,7 @@ Concept searches improve with practice. The more specific your query, the less n
 
 Classify the new paper-note: [Classify a source](../how-to-guides/compile/classify-a-source.md).
 
-Process outstanding candidates as part of your Friday ritual: [Run the weekly review](../how-to-guides/maintain/run-the-weekly-review.md).
+Process outstanding candidates as part of your Friday ritual: [Run the weekly review](../how-to-guides/curate/run-the-weekly-review.md).
 
 You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [How-to guides](../how-to-guides/README.md).
 

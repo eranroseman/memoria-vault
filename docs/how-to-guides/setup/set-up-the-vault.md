@@ -78,5 +78,5 @@ The `policy` server path should show an absolute vault path, not the `{{VAULT_PA
 
 - Next step: [Set up Obsidian](set-up-obsidian.md)
 - Profile secrets: [Set up Hermes](set-up-hermes.md)
-- Re-running after a git pull: [Redeploy profiles](../maintain/redeploy-profiles.md)
+- Re-running after a git pull: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Build status: [v0.1 release plan](../../../project/release/v0.1/release-plan-v0.1.md)

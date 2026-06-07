@@ -1,7 +1,7 @@
 ---
 title: Manage your topic vocabulary
-parent: Maintain
-nav_order: 5
+parent: Curate
+nav_order: 4
 ---
 
 
@@ -201,6 +201,6 @@ Once a year (or after a major reading batch), open `vocabulary.md` and walk thro
 ## Related
 
 - Classify a source: [Classify a source](../compile/classify-a-source.md)
-- Run the Linter: [Run the Linter](run-the-linter.md)
+- Run the Linter: [Run the Linter](../operate/run-the-linter.md)
 - Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
 - Vocabulary discipline (why three fields, why open): [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)

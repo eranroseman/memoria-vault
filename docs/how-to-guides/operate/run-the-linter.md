@@ -1,7 +1,7 @@
 ---
 title: Run the Linter
-parent: Maintain
-nav_order: 2
+parent: Operate
+nav_order: 1
 ---
 
 
@@ -12,7 +12,7 @@ Trigger a structural health check on the vault — either on demand or to review
 ## When to run
 
 - **On demand:** after a large batch ingest, after editing profile files, or when a Dataview query returns unexpected results
-- **Weekly:** as part of the [weekly review](run-the-weekly-review.md), step 8
+- **Weekly:** as part of the [weekly review](../curate/run-the-weekly-review.md), step 8
 - **Automatically:** the Linter runs on a cron schedule (see [Linter § Schedule](../../reference/linter.md#schedule)) and after each ingest batch
 
 ## Steps
@@ -90,7 +90,7 @@ git commit -m "maintenance: resolve lint findings"
 
 ## Related
 
-- Weekly review (lint is step 8): [Run the weekly review](run-the-weekly-review.md)
+- Weekly review (lint is step 8): [Run the weekly review](../curate/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../recovery/fix-broken-frontmatter.md)
 - Fix profile drift: [Fix profile drift](../recovery/fix-profile-drift.md)
 - Linter profile design: [The Linter](../../explanation/profiles/linter.md)

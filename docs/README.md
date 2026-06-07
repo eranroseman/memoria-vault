@@ -61,7 +61,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 [Query the vault](how-to-guides/compose/query-the-vault.md) · [Assess your corpus](how-to-guides/compose/assess-your-corpus.md) · [Draft with Writer](how-to-guides/compose/draft-with-writer.md) · [Verify and revise](how-to-guides/compose/verify-and-revise.md)
 
 **Weekly**
-[Return to work](how-to-guides/maintain/return-to-work.md) · [Weekly review](how-to-guides/maintain/run-the-weekly-review.md) · [Run the Linter](how-to-guides/maintain/run-the-linter.md)
+[Return to work](how-to-guides/curate/return-to-work.md) · [Weekly review](how-to-guides/curate/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
 
 **Recovery**
 [Safe mode](how-to-guides/recovery/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)

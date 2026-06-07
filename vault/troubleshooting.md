@@ -21,7 +21,7 @@ Quick checks that the system itself is up (run from a terminal):
 
 Profiles: `memoria-{librarian, mapper, socratic, writer, verifier, coder, linter}`.
 
-Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/maintain/return-to-work).
+Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/curate/return-to-work).
 
 ## Symptoms → diagnosis
 
