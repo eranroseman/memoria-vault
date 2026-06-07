@@ -2,11 +2,12 @@ name: check-test-refs
 
 # Drift guard for the test protocols: every path/link a protocol references must
 # resolve. Protocols rot when the design moves under them (a renamed/dissolved
-# path they still cite). Runs unconditionally on every push/PR — if it is ever
+# path they still cite). Runs on every PR (no `paths:` filter) — if it is ever
 # promoted to a required check, a path filter would leave non-test PRs blocked.
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:

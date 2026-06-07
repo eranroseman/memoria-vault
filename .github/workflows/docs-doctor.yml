@@ -1,13 +1,14 @@
 name: docs-doctor
 
 # Structural lint for docs/. This is a REQUIRED status check in the branch
-# ruleset, so it must run (and report) on EVERY push/PR — not just doc changes.
+# ruleset, so it must report on EVERY PR — not just doc changes.
 # A required check that is path-filtered never reports on non-docs PRs, which
 # leaves them permanently "blocked". The lint is fast and idempotent, so running
 # it unconditionally is the correct trade-off.
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
