@@ -273,6 +273,82 @@
           }
         ]
       }
+    },
+    {
+      "id": "62a40a2f-3513-4ccd-886c-9c123e9a3868",
+      "name": "Memoria: new project",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: new project",
+        "id": "6ca168b6-e05f-4ca1-8dfa-5f9bcd34c5d8",
+        "commands": [
+          {
+            "name": "new-project",
+            "type": "UserScript",
+            "id": "5deae62c-7b42-45c4-b51a-644b16f29df8",
+            "path": "99-system/scripts/new-project.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "71f04f90-6d9b-48a3-8eeb-a3fddaaa2841",
+      "name": "Memoria: scope this project",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: scope this project",
+        "id": "c985e5e0-65ca-4954-af9d-73d663de59a1",
+        "commands": [
+          {
+            "name": "scope-this-project",
+            "type": "UserScript",
+            "id": "5323475f-48a1-4e63-aa0c-18a9c62e5ae1",
+            "path": "99-system/scripts/scope-this-project.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "2702a2a1-3938-4b36-bb94-b909d98c4db9",
+      "name": "Memoria: frame this section",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: frame this section",
+        "id": "5901b550-3a13-4cc6-bddc-5bf22fbb49b4",
+        "commands": [
+          {
+            "name": "frame-this-section",
+            "type": "UserScript",
+            "id": "ed3948ec-e96f-40f7-b6f9-111d208f4ce1",
+            "path": "99-system/scripts/frame-this-section.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "8df2ed68-ce29-4370-837a-8c363fd53d1e",
+      "name": "Memoria: verify this draft",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: verify this draft",
+        "id": "447dd532-6c3f-4f84-be5f-96c85d58c96d",
+        "commands": [
+          {
+            "name": "verify-this-draft",
+            "type": "UserScript",
+            "id": "2a9c11eb-812d-43b0-a7ca-e312f82402b9",
+            "path": "99-system/scripts/verify-this-draft.js",
+            "settings": {}
+          }
+        ]
+      }
     }
   ],
   "inputPrompt": "single-line",
