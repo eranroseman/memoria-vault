@@ -29,7 +29,7 @@ sign-off → `releases/vX.Y/`.
 - **Layers (L0–L5)** — what *kind* of coverage: L0 static, L1 self-tests, L2 agent
   wiring, L3 GUI/dashboards, L4 end-to-end lifecycle, L5 output quality.
 - **Stages (S0–S5)** and **Gates (G1–G11)** — release-readiness checkpoints; their
-  state lives in the [release plan](../releases/v0.1/release-plan-v0.1.md) §2/§3, not here.
+  state lives in the [release plan](../release/v0.1/release-plan-v0.1.md) §2/§3, not here.
 
 ## Run order
 
@@ -41,7 +41,7 @@ headless ─▶ installer ─▶ cli ─┐
 `headless` (static + Python self-tests, CI-enforced) must be green first; `installer`
 stands up a throwaway vault; `cli` and `gui` validate the wired system; `e2e` runs one
 source through the full lifecycle; `g9`/`g10` prove the deterministic spine and ingest
-value-loop. Per-release orchestration + sign-off: [candidate-run-checklist](../releases/v0.1/candidate-run-checklist.md).
+value-loop. Per-release orchestration + sign-off: [candidate-run-checklist](../release/v0.1/candidate-run-checklist.md).
 
 ## Adding or changing a plan
 
