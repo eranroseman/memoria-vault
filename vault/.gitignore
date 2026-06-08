@@ -21,6 +21,11 @@
 # Ships as project-hints.yaml.example.
 .memoria/project-hints.yaml
 
+# Bibliography (ADR-05): the starter ships an EMPTY memoria.bib stub (tracked, so
+# the citation plugin loads); a real setup's Zotero auto-export overwrites it with
+# large, user-specific data that is never committed.
+.memoria/memoria.bib
+
 # Per-machine secret material (human copies .env.EXAMPLE to .env, fills in keys)
 .env
 

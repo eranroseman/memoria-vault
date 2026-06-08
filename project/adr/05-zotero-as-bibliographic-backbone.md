@@ -30,7 +30,7 @@ The alternative of managing metadata in Obsidian frontmatter puts Memoria in the
 ## Consequences
 
 - A source must be in Zotero with a pinned BBT citekey before ingestion. The Librarian's ingest workflow fails if a citekey is missing.
-- The `memoria.bib` file lives at `.memoria/memoria.bib` and is excluded from git (it's large and user-specific). Each setup exports their own from Zotero.
+- The `memoria.bib` file lives at `.memoria/memoria.bib`. The starter ships an **empty tracked stub** so the citation plugin loads on first launch; the **populated** bib is **gitignored** (`vault/.gitignore`) because it is large and user-specific — each setup's Zotero auto-export overwrites the stub locally and is never committed.
 - PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`, not by copying the file into the vault.
 - Obsidian-native Zotero connectors (ZotLit, zotero-integration) are evaluated but not adopted — see the [connector comparison](../../docs/reference/zotero-plugins.md); the reasoning is in *Alternatives considered* below.
 
