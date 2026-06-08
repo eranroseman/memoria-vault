@@ -1,0 +1,27 @@
+name: release-please
+
+# Owns versioning + release notes (Tier 2 release management). On push to main,
+# release-please maintains a "Release vX.Y.Z" PR that bumps CHANGELOG.md from the
+# Conventional Commits since the last release; merging that PR tags the version and
+# publishes the GitHub Release. Replaces the old tag-triggered release.yml.
+#
+# Config: release-please-config.json + .release-please-manifest.json (manifest mode,
+# release-type: simple — no package manifest to bump, version tracked in the manifest).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
