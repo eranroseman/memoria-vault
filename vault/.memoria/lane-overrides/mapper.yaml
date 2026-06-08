@@ -10,9 +10,10 @@ policy:
       # procedures composing these real skills:
       - obsidian            # vault query + write corpus-map / gap-report / cluster-maps
       - qmd                 # hybrid BM25+vector retrieval for gap-report + corpus retrieval (skills.sh skill)
-      - scikit-learn        # HDBSCAN clustering + topic modeling (K-Dense)
-      - umap-learn          # cluster-map dimensionality reduction (K-Dense)
       - cluster-mapping     # Mapper packaged skill: scope-project / gap-report / cluster-map procedures
+      # Clustering/topic-modeling runs over the BERTopic cluster MCP (ADR-33), NOT a
+      # skill — and it is not yet built, so the cluster commands are deferred.
+      # scikit-learn / umap-learn were never runnable Hermes skills; grants removed.
     write:
       - "40-workbench/*/01-map/corpus-map.md"
       - "40-workbench/*/01-map/gap-report.md"

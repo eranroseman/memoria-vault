@@ -8,10 +8,19 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Mapping, Clustering, Corpus-Analysis, Deterministic]
-    related_skills: [qmd, scikit-learn, umap-learn, obsidian]
+    related_skills: [qmd, obsidian]
 ---
 
 # cluster-mapping
+
+> **⚠️ Deferred — clustering backend not yet built.** Per
+> [ADR-33](../../../../../../project/adr/33-cluster-mcp-bertopic.md), the
+> clustering/topic-modeling runs over a self-hosted **BERTopic `cluster_mcp`**,
+> which is **not yet implemented**. Until it lands, the `scope-project` /
+> `gap-report` / `cluster-map` commands are **not runnable**. The
+> `scikit-learn` / `umap-learn` / HDBSCAN / UMAP / BERTopic references below
+> describe the *intended method* the cluster MCP will provide — they are **not**
+> callable Hermes skills (and are no longer granted in the lane-override).
 
 Map what already exists in the corpus. You retrieve notes, cluster them deterministically,
 aggregate recency and density, and then — and only then — compose a narrative map over those

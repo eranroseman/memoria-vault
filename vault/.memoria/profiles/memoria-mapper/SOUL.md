@@ -45,7 +45,11 @@ These are the real Hermes/K-Dense skills the lane-override grants (see `lane-ove
 
 - `obsidian` (Hermes skill) — read vault + write maps to project scratch.
 - `qmd` (skills.sh skill) — hybrid BM25+vector retrieval.
-- `umap-learn` + `scikit-learn` (K-Dense skills) — UMAP + HDBSCAN / topic clustering for `cluster-map` and `gap-report`.
+- Clustering / topic-modeling (HDBSCAN, UMAP, BERTopic) runs over the self-hosted
+  **cluster MCP** ([ADR-33](../../../../project/adr/33-cluster-mcp-bertopic.md)), **not**
+  a skill. That MCP is **not yet built**, so `cluster-map` / `gap-report` clustering is
+  **deferred** until it lands. (`scikit-learn` / `umap-learn` were never runnable Hermes
+  skills; the dead grants were removed from the lane-override.)
 - No external HTTP access (you don't fetch new sources — Librarian does that).
 
 ## Rules
