@@ -21,11 +21,11 @@ released: false      # machine cut-flag; true ONLY when every gate below is `don
      detailed to belong in a crisp plan (see §9).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
-  SINGLE SOURCE OF STATE. Gate (G#) and Stage (S#) state lives ONLY in the §2/§3
-  tables of this file. No sibling doc may restate it — they point here. Likewise,
-  build gaps live ONLY in GitHub issues; scope cuts in proposals/.
-  Edit each fact in exactly one place. (A future status-doctor check can enforce
-  this; see the README.)
+  SINGLE SOURCE OF STATE. This file holds PROSE, not state. Gate (G#) and Stage
+  (S#) STATE lives ONLY as the checklist in the "Release vX.Y" tracking issue (a
+  GitHub progress bar); §2/§3 here list the gate/stage DEFINITIONS, not their
+  state. Scope = the milestone; build gaps = GitHub issues; scope cuts = rfc/;
+  version + notes = release-please. Edit each fact in exactly one place.
 ============================================================================ -->
 
 <!-- PER-RELEASE STATUS LINE — one short paragraph. What is the state of this
@@ -59,37 +59,39 @@ what is deliberately later. }}
 
 ## 2. Definition of done — gates
 
-<!-- BOOKKEEPING. The release ships when EVERY gate is `done`. State lives HERE
-     and nowhere else. Each gate maps to a validation stage (§3), a CI check, or a
-     manual step. Keep gates few and verifiable — a gate is a yes/no verdict. -->
+<!-- DEFINITIONS, not state. The release ships when every gate is ticked in the
+     "Release vX.Y" tracking issue. List each gate's name + what it PROVES here;
+     its state is the checkbox in the issue, never a column in this file. Keep
+     gates few and verifiable — a gate is a yes/no verdict. -->
 
-vX.Y.Z ships when **all gates (G1–G…) are green.**
-_(Proposed gates — confirm/adjust the thresholds for this release.)_
+vX.Y.Z ships when **every gate box in the [Release vX.Y tracking issue]({{ #NN }})
+is ticked.** Definitions (confirm/adjust the thresholds for this release):
 
-| Gate | State | Proves | Verified by | Issue |
-| --- | --- | --- | --- | --- |
-| G1 | todo | {{ what passing this gate proves }} | {{ Tier 0–N / CI / manual }} | {{ #NN or — }} |
-| G2 | todo | {{ … }} | {{ … }} | {{ … }} |
-| G3 | todo | {{ … }} | {{ … }} | {{ … }} |
+| Gate | Proves | Verified by | Issue |
+| --- | --- | --- | --- |
+| G1 | {{ what passing this gate proves }} | {{ Sx / CI / manual }} | {{ #NN or — }} |
+| G2 | {{ … }} | {{ … }} | {{ … }} |
+| G3 | {{ … }} | {{ … }} | {{ … }} |
 <!-- add/remove gate rows as the release requires -->
 
 ## 3. Validation — stages
 
-<!-- BOOKKEEPING + procedure. The staged test plan that turns built artifacts into
-     VERIFIED ones. Stage STATE lives HERE only. The table is state; the prose under
-     it is the (reusable) procedure. -->
+<!-- DEFINITIONS + procedure. The staged test plan that turns built artifacts into
+     VERIFIED ones. List each stage + what it proves; the prose under it is the
+     (reusable) procedure. Stage STATE is a checkbox in the tracking issue. -->
 
 The staged test plan that turns `shipped` into `approved`. A release candidate
-must re-run **all stages green from a fresh clone** on a clean target box.
+must re-run **all stages green from a fresh clone** on a clean target box (track
+the runs as boxes in the [Release vX.Y tracking issue]({{ #NN }})).
 
-| Stage | State | Proves |
-| --- | --- | --- |
-| S0 | todo | {{ static checks: parse, formatting, presence }} |
-| S1 | todo | {{ unit / self-test suites }} |
-| S2 | todo | {{ dry-run / substitution }} |
-| S3 | todo | {{ real install / integration }} |
-| S4 | todo | {{ live: connectivity, enforcement }} |
-| S5 | todo | {{ end-to-end / GUI / acceptance }} |
+| Stage | Proves |
+| --- | --- |
+| S0 | {{ static checks: parse, formatting, presence }} |
+| S1 | {{ unit / self-test suites }} |
+| S2 | {{ dry-run / substitution }} |
+| S3 | {{ real install / integration }} |
+| S4 | {{ live: connectivity, enforcement }} |
+| S5 | {{ end-to-end / GUI / acceptance }} |
 <!-- stages are cumulative; adjust the set per release -->
 
 ## 4. Blockers
@@ -120,13 +122,11 @@ per-artifact deferred set. }}
 
 <!-- NUMBERED steps. The reusable checklist for cutting THIS release. -->
 
-1. **Every gate (§2) and stage (§3) `done`; no P0 issues open.**
-2. **Re-run all stages from a fresh clone** on a clean target → all green; record results in §3.
-3. **Confirm the version** is consistent across all version-bearing files.
-4. **Cut the `CHANGELOG` section** for this version.
-5. **Flip `released: false` → `true`** in this file's frontmatter.
-6. **Tag and publish** the release with curated notes (§6 limitations included).
-7. **Close the milestone**, rolling any unfinished issues to the next release.
+1. **Every gate + stage box ticked** in the "Release vX.Y" tracking issue; required CI green on `main`; no open **P0**.
+2. **Re-run all stages from a fresh clone** on a clean target → all green; tick the stage boxes.
+3. **Merge the release-please "Release vX.Y" PR** — it bumps `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release (fold the §6 known-limitations into the notes). This replaces manual version-bump + tagging.
+4. **Flip `released: false` → `true`** in this file's frontmatter and set `status: released`.
+5. **Close the milestone and the tracking issue**, rolling any unfinished issues to the next release.
 
 ## 8. Roadmap after this release
 

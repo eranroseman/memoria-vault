@@ -12,9 +12,9 @@ three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery �
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
 review gate firing live). #58 took two passes:
-[ADR-27](../../decisions/27-hermes-native-config-and-gate-enforcement.md) loaded the
+[ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md) loaded the
 `obsidian` MCP and locked each lane to obsidian-only writes, and
-[ADR-28](../../decisions/28-write-gate-as-plugin.md) replaced the never-firing shell
+[ADR-28](../../adr/28-write-gate-as-plugin.md) replaced the never-firing shell
 hook with a Python plugin — the shell hook's `obsidian.*` `re.fullmatch` never
 matched Hermes' real `mcp_obsidian_*` tool name (and shell hooks are consent-gated
 + fail-open). The gate now **enforces live**: validated in `hermes -z` on
@@ -28,7 +28,7 @@ is not only verification; part of it is the product itself.** The *infrastructur
 the remaining infra work is re-runs: dashboards (G4), telemetry cron (G5), the
 changelog (G8), the GUI stage (S5), and a fresh-clone re-run of the live gate (G2/S4).
 **Operability is now built and proven live:** the deterministic ingest pipeline
-([ADR-30](../../decisions/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
+([ADR-30](../../adr/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
 paper end-to-end on installer-deployed lanes — dispatch → `ingest_pipeline` MCP tool →
 vocabulary-constrained classify + `[!brief]` → ID-keyed entity links → gated writes →
 `review_status: requested`. What remains for operability is the fresh-clone candidate
