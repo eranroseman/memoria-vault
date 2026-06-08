@@ -19,7 +19,7 @@ Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Obsidian opens only the *runtime* vault (`~/Memoria`) — never this dev repo.
-- WSL2↔Windows bridge: Obsidian Local REST API at `https://127.0.0.1:27124`, bare endpoint (not `/mcp/`). Requires `networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`. API key lives in the plugin's `data.json` — never print or commit it.
+- WSL2↔Windows bridge (ADR-31): Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over loopback HTTP — `http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27123**; the self-signed HTTPS on 27124 is *not* the Hermes path — Hermes can't verify the cert). Requires the plugin's insecure HTTP server **on**, plus `networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`. `OBSIDIAN_API_KEY` (Bearer) and `OBSIDIAN_MCP_PORT` live in each profile's `.env` — never print or commit the key.
 
 ---
 
@@ -88,7 +88,7 @@ All must pass before merge:
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs` |
+| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`project/release/` link/path/flag drift) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` on vault Python tooling |
@@ -127,7 +127,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 | Any PR | `/code-review` | Before opening — catches bugs and simplification opportunities |
 | Sensitive-path changes | `/security-review` | PRs touching `scripts/`, `.github/`, `vault/.memoria/` |
 | Confirming a fix | `/verify` | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project)* | Scaffolds release folder, milestone, and plan |
+| New or cut release | `/release` *(project)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
 
 ---
 
@@ -213,7 +213,7 @@ created: YYYY-MM-DD
 
 ### Release plans (`project/release/`)
 
-One file per version, copied from `project/release/release-plan-template.md`. Gate/tier state lives **only** in §2/§3 of the release-plan file — never restated elsewhere. Build gaps go to GitHub issues; scope cuts go to proposals.
+One file per version, copied from `project/release/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to an RFC under `project/rfc/`.
 
 ---
 
@@ -224,14 +224,16 @@ One file per version, copied from `project/release/release-plan-template.md`. Ga
 | Bug, enhancement, doc fix, question | GitHub issue (label; milestone only if scheduled) |
 | Large capability worth weighing trade-offs | RFC in `project/rfc/` |
 | Closed decision + rationale | ADR in `project/adr/` |
-| Release gate/tier readiness | `release-plan-<v>.md` §2/§3 |
-| Analysis, findings, scratch | `_reports/` / `_notes/` (gitignored) |
+| Release scope | the GitHub milestone `vX.Y` (assigned issues) |
+| Release readiness (gates/stages) | the **"Release vX.Y" tracking issue** — a gate checklist (progress bar), *not* the plan §2/§3 |
+| Durable analysis that informs ADRs/RFCs | `project/rfc/explorations/` (tracked) |
+| Transient scratch / personal notes | `_reports/` / `_notes/` (gitignored) |
 
 - GitHub project board: "Memoria backlog" — Inbox → Scheduled → In progress → In review → Done.
 - Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Generated reports go in `_reports/`, never in `project/` or the repo root.
+- Reports: a **durable** analysis that informs an ADR/RFC is tracked in `project/rfc/explorations/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `project/` or the repo root.
 
 ---
 

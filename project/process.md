@@ -66,6 +66,13 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 - Cut a release at the end of a meaningful milestone, not on a calendar cadence. Milestones are releases (AGENTS.md "Work routing").
 - A **breaking change** in Memoria is: renaming a profile `config.yaml` field, restructuring the vault folder layout, removing a profile capability or skill, or changing ADR-frontmatter required fields.
 
+**How a release runs** (the `/release` skill scaffolds it):
+
+- **Scope** is the GitHub milestone `vX.Y` — the issues it must ship.
+- **Readiness** lives in one **"Release vX.Y" tracking issue** — a gate checklist whose progress bar *is* the status. Don't track gate state in the plan file.
+- **Prose** (what/why, gate rationale) lives in `project/release/<v>/`; `status-doctor` (a required check) guards it against stale links and path drift.
+- **Version + CHANGELOG + the GitHub Release** are owned by **release-please** (manifest mode) — opened automatically from Conventional Commits on `main`; merging its PR cuts the tag. Don't hand-edit `CHANGELOG.md` or tag by hand. See `project/release/README.md`.
+
 ## Checklists
 
 **Starting a branch**
