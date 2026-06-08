@@ -36,6 +36,16 @@ first open).
 
 See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md) for a full walkthrough.
 
+### Optional: a git safety alias
+
+The most common foot-gun is losing uncommitted work to `reset --hard` or `checkout` (see AGENTS.md §4). This makes "stash everything first" one keystroke:
+
+```bash
+git config --global alias.save 'stash push -u -m wip'   # save → git save  ·  restore → git stash pop
+```
+
+The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becomes `cd`, so there's no dirty tree to lose.
+
 ## What to work on
 
 | Area | Where |
