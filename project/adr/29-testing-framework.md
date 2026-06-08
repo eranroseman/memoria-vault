@@ -38,7 +38,7 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
 4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
 
-All plans live in `project/tests/`, built from `test-plan-template.md`.
+All plans live in `project/test/`, built from `test-plan-template.md`.
 
 ## Why
 

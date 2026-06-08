@@ -43,6 +43,6 @@ Do not adopt as a preparatory measure. Seven hand-authored files are simpler tha
 
 ## Related
 
-- **Decision:** [ADR-26 repo-as-install-unit](../decisions/26-repo-as-install-unit.md) — records hand-authored profiles as the current state and this proposal as the deferred compiler.
+- **Decision:** [ADR-26 repo-as-install-unit](../adr/26-repo-as-install-unit.md) — records hand-authored profiles as the current state and this proposal as the deferred compiler.
 - **Linter detector:** `profile-install-drift` (catches source-vs-deployed drift, not source-vs-source).
 - **Files:** the seven `.memoria/profiles/memoria-<name>/SOUL.md`.

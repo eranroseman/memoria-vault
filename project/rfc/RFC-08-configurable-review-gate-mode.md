@@ -8,7 +8,7 @@ created: 2026-05-31
 
 # RFC-08: Configurable review-gate mode (blocking | advisory) for comparison studies
 
-> **Naming.** This is **not** [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
+> **Naming.** This is **not** [ADR-14](../adr/14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 
 ## What
 
@@ -21,7 +21,7 @@ Three invariants make the mode evidence rather than just a weaker system: (1) th
 
 ## Why
 
-Memoria is designed **blocking-only**, and that is correct as the operating posture ([ADR-03](../decisions/03-structural-review-gate.md)). But the system's publication thesis — "for knowledge work, structurally blocking human review is the correct commitment" — is a claim of the form "*blocking* beats *advisory*," which is **unfalsifiable without an advisory baseline** measured by the same instrument. No current decision provides a non-gating mode, so the system can measure itself but not against the alternative it claims to beat — the one decision-layer gap between today's design and a completable Path 2/3 study.
+Memoria is designed **blocking-only**, and that is correct as the operating posture ([ADR-03](../adr/03-structural-review-gate.md)). But the system's publication thesis — "for knowledge work, structurally blocking human review is the correct commitment" — is a claim of the form "*blocking* beats *advisory*," which is **unfalsifiable without an advisory baseline** measured by the same instrument. No current decision provides a non-gating mode, so the system can measure itself but not against the alternative it claims to beat — the one decision-layer gap between today's design and a completable Path 2/3 study.
 
 ## Trade-offs
 
@@ -50,7 +50,7 @@ Committing to the Path 2/3 comparison study. `advisory` mode is not part of the 
 
 ## Related
 
-- **Workflows:** [Verify](../../docs/how-to-guides/compose/verify-and-revise.md), [Promote](../../docs/how-to-guides/compile/promote-a-claim.md); board dispatch rules ([timeline](../releases/v0.1/release-plan-v0.1-appendix.md)).
-- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](explorations/measurement-and-verification.md); the publication-instrumentation track in [release-plan-v0.1-appendix.md](../releases/v0.1/release-plan-v0.1-appendix.md).
-- **Related decisions:** [ADR-03 structural review gate](../decisions/03-structural-review-gate.md), [ADR-11 vault-eval](../decisions/11-vault-eval-integration.md), [ADR-14](../decisions/14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
+- **Workflows:** [Verify](../../docs/how-to-guides/compose/verify-and-revise.md), [Promote](../../docs/how-to-guides/compile/promote-a-claim.md); board dispatch rules ([timeline](../release/v0.1/release-plan-v0.1-appendix.md)).
+- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [measurement-and-verification.md](explorations/measurement-and-verification.md); the publication-instrumentation track in [release-plan-v0.1-appendix.md](../release/v0.1/release-plan-v0.1-appendix.md).
+- **Related decisions:** [ADR-03 structural review gate](../adr/03-structural-review-gate.md), [ADR-11 vault-eval](../adr/11-vault-eval-integration.md), [ADR-14](../adr/14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

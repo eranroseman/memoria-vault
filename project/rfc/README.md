@@ -20,8 +20,8 @@ Two kinds, both browsable in this directory:
 
 **Adding an idea:** copy [_template.md](_template.md), name it `slug-describing-capability.md` (or `RFC-NN-…` to number it). New ideas are proposals, not decisions — see [AGENTS.md §10](../../AGENTS.md).
 
-**When a proposal is adopted:** move the file to [decisions/](../decisions/), assign the next ADR number, set `status: accepted`. The proposal becomes the ADR's starting point.
+**When a proposal is adopted:** move the file to [adr/](../adr/), assign the next ADR number, set `status: accepted`. The proposal becomes the ADR's starting point.
 
 **When a proposal is rejected:** add a `status: rejected` field and a "Why rejected" section, and keep the file — cheaper than rediscovering the same idea later.
 
-Tools and approaches evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](../decisions/) and the plugin reference docs (`docs/reference/`), not enumerated here.
+Tools and approaches evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](../adr/) and the plugin reference docs (`docs/reference/`), not enumerated here.

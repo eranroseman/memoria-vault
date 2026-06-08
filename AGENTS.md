@@ -100,7 +100,7 @@ All must pass before merge:
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`project/release/` link/path/flag drift) |
+| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`project/` link/path/flag drift) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` on vault Python tooling |
