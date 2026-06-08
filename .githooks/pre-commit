@@ -159,6 +159,18 @@ if staged | grep -qE '^project/adr/.*\.md$|^scripts/gen-adr-index\.py$'; then
   fi
 fi
 
+# --- 11. status-doctor (when a release doc or the /release skill is staged) --
+# The release scaffolding (project/release/ + the /release skill) is prose +
+# pointers; this guards stale path renames, broken links, and released-flag
+# drift. Mirrors the status-doctor step in the lint CI job.
+if staged | grep -qE '^project/release/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$'; then
+  if [ -n "$PY" ]; then
+    "$PY" scripts/status-doctor.py || { echo "pre-commit: status-doctor found release-doc drift (above)." >&2; fail=1; }
+  else
+    echo "pre-commit: python not found; skipping status-doctor" >&2
+  fi
+fi
+
 if [ "$fail" -ne 0 ]; then
   echo "" >&2
   echo "pre-commit: blocked. Fix the above, or bypass with: git commit --no-verify" >&2

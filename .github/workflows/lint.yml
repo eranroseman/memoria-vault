@@ -42,3 +42,5 @@ jobs:
         run: bash scripts/check-vault-links.sh
       - name: check-test-refs
         run: python scripts/check-test-refs.py
+      - name: status-doctor
+        run: python scripts/status-doctor.py
