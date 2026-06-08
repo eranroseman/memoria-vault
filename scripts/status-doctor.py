@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""status-doctor — keep the release docs from rotting.
+"""status-doctor — keep the project/ docs (ADRs, RFCs, release plans) from rotting.
 
-The release scaffolding (project/release/ + the /release skill) is prose plus
-pointers; readiness STATE lives in the GitHub "Release vX.Y" tracking issue, not
-in the files (Tier 2 model). This guards the three ways those files drift:
+The project/ tree is prose plus pointers, and no other check covers its internal
+links — so a folder rename (the proposals/->rfc/, decisions/->adr/ reorg) silently
+left 59 broken cross-links across the ADR/RFC corpus before this widened to catch
+them. Guards the three ways those files drift:
 
   1. Stale path renames — `project/releases/` (now release/), `../decisions/`
      (now adr/), `proposals/` (now rfc/), `tests/` (now test/). These bit before.
+     Skipped under project/rfc/explorations/, where such paths are *documented*
+     as drift findings rather than used as live links.
   2. Broken relative links — every `[text](rel/path)` must resolve on disk.
-  3. released-flag inconsistency — frontmatter `status: released` <-> `released: true`.
+  3. released-flag inconsistency — frontmatter `status: released` <-> `released: true`
+     (only fires on the release plans that carry both keys).
 
-Scope: project/release/**/*.md + .claude/skills/release/SKILL.md.
+Scope: project/**/*.md + .claude/skills/release/SKILL.md.
 Exit 0 if clean, 1 if any issue. Usage: python scripts/status-doctor.py [--self-test]
 """
 from __future__ import annotations
@@ -30,7 +34,7 @@ STALE_RE = re.compile(r"(?:\.\./|project/)(" + "|".join(STALE) + r")/")
 
 
 def targets(root: Path) -> list[Path]:
-    files = sorted((root / "project" / "release").rglob("*.md"))
+    files = sorted((root / "project").rglob("*.md"))
     skill = root / ".claude" / "skills" / "release" / "SKILL.md"
     if skill.is_file():
         files.append(skill)
@@ -43,10 +47,11 @@ def check_file(p: Path, root: Path) -> list[str]:
     text = p.read_text(encoding="utf-8").replace("\r\n", "\n")
     rel = p.relative_to(root)
 
-    # 1. stale path renames
-    for m in STALE_RE.finditer(text):
-        old = m.group(1)
-        errs.append(f"{rel}: stale path `{m.group(0)}` — `{old}/` was renamed to `{STALE[old]}/`")
+    # 1. stale path renames (skip explorations/, which documents drift as findings)
+    if "rfc/explorations/" not in rel.as_posix():
+        for m in STALE_RE.finditer(text):
+            old = m.group(1)
+            errs.append(f"{rel}: stale path `{m.group(0)}` — `{old}/` was renamed to `{STALE[old]}/`")
 
     # 2. broken relative links (skip external, anchors, and {{ }} placeholders)
     for raw in MD_LINK.findall(text):
@@ -90,7 +95,7 @@ def main() -> int:
         for e in errors:
             print(f"  ✗ {e}")
         return 1
-    print(f"status-doctor: clean ✓ ({len(files)} release doc(s))")
+    print(f"status-doctor: clean ✓ ({len(files)} project doc(s))")
     return 0
 
 
@@ -134,6 +139,22 @@ def _self_test() -> int:
         prose.write_text("This records architectural decisions and proposals.\n")
         check("prose 'decisions'/'proposals' (no path) -> not flagged",
               not any("stale path" in e for e in check_file(prose, root)))
+
+        # broadened scope: targets() covers the whole project/ tree, not just release/
+        (root / "project" / "adr").mkdir(parents=True)
+        adr = root / "project" / "adr" / "07.md"
+        adr.write_text("see [r](../proposals/x.md)\n")
+        check("targets() includes non-release project/ files", adr in targets(root))
+        check("broken link in an ADR flagged", any("broken link" in e for e in check_file(adr, root)))
+
+        # explorations/ documents drift -> stale-path heuristic skipped, broken links still caught
+        expl = root / "project" / "rfc" / "explorations"
+        expl.mkdir(parents=True)
+        ex = expl / "notes.md"
+        ex.write_text("the old `project/releases/` (now release/) and [d](../../decisions/9.md)\n")
+        ex_errs = check_file(ex, root)
+        check("explorations stale-path string NOT flagged", not any("stale path" in e for e in ex_errs))
+        check("explorations broken link STILL flagged", any("broken link" in e for e in ex_errs))
 
     print(f"\n{'OK' if not failures else f'{failures} FAILING'}: status-doctor self-test")
     return 1 if failures else 0

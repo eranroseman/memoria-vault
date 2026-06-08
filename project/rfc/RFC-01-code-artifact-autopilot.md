@@ -28,7 +28,7 @@ A specific recurring analysis (e.g. a weekly metric refresh) has been run manual
 
 ## Guard
 
-Never a global flag. Opt-in per `code-note`, and only for code whose success is a verifiable scalar (tests, a metric) — the Coder-lane autonomy boundary of [ADR-21](../decisions/21-l3-autonomy-ceiling.md). Synthesis work is out of scope by construction.
+Never a global flag. Opt-in per `code-note`, and only for code whose success is a verifiable scalar (tests, a metric) — the Coder-lane autonomy boundary of [ADR-21](../adr/21-l3-autonomy-ceiling.md). Synthesis work is out of scope by construction.
 
 ## Alternatives considered
 
@@ -41,4 +41,4 @@ Never a global flag. Opt-in per `code-note`, and only for code whose success is 
 - **Workflows:** [Code](../../docs/how-to-guides/compose/create-a-code-artifact.md)
 - **Files:** [profiles/coder.md](../../docs/explanation/profiles/coder.md), `99-system/templates/code-note.md`
 - **Related proposal:** [discovery-loop.md](explorations/discovery-loop.md) §2 (Coder experiment loop) — the keep/revert variant of the same Coder-lane autonomy; this proposal is the *scheduled-script* variant.
-- **Bounded by:** [ADR-21 L3 autonomy ceiling](../decisions/21-l3-autonomy-ceiling.md) (the Coder exception).
+- **Bounded by:** [ADR-21 L3 autonomy ceiling](../adr/21-l3-autonomy-ceiling.md) (the Coder exception).

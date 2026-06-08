@@ -43,7 +43,7 @@ Do not stand up the governance layer as a preparatory measure. The runtime mecha
 ## Related
 
 - **Runtime mechanism:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **Placeholder:** `99-system/skills/` ships empty until this is stood up (see [on-disk-layout.md](../../docs/reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([release-plan-v0.1-appendix.md](../releases/v0.1/release-plan-v0.1-appendix.md)).
+- **Placeholder:** `99-system/skills/` ships empty until this is stood up (see [on-disk-layout.md](../../docs/reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([release-plan-v0.1-appendix.md](../release/v0.1/release-plan-v0.1-appendix.md)).
 
 ## Dependencies
 

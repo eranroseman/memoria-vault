@@ -4,13 +4,13 @@ One job each.
 
 | Path | What it holds | When to look here |
 |---|---|---|
-| [decisions/](decisions/) | Accepted architectural decisions (ADRs) | You want to know *why* something is the way it is |
-| [proposals/](proposals/) | Deferred capabilities and ideas under consideration (single-capability `RFC-NN` + thematic [explorations/](proposals/explorations/)) | You want to add a feature or understand what's been considered |
-| [releases/](releases/) | Per-version release plans + readiness, and the reusable [release-plan template](releases/release-plan-template.md) | You want to know what a release covers or how to cut one |
+| [adr/](adr/) | Accepted architectural decisions (ADRs) | You want to know *why* something is the way it is |
+| [rfc/](rfc/) | Deferred capabilities and ideas under consideration (single-capability `RFC-NN` + thematic [explorations/](rfc/explorations/)) | You want to add a feature or understand what's been considered |
+| [release/](release/) | Per-version release plans + readiness, and the reusable [release-plan template](release/release-plan-template.md) | You want to know what a release covers or how to cut one |
 | [process.md](process.md) | Branch discipline, issue/board flow, landing checklists, divergence recovery | You want to know *how* we work in this repo |
-| [tests/](tests/) | Reusable test plans | You want to verify or validate the system |
+| [test/](test/) | Reusable test plans | You want to verify or validate the system |
 
-Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](decisions/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
+Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](adr/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
 
 ---
 
@@ -20,6 +20,6 @@ A **decision** is closed. Something was considered, a choice was made, and the d
 
 A **proposal** is open. It's a capability that's been thought through enough to have a clear shape, an adoption trigger, and known trade-offs — but it hasn't been scheduled yet. Proposals graduate to decisions when they're adopted, or stay in proposals until conditions warrant.
 
-**If you're adding a new idea:** write a proposal file, not a decision. Use [proposals/_template.md](proposals/_template.md).
+**If you're adding a new idea:** write a proposal file, not a decision. Use [rfc/_template.md](rfc/_template.md).
 
-**If you're recording a choice that was just made:** write a decision file. Use [decisions/_template.md](decisions/_template.md) and give it the next available number.
+**If you're recording a choice that was just made:** write a decision file. Use [adr/_template.md](adr/_template.md) and give it the next available number.

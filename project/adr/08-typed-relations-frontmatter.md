@@ -24,7 +24,7 @@ Adopt a **`relations:` frontmatter block** on claim-notes for *associative* type
 - Unblocks [ADR-9](09-contradictions-dashboard.md): the contradictions dashboard now has `relations.contradicts` to query.
 - Adopting the *namespace* costs nothing when unused — opt-in means that below the density where typed links pay off they simply stay sparse; there is no "populate every link" burden. This is what made the earlier deferral unnecessary: the cost had been modeled as mandatory.
 - Adds a small schema obligation: a `relations` controlled vocabulary in the [schema reference](../../docs/reference/frontmatter.md), a `schema_version` bump on the claim-note template, and a Linter check that flags `relations:` keys outside the vocabulary.
-- Richer link semantics (a `relation_type:`-per-link list, an expanded PARNESS-style vocabulary — PARNESS: a typed-relation scheme covering supports, refutes, extends, uses, and similar rhetorical moves between claims) and an **NLI candidate-proposer** for `contradicts` remain future work — see [schema-and-retrieval.md](../proposals/explorations/schema-and-retrieval.md) and [classical-method-displacements.md](../proposals/explorations/classical-method-displacements.md). v1 is human-noticed, human-typed.
+- Richer link semantics (a `relation_type:`-per-link list, an expanded PARNESS-style vocabulary — PARNESS: a typed-relation scheme covering supports, refutes, extends, uses, and similar rhetorical moves between claims) and an **NLI candidate-proposer** for `contradicts` remain future work — see [schema-and-retrieval.md](../rfc/explorations/schema-and-retrieval.md) and [classical-method-displacements.md](../rfc/explorations/classical-method-displacements.md). v1 is human-noticed, human-typed.
 
 ## Alternatives considered
 
