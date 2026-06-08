@@ -17,8 +17,8 @@ topic, not chronology.
 
 ## D1 — Four-layer cognitive model *(→ supersedes ADR-01)*
 
-**Decided:** Desk · Bookkeeping · Housekeeping · Store — cognitive models, not
-implementation boundaries.
+**Decided:** Workspaces · Bookkeeping · Housekeeping · Vault — cognitive models, not
+implementation boundaries (originally named Desk / Store; renamed in D24).
 
 **Why:** the layer first called "Research/Production" actually describes the *agent's*
 bookkeeping *between* human actions — not the human's research, which happens at the
@@ -198,6 +198,128 @@ dashboards are *browsable health views* (where things stand). `daily-health` dis
 into the homepage; `board-state` becomes the Inbox board; `open-questions`/`contradictions`
 are the human's synthesis backlog (Read/Write) while `loose-ends`/`drift-watch` are the
 Linter's structural debt (Housekeeping) — kept separate **by layer**, not collapsed.
+
+---
+
+## D15 — Three doer-tiers; the Linter is an engine *(→ amends ADR-02)*
+
+**Decided:** three tiers — **engines** (deterministic, no posture, no board: ingest,
+Linter, search, retraction sweep), **agents** (posture + LLM, board lanes), and **the
+human** (the only promoter). The **Linter is an engine, not an agent**.
+
+**Why:** under "profile = posture" (D8), a zero-LLM, no-judgment tool has no posture, so
+it isn't an agent — you *run* a linter, you don't *dispatch* it. This sharpens the old
+"seven profiles" into six agents + infrastructure.
+
+**Alternatives weighed:** keep the Linter as a 7th profile (rejected — no posture, never
+touches the board).
+
+## D16 — Cataloging splits: ingest engine + Librarian agent *(→ amends ADR-30)*
+
+**Decided:** the mechanical half of cataloging (fetch metadata, extract content, build
+entity relationships, create records) is the **ingest engine**; the Librarian **agent**
+fills only the two LLM holes (the `[!brief]` + the classification proposal).
+
+**Why:** managing the catalog is mostly mechanical — an engine should do it; the
+Librarian's optimistic posture only matters for the judgment-adjacent steps. (ADR-30's
+pipeline already works this way.)
+
+## D17 — Relationships (Catalog) vs links (Notes) *(→ amends ADR-08)*
+
+**Decided:** entities carry **`relationships`** (cited-by, authored-by, published-in —
+*given* facts, built by the ingest engine); notes carry **`links:`** (supports /
+contradicts, hub membership — *authored*, agent-proposes / human-confirms). `links:`
+replaces the old `relations:` field.
+
+**Why:** "relationships are given; links are authored" — different in nature, owner, and
+gating. The rename also removes the `relations`/`relationships` near-synonym clash.
+
+**Alternatives weighed:** references / connections (rejected — "reference" is
+citation-narrow and collides with the dropped reference-note); one "relations" term for
+both (rejected — conflates given vs authored).
+
+## D18 — Inbox cards on the universal lifecycle; `review-request` dropped *(→ refines D5/D6)*
+
+**Decided:** inbox cards carry the **universal lifecycle** (`proposed → … → archived`),
+not a bespoke vocabulary; the Hermes-native execution `status` stays the hidden mechanic.
+There is **no `review-request` type** — a card awaiting the human is just any card in
+`proposed`.
+
+**Why:** one state vocabulary the human sees everywhere; "awaiting you" is a *state*, not
+a *type*. Card-state and note-state stay disjoint by *category scope* (queries scope to
+`inbox/`), not by inventing a second vocabulary.
+
+## D19 — Maturity and agent-recommendation are soft signals *(→ refines D5)*
+
+**Decided:** both are informal 3-tier signals — `maturity` (seedling→evergreen; claim
+development) and `agent-recommendation` (inconclusive→clean; a check verdict). Same
+*kind*, different *subject*; **distinct values, consistent display**; neither is a gate.
+
+**Why:** they look parallel but measure different things (development vs verdict) — keep
+values distinct so a `seedling` claim isn't read as an "inconclusive" check; present
+consistently so the human reads them the same way.
+
+## D20 — Reports inform; drafts gate *(→ new)*
+
+**Decided:** a **report** (corpus-map, gap-report, verification-report) is an
+agent-generated read-only analysis the human *consults* — regenerable, no approval gate,
+surfaces as FYI. A **composition** (draft → deliverable) is human work behind a **gate**.
+
+**Why:** a report isn't promoted to canon — its *findings* become Inbox `gap`/`flag`
+cards, but the document itself needs no approval. Conflating the two would gate things
+that don't need gating.
+
+## D21 — Two kinds of human decision; classify is automated *(→ new)*
+
+**Decided:** every human decision point is either an **approval gate** (review agent
+output → accept/reject) or a **work prompt** (do your own thinking). **classify** is
+neither a real gate (low-stakes metadata, rubber-stamp-prone) — so **automate it**
+(audited, correctable; flag only genuine ambiguity). The real Read gate is at **distill**.
+
+**Why:** the rule — *an Inbox item a human can clear without reading is a design smell* —
+exposes classify as a fake gate; the genuine keep/skip judgment belongs at candidate
+triage, and the genuine synthesis judgment at distill.
+
+**Alternatives weighed:** keep classify as a gate (rejected — rubber-stamp);
+confidence-tiered auto-accept (rejected, D12).
+
+## D22 — Decision transparency is the primary guardrail *(→ supersedes the anti-anchoring mechanics)*
+
+**Decided:** every approval gate ships the **reasoning — pros, cons, and the verdict** —
+so the human judges the *process*, not just the output; and **prefer full automation over
+a rubber-stamp gate**.
+
+**Why:** assume anything promoted to the human will be approved. The defensive
+anti-anchoring mechanics (blind-first, no-assist sampling) were weaker than simply making
+the reasoning legible — transparency lets the human catch a bad *process*, the real
+failure mode.
+
+**Alternatives weighed:** blind-first capture + no-assist sampling + rankings-off (kept
+only as optional aids; transparency is primary).
+
+## D23 — Skill-naming scheme *(→ new)*
+
+**Decided:** `<activity>:<verb>-<object>` (snake for MCP tools) — verb-first, from a
+**closed verb set** (extract · link · summarize · check · rank · draft · outline ·
+score); the artifact is the object, with **no result slot**.
+
+**Why:** matches the cross-system convention (fabric, MCP, CLI, Google AIP) — verb-noun +
+a closed verb set; the candidate third "result" slot was redundant.
+
+**Alternatives weighed:** `<activity>-<action>-<result>` (rejected — the result slot is
+redundant). The `read:`/`write:` prefix is borderline — keep only if an eval shows it
+aids selection.
+
+## D24 — Final naming pass *(→ refines D1/D2/D7)*
+
+**Decided:** **Workspaces** (was Desk), **Vault** (was Store; the Obsidian vault),
+`catalog/` (named for content, not the Librarian); activities are **Read / Write** only
+(drop the Compile/Compose double-name); Bookkeeping/Housekeeping spelled out (no
+`book`/`house`).
+
+**Why:** the naming discipline — one name per thing, the word the user would say.
+Desk/Store were abstractions; Workspaces/Vault are concrete and already in use.
+Compile/Compose was a redundant second vocabulary for Read/Write.
 
 ---
 
