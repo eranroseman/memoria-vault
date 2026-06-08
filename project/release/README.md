@@ -4,33 +4,54 @@ topic: releases
 
 # Releases
 
-One folder per version, `releases/vX.Y/`, holding everything specific to that cut.
-The reusable plan body is [release-plan-template.md](release-plan-template.md); the
-current release is [v0.1/](v0.1/).
+One folder per version, `release/vX.Y/`, holding the **prose** of that cut (scope,
+known limitations, cut procedure, roadmap). The reusable body is
+[release-plan-template.md](release-plan-template.md); the current release is
+[v0.1/](v0.1/). The *live readiness state* lives outside the file — see below.
+
+## Where each thing lives (single source of state)
+
+| Thing | Lives in |
+|---|---|
+| **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` (assigned issues) |
+| **Readiness** (gate + validation-stage state) | the **"Release vX.Y" tracking issue** — a gate checklist GitHub renders as a progress bar |
+| **Prose** (scope summary, limitations, cut steps, roadmap) | `release/vX.Y/release-plan-vX.Y.md` |
+| **Build gaps** | GitHub issues |
+| **Scope cuts** | `rfc/` |
+| **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
+
+The plan file holds **prose, not state tables**. Gate/stage state is the checklist
+in the tracking issue; everything else points — never restates.
 
 ## Starting a new release — vX.Y
 
-1. **Create the folder** `releases/vX.Y/` with a `README.md` (copy an existing
-   release README; it's a thin index of the files below).
-2. **Copy the plan:** [release-plan-template.md](release-plan-template.md) →
-   `releases/vX.Y/release-plan-vX.Y.md`. Reset every Gate (`G#`) and Stage (`S#`)
-   state to `todo`; set frontmatter `status: draft`, `released: false`.
-3. **Create the GitHub milestone** `vX.Y` and assign the issues that scope it
-   (see [AGENTS.md §10](../../AGENTS.md)). The milestone — not this folder — is the
-   live scope list; the plan's §4 Blockers *links* the release-blocking issues.
-4. **Add detail overflow** (optional) to `release-plan-vX.Y-appendix.md` when the
-   plan's phase/exit-criteria detail gets too long for a crisp plan.
+1. **Folder + plan.** Create `release/vX.Y/README.md` (thin index) and copy
+   [release-plan-template.md](release-plan-template.md) →
+   `release/vX.Y/release-plan-vX.Y.md`. Fill the prose; set frontmatter
+   `status: draft`, `released: false`.
+2. **Milestone = scope.** Create the `vX.Y` milestone
+   (`gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`) and assign the
+   issues that scope it (AGENTS.md "Work routing").
+3. **Tracking issue = readiness.** Open a **"Release vX.Y"** issue (label `release`,
+   milestone `vX.Y`) whose body is the **gate checklist** (one `- [ ]` per gate
+   `G#` and validation stage `S#`). GitHub shows the progress bar; tick boxes as
+   gates go green — no markdown state table to hand-edit.
+4. **Overflow** (optional) → `release-plan-vX.Y-appendix.md`.
 
-## Standard contents of a `releases/vX.Y/` folder
+## Cutting a release
 
-| File | What it holds |
+1. Every gate/stage box in the tracking issue ticked; required CI green on `main`; no open **P0**.
+2. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
+   `vX.Y`, and publishes the GitHub Release with curated notes (fold in the plan's
+   known-limitations).
+3. Set the plan frontmatter `status: released`, `released: true`.
+4. Close the milestone and the tracking issue; roll unfinished issues forward.
+
+## Standard contents of a `release/vX.Y/` folder
+
+| File | Holds |
 |---|---|
 | `README.md` | Thin index of this release's files |
-| `release-plan-vX.Y.md` | The plan: scope, gates (G#), stages (S#), blockers, cut procedure, roadmap |
-| `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail the plan summarizes |
-| *run records* | *(optional)* completed test-plan runs and sign-off sheets for the cut (the reusable plans live in [../tests/](../tests/)) |
-
-## Single source of state
-
-Gate/stage state lives **only** in the plan's §2/§3; build gaps live **only** in
-GitHub issues; scope cuts in `proposals/`. Everything else points — never restates.
+| `release-plan-vX.Y.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
+| `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail |
+| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [../test/](../test/)) |
