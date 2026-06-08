@@ -61,7 +61,7 @@ Detail: [installer-test-plan.md](../../test/plans/installer-test-plan.md).
 ## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
-- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../decisions/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
+- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
 Detail: [hermes-cli-test-plan.md](../../test/plans/hermes-cli-test-plan.md), [headless-test-plan.md](../../test/plans/headless-test-plan.md).

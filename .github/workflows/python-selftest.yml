@@ -57,6 +57,7 @@ jobs:
           python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py" --self-test
           python scripts/docs-doctor.py --self-test
           python scripts/check-test-refs.py --self-test
+          python scripts/status-doctor.py --self-test
           python scripts/gen-adr-index.py --self-test
           python .github/scripts/pr_policy.py --self-test
       - name: Check ADR index is current

@@ -90,6 +90,8 @@ v0.1.0 ships when **both gate groups are green** — the infrastructure mandator
 gates prove a workflow actually runs on it. **Green plumbing alone is not a release.**
 _(Proposed gates — confirm/adjust the thresholds.)_
 
+> **Live readiness:** [Release v0.1 (#266)](https://github.com/eranroseman/memoria-vault/issues/266) — the gate/stage checklist (GitHub progress bar). The State columns below are the at-cut record; the issue is the live source.
+
 ### Infrastructure gates (G1–G8) — mandatory
 
 | Gate | State | Proves | Verified by | Issue |
@@ -149,7 +151,7 @@ The remaining blockers split in two:
 
 ## 5. Out of scope (deferred)
 
-The deferred set lives in [proposals/](../../proposals/) — not duplicated here. At
+The deferred set lives in [proposals/](../../rfc/) — not duplicated here. At
 the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
