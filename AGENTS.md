@@ -35,6 +35,8 @@ git worktree remove ~/mv-<session>   # when done
 
 Keep worktrees on ext4 (`~/…`), never under `/mnt/c`.
 
+Prefer a worktree **per branch** even working solo: switching becomes `cd`, and a `reset --hard` in one worktree can't reach another's uncommitted work (§4).
+
 ## 2. Branch first — always
 
 ```bash
@@ -53,6 +55,16 @@ git add -A                          # NO
 ```
 
 If you find unmerged work you didn't author, preserve it and surface it to the user. Never delete a branch or stash you didn't create without confirming its content is already on `main`.
+
+## 4. Clean tree before you switch or reset
+
+`git switch -c` carries your uncommitted changes onto the new branch — but `git reset --hard`, `git checkout -- <path>`, and `git clean -f` **discard** them with no reflog entry. Before any of those, make the tree clean:
+
+```bash
+git stash push -u -m wip     # -u also stashes untracked WIP; restore with: git stash pop
+```
+
+The post-merge resync `git reset --hard origin/main` (PR flow) is the one safe exception — by then your work is already on `main` and the tree is clean. The durable fix is a worktree per branch (§1): it turns "switch" into `cd`, so there's never a dirty tree to lose.
 
 ---
 
