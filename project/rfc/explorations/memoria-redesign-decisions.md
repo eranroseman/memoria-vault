@@ -15,7 +15,7 @@ topic, not chronology.
 
 ---
 
-## D1 — Four-layer cognitive model *(→ supersedes ADR-01)*
+## D1 — Four-layer cognitive model *(→ supersedes ADR-01; collapsed to two layers + actors in D25)*
 
 **Decided:** Workspaces · Bookkeeping · Housekeeping · Vault — cognitive models, not
 implementation boundaries (originally named Desk / Store; renamed in D24).
@@ -114,7 +114,7 @@ removing the hidden wrap that CURATE-last needed.
 the "research vault" identity — "research" reserved for the practice); think/write;
 CURATE-last (fewer backward arcs but hides the trigger); CURATE as an unnumbered hub.
 
-## D8 — Team-role profile naming *(→ amends ADR-02)*
+## D8 — Team-role profile naming *(→ amends ADR-02; consolidated by D26/D27)*
 
 **Decided:** name agents by the team role you'd hire — **Librarian · Analyst · Writer
 · Fact-checker · Engineer** (colleagues); **Socratic** (thinking-partner, a method
@@ -201,7 +201,7 @@ Linter's structural debt (Housekeeping) — kept separate **by layer**, not coll
 
 ---
 
-## D15 — Three doer-tiers; the Linter is an engine *(→ amends ADR-02)*
+## D15 — Three doer-tiers; the Linter is an engine *(→ amends ADR-02; renamed "actors" in D30, layers collapsed in D25)*
 
 **Decided:** three tiers — **engines** (deterministic, no posture, no board: ingest,
 Linter, search, retraction sweep), **agents** (posture + LLM, board lanes), and **the
@@ -297,7 +297,7 @@ failure mode.
 **Alternatives weighed:** blind-first capture + no-assist sampling + rankings-off (kept
 only as optional aids; transparency is primary).
 
-## D23 — Skill-naming scheme *(→ new)*
+## D23 — Skill-naming scheme *(→ new; prefix changed to task in D31)*
 
 **Decided:** `<activity>:<verb>-<object>` (snake for MCP tools) — verb-first, from a
 **closed verb set** (extract · link · summarize · check · rank · draft · outline ·
@@ -320,6 +320,107 @@ aids selection.
 **Why:** the naming discipline — one name per thing, the word the user would say.
 Desk/Store were abstractions; Workspaces/Vault are concrete and already in use.
 Compile/Compose was a redundant second vocabulary for Read/Write.
+
+---
+
+## D25 — Collapse to two layers + three actors *(→ refines D1/D15)*
+
+**Decided:** the model is **two structural layers** (Workspaces · Vault) + **three
+actors** (engines · agents · the human). "Bookkeeping" and "Housekeeping" are no longer
+layers — they're *what* the agent and engine tiers *do*.
+
+**Why:** the four-layer model made the Linter both "the Housekeeping layer" *and* "an
+engine" — a redundancy. Layers answer *where* (Workspaces, Vault); actors answer *who*.
+The process-vs-maintain distinction the old `-keeping` pair carried is carried by the
+agent-vs-engine split instead, with no parallel taxonomy.
+
+**Alternatives weighed:** keep the four layers (rejected — the layer/tier doubling *is*
+the confusion); keep "Housekeeping" as the engine tier's function name only (rejected —
+half-measure, two names floating).
+
+## D26 — One co-PI fronts everything; specialists are background lanes *(→ refines D8/D9)*
+
+**Decided:** the human converses with **one agent — the co-PI** — and **delegates** tasks
+to the background lanes. The co-PI is the desk partner and **subsumes Socratic**; the
+specialists are never separate chats.
+
+**Why:** "who do I talk to?" was the multi-agent pane's core confusion. Concentrating
+every conversation in one agent lets it own Hermes' self-improving loop (memory · /goals ·
+skills), where it compounds into a true co-PI; the background lanes stay stateless
+propose-then-dispose executors. Socratic was already desk-only, write-denied, and off the
+board — a natural fold-in.
+
+**Alternatives weighed:** co-PI + a few directly-conversable specialists (rejected for now
+— reintroduces "who do I talk to", splits the loop; revisit if a specialist conversation
+proves necessary); the status-quo 4-agent pane (rejected — the confusion this fixes).
+
+## D27 — Profiles consolidate to three postures + Engineer *(→ amends D8)*
+
+**Decided:** three background postures — **Process** (catalog · extract · link · map; the
+merged Librarian + Analyst), **Write** (draft), **Verify** (independent judgment) — plus
+**Engineer** (code, kept), plus the co-PI. Cut by **posture**, not by task.
+
+**Why:** under "profile = posture", catalog/extract/link/map share one *faithful* stance,
+so they're one profile running four lanes — not four profiles. Writing (generative) and
+verifying (skeptical, independent) are genuinely different postures, so they stay separate;
+Engineer's narrow code scope is orthogonal.
+
+**Alternatives weighed:** keep the five specialists (rejected — artificial catalog→map
+handoffs, more to maintain); two postures, Researcher + Verify (rejected — collapses
+generative writing into faithful research, too broad a write-scope).
+
+## D28 — Fact-checker splits by determinism *(→ refines D15/D27)*
+
+**Decided:** the old Fact-checker splits along the determinism line — the **deterministic
+sweeps** (retraction, near-duplicate, broken-citation) become **engines**; the **judgment
+checks** (cite-check, claim-trace) become the independent **Verify** agent. Verify is
+**not** merged into Process.
+
+**Why:** deterministic→engine, judgment→agent is the same rule as D15. And verification
+independence is a deliberate safeguard — the agent that synthesizes must not also grade
+its own work (separation of duties; the anti-rubber-stamp logic behind the three review
+dimensions). Merging Verify into Process would break that.
+
+**Alternatives weighed:** merge Fact-checker's bookkeeping into Process, sweeps → engines
+(rejected — breaks independence); keep Fact-checker standalone spanning book/house
+(rejected — the "· book/house" awkwardness; deterministic sweeps need no posture).
+
+## D29 — One working surface, two perspectives *(→ refines D7/D24)*
+
+**Decided:** **Read** and **Write** are two **perspectives** (saved layouts) on **one
+working surface** plus Home — not two walled-off workspaces. Every task is reachable from
+both via the palette. The "six phases" framing is dropped — there are two activities and
+six **delegable tasks**.
+
+**Why:** reading and writing interleave too tightly for a hard wall (you write notes while
+reading, read claims while writing). The perspective keeps ergonomic focus without
+switch-friction; "phase" wrongly implied a pipeline the human walks.
+
+**Alternatives weighed:** two hard workspaces (rejected — switch-friction, two layouts);
+one undifferentiated surface (rejected — loses reading-vs-writing ergonomics).
+
+## D30 — "actors" is the tier term *(→ renames D15's doer-tiers)*
+
+**Decided:** the three tiers are **actors** — engines · agents · the human (replacing
+"doer-tiers").
+
+**Why:** "actors" carries the UML/actor-model lineage (who performs the action), is
+self-teaching, and naturally includes the human; "workers" is taken (Hermes lanes).
+
+**Alternatives weighed:** doers (kept as a plain fallback); operators (implies
+runtime-ops); performers (theatrical).
+
+## D31 — Task-prefix skill naming *(→ refines D23)*
+
+**Decided:** skill names are **`<task>:<verb>-<object>`** — the prefix is the **task/lane**
+(catalog · extract · link · map · draft · verify · find · search), not the activity. E.g.
+`verify:check-citation`, `catalog:enrich-record`, `search:find-source`.
+
+**Why:** the `read:`/`write:` activity prefix was too coarse to disambiguate; the task
+prefix matches the board card / lane, so a skill's name says which task delegates it.
+
+**Alternatives weighed:** `<activity>:` prefix (D23 — rejected as too coarse); no prefix
+(rejected — loses the lane signal).
 
 ---
 
