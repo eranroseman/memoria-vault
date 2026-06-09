@@ -25,7 +25,7 @@ Candidate notes can arrive from four pipelines: `find` (forward/backward citatio
 The candidate-note earns its place by filling **two** gaps with one type, not by being an alternate front door for routine capture (deliberate single captures should still go straight to a `paper-note`/`item-note` — adding a candidate gate there is redundant friction).
 
 1. **Discovery inbox.** Un-screened leads from `find` / database-search await a human include/exclude decision before any enrichment cost is paid.
-2. **Ingestion dead-letter.** The normal path is `capture → ingest (≤60s) → paper-note`. When ingestion *fails* — API down, no PDF, stalled queue — the card today exhausts `max_retries` and sits at `blocked`, invisible in the vault. Instead, on `kanban_block` (give-up signal, not a wall-clock timer) the capture **materializes as a candidate-note** so nothing captured is ever lost; the human can retry the pipeline or discard it from a triage-able note rather than a parked board card. Until the 16th type ships, this degrades gracefully — a stalled capture simply stays a `blocked` card.
+2. **Ingestion dead-letter.** The normal path is `capture → ingest (≤60s) → paper-note`. When ingestion *fails* — API down, no PDF, stalled queue — the card today exhausts `max_retries` and sits at `blocked`, invisible in the vault. Instead, on `kanban_block` (give-up signal, not a wall-clock timer) the capture **materializes as a candidate-note** so nothing captured is ever lost; the human can retry the pipeline or discard it from a triage-able note rather than a parked board card. (Before the 16th type shipped, this degraded gracefully — a stalled capture simply stayed a `blocked` card.)
 
 These two roles carry **different** `candidate_status` meanings (see below): a dead-letter candidate is *pending ingest-retry*; a discovery candidate is *pending include/exclude*. They trigger different next actions, so the status field must distinguish them.
 
@@ -57,7 +57,7 @@ These are the candidate-specific fields; every note also carries the global requ
 - Triage dashboards work uniformly regardless of where a candidate came from.
 - **No captured source is silently lost.** Ingestion failures surface as triage-able dead-letter notes instead of `blocked` board cards, decoupling capture reliability from ingest reliability.
 - Tiny schema cost; high payoff for any later screening work.
-- Until the 16th note type is added in templates, both roles degrade gracefully: discovery queries return no results, and a stalled capture stays a `blocked` card (its current behavior).
+- Before the 16th note type was added in templates, both roles degraded gracefully: discovery queries returned no results, and a stalled capture stayed a `blocked` card. The type has since shipped (see the status note above), so both are now live.
 
 ## Alternatives considered
 
