@@ -283,7 +283,7 @@ triage, and the genuine synthesis judgment at distill.
 **Alternatives weighed:** keep classify as a gate (rejected — rubber-stamp);
 confidence-tiered auto-accept (rejected, D12).
 
-## D22 — Decision transparency is the primary guardrail *(→ supersedes the anti-anchoring mechanics)*
+## D22 — Decision transparency is the primary guardrail *(→ supersedes the anti-anchoring mechanics; card schema in D35)*
 
 **Decided:** every approval gate ships the **reasoning — pros, cons, and the verdict** —
 so the human judges the *process*, not just the output; and **prefer full automation over
@@ -323,7 +323,7 @@ Compile/Compose was a redundant second vocabulary for Read/Write.
 
 ---
 
-## D25 — Collapse to two layers + three actors *(→ refines D1/D15)*
+## D25 — Collapse to two layers + three actors *(→ refines D1/D15; build-view stack in D36)*
 
 **Decided:** the model is **two structural layers** (Workspaces · Vault) + **three
 actors** (engines · agents · the human). "Bookkeeping" and "Housekeeping" are no longer
@@ -354,7 +354,7 @@ board — a natural fold-in.
 — reintroduces "who do I talk to", splits the loop; revisit if a specialist conversation
 proves necessary); the status-quo 4-agent pane (rejected — the confusion this fixes).
 
-## D27 — Profiles consolidate to three postures + Engineer *(→ amends D8)*
+## D27 — Profiles consolidate to three postures + Engineer *(→ amends D8; renamed Librarian/Writer/Fact-checker in D34)*
 
 **Decided:** three background postures — **Process** (catalog · extract · link · map; the
 merged Librarian + Analyst), **Write** (draft), **Verify** (independent judgment) — plus
@@ -385,7 +385,7 @@ dimensions). Merging Verify into Process would break that.
 (rejected — breaks independence); keep Fact-checker standalone spanning book/house
 (rejected — the "· book/house" awkwardness; deterministic sweeps need no posture).
 
-## D29 — One working surface, two perspectives *(→ refines D7/D24)*
+## D29 — One working surface, two perspectives *(→ refines D7/D24; perspectives named Library/Project in D33)*
 
 **Decided:** **Read** and **Write** are two **perspectives** (saved layouts) on **one
 working surface** plus Home — not two walled-off workspaces. Every task is reachable from
@@ -421,6 +421,105 @@ prefix matches the board card / lane, so a skill's name says which task delegate
 
 **Alternatives weighed:** `<activity>:` prefix (D23 — rejected as too coarse); no prefix
 (rejected — loses the lane signal).
+
+---
+
+## D32 — The human's role name is the PI *(→ new; locks the §10 naming-open)*
+
+**Decided:** the human in charge is **the PI** (Principal Investigator); *"human-in-the-loop"*
+stays the design **concept**, "PI" is the **role**.
+
+**Why:** "co-PI" requires a referent — `co-` is meaningless without a PI, so naming
+coherence is near-decisive. "PI" is agentive and accountable (the human-in-charge
+principle), where "human/user" is a passive role label.
+
+**Alternatives weighed:** "the human" / "user" as the role name (kept only as the
+interaction-paradigm *concept*, not the role). [Shneiderman, *Human-Centered AI*.]
+
+## D33 — Library / Project perspectives *(→ refines D29)*
+
+**Decided:** the two perspectives on the one working surface are **Library** (the *Read*
+surface — sources, catalog, notes) and **Project** (the *Write* surface — canvas, outline,
+draft). The **activities stay Read / Write**; "the Library" is retired as a nickname for
+the **Vault** to clear the collision.
+
+**Why:** concrete, domain-apt names beat the bare verbs for the *surfaces*, while the verbs
+remain the activity spine (D7). Two distinct vocabularies — activity vs surface — map 1:1.
+
+**Alternatives weighed:** Read/Write as the perspective names (rejected — bare verbs; kept
+as activities); Sources/Project.
+
+## D34 — Librarian for the unified processing agent *(→ amends D27)*
+
+**Decided:** the consolidated processing posture is named **Librarian** (not "Process").
+For coherence **Writer** and **Fact-checker** re-attach too. **Agents are role-named**
+(co-PI · Librarian · Writer · Fact-checker · Engineer); **lanes/tasks stay function-named**
+(catalog · extract · link · map · draft · verify · code).
+
+**Why:** a research/reference librarian does *both* intake and lit-search/gap-analysis, so
+"Librarian" is accurate for catalog+map and more thematic than "Process"; consistent with
+D8's "who would I hire?" naming. The D27 *consolidation* is unchanged — only the name.
+
+**Alternatives weighed:** functional names Process/Write/Verify (rejected — bland, and
+inconsistent with the colleague-name philosophy); keep Librarian alone but leave
+Write/Verify functional (rejected — mixed register).
+
+## D35 — Recommendation-card schema *(→ refines D22)*
+
+**Decided:** every approval-gate item uses **BLUF + progressive disclosure** in three tiers
+— **Glance** (recommended *action* · verdict + one-line justification · *impact* ·
+*certainty*) · **Reasoning** (why-impact · reasons-for · reasons-against ·
+what-it's-uncertain-about · provenance) · **Consequences** (if-accept · if-reject ·
+reversibility · alternatives). The **Toulmin** model is the spine (claim · grounds ·
+warrant · backing · qualifier · rebuttal). **Impact and certainty are 3 levels each,
+labelled by action** ("act now / later / skip"), never a numeric % scale. Clearing the
+gate **requires expanding the rebuttal**, not just reading the verdict.
+
+**Why:** the original element set was all verdict-side and missed five action-side elements
+(action, provenance, reversibility, uncertainty, alternatives). BLUF + progressive
+disclosure fits the visual-discipline glance→expand; 3 action-labelled levels suit a single
+uncalibrated rater and dodge the middle-bin trap; **handing a verdict induces automation
+bias** (people scrutinise less), so gate on the rebuttal and present for/against
+symmetrically (inform, don't persuade).
+
+**Alternatives weighed:** verdict-only or >3-level / numeric scales (rejected); a
+reasons-for-only gate (rejected — automation bias). [NIST IR 8312; Tintarev & Masthoff
+2012; Preston & Colman 2000; the Toulmin model.]
+
+## D36 — Seven-layer system architecture; MCP is a policy boundary *(→ complements D25)*
+
+**Decided:** adopt a **seven-layer build/runtime stack** (PI · Interface · co-PI · Tasks ·
+MCP · Engines · Vault) with the principle **decisions flow top-down, information bottom-up**.
+It *complements* — does not replace — the D25 cognitive model (two layers + three actors);
+they map one-to-one. **MCP is the agent sandbox boundary, but a *policy/permission* gate,
+not an *execution* sandbox.** Detail: [system-architecture.md](system-architecture.md).
+
+**Why:** the stack makes the MCP trust boundary and the co-PI/tasks split explicit, which
+the cognitive model folds away. Two *named* lenses (cognitive vs build) avoid the
+layer-model competition D25 fixed. The policy-vs-execution caveat is honest about what MCP
+alone provides (process isolation, if wanted, is a separate boundary).
+
+**Alternatives weighed:** a single layer model (rejected — D25 showed competing cognitive
+models confuse); rename engines → "apps" (rejected — collides with "MCP apps").
+
+## D37 — Batch-worklist pattern; reports are project artifacts; one unified inbox *(→ refines D6/D20)*
+
+**Decided:** **high-cardinality per-item decisions live in a batch worklist, not N inbox
+cards.** A report that lists many items each needing a keep/reject call (relevance scan,
+lit-search) **is** the review surface — a Bases-backed worklist where each row carries a
+lifecycle `decision` the PI toggles, at group or item granularity; the Inbox gets **one
+aggregate work-prompt**. Reports are **project artifacts** (`projects/<p>/reports/`),
+browsed in the Project perspective; there is **one global Inbox** with project-scoped
+*views*, not per-workspace inboxes.
+
+**Why:** dozens of atomic cards flood a queue meant to converge to zero and are exactly the
+"clear-without-reading" smell (D21); a worklist is the systematic-review screening model
+(Rayyan/Covidence). Reports inform, they aren't promoted (D20). Unified-inbox-plus-views is
+the dominant notification UX (one source of truth + filters) over siloed inboxes.
+
+**Alternatives weighed:** one card per item (rejected — flood + rubber-stamp);
+per-project inboxes (rejected — fragments attention, multiple unread counts). [PRISMA;
+synthesis matrix; NN/g inbox pattern.]
 
 ---
 
