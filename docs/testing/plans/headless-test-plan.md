@@ -1,7 +1,10 @@
 ---
 topic: tests
-title: "Headless test plan"
+title: Headless test plan
 status: draft
+parent: Test plans
+grand_parent: Testing
+nav_order: 16
 ---
 
 # Headless test plan — v0.1
@@ -95,7 +98,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 | `audit.jsonl` | `policy_mcp.py` audit writer | `timestamp, profile, action, path, task_id, decision, policy_rule, before_hash, after_hash` |
 
 - ✓ Pass: every DQL column / `WHERE` / `SORT` field and every `dataviewjs` `e.<field>` / `dv.pages(...).<field>` resolves to a field above. **And** every `.jsonl` feed is read with `dataviewjs` + `dv.io.load(...)` — never a DQL `FROM "…/x.jsonl"` (DQL queries note folders, not jsonl).
-- ✗ Fails: a field or mechanism mismatch → fix the dashboard query; or, where the data already exists in the writer's projection, serialize it from the writer. Canonical schemas: [docs/reference/telemetry.md](../../../docs/reference/telemetry.md).
+- ✗ Fails: a field or mechanism mismatch → fix the dashboard query; or, where the data already exists in the writer's projection, serialize it from the writer. Canonical schemas: [Telemetry & logs](../../reference/telemetry.md).
 
 > **Rule of thumb.** "No results to show" / "✅ All clear" on a fed dashboard is *only* trustworthy once D1+D2 are green — otherwise it's the failure mode, not success.
 
@@ -121,7 +124,7 @@ scripts/test.sh l1     # Part A only — the five component self-tests
 scripts/test.sh l0     # Parts B + C + E, plus the D1 informational run
 ```
 
-It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../../docs/adr/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
+It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../adr/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
 
 Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs PowerShell, and shellcheck (C1) is skipped with a notice when absent (CI still enforces both); the Part **D2** schema audit carries judgment — run it separately.
 
@@ -154,4 +157,4 @@ Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs Po
 - Hermes CLI checks: [Hermes CLI test plan](hermes-cli-test-plan.md)
 - The template these plans share: [{{Subject}} test plan](../test-plan-template.md)
 - CI that enforces A/B/C: `.github/workflows/{python-selftest,docs-doctor,docs-links,lint-installers}.yml`
-- Canonical telemetry schemas (for D2): [docs/reference/telemetry.md](../../../docs/reference/telemetry.md)
+- Canonical telemetry schemas (for D2): [Telemetry & logs](../../reference/telemetry.md)

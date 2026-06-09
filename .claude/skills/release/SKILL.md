@@ -6,7 +6,7 @@ description: Scaffold and track a new Memoria release (vX.Y) — create the rele
 # release
 
 Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffold:
-[project/release/README.md](../../../project/release/README.md).
+[docs/releasing/README.md](../../../docs/releasing/README.md).
 
 ## Where state lives (single source)
 
@@ -19,8 +19,8 @@ Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffo
 
 ## Starting a new release vX.Y
 
-1. **Folder + plan.** Create `project/release/vX.Y/README.md` (thin index). Copy
-   `project/release/release-plan-template.md` → `release/vX.Y/release-plan-vX.Y.md`.
+1. **Folder + plan.** Create `docs/releasing/vX.Y/README.md` (thin index). Copy
+   `docs/releasing/release-plan-template.md` → `docs/releasing/vX.Y/release-plan-vX.Y.md`.
    Fill the prose; frontmatter `status: draft`, `released: false`. The plan lists the
    gate/stage *definitions* — no state table.
 2. **Milestone = scope.** `gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`;
@@ -41,6 +41,6 @@ Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffo
 ## PR flow reminder
 
 Changes land via the PR flow (branch → PR → squash; `main` is a protected ruleset).
-Release-plan/`README` edits under `project/release/` are safe-path → auto-approve;
-anything touching `vault/`, `scripts/`, `.github/`, `docs/adr/`, or `project/test/`
+Release-plan/`README` edits under `docs/releasing/` are safe-path → auto-approve;
+anything touching `vault/`, `scripts/`, `.github/`, or `docs/adr/`
 is `needs_human`. See AGENTS.md "PR flow" / "Required CI checks".

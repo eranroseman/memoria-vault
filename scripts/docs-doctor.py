@@ -142,6 +142,8 @@ def check_links(md: Path, errors: list[str]) -> None:
         target = raw.strip()
         if target.startswith(("http://", "https://", "mailto:")):
             continue
+        if "{{" in target:
+            continue  # template placeholder (e.g. release-plan-template `{{ #NN }}`), not a real link
         # same-file anchor
         if target.startswith("#"):
             anchor = target[1:].strip()

@@ -1,6 +1,9 @@
 ---
 topic: releases
 title: v0.1 validation log
+parent: v0.1
+grand_parent: Releasing
+nav_order: 9
 ---
 
 # v0.1 validation log
@@ -70,4 +73,4 @@ All "verified" entries are against a **live Hermes on WSL2** unless noted.
 - GUI / dashboards (11) / Zotero bridge / ACP pane: attended per release (S5, G4) — see
   the [GUI run record](gui-test-run_v0.1.md).
 - Full clean-install candidate run from a fresh clone (G2 / S4) — see the
-  [release-candidate runbook](../../test/plans/release-candidate-runbook.md).
+  [release-candidate runbook](../../testing/plans/release-candidate-runbook.md).

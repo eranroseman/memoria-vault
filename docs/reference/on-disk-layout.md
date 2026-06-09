@@ -7,7 +7,7 @@ parent: Reference
 
 Where every file lives across the two filesystem roots: the starter vault (versioned, distributable) and `.memoria/` (tooling layer). For the design rationale see [explanation/architecture/](../explanation/architecture).
 
-**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See the [v0.1 release plan](../../project/release/v0.1/release-plan-v0.1.md) for build state.
+**Implementation note.** Items marked `# pending` are designed but not yet present in the v0.1 starter vault. Items marked `# deferred` are planned for a future version. See the [v0.1 release plan](../releasing/v0.1/release-plan-v0.1.md) for build state.
 
 ---
 

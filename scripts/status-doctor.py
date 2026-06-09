@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""status-doctor — keep the project/ docs (release plans, test plans) from rotting.
+"""status-doctor — keep the docs/ release/test/contributing prose from rotting.
 
 The project/ tree is prose plus pointers, and no other check covers its internal
-links. (ADRs and design notes now live under docs/ and are guarded by docs-doctor;
-this guards what remains in project/ — release/ and test/.) Guards three drift modes:
+links. (ADRs and design notes are guarded by docs-doctor's general link check;
+this adds the released-flag consistency guard over the release/test/contributing prose.) Guards three drift modes:
 
   1. Stale path renames — `project/releases/` (now release/) and `tests/` (now test/).
      These bit before, leaving broken cross-links after a folder rename.
@@ -11,7 +11,7 @@ this guards what remains in project/ — release/ and test/.) Guards three drift
   3. released-flag inconsistency — frontmatter `status: released` <-> `released: true`
      (only fires on the release plans that carry both keys).
 
-Scope: project/**/*.md + .claude/skills/release/SKILL.md.
+Scope: docs/{releasing,testing,contributing}/**/*.md + .claude/skills/release/SKILL.md.
 Exit 0 if clean, 1 if any issue. Usage: python scripts/status-doctor.py [--self-test]
 """
 from __future__ import annotations
@@ -31,11 +31,15 @@ STALE_RE = re.compile(r"(?:\.\./|project/)(" + "|".join(STALE) + r")/")
 
 
 def targets(root: Path) -> list[Path]:
-    files = sorted((root / "project").rglob("*.md"))
+    # The release/test/contributing prose moved from project/ into docs/; docs-doctor
+    # checks docs/ links generally, this adds the released-flag consistency guard.
+    files: list[Path] = []
+    for sub in ("releasing", "testing", "contributing"):
+        files += sorted((root / "docs" / sub).rglob("*.md"))
     skill = root / ".claude" / "skills" / "release" / "SKILL.md"
     if skill.is_file():
         files.append(skill)
-    return files
+    return sorted(files)
 
 
 def check_file(p: Path, root: Path) -> list[str]:
@@ -136,11 +140,11 @@ def _self_test() -> int:
         check("prose 'releases' (no path) -> not flagged",
               not any("stale path" in e for e in check_file(prose, root)))
 
-        # broadened scope: targets() covers the whole project/ tree, not just release/
-        (root / "project" / "test").mkdir(parents=True)
-        tp = root / "project" / "test" / "g9.md"
+        # scope: targets() covers the moved docs/ subtrees (releasing/testing/contributing)
+        (root / "docs" / "testing").mkdir(parents=True)
+        tp = root / "docs" / "testing" / "g9.md"
         tp.write_text("see [r](missing/x.md)\n")
-        check("targets() includes non-release project/ files", tp in targets(root))
+        check("targets() includes docs/testing files", tp in targets(root))
         check("broken link in a test plan flagged", any("broken link" in e for e in check_file(tp, root)))
 
     print(f"\n{'OK' if not failures else f'{failures} FAILING'}: status-doctor self-test")

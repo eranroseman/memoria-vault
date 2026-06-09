@@ -5,7 +5,7 @@ Emits two GitHub Actions outputs:
   reason   = human-readable string
 
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
-paths (docs/, project/release/, markdown) get decision=auto_approve, which
+paths (docs/, markdown) get decision=auto_approve, which
 causes the workflow to enable auto-merge. Safe PRs can be any size — a single
 docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
 docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
@@ -30,7 +30,6 @@ TRUSTED_AUTHORS = {
 # A path is safe if it matches any prefix or suffix below.
 SAFE_PREFIXES = (
     "docs/",
-    "project/release/",
     "_notes/",
     "_reports/",
 )
@@ -47,7 +46,6 @@ SENSITIVE_PREFIXES = (
     "vault/.memoria/mcp/",
     "vault/.memoria/lane-overrides/",
     "docs/adr/",
-    "project/test/",
 )
 
 
@@ -118,7 +116,7 @@ def _self_test() -> int:
 
     # --- is_safe ---
     check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
-    check("is_safe: release/ prefix", is_safe("project/release/v0.1.md"))
+    check("is_safe: releasing docs prefix", is_safe("docs/releasing/v0.1/release-plan-v0.1.md"))
     check("is_safe: design notes prefix", is_safe("docs/design/idea.md"))
     check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
     check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
@@ -136,7 +134,7 @@ def _self_test() -> int:
     check("is_sensitive: vault mcp", is_sensitive("vault/.memoria/mcp/policy_mcp.py"))
     check("is_sensitive: lane-overrides", is_sensitive("vault/.memoria/lane-overrides/coder.yaml"))
     check("is_sensitive: adr (docs/adr/)", is_sensitive("docs/adr/29-testing-framework.md"))
-    check("is_sensitive: test dir", is_sensitive("project/test/coverage-matrix.md"))
+    check("is_sensitive: testing docs NOT sensitive", not is_sensitive("docs/testing/coverage-matrix.md"))
     check("is_sensitive: docs/ NOT sensitive", not is_sensitive("docs/reference/policy-mcp.md"))
     check("is_sensitive: design notes NOT sensitive", not is_sensitive("docs/design/system-architecture.md"))
     check("is_sensitive: README NOT sensitive", not is_sensitive("README.md"))

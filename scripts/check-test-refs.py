@@ -4,7 +4,7 @@
 Test plans rot when the design moves under them (a renamed or dissolved path
 they still cite — e.g. `00-meta/04-reference/` after it was dissolved). This checks
 the resolvable classes — relative Markdown links and bare `docs/…`/`project/…`
-repo-path mentions — across every plan in project/test/, so the rot fails CI
+repo-path mentions — across every plan in docs/testing/, so the rot fails CI
 instead of misleading a tester. A lingering `project-files/…` mention (the
 pre-reorg path) is also caught: it matches the pattern but no longer resolves.
 
@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PROTOCOLS = sorted((ROOT / "project" / "test").rglob("*.md"))
+PROTOCOLS = sorted((ROOT / "docs" / "testing").rglob("*.md"))
 
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
 REPO_PATH = re.compile(r"`((?:docs|project|project-files)/[A-Za-z0-9/_.-]+\.md)`")

@@ -1,14 +1,19 @@
 ---
+title: Testing
+nav_order: 7
+has_children: true
+permalink: /testing/
 topic: tests
 ---
 
-# Tests
+# Testing
 
-Reusable, version-agnostic test **plans** (procedures) — not test code, and not
-filled-in run results. A *plan* is the steps to validate something; a *run* is a
-plan executed with results recorded. **Plans live here; runs live with their
-release** in `release/vX.Y/`, named `<plan>-run_vX.Y.md` (e.g. `gui-test-run_v0.1.md`)
-so a run is never mistaken for the reusable plan it instantiates.
+Reusable, version-agnostic test **plans** (procedures) — not the executable test code
+(that's `tests/` at the repo root), and not filled-in run results. A *plan* is the steps
+to validate something; a *run* is a plan executed with results recorded. **Plans live
+here; runs live with their release** in `releasing/vX.Y/`, named `<plan>-run_vX.Y.md`
+(e.g. `gui-test-run_v0.1.md`) so a run is never mistaken for the reusable plan it
+instantiates.
 
 ## Layout
 
@@ -16,16 +21,16 @@ so a run is never mistaken for the reusable plan it instantiates.
 |---|---|
 | [Test coverage matrix](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
-| [plans/](plans) | The reusable plans (browse the directory) |
+| [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows to gate its cut; copy its sign-off into the release's `validation-log.md` |
 | [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + every Python `--self-test`. Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. **Keep its L1 module list in sync with `python-selftest.yml`** (CI is the source of truth — a path drift there once slipped past CI). |
 
-## Why `tests/` and `releases/` stay separate
+## Why plans and runs stay separate
 
 Plans are **version-agnostic** and shared across every release; runs are
 **version-specific** records of one cut. Merging them would tie reusable procedures
-to a single version. So: reusable procedure → `tests/plans/`; completed run +
-sign-off → `releases/vX.Y/`.
+to a single version. So: reusable procedure → `testing/plans/`; completed run +
+sign-off → `releasing/vX.Y/`.
 
 ## Coverage layers and gates
 

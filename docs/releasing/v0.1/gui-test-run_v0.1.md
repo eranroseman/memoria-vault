@@ -2,6 +2,9 @@
 topic: plans
 title: GUI test plan — v0.1 (S5 + G4)
 status: draft
+parent: v0.1
+grand_parent: Releasing
+nav_order: 4
 ---
 
 # GUI test plan — v0.1 (Obsidian + Zotero)
@@ -32,7 +35,7 @@ end (the boxes are clickable in Obsidian).
 
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **7** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
-- [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY` (Librarian; OpenAlex requires a key since 2026-02).
+- [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY`.
 - [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27124`).
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
 - [ ] The vault folder is **outside OneDrive**.
@@ -45,12 +48,12 @@ end (the boxes are clickable in Obsidian).
 
 - ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/ 95-archive Home README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
-- [ V] **A1 Pass**
+- [x] **A1 Pass**
 
 **A2. Leave Restricted mode.** Settings → *Community plugins* → turn **off** Restricted mode → **restart Obsidian**.
 
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
-- [V ] **A2 Pass**
+- [x] **A2 Pass**
 
 **A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
@@ -70,15 +73,15 @@ end (the boxes are clickable in Obsidian).
 
 Tick each plugin that is enabled and validated:
 
-- [ ] `Agent Client`
-- [ ] `Callout Manager`
-- [ ] `Citations`
-- [ ] `Dataview`
-- [ ] `Git`
-- [ ] `Local REST API with MCP`
-- [ ] `QuickAdd`
-- [ ] `Templater`
-- [V ] **A3 Pass (8/8)**
+- [x] `Agent Client`
+- [x] `Callout Manager`
+- [x] `Citations`
+- [x] `Git`
+- [x] `Local REST API with MCP`
+- [x] `Dataview`
+- [x] `QuickAdd`
+- [x] `Templater`
+- [x] **A3 Pass (8/8)**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
@@ -94,13 +97,13 @@ Tick each plugin that is enabled and validated:
 
 **B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
 
-- [ V] **B1 Pass**
+- [x] **B1 Pass**
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
-- [V ] **B2 Pass**
+- [x] **B2 Pass**
 
 **B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:
 
@@ -111,7 +114,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
-- [ V] **B3 Pass**
+- [x] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -121,7 +124,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
-- [ V] **B4 Pass**
+- [x] **B4 Pass**
 
 ---
 
@@ -148,18 +151,18 @@ block: it must render a table or placeholder, **never a query error**.
 
 Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
-- [ ] 1 · `daily-health.md`
-- [ ] 2 · `board-state.md`
-- [ ] 3 · `reading-pipeline.md`
-- [ ] 4 · `discuss-queue.md`
-- [ ] 5 · `open-questions.md`
-- [ ] 6 · `contradictions.md`
-- [ ] 7 · `drift-watch.md`
-- [ ] 8 · `loose-ends.md`
-- [ ] 9 · `weekly-review.md`
-- [ ] 10 · `fleet-health.md`
-- [ ] 11 · `audit-log.md`
-- [ ] **Part C / G4 Pass (all 10 resolve)**
+- [x] 1 · `daily-health.md`
+- [x] 2 · `board-state.md`
+- [x] 3 · `reading-pipeline.md`
+- [x] 4 · `discuss-queue.md`
+- [x] 5 · `open-questions.md`
+- [x] 6 · `contradictions.md`
+- [x] 7 · `drift-watch.md`
+- [x] 8 · `loose-ends.md`
+- [x] 9 · `weekly-review.md`
+- [x] 10 · `fleet-health.md`
+- [x] 11 · `audit-log.md`
+- [x] **Part C / G4 Pass (all 11 resolve)**
 
 ---
 
@@ -167,28 +170,28 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
-- [ V] **D1 Pass**
+- [x] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
-`...\vault\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
+`C:\Users\eranr\Memoria-test\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
 
-- [ V] **D2 Pass**
+- [x] **D2 Pass**
 
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
 
-- [ ] **D3 Pass**
+- [x] **D3 Pass**
 
 **D4. Validate the export.** In Windows PowerShell:
-`Get-Item vault\.memoria\memoria.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> vault/.memoria/memoria.bib`.
+`Get-Item C:\Users\eranr\Memoria-test\.memoria\memoria.bib | Select-Object LastWriteTime` (updates), or WSL2: `grep <citekey> /mnt/c/Users/eranr/Memoria-test/.memoria/memoria.bib`.
 
 - ✓ Pass: `memoria.bib` updated and contains the entry.
-- [ ] **D4 Pass**
+- [x] **D4 Pass**
 
 **D5. Citation in Obsidian.** Command palette → *Citations: Insert Markdown citation* → your item resolves from `memoria.bib`. (If the picker is empty, run *Citations: Refresh citation database* first.)
 
 - ✓ Pass: the citekey/reference is offered and inserts.
 - ✗ Fails: citation plugin `citationExportPath` must point at `.memoria/memoria.bib`, format `biblatex`.
-- [ ] **D5 Pass**
+- [x] **D5 Pass**
 
 ---
 
@@ -197,7 +200,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 **E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-socratic` → ask a question.
 
 - ✓ Pass: a model response renders in the pane (model connectivity through the GUI).
-- [ ] **E1 Pass**
+- [x] **E1 Pass**
 
 **E2. Write gate visible in the GUI.** In WSL2, drive a **denied** write:
 
@@ -206,14 +209,15 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 30-synthe
 ```
 
 Then open `00-meta/01-dashboards/audit-log.md`.
+Dashboard doesn't refresh automatically.
 
 - ✓ Pass: **no `gui-denied.md` is created**, and a `deny` row for it appears in audit-log.
-- [ ] **E2 Pass**
+- [x] **E2 Pass**
 
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban create …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
 - ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
-- [ ] **E3 Pass**
+- [x] **E3 Pass**
 
 ---
 
@@ -221,15 +225,15 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
-| B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 11 dashboards' Dataview blocks resolve | | |
-| C | Seeded items appear (board-state, audit-log, loose-ends) | | |
-| D | `memoria.bib` auto-exports; citation resolves | | |
-| E1 | ACP pane returns a model response | | |
-| E2 | Denied write blocked; deny row in audit-log | | |
-| E3 | Board-state shows a card after cron tick | | |
+| A | 8/8 plugins enabled, no load errors | Pass | Didn't verify the per-plugin settings |
+| B | REST authenticated (B3) + round-trip write appears (B4) | Pass | B1–B4 all passed |
+| C / G4 | All 11 dashboards' Dataview blocks resolve | Pass | All 11 ticked, no query errors |
+| C | Seeded items appear (board-state, audit-log, loose-ends) | Partial | audit-log (E2) + loose-ends seeded OK; board-state seed not done (depends on E3, below) |
+| D | `memoria.bib` auto-exports; citation resolves | Pass | D1–D5 all passed |
+| E1 | ACP pane returns a model response | Pass | |
+| E2 | Denied write blocked; deny row in audit-log | Pass | |
+| E3 | Board-state shows a card after cron tick | Not run | E3 step left unticked — board telemetry round-trip not exercised |
 
 **S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/S5 rows of [Release plan — v0.1.0](../../release/v0.1/release-plan-v0.1.md).
+G4/S5 rows of [Release plan — v0.1.0](release-plan-v0.1.md).

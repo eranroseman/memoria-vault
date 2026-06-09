@@ -283,7 +283,7 @@ Legend: ✅ implemented · 🟡 partial · ❌ not built · ⚪ superseded/N-A.
 - **Decision:** L0–L5 + cross-cutting, indexed by a coverage matrix; determinism + drift
   (`check-test-refs.py`) + gate mapping; L2 split into hermetic L2a (in `--self-test`) and
   runtime L2b (opt-in `scripts/test-l2.sh`, nightly).
-- **Evidence:** `project/test/coverage-matrix.md` + 5 plans; `check-test-refs.py` gating
+- **Evidence:** `docs/testing/coverage-matrix.md` + 5 plans; `check-test-refs.py` gating
   in CI; L1 self-tests in `python-selftest.yml`; template present.
 - **Gap:** (1) ADR text says plans live in `project/tests/`; real dir is `project/test/`;
   (2) L2b harness (`scripts/test-l2.sh` + Option-B obsidian shim) unbuilt — described as
@@ -337,7 +337,7 @@ Legend: ✅ implemented · 🟡 partial · ❌ not built · ⚪ superseded/N-A.
   Don't invest in ADR-19's Tier-1-as-specified if the redesign is adopted.
 - **Tracked-deferred:** ADR-11, ADR-20 (CiteME + disposition/cost), ADR-29 (L2b),
   ADR-15, ADR-30 (fallback chain) are flagged in the
-  [v0.1 release plan](../../project/release/v0.1/release-plan-v0.1.md) and/or the ADRs themselves.
+  [v0.1 release plan](../releasing/v0.1/release-plan-v0.1.md) and/or the ADRs themselves.
 - **AGENTS.md note:** "generated reports go in `_reports/`, never in `project/`." This
   file is a *durable* analysis (it informs ADRs + the redesign), not gitignored scratch —
   hence its home here. If that distinction should be explicit, AGENTS.md's work-routing
