@@ -1,13 +1,13 @@
 ---
 release: 0.1.0
-status: draft
-released: false
+status: released
+released: true
 ---
 
 # Release plan — v0.1.0
 
-**Current status: pre-release — v0.1.0 has _not_ shipped.** No `v0.1.0` tag or
-GitHub release exists, and nothing is yet verified end-to-end. **All
+**Current status: released — v0.1.0 shipped 2026-06-09.** The `v0.1.0` tag and
+GitHub release exist; the candidate gates all passed. **All
 three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery —
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
