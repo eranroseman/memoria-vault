@@ -2,17 +2,20 @@
 topic: tests
 title: Deterministic-spine test plan (G9)
 status: draft
+parent: Test plans
+grand_parent: Testing
+nav_order: 14
 ---
 
 # Deterministic-spine test plan — v0.1 (G9)
 
-The leanest possible proof that **the agent spine runs end-to-end through the board**: a *dispatched* `memoria-linter` runs `health-report` (zero-LLM, deterministic), writes its report through the live policy gate into an allowed zone, the write is audited, and the card reaches `done` — **with no human-review step required.** Where the [golden-path plan](e2e-golden-path-plan.md) threads all seven profiles through the whole lifecycle, this isolates the single question underneath it: *does dispatch → claim → run → gated write → audit → done work live, at all?* Prove this first; it de-risks every richer loop (the ingest value loop is [G10](../../release/v0.1/release-plan-v0.1.md)).
+The leanest possible proof that **the agent spine runs end-to-end through the board**: a *dispatched* `memoria-linter` runs `health-report` (zero-LLM, deterministic), writes its report through the live policy gate into an allowed zone, the write is audited, and the card reaches `done` — **with no human-review step required.** Where the [golden-path plan](e2e-golden-path-plan.md) threads all seven profiles through the whole lifecycle, this isolates the single question underneath it: *does dispatch → claim → run → gated write → audit → done work live, at all?* Prove this first; it de-risks every richer loop (the ingest value loop is [G10](../../releasing/v0.1/release-plan-v0.1.md)).
 
-**Why the Linter.** Its lane allows writes only to `99-system/logs/**`, and that zone is **not** review-gated (the gated zones are `30-synthesis/…` and `50-deliverables/`). So the write logs a clean `allow_with_log` and the card completes **without** a human approval round — that is the G11 review loop, deliberately out of scope here. The Linter is also `invocation: dispatched`, `external_api_policy: blocked`, and zero-LLM ([detectors.py](../../../docs/reference/linter.md) is pure-stdlib `run_all()` + `verdict()`), so the same vault state yields the same report every run — the only fully reproducible spine in the system.
+**Why the Linter.** Its lane allows writes only to `99-system/logs/**`, and that zone is **not** review-gated (the gated zones are `30-synthesis/…` and `50-deliverables/`). So the write logs a clean `allow_with_log` and the card completes **without** a human approval round — that is the G11 review loop, deliberately out of scope here. The Linter is also `invocation: dispatched`, `external_api_policy: blocked`, and zero-LLM ([detectors.py](../../reference/linter.md) is pure-stdlib `run_all()` + `verdict()`), so the same vault state yields the same report every run — the only fully reproducible spine in the system.
 
 **The distinction this plan insists on.** The board is Hermes-native — cards live in `kanban.db`; the **dispatcher** polls every 60 s, claims `ready` cards for the matching lane, and advances them to `running`. `99-system/board/<task_id>.md` is only the *export mirror* (empty until a card exists and the exporter runs). G9 tests the **dispatch** path — the dispatcher claiming a card — **not** a direct `hermes -p … chat` invocation. Direct invocation proves the skill; dispatch proves the *operability*.
 
-**Where to run.** A live install (the gate candidate): 7 profiles registered, the `memoria-policy-gate` plugin deployed per-lane ([ADR-28](../../../docs/adr/28-write-gate-as-plugin.md)), `hermes gateway status` up so the dispatcher runs. A disposable vault is fine and preferred.
+**Where to run.** A live install (the gate candidate): 7 profiles registered, the `memoria-policy-gate` plugin deployed per-lane ([ADR-28](../../adr/28-write-gate-as-plugin.md)), `hermes gateway status` up so the dispatcher runs. A disposable vault is fine and preferred.
 
 **How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Each step's output is the next step's input; a step failing **blocks** the rest — record where the chain broke.
 
@@ -96,4 +99,4 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 | D | card → done, no review needed | | |
 | E | dispatch / determinism / audit / gate / autonomy | | |
 
-**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record in [Release plan — v0.1.0](../../release/v0.1/release-plan-v0.1.md) (gate G9).
+**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record in [Release plan — v0.1.0](../../releasing/v0.1/release-plan-v0.1.md) (gate G9).

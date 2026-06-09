@@ -1,3 +1,9 @@
+---
+title: Memoria v0.1 — release readiness review
+parent: v0.1
+grand_parent: Releasing
+nav_order: 8
+---
 # Memoria v0.1 — release readiness review
 
 **Date:** 2026-06-03

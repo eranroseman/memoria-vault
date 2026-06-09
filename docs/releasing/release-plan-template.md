@@ -2,6 +2,9 @@
 release: vX.Y.Z
 status: draft        # draft | candidate | released
 released: false      # machine cut-flag; true ONLY when every gate below is `done`
+title: Release plan — vX.Y.Z
+parent: Releasing
+nav_order: 2
 ---
 
 # Release plan — vX.Y.Z

@@ -162,7 +162,7 @@ Do not commit to Path 2 or Path 3 before Path 1's data exists. Both depend on em
 
 - [ADR-20](../adr/20-publication-path.md) (the committed first paper this analysis sits behind).
 - [ADR-11 vault-eval](../adr/11-vault-eval-maintenance.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../adr/10-claim-supersession.md) (the FAMA cell).
-- The six-signal capture ([Telemetry & logs](../reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../../project/release/v0.1/release-plan-v0.1-appendix.md)) — without populated logs, Paths 2/3 have no data.
+- The six-signal capture ([Telemetry & logs](../reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../releasing/v0.1/release-plan-v0.1-appendix.md)) — without populated logs, Paths 2/3 have no data.
 - [ADR-41](../adr/41-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [Measurement, quality, and verification](measurement-and-verification.md) (the deferred analysis harnesses).
 
 ## Source

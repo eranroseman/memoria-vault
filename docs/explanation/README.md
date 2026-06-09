@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR — see [Decisions](../adr/) (and the design notes in [Design notes](../design/)). The forward plan lives in the [release plan](../../project/release).
+The *why* behind a specific choice lives in an ADR — see [Decisions](../adr) (and the design notes in [Design notes](../design)). The forward plan lives in the [Releasing](../releasing/).

@@ -52,7 +52,7 @@ Committing to the Path 2/3 comparison study. `advisory` mode is not part of the 
 
 ## Related
 
-- **Workflows:** [Verify](../how-to-guides/compose/verify-and-revise.md), [Promote](../how-to-guides/compile/promote-a-claim.md); board dispatch rules ([timeline](../../project/release/v0.1/release-plan-v0.1-appendix.md)).
-- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [Measurement, quality, and verification](../design/measurement-and-verification.md); the publication-instrumentation track in [Release plan — v0.1.0 — appendix](../../project/release/v0.1/release-plan-v0.1-appendix.md).
+- **Workflows:** [Verify](../how-to-guides/compose/verify-and-revise.md), [Promote](../how-to-guides/compile/promote-a-claim.md); board dispatch rules ([timeline](../releasing/v0.1/release-plan-v0.1-appendix.md)).
+- **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [Measurement, quality, and verification](../design/measurement-and-verification.md); the publication-instrumentation track in [Release plan — v0.1.0 — appendix](../releasing/v0.1/release-plan-v0.1-appendix.md).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md), [ADR-11 vault-eval](11-vault-eval-maintenance.md), [ADR-14](14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

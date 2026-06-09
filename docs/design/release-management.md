@@ -11,12 +11,12 @@ nav_exclude: true
 
 # Release management — review and alternatives
 
-A review of how Memoria manages releases today (`project/release/`) and the
+A review of how Memoria manages releases today (`docs/releasing/`) and the
 alternatives weighed, with the tiered path chosen. Reviewed **2026-06-08**.
 
 ## Current approach — "self-contained plan file"
 
-One folder per version (`project/release/vX.Y/`) holding a single
+One folder per version (`docs/releasing/vX.Y/`) holding a single
 `release-plan-vX.Y.md` — frontmatter `released:` flag, §2 Gates (`G1–G11` state
 table), §3 Validation stages (`S0–S5`), scope, cut procedure, roadmap — plus
 sibling run records (gui-test-plan, manual-testing, validation-log,

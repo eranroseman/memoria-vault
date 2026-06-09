@@ -1,3 +1,8 @@
+---
+title: Contributing workflow
+parent: Contributing
+nav_order: 1
+---
 # Contributing workflow
 
 How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md** (§§1–3, "PR flow", "Merge discipline"); this file is the human-facing complement with checklists and recovery.
@@ -70,8 +75,8 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 
 - **Scope** is the GitHub milestone `vX.Y` — the issues it must ship.
 - **Readiness** lives in one **"Release vX.Y" tracking issue** — a gate checklist whose progress bar *is* the status. Don't track gate state in the plan file.
-- **Prose** (what/why, gate rationale) lives in `project/release/<v>/`; `status-doctor` (a required check) guards it against stale links and path drift.
-- **Version + CHANGELOG + the GitHub Release** are owned by **release-please** (manifest mode) — opened automatically from Conventional Commits on `main`; merging its PR cuts the tag. Don't hand-edit `CHANGELOG.md` or tag by hand. See `project/release/README.md`.
+- **Prose** (what/why, gate rationale) lives in `docs/releasing/<v>/`; `status-doctor` (a required check) guards it against stale links and path drift.
+- **Version + CHANGELOG + the GitHub Release** are owned by **release-please** (manifest mode) — opened automatically from Conventional Commits on `main`; merging its PR cuts the tag. Don't hand-edit `CHANGELOG.md` or tag by hand. See [Releasing](../releasing/README.md).
 
 ## Checklists
 

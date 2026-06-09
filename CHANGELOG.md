@@ -103,7 +103,7 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Working toward the first tagged release, **v0.1.0** — **not yet cut.** No
 `v0.1.0` tag or GitHub release exists; see the release gate in
-[project/release/v0.1/release-plan-v0.1.md](project/release/v0.1/release-plan-v0.1.md).
+[project/release/v0.1/release-plan-v0.1.md](docs/releasing/v0.1/release-plan-v0.1.md).
 
 ### Added
 - Seven specialist agent profiles: `librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`

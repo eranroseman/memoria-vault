@@ -88,10 +88,10 @@ for f in $(staged | grep -E '\.(md|py|ya?ml)$'); do
 done
 
 # --- 5. test-plan reference resolution (staged test plans) ------------------
-# The plans under project/test/ name many repo paths; check-test-refs ensures
+# The plans under docs/testing/ name many repo paths; check-test-refs ensures
 # each resolves, so a rename can't leave a plan pointing at a dead file.
 # Mirrors the check-test-refs CI job.
-if staged | grep -qE '^project/test/.*\.md$|^scripts/check-test-refs\.py$'; then
+if staged | grep -qE '^docs/testing/.*\.md$|^scripts/check-test-refs\.py$'; then
   if [ -n "$PY" ]; then
     "$PY" scripts/check-test-refs.py || { echo "pre-commit: check-test-refs failed (above)." >&2; fail=1; }
   else
@@ -159,11 +159,11 @@ if staged | grep -qE '^docs/adr/.*\.md$|^scripts/gen-adr-index\.py$'; then
   fi
 fi
 
-# --- 11. status-doctor (when any project/ doc or the /release skill is staged) --
-# The project/ tree (release + test plans + the /release skill) is prose +
+# --- 11. status-doctor (when any docs/ release/test/contributing doc or the /release skill is staged) --
+# The docs/ release+test+contributing prose (+ the /release skill) is prose +
 # pointers; this guards stale path renames, broken links, and released-flag
 # drift. Mirrors the status-doctor step in the lint CI job.
-if staged | grep -qE '^project/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$'; then
+if staged | grep -qE '^docs/(releasing|testing|contributing)/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$'; then
   if [ -n "$PY" ]; then
     "$PY" scripts/status-doctor.py || { echo "pre-commit: status-doctor found project-doc drift (above)." >&2; fail=1; }
   else

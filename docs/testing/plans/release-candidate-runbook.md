@@ -2,13 +2,16 @@
 topic: tests
 title: Release-candidate run runbook
 status: stable
+parent: Test plans
+grand_parent: Testing
+nav_order: 19
 ---
 
 # Release-candidate run runbook
 
 The reusable, version-agnostic run sheet that takes a **fresh clone on a clean
 Ubuntu/WSL2 box** through stages **S0–S5** and the operability gates **G9–G11**,
-recording each [gate](../../../docs/adr/29-testing-framework.md) green. Work top
+recording each [gate](../../adr/29-testing-framework.md) green. Work top
 to bottom; if a step fails, stop and file it — a candidate is green only when
 every row is.
 
@@ -66,7 +69,7 @@ Detail: [Installer test plan](installer-test-plan.md).
 ## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
-- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault via the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../../docs/adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, reload the Obsidian window to bind it. The port lives in the URL, so the candidate and any other vault coexist on different ports — no need to close another vault.
+- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault via the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, reload the Obsidian window to bind it. The port lives in the URL, so the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
 Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](headless-test-plan.md).
@@ -81,7 +84,7 @@ Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
 
 **Ingest setup (once):**
 
-- [ ] Better BibTeX **postscript** applied so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../../docs/reference/ingest.md#zotero-fields-without-the-zotero-api). Re-export the `.bib`.
+- [ ] Better BibTeX **postscript** applied so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../reference/ingest.md#zotero-fields-without-the-zotero-api). Re-export the `.bib`.
 - [ ] A seeded `00-meta/vocabulary.md` is present (ships with the vault).
 
 **Run a real paper end-to-end** (Zotero capture → card, or a manual ingest card):
@@ -122,7 +125,7 @@ ls -l "$RV/99-system/logs/"{board-state,board-transitions,audit,lint-findings}.j
 Only after every row above is green:
 
 - [ ] Confirm `version: vX.Y.0` across the seven `vault/.memoria/profiles/*/distribution.yaml`.
-- [ ] **Version + CHANGELOG + tag + GitHub Release** are owned by **release-please** — merge its open release PR; that cuts the tag, finalizes `CHANGELOG [vX.Y.0]`, and publishes the Release. Don't hand-tag or hand-edit the CHANGELOG. (See [project/release/README.md](../../release/README.md).)
+- [ ] **Version + CHANGELOG + tag + GitHub Release** are owned by **release-please** — merge its open release PR; that cuts the tag, finalizes `CHANGELOG [vX.Y.0]`, and publishes the Release. Don't hand-tag or hand-edit the CHANGELOG. (See [Releases](../../releasing/README.md).)
 - [ ] Flip `released: false → true` / `status: draft → released` in that release's `release-plan-<v>.md` frontmatter.
 - [ ] Close the release's **"Release vX.Y" tracking issue** + the milestone, rolling any unfinished issues to the next milestone.
 

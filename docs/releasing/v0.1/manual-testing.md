@@ -1,8 +1,14 @@
+---
+title: Memoria v0.1 manual testing
+parent: v0.1
+grand_parent: Releasing
+nav_order: 5
+---
 # Memoria v0.1 manual testing
 
 - **Scope:** Black box functional and usability testing of user-facing featured based on documented functionality.
 - **Objectives:** Ensures core functionality and user experience.
-- **Environments:** memoria-test after completion of the [release-candidate runbook](../../test/plans/release-candidate-runbook.md)
+- **Environments:** memoria-test after completion of the [release-candidate runbook](../../testing/plans/release-candidate-runbook.md)
 
 ## Disposition (2026-06-04)
 

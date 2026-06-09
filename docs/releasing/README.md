@@ -1,13 +1,17 @@
 ---
+title: Releasing
+nav_order: 6
+has_children: true
+permalink: /releasing/
 topic: releases
 ---
 
-# Releases
+# Releasing
 
-One folder per version, `release/vX.Y/`, holding the **prose** of that cut (scope,
+One folder per version, `releasing/vX.Y/`, holding the **prose** of that cut (scope,
 known limitations, cut procedure, roadmap). The reusable body is
 [Release plan — vX.Y.Z](release-plan-template.md); the current release is
-[v0.1/](v0.1). The *live readiness state* lives outside the file — see below.
+[the v0.1 release](v0.1/). The *live readiness state* lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 
@@ -54,4 +58,4 @@ in the tracking issue; everything else points — never restates.
 | `README.md` | Thin index of this release's files |
 | `release-plan-vX.Y.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
 | `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail |
-| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [../test/](../test)) |
+| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [Testing](../testing/)) |

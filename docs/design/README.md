@@ -8,7 +8,7 @@ topic: explorations
 
 # Design notes
 
-Durable design analysis that informs the [Decisions](../adr/) — the background a reader
+Durable design analysis that informs the [Decisions](../adr) — the background a reader
 needs to understand *why* an ADR landed where it did, kept out of the ADRs themselves so
 each decision stays tight. Three kinds of note live here:
 
@@ -36,4 +36,4 @@ each decision stays tight. Three kinds of note live here:
 Working material that isn't ready for readers (the redesign, research stubs, and the
 capability explorations behind `deferred` decisions) carries `nav_exclude: true` and is
 kept off the published site until it firms up. Decisions themselves live in
-[Decisions](../adr/), at every status.
+[Decisions](../adr), at every status.

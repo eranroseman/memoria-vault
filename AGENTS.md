@@ -102,7 +102,7 @@ All must pass before merge:
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`project/` link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | `--self-test` on vault Python tooling |
@@ -113,11 +113,11 @@ All must pass before merge:
 
 | Decision | Trigger |
 |---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/` — except `docs/adr/` — `project/release/`; `.md`/`.txt`) |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/` — except `docs/adr/` — `.md`/`.txt`) |
 | `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `project/test/`, `.github/`.
+Sensitive paths: `vault/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -155,7 +155,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
 - **Profiles:** `vault/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
-- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](project/release/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
+- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](docs/releasing/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
 
 ---
 
@@ -173,7 +173,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 Mixed-quadrant pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `vault/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; links to `project/` (release plans) are **relative** (`../../project/…`) — both trees ship in the repo and `docs/` renders on GitHub; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
+  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; release plans (`docs/releasing/`) and test plans (`docs/testing/`) are ordinary intra-`docs/` relative links; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
@@ -213,12 +213,12 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-Background design analysis that informs an ADR lives in [`docs/design/`](docs/design/),
+Background design analysis that informs an ADR lives in [`docs/design/`](docs/design),
 not in the ADR itself.
 
-### Release plans (`project/release/`)
+### Release plans (`docs/releasing/`)
 
-One file per version, copied from `project/release/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`.
+One file per version, copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`.
 
 ---
 
@@ -237,7 +237,7 @@ One file per version, copied from `project/release/release-plan-template.md` —
 - Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis that informs an ADR is tracked in `docs/design/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `project/`, `docs/`, or the repo root.
+- Reports: a **durable** analysis that informs an ADR is tracked in `docs/design/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `docs/` or the repo root.
 
 ---
 
