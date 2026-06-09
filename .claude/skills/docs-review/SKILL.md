@@ -9,7 +9,7 @@ Review `docs/` against this repo's conventions (the authority is [AGENTS.md — 
 
 ## 1. Diátaxis quadrant fit
 
-Every page sits in exactly one quadrant. Apply the test: would a reader come here to *do*, *learn*, *look up*, or *understand*?
+Every page sits in exactly one quadrant. Apply the test: would a reader come here to _do_, _learn_, _look up_, or _understand_?
 
 - `docs/tutorials/` — learn by doing. No reference tables, no rationale.
 - `docs/how-to-guides/` — accomplish a task. No conceptual background. Titles are **concise** (no "How to …" prefix), matching the filename + README link text.
