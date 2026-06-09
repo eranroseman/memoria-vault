@@ -105,7 +105,7 @@ State **what changed**, **who is affected**, **what action is required**, and **
 
 ## Changelog
 
-User-visible changes go in [CHANGELOG.md](CHANGELOG.md) at the repo root, which follows
+User-visible changes go in [Changelog](CHANGELOG.md) at the repo root, which follows
 [Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/). Keep an
 `[Unreleased]` section at the top; entries move into a versioned section when a release is cut.
 

@@ -8,7 +8,7 @@ permalink: /explanation/deployment/
 
 # Deployment
 
-How Memoria is packaged, installed, and deployed. These pages explain the _rationale_ behind the distribution model and the installer — for the operational steps see the [setup how-to guides](../../how-to-guides/setup/), and for exact inventories see [Installer (bootstrap)](../../reference/installer.md).
+How Memoria is packaged, installed, and deployed. These pages explain the _rationale_ behind the distribution model and the installer — for the operational steps see the [setup how-to guides](../../how-to-guides/setup), and for exact inventories see [Installer (bootstrap)](../../reference/installer.md).
 
 | Page                                          | What it explains                                                                                                                                                    |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -20,6 +20,6 @@ How Memoria is packaged, installed, and deployed. These pages explain the _ratio
 
 ## Related
 
-- The steps to actually install: [Setup how-to guides](../../how-to-guides/setup/)
+- The steps to actually install: [Setup how-to guides](../../how-to-guides/setup)
 - Installer inventories (what gets copied where): [Installer (bootstrap)](../../reference/installer.md)
-- The repo-as-install-unit decision: [ADR-26](../../../project/adr/26-repo-as-install-unit.md)
+- The repo-as-install-unit decision: [ADR-26](../../adr/26-repo-as-install-unit.md)

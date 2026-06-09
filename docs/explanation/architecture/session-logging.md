@@ -19,7 +19,7 @@ These are different artifacts written by different components with different lif
 | **Per-session summaries** | `99-system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (summarizes Hermes raw activity) | One file per session; never rotated; accumulate indefinitely |
 | **Policy MCP audit log** | `99-system/logs/audit.jsonl` | Policy MCP | Append-only; rotated weekly by the Linter |
 
-The audit log is what the [audit-log dashboard](../dashboards/) and [fleet-health dashboard](../dashboards/) read. The per-session summaries are the narrative record of what happened in a session — which skills ran, what decisions were made, which cards were advanced.
+The audit log is what the [audit-log dashboard](../dashboards) and [fleet-health dashboard](../dashboards) read. The per-session summaries are the narrative record of what happened in a session — which skills ran, what decisions were made, which cards were advanced.
 
 ---
 

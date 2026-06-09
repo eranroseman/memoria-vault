@@ -62,12 +62,12 @@ Settings → Local REST API → copy the `apiKey` value. You'll need it when fil
 
 The required plugins ship with their settings pre-configured in `.obsidian/plugins/`. Confirm:
 
-- Local REST API: **insecure HTTP server ON, port 27123** (loopback-only) — Hermes reaches the vault over the plugin's native MCP at `http://127.0.0.1:27123/mcp`, because it can't verify the self-signed HTTPS cert on 27124 ([ADR-31](../../../project/adr/31-native-obsidian-mcp.md)). The shipped `data.json.example` enables it; confirm it stayed on. Keep `OBSIDIAN_MCP_PORT` in your `.env` equal to this port.
+- Local REST API: **insecure HTTP server ON, port 27123** (loopback-only) — Hermes reaches the vault over the plugin's native MCP at `http://127.0.0.1:27123/mcp`, because it can't verify the self-signed HTTPS cert on 27124 ([ADR-31](../../adr/31-native-obsidian-mcp.md)). The shipped `data.json.example` enables it; confirm it stayed on. Keep `OBSIDIAN_MCP_PORT` in your `.env` equal to this port.
 - Obsidian Citation Plugin: bibliography path set to `.memoria/memoria.bib`
 
 **7. Do not install the frontend Obsidian Linter.**
 
-Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../../project/adr/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `40-workbench/` drafts are both human-edited and agent-written, so no exclusion list is safe.
+Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../adr/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `40-workbench/` drafts are both human-edited and agent-written, so no exclusion list is safe.
 
 Memoria's linting is the `memoria-linter` Hermes profile (structural validation under the policy MCP); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 

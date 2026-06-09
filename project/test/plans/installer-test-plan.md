@@ -6,7 +6,7 @@ status: draft
 
 # Installer test plan — v0.1 (S0–S3)
 
-The clean-install end-to-end the other plans *assume has already happened*: `scripts/install.sh` (and the `install.ps1` launcher) deploying the seven profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **S0–S3**. Installer *lint* is covered headless ([headless-test-plan.md](headless-test-plan.md) §C); agent behaviour after install is the [Hermes CLI plan](hermes-cli-test-plan.md); this plan is *the install itself*.
+The clean-install end-to-end the other plans *assume has already happened*: `scripts/install.sh` (and the `install.ps1` launcher) deploying the seven profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **S0–S3**. Installer *lint* is covered headless ([Headless test plan](headless-test-plan.md) §C); agent behaviour after install is the [Hermes CLI plan](hermes-cli-test-plan.md); this plan is *the install itself*.
 
 **Where to run.** A **throwaway target** — never the real `~/Memoria`. Ubuntu/WSL2 for `install.sh`; a Windows machine (WSL2 behind it) for the `install.ps1` path (Part F). Use `--vault ~/Memoria-test` and discard it after (Part G).
 
@@ -48,7 +48,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 **B2. `.env` bootstrapped + shared keys seeded.** `cat ~/.hermes/profiles/memoria-librarian/.env`
 - ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_EMAIL` for the Librarian.
-- ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md), #39).
+- ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../../docs/adr/27-hermes-native-config-and-gate-enforcement.md), #39).
 
 **B3. Profile config is valid.** `hermes profile show memoria-librarian`
 - ✓ Pass: shows `SOUL.md`, the model block, `mcp_servers` (`policy`, `obsidian`) from `config.yaml`, allowed skills, and `.env` key **names** (values redacted). No parse error.
@@ -111,4 +111,4 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | `install.ps1` WSL2 handoff (+ bootstrap) | | |
 
-**S0–S3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the S0–S3 rows of [release-plan-v0.1.md](../../release/v0.1/release-plan-v0.1.md).
+**S0–S3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record in the S0–S3 rows of [Release plan — v0.1.0](../../release/v0.1/release-plan-v0.1.md).

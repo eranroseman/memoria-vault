@@ -56,15 +56,15 @@ bash scripts/install.sh --vault "$RV"      # re-run: must be idempotent (no erro
 - [ ] Telemetry + sweeps crons wired: `hermes cron list` shows `memoria-board-export` and `memoria-sweeps`.
 - [ ] **Ingest runtime deps:** `"$RV/.memoria/.venv/bin/python" -c "import pymupdf4llm"` succeeds (local-PDF extraction; from `requirements.txt`).
 
-Detail: [installer-test-plan.md](../../test/plans/installer-test-plan.md).
+Detail: [Installer test plan](../../test/plans/installer-test-plan.md).
 
 ## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
-- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
+- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault. The agent uses the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../../docs/adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, and reload the Obsidian window to bind it. Because the port lives in the URL, the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
-Detail: [hermes-cli-test-plan.md](../../test/plans/hermes-cli-test-plan.md), [headless-test-plan.md](../../test/plans/headless-test-plan.md).
+Detail: [Hermes CLI test plan](../../test/plans/hermes-cli-test-plan.md), [Headless test plan](../../test/plans/headless-test-plan.md).
 
 ## G9 — deterministic spine (zero-LLM card)  → records G9
 
@@ -74,13 +74,13 @@ hermes kanban create "spine check" --assignee memoria-linter --skill <health-rep
 
 - [ ] A *dispatched, zero-LLM* card (Linter `health-report` or Verifier `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
-Detail: [g9-spine-plan.md](../../test/plans/g9-spine-plan.md).
+Detail: [Deterministic-spine test plan (G9)](../../test/plans/g9-spine-plan.md).
 
 ## G10 — ingest value loop (the product)  → records G10
 
 **Ingest setup (once):**
 
-- [ ] Better BibTeX **postscript** applied (Zotero → Better BibTeX → Preferences → Export → Postscript) so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [ingest.md](../../../docs/reference/ingest.md#zotero-fields-without-the-zotero-api). Re-export the `.bib`.
+- [ ] Better BibTeX **postscript** applied (Zotero → Better BibTeX → Preferences → Export → Postscript) so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../../docs/reference/ingest.md#zotero-fields-without-the-zotero-api). Re-export the `.bib`.
 - [ ] A seeded `00-meta/vocabulary.md` is present (ships with the vault).
 
 **Run a real paper end-to-end** (Zotero capture → card, or a manual ingest card):
@@ -88,7 +88,7 @@ Detail: [g9-spine-plan.md](../../test/plans/g9-spine-plan.md).
 - [ ] Dispatch ingests through the `ingest_pipeline` MCP tool → the Librarian fills the two holes (vocabulary-constrained `_proposed_classification`; comparative `[!brief]`) → gated write → `lifecycle: proposed`, `ingest_status: complete`.
 - [ ] Note is complete: identity + merged metadata (S2/OpenAlex/Crossref), stable IDs (`openalex_id`/`semantic_scholar_id`/`pmid`/`pmcid`), `zotero_uri` + `pdf_uri`, full-text extract saved under `90-assets/extracts/`, ID-keyed entity notes (`03-entities/<id>.md`), `[!brief]` leads the body.
 
-Detail: [g10-ingest-plan.md](../../test/plans/g10-ingest-plan.md).
+Detail: [Ingest-value-loop test plan (G10)](../../test/plans/g10-ingest-plan.md).
 
 ## G11 — review loop closes  → records G11
 
@@ -96,7 +96,7 @@ Detail: [g10-ingest-plan.md](../../test/plans/g10-ingest-plan.md).
 
 ## S5 — Obsidian + Zotero GUI  → records S5, G4
 
-Run [gui-test-plan.md](../../test/plans/gui-test-plan.md) on the Windows side and **fully complete its Results table**:
+Run [GUI test plan — v0.1 (S5 + G4)](../../test/plans/gui-test-plan.md) on the Windows side and **fully complete its Results table**:
 
 - [ ] **Part A** — all bundled plugins load/enable; REST round-trip; settings verified (no "didn't verify" caveat).
 - [ ] **Part B** — Zotero + Better BibTeX export works; the capture macro fires.

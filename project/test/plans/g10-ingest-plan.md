@@ -6,7 +6,7 @@ status: draft
 
 # Ingest-value-loop test plan — v0.1 (G10)
 
-The product loop: one real source carried **capture → ingest → Tier-1 enrich → classify → gated write → queued for review**, producing a *correct* `proposed` paper-note — gated and audited at every write, nothing captured ever lost. Where [G9](../../release/v0.1/release-plan-v0.1.md) proves the spine *runs* with a zero-LLM agent, G10 proves the spine carries *value*: the two LLM judgments land, the multi-source enrichment is correct, and a human gets a reviewable note. This is the **least-built** operability gate ([ADR-30](../../adr/30-deterministic-ingest-pipeline.md) is still `proposed`) and carries the real risk — run [G9](../../release/v0.1/release-plan-v0.1.md) green first so the dispatch/gate/write spine is trusted before betting it on ingest.
+The product loop: one real source carried **capture → ingest → Tier-1 enrich → classify → gated write → queued for review**, producing a *correct* `proposed` paper-note — gated and audited at every write, nothing captured ever lost. Where [G9](../../release/v0.1/release-plan-v0.1.md) proves the spine *runs* with a zero-LLM agent, G10 proves the spine carries *value*: the two LLM judgments land, the multi-source enrichment is correct, and a human gets a reviewable note. This is the **least-built** operability gate ([ADR-30](../../../docs/adr/30-deterministic-ingest-pipeline.md) is still `proposed`) and carries the real risk — run [G9](../../release/v0.1/release-plan-v0.1.md) green first so the dispatch/gate/write spine is trusted before betting it on ingest.
 
 **Run G9 first.** G10 assumes dispatch → claim → gated write → audit → `done` already works (that is G9). If G9 isn't green, a G10 failure is ambiguous.
 
@@ -125,4 +125,4 @@ Not a pass/fail of the run but of the **data** — ADR-30 mandates it before bui
 | F | Tier-1 correctness spike (merge / tags / extract) | | |
 | G | nothing-lost / scriptable-first / gate / serialized | | |
 
-**G10 green** when one real source traverses A → E producing a correct `proposed` paper-note, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record in [release-plan-v0.1.md](../../release/v0.1/release-plan-v0.1.md) (gate G10).
+**G10 green** when one real source traverses A → E producing a correct `proposed` paper-note, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record in [Release plan — v0.1.0](../../release/v0.1/release-plan-v0.1.md) (gate G10).

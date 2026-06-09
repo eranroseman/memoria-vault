@@ -5,7 +5,7 @@ parent: Reference
 
 # Obsidian plugins
 
-Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [Zotero plugins](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../../docs/explanation/obsidian/).
+Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [Zotero plugins](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../explanation/obsidian).
 
 ---
 
@@ -66,13 +66,13 @@ Documented but not in the install set. Obsidian-side evaluated alternatives. (Zo
 
 ## Load-bearing settings per plugin
 
-Settings with a fixed required value. All others are personal preference. See [explanation/obsidian/](../../docs/explanation/obsidian/) for rationale.
+Settings with a fixed required value. All others are personal preference. See [explanation/obsidian/](../explanation/obsidian) for rationale.
 
 ### obsidian-local-rest-api
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| HTTP (insecure) server | **on**, port `27123` | Serves the plugin's native MCP at `http://127.0.0.1:27123/mcp` — Hermes's vault path ([ADR-31](../../project/adr/31-native-obsidian-mcp.md)). Loopback-only. Each profile's `OBSIDIAN_MCP_PORT` must match; use distinct ports per vault to run a sandbox + production at once. |
+| HTTP (insecure) server | **on**, port `27123` | Serves the plugin's native MCP at `http://127.0.0.1:27123/mcp` — Hermes's vault path ([ADR-31](../adr/31-native-obsidian-mcp.md)). Loopback-only. Each profile's `OBSIDIAN_MCP_PORT` must match; use distinct ports per vault to run a sandbox + production at once. |
 | HTTPS port | `27124` | The plugin's HTTPS REST endpoint. **Not** the Hermes vault path — Hermes can't verify the self-signed cert, so it uses the HTTP MCP above. |
 | `data.json` | **gitignored** | Contains API key secrets. Ships as `.example`; never commit the real file. |
 

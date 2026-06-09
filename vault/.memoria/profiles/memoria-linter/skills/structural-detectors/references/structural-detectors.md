@@ -193,4 +193,4 @@ The inverse of `extract-path-broken` — extract files in `90-assets/extracts/` 
 
 - Linter SOUL — the full Linter profile contract, including the broader lint check table (data-hygiene checks alongside the structural detectors), the severity scale, and the verdict band rollup.
 - Policy MCP — the audit log that `vault-hash-drift` verifies against.
-- project/rfc/RFC-09-profile-compilation.md (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).
+- docs/adr/42-profile-compilation.md (**status: deferred**) — the compiler vision that `profile-install-drift` was originally designed against. Memoria currently uses direct profile management, so profile-install-drift's mechanism is install drift (source vs deployed) rather than build drift (source vs compiled).

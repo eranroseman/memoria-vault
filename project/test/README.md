@@ -13,9 +13,9 @@ release** in `releases/vX.Y/` (e.g. `gui-test-plan_v0.1.md`).
 
 | Path | What it is |
 |---|---|
-| [coverage-matrix.md](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
-| [test-plan-template.md](test-plan-template.md) | Copy this to author a new plan |
-| [plans/](plans/) | The reusable plans (browse the directory) |
+| [Test coverage matrix](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
+| [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
+| [plans/](plans) | The reusable plans (browse the directory) |
 
 ## Why `tests/` and `releases/` stay separate
 
@@ -41,7 +41,7 @@ headless ─▶ installer ─▶ cli ─┐
 `headless` (static + Python self-tests, CI-enforced) must be green first; `installer`
 stands up a throwaway vault; `cli` and `gui` validate the wired system; `e2e` runs one
 source through the full lifecycle; `g9`/`g10` prove the deterministic spine and ingest
-value-loop. Per-release orchestration + sign-off: [candidate-run-checklist](../release/v0.1/candidate-run-checklist.md).
+value-loop. Per-release orchestration + sign-off: [v0.1.0 release-candidate run checklist](../release/v0.1/candidate-run-checklist.md).
 
 ## Adding or changing a plan
 

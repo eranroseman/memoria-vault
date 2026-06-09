@@ -12,9 +12,9 @@ three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery �
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
 scope), and [#58](https://github.com/eranroseman/memoria-vault/issues/58) (the
 review gate firing live). #58 took two passes:
-[ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md) loaded the
+[ADR-27](../../../docs/adr/27-hermes-native-config-and-gate-enforcement.md) loaded the
 `obsidian` MCP and locked each lane to obsidian-only writes, and
-[ADR-28](../../adr/28-write-gate-as-plugin.md) replaced the never-firing shell
+[ADR-28](../../../docs/adr/28-write-gate-as-plugin.md) replaced the never-firing shell
 hook with a Python plugin — the shell hook's `obsidian.*` `re.fullmatch` never
 matched Hermes' real `mcp_obsidian_*` tool name (and shell hooks are consent-gated
 + fail-open). The gate now **enforces live**: validated in `hermes -z` on
@@ -28,7 +28,7 @@ is not only verification; part of it is the product itself.** The *infrastructur
 the remaining infra work is re-runs: dashboards (G4), telemetry cron (G5), the
 changelog (G8), the GUI stage (S5), and a fresh-clone re-run of the live gate (G2/S4).
 **Operability is now built and proven live:** the deterministic ingest pipeline
-([ADR-30](../../adr/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
+([ADR-30](../../../docs/adr/30-deterministic-ingest-pipeline.md), #100–#116) ran a real
 paper end-to-end on installer-deployed lanes — dispatch → `ingest_pipeline` MCP tool →
 vocabulary-constrained classify + `[!brief]` → ID-keyed entity links → gated writes →
 `review_status: requested`. What remains for operability is the fresh-clone candidate
@@ -99,7 +99,7 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [gui-test-plan.md](../../test/plans/gui-test-plan.md) Part C. A GUI run **was recorded** ([gui-test-plan_v0.1.md](gui-test-plan_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
+| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [GUI test plan — v0.1 (S5 + G4)](../../test/plans/gui-test-plan.md) Part C. A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-plan_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry — **four signals working live; two gated on an upstream Hermes change**. The board-export cron is wired (installer `wire_telemetry_cron`, `--no-agent`, 1-min) and validated against real ingest-card activity: `board-state` (snapshots), `board-transitions` (status changes), audit deny-reasons (policy gate), and Linter FAMA all emit. `disposition` + `cost` **cannot emit on the current Hermes**: `board_export.py` reads them from the card `metadata` overlay (`review_status`/`cost`/`tokens`), which this Hermes version does not surface in its serialized card JSON (verified — a card driven to `review_status: approved` logged a status transition but no disposition row). The exporter is correct and ready to consume both the instant Hermes exposes the overlay; tracked as a known limitation (§6). Only the fresh-clone candidate re-run of the four working signals remains | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
@@ -131,7 +131,7 @@ as stages here.
 | S2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | S3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
 | S4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| S5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [gui-test-plan.md](../../test/plans/gui-test-plan.md) (runs on the Windows side). A GUI run **was recorded** ([gui-test-plan_v0.1.md](gui-test-plan_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
+| S5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [GUI test plan — v0.1 (S5 + G4)](../../test/plans/gui-test-plan.md) (runs on the Windows side). A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-plan_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
 
 ## 4. Blockers
 
@@ -147,11 +147,11 @@ installer-deployed). #59 is resolved (skills are bundled, not hub-installed).
 
 The remaining blockers split in two:
 - **Infrastructure (verification, not defects):** the not-yet-`done` mandatory gates (G2, G4, G5, G8) and stages (S4, S5) — re-runs to confirm what's built.
-- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/S4). The substantive construction risk the [release readiness review](release-readiness-review-2026-06-03.md) flagged is resolved. Evidence per subsystem: [validation-log.md](validation-log.md).
+- **Operability (retired, pending only the candidate re-run):** **G9** (spine), **G10** (ingest value loop), and **G11** (review loop) are all **built and proven live** — a real paper ran the full dispatch → ingest → classify + `[!brief]` → gated write → `review_status: requested` → **human-promote → `lifecycle: current`** loop end-to-end on installer-deployed lanes (#100–#123). All that remains is recording them green from the fresh-clone candidate (with G2/S4). The substantive construction risk the [release readiness review](release-readiness-review-2026-06-03.md) flagged is resolved. Evidence per subsystem: [v0.1 validation log](validation-log.md).
 
 ## 5. Out of scope (deferred)
 
-The deferred set lives in [proposals/](../../rfc/) — not duplicated here. At
+The deferred set lives as `deferred`-status ADRs in [Decisions](../../../docs/adr/) — not duplicated here. At
 the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
@@ -192,10 +192,10 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 | Phase 4 — Multi-device | When a 2nd device enters regular use | Extend to a second machine without fragmenting dispatch ownership. |
 
 Full phase steps, exit criteria, and the week-by-week ramp:
-[release-plan-v0.1-appendix.md](release-plan-v0.1-appendix.md).
+[Release plan — v0.1.0 — appendix](release-plan-v0.1-appendix.md).
 
 ## 9. Appendix
 
 Detailed phase steps, exit criteria, and migration detail live in
-[release-plan-v0.1-appendix.md](release-plan-v0.1-appendix.md). This plan
+[Release plan — v0.1.0 — appendix](release-plan-v0.1-appendix.md). This plan
 summarizes (§8) and links rather than absorbing them.

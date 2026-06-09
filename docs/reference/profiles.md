@@ -5,7 +5,7 @@ parent: Reference
 
 # Profile capabilities
 
-Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../explanation/profiles/).
+Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../explanation/profiles).
 
 ---
 
@@ -54,7 +54,7 @@ Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
 | **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
 | **Linter** | Validate and report | `lint`, `report`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | `structural-detectors` | Level 1 (cron) |
 
-> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, `claim-checks`, `cluster-mapping`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. **External access is MCP-only for the Librarian, Mapper, and Verifier** (their `web` toolset is disabled) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers (`paper_search`, `pyzotero`, `verify`), not skills; see [ADR-32](../../project/adr/32-external-access-over-mcp.md). Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
+> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, `claim-checks`, `cluster-mapping`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. **External access is MCP-only for the Librarian, Mapper, and Verifier** (their `web` toolset is disabled) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers (`paper_search`, `pyzotero`, `verify`), not skills; see [ADR-32](../adr/32-external-access-over-mcp.md). Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
 
 ### Invocation levels
 

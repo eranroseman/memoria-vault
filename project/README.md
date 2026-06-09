@@ -4,22 +4,28 @@ One job each.
 
 | Path | What it holds | When to look here |
 |---|---|---|
-| [adr/](adr/) | Accepted architectural decisions (ADRs) | You want to know *why* something is the way it is |
-| [rfc/](rfc/) | Deferred capabilities and ideas under consideration (single-capability `RFC-NN` + thematic [explorations/](rfc/explorations/)) | You want to add a feature or understand what's been considered |
-| [release/](release/) | Per-version release plans + readiness, and the reusable [release-plan template](release/release-plan-template.md) | You want to know what a release covers or how to cut one |
-| [process.md](process.md) | Branch discipline, issue/board flow, landing checklists, divergence recovery | You want to know *how* we work in this repo |
-| [test/](test/) | Reusable test plans | You want to verify or validate the system |
+| [Decisions](../docs/adr/) | Architecture Decision Records (ADRs) at every status — `proposed` · `accepted` · `deferred` · `superseded` · `rejected` | You want to know *why* something is the way it is, or what's been considered |
+| [Design notes](../docs/design/) | Durable design analysis, as-built captures, and research that inform the ADRs | You want the background behind a decision |
+| [release/](release) | Per-version release plans + readiness, and the reusable [release-plan template](release/release-plan-template.md) | You want to know what a release covers or how to cut one |
+| [Contributing workflow](process.md) | Branch discipline, issue/board flow, landing checklists, divergence recovery | You want to know *how* we work in this repo |
+| [test/](test) | Reusable test plans | You want to verify or validate the system |
 
-Tools and approaches that were evaluated and **not** adopted are recorded as *Alternatives considered* in the relevant [decision](adr/) and in the plugin reference docs (`docs/reference/`), not in a separate folder.
+Decisions and the design notes behind them live under [docs/](../docs/) so they render
+on the docs site alongside the explanation pages. Tools and approaches evaluated and
+**not** adopted are recorded as *Alternatives considered* in the relevant
+[ADR](../docs/adr/) and in the plugin reference docs (`docs/reference/`), not in a
+separate folder.
 
 ---
 
-## How decisions and proposals differ
+## One folder for every decision
 
-A **decision** is closed. Something was considered, a choice was made, and the design reflects it. Decisions don't change — they get superseded by a new decision if the design shifts. The number is permanent.
+There is no separate "proposals" folder. A capability that's been thought through but
+not yet scheduled is an ADR with `status: deferred` (or `proposed`) — it lives in
+[Decisions](../docs/adr/) with the accepted ones, under one number sequence. A deferred
+ADR is **not** gated on a static adoption trigger; it records `assumes:` (what it rests
+on) so a change that invalidates it is detectable, and it is re-judged each release
+cycle.
 
-A **proposal** is open. It's a capability that's been thought through enough to have a clear shape, an adoption trigger, and known trade-offs — but it hasn't been scheduled yet. Proposals graduate to decisions when they're adopted, or stay in proposals until conditions warrant.
-
-**If you're adding a new idea:** write a proposal file, not a decision. Use [rfc/_template.md](rfc/_template.md).
-
-**If you're recording a choice that was just made:** write a decision file. Use [adr/_template.md](adr/_template.md) and give it the next available number.
+**Adding any decision — open or closed:** copy [the ADR template](../docs/adr/_template.md),
+take the next number, and set `status` to where it actually is in its lifecycle.

@@ -5,7 +5,7 @@ description: Review the Memoria docs/ site for Diátaxis-quadrant fit, link inte
 
 # docs-review
 
-Review `docs/` against this repo's conventions (the authority is [AGENTS.md](../../../AGENTS.md) §8). Report findings grouped by severity; fix only when asked.
+Review `docs/` against this repo's conventions (the authority is [AGENTS.md — working guidelines for AI agents in this repo](../../../AGENTS.md) §8). Report findings grouped by severity; fix only when asked.
 
 ## 1. Diátaxis quadrant fit
 

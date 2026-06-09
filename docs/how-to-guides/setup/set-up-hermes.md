@@ -88,7 +88,7 @@ Pick a citekey from `.memoria/memoria.bib` and run:
 
 **6. Install the upstream MCP servers (Librarian + Verifier).**
 
-The research lanes reach external services over MCP, not direct HTTP (their `web` toolset is disabled — see [ADR-32](../../../project/adr/32-external-access-over-mcp.md)). Two of those servers are upstream `pip` installs; the rest ship in the vault. Install them into the same environment Hermes launches MCP servers from (the vault venv):
+The research lanes reach external services over MCP, not direct HTTP (their `web` toolset is disabled — see [ADR-32](../../adr/32-external-access-over-mcp.md)). Two of those servers are upstream `pip` installs; the rest ship in the vault. Install them into the same environment Hermes launches MCP servers from (the vault venv):
 
 ```bash
 pip install paper-search-mcp          # Librarian: scholarly discovery across 20+ databases
@@ -156,4 +156,4 @@ Each line should have `"decision": "allow_with_log"` and `"profile": "memoria-li
 - API key sources: [set-up-zotero.md § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Hermes CLI reference: [External integrations](../../reference/integrations.md)
-- Profile design: [explanation/profiles/](../../explanation/profiles/) (Librarian, Mapper, etc.)
+- Profile design: [explanation/profiles/](../../explanation/profiles) (Librarian, Mapper, etc.)

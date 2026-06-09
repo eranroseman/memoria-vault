@@ -5,12 +5,13 @@ Emits two GitHub Actions outputs:
   reason   = human-readable string
 
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
-paths (docs/, project/release/, project/rfc/, markdown) get decision=auto_approve, which
+paths (docs/, project/release/, markdown) get decision=auto_approve, which
 causes the workflow to enable auto-merge. Safe PRs can be any size — a single
-docs pass legitimately touches 100+ nav_order fields.
+docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
+docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
 
 Block: any PR touching sensitive paths (CI workflows, vault profiles, scripts,
-ADRs) is blocked regardless of author, requiring a human decision.
+ADRs at docs/adr/) is blocked regardless of author, requiring a human decision.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -30,13 +31,14 @@ TRUSTED_AUTHORS = {
 SAFE_PREFIXES = (
     "docs/",
     "project/release/",
-    "project/rfc/",
     "_notes/",
     "_reports/",
 )
 SAFE_SUFFIXES = (".md", ".txt")
 
-# Any change to these paths is always blocked for human review.
+# Any change to these paths is always blocked for human review. docs/adr/ holds the
+# decision record (ADRs at every lifecycle status) and stays review-required even
+# though it lives under the otherwise-safe docs/ tree — is_sensitive wins over is_safe.
 SENSITIVE_PREFIXES = (
     ".github/workflows/",
     ".github/scripts/",
@@ -44,7 +46,7 @@ SENSITIVE_PREFIXES = (
     "vault/.memoria/profiles/",
     "vault/.memoria/mcp/",
     "vault/.memoria/lane-overrides/",
-    "project/adr/",
+    "docs/adr/",
     "project/test/",
 )
 
@@ -75,7 +77,7 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     if trusted and all_safe:
         return "auto_approve", (
             f"Trusted author (@{pr_author}), all {len(changed_paths)} changed "
-            "file(s) are in safe paths (docs / release / rfc / notes)."
+            "file(s) are in safe paths (docs / release / notes)."
         )
     if all_safe:
         return "needs_human", f"Safe file types only, but @{pr_author} is not on the trusted-author list."
@@ -117,7 +119,7 @@ def _self_test() -> int:
     # --- is_safe ---
     check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
     check("is_safe: release/ prefix", is_safe("project/release/v0.1.md"))
-    check("is_safe: rfc/ prefix", is_safe("project/rfc/idea.md"))
+    check("is_safe: design notes prefix", is_safe("docs/design/idea.md"))
     check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
     check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
     check("is_safe: .md suffix (arbitrary path)", is_safe("README.md"))
@@ -133,10 +135,14 @@ def _self_test() -> int:
     check("is_sensitive: vault profiles", is_sensitive("vault/.memoria/profiles/memoria-linter/detectors.py"))
     check("is_sensitive: vault mcp", is_sensitive("vault/.memoria/mcp/policy_mcp.py"))
     check("is_sensitive: lane-overrides", is_sensitive("vault/.memoria/lane-overrides/coder.yaml"))
-    check("is_sensitive: adr", is_sensitive("project/adr/29-testing-framework.md"))
+    check("is_sensitive: adr (docs/adr/)", is_sensitive("docs/adr/29-testing-framework.md"))
     check("is_sensitive: test dir", is_sensitive("project/test/coverage-matrix.md"))
     check("is_sensitive: docs/ NOT sensitive", not is_sensitive("docs/reference/policy-mcp.md"))
+    check("is_sensitive: design notes NOT sensitive", not is_sensitive("docs/design/system-architecture.md"))
     check("is_sensitive: README NOT sensitive", not is_sensitive("README.md"))
+    # docs/adr/ is both safe (docs/ prefix) and sensitive (docs/adr/ prefix) — sensitive wins
+    d, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)
+    check("decide: ADR edit by trusted -> needs_human (review-required)", d == "needs_human")
 
     # --- decide: trusted author, docs-only ---
     d, r = decide(["docs/reference/policy-mcp.md", "docs/reference/profiles.md"], "eranroseman", False)

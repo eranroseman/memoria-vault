@@ -98,7 +98,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 - **Vault write** → the file exists at the expected path with the expected frontmatter/body; e.g. `grep -l '^type: paper-note' 20-sources/01-papers/smithA.md`.
 - **Policy gate** → `99-system/logs/audit.jsonl` gains a row: `decision: allow_with_log` (permitted) or `deny` (forbidden), each carrying `before_hash`/`after_hash`. `tail -1 99-system/logs/audit.jsonl | jq`.
 - **Board state** → `hermes kanban show <id>` / `kanban list`; transitions also land in `99-system/logs/board-transitions.jsonl`.
-- **Telemetry** → `disposition.jsonl`, `cost.jsonl`, `lint-findings.jsonl` per [telemetry.md](../../../docs/reference/telemetry.md).
+- **Telemetry** → `disposition.jsonl`, `cost.jsonl`, `lint-findings.jsonl` per [Telemetry & logs](../../../docs/reference/telemetry.md).
 - **Read-only / dry-run** → assert the **inverse**: no new file, and **no** `allow_with_log` write row for that lane in `audit.jsonl`.
 
 ### 1.5 Reset after testing
@@ -148,7 +148,7 @@ If S1–S5 pass, proceed to the full matrix.
 | L3 | `ingest` (no PDF) | F1 (`jonesB`) | `ingest jonesB` | note created; `extract_path` blank (not aborted); ingest still completes |
 | L4 | `obsidian-paper-note` | F1 (`smithA`, delete the L2 note first) | `obsidian-paper-note smithA` | same as L2 — full pipeline incl. `[!brief]` (this is the skill `ingest` wraps) |
 | L5 | `enrich` | F7 | `enrich <citekey>` | `_enrichment` refreshed, top-level `enriched_date` = today; audit write row; main human fields untouched |
-| L6 | `classify` | a `paper-note` with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [frontmatter.md](../../../docs/reference/frontmatter.md)); human fields still empty |
+| L6 | `classify` | a `paper-note` with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [Frontmatter fields](../../../docs/reference/frontmatter.md)); human fields still empty |
 | L7 | `query` | F3 | `query "<claim topic>"` | ranked matches returned; **read-only** — no write row in `audit.jsonl` |
 | L8 | `export prior-labels` | F3 + some `paper-note`s | `export prior-labels` | an ASReview-format priors file produced; row count = # matching the frontmatter filter |
 
@@ -226,7 +226,7 @@ If S1–S5 pass, proceed to the full matrix.
 | B9 | `hermes kanban edit <id> --assignee memoria-mapper` | assignee corrected on the card |
 | B10 | `hermes kanban unblock <id>` (on a `blocked` card) | card → `ready` |
 | B11 | `hermes kanban archive <id> --reason "test cleanup"` | card archived (terminal) with the reason recorded |
-| B12 | review-gate check: `hermes kanban` action advancing a card out of `done` without `review_status: approved` | refused — the gate is a dispatch precondition (see [policy-mcp.md](../../../docs/reference/policy-mcp.md)) |
+| B12 | review-gate check: `hermes kanban` action advancing a card out of `done` without `review_status: approved` | refused — the gate is a dispatch precondition (see [Policy MCP](../../../docs/reference/policy-mcp.md)) |
 
 ### 4.9 Profile management
 

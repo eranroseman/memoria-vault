@@ -12,7 +12,7 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 
 **The distinction this plan insists on.** The board is Hermes-native — cards live in `kanban.db`; the **dispatcher** polls every 60 s, claims `ready` cards for the matching lane, and advances them to `running`. `99-system/board/<task_id>.md` is only the *export mirror* (empty until a card exists and the exporter runs). G9 tests the **dispatch** path — the dispatcher claiming a card — **not** a direct `hermes -p … chat` invocation. Direct invocation proves the skill; dispatch proves the *operability*.
 
-**Where to run.** A live install (the gate candidate): 7 profiles registered, the `memoria-policy-gate` plugin deployed per-lane ([ADR-28](../../adr/28-write-gate-as-plugin.md)), `hermes gateway status` up so the dispatcher runs. A disposable vault is fine and preferred.
+**Where to run.** A live install (the gate candidate): 7 profiles registered, the `memoria-policy-gate` plugin deployed per-lane ([ADR-28](../../../docs/adr/28-write-gate-as-plugin.md)), `hermes gateway status` up so the dispatcher runs. A disposable vault is fine and preferred.
 
 **How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Each step's output is the next step's input; a step failing **blocks** the rest — record where the chain broke.
 
@@ -96,4 +96,4 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 | D | card → done, no review needed | | |
 | E | dispatch / determinism / audit / gate / autonomy | | |
 
-**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record in [release-plan-v0.1.md](../../release/v0.1/release-plan-v0.1.md) (gate G9).
+**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record in [Release plan — v0.1.0](../../release/v0.1/release-plan-v0.1.md) (gate G9).

@@ -24,7 +24,7 @@ released: false      # machine cut-flag; true ONLY when every gate below is `don
   SINGLE SOURCE OF STATE. This file holds PROSE, not state. Gate (G#) and Stage
   (S#) STATE lives ONLY as the checklist in the "Release vX.Y" tracking issue (a
   GitHub progress bar); §2/§3 here list the gate/stage DEFINITIONS, not their
-  state. Scope = the milestone; build gaps = GitHub issues; scope cuts = rfc/;
+  state. Scope = the milestone; build gaps = GitHub issues; scope cuts = deferred-status ADRs in docs/adr/;
   version + notes = release-please. Edit each fact in exactly one place.
 ============================================================================ -->
 
@@ -52,7 +52,7 @@ release plan is self-contained.)
 ## 1. Scope — what this release is
 
 <!-- PROSE. What the release IS (the unit of delivery) and what it explicitly is
-     NOT. One paragraph. Out-of-scope detail → §5 + proposals/. -->
+     NOT. One paragraph. Out-of-scope detail → §5 + deferred-status ADRs in docs/adr/. -->
 
 {{ What this version delivers, in one paragraph. Name the boundary: what is in,
 what is deliberately later. }}
@@ -106,9 +106,9 @@ issue tracker.
 ## 5. Out of scope (deferred)
 
 <!-- PROSE. What this release consciously leaves out. Per-artifact deferred set lives
-     in proposals/ — point, don't duplicate. -->
+     in docs/adr/ (deferred) — point, don't duplicate. -->
 
-{{ Scope-level exclusions for this release. Point to proposals/ for the
+{{ Scope-level exclusions for this release. Point to the deferred-status ADRs for the
 per-artifact deferred set. }}
 
 ## 6. Known limitations (state in the release notes)

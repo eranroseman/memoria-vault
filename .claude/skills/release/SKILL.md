@@ -42,5 +42,5 @@ Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffo
 
 Changes land via the PR flow (branch → PR → squash; `main` is a protected ruleset).
 Release-plan/`README` edits under `project/release/` are safe-path → auto-approve;
-anything touching `vault/`, `scripts/`, `.github/`, `project/adr/`, or `project/test/`
+anything touching `vault/`, `scripts/`, `.github/`, `docs/adr/`, or `project/test/`
 is `needs_human`. See AGENTS.md "PR flow" / "Required CI checks".

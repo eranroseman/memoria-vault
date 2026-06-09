@@ -47,4 +47,4 @@ Memoria separates three concerns into three layers: a Kanban **board** that orch
 - **Why the design is shaped this way** (`why-*` arguments, including [Why three layers, not one](../rationale/why-three-layers.md)) → [Design rationale](../rationale/README.md)
 - **The board state machine** the profiles execute against → [Kanban board](../kanban-board/README.md)
 - **How profiles and the vault are packaged and installed** → [Deployment](../deployment/README.md)
-- **Operational reference** (permission matrices, command lists, config formats) → [Reference](../../reference/)
+- **Operational reference** (permission matrices, command lists, config formats) → [Reference](../../reference)

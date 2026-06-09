@@ -94,7 +94,7 @@ Dividing by posture instead of capability has a real price: the same *technique*
 
 Memoria takes the duplication on purpose. A shared capability-agent would become a bottleneck and, worse, a permission blur — it would need the union of every caller's access, dissolving exactly the per-lane write boundaries the split exists to make legible. For a human-gated system whose security model *is* per-lane permissions, legible trust boundaries are worth more than DRY capability. A throughput-maximizing autonomous fleet would make the opposite trade.
 
-The reconciliation is to separate the two layers. Capability increasingly lives in **shared MCP servers** — `pyzotero`, `verify`, `paper_search` — that any lane reaches through the gated policy plugin, while the **profiles stay posture-pure**: identity, write zone, and stance, not tools. Shared capability at the MCP layer, posture isolation at the agent layer (see [ADR-32](../../../project/adr/32-external-access-over-mcp.md)).
+The reconciliation is to separate the two layers. Capability increasingly lives in **shared MCP servers** — `pyzotero`, `verify`, `paper_search` — that any lane reaches through the gated policy plugin, while the **profiles stay posture-pure**: identity, write zone, and stance, not tools. Shared capability at the MCP layer, posture isolation at the agent layer (see [ADR-32](../../adr/32-external-access-over-mcp.md)).
 
 ---
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""gen-adr-index — regenerate the ADR table in project/adr/README.md from frontmatter.
+"""gen-adr-index — regenerate the ADR table in docs/adr/README.md from frontmatter.
 
 The ADR README is a hand-written navigation hub; the per-decision listing is the
 one part that rots (a renamed title, a new ADR, a supersession) if maintained by
-hand. This reads every `project/adr/NN-*.md`, and rewrites the table between the
+hand. This reads every `docs/adr/NN-*.md`, and rewrites the table between the
 `<!-- ADR-INDEX:START -->` / `<!-- ADR-INDEX:END -->` markers — sorted by number,
 with each status (and supersession arrow) taken straight from frontmatter.
 
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-ADR_DIR = ROOT / "project" / "adr"
+ADR_DIR = ROOT / "docs" / "adr"
 README = ADR_DIR / "README.md"
 
 START = "<!-- ADR-INDEX:START -->"

@@ -74,7 +74,7 @@ Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on
 
 ## Skills and MCP servers
 
-External access is **MCP-only** for the research lanes (Librarian, Mapper, Verifier) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers, not web-fetch skills (see [ADR-32](../../project/adr/32-external-access-over-mcp.md)). What still installs as a *skill* is a small set:
+External access is **MCP-only** for the research lanes (Librarian, Mapper, Verifier) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers, not web-fetch skills (see [ADR-32](../adr/32-external-access-over-mcp.md)). What still installs as a *skill* is a small set:
 
 - **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): `obsidian-paper-note` (Librarian), `retraction-check` + `claim-checks` (Verifier), `cluster-mapping` (Mapper), `structural-detectors` (Linter — wraps `detectors.py`).
 - **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `scientific-writing` (Writer); `scikit-learn` + `umap-learn` (the Python clustering/dimensionality-reduction libraries the Mapper's `cluster-mapping` drives for HDBSCAN + UMAP).
