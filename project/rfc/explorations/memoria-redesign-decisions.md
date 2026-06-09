@@ -449,7 +449,7 @@ remain the activity spine (D7). Two distinct vocabularies — activity vs surfac
 **Alternatives weighed:** Read/Write as the perspective names (rejected — bare verbs; kept
 as activities); Sources/Project.
 
-## D34 — Librarian for the unified processing agent *(→ amends D27)*
+## D34 — Librarian for the unified processing agent *(→ amends D27; verify agent renamed Peer-reviewer in D38)*
 
 **Decided:** the consolidated processing posture is named **Librarian** (not "Process").
 For coherence **Writer** and **Fact-checker** re-attach too. **Agents are role-named**
@@ -520,6 +520,47 @@ the dominant notification UX (one source of truth + filters) over siloed inboxes
 **Alternatives weighed:** one card per item (rejected — flood + rubber-stamp);
 per-project inboxes (rejected — fragments attention, multiple unread counts). [PRISMA;
 synthesis matrix; NN/g inbox pattern.]
+
+---
+
+## D38 — The verify agent is the Peer-reviewer (not Fact-checker) *(→ amends D34)*
+
+**Decided:** the independent verification agent is named **Peer-reviewer**. Agents stay
+role-named; the **lane stays `verify`**.
+
+**Why:** for a research vault, peer review is the **native pre-publication quality-gate
+metaphor**, and it completes the **PI · co-PI · Peer-reviewer** triad (the same thematic
+instinct as D32/D34). It also matches **scope** — the agent judges *soundness*, not just
+facts: a claim can be well-cited yet unsound, which is peer review, not fact-checking. And
+it cleanly **separates the two red-teams**: the co-PI is *informal, continuous* sparring;
+the Peer-reviewer is the *formal, independent* gate (⑥ certify).
+
+**Alternatives weighed:** **Fact-checker** (journalism — precise to cite-check/claim-trace
+but undersells soundness, and a mixed register against PI/co-PI); **Verifier** (the pre-D8
+functional name — agents get role names, not tool names); **Editor** (editors *fix*,
+violating flag-don't-fix; overlaps the Writer and the Linter); **Reviewer** (too generic;
+clashes with the board's `review_status`). [Tolerable cost: minor `review_status` overlap.]
+
+## D39 — The project workflow (v0.2) *(→ new; defines §3 Projects / the Project perspective)*
+
+**Decided:** the Project workflow is defined for **v0.2** as phases 1–5 —
+**brief → relevance scan → lit-search → canvas → outline** — each with a per-phase agent
+chosen by posture: *brief* = co-PI (+ Writer for prose); *relevance scan* & *lit-search* =
+Librarian (`map`/`find`, surfaced as batch-worklist reports, D37); *canvas* =
+Librarian-seeds / PI-authors; *outline* = Writer, a **one-way seed** from the canvas.
+**Write · code · verify (phases 6–8) are sequenced but v0.3** (not yet detailed). Detail:
+[memoria-redesign.md](memoria-redesign.md) Appendix H.
+
+**Why:** the brief is the cascade root (get it wrong and every later phase inherits the
+error), so it's deep co-PI work, not a delegated task; relevance/lit-search are faithful
+Librarian processing presented as screening worklists; the canvas is the ZK connecting
+phase (PI-authored); the outline seeds once because two-way canvas↔outline sync is
+high-cost, low-value. The Librarian + Analyst merge (D27/D34) holds across all five — one
+faithful-processing posture.
+
+**Alternatives weighed:** RQ-formulation as a Librarian task (rejected — generative/
+dialogic, belongs to co-PI/Writer); two-way canvas↔outline sync (rejected — complexity);
+detailing write/code/verify now (deferred to v0.3 — not yet specified).
 
 ---
 
