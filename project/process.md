@@ -8,8 +8,7 @@ How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md
 - **Keep it small.** ≤1 day or ≤10 commits. Split and land if it grows beyond that.
 - **Stay current.** `git fetch origin && git rebase origin/main` daily and before every PR.
 - **Structural changes first.** Folder moves, deletions, schema bumps get their own tiny PR, merged and announced — every active branch rebases the same day.
-- **One worktree per session.** See AGENTS.md §1 for setup. Never share a branch or checkout between sessions.
-- **Commit or stash before you switch.** `reset --hard` / `checkout -- <path>` / `clean -f` discard uncommitted work with no reflog; clean the tree (`git stash -u`) first, or keep a worktree per branch so there's nothing to lose. See AGENTS.md §4.
+- **Isolation & a clean tree are mechanics — see AGENTS.md §1–4** (authoritative; not restated here): own worktree per session, branch before any change, never share a checkout, and commit or stash before any `reset --hard`/`switch`.
 
 ## Issue and board flow
 
