@@ -45,6 +45,7 @@ graduates via the [decisions pipeline](../../adr/README.md).
 - Appendix E — the board (control plane)
 - Appendix F — related backlog
 - Appendix G — ADR impact (detail)
+- Appendix H — the project workflow (v0.2)
 
 ---
 
@@ -93,7 +94,7 @@ Linter was both "the Housekeeping layer" and "an engine.")*
 | Actor | Posture? | LLM? | On the board? | What it is | Examples |
 |---|---|---|---|---|---|
 | **Engines** | no | no | no | pure mechanism — you *run* it | ingest/cataloging · the Linter · search · the verification sweeps |
-| **Agents** | yes | yes | yes (lanes) | posture + judgment — you *delegate* to it | the co-PI + the background lanes (Librarian · Writer · Fact-checker · Engineer) |
+| **Agents** | yes | yes | yes (lanes) | posture + judgment — you *delegate* to it | the co-PI + the background lanes (Librarian · Writer · Peer-reviewer · Engineer) |
 | **The PI** | — | — | — | the only one who promotes to canonical | you |
 
 We call the human **the PI** (Principal Investigator) — the role name, matching the
@@ -117,7 +118,7 @@ The "gate" is just the PI's next action, prompted by an Inbox signal.
 
 The PI converses with **one agent — the co-PI** — and **delegates** the rest. The
 co-PI is the conversational front at the desk (it subsumes the old **Socratic** role);
-the specialist agents (Librarian · Writer · Fact-checker · Engineer) run as **background
+the specialist agents (Librarian · Writer · Peer-reviewer · Engineer) run as **background
 lanes** it delegates to, never as separate chats. Concentrating every conversation in one
 agent lets it use Hermes' self-improving loop — **memory · /goals · skills** — so it
 compounds into a genuine co-PI rather than a stateless assistant. (Detail: §4.)
@@ -215,7 +216,7 @@ recommendation never substitutes for human approval.
 | hub | current → archived | topic, members[] | 🔒 |
 | index | current → archived | — | |
 
-**PROJECTS** — work artifacts, project-scoped *(lighter — to revisit, §10)*
+**PROJECTS** — work artifacts, project-scoped *(the producing workflow is Appendix H)*
 
 | type | states | notes |
 |---|---|---|
@@ -240,9 +241,9 @@ tool). The Inbox gets **one aggregate work-prompt** ("N sources to screen for
 | type | description | raised by |
 |---|---|---|
 | candidate | a *found* source proposed for intake | Librarian (`find`) |
-| gap | a *missing*-source need | Librarian / Fact-checker |
-| flag | a verification / integrity issue | Fact-checker / Linter |
-| alert | drift / retraction notice | Linter / Fact-checker |
+| gap | a *missing*-source need | Librarian / Peer-reviewer |
+| flag | a verification / integrity issue | Peer-reviewer / Linter |
+| alert | drift / retraction notice | Linter / Peer-reviewer |
 
 (There is no `review-request` type — a card awaiting your gate is just any card in the
 `proposed` state, pointing at the artifact under review.)
@@ -299,7 +300,7 @@ item):
 | | ③ | connect | link | Librarian | (link proposals) |
 | **Write** | ④ | plan | map | Librarian | gap |
 | | ⑤ | write | draft | Writer | — |
-| | ⑥ | check | verify | Fact-checker | flag |
+| | ⑥ | check | verify | Peer-reviewer | flag |
 
 The tasks are **individually triggered, not a set** — a human gate (often a long gap)
 sits between each: a source is catalogued; *much later, if ever*, distilled (extract);
@@ -343,12 +344,14 @@ personality), and **distribution.yaml** (the packaged repo).
 - *Lane:* **draft**.
 - *Proposes:* prose drafts with bound citations, and outline options.
 - *Boundary:* drafts never land directly in `claims/` or `deliverables/`; no fact-checking
-  (that's the Fact-checker).
+  (that's the Peer-reviewer).
 
-**Fact-checker** — *posture: skeptical, and deliberately independent* (flag, don't fix).
+**Peer-reviewer** — *posture: skeptical, and deliberately independent* (flag, don't fix).
 
-- *Lane:* **verify** — the *judgment* checks (citekey resolution, claim→source tracing,
-  near-duplicate adjudication) + the conceptual red-team; spawns `gap`/`flag` cards.
+- *Lane:* **verify** — the **formal, independent review gate** (the academic peer-review
+  pass), distinct from the co-PI's *informal, continuous* sparring: the *judgment* checks
+  (citekey resolution, claim→source tracing, near-duplicate adjudication) + the conceptual
+  red-team *for soundness, not just facts*; spawns `gap`/`flag` cards.
 - *Boundary:* **independent of the Librarian** — the agent that synthesizes must not also
   grade its own work (separation of duties; the anti-rubber-stamp principle, §9). The
   *deterministic* sweeps (retraction, dedup, broken-citation) are **engines**, not this
@@ -375,9 +378,9 @@ Not agents — pure mechanism, triggered or scheduled, never on the board:
 - **Search** — deterministic retrieval over the vault (the `query` skill). Powers "Search"
   (§6.3) and finds link candidates before the Librarian proposes (§3.1).
 - **Verification sweeps** — scheduled, deterministic checks split out from the old
-  Fact-checker: retraction lookups, near-duplicate detection, broken-citation detection.
+  Peer-reviewer: retraction lookups, near-duplicate detection, broken-citation detection.
   Their *findings* become Inbox `flag`/`alert`s; the *judgment* verification stays the
-  Fact-checker (§4.2).
+  Peer-reviewer (§4.2).
 - **The Linter** — §5.
 
 ---
@@ -537,13 +540,13 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
 
 ## 10. To revisit
 
-- **Projects / the Project perspective** — `report · sketch · composition · code` is
-  provisional; the plan→draft→deliverable-as-states model needs a pass, as do the project
-  phases (brief → relevance scan → lit-search → canvas → outline → write/code/verify) and
-  their card breakdown. **The Library side is finalized first; write/code/verify → v0.3.**
+- **Projects / the Project perspective** — the project workflow is now defined in
+  **Appendix H** (v0.2: brief → relevance scan → lit-search → canvas → outline). Still
+  open: the `plan→draft→deliverable`-as-states model, and **write · code · verify** detail
+  — **v0.3**.
 - **Profile consolidation** ripples through existing docs — old Librarian + Analyst now
   unify as **Librarian** (catalog·extract·link·map); Verifier splits (judgment →
-  **Fact-checker**, sweeps → engines); Coder → **Engineer**; **Socratic folds into the
+  **Peer-reviewer**, sweeps → engines); Coder → **Engineer**; **Socratic folds into the
   co-PI**; Linter + sweeps are engines — sequence the migration.
 - **`relations:` → `links:`** field rename (notes) + adding entity `relationships`
   (Catalog) — amends ADR-08; plan the migration.
@@ -597,7 +600,7 @@ Existing skills are current `hermes-cli` commands; **(new)** are specified, not 
 | **co-PI** · agent (conversational, desk) | socratic-processing · lens-reading | ask · explore · delegate-task |
 | **Librarian** · agent (catalog · extract · link · map) | find · enrich · classify · query · scope-project · gap-report · cluster-map · cluster-mapping · obsidian-paper-note · counter-outline | candidate-rank · tension-surface · relation-suggest · distill-candidate-flag · writable-density · readiness-score · canvas-seed · gap-route · map:claim-graph · map:hub-canvas |
 | **Writer** · agent (draft) | draft · query · promote | claim-stub · outline-score · citation-bind |
-| **Fact-checker** · agent (verify, judgment) | cite-check · claim-trace | gap-card · gap-fix-propose |
+| **Peer-reviewer** · agent (verify, judgment) | cite-check · claim-trace | gap-card · gap-fix-propose |
 | **Engineer** · agent (code) | code · commit · revert · workspace · scaffold | — |
 | **Ingest** · engine | ingest · enrich (mechanical) | build-relationships · create-records |
 | **Search** · engine | query | — |
@@ -607,7 +610,7 @@ Existing skills are current `hermes-cli` commands; **(new)** are specified, not 
 The mechanical half of cataloging (fetch · extract · build relationships · create records)
 runs in the **Ingest engine**, not the Librarian; the **deterministic** verification
 sweeps are an engine, while the *judgment* checks (cite-check · claim-trace) are the
-**Fact-checker**. *(Dropped: `classification-confidence` — it served confidence
+**Peer-reviewer**. *(Dropped: `classification-confidence` — it served confidence
 auto-accept, which contradicts the propose-not-dispose guardrail.)*
 
 ## Appendix D — dashboards (reconciled)
@@ -643,7 +646,7 @@ worker runs it; the result resurfaces as an **Inbox** signal. (Engines run *off*
 board — on cron/CI, not as cards.)
 
 **Lanes = the background agents** (`assignee = memoria-<name>`: Librarian · Writer ·
-Fact-checker · Engineer). **No co-PI lane** — it converses at the desk (ACP pane), never
+Peer-reviewer · Engineer). **No co-PI lane** — it converses at the desk (ACP pane), never
 on the board — and **no engine lanes** (ingest · search · sweeps · Linter run on cron/CI).
 
 The board's native **`status`** (`triage → todo → ready → running → done → blocked →
@@ -687,7 +690,7 @@ to a lane · `#177` tutorial names.
 ### RFCs folded (`folded_into: memoria-redesign`)
 
 RFC-03 (→ Inbox card-in-`proposed`) · RFC-04 (→ Find / Librarian) · RFC-05
-(→ near-tie/dedup + Fact-checker) · RFC-09 (→ profile = posture, §4) · RFC-10 (→ pattern
+(→ near-tie/dedup + Peer-reviewer) · RFC-09 (→ profile = posture, §4) · RFC-10 (→ pattern
 governance, §7). **Tension:** RFC-08 (advisory gate) vs the transparency guardrail — allow
 only as a comparison-study toggle.
 
@@ -732,10 +735,10 @@ If adopted, each firm decision graduates via the
 **Amends**
 
 - **ADR-02** (seven specialist profiles) → **one co-PI** (conversational, subsumes
-  Socratic) + **four background agents** (**Librarian · Writer · Fact-checker · Engineer**),
+  Socratic) + **four background agents** (**Librarian · Writer · Peer-reviewer · Engineer**),
   each defined by a **posture**; the **Linter and the deterministic verification sweeps
   are engines**, not agents. The old Librarian + Analyst unify as **Librarian**; the old
-  Fact-checker splits by determinism (judgment → **Fact-checker**, sweeps → engines).
+  Peer-reviewer splits by determinism (judgment → **Peer-reviewer**, sweeps → engines).
 - **ADR-08** (typed relations) → notes carry **`links:`** (some typed
   supports/contradicts); entities carry **`relationships`** — two distinct kinds.
 - **ADR-30** (deterministic ingest) → **cataloging splits**: a mechanical *ingest
@@ -761,3 +764,34 @@ If adopted, each firm decision graduates via the
 **Aligns with (reinforced)** — ADR-03 (structural gate), 05 (Zotero backbone),
 10 (claim supersession), 21 (autonomy ceiling), 22 (Hermes runtime),
 24 (single-researcher), 33 (BERTopic clustering).
+
+## Appendix H — the project workflow (v0.2)
+
+A project moves through phases — **iterative, not linear**, but with a natural progression
+from *gathering* (Library side) to *producing* (Project side). **v0.2 defines phases 1–5**
+(brief → outline); **write · code · verify (6–8) are v0.3** — sequenced, not yet detailed.
+Each phase composes the six delegable tasks (§4.1); the agent is chosen by **posture**.
+
+| # | Phase | Agent | Input | Output (type) | Gate / mechanism |
+|---|---|---|---|---|---|
+| 1 | **Brief** — the research question | **co-PI** (dialogic) + PI; Writer may draft prose | the PI's intent | a **project brief** (`sketch`) — scope · problem · question | deep work; *guides every later phase, so getting it wrong cascades* |
+| 2 | **Relevance scan** | **Librarian** (`map`) | brief + the Catalog | a **relevance report** (`report`) | per-source keep/reject **batch worklist** (D37); accepted → linked to the project |
+| 3 | **Literature search** | **Librarian** (`find` + `map`) | brief + linked sources | a **new-sources report** (`report`) | same worklist shape; recommends catalog additions, then re-links |
+| 4 | **Canvas** — the thread | **Librarian** proposes (`canvas-seed`); **PI** authors | linked claims/sources | a **canvas** (`sketch`) | deep work; the ZK-style connecting phase |
+| 5 | **Outline** | **Writer** (`draft`) | the canvas | an **outline** (`sketch` → `composition`) | **one-way seed** from the canvas, then it diverges (no two-way sync) |
+| 6 | **Write** | **Writer** (`draft`) | outline + claims | `composition` (draft → deliverable 🔒) | **v0.3** |
+| 7 | **Code** | **Engineer** (`code`) | composition | `code` handoff | **v0.3** |
+| 8 | **Verify** | **Peer-reviewer** (`verify`) | the draft / deliverable | the ⑥ certify gate | **v0.3** |
+
+**The relevance / new-source report structure** (phases 2–3): a *scope + screening header*
+(the question, the catalog scanned, and an include/exclude line *with reason* per source —
+PRISMA-style); a **synthesis matrix** (one row per source: theme · finding · relevance
+verdict); then **thematic sections** — grouped by concept, not source-by-source — each
+source carrying *what it is / why relevant / what to adopt-borrow-reject + rationale*.
+Sources are grouped by their **`relationships`** (paper + repo, review + source, paper +
+counter-paper), so related items are judged together.
+
+**Two principles carried in:** reports are **project artifacts** (`projects/<p>/reports/`),
+browsed in the Project perspective, each surfacing **one aggregate work-prompt** — never N
+cards (D37); and the loop **compounds** — gaps found in ④/⑥ become Inbox `gap`s that
+re-trigger intake (①).
