@@ -490,7 +490,7 @@ symmetrically (inform, don't persuade).
 reasons-for-only gate (rejected — automation bias). [NIST IR 8312; Tintarev & Masthoff
 2012; Preston & Colman 2000; the Toulmin model.]
 
-## D36 — Seven-layer system architecture; MCP is a policy boundary *(→ complements D25)*
+## D36 — Seven-layer system architecture; MCP is a policy boundary *(→ complements D25; sandbox model in D40, engine invocation in D41)*
 
 **Decided:** adopt a **seven-layer build/runtime stack** (PI · Interface · co-PI · Tasks ·
 MCP · Engines · Vault) with the principle **decisions flow top-down, information bottom-up**.
@@ -565,6 +565,39 @@ faithful-processing posture.
 **Alternatives weighed:** RQ-formulation as a Librarian task (rejected — generative/
 dialogic, belongs to co-PI/Writer); two-way canvas↔outline sync (rejected — complexity);
 detailing write/code/verify now (deferred to v0.3 — not yet specified).
+
+## D40 — Sandbox model: policy-via-MCP baseline; execution isolation only for untrusted code *(→ refines D36)*
+
+**Decided:** under the **solo, local premise**, "sandboxed" means **policy-sandboxed via
+MCP** — allow-listed tools, vault-path-scoped writes, validation, logging — which, with
+propose-not-dispose + the gated zones + the SHA-256 audit log + git, is the right guard for
+first-party agents. **No process/execution isolation** for Memoria's own agents. Execution
+isolation (container / separate OS user) applies **only to untrusted third-party code** (a
+community MCP server, the Engineer's external coding agent) and is **deferred** until such
+code is actually run.
+
+**Why:** the threat model for one trusted user on their own vault isn't tenant-escape — it's
+*wrong writes*, covered by the policy gate + gate + git. Process isolation is multi-tenant
+hygiene: operational cost for no marginal safety here. State it honestly as
+"policy-sandboxed," not "completely sandboxed."
+
+**Alternatives weighed:** literal process isolation for all agents (rejected — overkill for
+solo/local); no boundary at all (rejected — the MCP policy gate is load-bearing).
+
+## D41 — Engine invocation: agents via MCP, trusted callers direct *(→ refines D36)*
+
+**Decided:** **the path follows the caller.** Agents reach engines **only through MCP** (no
+exceptions — that is the sandbox); **cron, CI, and the PI invoke engines directly.**
+Agent-reachable *processing* engines (ingest, search) carry an **MCP-tool facade + a direct
+entry**; *maintenance* engines run only by cron/CI (the Linter, the verification sweeps)
+need **no MCP facade**.
+
+**Why:** MCP must gate every agent→{engine, vault, API} path — that's the boundary; trusted
+callers don't need the sandbox and shouldn't pay its overhead. Matches reality: the Linter
+is a CI gate, the sweeps are cron.
+
+**Alternatives weighed:** everything through MCP uniformly (rejected — needless facades for
+cron-only engines); agents calling engines directly (rejected — breaks the sandbox).
 
 ---
 
