@@ -147,37 +147,6 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     return bundle
 
 
-def _self_test() -> int:
-    """Offline test of the assembly: Tier-0 only (no network)."""
-    fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
-               "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n"
-               "  zoteroselect = {zotero://select/library/items/ABCD1234},\n"
-               "  file = {C:\\Users\\me\\Zotero\\storage\\WXYZ5678\\A Test.pdf},\n}\n")
-    b = run("x2024Test", fixture, enrich=False)
-    fm = b["frontmatter"]
-    checks = [
-        ("tier0 captured", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
-        ("routes to paper-note", b["note_type"] == "paper-note"),
-        ("two holes declared", b["holes"] == ["_proposed_classification", "brief"]),
-        ("frontmatter has identity", fm["title"] == "A Test" and fm["doi"] == "10.1/x"),
-        ("zotero_uri from zoteroselect (no API)", fm["zotero_uri"] == "zotero://select/library/items/ABCD1234"),
-        ("pdf_uri from bib file storage key", fm["pdf_uri"] == "zotero://open-pdf/library/items/WXYZ5678"),
-        ("no enrichment without --enrich", b["extract"] is None and b["link_plan"] is None),
-    ]
-    pdf, key = _bib_local_pdf(
-        "y2024Pdf",
-        "@article{y2024Pdf,\n  title = {P},\n"
-        "  file = {C:\\Users\\me\\Zotero\\storage\\ABCD1234\\My Paper - 2024.pdf},\n}\n")
-    checks.append(("bib file -> wsl path + zotero storage key",
-                   key == "ABCD1234"
-                   and pdf == "/mnt/c/Users/me/Zotero/storage/ABCD1234/My Paper - 2024.pdf"))
-    bad = [n for n, ok in checks if not ok]
-    for n, ok in checks:
-        print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-    print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: pipeline.py self-test")
-    return 1 if bad else 0
-
-
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Deterministic ingest orchestrator (ADR-30)")
@@ -186,15 +155,12 @@ def main() -> int:
     ap.add_argument("--vault", help="default $OBSIDIAN_VAULT_PATH from ~/.hermes/.env")
     ap.add_argument("--pdf")
     ap.add_argument("--enrich", action="store_true", help="run the Tier-1 network stages")
-    ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
-    if a.self_test:
-        return _self_test()
     # Resolve the vault root from the documented OBSIDIAN_VAULT_PATH convention so a
     # dispatched worker (whose cwd is a scratch workspace) needn't know the path.
     vault_str = a.vault or _env("OBSIDIAN_VAULT_PATH")
     if not a.citekey or not vault_str:
-        ap.error("provide --citekey and --vault (or set OBSIDIAN_VAULT_PATH; or --self-test)")
+        ap.error("provide --citekey and --vault (or set OBSIDIAN_VAULT_PATH)")
     vault = Path(vault_str)
     bib = Path(a.bib) if a.bib else vault / ".memoria" / "memoria.bib"
     if not bib.is_file():

@@ -8,7 +8,7 @@
 mcp>=1.27.2
 
 # Lane-override (.memoria/lane-overrides/*.yaml) parsing. The decision core and
-# its --self-test run without PyYAML; only the live server's lane loading needs it.
+# its tests run without PyYAML; only the live server's lane loading needs it.
 PyYAML>=6.0.3
 
 # Local-PDF full-text extraction for the ingest pipeline (extract.py, the

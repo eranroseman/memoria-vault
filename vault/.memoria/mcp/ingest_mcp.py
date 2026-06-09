@@ -16,7 +16,6 @@ The agent fills the two holes (_proposed_classification and the [!brief]) and
 writes the notes through the gated obsidian MCP, exactly as before.
 
     python ingest_mcp.py --vault <path>      # run the server over stdio
-    python ingest_mcp.py --self-test         # synthetic, offline; no mcp pkg needed
 """
 from __future__ import annotations
 
@@ -123,48 +122,10 @@ def resolve_vault(arg: str | None) -> Path:
     return vault
 
 
-def self_test() -> int:
-    """Offline: the module imports the pipeline and runs a Tier-0 fixture through it."""
-    import pipeline
-    fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
-               "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n}\n")
-    b = pipeline.run("x2024Test", fixture, enrich=False)
-
-    # capture-intake anchor: appended once, idempotent on a second call
-    import tempfile
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        first = append_intake_anchor(v, "x2024Test", "20-sources/01-papers/x2024Test.md")
-        second = append_intake_anchor(v, "x2024Test", "20-sources/01-papers/x2024Test.md")
-        lines = (v / INTAKE_LOG).read_text().splitlines()
-        anchor_ok = first and not second and len(lines) == 1 and json.loads(lines[0])["citekey"] == "x2024Test"
-
-    # citekey sanitization: slashes and '..' are replaced so the path stays inside 90-assets/
-    safe_ck = "../../etc/passwd".replace("/", "_").replace("..", "_").replace("\\", "_")
-    sanitize_ok = "/" not in safe_ck and ".." not in safe_ck
-
-    checks = [
-        ("scripts dir importable", SCRIPTS_DIR.is_dir()),
-        ("pipeline runs Tier-0", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
-        ("bundle declares the two holes", b["holes"] == ["_proposed_classification", "brief"]),
-        ("identity assembled", b["frontmatter"]["title"] == "A Test"),
-        ("intake anchor appended once + idempotent", anchor_ok),
-        ("citekey sanitization strips traversal chars", sanitize_ok),
-    ]
-    bad = [n for n, ok in checks if not ok]
-    for n, ok in checks:
-        print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-    print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: ingest_mcp.py self-test")
-    return 1 if bad else 0
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description="Deterministic ingest pipeline as an MCP server (ADR-30)")
     ap.add_argument("--vault", help="vault root (or set OBSIDIAN_VAULT_PATH)")
-    ap.add_argument("--self-test", action="store_true", help="run unit tests and exit")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(1 if self_test() else 0)
     build_server(resolve_vault(args.vault)).run()
 
 

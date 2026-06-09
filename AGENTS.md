@@ -105,7 +105,7 @@ All must pass before merge:
 | `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
-| `python-selftest` | `--self-test` on vault Python tooling |
+| `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
 
 **CI invariant:** required-check workflows must have **no** `paths:` filter — a path-filtered required check permanently blocks PRs that don't touch those paths. Trigger them with `on: { pull_request:, push: { branches: [main] } }` — `pull_request` (unfiltered) reports on every PR; scoping `push` to `main` validates the post-merge state without a redundant second run on every feature-branch push (the `.githooks/pre-commit` hook already gives pre-push feedback). Add a `concurrency` group (`cancel-in-progress` except on `main`) so superseded runs are dropped.
 
@@ -127,7 +127,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`): `bash -n scripts/install.sh` (parse) + a `--dry-run` pass.
-- **Python** (`.memoria/mcp/*.py`, `detectors.py`): `python <file> --self-test`.
+- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44).
 - **PowerShell** (`scripts/install.ps1`): rely on CI; `Write-Host` is intentional and excluded via `scripts/PSScriptAnalyzerSettings.psd1`. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
 

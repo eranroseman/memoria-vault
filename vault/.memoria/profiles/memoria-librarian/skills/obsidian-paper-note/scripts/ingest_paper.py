@@ -9,7 +9,6 @@ runs"). Tiers 1-2 (merge/extract/tag/link, the two LLM judgments) land next.
 
 Usage:
     ingest_paper.py --citekey <key> [--bib PATH] [--json]
-    ingest_paper.py --self-test [--bib PATH]
 
 Exit codes: 0 ok · 2 citekey not found · 3 bad bib · 4 usage.
 """
@@ -232,7 +231,7 @@ def ingest(citekey: str, bib_path: Path) -> dict:
     return ingest_text(citekey, bib_path.read_text(encoding="utf-8", errors="ignore"))
 
 
-# A small self-contained fixture so --self-test needs no external library.
+# A small self-contained fixture so the tests need no external library.
 _FIXTURE = r"""
 @article{smith2024Example,
   title = {An Example Article With a PMCID},
@@ -280,39 +279,14 @@ _EXPECT = [
 ]
 
 
-def _self_test() -> int:
-    fails = 0
-    for ck, ntype, stype, want in _EXPECT:
-        fm = ingest_text(ck, _FIXTURE)["frontmatter"]
-        checks = [
-            ("captured", fm["lifecycle"] == "captured"),
-            ("title", bool(fm["title"])),
-            ("note_type", fm["type"] == ntype),
-            ("source_type", fm["source_type"] == stype),
-            ("authors", len(fm["authors"]) == want["authors"]),
-        ]
-        for key in ("arxiv_id", "pmcid", "isbn"):
-            if key in want:
-                checks.append((key, fm[key] == want[key]))
-        bad = [name for name, ok in checks if not ok]
-        print(f"  {'PASS' if not bad else 'FAIL'}  {ck:18} -> {fm['type']:9} {fm['source_type']:8}"
-              + (f"  BAD: {bad}" if bad else ""))
-        fails += bool(bad)
-    print(f"\n{'OK' if not fails else f'{fails} FAILING'}: ingest_paper Tier-0 self-test")
-    return 1 if fails else 0
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description="Deterministic ingest spine (ADR-30, Tier 0)")
     ap.add_argument("--citekey")
     ap.add_argument("--bib", help="path to memoria.bib (Better BibTeX export)")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
-    if a.self_test:
-        return _self_test()
     if not a.citekey or not a.bib:
-        ap.error("provide --citekey and --bib (or --self-test)")
+        ap.error("provide --citekey and --bib")
     bib = Path(a.bib)
     if not bib.is_file():
         print(f"bib not found: {bib}", file=sys.stderr)

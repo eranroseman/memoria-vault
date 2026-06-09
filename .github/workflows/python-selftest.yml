@@ -1,12 +1,12 @@
 name: python-selftest
 
-# Runs the --self-test suites of the vault's Python tooling (policy gate, board
-# exporter, metrics, Linter detectors) against the real runtime deps, then gates
-# dashboard schema-drift over the real vault/ tree (a dashboard querying a field
-# no template emits shows an empty table forever — silent, so CI must catch it).
+# Runs the L1 pytest suite (tests/) for the vault's Python tooling + repo scripts
+# against the real runtime deps (ADR-44), then gates dashboard schema-drift over the
+# real vault/ tree (a dashboard querying a field no template emits shows an empty
+# table forever — silent, so CI must catch it).
 #
-# policy_mcp degrades without PyYAML, but policy_hook's self-test writes a lane
-# YAML and needs it to load — so we install requirements.txt (mcp + PyYAML)
+# policy_mcp degrades without PyYAML, but policy_hook's test writes a lane YAML and
+# needs it to load — so we install requirements.txt (mcp + PyYAML) before pytest
 # rather than rely on stdlib-only behavior.
 #
 # This backs a REQUIRED status check, so — like docs-doctor and lint-installers —
@@ -36,30 +36,14 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: vault/.memoria/mcp/requirements.txt
-      - name: Install runtime deps
-        run: python -m pip install --quiet -r vault/.memoria/mcp/requirements.txt
-      - name: Run all --self-test suites
+      - name: Install runtime deps + pytest
+        # runtime deps (mcp + PyYAML) so the modules import; pytest runs the L1 tree.
         run: |
-          set -e
-          P=vault/.memoria
-          python "$P/mcp/policy_mcp.py" --self-test
-          python "$P/mcp/policy_hook.py" --self-test
-          python "$P/mcp/board_export.py" --self-test
-          python "$P/mcp/metrics_aggregate.py" --self-test
-          python "$P/mcp/ingest_mcp.py" --self-test
-          python "$P/mcp/verify_mcp.py" --self-test
-          python "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" --self-test
-          python "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py" --self-test
-          python scripts/docs-doctor.py --self-test
-          python scripts/check-test-refs.py --self-test
-          python scripts/status-doctor.py --self-test
-          python scripts/gen-adr-index.py --self-test
-          python .github/scripts/pr_policy.py --self-test
+          python -m pip install --quiet -r vault/.memoria/mcp/requirements.txt
+          python -m pip install --quiet pytest
+      - name: Run L1 component tests (pytest)
+        # ADR-44: the former per-module --self-test suites now live in tests/.
+        run: python -m pytest tests/ -q
       - name: Check ADR index is current
         run: python scripts/gen-adr-index.py --check
       - name: Gate dashboard schema-drift (real vault)

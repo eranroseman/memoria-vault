@@ -23,7 +23,7 @@ instantiates.
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows to gate its cut; copy its sign-off into the release's `validation-log.md` |
-| [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + every Python `--self-test`. Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. **Keep its L1 module list in sync with `python-selftest.yml`** (CI is the source of truth — a path drift there once slipped past CI). |
+| [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + the L1 `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
 
 ## Why plans and runs stay separate
 

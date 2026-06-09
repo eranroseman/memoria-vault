@@ -14,6 +14,10 @@ nav_order: 29
 
 # ADR-29: A layered testing framework
 
+> **Amended by [ADR-44](44-tests-in-pytest-tree.md):** L1 component tests now live in a
+> repo-side `pytest` tree (`tests/`), not inline `--self-test` blocks. The pyramid,
+> coverage matrix, and disciplines below are unchanged; only L1's hosting moved.
+
 ## Context
 
 Memoria has three good test plans — [headless](../testing/plans/headless-test-plan.md) (static + schema), [hermes-cli](../testing/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](../testing/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
@@ -27,7 +31,7 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 | Layer | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
 | **L0 Static & schema** | the 5 CI checks + dashboard/telemetry schema-drift | headless | every commit (CI) |
-| **L1 Component** | Python `--self-test` ×5 (gate, hook, board, metrics, detectors) | headless §A | every commit (CI) |
+| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | headless §A | every commit (CI) |
 | **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
 | **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
 | **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../testing/plans/e2e-golden-path-plan.md) | per release |

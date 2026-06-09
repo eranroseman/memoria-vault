@@ -154,46 +154,13 @@ def extract(ids: dict, pdf_path: str | None = None, email: str = "") -> dict:
 
 
 # --------------------------------------------------------------------------- #
-def _self_test() -> int:
-    good = ("This is a perfectly ordinary paragraph of English prose describing a "
-            "study, its methods, and the results obtained over a long evaluation. ") * 6
-    garbled = "�� ab � cd � " * 80
-    tiny = "short."
-    checks = [
-        ("coherent prose -> ok", coherence(good, pages=1)["ok"]),
-        ("garbled -> not ok (garbled)", coherence(garbled, pages=1)["reason"] == "garbled"),
-        ("tiny -> not ok (too-few-chars)", coherence(tiny, pages=1)["reason"] == "too-few-chars"),
-        ("empty -> not ok (empty)", coherence("", pages=1)["reason"] == "empty"),
-        ("no source & no pdf -> degraded", extract({}, None)["degraded"] is True
-         and extract({}, None)["source"] == "none"),
-        ("missing pdf path -> from_pdf no-pdf", from_pdf(Path("/no/such.pdf"))[1] == "no-pdf"),
-    ]
-    # ADR-30: a malformed PDF is parsed in the resource-limited subprocess and
-    # degrades gracefully (the parent never crashes) — note moves past "no-pdf".
-    _bad_pdf = Path(tempfile.gettempdir()) / "memoria-extract-selftest.pdf"
-    _bad_pdf.write_bytes(b"%PDF-1.4 not a real pdf\n")
-    try:
-        _txt, _note = from_pdf(_bad_pdf)
-        checks.append(("garbage pdf -> sandboxed + handled, no crash", _note != "no-pdf"))
-    finally:
-        _bad_pdf.unlink(missing_ok=True)
-    bad = [n for n, ok in checks if not ok]
-    for n, ok in checks:
-        print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-    print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: extract.py self-test")
-    return 1 if bad else 0
-
-
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Tier-1 full-text extraction (ADR-30)")
     ap.add_argument("--pmcid", default="")
     ap.add_argument("--pdf")
     ap.add_argument("--email", default="")
-    ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
-    if a.self_test:
-        return _self_test()
     r = extract({"pmcid": a.pmcid}, a.pdf, a.email)
     r_preview = {**r, "text": (r["text"][:300] + "...") if len(r.get("text", "")) > 300 else r.get("text", "")}
     print(json.dumps(r_preview, ensure_ascii=False, indent=2))
