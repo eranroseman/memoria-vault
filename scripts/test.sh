@@ -13,24 +13,42 @@
 # caught locally. Higher layers need a runtime or a human — see project/test/
 # (L2 agent wiring, L3 GUI, L4 golden-path, L5 eval).
 #
-# Usage: scripts/test.sh [l0|l1|all]   (default: all)
+# Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = paths-only, no run
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 P=vault/.memoria
 fail=0
 run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /tmp/mt.$$ | tail -2; else sed 's/^/    /' /tmp/mt.$$; echo "    ✗ FAILED"; fail=1; fi; rm -f /tmp/mt.$$; }
 
+# The L1 self-test modules (vault Python tooling), one path per line, no `.py`.
+# Single source for l1() and `check`. Keep in sync with python-selftest.yml —
+# CI is the authoritative list.
+L1_MODULES="mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate mcp/ingest_mcp mcp/verify_mcp
+profiles/memoria-linter/skills/structural-detectors/scripts/detectors
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline
+profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps"
+
 l1() {
   echo "── L1: component self-tests ──"
-  for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate mcp/ingest_mcp mcp/verify_mcp \
-           profiles/memoria-linter/skills/structural-detectors/scripts/detectors \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline \
-           profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps; do
+  # shellcheck disable=SC2086  # intentional word-split of the module list
+  for s in $L1_MODULES; do
     run python3 "$P/$s.py" --self-test
+  done
+}
+
+# `check` — verify every L1 module path resolves WITHOUT running it. Fast and
+# CI-safe; catches a renamed/moved module before it bites (the #284 drift that
+# slipped past CI because test.sh itself isn't run there).
+check_paths() {
+  echo "── check: L1 module paths resolve ──"
+  # shellcheck disable=SC2086  # intentional word-split of the module list
+  for s in $L1_MODULES; do
+    if [ -f "$P/$s.py" ]; then printf '  ✓ %s.py\n' "$s"
+    else printf '  ✗ MISSING  %s.py\n' "$P/$s"; fail=1; fi
   done
 }
 
@@ -54,8 +72,9 @@ l0() {
 case "${1:-all}" in
   l1) l1 ;;
   l0) l0 ;;
+  check) check_paths ;;
   all) l1; l0 ;;
-  *) echo "usage: $0 [l0|l1|all]"; exit 2 ;;
+  *) echo "usage: $0 [l0|l1|check|all]"; exit 2 ;;
 esac
 
 echo
