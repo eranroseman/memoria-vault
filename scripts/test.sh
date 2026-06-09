@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Memoria local test runner — the bottom of the test pyramid (ADR-29).
 #
-#   L1  component self-tests — the 5 `--self-test` modules (gate, hook, board,
-#       metrics, detectors). Synthetic fixtures, no vault runtime.
+#   L1  component self-tests — the vault `--self-test` modules (policy gate, hook,
+#       board, metrics, ingest + verify MCP, detectors, ingest spine). Synthetic
+#       fixtures, no vault runtime.
 #   L0  static + schema — docs-doctor, vault links, test-ref drift, dashboard
 #       schema-drift, installer lint, syntax sanity.
 #
 # This is the one-command local gate to run before pushing. CI runs the same
-# checks as separate required jobs (docs-doctor / docs-links / lint-installers /
-# python-selftest [+ check-test-refs]); this mirrors them so a red push is caught
-# locally. Higher layers need a runtime or a human — see project-files/tests/
+# checks as separate required jobs (lint [docs-doctor / docs-links / check-test-refs
+# / ruff / status-doctor] + python-selftest); this mirrors them so a red push is
+# caught locally. Higher layers need a runtime or a human — see project/test/
 # (L2 agent wiring, L3 GUI, L4 golden-path, L5 eval).
 #
 # Usage: scripts/test.sh [l0|l1|all]   (default: all)
@@ -21,8 +22,8 @@ run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /
 
 l1() {
   echo "── L1: component self-tests ──"
-  for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate mcp/ingest_mcp \
-           profiles/memoria-linter/detectors \
+  for s in mcp/policy_mcp mcp/policy_hook mcp/board_export mcp/metrics_aggregate mcp/ingest_mcp mcp/verify_mcp \
+           profiles/memoria-linter/skills/structural-detectors/scripts/detectors \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge \
            profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link \
