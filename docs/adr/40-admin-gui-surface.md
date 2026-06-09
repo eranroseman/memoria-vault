@@ -11,7 +11,7 @@ nav_order: 40
 nav_exclude: true
 ---
 
-# RFC-07: Admin/forensic GUI surface (`hermes-workspace`)
+# ADR-40: Admin/forensic GUI surface (`hermes-workspace`)
 
 ## What
 

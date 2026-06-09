@@ -1,7 +1,7 @@
 # AGENTS.md — working guidelines for AI agents in this repo
 
 For any AI agent (Claude Code, Hermes, etc.) making changes to `eranroseman/memoria-vault`.
-Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
+Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
 **One principle:** choose the correct long-term solution, never the path of least effort. Surface trade-offs and your recommendation rather than defaulting to the cheap path.
 
@@ -111,11 +111,11 @@ All must pass before merge:
 
 | Decision | Trigger |
 |---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/`, `project/release/`, `project/rfc/`; `.md`/`.txt`) |
+| `auto_approve` | Trusted author + all files in safe paths (`docs/` — except `docs/adr/` — `project/release/`; `.md`/`.txt`) |
 | `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault/.memoria/`, `scripts/`, `project/adr/`, `project/test/`, `.github/`.
+Sensitive paths: `vault/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `project/test/`, `.github/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -168,7 +168,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 Mixed-quadrant pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `vault/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder repo references follow the target: links to `project/` (ADRs, RFCs, release plans) are **relative** (`../../project/…`) — both trees ship in the repo and `docs/` renders on GitHub; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
+  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; links to `project/` (release plans) are **relative** (`../../project/…`) — both trees ship in the repo and `docs/` renders on GitHub; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
@@ -178,54 +178,42 @@ Mixed-quadrant pages are wrong — split them.
 Two flows: **Compile** (knowledge in) and **Compose** (knowledge out). Together: **the knowledge cycle**.
 Never name these "upstream/downstream pipeline" or "the two pipelines". `pipeline`, `upstream`, `downstream` are fine in all other senses.
 
-### ADR template (`project/adr/`)
+### ADR template (`docs/adr/`)
+
+ADRs are the **single home for every decision, at any lifecycle status** — there is no
+separate proposals/RFC folder. An open proposal is an ADR with `status: proposed` or
+`deferred`; it is revisited each release cycle, never gated on a static adoption
+trigger. Full template + nav fields in [`docs/adr/_template.md`](docs/adr/_template.md).
 
 ```markdown
 ---
 topic: decisions
 id: <NN>
 title: <Short title>
-status: accepted | rejected | superseded
+status: proposed | accepted | deferred | rejected | superseded
 date_proposed: YYYY-MM-DD
 date_resolved: YYYY-MM-DD
+assumes: []          # ADR/mechanism deps — so a change that invalidates this is detectable
 supersedes: []
 superseded_by: []
+# deferred/proposed ADRs also carry: nav_exclude: true   (unlisted on the site until accepted)
 ---
 
 # ADR-<NN>: <Title>
 
 ## Context
 ## Decision
-## Why
 ## Consequences
+## When this matters   # deferred/proposed only — priority context for the cadence review, NOT a gate
 ## Alternatives considered
 ```
 
-### RFC template (`project/rfc/`)
-
-```markdown
----
-topic: proposals
-id: RFC-<NN>
-title: <Short title>
-status: open | deferred | adopted | rejected
-created: YYYY-MM-DD
----
-
-# RFC-<NN>: <Title>
-
-## What
-## Why
-## Trade-offs
-## Adoption trigger
-## Guard
-## Alternatives considered
-## Related
-```
+Background design analysis that informs an ADR lives in [`docs/design/`](docs/design/),
+not in the ADR itself.
 
 ### Release plans (`project/release/`)
 
-One file per version, copied from `project/release/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to an RFC under `project/rfc/`.
+One file per version, copied from `project/release/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`.
 
 ---
 
@@ -234,18 +222,17 @@ One file per version, copied from `project/release/release-plan-template.md` —
 | Item | Goes to |
 |---|---|
 | Bug, enhancement, doc fix, question | GitHub issue (label; milestone only if scheduled) |
-| Large capability worth weighing trade-offs | RFC in `project/rfc/` |
-| Closed decision + rationale | ADR in `project/adr/` |
+| Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`/`deferred`) |
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) |
 | Release readiness (gates/stages) | the **"Release vX.Y" tracking issue** — a gate checklist (progress bar), *not* the plan §2/§3 |
-| Durable analysis that informs ADRs/RFCs | `project/rfc/explorations/` (tracked) |
+| Durable analysis that informs ADRs | `docs/design/` (tracked) |
 | Transient scratch / personal notes | `_reports/` / `_notes/` (gitignored) |
 
 - GitHub project board: "Memoria backlog" — Inbox → Scheduled → In progress → In review → Done.
 - Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis that informs an ADR/RFC is tracked in `project/rfc/explorations/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `project/` or the repo root.
+- Reports: a **durable** analysis that informs an ADR is tracked in `docs/design/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `project/`, `docs/`, or the repo root.
 
 ---
 

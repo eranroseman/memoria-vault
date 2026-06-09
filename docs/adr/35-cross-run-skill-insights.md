@@ -11,7 +11,7 @@ nav_order: 35
 nav_exclude: true
 ---
 
-# RFC-02: Cross-run skill-insights memory
+# ADR-35: Cross-run skill-insights memory
 
 ## What
 

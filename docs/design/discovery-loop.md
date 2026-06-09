@@ -2,7 +2,7 @@
 topic: explorations
 title: Discovery loop and autonomy within the boundary
 status: deferred
-folded_into: memoria-redesign  # partial - Find/candidate loop + RFC-04
+folded_into: memoria-redesign  # partial - Find/candidate loop + ADR-37
 created: 2026-05-31
 parent: Design notes
 grand_parent: Explanation
@@ -50,7 +50,7 @@ Three related capabilities that extend what the agent does *between* human gates
 
 **Dependencies.** A `code-experiment` card type with `success_metric:`, `budget_iterations:`, `budget_cost_usd:` fields. Policy MCP permitting writes only to `40-workbench/<project>/06-code/experiments/<run-id>/`.
 
-**Related.** [RFC-01 code-artifact autopilot](../adr/34-code-artifact-autopilot.md) is the *scheduled-script* variant of Coder-lane autonomy; this is the *keep/revert experiment* variant. Both are bounded by [ADR-21](../adr/21-l3-autonomy-ceiling.md).
+**Related.** [ADR-34 code-artifact autopilot](../adr/34-code-artifact-autopilot.md) is the *scheduled-script* variant of Coder-lane autonomy; this is the *keep/revert experiment* variant. Both are bounded by [ADR-21](../adr/21-l3-autonomy-ceiling.md).
 
 ---
 

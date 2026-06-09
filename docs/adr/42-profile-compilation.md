@@ -2,17 +2,16 @@
 topic: decisions
 id: 42
 title: Profile compilation from a shared base
-status: deferred
+status: superseded
 folded_into: memoria-redesign  # how the renamed team-role profiles are defined (D8)
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions
 grand_parent: Explanation
 nav_order: 42
-nav_exclude: true
 ---
 
-# RFC-09: Profile compilation from a shared base
+# ADR-42: Profile compilation from a shared base
 
 The seven SOUL.md files are hand-authored and hand-maintained. This proposal describes a build step that would generate the shared sections from a common base, reducing inter-profile drift.
 

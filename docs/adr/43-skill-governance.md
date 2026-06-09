@@ -12,7 +12,7 @@ nav_order: 43
 nav_exclude: true
 ---
 
-# RFC-10: Skill governance and lifecycle
+# ADR-43: Skill governance and lifecycle
 
 Not part of the active design. Adding a skill today means editing `policy.allow.skills` in a lane-override file and dropping the `SKILL.md` into the right profile's `skills/` folder. That's sufficient until the human is regularly graduating passthrough-skills to dedicated ones or coordinating cross-lane permission changes.
 

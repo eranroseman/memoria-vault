@@ -1,37 +1,39 @@
 ---
-topic: proposals
+title: Design notes
+parent: Explanation
+nav_order: 91
+has_children: true
+topic: explorations
 ---
 
-# Capability explorations
+# Design notes
 
-Thematic proposals that bundle several related capabilities, rather than a single
-one. Each file groups its capabilities under one theme (discovery, measurement,
-publication, retrieval, integrations, multi-machine, …), and each capability
-carries its own lighter What / Trade-offs / Adoption trigger / Guard block — see
-the convention in [<short imperative phrase, e.g. "Shared candidate frontmatter format">](../adr/_template.md).
+Durable design analysis that informs the [Decisions](../adr/) — the background a reader
+needs to understand *why* an ADR landed where it did, kept out of the ADRs themselves so
+each decision stays tight. Three kinds of note live here:
 
-These are unnumbered (no `RFC-NN`), to distinguish them from the single-capability
-proposals [one level up](../adr/README.md). Browse this directory for the full set.
+- **As-built design captures** — the design view of a subsystem that *is* already
+  implemented in `vault/`, reconstructed from the code and the ADRs. They describe
+  reality (What it is / How it works / Design rationale / Related):
+  [Policy gate and permissions](policy-gate-and-permissions.md),
+  [Session logging and audit](session-logging-and-audit.md),
+  [Profiles and the SOUL model](profiles-and-soul-model.md),
+  [Memory substrates](memory-substrates.md),
+  [Structural linter and drift detection](structural-linter-and-drift.md),
+  [Dashboards](dashboards-design.md),
+  [Ingest pipeline](ingest-pipeline-design.md),
+  [Design system and visual discipline](design-system-and-visual-discipline.md), and the
+  point-in-time [ADR → implementation gap analysis](adr-gap-analysis.md).
+- **Capability explorations** — thematic analyses that bundle several related ideas under
+  one theme (discovery, measurement, publication, retrieval, integrations, multi-machine,
+  …). A capability that the analysis recommends adopting becomes an ADR with the
+  appropriate status; the design note stays here as the reasoning behind it.
+- **Research stubs** (`status: stub`) — background research that ADRs cite as
+  load-bearing but which has no verified write-up yet; placeholders listing the claims to
+  check: [Memory systems and benchmarks](memory-systems-and-benchmarks.md) and
+  [AI-research systems survey](ai-research-systems-survey.md).
 
-## Genres that live here
-
-- **Proposals** (`status: deferred` / `under-consideration`) — capabilities not yet
-  built, following the convention above.
-- **Research stubs** (`status: stub`) — background research that accepted ADRs already
-  cite as load-bearing but which has no verified write-up yet; placeholders listing the
-  claims to check. Take care of these later:
-  [Memory systems and benchmarks — the evidence behind durable state](memory-systems-and-benchmarks.md) and
-  [AI-research systems survey — the evidence behind the provenance table](ai-research-systems-survey.md).
-- **As-built design captures** (`status: as-built` / `analysis`) — the design view of
-  a subsystem that *is* already implemented in `vault/`, reconstructed from the code
-  and the ADRs because no exploration recorded its shape at the time. These describe
-  reality (What it is / How it works / Design rationale / Related), not a future
-  capability. The set: [Policy gate and permissions — the structural write boundary](policy-gate-and-permissions.md),
-  [Session logging and audit — two logs, tamper-evidence, fleet trust](session-logging-and-audit.md),
-  [Profiles and the SOUL model — seven specialists, no orchestrator](profiles-and-soul-model.md),
-  [Memory substrates — seven scoped stores, not one](memory-substrates.md),
-  [Structural linter and drift detection — zero-LLM vault health](structural-linter-and-drift.md),
-  [Dashboards — eleven views, four groups, two data sources](dashboards-design.md),
-  [Ingest pipeline — one pipeline, three tiers, two model holes](ingest-pipeline-design.md),
-  [Design system and visual discipline — one spec, many consumers](design-system-and-visual-discipline.md), and
-  the point-in-time [ADR → implementation gap analysis](adr-gap-analysis.md).
+Working material that isn't ready for readers (the redesign, research stubs, and the
+capability explorations behind `deferred` decisions) carries `nav_exclude: true` and is
+kept off the published site until it firms up. Decisions themselves live in
+[Decisions](../adr/), at every status.

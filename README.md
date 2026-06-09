@@ -29,7 +29,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 | **Coder** | Scaffolds handoffs to an external coding agent (Codex, Claude Code; Kilo Code and Aider planned) and records provenance in the vault |
 | **Linter** | Zero-LLM structural validator — frontmatter shape, link health, schema versions, and audit-log rotation; same result every run |
 
-Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles/)
+Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles)
 
 ---
 
@@ -79,7 +79,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 
 1. Open the runtime folder (default `~/Memoria`) in Obsidian → **Open folder as vault**, then turn off **Restricted mode** to activate the eight enabled bundled plugins (plus `obsidian-homepage`, which ships on disk but is recommended — enable it from Community Plugins if you want `home.md` to auto-open on startup).
 2. **Set up your own git** in the vault — the installer copies it but doesn't `git init` (it's your repo, your identity): `cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"`, then optionally add your own remote. obsidian-git needs a repo to commit into.
-3. Fill the per-profile `.env` secrets — see [set-up-hermes.md](docs/how-to-guides/setup/set-up-hermes.md).
+3. Fill the per-profile `.env` secrets — see [Set up Hermes](docs/how-to-guides/setup/set-up-hermes.md).
 
 ---
 
@@ -89,14 +89,14 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
 | `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
-| `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/` |
-| `project/` | Decisions, proposals, and operations notes |
+| `docs/` | Engineering spec, Diátaxis-organized: `tutorials/`, `how-to-guides/`, `reference/`, `explanation/` — plus the decision record (`adr/`) and design notes (`design/`) |
+| `project/` | Release plans, test plans, and the contributing workflow |
 
 ## Documentation
 
-Start in [`docs/`](docs/). New here? Begin with
+Start in [`docs/`](docs). New here? Begin with
 [tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md), or jump to the
-[quickstart](docs/how-to-guides/setup/quickstart.md).
+[Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 ## Development
 
@@ -110,4 +110,4 @@ bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to run locally, code conventions, and the PR process.
+See [Contributing to Memoria](CONTRIBUTING.md) for how to run locally, code conventions, and the PR process.

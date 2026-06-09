@@ -2,17 +2,16 @@
 topic: decisions
 id: 37
 title: Retriever / Scout as a separate profile
-status: deferred
+status: superseded
 folded_into: memoria-redesign  # Find assist / Librarian discovery / Analyst (D7/D8)
 assumes: []
 date_proposed: 2026-05-15
 parent: Decisions
 grand_parent: Explanation
 nav_order: 37
-nav_exclude: true
 ---
 
-# RFC-04: Retriever / Scout as a separate profile
+# ADR-37: Retriever / Scout as a separate profile
 
 ## What
 

@@ -583,7 +583,7 @@ install_profiles() {
 }
 
 # =============================================================================
-# Step 7 — skills  (see project-files/proposals/bootstrap-installer.md, "Pinned skill install IDs")
+# Step 7 — skills  (see docs/explanation/deployment/bootstrap-installer.md, "Pinned skill install IDs")
 # =============================================================================
 install_skills() {
   hdr "Skills"

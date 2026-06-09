@@ -11,7 +11,7 @@ nav_exclude: true
 
 # Graph visualization — typed projections of the relationships/links graph
 
-> **Status: exploration** (a capability bundle in the RFC pipeline). Builds on the
+> **Status: exploration** (a capability bundle a design note, not yet adopted). Builds on the
 > [four-layer redesign](memoria-redesign.md) — specifically the **relationships vs
 > links** distinction — and on issue #197 (the OSS graph/cluster/NLP survey, largely
 > resolved by [ADR-33](../adr/33-cluster-mcp-bertopic.md)). #197 answers _what

@@ -11,7 +11,7 @@ nav_order: 34
 nav_exclude: true
 ---
 
-# RFC-01: Code-artifact autopilot
+# ADR-34: Code-artifact autopilot
 
 ## What
 

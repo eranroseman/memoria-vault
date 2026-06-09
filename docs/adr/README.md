@@ -63,6 +63,16 @@ condition. See [the template](_template.md) for the required fields per status.
 | [31](31-native-obsidian-mcp.md) | Vault access via the Local REST API plugin's native MCP (HTTP), not uvx mcp-obsidian | accepted |
 | [32](32-external-access-over-mcp.md) | Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted | accepted |
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
+| [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | deferred |
+| [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | deferred |
+| [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded |
+| [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded |
+| [38](38-ratchet-duplicate-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | superseded |
+| [39](39-frozen-evaluator.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
+| [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
+| [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
+| [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded |
+| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred |
 
 <!-- ADR-INDEX:END -->
 

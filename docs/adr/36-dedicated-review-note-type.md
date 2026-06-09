@@ -2,17 +2,16 @@
 topic: decisions
 id: 36
 title: Dedicated review-note type
-status: deferred
+status: superseded
 folded_into: memoria-redesign  # subsumed by the Inbox review-request type (D6)
 assumes: []
 date_proposed: 2026-05-15
 parent: Decisions
 grand_parent: Explanation
 nav_order: 36
-nav_exclude: true
 ---
 
-# RFC-03: Dedicated review-note type
+# ADR-36: Dedicated review-note type
 
 ## What
 

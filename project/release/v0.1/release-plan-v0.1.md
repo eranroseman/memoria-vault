@@ -151,7 +151,7 @@ The remaining blockers split in two:
 
 ## 5. Out of scope (deferred)
 
-The deferred set lives in [proposals/](../../rfc/) — not duplicated here. At
+The deferred set lives as `deferred`-status ADRs in [Decisions](../../../docs/adr/) — not duplicated here. At
 the scope level:
 multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 

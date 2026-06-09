@@ -22,7 +22,7 @@ construction). Reconstructed from
 
 > **Why capture this.** The profiles are the most-implemented subsystem in the vault
 > (seven `SOUL.md` + `config.yaml` + `distribution.yaml` triples) yet the only
-> proposal touching them is the narrow [RFC-09](../adr/42-profile-compilation.md).
+> proposal touching them is the narrow [ADR-42](../adr/42-profile-compilation.md).
 > This is the design view of the lane model as built.
 
 ## What it is
@@ -93,8 +93,8 @@ interactive_only` so it is never queue-dispatched.
 ## Related
 
 - [ADR-02](../adr/02-seven-specialist-profiles.md), [ADR-22](../adr/22-build-on-hermes-runtime.md), [ADR-27](../adr/27-hermes-native-config-and-gate-enforcement.md), [ADR-32](../adr/32-external-access-over-mcp.md)
-- [RFC-09](../adr/42-profile-compilation.md) — compiling the seven SOULs from a shared base (deferred)
-- [RFC-04](../adr/37-retriever-scout-profile.md) — splitting Librarian into Retriever + Librarian (deferred)
+- [ADR-42](../adr/42-profile-compilation.md) — compiling the seven SOULs from a shared base (deferred)
+- [ADR-37](../adr/37-retriever-scout-profile.md) — splitting Librarian into Retriever + Librarian (deferred)
 - [Policy gate and permissions — the structural write boundary](policy-gate-and-permissions.md) — the path/capability scoping behind each lane
 - [Memory substrates — seven scoped stores, not one](memory-substrates.md) — agent memory per profile
 - Explanation: [`docs/explanation/profiles/`](../explanation/profiles), [`why-specialist-profiles.md`](../explanation/rationale/why-specialist-profiles.md)

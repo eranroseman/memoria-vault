@@ -17,7 +17,7 @@ known limitations, cut procedure, roadmap). The reusable body is
 | **Readiness** (gate + validation-stage state) | the **"Release vX.Y" tracking issue** — a gate checklist GitHub renders as a progress bar |
 | **Prose** (scope summary, limitations, cut steps, roadmap) | `release/vX.Y/release-plan-vX.Y.md` |
 | **Build gaps** | GitHub issues |
-| **Scope cuts** | `rfc/` |
+| **Scope cuts** | `docs/adr/` (deferred-status ADRs) |
 | **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
 
 The plan file holds **prose, not state tables**. Gate/stage state is the checklist

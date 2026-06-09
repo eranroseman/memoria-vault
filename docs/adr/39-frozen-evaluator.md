@@ -11,7 +11,7 @@ nav_order: 39
 nav_exclude: true
 ---
 
-# RFC-06: Per-note-type acceptance checklists ("frozen evaluator")
+# ADR-39: Per-note-type acceptance checklists ("frozen evaluator")
 
 ## What
 
@@ -19,7 +19,7 @@ Explicit, per-note-type acceptance criteria the agent checks before filing — t
 
 ## Why
 
-Quality standards are currently implicit and human-judged. Making them explicit and uniform would catch under-supported or mis-shaped notes before they are filed, and pairs naturally with the ratchet gate ([RFC-05](38-ratchet-duplicate-gate.md)), which could use the checklist to decide what to flag.
+Quality standards are currently implicit and human-judged. Making them explicit and uniform would catch under-supported or mis-shaped notes before they are filed, and pairs naturally with the ratchet gate ([ADR-38](38-ratchet-duplicate-gate.md)), which could use the checklist to decide what to flag.
 
 ## Trade-offs
 
@@ -40,6 +40,6 @@ The vault holds **50+ `claim-note`s**, so the criteria can be grounded in real e
 
 ## Related
 
-- **Pairs with:** [RFC-05 — ratchet duplicate gate](38-ratchet-duplicate-gate.md)
+- **Pairs with:** [ADR-38 — ratchet duplicate gate](38-ratchet-duplicate-gate.md)
 - **Note type concerned:** [claim-note](../reference/note-types.md)
 - **Re-entry trigger:** 50+ claim-notes in `30-synthesis/01-claims/`

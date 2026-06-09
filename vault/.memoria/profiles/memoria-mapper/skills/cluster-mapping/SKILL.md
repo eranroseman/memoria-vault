@@ -14,7 +14,7 @@ metadata:
 # cluster-mapping
 
 > **⚠️ Deferred — clustering backend not yet built.** Per
-> [ADR-33](../../../../../../project/adr/33-cluster-mcp-bertopic.md), the
+> [ADR-33](../../../../../../docs/adr/33-cluster-mcp-bertopic.md), the
 > clustering/topic-modeling runs over a self-hosted **BERTopic `cluster_mcp`**,
 > which is **not yet implemented**. Until it lands, the `scope-project` /
 > `gap-report` / `cluster-map` commands are **not runnable**. The

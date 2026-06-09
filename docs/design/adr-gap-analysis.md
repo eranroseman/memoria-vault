@@ -10,7 +10,7 @@ nav_order: 2
 
 # ADR → implementation gap analysis
 
-A point-in-time audit of every **accepted** ADR (`project/adr/01`–`33`) against the
+A point-in-time audit of every **accepted** ADR (`docs/adr/01`–`33`) against the
 **actual codebase** — what each decision mandates vs. what the repo does. Verified by
 reading each ADR and grepping/reading the real files (no assumptions). Reviewed
 **2026-06-07**.
@@ -256,7 +256,7 @@ Legend: ✅ implemented · 🟡 partial · ❌ not built · ⚪ superseded/N-A.
 
 ### ADR-26 — Repo is the install unit; idempotent profile deploy — ✅
 - **Decision:** clone the repo; `install.sh` (+ `install.ps1` thin launcher); hand-authored
-  profiles (compiler deferred to RFC-09); idempotent `--profiles-only` preserving `.env`.
+  profiles (compiler deferred to ADR-42); idempotent `--profiles-only` preserving `.env`.
 - **Evidence:** `install.sh` (`--profiles-only`, `seed_profile_env`, rsync preserves
   notes+`.env`); `install.ps1` thin launcher; 7 hand-authored profiles; vault→docs use
   Pages URLs.
@@ -341,4 +341,4 @@ Legend: ✅ implemented · 🟡 partial · ❌ not built · ⚪ superseded/N-A.
 - **AGENTS.md note:** "generated reports go in `_reports/`, never in `project/`." This
   file is a *durable* analysis (it informs ADRs + the redesign), not gitignored scratch —
   hence its home here. If that distinction should be explicit, AGENTS.md's work-routing
-  could carve out "durable analyses → `project/rfc/explorations/`".
+  could carve out "durable analyses → `docs/design/`".

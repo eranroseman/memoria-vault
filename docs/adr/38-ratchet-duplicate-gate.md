@@ -2,17 +2,16 @@
 topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
-status: deferred
+status: superseded
 folded_into: memoria-redesign  # near-tie/dedup residue (R2) + Fact-checker similarity-check
 assumes: []
 date_proposed: 2026-05-30
 parent: Decisions
 grand_parent: Explanation
 nav_order: 38
-nav_exclude: true
 ---
 
-# RFC-05: Ratchet — a qmd similarity gate before filing a synthesis note
+# ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
 
 ## What
 

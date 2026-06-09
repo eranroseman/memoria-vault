@@ -14,7 +14,7 @@ nav_exclude: true
 The decision-journey stripped from [Memoria redesign — architecture](memoria-redesign.md) (which
 is design-only). Each entry records **what** was decided, **why**, and the
 **alternatives weighed** — the material an ADR needs. As each firms up, graduate it to
-`project/adr/NN-*.md` and set `superseded_by` on the ADR it replaces. Ordered by
+`docs/adr/NN-*.md` and set `superseded_by` on the ADR it replaces. Ordered by
 topic, not chronology.
 
 ---
@@ -570,7 +570,7 @@ detailing write/code/verify now (deferred to v0.3 — not yet specified).
 
 ## The meta-point
 
-This RFC→ADR pipeline is structurally Memoria's own model: `rfc/explorations` = seeds,
-an RFC = a proposed claim, an **ADR = an accepted claim with supersession** (ADR-10 is
-literally claim-supersession), the generated index = an MOC, `docs/` = the deliverable.
-The meta-work of building Memoria runs on Memoria's discipline.
+This decision pipeline is structurally Memoria's own model: `docs/design/` = seeds, a
+`proposed`/`deferred` ADR = a proposed claim, an **accepted ADR = an accepted claim with
+supersession** (ADR-10 is literally claim-supersession), the generated index = an MOC,
+`docs/` = the deliverable. The meta-work of building Memoria runs on Memoria's discipline.

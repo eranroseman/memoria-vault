@@ -11,7 +11,7 @@ nav_exclude: true
 
 # Memoria redesign — architecture
 
-> **Status: exploration** (a capability bundle in the RFC pipeline). The synthesized
+> **Status: exploration** (a capability bundle a design note, not yet adopted). The synthesized
 > target vision — a near-total architecture redesign. **Not yet adopted:** firm
 > decisions graduate to **ADRs** (each setting `superseded_by` on the ADR it replaces).
 > The rationale and alternatives weighed are preserved in
@@ -669,7 +669,7 @@ bounded. Dispatcher polls every 60s.
 
 ## Appendix F — related backlog
 
-A live map between this redesign and the GitHub board + `rfc/`. Reviewed 2026-06-08
+A live map between this redesign and the GitHub board + `docs/adr/`. Reviewed 2026-06-08
 against the project-board columns.
 
 ### Issues the redesign answers — labelled `resolved-by-redesign`
@@ -691,11 +691,11 @@ against the project-board columns.
 (by convention + git, not ACID) · `#188` LLM per profile · `#196` pin skills
 to a lane · `#177` tutorial names.
 
-### RFCs folded (`folded_into: memoria-redesign`)
+### Folded decisions (`folded_into: memoria-redesign`)
 
-RFC-03 (→ Inbox card-in-`proposed`) · RFC-04 (→ Find / Librarian) · RFC-05
-(→ near-tie/dedup + Peer-reviewer) · RFC-09 (→ profile = posture, §4) · RFC-10 (→ pattern
-governance, §7). **Tension:** RFC-08 (advisory gate) vs the transparency guardrail — allow
+ADR-36 (→ Inbox card-in-`proposed`) · ADR-37 (→ Find / Librarian) · ADR-38
+(→ near-tie/dedup + Peer-reviewer) · ADR-42 (→ profile = posture, §4) · ADR-43 (→ pattern
+governance, §7). **Tension:** ADR-41 (advisory gate) vs the transparency guardrail — allow
 only as a comparison-study toggle.
 
 ### Explorations
