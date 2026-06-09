@@ -5,8 +5,6 @@
   "include-component-in-tag": false,
   "bump-minor-pre-major": true,
   "packages": {
-    ".": {
-      "release-as": "0.1.0"
-    }
+    ".": {}
   }
 }
