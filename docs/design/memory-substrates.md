@@ -13,7 +13,7 @@ nav_order: 14
 A design capture of where Memoria's state actually lives. "Memory" is not one store
 but seven, each with a distinct scope, lifespan, and owner — three provided by the
 Hermes runtime, four by Memoria in the vault. Reconstructed from
-[ADR-23](../adr/23-six-memory-substrates.md) and the real on-disk locations.
+[ADR-23](../adr/23-scoped-memory-substrates.md) and the real on-disk locations.
 
 > **Why capture this.** ADR-23 names the substrates; this grounds each to its real
 > path (or marks it runtime-internal), which matters because three of the four
@@ -75,7 +75,7 @@ sessions, the substrate behind cross-session recall.
 
 ## Related
 
-- [ADR-23](../adr/23-six-memory-substrates.md)
+- [ADR-23](../adr/23-scoped-memory-substrates.md)
 - [Memory systems and benchmarks — the evidence behind durable state](memory-systems-and-benchmarks.md) — the (pending) evidence behind durable state
 - [Session logging and audit — two logs, tamper-evidence, fleet trust](session-logging-and-audit.md) — audit memory in detail
 - [Profiles and the SOUL model — seven specialists, no orchestrator](profiles-and-soul-model.md) — agent memory is per-profile

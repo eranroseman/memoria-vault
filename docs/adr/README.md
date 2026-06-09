@@ -36,23 +36,23 @@ condition. See [the template](_template.md) for the required fields per status.
 | [04](04-lifecycle-over-topic-folders.md) | Folders encode lifecycle stage, not subject area | accepted |
 | [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone | accepted |
 | [06](06-citekey-naming-convention.md) | Citekey naming convention | accepted |
-| [07](07-code-agent-attachment.md) | Code agent attachment | accepted |
+| [07](07-delegate-coding-to-external-agents.md) | Code agent attachment | accepted |
 | [08](08-typed-relations-frontmatter.md) | Typed relations frontmatter | accepted |
 | [09](09-contradictions-dashboard.md) | Contradictions / tensions dashboard | accepted |
 | [10](10-claim-supersession.md) | Claim supersession relation | accepted |
-| [11](11-vault-eval-integration.md) | vault-eval as a maintenance capability | accepted |
+| [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
 | [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not a control-plane formatter | accepted |
 | [13](13-homepage-front-door.md) | Homepage front-door note, auto-opened by obsidian-homepage | accepted |
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | accepted |
-| [15](15-project-auto-classification.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | accepted |
-| [16](16-adopt-on-demand-for-reviews.md) | Adopt-on-demand — systematic-review tooling | accepted |
+| [15](15-project-membership-from-topic-hint.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | accepted |
+| [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | accepted |
 | [17](17-shared-candidate-frontmatter.md) | Shared candidate frontmatter format | accepted |
 | [18](18-rename-agent-verdict.md) | Rename `agent_verdict` → `agent_recommendation` | accepted |
 | [19](19-moc-threshold-alert.md) | Agent-proposed MOCs (threshold alert; Mapper stub deferred) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced, with the Coder-lane exception | accepted |
 | [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | accepted |
-| [23](23-six-memory-substrates.md) | Memory is seven scoped substrates, not one store | accepted |
+| [23](23-scoped-memory-substrates.md) | Memory is seven scoped substrates, not one store | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
 | [25](25-session-logging-two-logs.md) | Two separate session logs — hash-chained audit vs. narrative summaries | accepted |
 | [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles are hand-authored and idempotently deployed | accepted |
@@ -67,8 +67,8 @@ condition. See [the template](_template.md) for the required fields per status.
 | [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | deferred |
 | [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded |
 | [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded |
-| [38](38-ratchet-duplicate-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | superseded |
-| [39](39-frozen-evaluator.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
+| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | superseded |
+| [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
 | [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
 | [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded |

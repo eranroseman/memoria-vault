@@ -120,7 +120,7 @@ read-only to the Librarian. Citekeys follow `authoryearword` —
 ## Related
 
 - [ADR-30](../adr/30-deterministic-ingest-pipeline.md), [ADR-05](../adr/05-zotero-as-bibliographic-backbone.md), [ADR-06](../adr/06-citekey-naming-convention.md), [ADR-17](../adr/17-shared-candidate-frontmatter.md)
-- [Classical method displacements](classical-method-displacements.md) — the classifier / NLI methods behind the holes
-- [Schema and retrieval extensions](schema-and-retrieval.md) — the `_aspects` / paper-note schema the pipeline populates
+- [Classical method displacements](classical-methods-over-llm.md) — the classifier / NLI methods behind the holes
+- [Schema and retrieval extensions](retrieval-and-schema-extensions.md) — the `_aspects` / paper-note schema the pipeline populates
 - [Profiles and the SOUL model — seven specialists, no orchestrator](profiles-and-soul-model.md) — the Librarian lane that drives it
 - Reference: [`docs/reference/ingest.md`](../reference/ingest.md), [`zotero-plugins.md`](../reference/zotero-plugins.md)

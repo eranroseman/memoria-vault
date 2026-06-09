@@ -55,7 +55,7 @@ the ADRs that lean on it weaken.
 
 ## Related
 
-- [ADR-01](../adr/01-three-layer-architecture.md), [ADR-10](../adr/10-claim-supersession.md), [ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-23](../adr/23-six-memory-substrates.md)
+- [ADR-01](../adr/01-three-layer-architecture.md), [ADR-10](../adr/10-claim-supersession.md), [ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-23](../adr/23-scoped-memory-substrates.md)
 - [Memory substrates — seven scoped stores, not one](memory-substrates.md) — the as-built substrate set this evidence underpins
 - [AI-research systems survey — the evidence behind the provenance table](ai-research-systems-survey.md) — the sibling survey stub (overlapping sources)
 - Explanation: [`why-three-layers.md`](../explanation/rationale/why-three-layers.md), [`architecture/memory-model.md`](../explanation/architecture/memory-model.md)

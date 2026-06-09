@@ -40,7 +40,7 @@ Each shape has different evidence requirements; picking a shape decides what wor
 | Shape | What it needs | What Memoria has | What's missing |
 | --- | --- | --- | --- |
 | System paper | Working impl + capability evaluation vs. baseline | Design only | Implementation, baseline comparison, metric |
-| Benchmark paper | Public benchmark + frontier-model evaluation + dataset | A *designed harness* — [ADR-11 vault-eval](../adr/11-vault-eval-integration.md) + a CiteME-style fixture | Public artifact, frontier evals, release |
+| Benchmark paper | Public benchmark + frontier-model evaluation + dataset | A *designed harness* — [ADR-11 vault-eval](../adr/11-vault-eval-maintenance.md) + a CiteME-style fixture | Public artifact, frontier evals, release |
 | Method paper | A specific technical advance with measurement | None claimed today | A measurable novel technique |
 | Position / argument paper | A strong claim + supporting evidence + clear contrast | Strong design rationale | Empirical evidence, comparison data |
 | Tools / artifact paper | Mature open-source repo + adoption | None public | All of it |
@@ -161,7 +161,7 @@ Do not commit to Path 2 or Path 3 before Path 1's data exists. Both depend on em
 ## Dependencies
 
 - [ADR-20](../adr/20-publication-path.md) (the committed first paper this analysis sits behind).
-- [ADR-11 vault-eval](../adr/11-vault-eval-integration.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../adr/10-claim-supersession.md) (the FAMA cell).
+- [ADR-11 vault-eval](../adr/11-vault-eval-maintenance.md) (the eval program Path 1/1′ instantiate); [ADR-10 claim supersession](../adr/10-claim-supersession.md) (the FAMA cell).
 - The six-signal capture ([Telemetry & logs](../reference/telemetry.md)) running on the board-export cron (Phase 1 in the [timeline](../../project/release/v0.1/release-plan-v0.1-appendix.md)) — without populated logs, Paths 2/3 have no data.
 - [ADR-41](../adr/41-configurable-review-gate-mode.md) (the comparison arm for the Path 2/3 study); [Measurement, quality, and verification](measurement-and-verification.md) (the deferred analysis harnesses).
 

@@ -66,4 +66,4 @@ rows above are a representative sample of the ones carrying a checkable figure.)
 - [`docs/explanation/overview/intellectual-foundations.md`](../explanation/overview/intellectual-foundations.md) — the foundations lineage
 - [Memory systems and benchmarks — the evidence behind durable state](memory-systems-and-benchmarks.md) — sibling stub; the durable-state rows overlap
 - Reference: [`docs/reference/bibliography.md`](../reference/bibliography.md)
-- Touches verdicts realized in [Measurement, quality, and verification](measurement-and-verification.md), [Classical method displacements](classical-method-displacements.md), and [Schema and retrieval extensions](schema-and-retrieval.md)
+- Touches verdicts realized in [Measurement, quality, and verification](measurement-and-verification.md), [Classical method displacements](classical-methods-over-llm.md), and [Schema and retrieval extensions](retrieval-and-schema-extensions.md)

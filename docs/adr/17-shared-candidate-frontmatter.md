@@ -18,7 +18,7 @@ nav_order: 17
 
 ## Context
 
-Candidate notes can arrive from four pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-16](16-adopt-on-demand-for-reviews.md) (pre-ingest screening, in the systematic-review cluster)), manual (human-typed lead), or **capture-timeout** (a Zotero capture whose ingestion gave up — see *Ingestion dead-letter* below). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run separate queries.
+Candidate notes can arrive from four pipelines: `find` (forward/backward citation search), database-search (PRISMA-style bulk screening — see [ADR-16](16-systematic-review-adopt-on-demand.md) (pre-ingest screening, in the systematic-review cluster)), manual (human-typed lead), or **capture-timeout** (a Zotero capture whose ingestion gave up — see *Ingestion dead-letter* below). Without a shared schema, each pipeline produces its own slightly different frontmatter and dashboards must run separate queries.
 
 ### Two roles, one type: discovery inbox + ingestion dead-letter
 
@@ -63,11 +63,11 @@ These are the candidate-specific fields; every note also carries the global requ
 
 **Per-pipeline schemas**: rejected — duplicates effort and forces three parallel queries in every candidate dashboard.
 
-**Hold off until [ADR-16](16-adopt-on-demand-for-reviews.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
+**Hold off until [ADR-16](16-systematic-review-adopt-on-demand.md) is adopted**: rejected — the shared format pays off for `find` alone (the current primary candidate source), and adopting it later wouldn't be cheaper.
 
 **Candidate-gate every capture** (route all Zotero captures through `candidate-note` first): rejected — a deliberate single capture *is* the screening decision, so a mandatory candidate stage adds redundant friction to the common path. The candidate-note earns its place at the *edges* (un-screened discovery leads, failed-ingest dead letters), not as the default front door.
 
 ## Related
 
-- **Consumed by:** [ADR-16 pre-ingest screening](16-adopt-on-demand-for-reviews.md) — reads this schema for bulk screening.
+- **Consumed by:** [ADR-16 pre-ingest screening](16-systematic-review-adopt-on-demand.md) — reads this schema for bulk screening.
 - **Files affected:** [The vault](../explanation/architecture/vault.md), `99-system/templates/candidate-note.md` (to be created), [The weekly-review dashboard](../explanation/dashboards/structural-health/weekly-review.md)

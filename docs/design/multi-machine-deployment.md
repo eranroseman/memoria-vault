@@ -13,7 +13,7 @@ nav_exclude: true
 
 The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([deployment options](../explanation/deployment/deployment-options.md)). This proposal covers everything past that default: the multi-machine sync topologies and the patterns by which a *secondary* device safely reads, edits, and (sometimes) dispatches against a shared vault. It is deferred because v0.1 ships single-device; the topologies are additive and cost nothing to defer.
 
-Adjacent: [Multi-vault and multi-machine](multi-vault-and-multi-machine.md) covers cross-machine *capabilities* (cross-vault retrieval, session-history sync, a shared memory server). This file covers the *deployment substrate* those capabilities run on. The two are designed to move together.
+Adjacent: [Multi-vault and multi-machine](cross-vault-knowledge-sharing.md) covers cross-machine *capabilities* (cross-vault retrieval, session-history sync, a shared memory server). This file covers the *deployment substrate* those capabilities run on. The two are designed to move together.
 
 ## What
 
@@ -175,6 +175,6 @@ The VPS remains the primary dispatcher in either case. Developers iterate agains
 ## Related
 
 - **Adopted baseline:** [deployment options](../explanation/deployment/deployment-options.md) (the `local-only` default and the common conventions).
-- **Cross-machine capabilities:** [Multi-vault and multi-machine](multi-vault-and-multi-machine.md) (cross-vault retrieval, session-history sync, shared memory server) — the capabilities that ride this substrate.
+- **Cross-machine capabilities:** [Multi-vault and multi-machine](cross-vault-knowledge-sharing.md) (cross-vault retrieval, session-history sync, shared memory server) — the capabilities that ride this substrate.
 - **Install discipline:** [Release plan — v0.1.0 — appendix](../../project/release/v0.1/release-plan-v0.1-appendix.md) (Phase 4 dev-install rules).
 - **Glossary:** [primary device](../reference/glossary.md#system).
