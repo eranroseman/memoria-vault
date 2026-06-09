@@ -68,6 +68,6 @@ All "verified" entries are against a **live Hermes on WSL2** unless noted.
 ## Still unverified at large (→ gates / runs)
 
 - GUI / dashboards (11) / Zotero bridge / ACP pane: attended per release (S5, G4) — see
-  the [GUI run record](gui-test-plan_v0.1.md).
+  the [GUI run record](gui-test-run_v0.1.md).
 - Full clean-install candidate run from a fresh clone (G2 / S4) — see the
-  [v0.1.0 release-candidate run checklist](candidate-run-checklist.md).
+  [release-candidate runbook](../../test/plans/release-candidate-runbook.md).

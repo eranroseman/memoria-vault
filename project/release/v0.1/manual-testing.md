@@ -2,7 +2,7 @@
 
 - **Scope:** Black box functional and usability testing of user-facing featured based on documented functionality.
 - **Objectives:** Ensures core functionality and user experience.
-- **Environments:** memoria-test after completion of (candidate-run-checklist.md)
+- **Environments:** memoria-test after completion of the [release-candidate runbook](../../test/plans/release-candidate-runbook.md)
 
 ## Disposition (2026-06-04)
 

@@ -7,7 +7,8 @@ topic: tests
 Reusable, version-agnostic test **plans** (procedures) — not test code, and not
 filled-in run results. A *plan* is the steps to validate something; a *run* is a
 plan executed with results recorded. **Plans live here; runs live with their
-release** in `releases/vX.Y/` (e.g. `gui-test-plan_v0.1.md`).
+release** in `release/vX.Y/`, named `<plan>-run_vX.Y.md` (e.g. `gui-test-run_v0.1.md`)
+so a run is never mistaken for the reusable plan it instantiates.
 
 ## Layout
 
@@ -16,6 +17,7 @@ release** in `releases/vX.Y/` (e.g. `gui-test-plan_v0.1.md`).
 | [Test coverage matrix](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [plans/](plans) | The reusable plans (browse the directory) |
+| [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows to gate its cut; copy its sign-off into the release's `validation-log.md` |
 | [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + every Python `--self-test`. Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. **Keep its L1 module list in sync with `python-selftest.yml`** (CI is the source of truth — a path drift there once slipped past CI). |
 
 ## Why `tests/` and `releases/` stay separate
@@ -42,7 +44,7 @@ headless ─▶ installer ─▶ cli ─┐
 `headless` (static + Python self-tests, CI-enforced) must be green first; `installer`
 stands up a throwaway vault; `cli` and `gui` validate the wired system; `e2e` runs one
 source through the full lifecycle; `g9`/`g10` prove the deterministic spine and ingest
-value-loop. Per-release orchestration + sign-off: [v0.1.0 release-candidate run checklist](../release/v0.1/candidate-run-checklist.md).
+value-loop. Per-release orchestration + sign-off: the [Release-candidate runbook](plans/release-candidate-runbook.md) — copy its sign-off template into the release's `validation-log.md`.
 
 ## Adding or changing a plan
 
