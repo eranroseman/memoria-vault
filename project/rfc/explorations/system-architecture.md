@@ -61,13 +61,27 @@ touches the vault or an external API, allow-lists tool types, scopes writes (e.g
 `read_file(path)` rejects paths outside the vault), rate-limits, and logs. This is the
 `allowed_paths`/lane-ceiling enforcement the redesign already assumes.
 
-**But MCP alone is not full isolation.** A stdio MCP server runs in the same OS context as
-its caller; it gives *protocol/permission* isolation, not *execution* isolation (no
-process/memory/CPU confinement). So "agents are completely sandboxed" is precise only as
-*policy-sandboxed via MCP*. If literal isolation is wanted, pair MCP with a process
-boundary (container / separate OS user / resource limits). For a solo, local,
-single-trust-domain tool this is likely overkill — but the claim should be stated
-honestly. *(Confirmed against the MCP architecture docs.)*
+**MCP is *not* an execution sandbox** — a stdio server shares the agent's OS context (no
+process/memory/CPU confinement) — so the honest phrasing is **policy-sandboxed via MCP**,
+not "completely sandboxed."
+
+**Resolution (the solo, local premise): policy-sandbox-via-MCP is the baseline, and it is
+sufficient.** For a single trusted user running their own agents on their own vault, the
+threat isn't tenant-escape — it's *wrong writes*, already covered by the MCP policy gate +
+propose-not-dispose + the gated zones + the SHA-256 audit log + git history. First-party
+Memoria agents get **no process isolation**; it's multi-tenant hygiene that buys nothing
+here. **Execution isolation applies only to *untrusted third-party code*** — a community
+MCP server, or the Engineer's external coding agent — which warrants a process boundary
+(container / separate OS user) or careful vetting, and is **deferred until such code is
+actually introduced** (D40).
+
+**Invocation paths — which calls cross MCP:** *the path follows the caller.* **Agents reach
+engines only through MCP** (no exceptions — that *is* the sandbox); **trusted callers —
+cron, CI, and the PI — invoke engines directly.** So an agent-reachable *processing* engine
+(ingest, search) carries an **MCP-tool facade** *and* a direct entry, while a *maintenance*
+engine run only by cron/CI (the Linter, the verification sweeps) needs **no MCP facade** —
+it runs directly and posts findings to the Inbox (D41). *(Confirmed against the MCP
+architecture docs.)*
 
 ## 5. MCP apps — a watch item, not a dependency
 
@@ -84,10 +98,15 @@ clients, VS Code) in a sandboxed iframe, served by an MCP server. Crucially they
 Verdict: keep Obsidian-native for vault views now; flag MCP apps for the L3 interaction
 layer later. Not a v0.x dependency.
 
-## 6. Open / deferred
+## 6. Resolved / deferred
 
-- **Process isolation** for L4/L5 — decide whether "completely sandboxed" is literal
-  (then add a container boundary) or means policy-sandboxed-via-MCP.
-- **Engine packaging** — are engines invoked as MCP tools (behind L5) uniformly, or do
-  some (Linter on CI, cron sweeps) run directly? Likely both; document per engine.
-- The L6 name **engines** is locked over "apps/applications" (collision) and "services".
+- **Sandbox model — resolved (D40):** policy-sandbox-via-MCP is the baseline for first-party
+  agents (sufficient under the solo/local premise); execution isolation applies only to
+  *untrusted third-party code* and is deferred until such code is introduced.
+- **Engine invocation — resolved (D41):** agents reach engines only through MCP; cron, CI,
+  and the PI invoke them directly. Processing engines (ingest, search) get an MCP facade +
+  a direct entry; cron/CI-only maintenance engines (the Linter, the sweeps) need no facade.
+- **L6 name — locked (D36):** **engines**, over "apps" (MCP-apps collision), "tools"
+  (MCP-tools collision), and services / utilities / scripts / appliances.
+- **Still deferred:** add a process boundary *if/when* untrusted third-party MCP servers or
+  coding agents are actually run.
