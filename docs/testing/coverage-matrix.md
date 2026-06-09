@@ -16,7 +16,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 
 | # | Component | Layer | Plan / where | Automated | Status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | L1 | [headless](plans/headless-test-plan.md) §A (`--self-test` ×5) · `python-selftest` CI | ✅ | ✅ |
+| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | L1 | [headless](plans/headless-test-plan.md) §A (`pytest tests/`) · `python-selftest` CI | ✅ | ✅ |
 | 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
 | 3 | vault→site links + wikilink resolution | L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |

@@ -42,18 +42,14 @@ if staged | grep -qE '^install\.sh$'; then
   fi
 fi
 
-# --- 3. Python --self-test (when any tracked .py tool is staged) ------------
+# --- 3. L1 component tests (pytest) when any tracked .py tool is staged ------
+# ADR-44: the L1 tests live in tests/ (not inline in the modules). Mirrors the
+# python-selftest CI job. Skipped gracefully if pytest isn't installed locally.
 if staged | grep -qE '\.py$'; then
-  if [ -n "$PY" ]; then
-    P=vault/.memoria
-    for t in "$P/mcp/policy_mcp.py" "$P/mcp/policy_hook.py" "$P/mcp/board_export.py" \
-             "$P/mcp/metrics_aggregate.py" "$P/mcp/verify_mcp.py" \
-             "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py"; do
-      [ -f "$t" ] || continue
-      "$PY" "$t" --self-test >/dev/null 2>&1 || { echo "pre-commit: self-test FAILED: $t" >&2; fail=1; }
-    done
+  if [ -n "$PY" ] && "$PY" -c "import pytest" >/dev/null 2>&1; then
+    "$PY" -m pytest tests/ -q >/dev/null 2>&1 || { echo "pre-commit: pytest (tests/) FAILED — run: $PY -m pytest tests/" >&2; fail=1; }
   else
-    echo "pre-commit: python not found; skipping self-tests" >&2
+    echo "pre-commit: pytest not available; skipping L1 tests (CI enforces them)" >&2
   fi
   # ruff lint over the Python tooling (mirrors the `ruff` CI job; config in ruff.toml).
   if command -v ruff >/dev/null 2>&1; then

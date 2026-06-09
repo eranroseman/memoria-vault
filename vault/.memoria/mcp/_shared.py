@@ -82,29 +82,3 @@ def append_jsonl(path: Path, rows: list[dict]) -> None:
     with path.open("a", encoding="utf-8") as fh:
         for r in rows:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-
-# --------------------------------------------------------------------------- #
-# Self-test harness
-# --------------------------------------------------------------------------- #
-class TestHarness:
-    """Minimal pass/fail test harness for ``--self-test`` routines.
-
-    Replaces the duplicated ``failures = 0; def check(): ...`` boilerplate.
-    """
-
-    def __init__(self) -> None:
-        self.failures = 0
-        self.total = 0
-
-    def check(self, name: str, cond: bool) -> None:
-        self.total += 1
-        self.failures += not cond
-        print(f"  {'PASS' if cond else 'FAIL'}  {name}")
-
-    def summary(self, label: str = "") -> int:
-        """Print a summary line and return the failure count."""
-        tag = f" [{label}]" if label else ""
-        status = "FAILED" if self.failures else "OK"
-        print(f"\n{status}: {self.failures} failing check(s){tag}.")
-        return self.failures

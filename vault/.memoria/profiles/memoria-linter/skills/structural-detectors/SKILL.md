@@ -53,7 +53,6 @@ Run the engine (resolve the vault root from the session, not a hardcoded path):
 ```bash
 python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault "<vault>"          # human-readable
 python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault "<vault>" --json   # machine-readable findings
-python "${HERMES_SKILL_DIR}/scripts/detectors.py" --self-test                # synthetic-fixture unit tests
 python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault "<vault>" --gate dashboard-field-drift
 ```
 
@@ -85,7 +84,7 @@ all other findings stay advisory.
 
 ## Verification
 
-- Before trusting a run, confirm the engine is healthy: `scripts/detectors.py --self-test`
+- Before trusting a run, confirm the engine is healthy: `python -m pytest tests/test_detectors.py` (ADR-44)
   exits `0` when all synthetic-fixture checks pass.
 - A clean sweep prints `verdict: PASS` with zero HIGH/CRITICAL findings.
 
