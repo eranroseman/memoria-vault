@@ -33,7 +33,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
 | 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](plans/installer-test-plan.md) | manual | 🟡 (plan new; lint-only before) |
 | 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) | manual | 🟡 (plan new) |
-| 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../../docs/adr/11-vault-eval-integration.md) vault-eval | — | ⛔ (harness empty) |
+| 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../../docs/adr/11-vault-eval-maintenance.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |

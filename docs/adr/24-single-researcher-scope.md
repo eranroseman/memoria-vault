@@ -20,7 +20,7 @@ Memoria assumes one human who owns judgment: review decisions, synthesis choices
 
 ## Decision
 
-Memoria is a knowledge-production system for a **single researcher**. The design assumes exactly one human reviewer who owns all judgment about what enters the canonical vault. **Multi-user review semantics — concurrent reviewers, per-user permissions, shared review queues, attribution/merge of competing judgments — are explicitly out of scope.** Features that assume a single owner of judgment (the blocking review gate of [ADR-03](03-structural-review-gate.md), agent-proposed/human-confirmed classification of [ADR-15](15-project-auto-classification.md), the single declared authority for frontmatter) are correct as designed and are not to be generalized to teams. This is a scope boundary, not a capability claim.
+Memoria is a knowledge-production system for a **single researcher**. The design assumes exactly one human reviewer who owns all judgment about what enters the canonical vault. **Multi-user review semantics — concurrent reviewers, per-user permissions, shared review queues, attribution/merge of competing judgments — are explicitly out of scope.** Features that assume a single owner of judgment (the blocking review gate of [ADR-03](03-structural-review-gate.md), agent-proposed/human-confirmed classification of [ADR-15](15-project-membership-from-topic-hint.md), the single declared authority for frontmatter) are correct as designed and are not to be generalized to teams. This is a scope boundary, not a capability claim.
 
 ## Consequences
 
@@ -38,6 +38,6 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 ## Related
 
 - **Supporting rationale:** [What Memoria is](../explanation/overview/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
-- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-auto-classification.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
-- **Proposals bounded by this ADR:** [Multi-vault and multi-machine](../design/multi-vault-and-multi-machine.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
+- **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-membership-from-topic-hint.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
+- **Proposals bounded by this ADR:** [Multi-vault and multi-machine](../design/cross-vault-knowledge-sharing.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
 - **Source discussion:** retroactively records the scope boundary already stated in `what-memoria-is.md`.

@@ -22,7 +22,7 @@ Profiles differ in how much they may hand a narrow, temporary subtask to a child
   less └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Rule:** delegate narrow, temporary, low-risk subtasks; never the defining judgment. The Coder's delegation is widest because the substantive coding *is* an external-agent handoff by design ([ADR-07](../../adr/07-code-agent-attachment.md)); the Socratic profile delegates nothing because it cannot write and its questions are the entire deliverable.
+**Rule:** delegate narrow, temporary, low-risk subtasks; never the defining judgment. The Coder's delegation is widest because the substantive coding *is* an external-agent handoff by design ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)); the Socratic profile delegates nothing because it cannot write and its questions are the entire deliverable.
 
 ---
 

@@ -14,7 +14,7 @@ nav_order: 23
 
 # ADR-23: Memory is seven scoped substrates, not one store
 
-> **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it. (The filename retains `six` for link stability; the title, body, and count are authoritative at **seven**.)
+> **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it. (The count is authoritative at **seven**; the file was renamed from `six-memory-substrates` to `scoped-memory-substrates` so the name no longer states a stale count.)
 
 ## Context
 

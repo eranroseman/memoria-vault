@@ -53,7 +53,7 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 
 ## Related
 
-- **Pairs with:** [ADR-39 — frozen-evaluator checklist (deferred)](39-frozen-evaluator.md)
+- **Pairs with:** [ADR-39 — note-acceptance checklists (deferred)](39-note-acceptance-checklists.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
 - **Profiles:** [Linter](../explanation/profiles/linter.md), [Mapper](../explanation/profiles/mapper.md)
 - **Note types gated:** [claim-note, reference-note](../reference/note-types.md)

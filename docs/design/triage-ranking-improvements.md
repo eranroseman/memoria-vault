@@ -45,6 +45,6 @@ Capabilities that reduce the human's per-candidate judgment cost without moving 
 
 **Trade-offs.** Pairwise comparison costs scale quadratically with queue size. Ranking is personalized only if `research-focus.md` is current.
 
-**Adoption trigger.** Inbox regularly exceeds 50 candidates *and* the learning-to-rank model (see `classical-method-displacements.md §Learning-to-rank`) is not yet trained (this is the expensive cold-start alternative).
+**Adoption trigger.** Inbox regularly exceeds 50 candidates *and* the learning-to-rank model (see `classical-methods-over-llm.md §Learning-to-rank`) is not yet trained (this is the expensive cold-start alternative).
 
 **Guard.** The tournament is a cold-start fallback. Once learning-to-rank has enough training data, switch to that — it is cheaper, faster, and personalized.

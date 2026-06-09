@@ -31,7 +31,7 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 | **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
 | **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
 | **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../../project/test/plans/e2e-golden-path-plan.md) | per release |
-| **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-integration.md) vault-eval | per release / model swap |
+| **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-maintenance.md) vault-eval | per release / model swap |
 | **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../../project/test/plans/installer-test-plan.md) (+ others as built) | on relevant change |
 
 **Disciplines**
@@ -45,7 +45,7 @@ All plans live in `project/test/`, built from `test-plan-template.md`.
 
 ## Why
 
-- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-six-memory-substrates.md)). Without an index, coverage erodes and nobody notices; the matrix makes erosion visible.
+- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without an index, coverage erodes and nobody notices; the matrix makes erosion visible.
 - The pyramid pushes coverage to the cheapest layer that can assert it: a `--self-test` on every commit beats a manual GUI step per release.
 - Separating wiring (L0–L4) from quality (L5) keeps fast deterministic checks honest and quarantines the slow, judgement-heavy eval where it belongs.
 

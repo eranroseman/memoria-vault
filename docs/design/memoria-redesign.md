@@ -700,9 +700,9 @@ only as a comparison-study toggle.
 
 ### Explorations
 
-`schema-and-retrieval`, `triage-improvements` → resolved; `discovery-loop`, `integrations`,
+`retrieval-and-schema-extensions`, `triage-ranking-improvements` → resolved; `discovery-loop`, `adjacent-tool-integrations`,
 `measurement-and-verification` → partially folded; `publication-strategy` → parked with
-Projects; deployment/`classical-method-displacements` → independent.
+Projects; deployment/`classical-methods-over-llm` → independent.
 [`graph-visualization`](graph-visualization.md) → captured separately (typed
 claim/relationship-graph projections; the Librarian gains the `map:claim-graph` /
 `map:hub-canvas` skills; activates #197's deferred NetworkX/InfraNodus threads).

@@ -20,7 +20,7 @@ At low claim-note density the human holds conflicts in their head; as claims acc
 
 ## Decision
 
-Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `relations.contradicts` links and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([Classical method displacements](../design/classical-method-displacements.md)), to be added when claim density makes manual noticing insufficient.
+Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `relations.contradicts` links and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([Classical method displacements](../design/classical-methods-over-llm.md)), to be added when claim density makes manual noticing insufficient.
 
 ## Consequences
 
@@ -38,5 +38,5 @@ Adopt a **`contradictions` dashboard** (ships at `00-meta/01-dashboards/contradi
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies `relations.contradicts`) — now adopted.
 - **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda/contradictions.md) (new), [Dashboards](../explanation/dashboards/README.md) (index).
-- **Future proposer:** [Classical method displacements](../design/classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
+- **Future proposer:** [Classical method displacements](../design/classical-methods-over-llm.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

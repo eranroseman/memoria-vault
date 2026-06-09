@@ -18,7 +18,7 @@ generated snippet.
 
 > **Why capture this.** The design system is implemented and load-bearing (it governs
 > every rendered output) but appeared only as a sub-item of
-> [Integrations and adjacent surfaces](integrations.md) (open-design). This is its standalone design view.
+> [Integrations and adjacent surfaces](adjacent-tool-integrations.md) (open-design). This is its standalone design view.
 
 ## What it is
 
@@ -90,7 +90,7 @@ the reverse. The vault file is the spec; consumers are subordinate.
 
 ## Related
 
-- [Integrations and adjacent surfaces](integrations.md) — open-design as the polished-deliverable renderer
+- [Integrations and adjacent surfaces](adjacent-tool-integrations.md) — open-design as the polished-deliverable renderer
 - [Structural linter and drift detection — zero-LLM vault health](structural-linter-and-drift.md) — the anti-pattern / drift enforcement
 - [Dashboards — eleven views, four groups, two data sources](dashboards-design.md) — single-accent discipline shared with dashboards/callouts
 - Explanation: [`docs/explanation/obsidian/design-system.md`](../explanation/obsidian/design-system.md), [`visual-discipline.md`](../explanation/obsidian/visual-discipline.md)

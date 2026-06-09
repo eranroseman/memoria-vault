@@ -58,4 +58,4 @@ The `done-awaiting-review` queue has a cap. When it fills, the dispatcher slows 
 - The write-gate that enforces it: [Policy MCP reference](../../reference/policy-mcp.md)
 - Why review is a state, not a convention: [Review as a first-class state](../../explanation/workflows/review-as-state.md)
 - Why the gate is structural: [Why a human gate](../../explanation/rationale/why-human-gate.md)
-- Decisions: [ADR-03 structural review gate](../../adr/03-structural-review-gate.md), [ADR-14 advisor review](../../adr/14-advisor-review-vs-frozen-deliverable.md), [ADR-16 adopt-on-demand](../../adr/16-adopt-on-demand-for-reviews.md)
+- Decisions: [ADR-03 structural review gate](../../adr/03-structural-review-gate.md), [ADR-14 advisor review](../../adr/14-advisor-review-vs-frozen-deliverable.md), [ADR-16 adopt-on-demand](../../adr/16-systematic-review-adopt-on-demand.md)
