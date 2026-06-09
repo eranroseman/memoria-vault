@@ -15,7 +15,7 @@ nav_exclude: true
 > WSL2), prompted by Hermes leaving beta on native Windows. **Recommendation: keep WSL2
 > for v0.2; make native Windows the v0.3 direction** via an ADR superseding the WSL2-only
 > rule. The v0.2 rule in
-> [bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md) stays in force.
+> [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) stays in force.
 
 ## The question
 
@@ -26,7 +26,7 @@ does the Windows path still *need* WSL2 — or can it be **native Windows only**
 
 ## The current rule rests on two rationales — both have weakened
 
-The WSL2-only rule ([bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md),
+The WSL2-only rule ([Bootstrap installer](../explanation/deployment/bootstrap-installer.md),
 the [installer platform matrix](../reference/installer.md), and ADR-22/26/27/31) was
 justified by:
 
@@ -86,14 +86,14 @@ swap into a slim v0.2 late in the milestone.
 ### What a v0.3 native-Windows ADR would touch
 
 - **Supersedes** the WSL2-only rule in
-  [bootstrap-installer.md](../explanation/deployment/bootstrap-installer.md) and the
-  platform matrix in [installer.md](../reference/installer.md); updates the README platform
+  [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) and the
+  platform matrix in [Installer (bootstrap)](../reference/installer.md); updates the README platform
   badge.
 - **Amends** [ADR-26](../adr/26-repo-as-install-unit.md) (`install.ps1` becomes a real
   installer), [ADR-27](../adr/27-hermes-native-config-and-gate-enforcement.md) and
   [ADR-31](../adr/31-native-obsidian-mcp.md) (the bridge simplifies on one OS);
   **reinforces** [ADR-22](../adr/22-build-on-hermes-runtime.md) (Hermes is now native).
-- The runtime stack ([system-architecture.md](system-architecture.md)) is unchanged — the
+- The runtime stack ([Memoria system architecture — the seven-layer stack](system-architecture.md)) is unchanged — the
   L5 MCP boundary stays; only the OS underneath it changes.
 
 ## To verify / open
