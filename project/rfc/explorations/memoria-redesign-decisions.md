@@ -500,7 +500,12 @@ layer-model competition D25 fixed. The policy-vs-execution caveat is honest abou
 alone provides (process isolation, if wanted, is a separate boundary).
 
 **Alternatives weighed:** a single layer model (rejected — D25 showed competing cognitive
-models confuse); rename engines → "apps" (rejected — collides with "MCP apps").
+models confuse). On the **engines** tier name: **apps** (collides with "MCP apps") and
+**tools** (collides with MCP "tools" — and agents *use* tools) are out; **services ·
+utilities · scripts · appliances** were weighed and rejected (mixed register, or they
+undersell / imply implementation — e.g. "scripts" names a `.py` artifact, not a role).
+**Engines** is reaffirmed — well-precedented for deterministic components (*search engine ·
+rules engine · ingest engine*).
 
 ## D37 — Batch-worklist pattern; reports are project artifacts; one unified inbox *(→ refines D6/D20)*
 
