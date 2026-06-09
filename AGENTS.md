@@ -25,7 +25,7 @@ Human contributors: see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 1. Session isolation — git worktree
 
-When more than one agent/session may touch this repo, each must work in its own worktree:
+**Start every session in its own worktree — always, even solo, before you touch a single file.** A worktree gives you a private working tree *and* index, so a concurrent session's staged files can never be swept into your commit:
 
 ```bash
 git worktree add ~/mv-<session> -b agent/<session> origin/main
@@ -39,11 +39,13 @@ Prefer a worktree **per branch** even working solo: switching becomes `cd`, and 
 
 ## 2. Branch first — always
 
+**Before you edit, stage, or commit _anything_, start your own branch in your own worktree (§1).** No change — not even a one-line doc fix — happens on `main`, on the default/shared checkout, or on another session's branch.
+
 ```bash
 git fetch origin && git switch -c fix/<thing> origin/main
 ```
 
-Never edit on `main` or on another session's branch.
+**Why a worktree, not just a branch:** the index is **shared** across a checkout. In a checkout another agent may be using, `git add <your-file>` stages *alongside* their already-staged files, and `git commit` captures the **whole** index — sweeping their work into your commit (this happened 2026-06-09: a one-file config commit swallowed 73 files of another agent's in-flight restructure). Your own worktree has its own index, so this cannot occur. If you ever must share a checkout, run `git diff --cached --name-only` and confirm it lists **only your files** before every commit.
 
 ## 3. Stage by explicit path — never `git add -A`
 
