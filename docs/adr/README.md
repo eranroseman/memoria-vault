@@ -88,3 +88,27 @@ Rules:
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
 - **Deferred is revisited, not gated.** A `deferred` ADR records `assumes:` (the decisions/mechanisms it rests on) so a change that invalidates it is detectable; it is re-judged each release cycle, never held on a static trigger.
 - **Sequencing is not decided here.** *When* a decision ships lives in the [release plan](../releasing/v0.1/release-plan-v0.1.md), which changes independently of these decisions. Link to it rather than restating phase order, so a re-plan does not strand stale dates here.
+
+## When to retire an ADR
+
+ADRs are immutable in **content** — you supersede a decision, never rewrite it — but the
+*set* is pruned, so it doesn't accrue stale v0.x cruft. "Immutable" means the decision
+text doesn't change; it does **not** mean every file is kept forever. Three fates:
+
+- **Accepted + load-bearing** — keep; it's the live rule the code follows.
+- **Superseded** — keep as a thin tombstone *while the supersession chain still has value*
+  (a reader following `superseded_by` must not hit a dead end). Once the replacement is
+  long-settled and nothing links to it, it is eligible to retire.
+- **Retired** — the question it answered no longer applies: **delete it**; git history is
+  the record.
+
+**Never prune the rejected-alternatives memory.** An ADR's *Alternatives considered* — why
+we did *not* do X — is the highest-value, lowest-cost part: it stops the same idea being
+re-litigated. Retire decisions whose *question dissolved*, not ones that record a
+still-relevant rejection.
+
+**Mechanics.** Delete the file, **leave the number gap** (numbers are permanent — never
+renumber), remove or repoint inbound `supersedes` / `superseded_by` / `assumes` references
+and any doc links (the `lint` job's link checks catch a dangling reference), then
+regenerate the index (`scripts/gen-adr-index.py`). The retire sweep runs **per release
+cut** — see [Releasing](../releasing/README.md).

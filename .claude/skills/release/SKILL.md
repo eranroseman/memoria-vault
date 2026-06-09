@@ -33,10 +33,11 @@ Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffo
 ## Cutting a release
 
 1. Every box in the tracking issue ticked; required CI green on `main`; no open **P0**.
-2. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
+2. **Retire-sweep the ADRs** — delete any whose question this release dissolved or whose decision it superseded; keep *Alternatives considered*, leave the number gap, regen the index. Criteria: `docs/adr/README.md` "When to retire an ADR". (Its own small PR before the cut.)
+3. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
    `vX.Y`, and publishes the GitHub Release (fold in the plan's known-limitations).
-3. Set the plan frontmatter `status: released`, `released: true`.
-4. Close the milestone + tracking issue; roll unfinished issues forward.
+4. Set the plan frontmatter `status: released`, `released: true`.
+5. Close the milestone + tracking issue; roll unfinished issues forward.
 
 ## PR flow reminder
 

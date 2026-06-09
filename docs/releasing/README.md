@@ -45,11 +45,12 @@ in the tracking issue; everything else points — never restates.
 ## Cutting a release
 
 1. Every gate/stage box in the tracking issue ticked; required CI green on `main`; no open **P0**.
-2. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
+2. **Retire-sweep the ADRs.** Delete any ADR whose question this release dissolved or whose decision it superseded — keep the *Alternatives considered* memory; leave the number gap. See the [retirement criteria](../adr/README.md#when-to-retire-an-adr). (Lands as its own small PR before the cut.)
+3. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
    `vX.Y`, and publishes the GitHub Release with curated notes (fold in the plan's
    known-limitations).
-3. Set the plan frontmatter `status: released`, `released: true`.
-4. Close the milestone and the tracking issue; roll unfinished issues forward.
+4. Set the plan frontmatter `status: released`, `released: true`.
+5. Close the milestone and the tracking issue; roll unfinished issues forward.
 
 ## Standard contents of a `release/vX.Y/` folder
 
