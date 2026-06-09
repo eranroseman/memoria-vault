@@ -139,9 +139,12 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 |---|---|---|
 | Any docs PR | `/docs-review` *(project)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` | Before opening — catches bugs and simplification opportunities |
+| Deeper review on a dimension | `pr-review-toolkit` agents *(plugin)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
 | Sensitive-path changes | `/security-review` | PRs touching `scripts/`, `.github/`, `vault/.memoria/` |
 | Confirming a fix | `/verify` | After a change — runs the app to confirm actual behavior |
 | New or cut release | `/release` *(project)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
+
+**Passive:** the `security-guidance` plugin runs *automatic* security scans as you work — a free per-edit pattern check plus an LLM review on `git commit`/`push` (secret leaks, injection, SSRF, weak crypto). It complements — does not replace — the manual `/security-review`, and is a first line against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule. Both plugins install from the `claude-code-plugins` marketplace (`/plugin`); tune `security-guidance`'s model-backed layers via its env vars if token cost matters.
 
 ---
 
