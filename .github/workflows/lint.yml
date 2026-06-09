@@ -44,3 +44,5 @@ jobs:
         run: python scripts/check-test-refs.py
       - name: status-doctor
         run: python scripts/status-doctor.py
+      - name: test-runner paths
+        run: bash scripts/test.sh check   # L1 module paths in test.sh resolve (drift guard)
