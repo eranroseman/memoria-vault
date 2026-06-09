@@ -16,6 +16,7 @@ release** in `releases/vX.Y/` (e.g. `gui-test-plan_v0.1.md`).
 | [Test coverage matrix](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [plans/](plans) | The reusable plans (browse the directory) |
+| [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + every Python `--self-test`. Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. **Keep its L1 module list in sync with `python-selftest.yml`** (CI is the source of truth — a path drift there once slipped past CI). |
 
 ## Why `tests/` and `releases/` stay separate
 
@@ -29,7 +30,7 @@ sign-off → `releases/vX.Y/`.
 - **Layers (L0–L5)** — what *kind* of coverage: L0 static, L1 self-tests, L2 agent
   wiring, L3 GUI/dashboards, L4 end-to-end lifecycle, L5 output quality.
 - **Stages (S0–S5)** and **Gates (G1–G11)** — release-readiness checkpoints; their
-  state lives in the [release plan](../release/v0.1/release-plan-v0.1.md) §2/§3, not here.
+  **state** lives in the per-release **"Release vX.Y" tracking issue** (a gate checklist — the Tier-2 model), not in this folder and not in the release plan (which holds only the prose + gate *definitions*).
 
 ## Run order
 
