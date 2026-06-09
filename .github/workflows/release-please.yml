@@ -22,6 +22,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # Fine-grained PAT, NOT the default GITHUB_TOKEN. Two reasons the default fails:
+      # (1) it can't open PRs unless the repo's "Actions may create PRs" toggle is on,
+      # and (2) PRs it opens do NOT trigger the required checks (pr-policy/lint/…), so a
+      # release PR could never go green and merge. A PAT-created PR triggers CI normally.
+      # PAT scope (repo: memoria-vault only): Contents=RW, Pull requests=RW. The PAT — not
+      # GITHUB_TOKEN — performs every privileged action here; the job `permissions:` above
+      # only cover the checkout's GITHUB_TOKEN. Rotate before the PAT expires (see memory).
       - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
