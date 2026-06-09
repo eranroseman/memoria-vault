@@ -278,7 +278,7 @@ canvas         draft          deliverable    candidate-note
 
 ### Candidate-note fields
 
-Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — shared candidate frontmatter](../../project/adr/17-shared-candidate-frontmatter.md)).
+Transient leads / ingestion dead-letters in `10-inbox/03-candidates/` ([ADR — shared candidate frontmatter](../adr/17-shared-candidate-frontmatter.md)).
 
 | Field | Type | Allowed values | Owner | Present on |
 | --- | --- | --- | --- | --- |

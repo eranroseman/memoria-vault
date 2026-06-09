@@ -5,7 +5,7 @@ parent: Reference
 
 # Glossary
 
-Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [Explanation](../explanation/).
+Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. For conceptual depth see [Explanation](../explanation).
 
 ---
 
@@ -21,7 +21,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Memoria** — the whole system: the vault, the seven profiles, the policy MCP, the Kanban board, and the tooling layer (`.memoria/`).
 
-**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See the [v0.1 release set](../../project/release/v0.1/).
+**Memoria v0.1** — the complete initial configuration on a single device (`local-only`): all seven profiles, all 16 templates, all 11 dashboards, the Kanban board, ACP plugins, and K-Dense skills. No component is optional. See the [v0.1 release set](../../project/release/v0.1).
 
 **Profile** — a Hermes role with bounded permissions, commands, skills, and tools. Memoria defines seven: Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter. No Orchestrator (routing is static, in lane-overrides) and no Reviewer (review is a human action).
 
@@ -98,9 +98,9 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Computational method class** — how a task is solved: **deterministic** (regex / graph / similarity — single right answer), **hybrid** (deterministic narrowing + LLM on the residual), or **generative** (open-ended LLM composition). Memoria prefers deterministic and hybrid over generative wherever correctness and testability matter.
 
-**Deployment option** — how the vault and execution layer sync across machines. Four patterns: `local-only` (single device, v0.1 default), `local-mesh` (Syncthing, peer-to-peer), `obsidian-sync` (cloud-managed), `always-on` (Syncthing + VPS). See [deployment options](../explanation/deployment/deployment-options.md) for the adopted `local-only` default; the multi-machine patterns are the [multi-machine deployment proposal](../../project/rfc/explorations/multi-machine-deployment.md).
+**Deployment option** — how the vault and execution layer sync across machines. Four patterns: `local-only` (single device, v0.1 default), `local-mesh` (Syncthing, peer-to-peer), `obsidian-sync` (cloud-managed), `always-on` (Syncthing + VPS). See [deployment options](../explanation/deployment/deployment-options.md) for the adopted `local-only` default; the multi-machine patterns are the [multi-machine deployment proposal](../design/multi-machine-deployment.md).
 
-**Thin control over thick state** — the design principle: the control plane carries as little persistent context as possible; durable knowledge (plans, notes, drafts, audit traces) lives in vault files that workers re-read between steps. See [explanation/architecture/](../../docs/explanation/architecture/).
+**Thin control over thick state** — the design principle: the control plane carries as little persistent context as possible; durable knowledge (plans, notes, drafts, audit traces) lives in vault files that workers re-read between steps. See [explanation/architecture/](../explanation/architecture).
 
 ---
 

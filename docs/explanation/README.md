@@ -9,7 +9,7 @@ permalink: /explanation/
 
 This section is for **understanding** Memoria — what it is, how it thinks, and why it was built the way it was. These documents answer "why" and "what is" questions. They are for reading and reflection, not for following step-by-step.
 
-If you need to *do* something, see [how-to guides](../how-to-guides/). If you need exact values, field names, or configuration formats, see [Reference](../reference/). If you want a guided first experience, see [Tutorials](../tutorials/).
+If you need to *do* something, see [how-to guides](../how-to-guides). If you need exact values, field names, or configuration formats, see [Reference](../reference). If you want a guided first experience, see [Tutorials](../tutorials).
 
 ---
 
@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR. The forward plan lives in the release plan. Both are in [Project files](../../project/): [Decisions](../../project/adr/) for the ADRs, [Releases](../../project/release/) for the release plans and roadmap.
+The *why* behind a specific choice lives in an ADR — see [Decisions](../adr/) (and the design notes in [Design notes](../design/)). The forward plan lives in the [release plan](../../project/release).

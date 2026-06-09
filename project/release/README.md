@@ -6,8 +6,8 @@ topic: releases
 
 One folder per version, `release/vX.Y/`, holding the **prose** of that cut (scope,
 known limitations, cut procedure, roadmap). The reusable body is
-[release-plan-template.md](release-plan-template.md); the current release is
-[v0.1/](v0.1/). The *live readiness state* lives outside the file — see below.
+[Release plan — vX.Y.Z](release-plan-template.md); the current release is
+[v0.1/](v0.1). The *live readiness state* lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 
@@ -26,7 +26,7 @@ in the tracking issue; everything else points — never restates.
 ## Starting a new release — vX.Y
 
 1. **Folder + plan.** Create `release/vX.Y/README.md` (thin index) and copy
-   [release-plan-template.md](release-plan-template.md) →
+   [Release plan — vX.Y.Z](release-plan-template.md) →
    `release/vX.Y/release-plan-vX.Y.md`. Fill the prose; set frontmatter
    `status: draft`, `released: false`.
 2. **Milestone = scope.** Create the `vX.Y` milestone
@@ -54,4 +54,4 @@ in the tracking issue; everything else points — never restates.
 | `README.md` | Thin index of this release's files |
 | `release-plan-vX.Y.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
 | `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail |
-| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [../test/](../test/)) |
+| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [../test/](../test)) |

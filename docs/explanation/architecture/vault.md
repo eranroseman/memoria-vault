@@ -8,7 +8,7 @@ nav_order: 1
 
 The vault is where durable knowledge lives. Everything else in Memoria — the board, the profiles, the dashboards — exists to serve it. This document explains the vault's structure: what the folders mean, how notes move through it, and the conventions that keep it navigable.
 
-For the conceptual model behind the design choices (why lifecycle folders, what note types represent, why promotion is gated), see [Knowledge](../knowledge/).
+For the conceptual model behind the design choices (why lifecycle folders, what note types represent, why promotion is gated), see [Knowledge](../knowledge).
 
 ---
 

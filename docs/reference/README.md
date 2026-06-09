@@ -7,7 +7,7 @@ permalink: /reference/
 
 # Reference
 
-Lookup material for Memoria — fields, values, commands, schemas, folder paths. For design rationale and conceptual explanations, see [Explanation](../explanation/).
+Lookup material for Memoria — fields, values, commands, schemas, folder paths. For design rationale and conceptual explanations, see [Explanation](../explanation).
 
 The files are grouped below by domain for scanning; the folder itself is flat.
 

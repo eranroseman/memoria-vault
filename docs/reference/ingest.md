@@ -44,7 +44,7 @@ If the type is ambiguous, the Librarian asks before proceeding. The agent never 
 | Organization | ROR API + OpenAlex Institutions | (none — entity note) | Affiliated people → person-notes |
 | Venue | OpenAlex Venues + DBLP | (none — entity note) | (none) |
 
-**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../../project/rfc/explorations/schema-and-retrieval.md)).
+**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../design/schema-and-retrieval.md)).
 
 ### PDF extraction tools
 

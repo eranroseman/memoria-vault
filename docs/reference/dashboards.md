@@ -5,7 +5,7 @@ parent: Reference
 
 # Dashboards
 
-The eleven dashboards shipped in `00-meta/01-dashboards/`: source file, sort order, and what each reads. For *why* each exists and when to open it, see [explanation/dashboards/](../explanation/dashboards/) — this page is the lookup.
+The eleven dashboards shipped in `00-meta/01-dashboards/`: source file, sort order, and what each reads. For *why* each exists and when to open it, see [explanation/dashboards/](../explanation/dashboards) — this page is the lookup.
 
 Dashboards are Dataview / DataviewJS views. They render existing vault state and logs; they never write. A dashboard with no data yet shows a placeholder, not an error.
 
@@ -117,7 +117,7 @@ Keep dashboards responsive as the vault grows:
 
 ## Related
 
-- Why each dashboard exists and when to open it: [explanation/dashboards/](../explanation/dashboards/)
+- Why each dashboard exists and when to open it: [explanation/dashboards/](../explanation/dashboards)
 - The structural detectors behind the verdict band: [Linter: detectors and auto-fix](linter.md)
 - The audit-log event schema and rotation: [Memory substrates](memory.md#audit-log-event-fields)
 - The status-line counters board-state feeds: [Obsidian status line](obsidian-status-line.md)

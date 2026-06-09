@@ -72,7 +72,7 @@ Send any message to your bot in Telegram. Within a few seconds, a `.md` file sho
 
 ## Related
 
-- Fleeting note triage workflow: [Triage fleeting notes](../../how-to-guides/compile/triage-fleeting-notes.md)
+- Fleeting note triage workflow: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
 - Vault-access and agent-interface integrations: [External integrations](../../reference/integrations.md)
 - The two HTTP roles of the gateway: [Distribution model](../../explanation/deployment/distribution-model.md)
 - Hermes gateway docs: [hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs)

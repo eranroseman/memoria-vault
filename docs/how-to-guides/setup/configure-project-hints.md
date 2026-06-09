@@ -9,7 +9,7 @@ nav_order: 6
 
 `project-hints.yaml` gives the Librarian a lightweight per-project topic list so it can **propose** which project a newly ingested paper belongs to — you confirm or correct that at triage, exactly like every other proposed field. It is **optional**: with no file, project membership is tagged fully by hand. This guide creates it from the shipped example and tunes it.
 
-It is deliberately *not* a scoring matrix — there are no weights and no expected-method/design fields. That richer config was considered and rejected as drift-prone ([ADR-15](../../../project/adr/15-project-auto-classification.md)); a hint is just a topic list.
+It is deliberately *not* a scoring matrix — there are no weights and no expected-method/design fields. That richer config was considered and rejected as drift-prone ([ADR-15](../../adr/15-project-auto-classification.md)); a hint is just a topic list.
 
 ## Prerequisites
 
@@ -66,4 +66,4 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 - Topic vocabulary discipline: [linking.md — Vocabulary discipline](../../reference/linking.md#vocabulary-discipline)
 - The profile that reads it: [The Librarian](../../explanation/profiles/librarian.md)
 - The ~30-term topic vocabulary discipline: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
-- The decision and its rationale: [ADR-15](../../../project/adr/15-project-auto-classification.md)
+- The decision and its rationale: [ADR-15](../../adr/15-project-auto-classification.md)

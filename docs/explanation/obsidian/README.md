@@ -8,7 +8,7 @@ permalink: /explanation/obsidian/
 
 # Obsidian — the human surface
 
-Obsidian is where the human meets Memoria. The agents run in Hermes and the board lives in `kanban.db`, but everything the human reads, writes, and decides happens here. This section explains _how that surface is designed_ — not how to operate it (that's the [interface how-to guides](../../how-to-guides/using-obsidian/)) and not the exact settings (that's [Obsidian plugins](../../reference/obsidian-plugins.md) and the `obsidian-*` reference pages).
+Obsidian is where the human meets Memoria. The agents run in Hermes and the board lives in `kanban.db`, but everything the human reads, writes, and decides happens here. This section explains _how that surface is designed_ — not how to operate it (that's the [interface how-to guides](../../how-to-guides/using-obsidian)) and not the exact settings (that's [Obsidian plugins](../../reference/obsidian-plugins.md) and the `obsidian-*` reference pages).
 
 One principle runs through every page below: **the architecture is invisible during normal use and legible when something goes wrong.** The vault should feel like a writing environment; the machinery surfaces only when it needs a decision.
 
@@ -34,6 +34,6 @@ The **dashboards** are also an Obsidian surface, but they have their own section
 
 ## Related
 
-- How to _use_ these surfaces (operate the pane, navigate dashboards, drive the palette): [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian/)
+- How to _use_ these surfaces (operate the pane, navigate dashboards, drive the palette): [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian)
 - Plugin inventory and load-bearing settings: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- Workspace, callout, and status-line reference pages: [Reference](../../reference/)
+- Workspace, callout, and status-line reference pages: [Reference](../../reference)

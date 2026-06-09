@@ -145,7 +145,7 @@ You now know the complete Memoria workflow. The daily rhythm from here is:
 - **Clear the review queue** (open `home.md` → board-state dashboard; approve or reject any card waiting at the gate)
 - **Run the weekly review** (open `weekly-review.md` every Friday, process link suggestions, address any Linter findings)
 
-The [how-to guides](../how-to-guides/) cover individual workflows in more depth. The [reference section](../reference/) is what you reach for when you need the exact name of a field or command.
+The [how-to guides](../how-to-guides) cover individual workflows in more depth. The [reference section](../reference) is what you reach for when you need the exact name of a field or command.
 
 ---
 

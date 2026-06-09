@@ -86,4 +86,4 @@ git commit -m "code: figure-3 receptivity curve — <project-slug>"
 - Coder profile design: [The Coder](../../explanation/profiles/coder.md)
 - Why code is a research output (principle 8): [Design principles](../../explanation/overview/design-principles.md)
 - The Coder autonomous-loop exception: [Why Memoria doesn't pursue full autonomy](../../explanation/rationale/why-not-autonomous.md)
-- ADR-07 (external coding agent boundary): [Code agent attachment](../../../project/adr/07-code-agent-attachment.md)
+- ADR-07 (external coding agent boundary): [Code agent attachment](../../adr/07-code-agent-attachment.md)

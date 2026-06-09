@@ -21,4 +21,4 @@ Two flows run on the board: a **Compile** flow that brings new knowledge into th
 | [Review as a first-class state](review-as-state.md)                           | Why review is a structured field rather than a convention, what "blocking" means technically, and the post-rejection paths.                                          |
 | [Verify-on-commit](verify-on-commit.md)                                       | Why committing a draft auto-creates a verification card, why the trigger is a git hook rather than a cron job, and why automatic creation is not automatic approval. |
 
-For step-by-step workflow recipes, see [how-to guides](../../how-to-guides/).
+For step-by-step workflow recipes, see [how-to guides](../../how-to-guides).

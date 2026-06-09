@@ -11,9 +11,9 @@ permalink: /
 A research operating system for a single researcher — seven AI agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
 **[Read about what Memoria is](explanation/overview/what-memoria-is.md)**, what it's not, and why it exists. Everything else builds on this.
-If you want a guided first experience, see [Tutorials](tutorials/).
-If you need to _do_ something, see [how-to guides](how-to-guides/).
-If you need exact values, field names, or configuration formats, see [Reference](reference/).
+If you want a guided first experience, see [Tutorials](tutorials).
+If you need to _do_ something, see [how-to guides](how-to-guides).
+If you need exact values, field names, or configuration formats, see [Reference](reference).
 
 **v0.1** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 

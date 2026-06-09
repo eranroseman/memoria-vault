@@ -233,4 +233,4 @@ Dashboard doesn't refresh automatically.
 
 **S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/S5 rows of [release-plan-v0.1.md](release-plan-v0.1.md).
+G4/S5 rows of [Release plan — v0.1.0](release-plan-v0.1.md).
