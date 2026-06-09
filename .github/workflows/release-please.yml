@@ -29,6 +29,6 @@ jobs:
       # PAT scope (repo: memoria-vault only): Contents=RW, Pull requests=RW. The PAT — not
       # GITHUB_TOKEN — performs every privileged action here; the job `permissions:` above
       # only cover the checkout's GITHUB_TOKEN. Rotate before the PAT expires (see memory).
-      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
