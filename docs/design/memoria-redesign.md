@@ -78,9 +78,15 @@ hides behind a vocabulary the user already owns.
 
 ## 2. Architecture — one model
 
-Memoria is **seven layers**, top to bottom, with one flow rule: **decisions flow down,
-information flows up.** Each layer depends only on the one below and serves only the one
-above.
+**At a glance:** you (the **PI**) think and decide · your **agents** do the bookkeeping ·
+your **engines** keep the substrate sound · it all lives in the **Vault**. That
+three-actors-over-the-substrate picture *is* the cognitive model; the **seven layers**
+below expand it for the build view.
+
+One flow rule: **decisions flow down, information flows up.** Along the **agent write-path**
+(co-PI → Tasks → MCP → Engines/Vault) each layer depends only on the one below; the **PI**
+and trusted automation are *direct edges* (the PI edits the Vault in Obsidian; cron/CI/PI
+invoke engines directly), so the strict layering binds *agents*, not every actor.
 
 | Layer | What it is | Actor-kind |
 |---|---|---|
@@ -264,8 +270,10 @@ schema** — required fields present, value types correct, enum values in-vocabu
 `links:`/`relationships` resolve to real targets — keyed off a `type:` discriminator. It
 flags malformed records, broken/renamed links, and orphans as Inbox `flag`s. So **Bases
 is the view layer, the Catalog is the source of truth, and the Linter is its
-integrity guarantor.** (Dataview / the Bases API stay in reserve for citation-graph
-traversal.)
+integrity *monitor*** — it *detects* drift on cron/CI and `flag`s it, but does not *block*
+a bad write, so between sweeps the Catalog can serve a broken record ("monitor", not
+"guarantor"; a write-time gate is an open question). (Dataview / the Bases API stay in
+reserve for citation-graph traversal.)
 
 ---
 
@@ -381,7 +389,9 @@ Not agents — pure mechanism, triggered or scheduled, never on the board. You *
   **Search** assist (§5.3) and finds link candidates before the Librarian proposes (§3.1).
 - **Clustering** — BERTopic (topics) + NetworkX (link-structure) behind the gated cluster
   MCP (ADR-33 + the [Graph visualization](graph-visualization.md) note). The *map* task
-  uses it; it surfaces structure, it never decides.
+  uses it: it decides *how to display* (model · params · thresholds shape which topics and
+  gaps the PI sees), never *what is canonical* — so its parameters fall under the
+  calibration/drift spec (§8).
 - **Verification sweeps** — scheduled, deterministic checks split from the old Verifier:
   retraction lookups, near-duplicate and broken-citation detection. Findings → Inbox
   `flag`/`alert`; the *judgment* checks stay the Peer-reviewer (§4.2).
@@ -529,9 +539,9 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
   automate it (audited) rather than fake a decision.
 - **Calibration gate (hybrid scores only).** `writable-density` and `readiness-score` are
   **deterministic** (graph/coverage metrics — reproducible; calibration = setting
-  thresholds). `candidate-rank` and `outline-score` are **hybrid** (embedding/LLM) — these
-  ship only with a filled threshold spec: grounded · error-budgeted · drift-bound
-  (recalibrate on model-version change) · shadow-first.
+  thresholds). `candidate-rank`, `outline-score`, **and the clustering engine's parameters**
+  are **hybrid** (embedding/LLM) — these ship only with a filled threshold spec: grounded ·
+  error-budgeted · drift-bound (recalibrate on model-version change) · shadow-first.
 - **Diversity reserve (anti-echo-chamber).** The system surfaces intake from its *own*
   gaps and interests (back-pressure) — left unchecked, 100%-self-recommended intake
   becomes an echo chamber that only deepens what you already have. So **≥20% of intake is
@@ -674,6 +684,10 @@ A live map between this redesign and the GitHub board + `docs/adr/`. Reviewed 20
 against the project-board columns.
 
 ### Issues the redesign answers — labelled `resolved-by-redesign`
+
+*These are **design-resolved, not built** — closed against this (exploration-status)
+design, not delivered; the implementing work is build-pending (see
+[Red-team findings](red-team-findings.md), Theme D).*
 
 | # | Resolution |
 |---|---|

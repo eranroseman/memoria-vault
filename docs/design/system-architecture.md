@@ -23,9 +23,12 @@ nav_exclude: true
 
 **Decisions flow top-down; information flows bottom-up.** A decision originates with the
 PI and descends the stack (PI → co-PI → tasks → engines → vault); knowledge ascends it
-(vault → engines → tasks → co-PI → PI). Every layer depends only on the one below and
-serves only the one above — the classic layered-architecture contract, which is what lets
-each layer be reasoned about, swapped, or sandboxed independently.
+(vault → engines → tasks → co-PI → PI). Along the **agent write-path** (co-PI → Tasks →
+MCP → Engines/Vault) each layer depends only on the one below — the classic layered
+contract that lets each be reasoned about, swapped, or sandboxed independently. But the
+**PI and trusted automation are direct edges, not rungs**: the PI edits the Vault directly
+in Obsidian, and cron/CI/the PI invoke engines directly (§3). The strict layering binds
+*agents*, not every actor.
 
 ## 2. The seven layers
 
@@ -42,8 +45,9 @@ each layer be reasoned about, swapped, or sandboxed independently.
 L2 is the **Interface** (the whole Obsidian UI); *Library* and *Project* are two saved
 Obsidian **Workspaces** (saved pane layouts) within it. Three **actor-kinds** act on the
 structural layers (L2, L7): the **PI** (L1), **agents** (L3 co-PI + L4 Tasks), and
-**engines** (L6); **L5 MCP** is the boundary between agents and the engines/vault they
-reach.
+**engines** (L6). **L5 MCP is a *trust boundary*, not a stratum everyone crosses** — only
+the *agent* path passes through it; the PI and cron/CI reach engines/Vault directly (§3).
+Read the table as a dependency *order*, not a claim that every actor traverses all seven.
 
 ## 3. The MCP boundary — a policy gate, not an execution sandbox
 
