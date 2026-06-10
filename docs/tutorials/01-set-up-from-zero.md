@@ -3,162 +3,128 @@ title: "Tutorial 01: Set up from zero"
 parent: Tutorials
 ---
 
-
 # Tutorial 01: Set up from zero
 
-**You will end with:** a working Memoria vault open in Obsidian, all eight required plugins installed and configured, all seven profiles installed, and Zotero wired up to auto-export your library.
+**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the co-PI answering in the Agent Client pane, and the Library workspace loaded.
 
-**Time:** 30–45 minutes.
+**Time:** 20–30 minutes.
 
-**You will use:** Terminal (once, for the installer), then Obsidian for everything else.
+**You will use:** a terminal (for the installer and your API keys), then Obsidian.
 
 ---
 
 ## Prerequisites
 
-- [Obsidian](https://obsidian.md/) installed
-- [Hermes](https://hermes-agent.nousresearch.com/) installed (`hermes --version` returns a version number)
-- [Zotero 9](https://www.zotero.org/) installed with the [Better BibTeX](https://retorque.re/zotero-better-bibtex/) add-on
-- [Git](https://git-scm.com/) installed
+- Linux or WSL2 (on Windows, `install.ps1` gates WSL2 and runs the same installer inside it)
+- [Git](https://git-scm.com/) installed (the installer checks and tells you if anything is missing — it provisions the rest itself, including Hermes)
+- [Obsidian](https://obsidian.md/) installed, or let the installer guide you through it
+
+You do **not** need Zotero for setup. It is an optional bibliographic backbone, covered where you first use it — [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md).
 
 ---
 
-## Step 1 — Clone the vault
+## Step 1 — Run the installer
 
-Open a terminal and run:
+The recommended invocation is inspect-first:
 
 ```bash
-git clone https://github.com/eranroseman/memoria-vault.git ~/memoria
-cd ~/memoria
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
+less install.sh        # read what it will do
+bash install.sh
 ```
 
-You now have the **repo** at `~/memoria` (the install unit). In the next step the installer copies the vault out of it to your runtime folder (default `~/Memoria`) — that copy is what you'll open in Obsidian.
+Or the convenience one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
+```
+
+The installer confirms every external step before running it (`--dry-run` previews everything and changes nothing). It will:
+
+1. Check prerequisites (`git`, `pandoc`).
+2. Fetch the repo and **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree).
+3. Install Hermes with the ACP extra.
+4. Deploy the **five profiles**: `memoria-copi` (the co-PI you'll talk to) plus the four background lanes — `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`.
+5. Offer the optional clustering stack (~2 GB; skip it for now — graph tools still work, and you can add it later with `--profiles-only`).
+6. Guide you through Obsidian if it isn't installed, and wire the maintenance crons.
+
+When it finishes it prints a **Next steps** checklist. The rest of this tutorial walks that checklist.
+
+Full flag and step reference: [Installer (bootstrap)](../reference/installer.md).
 
 ---
 
-## Step 2 — Run the installer
+## Step 2 — Add your API keys
 
-Still in the terminal, from the repo root (`~/memoria`):
+Open `~/.hermes/.env` and fill in:
 
 ```bash
-bash scripts/install.sh        # Linux / WSL2
+KILOCODE_API_KEY=...      # model access
+OBSIDIAN_API_KEY=...      # from the Local REST API plugin (Step 3 below)
+OPENALEX_API_KEY=...      # openalex.org/settings/api — required for discovery
 ```
 
-```powershell
-.\scripts/install.ps1          # Windows (gates WSL2, then runs scripts/install.sh in WSL2)
+Then propagate them into every profile (profile runs read only their own `.env` — there is no global fallback):
+
+```bash
+bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-The installer (with your confirmation at each external step):
-
-- Installs Hermes + the ACP extra
-- Copies `vault/` to your runtime folder (default `~/Memoria`, off OneDrive)
-- Substitutes your vault path into each profile's `config.yaml`
-- Registers the seven profiles into `~/.hermes/profiles/` and provisions skills
-
-It ends with a **Next steps** summary, including the path it copied the vault to (it asks before each external action; `--dry-run` previews without changing anything).
-
-> This is the only time in the tutorials you'll use the terminal. Day-to-day operation happens entirely in Obsidian.
+Re-run that command any time you add or rotate a key.
 
 ---
 
 ## Step 3 — Open the vault in Obsidian
 
-1. Open Obsidian.
-2. Click **Open folder as vault**.
-3. Navigate to the folder the installer reported (default `~/Memoria`) and click **Open**.
-4. If Obsidian asks about trusting the vault author, click **Trust and enable plugins**. Memoria's plugins are safe to enable.
+1. Open Obsidian → **Open folder as vault** → choose the folder the installer reported (default `~/Memoria`).
+2. Turn off Restricted mode when prompted (**Settings → Community plugins**) so the bundled plugins load — they ship pre-installed and pre-configured.
+3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in `~/.hermes/.env` (then re-run the `--profiles-only` command from Step 2).
+4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you:
 
-Obsidian opens. You'll see the vault in Safe Mode because community plugins aren't enabled yet.
+```bash
+cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
+```
 
----
-
-## Step 4 — Enable community plugins
-
-1. Open **Settings** (gear icon, bottom left).
-2. Under **Community plugins**, click **Turn on community plugins**.
-3. Close Settings.
+`home.md` opens as the front door: the **What needs me** Inbox view, the dashboard index, and your research focus.
 
 ---
 
-## Step 5 — Enable the bundled plugins
+## Step 4 — Open the co-PI pane
 
-The starter vault **ships all eight required plugins pre-installed and configured** in `.obsidian/plugins/` — you do not browse or install them. The only action is to let Obsidian load them:
+The co-PI is the one agent you converse with. Open it either way:
 
-1. **Settings → Community plugins → turn off Restricted mode.**
-2. Restart Obsidian. The eight bundled plugins activate on restart.
+- **In Obsidian:** command palette (`Cmd/Ctrl+P`) → **Agent Client: Open chat view**. The pane defaults to the co-PI.
+- **In a terminal:** `hermes -p memoria-copi acp`
 
-The eight that ship and should now be active:
+Verify the profiles installed first if you like: `hermes profile list` should show all five `memoria-*` profiles.
 
-| Plugin name | Plugin ID |
-| --- | --- |
-| Local REST API | `obsidian-local-rest-api` |
-| Agent Client | `agent-client` |
-| Dataview | `dataview` |
-| Templater | `templater-obsidian` |
-| QuickAdd | `quickadd` |
-| Obsidian Citation Plugin | `obsidian-citation-plugin` |
-| Callout Manager | `callout-manager` |
-| Obsidian Git | `obsidian-git` |
-
-Confirm all eight appear as enabled under Settings → Community plugins, then close Settings.
+Say hello and ask it something — "explain how this vault is organized" is a good first question. It questions, explains the system, and delegates tasks to the background lanes; it never writes your vault itself ([The co-PI](../explanation/profiles/co-pi.md)).
 
 ---
 
-## Step 6 — Configure the Citation Plugin
+## Step 5 — Switch to the Library workspace
 
-The Citation Plugin needs to know where your BibTeX file lives. Most of this is pre-configured in the bundled `data.json`; confirm these values:
+Two saved layouts ship with the vault: **Home** (the launchpad) and **Library** (the reading layout). Switch via the command palette: **Workspaces: Load workspace** → `Library`. See [Obsidian workspaces](../reference/obsidian-workspaces.md).
 
-1. **Settings → Community plugins → Obsidian Citation Plugin → Options** (the gear icon next to it).
-2. Confirm **Citation database path** is: `.memoria/memoria.bib`
-3. Confirm **Literature note folder** is: `20-sources/01-papers`
-4. The note body is **not** an external template file — this plugin stores it inline in `literatureNoteContentTemplate` (kept in sync with `99-system/templates/paper-note.md`). There is no template-path setting to set here.
-5. Close Settings.
-
----
-
-## Step 7 — Wire up Zotero
-
-Better BibTeX needs to auto-export your library to `.memoria/memoria.bib`.
-
-1. In Zotero, open **Edit → Preferences → Better BibTeX**.
-2. Under the **Citation keys** tab, confirm the citation key formula is: `[auth.lower][year][shorttitle1_0]`
-   - If it's different, update it. This is the citekey format Memoria expects.
-3. Right-click your library in the left panel → **Export Library**.
-4. Format: **Better BibLaTeX**. Check **Keep updated**.
-5. Save the file to: `<your-vault-path>/.memoria/memoria.bib`
-
-Zotero will now keep that file updated every time you add or modify an item.
-
----
-
-## Step 8 — Open home.md
-
-In the Obsidian file tree, open `home.md` at the vault root. This is your vault's front door.
-
-You'll see links to:
-- The dashboard suite (`00-meta/01-dashboards/`)
-- System status
-- Your research focus
-
-Click **Dashboard index** to open `00-meta/01-dashboards/daily-health.md`. The dashboards will mostly show empty states — that's expected. They'll fill as you add notes.
+The Library workspace opens the reading pipeline, the discuss queue, and the Catalog view — empty for now. They fill as you work through the next tutorials.
 
 ---
 
 ## What you have
 
-- ✓ Vault open in Obsidian
-- ✓ All eight required plugins installed and enabled
-- ✓ All seven profiles installed in `~/.hermes/profiles/`
-- ✓ Zotero auto-exporting to `.memoria/memoria.bib`
-- ✓ Dashboards loading (empty, ready for content)
+- A runtime vault at `~/Memoria`, scaffolded, populated, and golden-copied
+- Five profiles installed and the maintenance crons wired
+- API keys in `~/.hermes/.env`, propagated to every profile
+- The co-PI answering in the Agent Client pane
+- The Library workspace loaded
 
 ---
 
 ## What's next
 
-[Tutorial 02 — Your first note](02-your-first-note.md): capture a thought and turn it into your first permanent claim note. This is the Zettelkasten loop in miniature — you'll do the whole cycle in about 15 minutes.
+[Tutorial 02: Your first note](02-your-first-note.md) — capture a fleeting thought from the palette and learn the distill-or-archive discipline.
 
-**See also:** the fast-path install if you'd rather skip the guided walkthrough — [Quickstart](../how-to-guides/setup/quickstart.md); and [What Memoria is](../explanation/overview/what-memoria-is.md) for what you just installed.
+**See also:** [Quickstart](../how-to-guides/setup/quickstart.md) for the condensed install path, and [What Memoria is](../explanation/overview/what-memoria-is.md) for what you just installed.
 
 ---
 

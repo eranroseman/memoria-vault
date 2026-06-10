@@ -34,6 +34,8 @@ def check_paths(vault: Path, paths: list[str]) -> list[str]:
             continue  # outside the vault (repo docs etc.) — not gated here
         if p.suffix != ".md" or not p.is_file():
             continue
+        if rel.startswith((".memoria/", ".obsidian/")):
+            continue  # hidden runtime (golden copies, profile SKILLs) — never typed notes
         if is_untyped_infra(rel) or "/" not in rel:
             continue
         fm = parse_frontmatter(p.read_text(encoding="utf-8"))

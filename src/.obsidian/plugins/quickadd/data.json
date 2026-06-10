@@ -5,7 +5,7 @@
       "name": "Memoria: capture fleeting",
       "type": "Template",
       "command": true,
-      "templatePath": "99-system/templates/fleeting-note.md",
+      "templatePath": "system/templates/fleeting.md",
       "fileNameFormat": {
         "enabled": true,
         "format": "{{DATE:YYYY-MM-DD-HHmmss}}-fleeting"
@@ -13,7 +13,7 @@
       "folder": {
         "enabled": true,
         "folders": [
-          "10-inbox/01-fleeting"
+          "notes/fleeting"
         ],
         "chooseWhenCreatingNote": false,
         "createInSameFolderAsActiveFile": false,
@@ -44,7 +44,7 @@
             "name": "capture-from-zotero",
             "type": "UserScript",
             "id": "21c15756-9c6b-4b24-a709-f4944200fa8a",
-            "path": "99-system/scripts/capture-from-zotero.js",
+            "path": "system/scripts/capture-from-zotero.js",
             "settings": {}
           }
         ]
@@ -63,7 +63,7 @@
             "name": "capture-from-url",
             "type": "UserScript",
             "id": "46a60438-5cfc-4bbe-b18d-f15a15b9bd89",
-            "path": "99-system/scripts/capture-from-url.js",
+            "path": "system/scripts/capture-from-url.js",
             "settings": {}
           }
         ]
@@ -74,7 +74,7 @@
       "name": "Memoria: write claim note",
       "type": "Template",
       "command": true,
-      "templatePath": "99-system/templates/claim-note.md",
+      "templatePath": "system/templates/claim.md",
       "fileNameFormat": {
         "enabled": true,
         "format": "{{VALUE:claim title}}"
@@ -82,7 +82,7 @@
       "folder": {
         "enabled": true,
         "folders": [
-          "30-synthesis/01-claims"
+          "notes/claims"
         ],
         "chooseWhenCreatingNote": false,
         "createInSameFolderAsActiveFile": false,
@@ -98,256 +98,6 @@
       },
       "fileExistsBehavior": {
         "kind": "prompt"
-      }
-    },
-    {
-      "id": "e4bb809f-db7f-439f-9f79-9419dbba3552",
-      "name": "Memoria: scaffold code note",
-      "type": "Template",
-      "command": true,
-      "templatePath": "99-system/templates/code-note.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:code-note title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "40-workbench"
-        ],
-        "chooseWhenCreatingNote": true,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": true
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
-      }
-    },
-    {
-      "id": "11111111-1111-4111-8111-111111111111",
-      "name": "Memoria: write MOC",
-      "type": "Template",
-      "command": true,
-      "templatePath": "99-system/templates/moc.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:moc title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "30-synthesis/03-moc"
-        ],
-        "chooseWhenCreatingNote": false,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": false
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
-      }
-    },
-    {
-      "id": "22222222-2222-4222-8222-222222222222",
-      "name": "Memoria: scaffold canvas",
-      "type": "Template",
-      "command": true,
-      "templatePath": "99-system/templates/canvas.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:canvas title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "40-workbench"
-        ],
-        "chooseWhenCreatingNote": true,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": true
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
-      }
-    },
-    {
-      "id": "33333333-3333-4333-8333-333333333333",
-      "name": "Memoria: write draft",
-      "type": "Template",
-      "command": true,
-      "templatePath": "99-system/templates/draft.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:draft title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "40-workbench"
-        ],
-        "chooseWhenCreatingNote": true,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": true
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
-      }
-    },
-    {
-      "id": "44444444-4444-4444-8444-444444444444",
-      "name": "Memoria: write project note",
-      "type": "Template",
-      "command": true,
-      "templatePath": "99-system/templates/project-note.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:project title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "40-workbench"
-        ],
-        "chooseWhenCreatingNote": true,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": true
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
-      }
-    },
-    {
-      "id": "d099d928-847e-4c18-ae19-4ae61471f3ef",
-      "name": "Memoria: lint this note",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: lint this note",
-        "id": "d2a36144-a889-4c70-ac03-c6caa45f85e2",
-        "commands": [
-          {
-            "name": "lint-this-note",
-            "type": "UserScript",
-            "id": "01522e65-70a0-4b87-ac59-295ed66a8d42",
-            "path": "99-system/scripts/lint-this-note.js",
-            "settings": {}
-          }
-        ]
-      }
-    },
-    {
-      "id": "62a40a2f-3513-4ccd-886c-9c123e9a3868",
-      "name": "Memoria: new project",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: new project",
-        "id": "6ca168b6-e05f-4ca1-8dfa-5f9bcd34c5d8",
-        "commands": [
-          {
-            "name": "new-project",
-            "type": "UserScript",
-            "id": "5deae62c-7b42-45c4-b51a-644b16f29df8",
-            "path": "99-system/scripts/new-project.js",
-            "settings": {}
-          }
-        ]
-      }
-    },
-    {
-      "id": "71f04f90-6d9b-48a3-8eeb-a3fddaaa2841",
-      "name": "Memoria: scope this project",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: scope this project",
-        "id": "c985e5e0-65ca-4954-af9d-73d663de59a1",
-        "commands": [
-          {
-            "name": "scope-this-project",
-            "type": "UserScript",
-            "id": "5323475f-48a1-4e63-aa0c-18a9c62e5ae1",
-            "path": "99-system/scripts/scope-this-project.js",
-            "settings": {}
-          }
-        ]
-      }
-    },
-    {
-      "id": "2702a2a1-3938-4b36-bb94-b909d98c4db9",
-      "name": "Memoria: frame this section",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: frame this section",
-        "id": "5901b550-3a13-4cc6-bddc-5bf22fbb49b4",
-        "commands": [
-          {
-            "name": "frame-this-section",
-            "type": "UserScript",
-            "id": "ed3948ec-e96f-40f7-b6f9-111d208f4ce1",
-            "path": "99-system/scripts/frame-this-section.js",
-            "settings": {}
-          }
-        ]
-      }
-    },
-    {
-      "id": "8df2ed68-ce29-4370-837a-8c363fd53d1e",
-      "name": "Memoria: verify this draft",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: verify this draft",
-        "id": "447dd532-6c3f-4f84-be5f-96c85d58c96d",
-        "commands": [
-          {
-            "name": "verify-this-draft",
-            "type": "UserScript",
-            "id": "2a9c11eb-812d-43b0-a7ca-e312f82402b9",
-            "path": "99-system/scripts/verify-this-draft.js",
-            "settings": {}
-          }
-        ]
       }
     }
   ],

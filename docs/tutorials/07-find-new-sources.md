@@ -3,163 +3,85 @@ title: "Tutorial 07: Find new sources"
 parent: Tutorials
 ---
 
-
 # Tutorial 07: Find new sources
 
-**You will end with:** a candidates queue with 5+ surfaced papers, at least one of them added to Zotero, ingested as a paper-note, and ready to classify.
+**You will end with:** a discovery run delegated through the co-PI, a queue of honest candidate cards judged keep-or-skip, and new Catalog entries you didn't know to look for.
 
 **Time:** 25–35 minutes.
 
-**You will use:** WSL2 terminal (Hermes CLI) and Obsidian.
+**You will use:** the co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 04](04-build-a-reading-batch.md) complete. At least three classified paper-notes in your vault to use as seeds.
+**Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — a few Catalog entries and source notes give discovery something to compare against.
 
 ---
 
 ## Why this tutorial
 
-Tutorials 03 and 04 showed you how to bring papers *you already knew about* into the vault. This tutorial shows the other direction: letting the system surface papers you haven't encountered yet, based on what's already there. This closes the knowledge cycle — the vault grows by accumulation, not just by what you happen to come across.
-
-There are two complementary discovery paths. You'll use both:
-
-- **Forward citations** — papers that *cite* one of your existing papers (what built on it)
-- **Concept search** — papers matching a research question you phrase in your own words
+Tutorials 03 and 04 brought in papers *you already knew about*. This is the other direction: the system surfaces papers you haven't met, grounded in what your vault already holds. You ran one targeted form of this in Tutorial 06 when a gap card became a discovery task; here you drive it directly.
 
 ---
 
-## Step 1 — Choose a seed paper
+## Step 1 — Ask the co-PI
 
-Open `20-sources/01-papers/` in Obsidian. Pick a paper-note that's central to your current focus — well-classified, probably the most-linked one you have. Note its citekey (the filename without `.md`).
+Open the co-PI pane and name the need in your own words:
 
----
+> "Find sources on just-in-time interventions for physical activity — what am I missing?"
 
-## Step 2 — Start the Librarian's find skill
-
-Open WSL2 (or your terminal on Linux):
-
-```bash
-hermes -p memoria-librarian chat -s find
-```
-
-The `-s find` flag loads the discovery skill. Without it the Librarian answers questions about existing vault contents rather than running searches.
+Phrase it as a research question, not keywords. Seed it however helps: "papers that build on `<citekey>`", "recent work that disagrees with my receptivity claims", "the foundational papers I skipped."
 
 ---
 
-## Step 3 — Run a forward citation search
+## Step 2 — What happens behind the pane
 
-Inside the session:
+The co-PI delegates a **`catalog`** task to the Librarian. The Librarian searches through the **`paper_search`** MCP — scholarly discovery across 20+ databases — and compares hits against your Catalog, so papers you already hold are not resurfaced ([The Librarian](../explanation/profiles/librarian.md)).
 
-```text
-/find --source <your-citekey> --depth 1
-```
-
-Replace `<your-citekey>` with the citekey from Step 1.
-
-**What happens:** the Librarian queries OpenAlex for papers that cite your seed. At `--depth 1` it returns first-order citations only — papers one hop away. This typically surfaces 20–80 candidates depending on how much your seed paper has been cited.
-
-Watch the output. The Librarian scores each found paper for novelty against your existing vault (papers already in your notes are de-prioritized) and writes lightweight candidate notes to `10-inbox/03-candidates/`.
+Its posture is *faithful and generous*: include liberally, represent accurately, and let your gate filter. The cost of an over-inclusive candidate is one decision of yours; the cost of a missed source is invisible. One principle keeps the generosity from becoming an echo chamber: the **diversity reserve** — at least 20% of intake is reserved for serendipitous sources the ranker didn't choose, so the corpus never becomes a monoculture of what you already believe.
 
 ---
 
-## Step 4 — Run a concept search
+## Step 3 — Judge the candidates
 
-Still inside the same session:
-
-```text
-/find --query "your research question here" --limit 15
-```
-
-Write a short phrase describing a gap you want to fill. Use your own words — not paper titles, not keywords from your frontmatter. Examples:
-
-- `"just-in-time interventions for physical activity"`
-- `"receptivity prediction using context sensing"`
-- `"longitudinal knowledge graph construction"`
-
-The Librarian rewrites your query, runs hybrid retrieval (semantic + keyword against OpenAlex and Semantic Scholar), and adds more candidates.
-
-You'll see different papers than the citation search returned — concept search finds papers that discuss the same ideas even if they never cite your seed.
-
-After both searches complete:
-
-```text
-exit
-```
-
----
-
-## Step 5 — Review the candidates queue
-
-Open `10-inbox/03-candidates/` in Obsidian. Each candidate note contains:
-
-- **Title and abstract snippet** — what the paper is about
-- **Relevance signal** — why the Librarian surfaced it (cites seed / cited by seed / concept match)
-- **Novelty signal** — whether the paper introduces constructs your vault doesn't have yet
-
-You don't have to read all of them now. Work through the 5–10 that look most relevant.
-
----
-
-## Step 6 — Triage: include or exclude each candidate
-
-For each candidate you review, make one decision.
-
-**Include — worth reading and ingesting:**
-1. Open the paper in a browser. The candidate note has a DOI or URL.
-2. Add it to Zotero using the browser connector or by dragging the PDF.
-3. Pin the citekey immediately: right-click the Zotero item → **Better BibTeX → Pin BibTeX key**. Pin before doing anything else — an unpinned key can drift if you edit metadata later.
-4. Wait ~60 seconds for Better BibTeX's auto-export to update `memoria.bib`.
-5. Delete the candidate note — it's been replaced by a real source about to be ingested.
-
-**Exclude — not relevant, or already covered:**
-Add to the candidate note's frontmatter:
+**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body ([The honesty card](../explanation/kanban-board/card-schema.md)):
 
 ```yaml
-excluded: true
-reason: "Already covered by <citekey> — same finding."
+action: "Catalog this paper and queue it for reading"
+argument_for: "Directly tests the timing mechanism your three receptivity claims assume."
+argument_against: "N=23, single lab; may not generalize beyond students."
+what_tipped_it: "It's the only experimental test of the assumption in your corpus."
+certainty: likely
 ```
 
-Keep the note in place. The Linter tracks exclusion coverage; an empty `reason` field is flagged.
+There is no verdict field — the card existing *is* the recommendation, so the verdict would be noise. Read `argument_against` and `certainty` first; they're what make this a real decision instead of a rubber stamp. Then, as one batch sitting (Tutorial 04's discipline):
 
-Don't leave candidates undecided. The weekly review surfaces the count of candidates older than 7 days.
+- **Keep:** the ingest engine builds the Catalog entity and the paper joins your reading queue — the Tutorial 03 flow from here.
+- **Skip:** set the card to `lifecycle: archived`. Skipping generously offered candidates is the system working, not failing.
 
 ---
 
-## Step 7 — Ingest the first included paper
+## Step 4 — Make it a habit
 
-For the first paper you added to Zotero in Step 6:
+Discovery isn't a one-off run; it's the intake side of the loop you closed in Tutorial 06:
 
-In Obsidian, with the Zotero item selected, `Cmd/Ctrl+P` → **Memoria: capture from Zotero selection**.
+- Run it **when synthesis stalls** — a hub that won't grow, a claim with one lonely source.
+- Run it **from gaps** — every `gap` card you agree with is a pre-written discovery prompt.
+- Keep your **research focus** current (`research-focus.md` at the vault root) — the Librarian reads it to aim discovery.
 
-Open `00-meta/01-dashboards/reading-pipeline.md`. Within a minute, your paper appears with `lifecycle: proposed`.
-
-This is the same ingest flow from Tutorial 03. The paper-note is now in your vault, ready to classify and discuss.
+As the corpus grows, comparison gets sharper: discovery surfaces less of what you have and more of what you lack.
 
 ---
 
 ## What you have
 
-- `10-inbox/03-candidates/` — new candidates with relevance signals, each either excluded (with a reason) or deleted (because ingested)
-- At least one paper-note in `20-sources/01-papers/` with `lifecycle: proposed`
-- A live sense of what the Librarian's discovery loop surfaces — not papers you searched for, but papers that connect to what you already know
+- A discovery run from a plain-language question — no search syntax, no terminal
+- A judged candidate queue: kept papers in the Catalog and reading queue, skips archived with a clear conscience
+- The complete v0.1.1 loop in hand: capture → catalog → read → distill → map → verify → discover → repeat
 
 ---
 
-## What you learned
+## Where to go from here
 
-The find workflow changes how the vault grows. Instead of importing papers you already knew about, you're letting the citation graph and semantic similarity pull in papers you didn't know to look for. As your corpus grows, the novelty signal becomes more discriminating — a richer vault means the Librarian can better distinguish what you need from what you already have.
-
-Concept searches improve with practice. The more specific your query, the less noise in the candidates queue.
+You've completed the tutorial sequence. The [How-to guides](../how-to-guides/README.md) cover each recurring task in more depth — and [Run the weekly review](../how-to-guides/curate/run-the-weekly-review.md) is the Friday ritual that keeps the queues honest. The [Reference](../reference/README.md) section is where you look up the exact field, command, or schema.
 
 ---
 
-## What's next
-
-Classify the new paper-note: [Classify a source](../how-to-guides/compile/classify-a-source.md).
-
-Process outstanding candidates as part of your Friday ritual: [Run the weekly review](../how-to-guides/curate/run-the-weekly-review.md).
-
-You've completed the tutorial sequence. The how-to guides cover every recurring task from here — see [How-to guides](../how-to-guides/README.md).
-
----
-
-← [Tutorial 06: Verify and address a gap](06-verify-and-address-gaps.md)
+← [Tutorial 06: Verify and address gaps](06-verify-and-address-gaps.md)
