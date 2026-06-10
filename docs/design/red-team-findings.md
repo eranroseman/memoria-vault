@@ -70,16 +70,26 @@ nav_exclude: true
 
 ## Open decisions (options + pros/cons)
 
-### 1 — The gate model (automation bias) · Theme A, contradictions 1–2
+### 1 — The gate model (automation bias) · Theme A, contradictions 1–2 — **RESOLVED (D49)**
 
-| Option | Pros | Cons |
-|---|---|---|
-| **A. Keep "ship the verdict"** (D22 status quo) | simplest; full transparency | induces automation bias — a polished verdict gets *less* scrutiny; contradicts D35 |
-| **B. Blind-first for the strongest gates** — glance shows action + uncertainty + rebuttal; reveal the agent's verdict only after the PI logs a lean | defeats anchoring; strongest protection where it matters (certify, re-adjudicate) | more friction/slower; needs UI support; may annoy a confident PI |
-| **C. Forced-rebuttal-expansion** (D35) — keep the verdict but require expanding reasons-against to clear | lighter than B; already half-specified | expanding ≠ reading; a tired PI expands + accepts anyway |
-| **D. Attention instrumentation** — log time-on-gate / expand-accept latency / accept-rate to `fleet-health`; sample blind re-reviews | makes rubber-stamping *measurable*; composes with A/B/C | detects, doesn't prevent; mild self-surveillance |
+The original options rested on a false premise: **for a proposal the verdict is a given** —
+the agent surfaced the item because it recommends it, so "accept" carries no information.
+"Ship the verdict" (D22) is vacuous, and "blind-first on the verdict" hides a foregone
+conclusion. **Resolution — honesty is the guard.** The proposal card presents, symmetrically:
 
-*Recommendation:* **B for the strongest gates + D as the cross-cutting measure**, C as the everyday default.
+| Field | |
+|---|---|
+| **Action** | what you'd be accepting |
+| **Argument for** | the case to accept |
+| **Argument against** | the agent's honest self-rebuttal — the strongest reason to reject |
+| **What tipped it** | why *for* outweighed *against* (the deciding reason) |
+| **Certainty** | calibrated confidence (3-level) — the loudness signal |
+
+No verdict line (it's implied). The **against-case + certainty** are the real
+anti-automation-bias levers. **Exception:** verification / adjudication items
+(`clean`/`issues-found`/`inconclusive`; near-tie same/different/unsure) *do* carry a
+non-given verdict — they **lead with the finding**. Keep **attention instrumentation**
+(time-on-gate, accept-rate; sampled re-reviews) regardless, so the gate is measurable.
 
 ### 2 — Write-time integrity gate vs cron/CI monitor · Theme A, data #1
 

@@ -503,8 +503,9 @@ lintable — *not* `.memoria/`, which is hidden runtime).
 Every place the PI acts is one of **two kinds**, and they need different Inbox items:
 
 - **Approval gate** — the PI reviews *agent-produced output* and accepts/rejects.
-  Rubber-stamp risk is high, so the item must carry **reasoning + verdict** (§8), never a
-  bare "OK?".
+  Rubber-stamp risk is high, so the item must carry **the argument for, the argument
+  against, what tipped it, and the certainty** (§8) — not a bare verdict (for a proposal
+  the verdict is a given).
 - **Work prompt** — the agent signals it's *time for the PI's own thinking/writing*.
   Not an approval; the item is a **rich nudge** with the material to start.
 
@@ -532,11 +533,16 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
 
 ## 8. Design guardrails
 
-- **Decision transparency (the primary guardrail).** Assume anything promoted to the
-  PI *will* be approved — so the strongest guard is to hand the PI the **reasoning:
-  the pros, the cons, and the verdict**, so they judge the *process*, not just the output.
+- **Honesty — the primary guardrail.** Assume anything promoted to the PI *will* be
+  approved (for a *proposal* the "accept" verdict is a **given** — the agent surfaced it
+  because it recommends it). So the strongest guard is **honesty**: hand the PI the
+  **argument for · the argument against · what tipped it · the certainty level**, presented
+  symmetrically, so they judge the *argument*, not a foregone verdict. The against-case and
+  the certainty are the real anti-automation-bias levers; the verdict itself is shown only
+  where it isn't a given (verification / adjudication). Pair with **attention
+  instrumentation** (time-on-gate, accept-rate → `fleet-health`) so the gate is measurable.
   And **prefer full automation over a rubber-stamp gate** — if a gate is just "click OK,"
-  automate it (audited) rather than fake a decision.
+  automate it (audited) rather than fake a decision. (D49)
 - **Calibration gate (hybrid scores only).** `writable-density` and `readiness-score` are
   **deterministic** (graph/coverage metrics — reproducible; calibration = setting
   thresholds). `candidate-rank`, `outline-score`, **and the clustering engine's parameters**
