@@ -11,11 +11,11 @@ nav_exclude: true
 
 # Native Windows vs WSL2 — platform reevaluation
 
-> **Status: exploration.** A reevaluation of the v0.2 platform rule (Windows requires
-> WSL2), prompted by Hermes leaving beta on native Windows. **Recommendation: keep WSL2
-> for v0.2; make native Windows the v0.3 direction** via an ADR superseding the WSL2-only
-> rule. The v0.2 rule in
-> [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) stays in force.
+> **Status: exploration.** A reevaluation of the platform rule (Windows requires WSL2),
+> prompted by Hermes leaving beta on native Windows. **Recommendation: keep WSL2 through the
+> v0.1.x workspace releases; make native Windows a target *after* v0.1.2** (with/after the UI
+> phase) via an ADR superseding the WSL2-only rule. The WSL2 rule in
+> [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) stays in force for now.
 
 ## The question
 
@@ -58,7 +58,7 @@ Native Windows collapses the two-OS topology into one and deletes them:
 - the `/mnt/c` Windows→WSL path translation in the ingest pipeline;
 - `windowsWslMode` in the ACP pane; the "VPS tunnel drops on WSL2 restart" failure mode.
 
-## What it would *cost* (why it's v0.3, not v0.2)
+## What it would *cost* (why it's deferred past v0.1.2)
 
 The current build is deeply WSL2-wired; a native path is a **port**, not a flag:
 
@@ -73,17 +73,17 @@ The current build is deeply WSL2-wired; a native path is a **port**, not a flag:
 
 A meaningful share of this is *deletion* (the bridge / path-translation / mirrored-network
 layers largely go away), so it is smaller than it first looks — but still too large to
-swap into a slim v0.2 late in the milestone.
+swap into the v0.1.x workspace releases.
 
 ## Recommendation
 
-- **v0.2 — keep WSL2-on-Windows** as the single supported, tested Windows path. Do not
-  re-platform now; the build is written and tested for WSL2.
-- **v0.3 — make native Windows the target**, via an **ADR that supersedes the WSL2-only
-  rule**. Justified by: both blockers have dissolved, and native Windows *removes*
+- **Through v0.1.x — keep WSL2-on-Windows** as the single supported, tested Windows path. Do
+  not re-platform now; the build is written and tested for WSL2.
+- **After v0.1.2 — make native Windows the target**, via an **ADR that supersedes the
+  WSL2-only rule**. Justified by: both blockers have dissolved, and native Windows *removes*
   fragility rather than displacing it.
 
-### What a v0.3 native-Windows ADR would touch
+### What a native-Windows ADR would touch
 
 - **Supersedes** the WSL2-only rule in
   [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) and the

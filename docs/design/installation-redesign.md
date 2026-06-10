@@ -11,11 +11,12 @@ nav_exclude: true
 
 # Installation redesign — src/ + scaffold-and-populate + a restorable golden copy
 
-> **Status: exploration (v0.3 direction).** Rework the install model so the repo ships
-> *source files*, not a live vault, and so the system can **self-heal**. Amends
-> [ADR-26](../adr/26-repo-as-install-unit.md) and the installer docs
+> **Status: exploration.** Rework the install model so the repo ships *source files*, not a
+> live vault, and so the system can **self-heal**. This is the **fresh-install delivery model
+> for the workspace releases** — foundational to **v0.1.1** onward (D52), not deferred.
+> Amends [ADR-26](../adr/26-repo-as-install-unit.md) and the installer docs
 > ([Bootstrap installer](../explanation/deployment/bootstrap-installer.md),
-> [Installer (bootstrap)](../reference/installer.md)). Not for v0.2.
+> [Installer (bootstrap)](../reference/installer.md)).
 
 ## The problem
 
@@ -71,9 +72,9 @@ installer. This is the part most worth promoting to an **ADR** (a small, sharp d
   ([Bootstrap installer](../explanation/deployment/bootstrap-installer.md),
   [Installer (bootstrap)](../reference/installer.md)) — the new flow, and Zotero moving to
   the tutorial.
-- Composes with the [native-Windows reevaluation](native-windows.md): both are
-  installer-shaped v0.3 work and should be sequenced together (the native-Windows port also
-  rewrites provisioning).
+- Related to the [native-Windows reevaluation](native-windows.md) — both reshape
+  provisioning — but sequenced apart: this fresh-install model is needed for **v0.1.1**,
+  while native Windows is a target **after v0.1.2**.
 
 ## Open / to decide
 
