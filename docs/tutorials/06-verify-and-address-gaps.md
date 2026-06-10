@@ -1,152 +1,84 @@
 ---
-title: "Tutorial 06: Verify and address a gap"
+title: "Tutorial 06: Verify and address gaps"
 parent: Tutorials
 ---
 
+# Tutorial 06: Verify and address gaps
 
-# Tutorial 06: Verify and address a gap
-
-**You will end with:** one verified draft section with a complete citation trail, and your first experience of the Compose-side feedback loop — where a gap in your draft sends a signal back to the Compile-side reading queue.
+**You will end with:** an independent verification pass over your claims, the finding-first cards it raises read and acted on, and your first full turn of the compounding loop — where a gap becomes the next discovery task.
 
 **Time:** 30–45 minutes.
 
-**You will use:** Obsidian for drafting, the command palette for verification, and the board-state dashboard.
+**You will use:** the co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 05](05-start-a-writing-project.md) complete — project folder created, `CHOSEN.md` committed.
-
----
-
-## Step 1 — Create the draft file
-
-Navigate to `40-workbench/first-synthesis/04-drafts/`.
-
-Create a new file named `draft-01.md`. Open it.
+**Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the `map` task in your Inbox.
 
 ---
 
-## Step 2 — Write one section from your outline
+## Step 1 — Delegate a verify task
 
-Look at `CHOSEN.md`. Find the first section of your outline — the introduction, or the first substantive argument, depending on your framing.
+In the co-PI pane:
 
-Write 150–250 words of prose from that section. Not a perfect draft — just real sentences that make real claims. Open your claim notes in a split pane and write from what they say, in your own voice.
+> "Verify my claims on `<your-topic>` — check that each one is actually supported by its sources."
 
-Write from your notes, not from memory. If you find yourself writing something you believe but haven't noted, add a `[need to check]` marker and keep going.
+The co-PI delegates a **`verify`** task to the **Peer-reviewer** — the adversarial lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
 
-**Example prose you might write:**
-
-> Notification timing research consistently shows that receptivity varies not by notification content but by the user's current cognitive load and availability state [need to trace]. Mamykina et al. (2010) demonstrated this through a field study of patients managing chronic illness — the moments when users most needed support were reliably the moments when they had the least capacity to act on it. A more recent line of work suggests that predicted availability, rather than measured interruption, is the variable that matters...
-
-Save the file when you have at least 150 words.
+You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
 ---
 
-## Step 3 — Run verification
+## Step 2 — Read the flag cards
 
-With `draft-01.md` open:
+Findings land in the Inbox as **`flag` cards**. Unlike a candidate's honesty body, a flag is **finding-first** — here the verdict is the point ([The honesty card](../explanation/kanban-board/card-schema.md)):
 
-Run **Memoria: verify this draft** — it creates the Verifier card for the open draft. Verification also runs automatically when you **commit** the draft (the Verify hook). The terminal is the equivalent fallback — dispatch a Verifier card with `hermes -p memoria-verifier chat` and ask it to verify `draft-01.md`.
+- **`finding`** — what the check found, leading the card
+- **`agent_recommendation`** — `clean` / `inconclusive` / `issues-found`
+- **`target` / `citekey`** — what's being flagged
 
-**What happens:** A card goes to the Verifier lane. Verifier reads the draft, parses it into discrete claims, and for each claim traces back to claim notes in `30-synthesis/01-claims/` that support it.
+A `clean` flag closes nothing by itself and an `issues-found` flag changes nothing by itself — you act, the agent flags. Typical actions:
 
-This takes 1–3 minutes. Watch the board-state dashboard for the Verifier card to advance from `running` to `done`.
+- **A claim's source doesn't say what the claim says:** revise the claim, or soften it and note the weakness in its body.
+- **A citation issue:** fix the `sources` entry on the claim.
+- **Inconclusive:** decide whether it's worth your own read; archive the flag either way once decided.
 
----
-
-## Step 4 — Read the verification report
-
-Open `40-workbench/first-synthesis/05-verification/`.
-
-You'll find a verification report. It looks like this:
-
-```text
-draft-01.md verification report
-
-✓ TRACED: "receptivity varies with cognitive load" → [[receptivity-decreases-under-high-cognitive-load]]
-✓ TRACED: "Mamykina et al. (2010) field study" → [[mamykina2010sense]]
-✗ UNTRACED: "predicted availability rather than measured interruption is the key variable"
-  → No matching claim note found. Closest: [[interruption-costs-scale-with-task-depth]] (0.41 similarity, below threshold)
-
-Verdict: NEEDS REVISION — 1 untraced claim
-```
-
-The report also adds a `[!verification]` callout at the top of your draft with a summary verdict. (The human-readable `NEEDS REVISION` / `CLEAN` labels shown here correspond to the formal trace-result slugs `verify-needs-revision` / `verify-clean` in the [Glossary](../reference/glossary.md) — same states, display vs. slug.)
+Set each handled flag to `lifecycle: archived`. The Inbox converges to empty.
 
 ---
 
-## Step 5 — Soften the untraced claim
+## Step 3 — The check you never run: the retraction sweep
 
-Find the untraced claim in the report. In this example: "predicted availability rather than measured interruption is the key variable."
+One verification runs without you asking: the **retraction sweep**, wired by the installer as a cron. It refreshes the Retraction Watch dataset monthly and sweeps your Catalog DOIs against it (plus Crossref and Open Retractions); a hit raises a finding-first **`alert`** card in the Inbox ([Ingest routing](../reference/ingest.md)). Flag-don't-fix applies here too — the sweep never flips a note; you decide what a retraction means for the claims that cite it.
 
-Go to `draft-01.md`, find that sentence, and rewrite it with appropriate hedging:
-
-> "Some researchers have suggested that predicted availability, rather than measured interruption, may be the key variable — though the evidence base here is thinner."
-
-Save the file.
+Nothing to do in this step but know it's running — and never be the last to learn a source you cite was retracted.
 
 ---
 
-## Step 6 — Re-verify
+## Step 4 — Close the loop: gaps re-trigger discovery
 
-Re-run verification: **commit** the revised draft (the Verify hook re-runs), run **Memoria: verify this draft** again, or dispatch another Verifier card from the terminal.
+Now return to the **`gap` cards** — from Tutorial 05's map task, or raised by a verify pass that found a claim resting on thin evidence. A gap is a proposal ("your corpus is missing X") with the full honesty body. For each gap you agree with, hand it straight back:
 
-Wait for the new report. The verification callout at the top of the draft should now show:
+> "That gap on `<sub-topic>` is real — find sources to fill it."
 
-```text
-[!verification]
-Verdict: CLEAN — all claims traced
-```
+The co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, the next map or verify pass finds the next gap. This is **the compounding loop**: mapping finds holes → discovery fills them → verification keeps the filling honest. Each turn makes the next one better targeted — the system gets more useful as the corpus grows, not noisier.
 
-Every substantive claim in the prose now has a backing claim note.
-
----
-
-## Step 7 — Commit the draft
-
-Open Obsidian's Git panel (bottom status bar → Git icon, or `Cmd+P → Obsidian Git: Open source control`).
-
-Stage `04-drafts/draft-01.md` and `05-verification/<report-file>.md`. Write a commit message: `first draft section with verification pass`. Commit.
-
-When you commit, a git hook fires automatically and creates a Verify card on the Verifier lane as a final automated check. You can watch it on the board-state dashboard — it will quickly confirm the verification you just ran manually.
-
----
-
-## Step 8 — Meet the review gate
-
-So far every write in this tutorial landed in the workbench (`40-workbench/`), which is yours to edit freely. The moment an agent proposes a write to a **review-gated zone** — promoting a claim into the reference layer (`30-synthesis/02-reference/`) or producing a deliverable (`50-deliverables/`) — it does **not** land automatically. The card stops in the **review queue** (`done` with `review_status: requested`), and the policy MCP holds the write in `dry_run` until you approve it.
-
-To see where these land: open `home.md` — the front-door note that opens on startup — and go to the **board-state dashboard**. Any card waiting on you appears under the review-queue count. When you start promoting claims, you'll clear them here: **approve** to let the write land, **reject** to send it back as a fresh task.
-
-This is the human gate that makes Memoria safe to run unattended — agents propose, you dispose; nothing reaches synthesis or deliverables without passing through you. Full procedure when you get there: [Work the review queue](../how-to-guides/compose/work-the-review-queue.md).
+Skip the gaps you don't buy — archive them with a clear conscience. The honesty body exists so you can disagree.
 
 ---
 
 ## What you have
 
-- `40-workbench/first-synthesis/04-drafts/draft-01.md` — a verified draft section
-- `40-workbench/first-synthesis/05-verification/` — the verification report
-- A `[!verification] CLEAN` callout at the top of the draft
-- A committed revision in git
-- One untraced claim softened with appropriate hedging
+- An independent verify pass over your claims, with each flag read and acted on
+- The retraction sweep running on cron behind you
+- At least one gap turned back into a discovery task — one full turn of the loop
 
-**You've experienced the complete research loop.** Compile: you brought in papers and wrote claim notes. Compose: you scoped, framed, wrote, and verified. The verification found a gap. You addressed it.
-
-**See also:** [The Verifier](../explanation/profiles/peer-reviewer.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the Compile loop.
+> **Coming in v0.1.2:** project-level verification — drafts in `projects/` checked claim by claim against your vault before anything ships.
 
 ---
 
-## Where to go from here
+## What's next
 
-You now know the complete Memoria workflow. The daily rhythm from here is:
-
-- **Capture** fleeting thoughts when they arise (`Cmd+P → Memoria: capture fleeting`)
-- **Ingest** papers from Zotero when you add them (`Cmd+P → Memoria: capture from Zotero selection`)
-- **Classify** and **discuss** new paper-notes during reading sessions
-- **Write claim notes** after Socratic discussions
-- **Clear the review queue** (open `home.md` → board-state dashboard; approve or reject any card waiting at the gate)
-- **Run the weekly review** (open `weekly-review.md` every Friday, process link suggestions, address any Linter findings)
-
-The [how-to guides](../how-to-guides) cover individual workflows in more depth. The [reference section](../reference) is what you reach for when you need the exact name of a field or command.
+[Tutorial 07: Find new sources](07-find-new-sources.md) — the discovery side of the loop you just triggered: how candidates are found, argued, and judged.
 
 ---
 
-← [Tutorial 05: Start a writing project](05-start-a-writing-project.md) · [Tutorial 07: Find new sources](07-find-new-sources.md) →
+← [Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) · [Tutorial 07: Find new sources](07-find-new-sources.md) →

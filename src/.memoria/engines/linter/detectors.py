@@ -142,16 +142,22 @@ def relpath(vault: Path, p: Path) -> str:
 
 
 def parse_frontmatter(text: str) -> dict:
-    """Minimal YAML-frontmatter parser -- top-level scalars and inline lists.
-
-    Dependency-free on purpose so the detectors (and the self-test) run without
-    PyYAML. Handles `key: value`, `key: [a, b]`, and quoted scalars; ignores
-    nested mappings (no detector here needs them)."""
+    """YAML frontmatter parser: PyYAML when available (full fidelity — nested
+    maps and ints matter for schema validation), else the minimal hand parser
+    (top-level scalars + inline lists) so the engine stays runnable without it."""
     if not text.startswith("---"):
         return {}
     end = text.find("\n---", 3)
     if end == -1:
         return {}
+    if _schema is not None:                       # PyYAML proven importable
+        try:
+            import yaml
+
+            data = yaml.safe_load(text[3:end])
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
     fm: dict = {}
     for line in text[3:end].splitlines():
         if not line.strip() or line.lstrip().startswith("#") or ":" not in line:

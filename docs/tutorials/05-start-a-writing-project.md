@@ -1,141 +1,101 @@
 ---
-title: "Tutorial 05: Start a writing project"
+title: "Tutorial 05: Synthesize toward a writing project"
 parent: Tutorials
 ---
 
+# Tutorial 05: Synthesize toward a writing project
 
-# Tutorial 05: Start a writing project
-
-**You will end with:** a project folder at `40-workbench/first-synthesis/`, a corpus map produced by Mapper, and a committed framing — one outline you've chosen as the direction for your first piece of writing.
+**You will end with:** two or three claim notes distilled from your reading batch, a hub gathering them, and a corpus map from a delegated `map` task — the synthesis surface a writing project will stand on.
 
 **Time:** 45–60 minutes.
 
-**You will use:** Obsidian command palette, the board-state dashboard, and your project's workbench folder.
+**You will use:** Obsidian, your source notes from Tutorial 04, and the co-PI pane.
 
-**Prerequisite:** [Tutorial 04](04-build-a-reading-batch.md) complete — at least 5 classified papers and 3 linked claim notes on one topic.
+**Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
----
-
-## Step 1 — Create the project
-
-Scaffold the project in one step with **Memoria: new project** (`Cmd+P` → type `new project`) — it prompts for the title, research question, and output type, then creates `40-workbench/<slug>/` with its subfolders, the project note (`README.md`), and the Mapper scope card that produces the corpus map in Step 2. Name it `first-synthesis`. *(The narrower **Memoria: write project note** just creates the folder and note without the scope card.)*
-
-**What happens:**
-
-- A project folder is created at `40-workbench/first-synthesis/`
-- A `README.md` project-note opens inside it, from the template
-- A scope card is created on the Mapper lane queue
+> **Honest scoping:** the full project workflow — `projects/` folders, the Project workspace, briefs and outlines — ships with **v0.1.2**. The `projects/` folder in your vault is empty until then. What exists *today*, and what this tutorial teaches, is the part that matters most anyway: claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
 
 ---
 
-## Step 2 — Fill in the brief
+## Step 1 — Distill claims from your sources
 
-The `README.md` file is open. Fill in two things:
+Open the source notes from Tutorial 04 and re-read each **Worth distilling** section. Pick two or three assertions that are durable, surprising, or in tension with each other.
 
-**What you're trying to write:** One sentence. For example: "A 500-word synthesis of what we know about notification timing and user receptivity."
+For each, create a claim note in `notes/claims/` from `system/templates/claim.md`:
 
-**For whom:** One sentence. For example: "For my dissertation chapter on adaptive intervention design."
-
-That's enough. Save `README.md`.
-
----
-
-## Step 3 — Watch Mapper work
-
-Open `00-meta/01-dashboards/board-state.md`.
-
-You'll see a card on the Mapper lane with `status: ready`. Within 60 seconds, it advances to `status: running` as Mapper picks it up.
-
-Mapper is:
-
-- Reading your `README.md`
-- Searching the vault for notes relevant to the project's topic
-- Counting how many notes exist per sub-topic
-- Identifying which adjacent topics have thin coverage
-- Writing the corpus map
-
-When the card reaches `status: done`, the corpus map is ready.
-
----
-
-## Step 4 — Read the corpus map
-
-Open `40-workbench/first-synthesis/01-map/corpus-map.md`.
-
-The map shows you:
-
-- A breakdown of your corpus by sub-topic and how many notes you have on each
-- Which sub-topics have good coverage (ready to write from) and which are thin (might need more reading)
-- Adjacent topics that appear in your notes but weren't the focus of your reading
-
-Read it carefully. **Make a decision:** Is the corpus ready to write from?
-
-Look for the sub-topic with the most claim notes. If you have at least 3 claim notes on one sub-topic, proceed. If everything is thin, go back to Tutorial 04 and add more papers before continuing.
-
----
-
-## Step 5 — Request counter-outlines
-
-With `corpus-map.md` open:
-
-Run **Memoria: frame this section** (with a note in the project open) — it creates the Writer card that produces the outlines under `02-framing/`. The terminal is the equivalent fallback:
-
-```bash
-hermes -p memoria-writer chat -s counter-outline
-# then, in the session:
-/counter-outline --project first-synthesis
+```yaml
+type: claim
+lifecycle: current
+maturity: seedling
+sources: ["<citekey>"]
+topics: [<your-topic>]
+links:
+  supports: []
+  contradicts: []
 ```
 
-**What happens:** A card goes to the Writer lane with the `counter-outline` skill loaded. Writer reads your brief and corpus map, then generates 2–3 competing outlines — each one organizes the same material in a fundamentally different way.
+- **Title:** the claim itself, one falsifiable sentence, in your words — not a paper's title.
+- **Body:** the claim, the evidence (every line traces to a citekey in `sources` — the provenance guardrail), and connections in prose.
+- **`maturity: seedling`** — maturity (`seedling → budding → evergreen`) tracks *development*, never trust. A seedling isn't a doubted claim; it's a young one ([Note types](../reference/note-types.md)).
 
-Wait until the board-state dashboard shows this card reaching `status: done`.
+If two of your claims relate, say so in `links:` — `supports` or `contradicts`. The contradictions are the valuable ones.
 
----
-
-## Step 6 — Read the competing outlines
-
-Open `40-workbench/first-synthesis/02-framing/`.
-
-You'll find 2–3 outline documents. Each takes a different approach to structuring your argument. For example:
-
-- **Outline A** might be chronological: how the field's understanding of receptivity evolved
-- **Outline B** might be problem-first: start with the design problem, work backward to the evidence
-- **Outline C** might be contrast-driven: frame the whole piece as a tension between two camps
-
-Read all three. Notice what each one forces you to emphasize and what it forces you to hide.
+`notes/claims/` is a **review-gated zone**: agents can only *propose* writes there ([Why promotion is gated](../explanation/knowledge/promotion-model.md)). You write claims directly — they're yours.
 
 ---
 
-## Step 7 — Commit to one framing
+## Step 2 — Gather them under a hub
 
-Choose the outline that best serves your brief.
+When a topic has a few claims, give it a navigational home. Create a hub in `notes/hubs/` from `system/templates/hub.md`:
 
-Create a new file in `40-workbench/first-synthesis/02-framing/` named `CHOSEN.md`. Copy your chosen outline into it.
+```yaml
+type: hub
+lifecycle: current
+topic: <your-topic>
+members: []
+```
 
-At the top of `CHOSEN.md`, add one sentence explaining why you chose this framing over the others.
+List your claim notes (and key sources) as `members`, and write a few lines of orientation in the body: what this cluster is about, what's settled, what's still fighting. A hub is the renamed MOC — the synthesis surface a future draft starts from. Like claims, hubs are review-gated and PI-authored.
 
-Save `CHOSEN.md`.
+---
+
+## Step 3 — Delegate a map task
+
+Now ask the system what your corpus actually covers. In the co-PI pane:
+
+> "Map my corpus on `<your-topic>` — what do I have good coverage on, and where is it thin?"
+
+The co-PI delegates a **`map`** task to the Librarian, whose map lane produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
+
+Read the coverage view and decide: is any cluster dense enough to write from (a hub with several mutually linked claims is the tell)? Keep the gap cards — Tutorial 06 closes the loop on them.
+
+---
+
+## Step 4 — A preview of v0.1.2
+
+When the Project release lands, the path from here continues inside `projects/`:
+
+1. **Brief** — you state what you're writing and for whom.
+2. **Relevance scan** — the map lane scopes your corpus against the brief.
+3. **Canvas** — argument mapping on the claims you just wrote.
+4. **Outline** — competing framings to choose between, drafted by the Writer.
+
+Nothing you did in this tutorial is throwaway — claims and hubs are exactly the inputs that workflow consumes. Until then, draft in any editor you like, from your hub.
 
 ---
 
 ## What you have
 
-- `40-workbench/first-synthesis/` — your project folder
-- `40-workbench/first-synthesis/README.md` — project note (`type: project-note`)
-- `40-workbench/first-synthesis/01-map/corpus-map.md` — Mapper's view of your corpus
-- `40-workbench/first-synthesis/02-framing/CHOSEN.md` — your committed outline
-- Board-state dashboard: scope and framing cards archived as complete
-
-**Your corpus is scoped. Your framing is committed. The next step is prose.**
-
-**See also:** [The Mapper](../explanation/profiles/librarian.md) — how scope-project builds a corpus map and what the clustering and gap signals mean.
+- 2–3 claim notes in `notes/claims/` — falsifiable, sourced, `maturity: seedling`
+- A hub in `notes/hubs/` gathering the cluster
+- A corpus/coverage read from the `map` lane, and gap cards marking the thin spots
 
 ---
 
 ## What's next
 
-[Tutorial 06 — Verify and address a gap](06-verify-and-address-gaps.md): write one section of prose from your outline, run verification to check your citation trail, and address a gap when verification finds a claim without backing.
+[Tutorial 06: Verify and address gaps](06-verify-and-address-gaps.md) — put your claims in front of the adversarial lane, and watch gaps feed discovery.
 
 ---
 
-← [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) · [Tutorial 06: Verify and address a gap](06-verify-and-address-gaps.md) →
+← [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) · [Tutorial 06: Verify and address gaps](06-verify-and-address-gaps.md) →

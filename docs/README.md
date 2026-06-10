@@ -8,7 +8,7 @@ permalink: /
 
 # Memoria
 
-A research operating system for a single researcher — seven AI agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
+A research operating system for a single researcher (the PI) — a co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
 **[Read about what Memoria is](explanation/overview/what-memoria-is.md)**, what it's not, and why it exists. Everything else builds on this.
 If you want a guided first experience, see [Tutorials](tutorials).
@@ -39,11 +39,11 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 
 | Tutorial                                                                 | What you'll do                                           | You'll end with                                     |
 | ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------- |
-| [01 — Set up from zero](tutorials/01-set-up-from-zero.md)                | Clone the vault, run the installer, wire Zotero          | A working vault, all plugins, all seven profiles    |
+| [01 — Set up from zero](tutorials/01-set-up-from-zero.md)                | Run the installer, finish the setup steps                | A working vault, all plugins, the five profiles     |
 | [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a thought, discuss it, write a claim note        | One permanent claim note in your own words          |
-| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Ingest one Zotero paper, classify it, distill one claim  | One paper-note and one linked claim-note            |
+| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Wire Zotero (optional), ingest one paper, judge its card | A Catalog entity, a candidate card, a source note   |
 | [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ingest five papers, write three linked claim notes       | Your first connected knowledge cluster              |
-| [05 — Start a writing project](tutorials/05-start-a-writing-project.md)  | Read the corpus map, commit a framing                    | A project folder with map and chosen outline        |
+| [05 — Start a writing project](tutorials/05-start-a-writing-project.md)  | Synthesize claims + hubs; delegate a map task            | Coverage views over your corpus (workflow: v0.1.2)  |
 | [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Write a draft paragraph, run verification, close the gap | A verified draft with a complete citation trail     |
 | [07 — Find new sources](tutorials/07-find-new-sources.md)                | Run forward-citation search, triage candidates           | A populated candidates queue and one new paper-note |
 
@@ -68,17 +68,17 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 
 ---
 
-## The seven agents
+## The agents
 
-| Agent         | What it does                                                                 |
-| ------------- | ---------------------------------------------------------------------------- |
-| **Librarian** | Fetches sources, enriches metadata, proposes classifications — intake layer  |
-| **Mapper**    | Produces corpus maps, gap reports, and cluster maps — read-only              |
-| **Socratic**  | Asks questions to sharpen your thinking — architecturally write-denied       |
-| **Writer**    | Turns evidence into draft prose — lands in review, never direct to canonical |
-| **Verifier**  | Traces claims to sources, flags retractions, catches near-duplicates         |
-| **Coder**     | Scaffolds handoffs to external coding agents (Claude Code, Aider)            |
-| **Linter**    | Zero-LLM structural validator — frontmatter, links, schema, audit logs       |
+| Agent             | What it does                                                                  |
+| ----------------- | ----------------------------------------------------------------------------- |
+| **co-PI**         | The one agent you converse with — questions, explains, and delegates; read-only |
+| **Librarian**     | The four processing lanes (catalog · extract · link · map) — intake to corpus maps |
+| **Writer**        | Turns evidence into draft prose — lands in review, never direct to canonical  |
+| **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
+| **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert gate  |
+
+Five deterministic **engines** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
 

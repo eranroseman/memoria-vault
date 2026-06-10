@@ -21,14 +21,14 @@
   "debugMode": false,
   "nodePath": "",
   "exportSettings": {
-    "defaultFolder": "10-inbox/02-answers",
+    "defaultFolder": "projects",
     "filenameTemplate": "agent_client_{date}_{time}",
     "autoExportOnNewChat": false,
     "autoExportOnCloseChat": false,
     "openFileAfterExport": true,
     "includeImages": true,
     "imageLocation": "obsidian",
-    "imageCustomFolder": "90-assets",
+    "imageCustomFolder": ".memoria/data",
     "frontmatterTag": "agent-client"
   },
   "_wsl_note": "Set windowsWslMode: true if the agent commands above resolve through WSL on Windows. The plugin will translate Windows paths to /mnt/c/... format for the subprocess.",
@@ -43,7 +43,7 @@
     "showEmojis": true,
     "fontSize": null
   },
-  "_savedSessions_note": "Populated by the plugin as you use ACP. Human-generated state; safe to commit but periodically prune to keep data.json small. Sessions accumulate primarily from Socratic (persistent processing chats); Mapper / Writer / Verifier sessions are transient and they are usually cleared automatically.",
+  "_savedSessions_note": "After first launch the plugin appends savedSessions[] for the co-PI pane \u2014 normal and safe to commit.",
   "savedSessions": [],
   "lastUsedModels": {},
   "lastUsedModes": {},
