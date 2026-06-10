@@ -16,7 +16,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | File | What it covers |
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
-| [Note types](note-types.md) | The 17 note types: folder, template, lifecycle, promotion map |
+| [Note types](note-types.md) | The 18 note types: folder, template, lifecycle, promotion map |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, typed-relation vocabulary, MOC thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [Glossary](glossary.md) | Term definitions, alphabetical |

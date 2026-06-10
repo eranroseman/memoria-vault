@@ -6,6 +6,8 @@ Librarian worker completes (the two LLM judgments) and writes (gated):
 
     Tier-0  ingest_paper  -> identity + route + captured frontmatter
     Tier-1  resolve_merge -> S2+OpenAlex+Crossref merged metadata + ref union
+            classify      -> research_area/methodology from the OpenAlex topics
+                             (automated, audited, flag-on-ambiguity — D21/ADR-54)
             extract       -> full text (PMC / local PDF), gatekept by coherence
             link          -> entity find-or-create plan + cites edges
 
@@ -24,6 +26,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import classify
 import extract
 import ingest_paper
 import link
@@ -145,6 +148,24 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
                         + "; ".join(agr.get("disagreements", []))),
             "citekey": citekey,
         }
+
+    # D21/ADR-54: classify — AUTOMATED, AUDITED, never a gate. research_area (and a
+    # methodology facet when derivable) come from the OpenAlex topics already in the
+    # merged payload — no new network call. Clear winner applies silently; near-tie /
+    # below-floor leaves the field unset and requests ONE Inbox flag (the writing
+    # layer raises it, like the identity flag above). Each applied/flagged decision
+    # appends one audit line to system/logs/classify.jsonl.
+    c_floor, c_margin = classify.thresholds(vault)
+    cls = classify.decide(m, c_floor, c_margin)
+    if cls["status"] == "applied":
+        fm["research_area"] = cls["research_area"]
+    if cls["methodology"]:                 # deterministic from S2 pub types —
+        fm["methodology"] = cls["methodology"]  # independent of topic ambiguity
+    bundle["classify"] = cls
+    if cls["status"] == "ambiguous":
+        bundle["classify_flag_needed"] = classify.flag_payload(citekey, cls)
+    if vault is not None and cls["status"] != "no_data":
+        classify.append_audit(vault, citekey, cls, c_floor, c_margin)
 
     # local Zotero PDF from the bib `file` field — feed extraction (pdf_uri set in Tier 0)
     if not pdf_path:

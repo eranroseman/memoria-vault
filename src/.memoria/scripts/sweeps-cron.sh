@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Re-ingest sweeps cron (ADR-30). Runs the two deterministic backstops:
+# Re-ingest sweeps cron (ADR-30). Runs the deterministic backstops:
 #   (a) reconcile — capture-intake.jsonl entries with no note on disk
 #   (b) retry     — `captured` notes stuck at ingest_status: tier0
-# Each is a detector that enqueues an *idempotent* re-ingest card
+#   (c) stamp     — bare ACP chat exports in notes/fleeting/chats/ get fleeting
+#                   frontmatter (origin: chat) so they enter fleeting triage (#185)
+# (a) and (b) are detectors that enqueue an *idempotent* re-ingest card
 # (hermes kanban create --idempotency-key reingest:<citekey>); the board provides
 # serialization, dedup, and the failure circuit-breaker (the needs-human floor).
 #

@@ -4,7 +4,7 @@ parent: Setup
 nav_order: 9
 ---
 
-# Add a second vault [deferred]
+# Add a second vault
 
 Fork the starter vault for a separate project or research area, keeping it independent from your primary vault while sharing the same Hermes profiles.
 
@@ -30,7 +30,7 @@ bash scripts/install.sh --vault ~/my-second-vault
 
 # duplicate each deployed profile under a project2-* alias (its config.yaml already
 # has the substituted second-vault path):
-for role in librarian mapper socratic writer verifier coder linter; do
+for role in copi librarian writer peer-reviewer engineer; do
   hermes profile install ~/.hermes/profiles/memoria-$role --alias project2-$role --force --yes
 done
 
@@ -38,7 +38,7 @@ done
 bash scripts/install.sh --profiles-only --vault ~/your-primary-vault
 ```
 
-This leaves `project2-librarian`, `project2-linter`, etc. pointing at the second vault while `memoria-*` keep pointing at your primary.
+This leaves `project2-copi`, `project2-librarian`, etc. pointing at the second vault while `memoria-*` keep pointing at your primary.
 
 > **Note.** A built-in `--alias-prefix` flag is a future enhancement; until then this manual duplication is the supported route.
 
@@ -59,7 +59,7 @@ Each vault's Obsidian instance runs its own Local REST API plugin, and two insta
 
 **6. Set up Zotero for the second vault.**
 
-Add a second auto-export in Better BibTeX pointing at `my-second-vault/vault/.memoria/memoria.bib`. You can share the same Zotero library or create a separate collection.
+Add a second auto-export in Better BibTeX pointing at `my-second-vault/.memoria/memoria.bib`. You can share the same Zotero library or create a separate collection.
 
 ## Verify
 
@@ -76,7 +76,7 @@ hermes -p project2-librarian chat -s obsidian-paper-note
 /obsidian-paper-note --source <citekey> --dry-run
 ```
 
-The dry-run output should show paths inside `my-second-vault/vault/`, not your primary vault.
+The dry-run output should show paths inside `my-second-vault/`, not your primary vault.
 
 ## What collides when two vaults run at once
 

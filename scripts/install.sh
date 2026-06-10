@@ -278,6 +278,7 @@ SKELETON_DIRS=(
   catalog/datasets
   catalog/repositories
   notes/fleeting
+  notes/fleeting/chats
   notes/source
   notes/claims
   notes/hubs

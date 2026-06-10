@@ -12,6 +12,8 @@ aggregator and any publication analysis read (see docs/reference/telemetry.md):
   system/logs/board-transitions.jsonl  per-card state/review transitions (time-series)
   system/logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
   system/logs/cost.jsonl          API spend + token counts per card at completion
+  inbox/work-prompt-review-*.md   ONE review prompt per card that reaches `done`
+                                  (the Inbox is the PI's slice of the board, ADR-51)
 
 Transitions/disposition/cost are computed by diffing this run's board against the
 previous run, cached in `system/logs/.board-state-cache.json`. Source of
@@ -32,6 +34,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from _shared import append_jsonl, now_iso, resolve_vault, safe_filename
+
+# The shared Inbox card writer (ADR-51) — engines and lanes never invent card formats.
+_LIB_DIR = Path(__file__).resolve().parent.parent / "engines" / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+import inbox  # noqa: E402
 
 BOARD_RELDIR = "system/board"
 SNAPSHOT_RELPATH = "system/logs/board-state.jsonl"
@@ -293,14 +301,87 @@ def export_events(vault: Path, prev: dict, cards: list[dict]) -> dict:
     return {k: len(v) for k, v in ev.items()}
 
 
+# --------------------------------------------------------------------------- #
+# Inbox review prompts -- a card reaching `done` is lane work awaiting the PI
+# --------------------------------------------------------------------------- #
+REVIEW_PROMPT_FRESH_SECONDS = 24 * 3600  # bootstrap-guard window for first-seen cards
+
+
+def _recently_done(c: dict, now: datetime | None = None) -> bool:
+    """True when the card's last_updated falls inside the bootstrap window.
+    A missing/unparseable timestamp counts as stale -- never flood the Inbox."""
+    raw = c.get("last_updated", "")
+    if not raw:
+        return False
+    try:
+        ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    return (now - ts).total_seconds() <= REVIEW_PROMPT_FRESH_SECONDS
+
+
+def newly_done(prev: dict, cards: list[dict]) -> list[dict]:
+    """The raw cards that should raise a review prompt this run: cards observed
+    transitioning into `done`, plus -- bootstrap guard -- cards first seen
+    already `done` only when they finished within the last 24h, so the first
+    run after install never floods the Inbox with the board's history."""
+    out: list[dict] = []
+    for raw in cards:
+        c = normalize(raw)
+        if c["status"] != "done":
+            continue
+        before = prev.get(c["task_id"])
+        if before is not None:
+            if before.get("status") == "done":
+                continue   # prompt already raised on the transition into done
+        elif not _recently_done(c):
+            continue       # first sight of an old done card -- seed cache silently
+        out.append(raw)
+    return out
+
+
+def export_review_prompts(vault: Path, prev: dict, cards: list[dict]) -> int:
+    """Raise ONE `work-prompt` card in inbox/ per card newly arrived in `done`
+    (the Inbox is the PI's single slice of the board -- ADR-51). Idempotent
+    twice over: the state-cache diff only fires on the transition, and the
+    filename derives from the card id, so the same done card never produces
+    two prompts across cron runs. Returns the number of prompts written."""
+    written = 0
+    for raw in newly_done(prev, cards):
+        c = normalize(raw)
+        outputs = _metadata(raw).get("expected_outputs", "")
+        if isinstance(outputs, (list, tuple)):
+            outputs = ", ".join(str(o) for o in outputs)
+        path = inbox.write_work_prompt(
+            vault,
+            title=f"Review: {c['title']}",
+            action="Review the work product, then accept it or archive the board card.",
+            what_happened=f'Lane {c["assignee"]} finished "{c["title"]}" '
+                          f'(card {c["task_id"]}).',
+            raised_by="board-export",
+            target=str(outputs or ""),
+            task_id=c["task_id"],
+            lane=c["assignee"],
+            dedupe_slug=f"review-{c['task_id']}",
+        )
+        if path is not None:
+            written += 1
+    return written
+
+
 def run_export(vault: Path, from_json: Path | None = None) -> dict:
     cards = load_cards(from_json)
     prev = load_state_cache(vault)
     events = export_events(vault, prev, cards)   # diff BEFORE the cache is overwritten
+    prompts = export_review_prompts(vault, prev, cards)
     exported = export_markdown(vault, cards)
     snap = export_snapshot(vault, cards)
     save_state_cache(vault, cards)
-    return {"exported_cards": len(exported), "snapshot": snap["totals"], "events": events}
+    return {"exported_cards": len(exported), "snapshot": snap["totals"],
+            "events": events, "review_prompts": prompts}
 
 
 # --------------------------------------------------------------------------- #

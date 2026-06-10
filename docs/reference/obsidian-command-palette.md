@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian capture commands, registered by QuickAdd (`Cmd-P → Memoria: …`). In v0.1.1 this surface is deliberately small: **the co-PI conversation is the primary route for agent tasks.** Instead of a palette command per task, you tell the co-PI what you want; it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)). The palette keeps only the capture entry points that must fire from inside the editor.
+The `Memoria:` command-palette surface — the in-Obsidian capture commands, registered by QuickAdd (`Cmd-P → Memoria: …`). In v0.1.1 this surface is deliberately small: **the co-PI conversation is the primary route for agent tasks.** Instead of a palette command per task, you tell the co-PI what you want; it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)). The palette keeps the capture entry points that must fire from inside the editor, plus two thin shims on the delegation model itself (ADR-48): a manual delegate for when you already know the lane, and the inbox resolve action.
 
 ---
 
@@ -17,6 +17,8 @@ The `Memoria:` command-palette surface — the in-Obsidian capture commands, reg
 | `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
 | `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → [src/system/scripts/capture-from-url.js](../../src/system/scripts/capture-from-url.js) → `hermes kanban create` |
 | `Memoria: capture from Zotero selection` | A capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → [src/system/scripts/capture-from-zotero.js](../../src/system/scripts/capture-from-zotero.js) (Better BibTeX CAYW) → `hermes kanban create` |
+| `Memoria: delegate a task` | A card on the chosen lane (catalog/extract/link/map → Librarian, draft → Writer, verify → Peer-reviewer, code → Engineer) with the goal you type — the palette twin of asking the co-PI, for when you already know the lane. | QuickAdd Macro → [src/system/scripts/delegate-task.js](../../src/system/scripts/delegate-task.js) → `hermes kanban create` |
+| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your verdict (current = accept, retracted = reject, or archived) and `resolved:` stamped with today's date. | QuickAdd Macro → [src/system/scripts/resolve-inbox-card.js](../../src/system/scripts/resolve-inbox-card.js) (pure Obsidian API — no shelling) |
 
 Template-based note creation (fleeting, claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md).
 

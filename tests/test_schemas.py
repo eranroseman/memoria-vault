@@ -3,13 +3,13 @@
 import schema
 
 
-def test_all_seventeen_types_load():
+def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 17
+    assert len(types) == 18
     expected = {
         "paper", "person", "organization", "venue", "dataset", "repository",
         "fleeting", "source", "claim", "hub", "index",
-        "candidate", "gap", "flag", "alert", "pattern", "eval-task",
+        "candidate", "gap", "flag", "alert", "work-prompt", "pattern", "eval-task",
     }
     assert set(types) == expected
 
@@ -97,6 +97,12 @@ def test_honesty_card_fields_on_proposals():
         assert "finding" not in req  # no verdict line on proposals (D49)
     for verification in ("flag", "alert"):
         assert "finding" in types[verification]["required"]
+    # work prompts: action + what happened + where to look, never a verdict
+    wp = types["work-prompt"]
+    assert "action" in wp["required"] and "what_happened" in wp["required"]
+    assert "agent_recommendation" not in wp["required"]
+    assert "agent_recommendation" not in (wp.get("optional") or {})
+    assert set(wp["required_any"]) == {"target", "task_id"}
 
 
 def test_calibration_loads_with_confidence_floor():

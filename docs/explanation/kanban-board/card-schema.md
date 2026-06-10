@@ -44,6 +44,10 @@ A `flag` (a verification or integrity issue) and an `alert` (a drift or retracti
 
 `agent_recommendation` is the soft 3-tier verdict ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — meaningful here precisely because it is *not* implied, and still never a gate: a `clean` flag closes nothing on its own.
 
+## Work prompts: work-prompt
+
+A `work-prompt` is the third shape: not a proposal to judge and not a finding to adjudicate, but **work waiting on the PI** — the board export raises one when a worker card reaches `done`, and a batch worklist surfaces as one aggregate prompt. Like proposals, it carries **no verdict** (see [the work-prompt schema](../../../src/.memoria/schemas/types/work-prompt.yaml)): `action` (what to do — e.g. review, then accept or archive), `what_happened` (which lane finished what), and where to look (`target` output path(s) and/or the board `task_id`).
+
 ---
 
 ## Graded loudness

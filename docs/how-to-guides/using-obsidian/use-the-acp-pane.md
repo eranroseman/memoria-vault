@@ -76,6 +76,23 @@ A similarity score ≥ 0.8 from Verifier means the claim likely already exists i
 
 Do not let Socratic accumulate more than one session's worth of conversation. Long histories degrade response quality. Clear when done.
 
+## Exporting a session
+
+Sessions are captured automatically: with the shipped config, closing a chat exports the conversation as a markdown file to `notes/fleeting/chats/` (filenames start with `chat_`). You can also export mid-session via `Cmd/Ctrl+P` → **Agent Client: Export chat**.
+
+Exports are fleeting-grade raw material, and the system processes them instead of letting them rot:
+
+1. The plugin writes the transcript to `notes/fleeting/chats/` with no Memoria frontmatter.
+2. Within 15 minutes the sweeps cron stamps it with valid fleeting frontmatter (`type: fleeting`, `lifecycle: proposed`, `origin: chat`). Already-stamped files are never touched.
+3. The stamped export then appears in the fleeting dashboard (`system/dashboards/fleeting.base`) and is flagged by the stale-fleeting detector after a week — triage it like any other fleeting note: [Triage fleeting notes](../compile/triage-fleeting-notes.md).
+
+Two folders to **never** point `exportSettings.defaultFolder` at:
+
+- `inbox/` — reserved for agent-raised honesty cards (candidates, gaps, flags, alerts), not chat transcripts.
+- `projects/` — reserved and empty until v0.1.2.
+
+Auto-export fires on chat **close**, not on new chat (`autoExportOnCloseChat: true`, `autoExportOnNewChat: false`) — you get one transcript per finished session, no empty stubs.
+
 ## If the pane won't connect (Windows + WSL)
 
 On Windows, Obsidian runs natively while hermes lives in WSL, so the ACP commands must resolve **through `wsl.exe`**. Two settings make that work (Settings → **Agent Client**):

@@ -1,0 +1,155 @@
+"""L1 component tests for the classify stage (D21/ADR-54).
+
+Classification is AUTOMATED in the ingest path, AUDITED (one JSONL line per
+decision in system/logs/classify.jsonl), and never a gate: a clear winner
+applies silently, genuine ambiguity leaves the field unset and requests ONE
+Inbox flag. Offline: enrichment is stubbed with fixture payloads — no network.
+"""
+
+import json
+
+import classify
+import pipeline
+
+# --------------------------------------------------------------------------- #
+# fixtures
+# --------------------------------------------------------------------------- #
+BIB = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
+       "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n}\n")
+
+
+def _merged(topics_scored, publication_types=()):
+    """A minimal resolve_merge-shaped merged record."""
+    return {
+        "title": "A Test", "year": 2024, "venue": "J Tests", "issn": "",
+        "s2_id": "S2X", "openalex_id": "W1", "pmid": "", "pmcid": "",
+        "authors": [{"name": "Jane Doe"}], "tldr": "", "fields_of_study": [],
+        "topics": [t["name"] for t in topics_scored],
+        "topics_scored": topics_scored,
+        "publication_types": list(publication_types),
+        "references": [], "citation_count": 1,
+        "provenance": {"title": "openalex"},
+        "agreement": {"score": 1.0, "disagreements": []},
+    }
+
+
+def _topic(name, score, subfield=""):
+    return {"name": name, "score": score, "subfield": subfield,
+            "field": "F", "domain": "D"}
+
+
+def _run_pipeline(monkeypatch, vault, merged):
+    """Run the enriched pipeline offline: stub the network stages."""
+    monkeypatch.setattr(pipeline.resolve_merge, "resolve", lambda ck, bib: {
+        "citekey": ck, "ids": {}, "merged": merged,
+        "parts": {"s2": {"found": True}, "openalex": {"found": True},
+                  "crossref": {"found": False}}})
+    monkeypatch.setattr(pipeline.extract, "extract", lambda ids, pdf, email: {
+        "source": "none", "chars": 0, "degraded": True, "text": ""})
+    return pipeline.run("x2024Test", BIB, vault, enrich=True)
+
+
+def _audit_lines(vault):
+    log = vault / "system" / "logs" / "classify.jsonl"
+    if not log.is_file():
+        return []
+    return [json.loads(line) for line in
+            log.read_text(encoding="utf-8").splitlines()]
+
+
+# --------------------------------------------------------------------------- #
+# decide() — the pure decision rule
+# --------------------------------------------------------------------------- #
+def test_candidates_roll_up_to_subfield_best_score():
+    m = _merged([_topic("mHealth Apps", 0.97, "Health Informatics"),
+                 _topic("Telemonitoring", 0.91, "Health Informatics"),
+                 _topic("HCI Theory", 0.40, "Human-Computer Interaction")])
+    cands = classify.candidates(m)
+    assert cands[0] == ("Health Informatics", 0.97)  # max, not double-counted
+    assert len(cands) == 2
+
+
+def test_below_floor_is_ambiguous():
+    d = classify.decide(_merged([_topic("T", 0.30, "Area A")]),
+                        floor=0.6, margin=0.15)
+    assert d["status"] == "ambiguous" and d["research_area"] == []
+    assert "floor" in d["reason"]
+
+
+def test_methodology_facet_from_publication_types():
+    d = classify.decide(_merged([_topic("T", 0.95, "Area A")],
+                                publication_types=["JournalArticle", "Review",
+                                                   "MetaAnalysis"]))
+    assert d["methodology"] == ["review", "meta-analysis"]  # venue-ish types unmapped
+
+
+def test_flag_payload_is_honest_no_verdict():
+    d = classify.decide(_merged([_topic("T1", 0.80, "Area A"),
+                                 _topic("T2", 0.78, "Area B")]))
+    f = classify.flag_payload("x2024Test", d)
+    assert f["citekey"] == "x2024Test"
+    assert "Area A (0.80)" in f["finding"] and "Area B (0.78)" in f["finding"]
+    assert "left unset" in f["finding"]      # what was ambiguous, no verdict
+
+
+# --------------------------------------------------------------------------- #
+# the pipeline integration — applies / flags / no-ops, always audited
+# --------------------------------------------------------------------------- #
+def test_clear_winner_applies_and_audits(monkeypatch, tmp_path):
+    m = _merged([_topic("mHealth Apps", 0.97, "Health Informatics"),
+                 _topic("HCI Theory", 0.40, "Human-Computer Interaction")],
+                publication_types=["Review"])
+    b = _run_pipeline(monkeypatch, tmp_path, m)
+    fm = b["frontmatter"]
+    assert fm["research_area"] == ["Health Informatics"]
+    assert fm["methodology"] == ["review"]
+    assert b["classify"]["status"] == "applied"
+    assert "classify_flag_needed" not in b
+    lines = _audit_lines(tmp_path)
+    assert len(lines) == 1
+    rec = lines[0]
+    assert rec["decision"] == "applied" and rec["citekey"] == "x2024Test"
+    assert rec["research_area"] == ["Health Informatics"]
+    assert rec["candidates"][0]["name"] == "Health Informatics"
+    assert rec["confidence_floor"] == 0.6 and rec["near_tie_margin"] == 0.15
+    assert rec["source"] == "openalex.topics"
+    assert rec["timestamp"].endswith("Z") and rec["run_id"]
+
+
+def test_near_tie_flags_audits_and_leaves_unset(monkeypatch, tmp_path):
+    m = _merged([_topic("T1", 0.90, "Area A"), _topic("T2", 0.85, "Area B")])
+    b = _run_pipeline(monkeypatch, tmp_path, m)
+    assert b["frontmatter"]["research_area"] == []           # left unset
+    assert b["classify"]["status"] == "ambiguous"
+    flag = b["classify_flag_needed"]                          # ONE flag request
+    assert flag["title"] == "Ambiguous classification for x2024Test"
+    assert "near-tie" in flag["finding"]
+    lines = _audit_lines(tmp_path)
+    assert len(lines) == 1 and lines[0]["decision"] == "ambiguous"
+    assert lines[0]["research_area"] == []
+
+
+def test_calibration_thresholds_read_from_vault(tmp_path):
+    schemas = tmp_path / ".memoria" / "schemas"
+    schemas.mkdir(parents=True)
+    (schemas / "calibration.yaml").write_text(
+        "classify:\n  confidence_floor: 0.9\n  near_tie_margin: 0.05\n",
+        encoding="utf-8")
+    assert classify.thresholds(tmp_path) == (0.9, 0.05)
+    assert classify.thresholds(None) == (classify.DEFAULT_FLOOR,
+                                         classify.DEFAULT_MARGIN)
+
+
+def test_no_topic_data_is_a_noop(monkeypatch, tmp_path):
+    b = _run_pipeline(monkeypatch, tmp_path, _merged([]))
+    assert b["frontmatter"]["research_area"] == []
+    assert b["classify"]["status"] == "no_data"
+    assert "classify_flag_needed" not in b
+    assert _audit_lines(tmp_path) == []      # a no-op is not a decision
+
+
+def test_no_enrichment_no_op(tmp_path):
+    b = pipeline.run("x2024Test", BIB, tmp_path, enrich=False)
+    assert "classify" not in b               # classify never ran
+    assert b["frontmatter"]["research_area"] == []
+    assert _audit_lines(tmp_path) == []

@@ -20,6 +20,7 @@ homes:
   gap: inbox
   flag: inbox
   alert: inbox
+  work-prompt: inbox
   pattern: system/patterns
   eval-task: system/eval
 
@@ -41,6 +42,7 @@ skeleton:
   - catalog/datasets
   - catalog/repositories
   - notes/fleeting
+  - notes/fleeting/chats
   - notes/source
   - notes/claims
   - notes/hubs
