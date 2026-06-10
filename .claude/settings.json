@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/tmp/m-p2/docs/adr"
+    ]
+  }
+}

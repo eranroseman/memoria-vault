@@ -39,7 +39,7 @@ Prefer a worktree **per branch** even working solo: switching becomes `cd`, and 
 
 ## 2. Branch first — always
 
-**Before you edit, stage, or commit _anything_, start your own branch in your own worktree (§1).** No change — not even a one-line doc fix — happens on `main`, on the default/shared checkout, or on another session's branch.
+**Before you edit, stage, or commit *anything*, start your own branch in your own worktree (§1).** No change — not even a one-line doc fix — happens on `main`, on the default/shared checkout, or on another session's branch.
 
 ```bash
 git fetch origin && git switch -c fix/<thing> origin/main
@@ -177,11 +177,6 @@ Mixed-quadrant pages are wrong — split them.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
-
-### Terminology
-
-Two flows: **Compile** (knowledge in) and **Compose** (knowledge out). Together: **the knowledge cycle**.
-Never name these "upstream/downstream pipeline" or "the two pipelines". `pipeline`, `upstream`, `downstream` are fine in all other senses.
 
 ### ADR template (`docs/adr/`)
 
