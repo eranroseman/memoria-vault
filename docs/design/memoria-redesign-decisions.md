@@ -287,7 +287,7 @@ triage, and the genuine synthesis judgment at distill.
 **Alternatives weighed:** keep classify as a gate (rejected — rubber-stamp);
 confidence-tiered auto-accept (rejected, D12).
 
-## D22 — Decision transparency is the primary guardrail *(→ supersedes the anti-anchoring mechanics; card schema in D35)*
+## D22 — Decision transparency is the primary guardrail *(→ supersedes the anti-anchoring mechanics; card schema in D35; restated as honesty — for/against/deciding-reason/certainty, not "verdict" — in D49)*
 
 **Decided:** every approval gate ships the **reasoning — pros, cons, and the verdict** —
 so the human judges the *process*, not just the output; and **prefer full automation over
@@ -468,7 +468,7 @@ D8's "who would I hire?" naming. The D27 *consolidation* is unchanged — only t
 inconsistent with the colleague-name philosophy); keep Librarian alone but leave
 Write/Verify functional (rejected — mixed register).
 
-## D35 — Recommendation-card schema *(→ refines D22)*
+## D35 — Recommendation-card schema *(→ refines D22; verdict dropped for proposals in D49)*
 
 **Decided:** every approval-gate item uses **BLUF + progressive disclosure** in three tiers
 — **Glance** (recommended *action* · verdict + one-line justification · *impact* ·
@@ -692,7 +692,7 @@ didn't); and "gap" naming both a report and a signal was the exact confusion to 
 
 ---
 
-## D48 — Red-team pass: scope-corrections + five open decisions *(→ refines D22/D42/D44; new opens)*
+## D48 — Red-team pass: scope-corrections + five open decisions *(→ refines D22/D42/D44; new opens; decision #1 resolved in D49)*
 
 **Decided (applied):** a six-pass adversarial review (full write-up:
 [Red-team findings](red-team-findings.md)) produced clear corrections, now in the docs:
@@ -716,6 +716,30 @@ The first two are genuine decisions, not clarifications.
 cron monitor**; (3) an **extraction-uncertainty gate**; (4) **conversational specialist
 work** (conversational lane vs one-shot cards); (5) **sequencing** (migration ADR + DAG +
 `effective_from`; rename the architecture target to a major version; close #198).
+
+---
+
+## D49 — The recommendation card is an honest argument, not a verdict *(→ resolves the red-team gate-model open; refines D22/D35/D48)*
+
+**Decided:** for a **proposal** the agent's verdict is a *given* — it surfaced the item
+because it recommends it, so "accept" carries no information. The card therefore **drops the
+verdict line** and instead presents, honestly and symmetrically: **the argument for · the
+argument against · what tipped it (the deciding reason) · the certainty level**. The PI
+judges the *argument*, not a foregone conclusion; the **against-case and the certainty** are
+the real anti-automation-bias levers. The **verdict survives only where it is not a given**
+— verification / adjudication items (`clean`/`issues-found`/`inconclusive`, near-tie
+same/different/unsure), which **lead with the finding**. Pair with **attention
+instrumentation** (time-on-gate / accept-rate; sampled re-reviews) so the gate is measurable.
+
+**Why:** *honesty is the guardrail* (the PI's own principle). "Ship the verdict" (D22) was
+vacuous for proposals and "blind-first on the verdict" hides a foregone conclusion — the
+information is in the counter-case and the uncertainty. A symmetric for/against + an explicit
+"what decided it" + a calibrated certainty lets the PI catch a bad *process*, and presenting
+both sides symmetrically is itself the research-backed anti-bias move.
+
+**Alternatives weighed:** ship the verdict (D22 — vacuous for proposals); blind-first /
+hide-the-verdict (nothing to hide; the recommendation is implied); a verdict on every item
+(rejected — only verification/adjudication has a non-given verdict).
 
 ---
 
