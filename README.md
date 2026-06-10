@@ -107,6 +107,12 @@ bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
 .\scripts/install.ps1 -ProfilesOnly                       # Windows equivalent
 ```
 
+## Citation
+
+If you use Memoria in your research, please cite it ([CITATION.cff](CITATION.cff)):
+
+> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents* (v0.1.1). <https://github.com/eranroseman/memoria-vault>
+
 ## Contributing
 
 See [Contributing to Memoria](CONTRIBUTING.md) for how to run locally, code conventions, and the PR process.
