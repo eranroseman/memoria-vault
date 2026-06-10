@@ -1,6 +1,5 @@
 ---
-type: reference-note
-schema_version: 1
+type: index
 lifecycle: current
 title: Topic vocabulary
 ---

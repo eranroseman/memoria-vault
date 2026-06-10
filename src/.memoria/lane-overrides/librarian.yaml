@@ -1,31 +1,31 @@
 profile: memoria-librarian
 
-# Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
-# See https://eranroseman.github.io/memoria-vault/reference/installer/ § skills.
+# The Librarian's lane ceiling (ADR-48): four processing lanes — catalog · extract ·
+# link · map — one faithful posture. It proposes into intake/staging zones and never
+# touches the review-gated ones (notes/claims/, notes/hubs/ — ADR-47).
+# External access is MCP-only (web disabled): discovery -> paper_search MCP, Zotero
+# reads -> pyzotero MCP, enrich/extract -> ingest MCP, clustering -> cluster MCP.
 
 policy:
   allow:
-    # External access is MCP-only (web disabled): discovery -> paper_search MCP, Zotero
-    # reads -> pyzotero MCP (read-only; Zotero has no local write path), enrich/extract ->
-    # ingest MCP (server-side). Retired the web-fetch K-Dense skills (paper-lookup, arxiv,
-    # pyzotero, citation-management, literature-review, ocr-and-documents, rest-passthrough)
-    # — their capabilities are served by the MCP servers or composed from them.
     skills:
-      - obsidian-paper-note    # authored skill: the ingest pipeline (reaches the ingest + obsidian + pyzotero MCPs)
       - obsidian               # gated vault read/write
-      - qmd                    # the `query` command (hybrid BM25+vector vault search; skills.sh skill, local)
+      - qmd                    # hybrid BM25+vector vault search (the search engine)
     write:
-      - "10-inbox/01-fleeting/**"      # discovery captures
-      - "10-inbox/03-candidates/**"    # discovery candidates (02-answers is the Writer's)
-      - "20-sources/**"
+      - "inbox/**"             # candidate / gap cards (the honesty body, ADR-51)
+      - "catalog/**"           # entity records (the ingest engine writes; agent fills the LLM holes)
+      - "notes/fleeting/**"    # discovery captures
+      - "notes/source/**"      # proposed source notes (lifecycle: proposed)
   deny:
     skills:
       - review_gated_publish
       - destructive_shell
     write:
-      - "30-synthesis/**"
-      - "40-workbench/**"
-      - "50-deliverables/**"
+      - "notes/claims/**"      # review-gated (ADR-03/47)
+      - "notes/hubs/**"        # review-gated
+      - "notes/index/**"
+      - "projects/**"
+      - "system/**"
   require:
     - audit_log
     - timeout_required
@@ -35,6 +35,7 @@ routing:
   invocation: dispatched
   external_api_policy: explicit_only    # blocked | explicit_only | open
   write_scope:
-    - "10-inbox/01-fleeting/"
-    - "10-inbox/03-candidates/"
-    - "20-sources/"
+    - "inbox/"
+    - "catalog/"
+    - "notes/fleeting/"
+    - "notes/source/"

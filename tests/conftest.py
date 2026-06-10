@@ -8,7 +8,7 @@ _DIRS = [
     "src/.memoria/mcp",
     "src/.memoria/engines/lib",
     "src/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note/scripts",
-    "src/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts",
+    "src/.memoria/engines/linter",
     "scripts",
     ".github/scripts",
 ]

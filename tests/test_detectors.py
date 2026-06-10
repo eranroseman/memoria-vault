@@ -25,7 +25,7 @@ def test_detectors():
 
             # clean claim note (no findings)
             (v / "notes/claims/good.md").write_text(
-                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n---\nA claim. [[good]]\n",
+                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\ntitle: Good\nsources: ['@smith2020']\n---\nA claim. [[good]]\n",
                 encoding="utf-8")
             # claim note missing 'maturity' -> schema finding
             (v / "notes/claims/bad.md").write_text(

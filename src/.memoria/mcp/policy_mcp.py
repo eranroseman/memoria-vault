@@ -6,7 +6,7 @@ enforced here. Every vault action goes through ``check_permission`` and gets
 one of four decisions -- ``allow`` / ``allow_with_log`` / ``deny`` / ``dry_run``
 -- per the contract in docs/reference/policy-mcp.md.
 
-Design (mirrors .memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py): a dependency-
+Design (mirrors .memoria/engines/linter/detectors.py): a dependency-
 light, unit-testable *core* (the decision engine, the glob matcher, the SHA-256
 hashing, the audit append) plus a thin MCP-server wrapper. The core runs and
 self-tests without the MCP SDK or even PyYAML installed, so the enforcement
@@ -65,6 +65,21 @@ REVIEW_GATED_PREFIXES = (
     "notes/claims/",
     "notes/hubs/",
 )
+
+
+def load_gated_prefixes(vault) -> tuple:
+    """Prefer the canonical schema home (.memoria/schemas/folders.yaml, ADR-49);
+    the hardcoded tuple above is the dependency-free fallback and must stay in
+    sync with it (test-enforced)."""
+    try:
+        import yaml  # optional - the policy core stays dependency-light
+
+        f = Path(vault) / ".memoria" / "schemas" / "folders.yaml"
+        data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        prefixes = tuple(data["gated_prefixes"])
+        return prefixes or REVIEW_GATED_PREFIXES
+    except Exception:
+        return REVIEW_GATED_PREFIXES
 
 # Linter auto_fix is class-gated. These two classes may proceed; the other two
 # are pinned to dry_run / deny regardless of who asks. (linter.yaml + policy.md)
@@ -154,7 +169,7 @@ def path_matches(path: str, patterns: list[str]) -> bool:
 
 
 def is_review_gated(path: str) -> bool:
-    return path.startswith(REVIEW_GATED_PREFIXES)
+    return path.startswith(_GATED or REVIEW_GATED_PREFIXES)
 
 
 def within_scope(path: str, scope: list[str]) -> bool:
@@ -567,7 +582,12 @@ class PolicyEngine:
 # --------------------------------------------------------------------------- #
 # MCP server wrapper (thin; optional dependency)
 # --------------------------------------------------------------------------- #
+_GATED: tuple = ()
+
+
 def build_server(vault: Path):
+    global _GATED
+    _GATED = load_gated_prefixes(vault)
     """Wrap the engine as an MCP server. Imported lazily so the core/self-test
     don't require the `mcp` package."""
     from mcp.server.fastmcp import FastMCP  # type: ignore
@@ -626,6 +646,8 @@ def main() -> None:
     vault = resolve_vault(args.vault)
 
     if args.decide:
+        global _GATED
+        _GATED = load_gated_prefixes(vault)
         req = json.loads(args.decide)
         engine = PolicyEngine(vault)
         print(json.dumps(engine.check(

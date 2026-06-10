@@ -47,15 +47,15 @@ l0() {
   run bash scripts/check-vault-links.sh
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P/engines/lib/schema.py" "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py"
+  run python3 -m py_compile "$P"/mcp/*.py "$P/engines/lib/schema.py" "$P/engines/lib/inbox.py" "$P/engines/linter/detectors.py" "$P/engines/linter/golden.py" "$P/engines/linter/precommit_check.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/ingest_paper.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/resolve_merge.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/link.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/extract.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/pipeline.py" "$P/profiles/memoria-librarian/skills/obsidian-paper-note/scripts/sweeps.py"
   run bash -n scripts/install.sh
   if command -v shellcheck >/dev/null 2>&1; then
-    run shellcheck --severity=warning scripts/install.sh "$P"/scripts/*.sh
+    run shellcheck --severity=warning scripts/install.sh src/.memoria/engines/linter/pre-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
   # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
   # querying a field no template emits is a silent failure — CI gates it too);
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" --vault src --gate dashboard-field-drift
+  run python3 "$P/engines/linter/detectors.py" --vault src --gate dashboard-field-drift
 }
 
 case "${1:-all}" in
