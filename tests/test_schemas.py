@@ -3,13 +3,13 @@
 import schema
 
 
-def test_all_seventeen_types_load():
+def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 17
+    assert len(types) == 18
     expected = {
         "paper", "person", "organization", "venue", "dataset", "repository",
         "fleeting", "source", "claim", "hub", "index",
-        "candidate", "gap", "flag", "alert", "work-prompt", "pattern",
+        "candidate", "gap", "flag", "alert", "work-prompt", "pattern", "eval-task",
     }
     assert set(types) == expected
 

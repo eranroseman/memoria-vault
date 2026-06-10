@@ -48,6 +48,7 @@ TYPE_HOME = {
     "flag": "inbox/",
     "alert": "inbox/",
     "pattern": "system/patterns/",
+    "eval-task": "system/eval/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {
@@ -63,8 +64,9 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 def is_untyped_infra(rp: str) -> bool:
     """system/ holds infrastructure documents, not typed knowledge — only
-    system/patterns/ files carry a type schema (ADR-53)."""
-    return rp.startswith("system/") and not rp.startswith("system/patterns/")
+    system/patterns/ (ADR-53) and system/eval/ (ADR-11 gold tasks) files
+    carry a type schema."""
+    return rp.startswith("system/") and not rp.startswith(("system/patterns/", "system/eval/"))
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
