@@ -57,6 +57,8 @@ If the note is a passing thought you no longer need, a duplicate of something yo
 
 ## Notes
 
+**Chat exports count too.** Closed ACP-pane sessions are auto-exported to `notes/fleeting/chats/` and stamped by the sweep with fleeting frontmatter (`origin: chat`), so they show up in the same queue and the same stale-fleeting flags. Triage them like any other fleeting note: promote the durable insight, attach context to the relevant note, or discard the transcript. See [Agent-client pane](../using-obsidian/use-the-acp-pane.md).
+
 The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising count of stale fleeting notes in the weekly review is a signal to run this triage before the next session.
 
 ## Related
