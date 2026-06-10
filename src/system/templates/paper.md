@@ -8,7 +8,7 @@ authors: []
 year:
 venue: ""
 url: ""
-research-area: []
+research_area: []
 methodology: []
 relationships:
   cited_by: []

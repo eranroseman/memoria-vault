@@ -4,7 +4,7 @@ type: source
 lifecycle: proposed
 entity: "[[{{VALUE:catalog entity}}]]"
 source_type: paper
-research-area: []
+research_area: []
 methodology: []
 links: {}
 created: {{DATE:YYYY-MM-DD}}

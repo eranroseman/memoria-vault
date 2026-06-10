@@ -4,7 +4,7 @@ Sources you've read but not yet distilled — worth a pass with the co-PI (Ask) 
 the claims firm up. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/synthesis-agenda/discuss-queue).
 
 ```dataview
-TABLE file.link AS Source, entity, research-area
+TABLE file.link AS Source, entity, research_area
 FROM "notes/source"
 WHERE lifecycle = "provisional"
 SORT file.mtime ASC

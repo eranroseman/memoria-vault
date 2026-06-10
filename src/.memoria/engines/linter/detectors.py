@@ -380,7 +380,7 @@ def dashboard_field_drift(vault: Path) -> list[Finding]:
     dash = vault / "system" / "dashboards"
     tmpl = vault / "system" / "templates"
     if not dash.is_dir() or not tmpl.is_dir():
-        return out_empty()
+        return []
     known = set(DATAVIEW_BUILTINS)
     for t in tmpl.glob("*.md"):
         known |= template_field_names(read(t))
@@ -467,7 +467,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
         if archived or sup not in (None, "", [], "[]"):
             superseded[p.stem] = relpath(vault, p)
     if not superseded:
-        return out_empty()
+        return []
     link_re = re.compile(r"\[\[([^\]|#]+)")
     out = []
     for p in notes:
@@ -509,10 +509,6 @@ def misplaced_note(vault: Path) -> list[Finding]:
             out.append(Finding("misplaced-note", "LOW", relpath(vault, d),
                                "stray top-level folder not in the vault schema"))
     return out
-
-
-def out_empty() -> list[Finding]:
-    return []
 
 
 DETECTORS = [

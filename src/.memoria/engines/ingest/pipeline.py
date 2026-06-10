@@ -178,15 +178,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Deterministic ingest orchestrator (ADR-30)")
     ap.add_argument("--citekey")
     ap.add_argument("--bib", help="default <vault>/.memoria/memoria.bib")
-    ap.add_argument("--vault", help="default $OBSIDIAN_VAULT_PATH from ~/.hermes/.env")
+    ap.add_argument("--vault", help="default $MEMORIA_VAULT_PATH (or $OBSIDIAN_VAULT_PATH from ~/.hermes/.env)")
     ap.add_argument("--pdf")
     ap.add_argument("--enrich", action="store_true", help="run the Tier-1 network stages")
     a = ap.parse_args()
-    # Resolve the vault root from the documented OBSIDIAN_VAULT_PATH convention so a
+    # Resolve the vault root from the documented env conventions so a
     # dispatched worker (whose cwd is a scratch workspace) needn't know the path.
-    vault_str = a.vault or _env("OBSIDIAN_VAULT_PATH")
+    vault_str = a.vault or _env("MEMORIA_VAULT_PATH") or _env("OBSIDIAN_VAULT_PATH")
     if not a.citekey or not vault_str:
-        ap.error("provide --citekey and --vault (or set OBSIDIAN_VAULT_PATH)")
+        ap.error("provide --citekey and --vault (or set MEMORIA_VAULT_PATH)")
     vault = Path(vault_str)
     bib = Path(a.bib) if a.bib else vault / ".memoria" / "memoria.bib"
     if not bib.is_file():

@@ -1,4 +1,4 @@
-name: Lint installers
+name: lint-installers
 
 # shellcheck + PSScriptAnalyzer are REQUIRED status checks in the branch ruleset,
 # so they must report on EVERY PR — not just install-script changes.

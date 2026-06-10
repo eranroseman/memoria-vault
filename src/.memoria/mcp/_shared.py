@@ -39,17 +39,18 @@ def safe_filename(s: str) -> str:
 def resolve_vault(arg: str | None, *env_vars: str) -> Path:
     """Resolve a vault root from a CLI arg or environment variables.
 
-    Falls back through *env_vars* in order (default: ``MEMORIA_VAULT_PATH``).
+    Falls back through *env_vars* in order (default: ``MEMORIA_VAULT_PATH``,
+    then ``OBSIDIAN_VAULT_PATH``).
     Exits with an error if no path is found or the path is not a directory.
     """
     raw = arg
     if not raw:
-        for var in env_vars or ("MEMORIA_VAULT_PATH",):
+        for var in env_vars or ("MEMORIA_VAULT_PATH", "OBSIDIAN_VAULT_PATH"):
             raw = os.environ.get(var)
             if raw:
                 break
     if not raw:
-        names = " or ".join(env_vars) if env_vars else "MEMORIA_VAULT_PATH"
+        names = " or ".join(env_vars) if env_vars else "MEMORIA_VAULT_PATH"  # primary name in the message
         sys.exit(f"no vault path: pass --vault <path> or set {names}")
     vault = Path(raw).expanduser().resolve()
     if not vault.is_dir():

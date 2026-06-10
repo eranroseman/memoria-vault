@@ -17,7 +17,7 @@ Bibliographic / world records, keyed on stable IDs and carrying **given** `relat
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
-| `paper` | `catalog/papers/` | `current → retracted → archived` | `citekey`, `title` | `doi`, `authors`, `year`, `venue`, `url`, `relationships`, `research-area`, `methodology` |
+| `paper` | `catalog/papers/` | `current → retracted → archived` | `citekey`, `title` | `doi`, `authors`, `year`, `venue`, `url`, `relationships`, `research_area`, `methodology` |
 | `person` | `catalog/people/` | `current → archived` | `name` | `orcid`, `affiliations`, `relationships` |
 | `organization` | `catalog/organizations/` | `current → archived` | `name` | `subtype` (lab · university · company · funder …), `location`, `relationships` |
 | `venue` | `catalog/venues/` | `current → archived` | `name` | `subtype` (journal · conference · publisher …), `issn`, `relationships` |
@@ -33,7 +33,7 @@ The PI's knowledge, carrying **authored** `links:` edges. Two of the five live i
 | Type | Folder | Gated | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- | --- |
 | `fleeting` | `notes/fleeting/` | no | `proposed → archived` | `origin` (`human` / `agent`) | `title` |
-| `source` | `notes/source/` | no | `proposed → provisional → current → retracted → archived` (the full chain) | `title`, `entity` (wikilink to the Catalog entity it is about) | `source_type`, `research-area`, `methodology`, `links` |
+| `source` | `notes/source/` | no | `proposed → provisional → current → retracted → archived` (the full chain) | `title`, `entity` (wikilink to the Catalog entity it is about) | `source_type`, `research_area`, `methodology`, `links` |
 | `claim` | `notes/claims/` | **yes** | `current → retracted → archived` | `title`, `maturity`, `sources` (every claim → a citekey) | `links` (supports / contradicts / …), `topics`, `superseded_by` |
 | `hub` | `notes/hubs/` | **yes** | `current → archived` | `title`, `topic` | `members`, `links` |
 | `index` | `notes/index/` | no | `current → archived` | `title` | — |

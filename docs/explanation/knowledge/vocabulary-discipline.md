@@ -12,9 +12,9 @@ For the exact field definitions and allowed values, see [Frontmatter fields](../
 
 ## Why separate facets, not one tag field
 
-Memoria classifies sources with two distinct facets — `research-area` and `methodology` — plus `topics` on claim notes, rather than one general-purpose tag field. The separation is not bureaucratic; the facets answer categorically different questions.
+Memoria classifies sources with two distinct facets — `research_area` and `methodology` — plus `topics` on claim notes, rather than one general-purpose tag field. The separation is not bureaucratic; the facets answer categorically different questions.
 
-`methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research-area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research-area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
+`methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research_area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research_area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
 
 The Linter's `lint:check-schema` pass validates that facet values match the defined vocabulary, but only after the vocabulary has been defined. Drift from a vocabulary that doesn't yet exist is invisible to the Linter.
 
@@ -24,7 +24,7 @@ Early in a vault's life, forcing term consistency is counterproductive. The righ
 
 The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
 
-This is also why `research-area` is seeded from **OpenAlex topics** by the ingest engine: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
+This is also why `research_area` is seeded from **OpenAlex topics** by the ingest engine: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
 
 ## Why drift fails silently
 
