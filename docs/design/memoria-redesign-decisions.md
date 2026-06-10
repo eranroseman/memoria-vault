@@ -780,7 +780,7 @@ an incremental ADR-cluster migration: the system is **useless without the comple
 redesign**, so no partial/half-migrated state has user value and there is no
 incremental-delivery benefit to weigh against migration risk. The red-team's "half-renamed
 running vault" risk is avoided not by incrementalism but by the **fresh-install model**
-([installation-redesign](installation-redesign.md), #310): build the complete system from
+([Installation redesign](installation-redesign.md), #310): build the complete system from
 `src/` and install it fresh, **replacing** the v0.1 prototype rather than migrating in place.
 
 **Why:** when no intermediate state is shippable or usable, big-bang is the rational choice;
