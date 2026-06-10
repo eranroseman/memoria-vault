@@ -207,7 +207,7 @@ class LanePolicy:
 
     @property
     def short(self) -> str:
-        """Capitalized short name for policy_rule ids: memoria-coder -> Coder."""
+        """Capitalized short name for policy_rule ids: memoria-engineer -> Engineer."""
         name = self.profile[len("memoria-"):] if self.profile.startswith("memoria-") else self.profile
         return name[:1].upper() + name[1:]
 
@@ -243,7 +243,7 @@ def parse_lane(doc: dict) -> LanePolicy:
 
 
 def load_lane(vault: Path, profile: str) -> LanePolicy:
-    """Read and parse the lane-override for `profile` (memoria-coder -> coder.yaml)."""
+    """Read and parse the lane-override for `profile` (memoria-engineer -> engineer.yaml)."""
     if yaml is None:
         raise RuntimeError(
             "PyYAML not installed -- run `pip install -r .memoria/mcp/requirements.txt`."
@@ -639,7 +639,7 @@ def main() -> None:
     ap.add_argument("--vault", help="vault root (or set MEMORIA_VAULT_PATH)")
     ap.add_argument("--decide", metavar="JSON",
                     help='one-shot: decide a single request, e.g. '
-                         '\'{"profile":"memoria-coder","action":"write",'
+                         '\'{"profile":"memoria-engineer","action":"write",'
                          '"path":"40-workbench/x/06-code/m.py","task_id":"T1"}\'')
     args = ap.parse_args()
 

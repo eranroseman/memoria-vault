@@ -1,41 +1,31 @@
 profile: memoria-writer
 
-# Allowlist wired to real Hermes/K-Dense skill IDs — adapt-not-wrap (2026-05-31).
-# See https://eranroseman.github.io/memoria-vault/reference/installer/ § skills.
+# The Writer's lane ceiling (ADR-48): generative, draft-only, review-gated. Drafts
+# live in project scratch; nothing lands in the review-gated knowledge zones.
 
 policy:
   allow:
     skills:
-      - llm-wiki             # was llm-wiki-draft (official research/llm-wiki)
-      - obsidian-markdown    # note-refactor (kepano obsidian-skills)
-      - obsidian             # vault read/write for drafts / answers / framing
-      - scientific-writing   # K-Dense
-      - qmd                  # the `query` step (hybrid BM25+vector vault search; skills.sh skill)
-      # counter-outline is a SOUL.md behavior (produce 2–3 competing outlines), not a tool skill.
+      - obsidian
+      - qmd
     write:
-      - "10-inbox/02-answers/**"
-      - "40-workbench/*/04-drafts/**"
-      - "40-workbench/*/03-canvas/**"
-      - "40-workbench/*/02-framing/**"
-      - "30-synthesis/02-reference/**"   # review-gated → policy MCP degrades to dry_run (human-approved)
-      - "50-deliverables/**"             # review-gated export → degrades to dry_run
+      - "projects/**"          # drafts + outlines (project scratch)
   deny:
     skills:
-      - rest-passthrough
+      - review_gated_publish
+      - destructive_shell
     write:
-      - "20-sources/**"
-      - "30-synthesis/01-claims/**"    # claims are human-owned — hard deny (not Writer's to propose)
-      - "30-synthesis/03-moc/**"       # MOCs are human-owned — hard deny (Writer suggests via comment, not write)
+      - "notes/claims/**"      # review-gated (ADR-03/47)
+      - "notes/hubs/**"
+      - "catalog/**"
+      - "inbox/**"             # the Writer raises no cards (its Inbox column is —)
+      - "system/**"
   require:
     - audit_log
     - timeout_required
-    - review_gated_write               # writes to review-gated zones degrade to dry_run
 
 routing:
   invocation: dispatched
-  external_api_policy: blocked          # blocked | explicit_only | open
+  external_api_policy: blocked
   write_scope:
-    - "10-inbox/02-answers/"
-    - "40-workbench/*/04-drafts/"
-    - "40-workbench/*/03-canvas/"
-    - "40-workbench/*/02-framing/"
+    - "projects/"

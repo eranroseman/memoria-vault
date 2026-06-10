@@ -1,0 +1,29 @@
+profile: memoria-engineer
+
+# The Engineer's lane ceiling (ADR-48): the code lane only — the ADR-21 Coder-lane
+# exception under its new name. Scaffolds handoffs to an external coding agent and
+# owns the commit/revert gate.
+
+policy:
+  allow:
+    skills:
+      - obsidian
+    write:
+      - "projects/*/code/**"
+  deny:
+    skills:
+      - review_gated_publish
+    write:
+      - "notes/**"
+      - "catalog/**"
+      - "inbox/**"
+      - "system/**"
+  require:
+    - audit_log
+    - timeout_required
+
+routing:
+  invocation: dispatched
+  external_api_policy: explicit_only
+  write_scope:
+    - "projects/*/code/"
