@@ -11,8 +11,8 @@ nav_exclude: true
 
 # Memoria redesign — architecture
 
-> **Status: exploration** (a capability bundle a design note, not yet adopted). The synthesized
-> target vision — a near-total architecture redesign. **Not yet adopted:** firm
+> **Status: exploration** (a design note in the RFC→ADR pipeline, not yet adopted). The
+> synthesized target vision — a near-total architecture redesign. **Not yet adopted:** firm
 > decisions graduate to **ADRs** (each setting `superseded_by` on the ADR it replaces).
 > The rationale and alternatives weighed are preserved in
 > [Memoria redesign — decisions & rationale](memoria-redesign-decisions.md), the seed for those ADRs.
@@ -21,10 +21,10 @@ nav_exclude: true
 
 ## What this changes (ADR impact)
 
-If adopted, this **supersedes** ADR-01 (→ two structural layers + three actors) and ADR-04 (→ type-first
-folders); **amends** ADR-02, 08, 13, 17, 19, 30; **creates** ~7 new ADRs (categories ·
-Catalog-in-Bases · Inbox · Read/Write · lifecycle + maturity · pattern library ·
-two-kinds-of-decision); and **reinforces** ADR-03/05/10/21/22/24/33. The
+If adopted, this **supersedes** ADR-01 (→ the single seven-layer architecture) and ADR-04
+(→ type-first folders); **amends** ADR-02, 08, 13, 17, 19, 30; **creates** ~7 new ADRs
+(categories · Catalog-in-Bases · Inbox · Library/Project · lifecycle + maturity · pattern
+library · two-kinds-of-decision); and **reinforces** ADR-03/05/10/21/22/24/33. The
 decision-by-decision map is **Appendix G**; the rationale and alternatives weighed are
 in [Memoria redesign — decisions & rationale](memoria-redesign-decisions.md). Each firm decision
 graduates via the [decisions pipeline](../adr/README.md).
@@ -32,15 +32,14 @@ graduates via the [decisions pipeline](../adr/README.md).
 ## Contents
 
 1. What Memoria is
-2. Structure and actors
+2. Architecture — one model
 3. The Vault — categories, types, state
 4. The actors — co-PI, agents, engines
-5. The Linter engine
-6. The working surface
-7. The pattern library
-8. Human decision points
-9. Design guardrails
-10. To revisit
+5. The working surface
+6. The pattern library
+7. Human decision points
+8. Design guardrails
+9. To revisit
 
 - Appendix A — topic ontology
 - Appendix B — relationship to Zettelkasten
@@ -77,61 +76,49 @@ hides behind a vocabulary the user already owns.
 
 ---
 
-## 2. Structure and actors
+## 2. Architecture — one model
 
-Two simple structural layers, and three kinds of **actor** that move between them.
+Memoria is **seven layers**, top to bottom, with one flow rule: **decisions flow down,
+information flows up.** Each layer depends only on the one below and serves only the one
+above.
 
-### The two layers
+| Layer | What it is | Actor-kind |
+|---|---|---|
+| **PI** | the human in charge (*Principal Investigator*) — the only one who promotes to canonical | human |
+| **Interface** | the Obsidian UI — Home, dashboards, Inbox, the Library/Project Workspaces, command palette | — |
+| **co-PI** | the permanent agent in the ACP pane the PI converses with (subsumes Socratic) | agent |
+| **Tasks** | the ephemeral profiles + kanban board + cards the co-PI/PI delegate to | agents |
+| **MCP** | the sandbox boundary — agents reach the Vault + external APIs only through it | — |
+| **Engines** | the deterministic apps — ingest · search · clustering · sweeps · Linter | engines |
+| **Vault** | the files & folders — the knowledge itself | — |
 
-| Layer | What it is |
-|---|---|
-| **Workspaces** | where the PI works; results resurface here |
-| **Vault** | where everything is kept (the Obsidian vault — files & folders) |
+This *is* the model — there is no separate "cognitive" vs "build" version (an earlier
+draft kept two and mapped them one-to-one; one good model beats two perfect ones). Three
+**actor-kinds** act on the structural layers (Interface, Vault): the **PI** (human
+judgment), **agents** (posture + LLM — the co-PI and the Task lanes), and **engines**
+(deterministic, no posture). The full treatment — the MCP trust boundary, the flow, the
+sandbox model — is in
+[Memoria system architecture — the seven-layer stack](system-architecture.md).
 
-Everything else is an actor acting on the Vault on the PI's behalf. *(The earlier
-model had four layers — but "Bookkeeping" and "Housekeeping" were really* what the actors
-do, *not places. Folding them into the actor tiers removes the redundancy where the
-Linter was both "the Housekeeping layer" and "an engine.")*
-
-### The three actors
-
-| Actor | Posture? | LLM? | On the board? | What it is | Examples |
-|---|---|---|---|---|---|
-| **Engines** | no | no | no | pure mechanism — you *run* it | ingest/cataloging · the Linter · search · the verification sweeps |
-| **Agents** | yes | yes | yes (lanes) | posture + judgment — you *delegate* to it | the co-PI + the background lanes (Librarian · Writer · Peer-reviewer · Engineer) |
-| **The PI** | — | — | — | the only one who promotes to canonical | you |
-
-We call the human **the PI** (Principal Investigator) — the role name, matching the
-co-PI; *"human-in-the-loop"* stays the design **concept**.
-
-**The key correction over the old "seven profiles": deterministic work is an engine, not
-an agent.** You don't *dispatch* a linter or an ingest pipeline — you *run* it. An agent
-has a **posture** (a stable stance) and makes LLM judgments; an engine is pure mechanism.
-The two work-kinds map onto the actors: **processing knowledge** (in response to a human
-action) is agent work; **maintaining integrity** (on a trigger) is engine work — the
-distinction the old Bookkeeping/Housekeeping layers carried, now carried by the actors
-themselves. The loop, everywhere:
-
-```text
-   Workspaces (PI acts) ──▶ agent lanes ──▶ Inbox (signal) ──▶ Workspaces …
-```
-
-The "gate" is just the PI's next action, prompted by an Inbox signal.
+**The key distinction: deterministic work is an engine, not an agent.** You *run* an
+engine (a linter, an ingest pipeline); you *delegate* to an agent (it has a posture and
+makes LLM judgments). "Bookkeeping" and "maintenance" are *what these actors do*, not
+extra layers.
 
 ### The co-PI fronts everything
 
-The PI converses with **one agent — the co-PI** — and **delegates** the rest. The
-co-PI is the conversational front at the desk (it subsumes the old **Socratic** role);
-the specialist agents (Librarian · Writer · Peer-reviewer · Engineer) run as **background
+The PI converses with **one agent — the co-PI** — and **delegates** the rest. The co-PI is
+the conversational front at the desk (it subsumes the old **Socratic** role); the
+specialist agents (Librarian · Writer · Peer-reviewer · Engineer) run as **background Task
 lanes** it delegates to, never as separate chats. Concentrating every conversation in one
 agent lets it use Hermes' self-improving loop — **memory · /goals · skills** — so it
-compounds into a genuine co-PI rather than a stateless assistant. (Detail: §4.)
+compounds into a genuine co-PI rather than a stateless assistant. The loop, everywhere:
 
-The **full runtime stack** — the seven system-architecture layers (PI · Interface ·
-co-PI · tasks · MCP · engines · vault), the MCP sandbox boundary, and the
-*decisions-down / information-up* flow — is in
-[Memoria system architecture — the seven-layer stack](system-architecture.md). This section is the *cognitive* model;
-that doc is the *build* view, and they map one-to-one.
+```text
+   PI acts ──▶ agent lanes ──▶ Inbox (signal) ──▶ PI acts …
+```
+
+The "gate" is just the PI's next action, prompted by an Inbox signal. (Agents: §4.)
 
 ---
 
@@ -165,7 +152,7 @@ Librarian agent operate *on* it.
 | examples | paper *cited-by* paper, *authored-by* author, *published-in* venue, DOI→ORCID | claim *supports/contradicts* claim, claim ∈ hub |
 | nature | **given** — objective facts about sources | **authored** — connections *you* draw |
 | built by | the **ingest engine** (from metadata APIs), mechanical | agent **proposes** candidates, **PI confirms** |
-| gated? | no — it's a fact | yes — the ③ connect gate |
+| gated? | no — it's a fact | yes — the *link* gate |
 | field | entity `relationships` (in the Base) | note `links:` (some typed: supports/contradicts) |
 
 "Relationships are given; links are authored." `links:` (typed note-links) replaces the
@@ -224,7 +211,7 @@ recommendation never substitutes for human approval.
 
 | type | states | notes |
 |---|---|---|
-| report | current → archived | agent analysis (corpus-map, gap-report, verification-report) — **read-only; informs, doesn't gate** |
+| report | current → archived | agent analysis (corpus-map, coverage-report, verification-report) — **read-only; informs, doesn't gate** |
 | sketch | proposed → current → archived | planning scaffold (framing, outline, canvas) |
 | composition | provisional → current → archived | the evolving output; `plan → draft → deliverable` are **states** (deliverable 🔒) |
 | code | current → archived | code handoff |
@@ -238,19 +225,25 @@ report **is** the review surface — a Bases-backed worklist where each row carr
 lifecycle `decision` the PI toggles (accept → linked to the project; reject → archived +
 reason), acted on at *group or item* granularity (like a systematic-review screening
 tool). The Inbox gets **one aggregate work-prompt** ("N sources to screen for
-‹project›"), never N cards (§8).
+‹project›"), never N cards (§7).
 
 **INBOX** — agent→human messages (the PI's slice of the board) · agent-built · transient
 
 | type | description | raised by |
 |---|---|---|
-| candidate | a *found* source proposed for intake | Librarian (`find`) |
+| candidate | a *found* source proposed for intake | Librarian (`catalog`) |
 | gap | a *missing*-source need | Librarian / Peer-reviewer |
 | flag | a verification / integrity issue | Peer-reviewer / Linter |
 | alert | drift / retraction notice | Linter / Peer-reviewer |
 
 (There is no `review-request` type — a card awaiting your gate is just any card in the
 `proposed` state, pointing at the artifact under review.)
+
+**Reports vs Inbox — don't conflate them.** A **report** (corpus-map, coverage-report,
+verification-report) is a project-scoped **analysis *document* you consult**; an **Inbox**
+`gap`/`candidate` is an atomic **global *signal* you act on**. A coverage-report *finds*
+gaps; each one then becomes (or is batched into) an Inbox signal. Different objects:
+the document is the analysis, the card is the action extracted from it.
 
 ### 3.5 Bases as the Vault's view layer — and how the Linter keeps it sound
 
@@ -290,55 +283,58 @@ assigned to the *lane*, not baked into the profile. So one posture can run sever
 as different *modes*, and lanes can share skills. **The PI converses with one agent —
 the co-PI — and delegates to the rest.**
 
-### 4.1 Two activities, six delegable tasks
+### 4.1 The six delegable tasks
 
-The PI's work is **Read** (take knowledge in) and **Write** (put work out) — two
-*activities*, not a six-step pipeline the PI walks. Within them, six **tasks** can be
-delegated to a background lane (each pairs a human verb, an agent task, and an Inbox
-item):
+The PI works in two modes — **Library** (take knowledge in) and **Project** (put work
+out) — *not* a six-step pipeline. Within them, six **tasks** can be delegated to a
+background lane. Each task has **one name** that is at once the action, the lane, and the
+skill prefix; the Inbox signal it raises is named to match.
 
-| Activity | # | Human verb | Delegable task | Lane (agent) | Inbox |
-|---|---|---|---|---|---|
-| **Read** | ① | sort | catalog | Librarian | candidate |
-| | ② | read & note | extract | Librarian | (stubs) |
-| | ③ | connect | link | Librarian | (link proposals) |
-| **Write** | ④ | plan | map | Librarian | gap |
-| | ⑤ | write | draft | Writer | — |
-| | ⑥ | check | verify | Peer-reviewer | flag |
+| Mode | Task (= lane = skill prefix) | Inbox signal |
+|---|---|---|
+| **Library** | **catalog** | candidate |
+| | **extract** | (stub) |
+| | **link** | (link proposal) |
+| **Project** | **map** | gap |
+| | **draft** | — |
+| | **verify** | flag |
 
 The tasks are **individually triggered, not a set** — a human gate (often a long gap)
-sits between each: a source is catalogued; *much later, if ever*, distilled (extract);
-only after a claim is written does linking fire. Catalog/extract/link/map are four lanes
-of the one **Librarian posture**, not four profiles. All six are reachable from either
-perspective via the palette; each perspective just surfaces its natural tasks first (§6).
-Gaps found in ④/⑥ become Inbox `gap`s that re-trigger ① — the loop that compounds.
+sits between each: a source is *catalogued*; *much later, if ever*, *extracted*; only
+after a claim is written does *linking* fire. catalog/extract/link/map are four lanes of
+the one **Librarian** posture (draft = Writer, verify = Peer-reviewer); all six are
+reachable from either mode via the command palette. Gaps found in *map*/*verify* raise
+Inbox `gap`s that re-trigger *catalog* — the loop that compounds.
 
 ### 4.2 The agents
 
-The PI talks to the **co-PI**; four background agents run as lanes it delegates to.
-Each follows the Hermes profile model: a **SOUL.md** (posture / system prompt),
-**config.yaml** (model + tools), **skills/** (per-lane), **mcp.json** (connections),
-**AGENTS.md** (the shared "how we work in this vault" instructions, distinct from SOUL's
-personality), and **distribution.yaml** (the packaged repo).
+The PI talks to the **co-PI**; four background agents run as lanes it delegates to. Each
+agent = a **shared** layer + a **unique** layer. The shared layer is **AGENTS.md** — the
+one "how we work in this vault" instruction set every agent reads. The unique-per-agent
+layer is **SOUL.md** (its posture / system prompt), **skills/** (per-lane),
+**config.yaml** (model + tools), and **mcp.json** (connections). (`distribution.yaml`
+packages it.) So they share the house rules but each brings its own stance and toolset.
 
 **co-PI** — *posture: reflective thinking-partner; the only agent you converse with.*
 
-- *Where:* **Workspaces** — the desk pane (ACP), interactive, **not on the board**.
+- *Where:* the **Interface** — the desk pane (ACP), interactive, **not on the board**.
 - *Does:* holds the conversation, asks the sharpening questions (the old **Socratic**
   role, folded in), and **delegates** tasks to the background lanes (the Ask / Explore
   assists are it, in the moment). Read-only itself — it can run any read-only skill
   directly, but every *write* goes out as a delegated task card.
 - *Why one:* concentrating every conversation here lets it use Hermes' learning loop —
-  **memory · /goals · skills** — and grow into a true co-PI. It never writes canonical
-  content; its product is your sharpened thinking and well-routed work.
+  **memory · /goals · skills** — and grow into a true co-PI. **`/personality` (interactive
+  persona tuning) is a co-PI-only affordance** — the specialists' postures are fixed by
+  design (stable traits, not per-run knobs). It never writes canonical content; its
+  product is your sharpened thinking and well-routed work.
 
 **Librarian** — *posture: faithful* (include generously and report state; the gate filters).
 
 - *Lanes:* the four processing tasks — **catalog · extract · link · map** (now also the
   old Analyst's map/scope work — a research librarian does both intake and lit-search).
 - *Proposes:* a comparative `[!brief]`, draft classifications, claim-stubs, note-link
-  candidates, corpus-/gap-/cluster-maps, a writability read, scored outlines, a seeded
-  canvas — all into staging.
+  candidates, corpus-maps, coverage-reports, cluster maps, a writability read, scored
+  outlines, a seeded canvas — all into staging.
 - *Boundary:* read-only over canonical content; writes only staging / project scratch;
   never canonizes. The mechanical half of cataloging (fetch metadata, extract text, build
   **relationships**, create records) is the **ingest engine**, not the agent.
@@ -357,7 +353,7 @@ personality), and **distribution.yaml** (the packaged repo).
   (citekey resolution, claim→source tracing, near-duplicate adjudication) + the conceptual
   red-team *for soundness, not just facts*; spawns `gap`/`flag` cards.
 - *Boundary:* **independent of the Librarian** — the agent that synthesizes must not also
-  grade its own work (separation of duties; the anti-rubber-stamp principle, §9). The
+  grade its own work (separation of duties; the anti-rubber-stamp principle, §8). The
   *deterministic* sweeps (retraction, dedup, broken-citation) are **engines**, not this
   agent (§4.3).
 
@@ -374,70 +370,73 @@ PI-only, enforced by the policy MCP. (Skills per profile: Appendix C.)
 
 ### 4.3 The engines (deterministic, no posture)
 
-Not agents — pure mechanism, triggered or scheduled, never on the board:
+Not agents — pure mechanism, triggered or scheduled, never on the board. You *run* them
+(the PI, an agent via MCP, or cron); they have no posture and make no judgments.
 
-- **Ingest / cataloging engine** — fetches metadata, extracts content, builds entity
-  **relationships**, creates Catalog records. The mechanical core of ①. *(ADR-30's
-  pipeline already works this way.)*
-- **Search** — deterministic retrieval over the vault (the `query` skill). Powers "Search"
-  (§6.3) and finds link candidates before the Librarian proposes (§3.1).
-- **Verification sweeps** — scheduled, deterministic checks split out from the old
-  Peer-reviewer: retraction lookups, near-duplicate detection, broken-citation detection.
-  Their *findings* become Inbox `flag`/`alert`s; the *judgment* verification stays the
-  Peer-reviewer (§4.2).
-- **The Linter** — §5.
+- **Ingest** — fetches metadata, extracts content, builds entity **relationships**, and
+  creates Catalog records. The mechanical core of *catalog* (the Librarian fills the two
+  LLM holes — the brief and the classification proposal). *(ADR-30's pipeline already
+  works this way.)*
+- **Search** — deterministic retrieval over the vault (the `search:*` skills). Powers the
+  **Search** assist (§5.3) and finds link candidates before the Librarian proposes (§3.1).
+- **Clustering** — BERTopic (topics) + NetworkX (link-structure) behind the gated cluster
+  MCP (ADR-33 + the [Graph visualization](graph-visualization.md) note). The *map* task
+  uses it; it surfaces structure, it never decides.
+- **Verification sweeps** — scheduled, deterministic checks split from the old Verifier:
+  retraction lookups, near-duplicate and broken-citation detection. Findings → Inbox
+  `flag`/`alert`; the *judgment* checks stay the Peer-reviewer (§4.2).
+- **Linter** — the zero-LLM integrity guard, run on **cron + as a CI gate**: validates
+  frontmatter schema, link/relationship resolvability, orphans, and graph health; supplies
+  the **schema integrity Bases lacks** (§3.5); rotates logs. Findings → Inbox
+  `flag`/`alert` at graded loudness (§5.4). `archive` is **propose-only** — it stages the
+  move, the PI executes it (the one move actors never make).
+
+**Invocation:** agents reach engines **only through MCP** (the sandbox); cron, CI, and the
+PI run them directly (D41).
 
 ---
 
-## 5. The Linter engine
-
-**The Linter is an engine, not an agent** — zero-LLM, no posture, no board lane. It's the
-deterministic integrity guard, run on **cron + as a CI gate**. It validates frontmatter
-schema, link/relationship resolvability, orphans, and graph health; rotates logs; and
-supplies the **schema integrity Bases lacks** (§3.5). Findings surface as Inbox
-`flag`/`alert` at a graded loudness (§6.4). `archive` is **propose-only** — the Linter
-stages the move; the PI executes it (the one move actors never make).
-
----
-
-## 6. The working surface
+## 5. The working surface
 
 Where the PI works; everything else serves it. Governed by **visual discipline**:
-*invisible during normal use, legible when something needs a decision* — it feels like
-reading and writing most of the time.
+*invisible during normal use, legible when something needs a decision.* We use Obsidian's
+own vocabulary — **panes/tabs** in the main area, **left/right sidebars**, the **ribbon**,
+the **status bar**, the **command palette**, and **Bases**/**Canvas** for views.
 
-### 6.1 One working surface, two perspectives
+### 5.1 Two Workspaces — Library and Project
 
-There is **one working surface plus Home** — not two walled-off workspaces. The surface
-adapts to a **Library** or **Project** perspective (a saved layout), and **every task is
-reachable from both** via the palette; the perspective just surfaces its natural tasks
-and panes first. Reading and writing interleave too tightly for a hard wall.
+Library and Project are two saved **Obsidian Workspaces** (the Workspaces core plugin =
+saved pane layouts), alongside **Home**:
 
-| Surface | Holds |
+| Workspace | Holds |
 |---|---|
 | **Home** | the "what needs me?" surface (triage / overview) |
-| **Library** perspective | the *Read* surface — source + notes + backlinks + co-PI + reading queues (tasks ①②③) |
-| **Project** perspective | the *Write* surface — project tree + composition + linked claims + verification (tasks ④⑤⑥) |
+| **Library** | sources + notes + backlinks + the co-PI pane + reading queues (catalog · extract · link) |
+| **Project** | project tree + composition + linked claims + verification (map · draft · verify) |
 
-**Deep vs. task work stays separated.** The perspectives are for **deep work** (close
-reading, the project brief, the canvas, drafting); **task-mode** triage (clearing the
-Inbox, confirming link proposals, screening a relevance report) lives in **Home / the
-Inbox**, batched — it never interrupts the deep surfaces. They are different mindsets and
-should not be mixed.
+Every task is reachable from both via the **command palette**; the Workspace just surfaces
+its natural tasks and panes first. Reading and writing interleave too tightly for a hard
+wall.
 
-### 6.2 Homepage — above-fold "what needs me" + progressive disclosure
+**Deep vs. task work stays separated.** The Workspaces are for **deep work** (close
+reading, the brief, the canvas, drafting); **task-mode** triage (clearing the Inbox,
+confirming link proposals, screening a coverage-report) lives in **Home / the Inbox**,
+batched — it never interrupts the deep surfaces. They are different mindsets and should
+not be mixed.
+
+### 5.2 Home — above-fold "what needs me" + progressive disclosure
 
 The front door (`home.md`): a **launchpad, consumer-only** (embeds dashboards, owns no
 logic — so it can't drift or error, and degrades to empty). Above the fold: the **Inbox
-summary** ("what needs me?"). Below: collapsible detail dashboards (Appendix D). So
-homepage, Inbox, and dashboards are one calm surface — a 30-second glance that opens into
-depth on demand. The **status line** is the always-visible ambient indicator (Linter +
-queue counts).
+summary** ("what needs me?"). Below: collapsible detail dashboards (Appendix D). So Home,
+Inbox, and dashboards are one calm surface — a 30-second glance that opens into depth on
+demand. The **status bar** is the always-visible ambient indicator (Linter + queue
+counts).
 
-### 6.3 Active assistance
+### 5.3 Active assistance
 
-The PI invokes an assist *from the working surface* (command palette · assist pane ·
-text selection); the result is always a **proposal in staging**. Each assist is a
+The PI invokes an assist *from the working surface* (command palette · assist pane · text
+selection); the result is always a **proposal in staging**. Each assist is a
 **(posture × skill)** applied to the current context — i.e. the same actors, invoked
 interactively rather than on the board:
 
@@ -450,7 +449,7 @@ interactively rather than on the board:
 | **Draft** | generate a proposed artifact (stub / outline / prose) | Writer | Project |
 | **Explore** | elicit framings / branches | co-PI | Project |
 
-### 6.4 Graded loudness — defined outcomes
+### 5.4 Graded loudness — defined outcomes
 
 | Level | Outcome |
 |---|---|
@@ -463,7 +462,7 @@ The test for push vs dashboard: *does it change what the PI does in the next 30 
 
 ---
 
-## 7. The pattern library
+## 6. The pattern library
 
 The substrate for the **Patterns** assist: a curated library of single-purpose
 prompt-transformations, stored as markdown in **`system/patterns/`** (visible, git-tracked,
@@ -471,12 +470,12 @@ lintable — *not* `.memoria/`, which is hidden runtime).
 
 - **One runner skill executes every pattern.** Patterns are *data* (prompts), not
   individual skills; "using a pattern" = the runner + a pattern id.
-- **Each pattern's frontmatter declares** its **posture/agent**, **activity (read/write)**,
+- **Each pattern's frontmatter declares** its **posture/agent**, **mode (Library/Project)**,
   **action type**, **input**, and **output_target** — so we always know which posture runs
   it, and whether it's a read or write pattern. A shared `_preamble.md` enforces Memoria
   voice (your-words, concise, propose-never-assert, cite-don't-fabricate).
 - **Finding the right one:** the working-surface **pattern-picker** (a `patterns.base`
-  catalog) filters by the current activity / task / selection — it surfaces only the patterns
+  catalog) filters by the current mode / task / selection — it surfaces only the patterns
   relevant *now*. That picker is the discovery mechanism.
 - **Constraints (enforced):** never writes a gated zone (output → staging, else dry-run +
   lint failure); propose-not-dispose; the Linter validates pattern files; retrieve-type
@@ -489,12 +488,12 @@ lintable — *not* `.memoria/`, which is hidden runtime).
 
 ---
 
-## 8. Human decision points
+## 7. Human decision points
 
 Every place the PI acts is one of **two kinds**, and they need different Inbox items:
 
 - **Approval gate** — the PI reviews *agent-produced output* and accepts/rejects.
-  Rubber-stamp risk is high, so the item must carry **reasoning + verdict** (§9), never a
+  Rubber-stamp risk is high, so the item must carry **reasoning + verdict** (§8), never a
   bare "OK?".
 - **Work prompt** — the agent signals it's *time for the PI's own thinking/writing*.
   Not an approval; the item is a **rich nudge** with the material to start.
@@ -503,11 +502,11 @@ Every place the PI acts is one of **two kinds**, and they need different Inbox i
 |---|---|---|---|
 | keep this source? (candidate triage) | approval (keep/skip) | ✓ at intake | `candidate` + *why surfaced* (which gap/focus, signals, dupes) |
 | classify | — **not a real gate** | ✗ rubber-stamp, low-stakes metadata | **automate** (audited, correctable); `flag` only on genuine ambiguity |
-| write the claim (②) | work prompt | ✓ on a kept source | "distill candidate" nudge: why worth distilling + stubs |
-| confirm links (③) | approval | ✓ once the claim exists | link proposals **+ evidence + stance reasoning** per edge |
-| frame a project (④) | work prompt + choice | ✓ at write-readiness | "ready to write" + corpus-map + scored outlines |
-| edit the draft (⑤) | work (continuous) | ✓ in Write | a "draft ready" FYI; not an approval |
-| certify & ship (⑥) | approval (strongest) | ✓ before shipping | the verification report: checks, red-team, open gaps |
+| write the claim (extract) | work prompt | ✓ on a kept source | "distill candidate" nudge: why worth distilling + stubs |
+| confirm links (link) | approval | ✓ once the claim exists | link proposals **+ evidence + stance reasoning** per edge |
+| frame a project (map) | work prompt + choice | ✓ at write-readiness | "ready to write" + corpus-map + scored outlines |
+| edit the draft (draft) | work (continuous) | ✓ in Project | a "draft ready" FYI; not an approval |
+| certify & ship (verify) | approval (strongest) | ✓ before shipping | the verification report: checks, red-team, open gaps |
 | archive | approval (PI-only move) | ✓ when stale | archival proposal **+ reason** |
 | re-adjudicate (retraction) | approval | ✓ on invalidation | retraction `alert` + adjudication options |
 | near-tie | approval (same/diff/unsure) | ✓ before a commit | the two objects, side by side |
@@ -516,12 +515,12 @@ Every place the PI acts is one of **two kinds**, and they need different Inbox i
 either give it real decision material, or automate it. **classify** fails this test, so
 it's automated. The strongest gates (certify, link-confirm, re-adjudicate) are approvals,
 so each must ship its reasoning. **High-cardinality** per-item decisions (screening a
-relevance report) are the exception that proves the rule: they belong in a **batch
+coverage-report) are the exception that proves the rule: they belong in a **batch
 worklist** (§3.4), not N cards — one aggregate work-prompt points at the worklist.
 
 ---
 
-## 9. Design guardrails
+## 8. Design guardrails
 
 - **Decision transparency (the primary guardrail).** Assume anything promoted to the
   PI *will* be approved — so the strongest guard is to hand the PI the **reasoning:
@@ -533,8 +532,11 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
   thresholds). `candidate-rank` and `outline-score` are **hybrid** (embedding/LLM) — these
   ship only with a filled threshold spec: grounded · error-budgeted · drift-bound
   (recalibrate on model-version change) · shadow-first.
-- **Diversity reserve.** ≥20% of intake reserved for unranked external/serendipitous
-  sources, so the cycle isn't fed only by its own back-pressure (anti-monoculture).
+- **Diversity reserve (anti-echo-chamber).** The system surfaces intake from its *own*
+  gaps and interests (back-pressure) — left unchecked, 100%-self-recommended intake
+  becomes an echo chamber that only deepens what you already have. So **≥20% of intake is
+  reserved for unranked, serendipitous, external sources** the ranker didn't choose —
+  deliberate novelty that keeps the corpus from becoming a monoculture.
 - **Provenance everywhere.** Every claim → a citekey; every gated write → an audit entry
   (SHA-256 chain); shipped deliverables → a frozen provenance snapshot.
 - **Archive, never delete.** Obsolescence is handled by `retracted` + supersession with
@@ -542,9 +544,9 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
 
 ---
 
-## 10. To revisit
+## 9. To revisit
 
-- **Projects / the Project perspective** — the project workflow is now defined in
+- **Projects / the Project Workspace** — the project workflow is now defined in
   **Appendix H** (v0.2: brief → relevance scan → lit-search → canvas → outline). Still
   open: the `plan→draft→deliverable`-as-states model, and **write · code · verify** detail
   — **v0.3**.
@@ -554,8 +556,9 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
   co-PI**; Linter + sweeps are engines — sequence the migration.
 - **`relations:` → `links:`** field rename (notes) + adding entity `relationships`
   (Catalog) — amends ADR-08; plan the migration.
-- **Task prefix in skill names** (`catalog:`/`verify:`…, not `read:`/`write:`) — confirm
-  via an eval that the prefix aids selection (Appendix C).
+- **Skill-name migration** — the shipped `hermes-cli` commands move to the
+  `<task>:<verb>-<object>` convention (Appendix C); confirm via an eval that the prefix
+  aids selection.
 
 ---
 
@@ -587,35 +590,32 @@ promoted.**
 
 ## Appendix C — profile → skills map + naming scheme
 
-**Skill naming: `<task>:<verb>-<object>`** (snake `<task>_<verb>_<object>` if serialized
-as an MCP tool) — the **task/lane** is the prefix (`catalog · extract · link · map · draft
-· verify · find · search`), the verb is from a **closed set** (`extract · link ·
-summarize · check · rank · draft · outline · score`), and the artifact is the object (no
-result slot). Examples: `catalog:enrich-record` · `extract:summarize-source` ·
-`link:suggest-claim` · `map:report-gaps` · `verify:check-citation` · `search:find-source`
-· `draft:write-section`. The task prefix matches the **board card / lane**, so a skill's
-name says which task delegates it *(the earlier `read:`/`write:` activity prefix was too
-coarse to disambiguate).*
+**One naming convention for every skill: `<task>:<verb>-<object>`** (snake
+`<task>_<verb>_<object>` when serialized as an MCP tool). The **task/lane** is the prefix
+(`catalog · extract · link · map · draft · verify · find · search · ask · explore ·
+ingest · cluster · sweep · lint`); the **verb** is from a closed set (`find · enrich ·
+classify · summarize · suggest · rank · score · check · trace · draft · outline · report ·
+seed · build · migrate`); the **object** is the artifact (no redundant result slot). So a
+skill's name says which task delegates it. The existing shipped `hermes-cli` commands
+migrate to this scheme (legacy name in parentheses).
 
-Existing skills are current `hermes-cli` commands; **(new)** are specified, not built.
-
-| Actor (agent / engine) | Existing skills | New (proposed) |
-|---|---|---|
-| **co-PI** · agent (conversational, desk) | socratic-processing · lens-reading | ask · explore · delegate-task |
-| **Librarian** · agent (catalog · extract · link · map) | find · enrich · classify · query · scope-project · gap-report · cluster-map · cluster-mapping · obsidian-paper-note · counter-outline | candidate-rank · tension-surface · relation-suggest · distill-candidate-flag · writable-density · readiness-score · canvas-seed · gap-route · map:claim-graph · map:hub-canvas |
-| **Writer** · agent (draft) | draft · query · promote | claim-stub · outline-score · citation-bind |
-| **Peer-reviewer** · agent (verify, judgment) | cite-check · claim-trace | gap-card · gap-fix-propose |
-| **Engineer** · agent (code) | code · commit · revert · workspace · scaffold | — |
-| **Ingest** · engine | ingest · enrich (mechanical) | build-relationships · create-records |
-| **Search** · engine | query | — |
-| **Verification sweeps** · engine | similarity-check · find-duplicates · retraction-check · claim-checks | continuous-verify |
-| **Linter** · engine | lint · schema-check · schema-migrate · graph-analyze · health-report · session-log · dry-run · structural-detectors | provenance-snapshot · archive (propose-only) |
+| Actor (agent / engine) | Skills (`<task>:<verb>-<object>`) |
+|---|---|
+| **co-PI** · agent (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` |
+| **Librarian** · agent (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (enrich) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-map) · `map:score-writability` (writable-density) · `map:score-readiness` (readiness-score) · `map:seed-canvas` (canvas-seed) · `map:graph-claims` · `map:canvas-hub` |
+| **Writer** · agent (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
+| **Peer-reviewer** · agent (verify) | `verify:check-citation` (cite-check) · `verify:trace-claim` (claim-trace) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
+| **Ingest** · engine | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` · `ingest:enrich-openalex` |
+| **Search** · engine | `search:query-vault` (query) · `search:find-similar` |
+| **Clustering** · engine | `cluster:model-topics` (BERTopic) · `cluster:build-graph` (NetworkX) |
+| **Verification sweeps** · engine | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) · `sweep:check-claims` (claim-checks) |
+| **Linter** · engine | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) · `lint:log-session` (session-log) · `lint:detect-structural` (structural-detectors) · `lint:snapshot-provenance` · `lint:propose-archive` |
 
 The mechanical half of cataloging (fetch · extract · build relationships · create records)
 runs in the **Ingest engine**, not the Librarian; the **deterministic** verification
-sweeps are an engine, while the *judgment* checks (cite-check · claim-trace) are the
-**Peer-reviewer**. *(Dropped: `classification-confidence` — it served confidence
-auto-accept, which contradicts the propose-not-dispose guardrail.)*
+sweeps are an engine, while the *judgment* checks (`verify:check-citation`,
+`verify:trace-claim`) are the **Peer-reviewer**. *(Dropped: `classification-confidence` —
+it served confidence auto-accept, which contradicts the propose-not-dispose guardrail.)*
 
 ## Appendix D — dashboards (reconciled)
 
@@ -651,7 +651,8 @@ board — on cron/CI, not as cards.)
 
 **Lanes = the background agents** (`assignee = memoria-<name>`: Librarian · Writer ·
 Peer-reviewer · Engineer). **No co-PI lane** — it converses at the desk (ACP pane), never
-on the board — and **no engine lanes** (ingest · search · sweeps · Linter run on cron/CI).
+on the board — and **no engine lanes** (ingest · search · clustering · sweeps · Linter run
+on cron/CI).
 
 The board's native **`status`** (`triage → todo → ready → running → done → blocked →
 archived`) is the **hidden execution mechanic**. The human-facing card state is the
@@ -679,7 +680,7 @@ against the project-board columns.
 | 221 | this redesign — the tracking issue |
 | 153 | auto-promote at `evergreen`? **No** — maturity is a property (§3.3) |
 | 213 | Dataview vs Bases — Bases is the view layer (§3.5) |
-| 224 | "Ask chat transform" → the Ask / Patterns assists (§6.3, §7) |
+| 224 | "Ask chat transform" → the Ask / Patterns assists (§5.3, §6) |
 | 185 | ACP→inbox loop → the trigger→lanes→signal loop + Inbox |
 | 191 / 180 | tags/properties + starter tag set → faceted ontology (App. A) |
 | 142–145 | frontmatter UX → Bases/forms once Catalog/Notes are Bases-backed |
@@ -695,7 +696,7 @@ to a lane · `#177` tutorial names.
 
 ADR-36 (→ Inbox card-in-`proposed`) · ADR-37 (→ Find / Librarian) · ADR-38
 (→ near-tie/dedup + Peer-reviewer) · ADR-42 (→ profile = posture, §4) · ADR-43 (→ pattern
-governance, §7). **Tension:** ADR-41 (advisory gate) vs the transparency guardrail — allow
+governance, §6). **Tension:** ADR-41 (advisory gate) vs the transparency guardrail — allow
 only as a comparison-study toggle.
 
 ### Explorations
@@ -704,10 +705,10 @@ only as a comparison-study toggle.
 `measurement-and-verification` → partially folded; `publication-strategy` → parked with
 Projects; deployment/`classical-methods-over-llm` → independent.
 [`graph-visualization`](graph-visualization.md) → captured separately (typed
-claim/relationship-graph projections; the Librarian gains the `map:claim-graph` /
-`map:hub-canvas` skills; activates #197's deferred NetworkX/InfraNodus threads).
-[`system-architecture`](system-architecture.md) → the 7-layer runtime stack + the
-cognitive-model mapping + the MCP boundary.
+claim/relationship-graph projections; the Librarian gains `map:graph-claims` /
+`map:canvas-hub`; activates #197's deferred NetworkX/InfraNodus threads).
+[`system-architecture`](system-architecture.md) → the seven-layer architecture + the MCP
+boundary.
 
 ### #220 — obsidian-biblib
 
@@ -730,9 +731,10 @@ If adopted, each firm decision graduates via the
 
 **Supersedes**
 
-- **ADR-01** (three-layer architecture) → **two structural layers** (Workspaces · Vault)
-  with **three actors** (engines · agents · the PI); "Bookkeeping/Housekeeping" are
-  *what the actors do*, not separate layers. (Full stack: [Memoria system architecture — the seven-layer stack](system-architecture.md).)
+- **ADR-01** (three-layer architecture) → **the single seven-layer architecture** (PI ·
+  Interface · co-PI · Tasks · MCP · Engines · Vault), one model serving as both the
+  cognitive and the build view (full stack:
+  [Memoria system architecture — the seven-layer stack](system-architecture.md)).
 - **ADR-04** (lifecycle-over-topic folders) → **type-first folders** (one category per
   folder; lifecycle is a state property, not a folder number).
 
@@ -742,7 +744,7 @@ If adopted, each firm decision graduates via the
   Socratic) + **four background agents** (**Librarian · Writer · Peer-reviewer · Engineer**),
   each defined by a **posture**; the **Linter and the deterministic verification sweeps
   are engines**, not agents. The old Librarian + Analyst unify as **Librarian**; the old
-  Peer-reviewer splits by determinism (judgment → **Peer-reviewer**, sweeps → engines).
+  Verifier splits by determinism (judgment → **Peer-reviewer**, sweeps → engines).
 - **ADR-08** (typed relations) → notes carry **`links:`** (some typed
   supports/contradicts); entities carry **`relationships`** — two distinct kinds.
 - **ADR-30** (deterministic ingest) → **cataloging splits**: a mechanical *ingest
@@ -757,7 +759,7 @@ If adopted, each firm decision graduates via the
 - Catalog entities in **Obsidian Bases**; the **Linter engine** supplies the integrity
   Bases lacks.
 - **Inbox** as the agent→human message category (kanban + dashboards are its views).
-- **Read / Write** as the activity spine, on **one working surface (Library/Project perspectives)**.
+- **Library / Project** as the two-mode spine, realized as two Obsidian Workspaces.
 - The **co-PI + delegation** model — one conversational agent; specialists are background
   lanes.
 - Universal lifecycle chain + **maturity as a property**; **drop the `reference`** type.
@@ -780,12 +782,12 @@ Each phase composes the six delegable tasks (§4.1); the agent is chosen by **po
 |---|---|---|---|---|---|
 | 1 | **Brief** — the research question | **co-PI** (dialogic) + PI; Writer may draft prose | the PI's intent | a **project brief** (`sketch`) — scope · problem · question | deep work; *guides every later phase, so getting it wrong cascades* |
 | 2 | **Relevance scan** | **Librarian** (`map`) | brief + the Catalog | a **relevance report** (`report`) | per-source keep/reject **batch worklist** (D37); accepted → linked to the project |
-| 3 | **Literature search** | **Librarian** (`find` + `map`) | brief + linked sources | a **new-sources report** (`report`) | same worklist shape; recommends catalog additions, then re-links |
-| 4 | **Canvas** — the thread | **Librarian** proposes (`canvas-seed`); **PI** authors | linked claims/sources | a **canvas** (`sketch`) | deep work; the ZK-style connecting phase |
+| 3 | **Literature search** | **Librarian** (`catalog` + `map`) | brief + linked sources | a **new-sources report** (`report`) | same worklist shape; recommends catalog additions, then re-links |
+| 4 | **Canvas** — the thread | **Librarian** proposes (`map:seed-canvas`); **PI** authors | linked claims/sources | a **canvas** (`sketch`) | deep work; the ZK-style connecting phase |
 | 5 | **Outline** | **Writer** (`draft`) | the canvas | an **outline** (`sketch` → `composition`) | **one-way seed** from the canvas, then it diverges (no two-way sync) |
 | 6 | **Write** | **Writer** (`draft`) | outline + claims | `composition` (draft → deliverable 🔒) | **v0.3** |
 | 7 | **Code** | **Engineer** (`code`) | composition | `code` handoff | **v0.3** |
-| 8 | **Verify** | **Peer-reviewer** (`verify`) | the draft / deliverable | the ⑥ certify gate | **v0.3** |
+| 8 | **Verify** | **Peer-reviewer** (`verify`) | the draft / deliverable | the certify gate | **v0.3** |
 
 **The relevance / new-source report structure** (phases 2–3): a *scope + screening header*
 (the question, the catalog scanned, and an include/exclude line *with reason* per source —
@@ -796,6 +798,6 @@ Sources are grouped by their **`relationships`** (paper + repo, review + source,
 counter-paper), so related items are judged together.
 
 **Two principles carried in:** reports are **project artifacts** (`projects/<p>/reports/`),
-browsed in the Project perspective, each surfacing **one aggregate work-prompt** — never N
-cards (D37); and the loop **compounds** — gaps found in ④/⑥ become Inbox `gap`s that
-re-trigger intake (①).
+browsed in the Project Workspace, each surfacing **one aggregate work-prompt** — never N
+cards (D37); and the loop **compounds** — gaps found in *map*/*verify* raise Inbox `gap`s
+that re-trigger intake (*catalog*).

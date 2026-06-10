@@ -327,7 +327,7 @@ Compile/Compose was a redundant second vocabulary for Read/Write.
 
 ---
 
-## D25 — Collapse to two layers + three actors *(→ refines D1/D15; build-view stack in D36)*
+## D25 — Collapse to two layers + three actors *(→ refines D1/D15; build-view stack in D36; unified into one model in D42)*
 
 **Decided:** the model is **two structural layers** (Workspaces · Vault) + **three
 actors** (engines · agents · the human). "Bookkeeping" and "Housekeeping" are no longer
@@ -342,7 +342,7 @@ agent-vs-engine split instead, with no parallel taxonomy.
 the confusion); keep "Housekeeping" as the engine tier's function name only (rejected —
 half-measure, two names floating).
 
-## D26 — One co-PI fronts everything; specialists are background lanes *(→ refines D8/D9)*
+## D26 — One co-PI fronts everything; specialists are background lanes *(→ refines D8/D9; shared/unique context + /personality in D46)*
 
 **Decided:** the human converses with **one agent — the co-PI** — and **delegates** tasks
 to the background lanes. The co-PI is the desk partner and **subsumes Socratic**; the
@@ -389,7 +389,7 @@ dimensions). Merging Verify into Process would break that.
 (rejected — breaks independence); keep Fact-checker standalone spanning book/house
 (rejected — the "· book/house" awkwardness; deterministic sweeps need no posture).
 
-## D29 — One working surface, two perspectives *(→ refines D7/D24; perspectives named Library/Project in D33)*
+## D29 — One working surface, two perspectives *(→ refines D7/D24; perspectives named Library/Project in D33; Obsidian Workspaces in D45)*
 
 **Decided:** **Read** and **Write** are two **perspectives** (saved layouts) on **one
 working surface** plus Home — not two walled-off workspaces. Every task is reachable from
@@ -414,7 +414,7 @@ self-teaching, and naturally includes the human; "workers" is taken (Hermes lane
 **Alternatives weighed:** doers (kept as a plain fallback); operators (implies
 runtime-ops); performers (theatrical).
 
-## D31 — Task-prefix skill naming *(→ refines D23)*
+## D31 — Task-prefix skill naming *(→ refines D23; one task-name + all-skills convention in D43/D47)*
 
 **Decided:** skill names are **`<task>:<verb>-<object>`** — the prefix is the **task/lane**
 (catalog · extract · link · map · draft · verify · find · search), not the activity. E.g.
@@ -490,7 +490,7 @@ symmetrically (inform, don't persuade).
 reasons-for-only gate (rejected — automation bias). [NIST IR 8312; Tintarev & Masthoff
 2012; Preston & Colman 2000; the Toulmin model.]
 
-## D36 — Seven-layer system architecture; MCP is a policy boundary *(→ complements D25; sandbox model in D40, engine invocation in D41)*
+## D36 — Seven-layer system architecture; MCP is a policy boundary *(→ complements D25; sandbox model in D40, engine invocation in D41; unified as the one model in D42)*
 
 **Decided:** adopt a **seven-layer build/runtime stack** (PI · Interface · co-PI · Tasks ·
 MCP · Engines · Vault) with the principle **decisions flow top-down, information bottom-up**.
@@ -598,6 +598,97 @@ is a CI gate, the sweeps are cron.
 
 **Alternatives weighed:** everything through MCP uniformly (rejected — needless facades for
 cron-only engines); agents calling engines directly (rejected — breaks the sandbox).
+
+---
+
+## D42 — One unified model: the seven-layer architecture *(→ supersedes the D25/D36 two-model split)*
+
+**Decided:** collapse the separate *cognitive* model (two layers + three actors, D25) and
+*build* model (seven-layer stack, D36) into **one model — the seven-layer architecture**
+(PI · Interface · co-PI · Tasks · MCP · Engines · Vault), annotated with the three
+**actor-kinds** (human · agents · engines) and the decisions-down/info-up flow. The
+one-to-one mapping table is dropped; the redesign §2 is the summary, system-architecture.md
+the full treatment.
+
+**Why:** a 1:1 mapping between two models is the smell that they're redundant; a single
+good-enough model is a *better* cognitive aid than two perfect-but-separate ones. This
+still honors D25's real point (no *parallel taxonomy / doubling*) — it's one model, not two.
+
+**Alternatives weighed:** keep two lenses (rejected — the mapping overhead and the "which
+is canonical?" question are exactly the confusion to avoid).
+
+## D43 — Library/Project is the one mode name; one task name spans verb/lane/skill *(→ refines D7/D29/D31)*
+
+**Decided:** the two modes are **Library** and **Project** (dropping Read/Write as separate
+*activity* names — the mode *is* the Obsidian Workspace, D45). The §4.1 table collapses to
+**Mode | Task | Inbox**: the old "human verb" and "delegated task" merge into **one task
+name** (`catalog · extract · link · map · draft · verify`) that is simultaneously the
+action, the lane, and the skill prefix; the Inbox signal is named to match. The `①–⑥`
+numbering is dropped (it implied a pipeline).
+
+**Why:** one vocabulary per axis — fewer parallel names to reconcile; the numbers wrongly
+implied a fixed sequence (the tasks are individually triggered).
+
+**Alternatives weighed:** keep Read/Write activities *and* Library/Project perspectives
+(rejected — two names for one axis); keep separate verb + task columns (rejected —
+redundant).
+
+## D44 — Engines finalized: ingest (not cataloging) + clustering; Linter merged in *(→ refines D15/D16/D41)*
+
+**Decided:** the engine that builds the catalog is **ingest** — kept distinct from the
+Librarian's *catalog* task (D16: engine = mechanical, agent = interpretive); "cataloging
+engine" would collide with the task. Add a **clustering** engine (BERTopic + NetworkX, the
+gated cluster MCP). The **Linter** is one engine in the §4.3 list — its standalone section
+(old §5) was redundant and is removed.
+
+**Why:** `ingest` ≠ `catalog` keeps the split legible (and matches the wiki-llm term);
+clustering is deterministic and posture-free, so it is an engine; the Linter is just one
+more engine, not a layer of its own.
+
+**Alternatives weighed:** "cataloging engine" (rejected — collides with the catalog task);
+keep §5 (rejected — redundant with §4.3).
+
+## D45 — Obsidian terminology for the UI; Library/Project are Obsidian Workspaces *(→ refines D29/D33)*
+
+**Decided:** the working surface adopts Obsidian's own vocabulary — **panes/tabs**,
+**left/right sidebars**, **ribbon**, **status bar**, **command palette**, **Bases**,
+**Canvas**. **Library and Project are two saved Obsidian Workspaces** (the Workspaces core
+plugin = saved pane layouts), alongside Home. This also resolves the old "Workspaces"
+overload: the layer is **Interface** (D42), freeing "Workspace" to mean the saved layout.
+
+**Why:** grounding the UI in real Obsidian features (rather than coined terms like
+"perspective"/"working surface") is the naming discipline — the word the user already owns.
+
+**Alternatives weighed:** keep "perspective"/"working surface" (rejected — coined terms
+where Obsidian already has the right one).
+
+## D46 — Shared + per-agent context; `/personality` is co-PI-only *(→ refines D26)*
+
+**Decided:** each agent = a **shared** layer (`AGENTS.md` — the one "how we work in this
+vault" instruction set every agent reads) + a **unique** layer (its own `SOUL.md` posture,
+`skills/`, `config.yaml`, `mcp.json`). **`/personality`** (interactive persona tuning) is a
+**co-PI-only** affordance; the specialists' postures are fixed by design.
+
+**Why:** DRY shared house-rules + specialized per-agent stance is the best practice; and a
+stable posture shouldn't be human-tuned per run — only the co-PI (which you converse with
+and shape over time) needs `/personality`.
+
+**Alternatives weighed:** per-agent everything, no shared layer (rejected — duplication);
+`/personality` for all (rejected — undermines the fixed-posture model).
+
+## D47 — One skill-naming convention; reports vs Inbox de-collided *(→ refines D31; renames gap-report)*
+
+**Decided:** **every** skill uses `<task>:<verb>-<object>` (Appendix C) — the shipped
+`hermes-cli` commands migrate to it (legacy name kept in parentheses). And the project
+report **`gap-report` → `coverage-report`**, so the *document* stops colliding with the
+Inbox `gap` *signal*: reports are project-scoped analysis documents you consult; Inbox items
+are atomic global signals you act on.
+
+**Why:** "all skills, one convention" was half-applied (new skills followed it, legacy ones
+didn't); and "gap" naming both a report and a signal was the exact confusion to remove.
+
+**Alternatives weighed:** leave legacy skill names (rejected — two conventions); keep
+`gap-report` (rejected — overloads `gap`).
 
 ---
 
