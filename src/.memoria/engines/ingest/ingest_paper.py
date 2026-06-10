@@ -25,23 +25,24 @@ SCHEMA_VERSION = 1
 # entry-type → (note_type, folder, source_type). ADR-30: ~17% of the corpus is
 # non-paper; route it, don't force it into the paper-note shape.
 TYPE_ROUTING = {
-    "article": ("paper-note", "20-sources/01-papers", "paper"),
-    "inproceedings": ("paper-note", "20-sources/01-papers", "paper"),
-    "conference": ("paper-note", "20-sources/01-papers", "paper"),
-    "proceedings": ("paper-note", "20-sources/01-papers", "paper"),
-    "incollection": ("paper-note", "20-sources/01-papers", "chapter"),
-    "inbook": ("paper-note", "20-sources/01-papers", "chapter"),
-    "online": ("paper-note", "20-sources/01-papers", "preprint"),
-    "misc": ("paper-note", "20-sources/01-papers", "preprint"),
-    "techreport": ("paper-note", "20-sources/01-papers", "report"),
-    "report": ("paper-note", "20-sources/01-papers", "report"),
-    "phdthesis": ("paper-note", "20-sources/01-papers", "thesis"),
-    "mastersthesis": ("paper-note", "20-sources/01-papers", "thesis"),
-    "book": ("paper-note", "20-sources/01-papers", "book"),
-    "software": ("item-note", "20-sources/02-items", "software"),
-    "dataset": ("item-note", "20-sources/02-items", "dataset"),
+    # bib entry type -> (vault type, catalog home, source_type hint)  [ADR-47/49]
+    "article": ("paper", "catalog/papers", "paper"),
+    "inproceedings": ("paper", "catalog/papers", "paper"),
+    "conference": ("paper", "catalog/papers", "paper"),
+    "proceedings": ("paper", "catalog/papers", "paper"),
+    "incollection": ("paper", "catalog/papers", "chapter"),
+    "inbook": ("paper", "catalog/papers", "chapter"),
+    "online": ("paper", "catalog/papers", "preprint"),
+    "misc": ("paper", "catalog/papers", "preprint"),
+    "techreport": ("paper", "catalog/papers", "report"),
+    "report": ("paper", "catalog/papers", "report"),
+    "phdthesis": ("paper", "catalog/papers", "thesis"),
+    "mastersthesis": ("paper", "catalog/papers", "thesis"),
+    "book": ("paper", "catalog/papers", "book"),
+    "software": ("repository", "catalog/repositories", "software"),
+    "dataset": ("dataset", "catalog/datasets", "dataset"),
 }
-DEFAULT_ROUTE = ("paper-note", "20-sources/01-papers", "paper")
+DEFAULT_ROUTE = ("paper", "catalog/papers", "paper")
 
 
 # --------------------------------------------------------------------------- #
@@ -167,12 +168,18 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
     fm = {
         "title": f.get("title", ""),
         "type": note_type,
+        "lifecycle": "current",             # entities are current from creation (ADR-50)
+        "citekey": citekey,
+        "name": f.get("title", ""),         # dataset/repository records key on name
         "authors": _authors(f.get("author", "") or f.get("editor", "")),
         "year": year,
-        "citekey": citekey,
-        "source_type": source_type,
+        "venue": f.get("journal", "") or f.get("booktitle", "") or f.get("publisher", ""),
         "doi": doi,
         "url": f.get("url", ""),
+        "relationships": {},                # given edges; Tier-1 link builds them (ADR-52)
+        "research-area": [],
+        "methodology": [],
+        "source_type": source_type,
         "zotero_uri": "",
         "pdf_uri": "",
         "extract_path": "",
@@ -182,21 +189,14 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "arxiv_id": arxiv,
         "pmcid": f.get("pmcid", ""),
         "isbn": f.get("isbn", ""),
-        "venue": f.get("journal", "") or f.get("booktitle", "") or f.get("publisher", ""),
         "pub_status": "active",
-        "lifecycle": "captured",            # ADR-30: Tier-0 floor
-        "ingest_status": "tier0",           # captured but not yet enriched
+        "ingest_status": "tier0",           # captured but not yet enriched (ADR-30)
         "full_text_reviewed": False,
         "created": now,
         "updated": now,
         "enriched_date": "",
-        "study_design": "",
-        "methods": [],
-        "topic": [],
-        "moc": [],
-        "projects": [],
         "schema_version": SCHEMA_VERSION,
-        "_proposed_classification": {"study_design": None, "methods": [], "topic": [], "projects": [], "moc": []},
+        "_proposed_classification": {"research-area": [], "methodology": []},
     }
     body_lines = [f"# {fm['title'] or citekey}", ""]
     if fm["venue"]:
@@ -204,8 +204,8 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
     if f.get("abstract"):
         body_lines += ["## Abstract", "", f["abstract"], ""]
     body_lines += ["> [!note] Captured — not yet ingested",
-                   "> Identity from the local `.bib`. Enrichment (full text, citation graph, "
-                   "classification) runs in Tier 1; this note is at `lifecycle: captured`.", ""]
+                   "> Identity from the local `.bib`. Enrichment (full text, relationships, "
+                   "classification) runs in Tier 1; `ingest_status: tier0` marks the floor.", ""]
     return {
         "citekey": citekey, "entry_type": etype, "note_type": note_type,
         "path": f"{folder}/{citekey}.md", "frontmatter": fm, "body": "\n".join(body_lines),
@@ -271,11 +271,11 @@ _FIXTURE = r"""
 """
 
 _EXPECT = [
-    ("smith2024Example", "paper-note", "paper", {"authors": 2, "pmcid": "PMC1234567"}),
-    ("lee2025Preprint", "paper-note", "preprint", {"authors": 1, "arxiv_id": "2503.20201"}),
-    ("2025tool", "item-note", "software", {"authors": 0}),
-    ("brown2009Book", "paper-note", "book", {"authors": 1, "isbn": "978-0-13-468599-1"}),
-    ("green2018Chapter", "paper-note", "chapter", {"authors": 2}),
+    ("smith2024Example", "paper", "paper", {"authors": 2, "pmcid": "PMC1234567"}),
+    ("lee2025Preprint", "paper", "preprint", {"authors": 1, "arxiv_id": "2503.20201"}),
+    ("2025tool", "repository", "software", {"authors": 0}),
+    ("brown2009Book", "paper", "book", {"authors": 1, "isbn": "978-0-13-468599-1"}),
+    ("green2018Chapter", "paper", "chapter", {"authors": 2}),
 ]
 
 

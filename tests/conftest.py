@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parent.parent
 _DIRS = [
     "src/.memoria/mcp",
     "src/.memoria/engines/lib",
-    "src/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note/scripts",
+    "src/.memoria/engines/ingest",
+    "src/.memoria/engines/sweeps",
     "src/.memoria/engines/linter",
     "scripts",
     ".github/scripts",

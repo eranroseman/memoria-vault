@@ -14,7 +14,7 @@ def test_pipeline():
         fm = b["frontmatter"]
         checks = [
             ("tier0 captured", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
-            ("routes to paper-note", b["note_type"] == "paper-note"),
+            ("routes to paper", b["note_type"] == "paper"),
             ("two holes declared", b["holes"] == ["_proposed_classification", "brief"]),
             ("frontmatter has identity", fm["title"] == "A Test" and fm["doi"] == "10.1/x"),
             ("zotero_uri from zoteroselect (no API)", fm["zotero_uri"] == "zotero://select/library/items/ABCD1234"),

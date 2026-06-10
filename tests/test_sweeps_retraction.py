@@ -1,5 +1,5 @@
 """L1 component test for verify_mcp — extracted from its former --self-test (ADR-44)."""
-import verify_mcp as _m
+import retraction as _m
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -69,6 +69,6 @@ def test_verify_mcp():
         bad = [n for n, ok in checks if not ok]
         for n, ok in checks:
             print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: verify_mcp.py self-test ({len(checks)} checks)")
+        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: retraction.py self-test ({len(checks)} checks)")
         return 1 if bad else 0
     assert _run() == 0

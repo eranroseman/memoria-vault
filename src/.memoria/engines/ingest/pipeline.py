@@ -34,6 +34,18 @@ def _env(k: str) -> str:
     return resolve_merge._env(k)
 
 
+def _confidence_floor(vault: Path | None) -> float:
+    """The ADR-56 floor from .memoria/schemas/calibration.yaml (default 0.85)."""
+    try:
+        import yaml
+
+        f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
+        return float(yaml.safe_load(f.read_text(encoding="utf-8"))
+                     ["entity_resolution"]["confidence_floor"])
+    except Exception:
+        return 0.85
+
+
 def _bib_field(citekey: str, bib_text: str, name: str) -> str:
     """Raw value of a single named field from a bib entry ('' if absent)."""
     entry = ingest_paper._find_entry(bib_text, citekey)
@@ -120,6 +132,20 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     bundle["ingest_status"] = "enriched"
     bundle["lifecycle"] = "captured"   # still captured until classify (LLM #1) lands -> proposed
 
+    # D51 / ADR-56: below the calibration floor, cross-source identity disagreement
+    # becomes a near-tie flag instead of a silent best-source-wins merge. The bundle
+    # carries the request; the writing layer (ingest MCP) raises the Inbox card.
+    agr = m.get("agreement") or {}
+    floor = _confidence_floor(vault)
+    if agr and agr.get("score", 1.0) < floor:
+        bundle["flag_needed"] = {
+            "title": f"Identity disagreement on {citekey}",
+            "finding": ("cross-source agreement "
+                        f"{agr.get('score', 0.0):.2f} < floor {floor:.2f}: "
+                        + "; ".join(agr.get("disagreements", []))),
+            "citekey": citekey,
+        }
+
     # local Zotero PDF from the bib `file` field — feed extraction (pdf_uri set in Tier 0)
     if not pdf_path:
         wsl_pdf, _ = _bib_local_pdf(citekey, bib_text)
@@ -130,7 +156,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     ex_ids = {**ids, "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
               "pmid": ids.get("pmid") or m.get("pmid", "")}
     ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"))
-    # carry the text so the caller can persist it (90-assets is outside the agent's
+    # carry the text so the caller can persist it (the extract store is outside the agent's
     # write lane, so the ingest tool writes the extract file, not the worker)
     bundle["extract"] = {"source": ex["source"], "chars": ex["chars"],
                          "degraded": ex["degraded"], "text": ex.get("text", "")}
