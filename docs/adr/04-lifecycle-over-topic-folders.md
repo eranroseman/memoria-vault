@@ -2,11 +2,11 @@
 topic: decisions
 id: 04
 title: Folders encode lifecycle stage, not subject area
-status: accepted
+status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
 supersedes: []
-superseded_by: []
+superseded_by: [47]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 4

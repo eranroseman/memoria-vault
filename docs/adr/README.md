@@ -30,14 +30,14 @@ condition. See [the template](_template.md) for the required fields per status.
 
 | # | Decision | Status |
 |---|---|---|
-| [01](01-three-layer-architecture.md) | Three-layer architecture — board, workers, vault | accepted |
-| [02](02-seven-specialist-profiles.md) | Seven specialist profiles over one generalist agent | accepted |
+| [01](01-three-layer-architecture.md) | Three-layer architecture — board, workers, vault | superseded → ADR-46 |
+| [02](02-seven-specialist-profiles.md) | Seven specialist profiles over one generalist agent | superseded → ADR-48 |
 | [03](03-structural-review-gate.md) | Review gate is structural, enforced by the policy MCP | accepted |
-| [04](04-lifecycle-over-topic-folders.md) | Folders encode lifecycle stage, not subject area | accepted |
+| [04](04-lifecycle-over-topic-folders.md) | Folders encode lifecycle stage, not subject area | superseded → ADR-47 |
 | [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone | accepted |
 | [06](06-citekey-naming-convention.md) | Citekey naming convention | accepted |
 | [07](07-delegate-coding-to-external-agents.md) | Code agent attachment | accepted |
-| [08](08-typed-relations-frontmatter.md) | Typed relations frontmatter | accepted |
+| [08](08-typed-relations-frontmatter.md) | Typed relations frontmatter | superseded → ADR-52 |
 | [09](09-contradictions-dashboard.md) | Contradictions / tensions dashboard | accepted |
 | [10](10-claim-supersession.md) | Claim supersession relation | accepted |
 | [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
@@ -75,6 +75,17 @@ condition. See [the template](_template.md) for the required fields per status.
 | [43](43-skill-governance.md) | Skill governance and lifecycle | deferred |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [45](45-release-management-model.md) | Release management — gates as a tracking-issue checklist, release-please for versioning | accepted |
+| [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · co-PI · Tasks · MCP · Engines · Vault | accepted |
+| [47](47-type-first-category-folders.md) | Type-first category folders — catalog · notes · projects · inbox · system | accepted |
+| [48](48-copi-and-agent-consolidation.md) | One co-PI fronts everything; specialists consolidate to posture-defined agents | accepted |
+| [49](49-catalog-in-bases-linter-monitor.md) | Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate | accepted |
+| [50](50-universal-lifecycle-and-maturity.md) | One lifecycle chain for everything; maturity is a claim property; reference dropped; MOC renamed hub | accepted |
+| [51](51-inbox-category-and-honesty-card.md) | The Inbox category and the honesty card — argument for/against, what tipped it, certainty; no verdict on proposals | accepted |
+| [52](52-links-vs-relationships.md) | Notes carry authored links:, entities carry given relationships — two kinds of connection | accepted |
+| [53](53-pattern-library.md) | The pattern library — curated prompt-transformations as data in system/patterns/, one runner | accepted |
+| [54](54-two-decision-kinds-batch-worklists.md) | Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality | accepted |
+| [55](55-src-scaffold-populate-golden-copy.md) | The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
+| [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 
 <!-- ADR-INDEX:END -->
 

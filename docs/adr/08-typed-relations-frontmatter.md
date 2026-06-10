@@ -2,11 +2,11 @@
 topic: decisions
 id: 08
 title: Typed relations frontmatter
-status: accepted
+status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-05-29
 supersedes: []
-superseded_by: []
+superseded_by: [52]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 8

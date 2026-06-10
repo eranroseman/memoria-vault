@@ -1,0 +1,14 @@
+type: person
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:person
+  lifecycle: enum:lifecycle
+  name: str
+optional:
+  orcid: str
+  affiliations: list
+  relationships: map
+  created: date

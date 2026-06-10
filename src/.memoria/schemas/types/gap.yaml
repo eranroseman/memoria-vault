@@ -1,0 +1,20 @@
+type: gap
+category: inbox
+gated: false
+enums:
+  lifecycle: [proposed, current, archived]
+  certainty: [confident, likely, unsure]
+  loudness: [quiet, notice, alert, block]
+required:
+  type: literal:gap
+  lifecycle: enum:lifecycle
+  title: str
+  action: str
+  argument_for: str
+  argument_against: str
+  what_tipped_it: str
+  certainty: enum:certainty
+optional:
+  raised_by: str
+  loudness: enum:loudness
+  created: date

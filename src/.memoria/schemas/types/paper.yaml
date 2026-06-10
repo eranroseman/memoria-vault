@@ -1,0 +1,20 @@
+type: paper
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, retracted, archived]
+required:
+  type: literal:paper
+  lifecycle: enum:lifecycle
+  citekey: str
+  title: str
+optional:
+  doi: str
+  authors: list
+  year: int
+  venue: str
+  url: str
+  relationships: map # given edges — cited_by, authored_by, published_in… (ADR-52)
+  research-area: list
+  methodology: list
+  created: date

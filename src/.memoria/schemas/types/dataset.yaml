@@ -1,0 +1,15 @@
+type: dataset
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, retracted, archived]
+required:
+  type: literal:dataset
+  lifecycle: enum:lifecycle
+  name: str
+optional:
+  doi: str
+  url: str
+  license: str
+  relationships: map
+  created: date
