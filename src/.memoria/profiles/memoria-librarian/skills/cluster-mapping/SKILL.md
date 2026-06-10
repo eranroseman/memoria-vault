@@ -13,14 +13,18 @@ metadata:
 
 # cluster-mapping
 
-> **⚠️ Deferred — clustering backend not yet built.** Per
+> **⚠️ Partially deferred.** Per
 > [ADR-33](../../../../../../docs/adr/33-cluster-mcp-bertopic.md), the
-> clustering/topic-modeling runs over a self-hosted **BERTopic `cluster_mcp`**,
-> which is **not yet implemented**. Until it lands, the `scope-project` /
-> `gap-report` / `cluster-map` commands are **not runnable**. The
-> `scikit-learn` / `umap-learn` / HDBSCAN / UMAP / BERTopic references below
-> describe the *intended method* the cluster MCP will provide — they are **not**
-> callable Hermes skills (and are no longer granted in the lane-override).
+> clustering/topic-modeling runs over the self-hosted **`cluster_mcp`**. Its
+> graph tools are live: `cluster_build_graph` (typed graph + communities +
+> layout) and `cluster_emit_canvas` (the **claim-debate map** — a JSON Canvas
+> artifact written to the `notes/fleeting/maps/` staging home; supports green,
+> contradicts red, never the review-gated zones). The BERTopic-backed
+> `scope-project` / `gap-report` / `cluster-map` commands remain **deferred**
+> until the optional cluster deps (`requirements-cluster.txt`) are installed;
+> the `scikit-learn` / `umap-learn` / HDBSCAN / UMAP / BERTopic references
+> below describe that *intended method* — they are **not** callable Hermes
+> skills (and are no longer granted in the lane-override).
 
 Map what already exists in the corpus. You retrieve notes, cluster them deterministically,
 aggregate recency and density, and then — and only then — compose a narrative map over those
