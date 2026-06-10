@@ -70,9 +70,9 @@ v0.1.0 had a `reference` note type for "settled" synthesis pages. It was retired
 
 ---
 
-## The four card types
+## The five card types
 
-The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its four types are *transient cards*, not knowledge:
+The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge:
 
 | Card        | What it carries                       | Raised by                |
 | ----------- | ------------------------------------- | ------------------------ |
@@ -80,6 +80,7 @@ The **Inbox** (`inbox/`) is the agent→human message category — the signal en
 | `gap`       | a *missing*-source need               | Librarian / Peer-reviewer |
 | `flag`      | a verification or integrity issue     | Peer-reviewer / Linter   |
 | `alert`     | a drift or retraction notice          | Linter / sweeps          |
+| `work-prompt` | work waiting on the PI — e.g. a done board card to review | board export / engines |
 
 A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/card-schema.md).
 

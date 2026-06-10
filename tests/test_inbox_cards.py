@@ -58,6 +58,42 @@ def test_collision_appends_not_overwrites(tmp_path):
     assert a != b and a.exists() and b.exists()
 
 
+def test_work_prompt_card_is_schema_valid(tmp_path):
+    p = inbox.write_work_prompt(
+        tmp_path, "Review: Draft answer", "Review the draft, then accept or archive",
+        'Lane memoria-writer finished "Draft answer" (card t_b2).', "board-export",
+        target="projects/p1/draft.md", task_id="t_b2", lane="memoria-writer")
+    fm = _frontmatter(p)
+    types = schema.load_types()
+    assert schema.validate_frontmatter(fm, types["work-prompt"]) == []
+    assert fm["lifecycle"] == "proposed"
+    body = p.read_text(encoding="utf-8")
+    assert "# Action" in body and "# What happened" in body and "# Where to look" in body
+
+
+def test_work_prompt_carries_no_verdict(tmp_path):
+    p = inbox.write_work_prompt(tmp_path, "Review: X", "review it", "lane finished X",
+                                "board-export", task_id="t_1")
+    text = p.read_text(encoding="utf-8")
+    assert "agent_recommendation" not in text  # ADR-51: never a verdict
+    assert "finding" not in _frontmatter(p)
+
+
+def test_work_prompt_requires_a_pointer(tmp_path):
+    with pytest.raises(ValueError):
+        inbox.write_work_prompt(tmp_path, "t", "a", "w", "board-export")
+
+
+def test_work_prompt_dedupe_slug_is_idempotent(tmp_path):
+    a = inbox.write_work_prompt(tmp_path, "Review: X", "a", "w", "board-export",
+                                task_id="t_1", dedupe_slug="review-t_1")
+    b = inbox.write_work_prompt(tmp_path, "Review: X", "a", "w", "board-export",
+                                task_id="t_1", dedupe_slug="review-t_1")
+    assert a is not None and a.name == "work-prompt-review-t-1.md"
+    assert b is None  # second emit for the same card id writes nothing
+    assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
+
+
 def test_invalid_enums_rejected(tmp_path):
     with pytest.raises(ValueError):
         inbox.write_proposal(tmp_path, "candidate", "T", "a", "b", "c", "d",

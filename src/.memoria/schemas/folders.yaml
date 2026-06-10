@@ -20,6 +20,7 @@ homes:
   gap: inbox
   flag: inbox
   alert: inbox
+  work-prompt: inbox
   pattern: system/patterns
 
 # review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
