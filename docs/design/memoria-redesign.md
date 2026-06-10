@@ -192,7 +192,7 @@ recommendation never substitutes for human approval.
 
 🔒 = review-gated. Base = surfaced through an Obsidian Base.
 
-**CATALOG** — entity records · built by the ingest engine · Base-backed · not gated
+**CATALOG** — entity records · built by the ingest engine · Base-backed · not gated (clean extractions; low-confidence entity-resolution/dedup/license calls → `flag`, D51)
 
 | type | states | key properties |
 |---|---|---|
@@ -272,7 +272,7 @@ flags malformed records, broken/renamed links, and orphans as Inbox `flag`s. So 
 is the view layer, the Catalog is the source of truth, and the Linter is its
 integrity *monitor*** — it *detects* drift on cron/CI and `flag`s it, but does not *block*
 a bad write, so between sweeps the Catalog can serve a broken record ("monitor", not
-"guarantor"; a write-time gate is an open question). (Dataview / the Bases API stay in
+"guarantor"; a **pre-commit `schema-check`** gates git-tracked writes (D50), and live edits are caught on the next sweep — it *gates at commit, monitors between*). (Dataview / the Bases API stay in
 reserve for citation-graph traversal.)
 
 ---
@@ -345,7 +345,8 @@ packages it.) So they share the house rules but each brings its own stance and t
   outlines, a seeded canvas — all into staging.
 - *Boundary:* read-only over canonical content; writes only staging / project scratch;
   never canonizes. The mechanical half of cataloging (fetch metadata, extract text, build
-  **relationships**, create records) is the **ingest engine**, not the agent.
+  **relationships**, create records) is the **ingest engine**, not the agent; below a
+  confidence floor, entity-resolution/dedup emit a `flag` rather than merging silently (D51).
 
 **Writer** — *posture: generative, draft-only* (review-gated).
 
@@ -740,8 +741,11 @@ schema; a spike, not a swap.
 
 ### Scoping
 
-`#198` (v0.2 scope): this redesign supersedes ADR-01/04 and renames profiles/folders —
-**major-version-sized**. Sequence it as superseding ADRs across versions.
+This redesign supersedes ADR-01/04 and renames profiles/folders — it is the **completion of
+v0.1**, shipped as **v0.1.1** (split out only for issue tracking). It lands as **one
+complete effort** (big-bang, D52), not incrementally — the system isn't usable until it
+does; the **fresh-install** model replaces the v0.1 prototype rather than migrating it in
+place.
 
 ## Appendix G — ADR impact (detail)
 
