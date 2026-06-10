@@ -21,9 +21,8 @@ each decision stays tight. Three kinds of note live here:
   [Memory substrates](memory-substrates.md),
   [Structural linter and drift detection](structural-linter-and-drift.md),
   [Dashboards](dashboards-design.md),
-  [Ingest pipeline](ingest-pipeline-design.md),
-  [Design system and visual discipline](design-system-and-visual-discipline.md), and the
-  point-in-time [ADR → implementation gap analysis](adr-gap-analysis.md).
+  [Ingest pipeline](ingest-pipeline-design.md), and
+  [Design system and visual discipline](design-system-and-visual-discipline.md).
 - **Capability explorations** — thematic analyses that bundle several related ideas under
   one theme (discovery, measurement, publication, retrieval, integrations, multi-machine,
   …). A capability that the analysis recommends adopting becomes an ADR with the
