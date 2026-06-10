@@ -236,7 +236,7 @@ def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
     folder = vault / "notes" / "fleeting"
     if not folder.is_dir():
         return out
-    for p in folder.glob("*.md"):
+    for p in folder.rglob("*.md"):  # recursive: subfolders (e.g. chats/, the ACP-export home) count too
         if p.stat().st_mtime < cutoff:
             age_d = (time.time() - p.stat().st_mtime) / 86400
             out.append(Finding("stale-fleeting", "LOW", relpath(vault, p),

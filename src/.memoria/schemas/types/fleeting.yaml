@@ -3,7 +3,7 @@ category: notes
 gated: false
 enums:
   lifecycle: [proposed, archived]
-  origin: [human, agent]
+  origin: [human, agent, chat]  # chat = ACP-pane session export (notes/fleeting/chats/)
 required:
   type: literal:fleeting
   lifecycle: enum:lifecycle
