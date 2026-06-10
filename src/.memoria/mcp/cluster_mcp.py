@@ -145,19 +145,7 @@ def build_graph(vault: Path, seed: int | None = None) -> dict:
 EDGE_COLORS = {"supports": "4", "contradicts": "1"}
 # Node color = maturity (seedling → evergreen).
 MATURITY_COLORS = {"seedling": "3", "budding": "5", "evergreen": "4"}
-CANVAS_HOME = "notes/fleeting/maps"          # ungated staging — the map-lane write scope
-# Mirrors policy_mcp/patterns_mcp — used only when folders.yaml is unreadable.
-REVIEW_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
-
-
-def _gated_prefixes(vault: Path) -> tuple:
-    try:
-        import yaml
-
-        f = vault / ".memoria" / "schemas" / "folders.yaml"
-        return tuple(yaml.safe_load(f.read_text(encoding="utf-8"))["gated_prefixes"])
-    except Exception:
-        return REVIEW_GATED_PREFIXES
+CANVAS_HOME = "notes/fleeting/maps"          # the ONLY canvas write target (allowlist)
 
 
 def _scope_stems(vault: Path, scope: str, nodes: list[dict],
@@ -265,12 +253,19 @@ def emit_canvas(vault: Path, scope: str = "notes/claims",
     else:
         rel = f"{CANVAS_HOME}/claim-debate-{Path(scope.rstrip('/')).stem}.canvas"
     norm = str(Path(rel)).replace("\\", "/")
-    if ".." in Path(norm).parts or Path(norm).is_absolute():
-        return {"error": "invalid-target", "target": rel}
-    if any(norm.startswith(p) for p in _gated_prefixes(vault)):
-        return {"error": "gated-target", "target": norm,
-                "note": "canvas artifacts are propose-class — staging only (ADR-03/47)"}
-    dest = vault / norm
+    # Allowlist, not denylist: a canvas may land only under CANVAS_HOME (the
+    # map lane's staging), resolved against symlink tricks, and only as .canvas.
+    allowed_root = (vault / CANVAS_HOME).resolve()
+    dest = (vault / norm).resolve()
+    try:
+        dest.relative_to(allowed_root)
+    except ValueError:
+        return {"error": "invalid-target", "target": rel,
+                "note": f"canvas writes are restricted to {CANVAS_HOME}/ (staging — ADR-03/47)"}
+    if dest.suffix != ".canvas":
+        return {"error": "invalid-target", "target": rel,
+                "note": "canvas artifacts must end in .canvas"}
+    norm = f"{CANVAS_HOME}/{dest.relative_to(allowed_root)}".replace("\\", "/")
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps({"nodes": groups + canvas_nodes, "edges": canvas_edges},
                                indent=2, sort_keys=True) + "\n", encoding="utf-8")

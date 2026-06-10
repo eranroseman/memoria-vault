@@ -140,13 +140,17 @@ def test_emit_canvas_scope_filters(tmp_path):
     assert "h" not in stems2 and "x2024" not in stems2
 
 
-def test_emit_canvas_refuses_gated_targets(tmp_path):
+def test_emit_canvas_refuses_targets_outside_staging(tmp_path):
     v = _canvas_vault(tmp_path)
-    for bad in ("notes/claims/map.canvas", "notes/hubs/map.canvas"):
+    # allowlist: anything outside notes/fleeting/maps/ is refused — gated zones,
+    # ungated-but-foreign homes, traversal escapes, and non-.canvas suffixes alike
+    for bad in ("notes/claims/map.canvas", "notes/hubs/map.canvas",
+                "catalog/papers/map.canvas", "system/map.canvas",
+                "../escape.canvas", "notes/fleeting/maps/../../claims/x.canvas"):
         out = cluster_mcp.emit_canvas(v, out=bad)
-        assert out["error"] == "gated-target"
+        assert out["error"] == "invalid-target", bad
         assert not (v / bad).exists()
-    out = cluster_mcp.emit_canvas(v, out="../escape.canvas")
+    out = cluster_mcp.emit_canvas(v, out="notes/fleeting/maps/evil.md")
     assert out["error"] == "invalid-target"
 
 
