@@ -21,6 +21,7 @@ homes:
   flag: inbox
   alert: inbox
   pattern: system/patterns
+  eval-task: system/eval
 
 # review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
 gated_prefixes:
@@ -49,4 +50,5 @@ skeleton:
   - system/logs
   - system/templates
   - system/patterns
+  - system/eval
   - system/dashboards

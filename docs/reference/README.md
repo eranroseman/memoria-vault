@@ -16,7 +16,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | File | What it covers |
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
-| [Note types](note-types.md) | The 16 note types: folder, template, lifecycle, promotion map |
+| [Note types](note-types.md) | The 17 note types: folder, template, lifecycle, promotion map |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, typed-relation vocabulary, MOC thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [Glossary](glossary.md) | Term definitions, alphabetical |
@@ -27,6 +27,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
+| [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries (the in-Obsidian UI surface) |
 | [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
 | [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |

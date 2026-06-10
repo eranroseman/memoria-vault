@@ -132,7 +132,7 @@ def _self_test() -> int:
         if not ok:
             failures += 1
 
-    check("16 type schemas load", len(types) == 16)
+    check("17 type schemas load", len(types) == 17)
     for name, sc in types.items():
         check(f"{name}: lifecycle ⊆ universal chain",
               set(lifecycle_for(sc)) <= set(UNIVERSAL_LIFECYCLE))

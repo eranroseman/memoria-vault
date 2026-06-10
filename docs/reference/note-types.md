@@ -5,9 +5,9 @@ parent: Reference
 
 # Note types
 
-The 16 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under [src/.memoria/schemas/types/](../../src/.memoria/schemas/types), and the type → folder map lives in [src/.memoria/schemas/folders.yaml](../../src/.memoria/schemas/folders.yaml) ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 17 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under [src/.memoria/schemas/types/](../../src/.memoria/schemas/types), and the type → folder map lives in [src/.memoria/schemas/folders.yaml](../../src/.memoria/schemas/folders.yaml) ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
-The 16 types group into four categories: **6 entities** (catalog), **5 notes**, **4 cards** (inbox), and the **pattern** (system).
+The 17 types group into four categories: **6 entities** (catalog), **5 notes**, **4 cards** (inbox), and **2 system types** (the pattern and the eval task).
 
 ---
 
@@ -64,13 +64,14 @@ All cards share the optional `raised_by` and `loudness` (`quiet` / `notice` / `a
 
 ---
 
-## Pattern (1)
+## System types (2)
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
 | `pattern` | `system/patterns/` | `proposed → current → archived` | `title`, `posture`, `mode` (`library` / `project` / `both`), `action`, `input`, `output_target` | `model_hint`, `version`, `adapted_from` |
+| `eval-task` | `system/eval/` | `proposed → current → archived` | `title`, `workflow`, `lane` (`catalog` / `extract` / `link` / `map` / `draft` / `verify` / `code`) | `references`, `created` |
 
-Patterns are curated prompt-transformations stored as data ([ADR-53](../adr/53-pattern-library.md)); only `lifecycle: current` patterns are runnable, and the runner refuses an `output_target` inside a gated zone. `system/` is otherwise untyped infrastructure — patterns are the only typed notes under it.
+Patterns are curated prompt-transformations stored as data ([ADR-53](../adr/53-pattern-library.md)); only `lifecycle: current` patterns are runnable, and the runner refuses an `output_target` inside a gated zone. Eval tasks are the [Vault eval](vault-eval.md) gold set ([ADR-11](../adr/11-vault-eval-maintenance.md)); only `lifecycle: current` tasks dispatch. `system/` is otherwise untyped infrastructure — patterns and eval tasks are the only typed notes under it.
 
 ---
 
@@ -88,7 +89,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 
 ## Templates
 
-Human-facing starter notes for 15 of the 16 types ship in [src/system/templates/](../../src/system/templates) (patterns are authored directly in `system/patterns/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+Human-facing starter notes for 15 of the 17 types ship in [src/system/templates/](../../src/system/templates) (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
 
 ---
 
