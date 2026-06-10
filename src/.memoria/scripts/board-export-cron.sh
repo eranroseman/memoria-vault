@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Board-export telemetry cron (G5). Projects the live Hermes kanban board to the
 # vault and appends the six-signal telemetry logs (board-state / board-transitions
-# / disposition / cost under 99-system/logs/, plus 99-system/board/<task_id>.md).
+# / disposition / cost under system/logs/, plus system/board/<task_id>.md).
 #
 # Deterministic — no LLM. Wired by the installer via:
 #   hermes cron create '* * * * *' --script memoria-board-export.sh --no-agent \

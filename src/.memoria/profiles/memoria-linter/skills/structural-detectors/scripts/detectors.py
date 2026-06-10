@@ -24,34 +24,41 @@ from dataclasses import dataclass
 from pathlib import Path
 
 SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
-TRANSIENT_PREFIXES = ("10-inbox/", "40-workbench/", "99-system/logs/")
+TRANSIENT_PREFIXES = ("inbox/", "system/logs/", "system/board/")
 # A typed note legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
-MISPLACED_SKIP_PREFIXES = (*TRANSIENT_PREFIXES, "95-archive/")
+MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 # Canonical type -> expected folder prefix (docs/explanation/architecture/vault.md,
 # ADR-11/ADR-30). The entity rows mirror ENTITY_FOLDER in the Librarian's link.py.
 TYPE_HOME = {
-    "paper-note": "20-sources/01-papers/",
-    "item-note": "20-sources/02-items/",
-    "person-note": "20-sources/03-entities/01-people/",
-    "organization-note": "20-sources/03-entities/02-organizations/",
-    "venue-note": "20-sources/03-entities/03-venues/",
-    "claim-note": "30-synthesis/01-claims/",
-    "reference-note": "30-synthesis/02-reference/",
-    "moc": "30-synthesis/03-moc/",
+    "paper": "catalog/papers/",
+    "person": "catalog/people/",
+    "organization": "catalog/organizations/",
+    "venue": "catalog/venues/",
+    "dataset": "catalog/datasets/",
+    "repository": "catalog/repositories/",
+    "fleeting": "notes/fleeting/",
+    "source": "notes/source/",
+    "claim": "notes/claims/",
+    "hub": "notes/hubs/",
+    "index": "notes/index/",
+    "candidate": "inbox/",
+    "gap": "inbox/",
+    "flag": "inbox/",
+    "alert": "inbox/",
+    "pattern": "system/patterns/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {
-    "00-meta", "10-inbox", "20-sources", "30-synthesis", "40-workbench",
-    "50-deliverables", "90-assets", "95-archive", "99-system",
+    "catalog", "notes", "projects", "inbox", "system",
 }
 # Scaffolding, not authored notes: skeleton folders, assets, and the note
 # templates (raw notes full of placeholder [[links]]). Detectors that assert
 # things about *real* notes (broken wikilinks, type schema) skip these. Templates
-# moved 00-meta/ -> 99-system/templates/ in the 99-system refactor (c53486d);
+# templates live in system/templates/ (ADR-47);
 # keep this the single source of truth so the skip can't drift from the move.
-SCAFFOLD_PREFIXES = ("00-meta/", "90-assets/", "99-system/templates/")
+SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns/")
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
@@ -60,8 +67,8 @@ LEFTOVER_PATTERNS = [
 ]
 # Per-type required frontmatter fields (minimal; extend as the schema firms up).
 REQUIRED_FIELDS = {
-    "claim-note": ["lifecycle", "maturity"],
-    "paper-note": ["citekey"],
+    "claim": ["lifecycle", "maturity"],
+    "paper": ["citekey"],
 }
 DATAVIEW_BUILTINS = {
     "file", "rows", "type", "tags", "tag", "true", "false", "null",
@@ -72,8 +79,8 @@ DATAVIEW_KEYWORDS = {
     "limit", "asc", "desc", "table", "list", "task", "and", "or", "not", "reverse",
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
-# (cards) or 99-system logs/metrics (JSONL) drift on different schemas, not this one.
-NOTE_FOLDERS = ("10-inbox", "20-sources", "30-synthesis", "40-workbench", "50-deliverables")
+# (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
+NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects")
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 
@@ -195,7 +202,7 @@ def orphan_working_files(vault: Path) -> list[Finding]:
 
 def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
     out, cutoff = [], time.time() - days * 86400
-    folder = vault / "10-inbox" / "01-fleeting"
+    folder = vault / "notes" / "fleeting"
     if not folder.is_dir():
         return out
     for p in folder.glob("*.md"):
@@ -207,7 +214,7 @@ def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
 
 
 def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
-    """Flag unreviewed answer drafts in 10-inbox/02-answers/ older than `days`.
+    """Flag unreviewed answer drafts older than `days` (folder retired in v0.1.1).
 
     REPORT-ONLY by design: the human decides keep / promote / discard in the
     weekly review. Never auto-archive -- the most useful drafts are often the
@@ -215,7 +222,7 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
     they're most likely to be needed. (Formerly proposed as ADR-3, answer-draft
     retention; realized here as a report-only check rather than a decision.)"""
     out, cutoff = [], time.time() - days * 86400
-    folder = vault / "10-inbox" / "02-answers"
+    folder = vault / "inbox" / "_answers"
     if not folder.is_dir():
         return out
     for p in folder.glob("*.md"):
@@ -228,7 +235,7 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
 
 def extract_path_broken(vault: Path) -> list[Finding]:
     out = []
-    papers = vault / "20-sources" / "01-papers"
+    papers = vault / "catalog" / "papers"
     if not papers.is_dir():
         return out
     for p in papers.rglob("*.md"):
@@ -294,8 +301,8 @@ _IDENT = re.compile(r"[A-Za-z_][\w-]*")
 
 
 def dashboard_field_drift(vault: Path) -> list[Finding]:
-    dash = vault / "00-meta" / "01-dashboards"
-    tmpl = vault / "99-system" / "templates"
+    dash = vault / "system" / "dashboards"
+    tmpl = vault / "system" / "templates"
     if not dash.is_dir() or not tmpl.is_dir():
         return out_empty()
     known = set(DATAVIEW_BUILTINS)
@@ -346,7 +353,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
     they are left out of the report to keep findings to things a human can act on;
     extend here if a graph-stats summary is wanted later."""
     notes = [p for p in iter_notes(vault)
-             if not relpath(vault, p).startswith(("00-meta/", "90-assets/"))]
+             if not relpath(vault, p).startswith(("system/",))]
     indeg = {p.stem: 0 for p in notes}
     link_re = re.compile(r"\[\[([^\]|#]+)")
     for p in notes:
@@ -355,7 +362,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("30-synthesis/01-claims/", "30-synthesis/02-reference/")
+    synth = ("notes/claims/", "notes/hubs/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):
@@ -376,7 +383,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
     notes = list(iter_notes(vault))
     superseded: dict[str, str] = {}    # claim stem -> its relpath
     for p in notes:
-        if not relpath(vault, p).startswith("30-synthesis/01-claims/"):
+        if not relpath(vault, p).startswith("notes/claims/"):
             continue
         fm = parse_frontmatter(read(p))
         sup = fm.get("superseded_by")
@@ -391,7 +398,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
         rp = relpath(vault, p)
         # Exposure matters in downstream synthesis; skip scaffolding and the claim
         # graph itself (claim->claim links are the supersession / relations graph).
-        if rp.startswith(("00-meta/", "90-assets/", "30-synthesis/01-claims/")):
+        if rp.startswith(("system/", "notes/claims/")):
             continue
         for m in link_re.finditer(read(p)):
             stem = Path(m.group(1).strip()).stem

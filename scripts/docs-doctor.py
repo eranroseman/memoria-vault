@@ -221,6 +221,8 @@ def check_wikilink_aliases(md: Path, errors: list[str]) -> None:
         if "|" in clean:
             continue
         tgt = clean.split("#")[0].strip()
+        if "." in tgt.split("/")[-1] and not tgt.endswith(".md"):
+            continue  # non-note target (.base/.canvas/image embed) — not a note wikilink
         if tgt:
             errors.append(f"{md}: bare wikilink [[{inner}]] shows the filename — alias it with the page title ([[{tgt}|…]])")
 
@@ -233,8 +235,10 @@ def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[s
     text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
     for inner in WIKILINK_RE.findall(text):
         tgt = inner.replace("\\|", "|").split("|")[0].split("#")[0].strip().rstrip("\\")
-        if not tgt or tgt.startswith("90-assets/"):
+        if not tgt or tgt.startswith("system/extracts/"):
             continue
+        if "." in tgt.split("/")[-1] and not tgt.endswith(".md"):
+            continue  # non-note target (.base/.canvas/image embed)
         if Path(tgt).stem.lower() not in vault_stems:
             errors.append(f"{md}: wikilink [[{inner}]] resolves to no vault note")
 
@@ -262,7 +266,7 @@ def main() -> int:
 
     # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
     # and a banned key there propagates to every note created from the template.
-    tmpl_dir = root.parent / "src" / "99-system" / "templates"
+    tmpl_dir = root.parent / "src" / "system" / "templates"
     if tmpl_dir.is_dir():
         for md in sorted(tmpl_dir.glob("*.md")):
             check_template_frontmatter(md, errors)

@@ -78,7 +78,7 @@ The pipeline declares exactly two gaps for the Librarian to fill
 
 1. **Classification.** From the abstract / tldr / extract, propose
    `_proposed_classification` (`study_design`, `methods`, `topic`) using terms from
-   [`00-meta/vocabulary.md`](../../src/00-meta/vocabulary.md) — prefer a defined
+   [`00-meta/vocabulary.md`](../../src/system/vocabulary.md) — prefer a defined
    term; only propose a new one (`provisional: true`) when nothing fits. A confidence
    gate (default `0.85`) accepts the classifier's proposal directly; below it, the LLM
    decides. On landing, the note advances to `lifecycle: proposed`,

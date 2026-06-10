@@ -25,7 +25,7 @@ def test_metrics_aggregate():
 
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
-            (vault / "99-system" / "logs").mkdir(parents=True)
+            (vault / "system" / "logs").mkdir(parents=True)
             # audit: writer made 6 writes, 1 deny, this period
             audit_lines = []
             for _ in range(5):
@@ -57,7 +57,7 @@ def test_metrics_aggregate():
         # --- new telemetry: disposition, cost, decision-time --------------------
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
-            logs = vault / "99-system" / "logs"
+            logs = vault / "system" / "logs"
             logs.mkdir(parents=True)
             disp_rows = ([{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
                          + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]
@@ -91,7 +91,7 @@ def test_metrics_aggregate():
         # --- lint-verdict rollup (periodized from timestamped lint-findings) -----
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
-            logs = vault / "99-system" / "logs"
+            logs = vault / "system" / "logs"
             logs.mkdir(parents=True)
             (logs / "lint-findings.jsonl").write_text("\n".join(json.dumps(r) for r in [
                 {"timestamp": "2026-05-28T02:00:00Z", "detector": "broken-wikilink", "severity": "HIGH", "path": "a.md", "message": "x"},

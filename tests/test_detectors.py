@@ -18,65 +18,65 @@ def test_detectors():
         with tempfile.TemporaryDirectory() as td:
             v = Path(td)
             # folder skeleton
-            for d in ("10-inbox/01-fleeting", "20-sources/01-papers",
-                      "30-synthesis/01-claims", "00-meta/01-dashboards",
-                      "99-system/templates", "90-assets/extracts"):
+            for d in ("notes/fleeting", "catalog/papers",
+                      "notes/claims", "system/dashboards",
+                      "system/templates", "inbox/_answers"):
                 (v / d).mkdir(parents=True, exist_ok=True)
 
             # clean claim note (no findings)
-            (v / "30-synthesis/01-claims/good.md").write_text(
-                "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\nA claim. [[good]]\n",
+            (v / "notes/claims/good.md").write_text(
+                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n---\nA claim. [[good]]\n",
                 encoding="utf-8")
             # claim note missing 'maturity' -> schema finding
-            (v / "30-synthesis/01-claims/bad.md").write_text(
-                "---\ntype: claim-note\nlifecycle: current\n---\nClaim with a [[ghost]] link.\n",
+            (v / "notes/claims/bad.md").write_text(
+                "---\ntype: claim\nlifecycle: current\n---\nClaim with a [[ghost]] link.\n",
                 encoding="utf-8")
             # leftover file outside transient zone -> orphan finding
-            (v / "30-synthesis/01-claims/notes.md.bak").write_text("x", encoding="utf-8")
+            (v / "notes/claims/notes.md.bak").write_text("x", encoding="utf-8")
             # stale fleeting note (8 days old) -> stale finding
-            fl = v / "10-inbox/01-fleeting/old.md"
+            fl = v / "notes/fleeting/old.md"
             fl.write_text("idea", encoding="utf-8")
             old = time.time() - 8 * 86400
             import os
             os.utime(fl, (old, old))
             # stale answer draft (100 days old) -> stale-answer-drafts finding
-            ad = v / "10-inbox/02-answers/old-answer.md"
+            ad = v / "inbox/_answers/old-answer.md"
             ad.parent.mkdir(parents=True, exist_ok=True)
             ad.write_text("draft answer", encoding="utf-8")
             old_ad = time.time() - 100 * 86400
             os.utime(ad, (old_ad, old_ad))
             # paper note with broken extract_path -> extract finding
-            (v / "20-sources/01-papers/p.md").write_text(
-                "---\ntype: paper-note\ncitekey: smith2020\nextract_path: 90-assets/extracts/missing.md\n---\n",
+            (v / "catalog/papers/p.md").write_text(
+                "---\ntype: paper\ncitekey: smith2020\nextract_path: system/extracts/missing.md\n---\n",
                 encoding="utf-8")
             # superseded claim + a draft that cites it -> fama-exposure finding
-            (v / "30-synthesis/01-claims/oldclaim.md").write_text(
-                "---\ntype: claim-note\nlifecycle: archived\nsuperseded_by: newclaim\n---\nOld claim.\n",
+            (v / "notes/claims/oldclaim.md").write_text(
+                "---\ntype: claim\nlifecycle: archived\nsuperseded_by: newclaim\n---\nOld claim.\n",
                 encoding="utf-8")
-            dft = v / "40-workbench/proj/04-drafts/draft.md"
+            dft = v / "projects/proj/draft.md"
             dft.parent.mkdir(parents=True, exist_ok=True)
             dft.write_text("---\ntype: draft\n---\nWe still rely on [[oldclaim]] here.\n", encoding="utf-8")
             # template + dashboard referencing an unknown field -> dashboard finding.
             # The template body carries a placeholder [[link]] (templates are raw notes):
-            # broken-wikilink must ignore it now that templates live in 99-system/.
-            (v / "99-system/templates/claim-note.md").write_text(
-                "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n"
+            # broken-wikilink must ignore it now that templates live in system/.
+            (v / "system/templates/claim.md").write_text(
+                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n---\n"
                 "Example link: [[placeholder-target]]\n", encoding="utf-8")
             # vault-root navigation page: has frontmatter, no type -> NOT a typed note
             (v / "home.md").write_text(
                 "---\ncreated: 2026-01-01\ncssclasses:\n  - dashboard\n---\n# Home\n", encoding="utf-8")
             # a real note with a table-escaped aliased link to an existing note ([[good]]):
             # the "\|" must resolve, not read as a broken "good\" target.
-            (v / "30-synthesis/01-claims/tablelink.md").write_text(
-                "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\n"
+            (v / "notes/claims/tablelink.md").write_text(
+                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n---\n"
                 "| col | [[good\\|Good]] |\n", encoding="utf-8")
-            (v / "00-meta/01-dashboards/d.md").write_text(
-                "```dataview\nTABLE maturity, projct\nFROM \"30-synthesis\"\nSORT file.mtime DESC\n```\n",
+            (v / "system/dashboards/d.md").write_text(
+                "```dataview\nTABLE maturity, projct\nFROM \"notes\"\nSORT file.mtime DESC\n```\n",
                 encoding="utf-8")
-            # claim-note sitting under 20-sources/ -> misplaced-note finding. The
+            # claim sitting under catalog/ -> misplaced-note finding. The
             # correctly-placed claims above (good.md/bad.md) must NOT fire.
-            (v / "20-sources/01-papers/stray-claim.md").write_text(
-                "---\ntype: claim-note\nlifecycle: current\nmaturity: seedling\n---\nClaim in the wrong home.\n",
+            (v / "catalog/papers/stray-claim.md").write_text(
+                "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n---\nClaim in the wrong home.\n",
                 encoding="utf-8")
             # stray top-level folder -> misplaced-note LOW finding
             (v / "70-misc").mkdir(parents=True, exist_ok=True)

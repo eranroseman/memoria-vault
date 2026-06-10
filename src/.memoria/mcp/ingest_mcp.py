@@ -34,7 +34,7 @@ SCRIPTS_DIR = (Path(__file__).resolve().parent.parent
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-INTAKE_LOG = "99-system/logs/capture-intake.jsonl"
+INTAKE_LOG = "system/logs/capture-intake.jsonl"
 
 
 def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:

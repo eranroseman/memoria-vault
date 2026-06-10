@@ -1,0 +1,26 @@
+# Claims by maturity and topic (ADR-50: maturity is a property, never a gate).
+filters:
+  and:
+    - file.inFolder("notes/claims")
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "By maturity"
+    groupBy:
+      property: maturity
+      direction: DESC
+    order:
+      - file.name
+      - maturity
+      - topics
+      - sources
+      - lifecycle
+  - type: table
+    name: "Retracted"
+    filters:
+      and:
+        - 'lifecycle == "retracted"'
+    order:
+      - file.name
+      - superseded_by
+      - sources
