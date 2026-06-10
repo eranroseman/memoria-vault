@@ -2,11 +2,11 @@
 topic: decisions
 id: 02
 title: Seven specialist profiles over one generalist agent
-status: accepted
+status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
 supersedes: []
-superseded_by: []
+superseded_by: [48]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 2

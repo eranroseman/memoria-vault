@@ -1,0 +1,13 @@
+# Calibrated thresholds — drift-bound (ADR-56; design guardrails §8).
+# Every value here ships with the discipline: grounded, error-budgeted,
+# recalibrated on model/source-version change, shadow-first.
+entity_resolution:
+  # Below the floor, ingest emits an Inbox near-tie flag instead of merging (ADR-56).
+  confidence_floor: 0.85
+  model_version: null # pin when an embedding/matching model is introduced
+clustering:
+  # Cluster-MCP parameters decide *how to display*, never what is canonical (D44/D48).
+  embedding_model: null # pinned when the cluster MCP is configured
+  umap_n_neighbors: 15
+  hdbscan_min_cluster_size: 5
+  seed: 42

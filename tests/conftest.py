@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 _DIRS = [
     "src/.memoria/mcp",
+    "src/.memoria/engines/lib",
     "src/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note/scripts",
     "src/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts",
     "scripts",

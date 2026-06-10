@@ -1,0 +1,14 @@
+type: venue
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:venue
+  lifecycle: enum:lifecycle
+  name: str
+optional:
+  subtype: str # journal · conference · publisher …
+  issn: str
+  relationships: map
+  created: date
