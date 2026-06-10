@@ -100,6 +100,6 @@ All four must return expected values before blaming a tool.
 ## Related
 
 - Return-to-work checklist: [Return to work](../curate/return-to-work.md)
-- Fix stale .bib: [Fix a stale .bib](fix-stale-bib.md)
+- Fix stale .bib: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - Fix stuck card: [Fix a stuck card](fix-stuck-card.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)

@@ -23,7 +23,7 @@ Zotero is Memoria's recommended bibliographic backbone — stable citekeys and a
 2. **Citekeys are pinned automatically** by Better BibTeX — a generated key never regenerates, so vault wikilinks stay stable with no manual step.
 3. Export your library to the vault: right-click the library → **Export Library** → format **Better BibLaTeX** → check **Keep updated** → save to `<your-vault>/.memoria/memoria.bib`.
 
-That's the whole integration: Better BibTeX keeps `memoria.bib` current, and Memoria reads it. Details and connector options: [Zotero plugins](../reference/zotero-plugins.md) and [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+That's the whole integration: Better BibTeX keeps `memoria.bib` current, and Memoria reads it. Details and connector options: [Zotero plugins](../reference/zotero-plugins.md) and [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md).
 
 ---
 

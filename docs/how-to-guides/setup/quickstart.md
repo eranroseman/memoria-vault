@@ -61,5 +61,5 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Plugin install details: [Set up Obsidian](set-up-obsidian.md)
-- Zotero configuration: [Set up Zotero](set-up-zotero.md)
+- Zotero configuration: [Set up Zotero](../zotero/set-up-zotero.md)
 - API keys and profile secrets: [Set up Hermes](set-up-hermes.md)

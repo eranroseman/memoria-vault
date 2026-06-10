@@ -41,7 +41,7 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | [Quickstart](setup/quickstart.md) | Five-step fast path for a new machine |
 | [Set up the vault](setup/set-up-the-vault.md) | Clone the repo and run the install script |
 | [Set up Obsidian](setup/set-up-obsidian.md) | Open the vault and install required plugins |
-| [Set up Zotero](setup/set-up-zotero.md) | Better BibTeX, citekey format, autosync to `.bib` |
+| [Set up Zotero](zotero/set-up-zotero.md) | Better BibTeX, citekey format, autosync to `.bib` |
 | [Set up Hermes](setup/set-up-hermes.md) | Install profiles and fill `.env` secrets |
 | [Configure project hints](setup/configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 | [Set up the messaging gateway](setup/set-up-messaging.md) | Telegram capture for mobile fleeting notes |
@@ -139,5 +139,5 @@ Detect-Fix-Verify recipes for specific failures. Each guide covers exactly one f
 | [Fix a stuck card](troubleshooting/fix-stuck-card.md) | Card won't advance on the Kanban board |
 | [Fix broken frontmatter](troubleshooting/fix-broken-frontmatter.md) | YAML parse error; note missing from Dataview queries |
 | [Diagnose a denied or blocked write](troubleshooting/diagnose-a-denied-write.md) | Trace a missing write: policy denial vs. wiring failure |
-| [Fix a stale `.bib`](troubleshooting/fix-stale-bib.md) | Citekey not found at ingest |
+| [Fix a stale `.bib`](zotero/fix-stale-bib.md) | Citekey not found at ingest |
 | [Fix profile drift](troubleshooting/fix-profile-drift.md) | Deployed profile doesn't match vault source |

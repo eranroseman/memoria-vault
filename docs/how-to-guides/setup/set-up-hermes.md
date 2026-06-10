@@ -153,7 +153,7 @@ Each line should have `"decision": "allow_with_log"` and `"profile": "memoria-li
 
 ## Related
 
-- API key sources: [set-up-zotero.md § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
+- API key sources: [set-up-zotero.md § API keys for enrichment](../zotero/set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Hermes CLI reference: [External integrations](../../reference/integrations.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles) (Librarian, Mapper, etc.)

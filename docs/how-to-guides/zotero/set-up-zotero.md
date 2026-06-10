@@ -1,6 +1,6 @@
 ---
 title: Set up Zotero
-parent: Setup
+parent: Zotero
 nav_order: 4
 ---
 
@@ -13,7 +13,7 @@ Configure Zotero with Better BibTeX and wire up the automatic export so Memoria'
 
 - Zotero 9 installed ([zotero.org](https://www.zotero.org/download/))
 - Better BibTeX plugin installed in Zotero ([retorque.re/zotero-better-bibtex/](https://retorque.re/zotero-better-bibtex/))
-- The vault cloned ([Set up the vault](set-up-the-vault.md))
+- The vault cloned ([Set up the vault](../setup/set-up-the-vault.md))
 
 ## Steps
 
@@ -71,7 +71,7 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 The Librarian and Verifier resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 9; if it isn't already on, enable local API access under **Settings → Advanced**).
 
 - Zotero must be **running** for the MCP to reach it.
-- The MCP itself is installed during [Set up Hermes](set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
+- The MCP itself is installed during [Set up Hermes](../setup/set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
 - It is **read-only** — Memoria reads from Zotero but never writes back to it.
 
 ## Close the loop: install MarkDB-Connect (recommended)
@@ -105,11 +105,11 @@ Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without k
 | PubMed | ncbi.nlm.nih.gov/account/ | 3 req/sec | 10 req/sec |
 | GitHub | github.com/settings/tokens (`public_repo` scope) | 60 req/hr | 5,000 req/hr |
 
-Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
+Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes](../setup/set-up-hermes.md).
 
 ## Related
 
-- Next step: [Set up Hermes](set-up-hermes.md)
+- Next step: [Set up Hermes](../setup/set-up-hermes.md)
 - What ingest does with the `.bib`: [Capture and ingest a source](../compile/capture-and-ingest.md)
-- Fixing a stale `.bib`: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
+- Fixing a stale `.bib`: [Fix a stale .bib](fix-stale-bib.md)
 - Citekey naming convention: [ADR-6](../../adr/06-citekey-naming-convention.md)

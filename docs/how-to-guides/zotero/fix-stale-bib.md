@@ -1,6 +1,6 @@
 ---
 title: Fix a stale .bib
-parent: Troubleshooting
+parent: Zotero
 nav_order: 5
 ---
 
@@ -70,5 +70,5 @@ hermes -p memoria-librarian chat -s obsidian-paper-note
 
 ## Related
 
-- Zotero setup: [Set up Zotero](../setup/set-up-zotero.md)
+- Zotero setup: [Set up Zotero](set-up-zotero.md)
 - Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)
