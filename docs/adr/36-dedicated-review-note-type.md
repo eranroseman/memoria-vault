@@ -3,7 +3,7 @@ topic: decisions
 id: 36
 title: Dedicated review-note type
 status: superseded
-folded_into: memoria-redesign  # subsumed by the Inbox review-request type (D6)
+folded_into: memoria-design-update  # subsumed by the Inbox review-request type (D6)
 assumes: []
 date_proposed: 2026-05-15
 parent: Decisions

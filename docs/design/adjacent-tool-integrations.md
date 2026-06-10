@@ -2,7 +2,7 @@
 topic: explorations
 title: Integrations and adjacent surfaces
 status: deferred
-folded_into: memoria-redesign  # partial - pattern library (D11) + Catalog (#220 biblib)
+folded_into: memoria-design-update  # partial - pattern library (D11) + Catalog (#220 biblib)
 created: 2026-05-31
 parent: Design notes
 grand_parent: Explanation

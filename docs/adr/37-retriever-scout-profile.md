@@ -3,7 +3,7 @@ topic: decisions
 id: 37
 title: Retriever / Scout as a separate profile
 status: superseded
-folded_into: memoria-redesign  # Find assist / Librarian discovery / Analyst (D7/D8)
+folded_into: memoria-design-update  # Find assist / Librarian discovery / Analyst (D7/D8)
 assumes: []
 date_proposed: 2026-05-15
 parent: Decisions

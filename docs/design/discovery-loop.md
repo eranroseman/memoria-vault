@@ -2,7 +2,7 @@
 topic: explorations
 title: Discovery loop and autonomy within the boundary
 status: deferred
-folded_into: memoria-redesign  # partial - Find/candidate loop + ADR-37
+folded_into: memoria-design-update  # partial - Find/candidate loop + ADR-37
 created: 2026-05-31
 parent: Design notes
 grand_parent: Explanation

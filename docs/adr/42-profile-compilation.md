@@ -3,7 +3,7 @@ topic: decisions
 id: 42
 title: Profile compilation from a shared base
 status: superseded
-folded_into: memoria-redesign  # how the renamed team-role profiles are defined (D8)
+folded_into: memoria-design-update  # how the renamed team-role profiles are defined (D8)
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions

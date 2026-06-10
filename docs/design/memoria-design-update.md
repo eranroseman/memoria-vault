@@ -716,7 +716,7 @@ design, not delivered; the implementing work is build-pending (see
 (by convention + git, not ACID) · `#188` LLM per profile · `#196` pin skills
 to a lane · `#177` tutorial names.
 
-### Folded decisions (`folded_into: memoria-redesign`)
+### Folded decisions (`folded_into: memoria-design-update`)
 
 ADR-36 (→ Inbox card-in-`proposed`) · ADR-37 (→ Find / Librarian) · ADR-38
 (→ near-tie/dedup + Peer-reviewer) · ADR-42 (→ profile = posture, §4) · ADR-43 (→ pattern
