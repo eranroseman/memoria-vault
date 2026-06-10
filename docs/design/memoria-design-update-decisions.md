@@ -1,6 +1,6 @@
 ---
 topic: explorations
-title: Memoria redesign — decisions & rationale
+title: Memoria design update — decisions & rationale
 status: exploration
 created: 2026-06-07
 parent: Design notes
@@ -9,9 +9,9 @@ nav_order: 12
 nav_exclude: true
 ---
 
-# Memoria redesign — decisions & rationale
+# Memoria design update — decisions & rationale
 
-The decision-journey stripped from [Memoria redesign — architecture](memoria-redesign.md) (which
+The decision-journey stripped from [Memoria design update](memoria-design-update.md) (which
 is design-only). Each entry records **what** was decided, **why**, and the
 **alternatives weighed** — the material an ADR needs. As each firms up, graduate it to
 `docs/adr/NN-*.md` and set `superseded_by` on the ADR it replaces. Ordered by
@@ -553,7 +553,7 @@ chosen by posture: *brief* = co-PI (+ Writer for prose); *relevance scan* & *lit
 Librarian (`map`/`find`, surfaced as batch-worklist reports, D37); *canvas* =
 Librarian-seeds / PI-authors; *outline* = Writer, a **one-way seed** from the canvas.
 **Write · code · verify (phases 6–8) are sequenced but come later in v0.1.2** (not yet detailed). Detail:
-[Memoria redesign — architecture](memoria-redesign.md) Appendix H.
+[Memoria design update](memoria-design-update.md) Appendix H.
 
 **Why:** the brief is the cascade root (get it wrong and every later phase inherits the
 error), so it's deep co-PI work, not a delegated task; relevance/lit-search are faithful

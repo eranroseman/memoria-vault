@@ -1,6 +1,6 @@
 ---
 topic: explorations
-title: Memoria redesign — architecture
+title: Memoria design update
 status: exploration
 created: 2026-06-07
 parent: Design notes
@@ -9,13 +9,13 @@ nav_order: 13
 nav_exclude: true
 ---
 
-# Memoria redesign — architecture
+# Memoria design update
 
 > **Status: exploration** (a design note in the RFC→ADR pipeline, not yet adopted). The
-> synthesized target vision — a near-total architecture redesign. **Not yet adopted:** firm
+> synthesized target vision — a near-total architecture update. **Not yet adopted:** firm
 > decisions graduate to **ADRs** (each setting `superseded_by` on the ADR it replaces).
 > The rationale and alternatives weighed are preserved in
-> [Memoria redesign — decisions & rationale](memoria-redesign-decisions.md), the seed for those ADRs.
+> [Memoria design update — decisions & rationale](memoria-design-update-decisions.md), the seed for those ADRs.
 >
 > **Premise: strictly solo, personal.** One judgment-owner.
 
@@ -26,7 +26,7 @@ If adopted, this **supersedes** ADR-01 (→ the single seven-layer architecture)
 (categories · Catalog-in-Bases · Inbox · Library/Project · lifecycle + maturity · pattern
 library · two-kinds-of-decision); and **reinforces** ADR-03/05/10/21/22/24/33. The
 decision-by-decision map is **Appendix G**; the rationale and alternatives weighed are
-in [Memoria redesign — decisions & rationale](memoria-redesign-decisions.md). Each firm decision
+in [Memoria design update — decisions & rationale](memoria-design-update-decisions.md). Each firm decision
 graduates via the [decisions pipeline](../adr/README.md).
 
 ## Contents
@@ -754,7 +754,7 @@ follows v0.1.2.**
 
 If adopted, each firm decision graduates via the
 [decisions pipeline](../adr/README.md) (rationale in
-[Memoria redesign — decisions & rationale](memoria-redesign-decisions.md)).
+[Memoria design update — decisions & rationale](memoria-design-update-decisions.md)).
 
 **Supersedes**
 

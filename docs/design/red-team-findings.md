@@ -12,8 +12,8 @@ nav_exclude: true
 # Red-team findings — adversarial review of the redesign
 
 > **Status: exploration.** A six-pass adversarial review of the
-> [redesign](memoria-redesign.md) + [system architecture](system-architecture.md) +
-> [decisions](memoria-redesign-decisions.md), each pass attacking one load-bearing
+> [redesign](memoria-design-update.md) + [system architecture](system-architecture.md) +
+> [decisions](memoria-design-update-decisions.md), each pass attacking one load-bearing
 > assumption (co-PI/delegation · the gates · engine/agent split · v0.2 scope · the unified
 > model · the data model). The clear corrections are **applied**; the genuine decisions are
 > **open** (below). Overall: the design is unusually self-aware — almost nothing is naïve;
