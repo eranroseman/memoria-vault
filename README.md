@@ -35,7 +35,7 @@ Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explan
 
 ## How it works
 
-The installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the seven `memoria-*` profiles, provisions skills, and prints where to put your API keys.
+The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the seven `memoria-*` profiles, provisions skills, and prints where to put your API keys.
 
 Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. A policy MCP layer intercepts every proposed write — you confirm or reject before anything lands in your vault.
 
@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-**Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `vault/`):
+**Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `src/`):
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
@@ -88,7 +88,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 | Path | What |
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
-| `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
+| `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
 | `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), the decision record (`adr/`), design notes (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
 
 ## Documentation

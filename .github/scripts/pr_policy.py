@@ -41,9 +41,9 @@ SENSITIVE_PREFIXES = (
     ".github/workflows/",
     ".github/scripts/",
     "scripts/",
-    "vault/.memoria/profiles/",
-    "vault/.memoria/mcp/",
-    "vault/.memoria/lane-overrides/",
+    "src/.memoria/profiles/",
+    "src/.memoria/mcp/",
+    "src/.memoria/lane-overrides/",
     "docs/adr/",
 )
 

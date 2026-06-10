@@ -51,7 +51,7 @@ sessions, the substrate behind cross-session recall.
 - **Project memory** is the workbench. Everything scoped to one project — map, framing,
   drafts, verification, code — lives under `40-workbench/<project>/` and archives as a
   unit when the project closes.
-- **Program memory** is the steering layer. [`research-focus.md`](../../vault/research-focus.md)
+- **Program memory** is the steering layer. [`research-focus.md`](../../src/research-focus.md)
   carries current priorities, open questions, and synthesis gaps; the Librarian reads
   it at session start to weight discovery. It is human-maintained, refreshed in the
   weekly (Friday) ritual. `screening-protocol.md` holds per-program inclusion criteria.

@@ -33,7 +33,7 @@ def test_check_test_refs():
         check("REPO_PATH: matches project-files/ path",
               REPO_PATH.findall("`project-files/tests/coverage-matrix.md`") == ["project-files/tests/coverage-matrix.md"])
         check("REPO_PATH: ignores non-matching prefix",
-              REPO_PATH.findall("`vault/something.md`") == [])
+              REPO_PATH.findall("`src/something.md`") == [])
         check("REPO_PATH: ignores non-backtick text",
               REPO_PATH.findall("docs/reference/policy-mcp.md") == [])
 

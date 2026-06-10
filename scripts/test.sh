@@ -16,7 +16,7 @@
 # Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = collect-only, no run
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
-P=vault/.memoria
+P=src/.memoria
 fail=0
 run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /tmp/mt.$$ | tail -2; else sed 's/^/    /' /tmp/mt.$$; echo "    ✗ FAILED"; fail=1; fi; rm -f /tmp/mt.$$; }
 
@@ -55,7 +55,7 @@ l0() {
   # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
   # querying a field no template emits is a silent failure — CI gates it too);
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" --vault vault --gate dashboard-field-drift
+  run python3 "$P/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py" --vault src --gate dashboard-field-drift
 }
 
 case "${1:-all}" in
