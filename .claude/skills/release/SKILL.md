@@ -19,8 +19,8 @@ Stand up or cut a Memoria release. Conventions: AGENTS.md "Work routing"; scaffo
 
 ## Starting a new release vX.Y
 
-1. **Folder + plan.** Create `docs/releasing/vX.Y/README.md` (thin index). Copy
-   `docs/releasing/release-plan-template.md` → `docs/releasing/vX.Y/release-plan-vX.Y.md`.
+1. **Folder + plan.** Create `docs/releasing/v<N>.<M>/README.md` (thin index). Copy
+   `docs/releasing/release-plan-template.md` → `docs/releasing/v<N>.<M>/release-plan-v<N>.<M>.md`.
    Fill the prose; frontmatter `status: draft`, `released: false`. The plan lists the
    gate/stage *definitions* — no state table.
 2. **Milestone = scope.** `gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`;

@@ -1,0 +1,134 @@
+# Memoria pre-commit configuration.
+# Install once per clone:  pre-commit install   (run via  bash scripts/dev-setup.sh)
+# Run manually over all files:  pre-commit run --all-files
+# Skip a single hook once:  SKIP=<hook-id> git commit
+# Bypass everything (rarely):  git commit --no-verify
+
+repos:
+  # ---------------------------------------------------------------------------
+  # Official hooks (pre-commit/pre-commit-hooks)
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Block 0: no direct commits to main (main is PR-protected; block, don't warn)
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      # Block 8: JSON syntax check (exclude vendored Obsidian plugin files)
+      - id: check-json
+        exclude: vault/\.obsidian/plugins/
+
+  # ---------------------------------------------------------------------------
+  # ruff (Python linter)  —  Block 3 partial
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff
+        files: ^scripts/|^vault/\.memoria/
+
+  # ---------------------------------------------------------------------------
+  # yamllint  —  Block 7
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        exclude: vault/\.obsidian/
+
+  # ---------------------------------------------------------------------------
+  # shellcheck  —  Block 2 partial
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
+        files: ^scripts/install\.sh$
+
+  # ---------------------------------------------------------------------------
+  # Local hooks
+  # ---------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      # Block 1: docs-doctor
+      - id: docs-doctor
+        name: docs-doctor
+        language: system
+        entry: python scripts/docs-doctor.py docs
+        files: ^docs/|^scripts/docs-doctor\.py
+        pass_filenames: false
+
+      # Block 2 partial: bash syntax check for install.sh
+      - id: bash-syntax
+        name: bash-syntax
+        language: system
+        entry: bash -n scripts/install.sh
+        files: ^scripts/install\.sh$
+        pass_filenames: false
+
+      # Block 3 partial: pytest
+      - id: pytest
+        name: pytest
+        language: system
+        entry: python -m pytest tests/ -q
+        files: \.py$
+        pass_filenames: false
+
+      # Block 4: docs reference resolution
+      - id: check-doc-refs
+        name: check-doc-refs
+        language: system
+        entry: bash scripts/check-doc-refs.sh
+        files: \.(md|py|ya?ml)$
+        pass_filenames: true
+
+      # Block 5: test-plan reference resolution
+      - id: check-test-refs
+        name: check-test-refs
+        language: system
+        entry: python scripts/check-test-refs.py
+        files: ^docs/testing/.*\.md$|^scripts/check-test-refs\.py$
+        pass_filenames: false
+
+      # Block 6: dashboard schema-drift
+      - id: dashboard-schema-drift
+        name: dashboard-schema-drift
+        language: system
+        entry: python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault --gate dashboard-field-drift
+        files: ^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/templates/.*\.md$
+        pass_filenames: false
+
+      # Block 9: markdownlint structural rules
+      - id: markdownlint-structural
+        name: markdownlint-structural
+        language: system
+        entry: npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-structural.json
+        files: ^docs/.*\.md$
+        pass_filenames: true
+
+      # Block 10: ADR index current
+      - id: adr-index
+        name: adr-index
+        language: system
+        entry: python scripts/gen-adr-index.py --check
+        files: ^docs/adr/.*\.md$|^scripts/gen-adr-index\.py$
+        pass_filenames: false
+
+      # Block 11: status-doctor
+      - id: status-doctor
+        name: status-doctor
+        language: system
+        entry: python scripts/status-doctor.py
+        files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$
+        pass_filenames: false
+
+      # Block 12: harper grammar (advisory — always exits 0)
+      - id: harper-grammar
+        name: harper-grammar
+        language: system
+        entry: bash scripts/harper-advisory.sh
+        files: \.(md|txt|rst)$
+        exclude: vault/\.obsidian/
+        pass_filenames: true
+        verbose: true

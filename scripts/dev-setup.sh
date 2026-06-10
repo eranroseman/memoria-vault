@@ -15,9 +15,9 @@ cd "$(dirname -- "$0")/.." || exit 1
 
 note() { printf '  %s\n' "$1"; }
 
-echo "==> Activating the pre-commit hook (git won't do this on clone — it's local config)"
-git config core.hooksPath .githooks
-note "core.hooksPath = $(git config --local core.hooksPath)"
+echo "==> Installing pre-commit hooks (git won't do this on clone — it's local config)"
+pre-commit install
+note "pre-commit hooks installed"
 
 echo "==> Installing Python dev tooling (ruff, yamllint) + MCP self-test deps"
 PY=$(command -v python3 || command -v python || true)
