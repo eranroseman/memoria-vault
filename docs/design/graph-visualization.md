@@ -38,6 +38,9 @@ the vault.
 
 ## 2. The crown jewel: the typed claim graph
 
+> **Status:** shipped (#345) — `cluster_emit_canvas` in the cluster MCP emits this map
+> as a JSON Canvas artifact into the `notes/fleeting/maps/` staging home.
+
 The single highest-value view the redesign unlocks — and one **no off-the-shelf tool
 can draw**, because it depends on Memoria's _authored_ typing: claims connected by
 **`supports` / `contradicts`**, edges colored green/red, node color = `maturity`

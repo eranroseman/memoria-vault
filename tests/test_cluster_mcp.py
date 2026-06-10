@@ -63,3 +63,94 @@ def test_topics_degrade_cleanly(tmp_path):
 def test_empty_vault_no_crash(tmp_path):
     g = cluster_mcp.build_graph(tmp_path, seed=1)
     assert g["nodes"] == [] and g["edges"] == []
+
+
+# ── cluster_emit_canvas — the claim-debate map (#345) ────────────────────────
+
+def _canvas_vault(tmp_path):
+    v = _vault(tmp_path)
+    (v / "notes/claims/a.md").write_text(
+        "---\ntype: claim\nmaturity: evergreen\nlinks:\n"
+        "  supports: ['[[b]]']\n  contradicts: ['[[c]]']\n  extends: ['[[d]]']\n---\n",
+        encoding="utf-8")
+    (v / "notes/claims/d.md").write_text(
+        "---\ntype: claim\nmaturity: seedling\n---\n", encoding="utf-8")
+    return v
+
+
+def _emit(v, **kw):
+    import json
+
+    out = cluster_mcp.emit_canvas(v, **kw)
+    assert "error" not in out, out
+    doc = json.loads((v / out["canvas_path"]).read_text(encoding="utf-8"))
+    return out, doc
+
+
+def test_emit_canvas_valid_structure(tmp_path):
+    v = _canvas_vault(tmp_path)
+    out, doc = _emit(v)
+    assert out["canvas_path"] == "notes/fleeting/maps/claim-debate.canvas"
+    ids = [n["id"] for n in doc["nodes"]]
+    assert len(ids) == len(set(ids))                       # unique node ids
+    file_nodes = [n for n in doc["nodes"] if n["type"] == "file"]
+    assert {n["id"] for n in file_nodes} == {"a", "b", "c", "d"}
+    for n in file_nodes:                                   # file nodes -> real files
+        assert (v / n["file"]).is_file()
+        assert all(k in n for k in ("x", "y", "width", "height"))
+    for e in doc["edges"]:                                 # edges join existing nodes
+        assert e["fromNode"] in ids and e["toNode"] in ids
+        assert e["fromSide"] in ("left", "right") and e["toSide"] in ("left", "right")
+    edge_ids = [e["id"] for e in doc["edges"]]
+    assert len(edge_ids) == len(set(edge_ids))
+
+
+def test_emit_canvas_color_mapping(tmp_path):
+    v = _canvas_vault(tmp_path)
+    _, doc = _emit(v)
+    by_type = {e["label"]: e for e in doc["edges"]}
+    assert by_type["supports"]["color"] == "4"             # green
+    assert by_type["contradicts"]["color"] == "1"          # red
+    assert "color" not in by_type["extends"]               # neutral
+    by_id = {n["id"]: n for n in doc["nodes"]}
+    assert by_id["a"]["color"] == "4"                      # evergreen
+    assert by_id["d"]["color"] == "3"                      # seedling
+    assert "color" not in by_id["b"]                       # no maturity declared
+
+
+def test_emit_canvas_deterministic(tmp_path):
+    v = _canvas_vault(tmp_path)
+    _, d1 = _emit(v, seed=13)
+    _, d2 = _emit(v, seed=13)
+    assert d1 == d2
+
+
+def test_emit_canvas_scope_filters(tmp_path):
+    v = _canvas_vault(tmp_path)
+    (v / "notes/claims/sub").mkdir()
+    (v / "notes/claims/sub/e.md").write_text("---\ntype: claim\n---\n", encoding="utf-8")
+    # hub scope: the hub plus its one-hop neighborhood, named after the hub
+    out, doc = _emit(v, scope="notes/hubs/h.md")
+    assert out["canvas_path"].endswith("claim-debate-h.canvas")
+    stems = {n["id"] for n in doc["nodes"] if n["type"] == "file"}
+    assert stems == {"h", "a", "b"}
+    # folder-prefix scope excludes everything outside the prefix
+    _, doc2 = _emit(v, scope="notes/claims")
+    stems2 = {n["id"] for n in doc2["nodes"] if n["type"] == "file"}
+    assert "h" not in stems2 and "x2024" not in stems2
+
+
+def test_emit_canvas_refuses_gated_targets(tmp_path):
+    v = _canvas_vault(tmp_path)
+    for bad in ("notes/claims/map.canvas", "notes/hubs/map.canvas"):
+        out = cluster_mcp.emit_canvas(v, out=bad)
+        assert out["error"] == "gated-target"
+        assert not (v / bad).exists()
+    out = cluster_mcp.emit_canvas(v, out="../escape.canvas")
+    assert out["error"] == "invalid-target"
+
+
+def test_emit_canvas_empty_scope_errors(tmp_path):
+    v = _canvas_vault(tmp_path)
+    out = cluster_mcp.emit_canvas(v, scope="notes/nothing-here")
+    assert out["error"] == "empty-scope"
