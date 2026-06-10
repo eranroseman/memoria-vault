@@ -4,7 +4,7 @@
 # =============================================================================
 # One command sets up the whole system: clones the vault, installs Hermes + the
 # ACP extra, deploys the seven memoria-* profiles, provisions skills, and guides
-# the GUI apps (Obsidian, Zotero). macOS is not supported.
+# the GUI app (Obsidian). macOS is not supported. (Zotero: see the tutorial.)
 #
 # Inspect-first (recommended):
 #   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -19,8 +19,8 @@
 #   --profiles-only   skip the bootstrap; just (re)deploy profiles from an existing vault
 #                     (the maintenance path — run after editing the vault source)
 #   --only NAMES      restrict the profile step to these (comma-separated), e.g.
-#                     --only memoria-linter  — pairs with --profiles-only
-#   --no-apps         skip the Obsidian/Zotero guidance (headless / server installs)
+#                     --only memoria-librarian — pairs with --profiles-only
+#   --no-apps         skip the Obsidian guidance (headless / server installs)
 #   --dry-run         print every command that WOULD run; change nothing
 #   --yes             non-interactive: accept all defaults, no prompts (CI)
 #   -h | --help       this help
@@ -44,7 +44,7 @@ HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_PROFILES_DIR="$HERMES_HOME/profiles"
 HERMES_SKILLS_DIR="$HERMES_HOME/skills"
 
-ALL_PROFILES="memoria-librarian memoria-mapper memoria-socratic memoria-writer memoria-verifier memoria-coder memoria-linter"
+ALL_PROFILES="memoria-copi memoria-librarian memoria-writer memoria-peer-reviewer memoria-engineer"
 REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
 
 # Official Hermes skills we rely on, allowed by name in the lane-overrides. Per the
@@ -156,7 +156,7 @@ print_plan() {
   say "  5. install MCP server dependencies (pip)"
   say "  6. deploy the seven memoria-* Hermes profiles"
   say "  7. provision skills (K-Dense clone + kepano/qmd hub skills; verify bundled official skills)"
-  say "  8. guide the Obsidian and Zotero installs"
+  say "  8. guide the Obsidian install (Zotero moved to the tutorial)"
   say "  9. print where to put your API keys + next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
   return 0
@@ -331,6 +331,23 @@ copy_vault() {
   done
   ok "Folder skeleton ensured (${#SKELETON_DIRS[@]} dirs)"
 
+  # Stage the golden copy (ADR-55): a canonical copy of every system file with a
+  # hash manifest at <vault>/.memoria/golden/ — the Linter's restore source.
+  local pybin="${VENV_PYTHON:-python3}"
+  run "$pybin" "$VAULT_PATH/.memoria/engines/linter/golden.py" --vault "$VAULT_PATH" stage \
+    || warn "golden copy not staged — run golden.py stage manually (lint:restore needs it)"
+  ok "Golden copy staged (.memoria/golden/)"
+
+  # The commit gate (D50): if the vault is a git repo, wire the pre-commit hook.
+  if [ -d "$VAULT_PATH/.git" ]; then
+    run mkdir -p "$VAULT_PATH/.git/hooks"
+    run cp "$VAULT_PATH/.memoria/engines/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
+    run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
+    ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
+  else
+    say "  (vault is not a git repo yet — the pre-commit gate wires on the next refresh after git init)"
+  fi
+
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
   # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
@@ -412,6 +429,17 @@ install_mcp_deps() {
   run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
   run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
   ok "MCP dependencies installed into $venv"
+
+  # Optional heavy stack (ADR-33): the cluster MCP's topic modeling needs
+  # bertopic (-> torch). Graph tools work without it; offer, don't force.
+  if [ -f "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" ]; then
+    if confirm "Install the OPTIONAL clustering stack (bertopic -> torch, ~2GB)? Topic modeling needs it; graph analysis does not."; then
+      run "$VENV_PYTHON" -m pip install --quiet -r "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" \
+        || warn "cluster deps failed — install later: $VENV_PYTHON -m pip install -r .memoria/mcp/requirements-cluster.txt"
+    else
+      say "  (skipped — cluster_model_topics will error cleanly until installed)"
+    fi
+  fi
 }
 
 # Seed shared secrets into a profile's .env. Hermes profile runs read ONLY the
@@ -565,6 +593,24 @@ install_profiles() {
   [ -n "$skipped" ] && printf '  Skipped:%b\n' "$skipped"
   trap - RETURN
   rm -rf "$staging"
+
+  # Fresh-install discipline (ADR-55): prune installed memoria-* profiles that are
+  # no longer shipped (mapper/socratic/verifier/coder/linter from v0.1.0) so a
+  # stale SOUL never answers the ACP pane.
+  if [ "$DRY_RUN" -eq 0 ]; then
+    local installed_list stale
+    installed_list="$(hermes profile list 2>/dev/null | grep -oE 'memoria-[a-z-]+' | sort -u || true)"
+    for stale in $installed_list; do
+      case " $ALL_PROFILES " in
+        *" $stale "*) ;;  # shipped — keep
+        *)
+          warn "stale profile from a previous install: $stale"
+          hermes profile remove "$stale" --yes 2>/dev/null \
+            || warn "  could not remove $stale — remove it manually: hermes profile remove $stale"
+          ;;
+      esac
+    done
+  fi
 }
 
 # =============================================================================
@@ -637,33 +683,7 @@ ensure_obsidian() {
   say "  On first launch: turn off Restricted mode so the nine bundled plugins load."
 }
 
-ensure_zotero() {
-  hdr "Zotero"
-  if have zotero || (have flatpak && flatpak info org.zotero.Zotero >/dev/null 2>&1); then
-    ok "Zotero present"
-  else
-    say "Zotero is a GUI app — install it yourself:"
-    if have flatpak; then
-      say "  Flatpak:  flatpak install -y flathub org.zotero.Zotero"
-      confirm "Install via Flatpak now?" && run flatpak install -y flathub org.zotero.Zotero
-    else
-      say "  Download: https://www.zotero.org/download/"
-      say "  Or the apt repo (zotero-deb):  https://github.com/retorquere/zotero-deb"
-    fi
-  fi
-}
 
-zotero_plugins() {
-  hdr "Zotero add-ons (manual — Zotero installs .xpi from the GUI)"
-  say "Install these in Zotero -> Tools -> Add-ons -> gear -> Install Add-on From File:"
-  say "  - Better BibTeX (REQUIRED): https://github.com/retorquere/zotero-better-bibtex/releases/latest"
-  say "  - MarkDB-Connect (recommended): https://github.com/daeh/zotero-markdb-connect/releases/latest"
-  say ""
-  say "Then configure Better BibTeX:"
-  say "  - Citation key formula: stable author+year (see set-up-zotero.md)"
-  say "  - Auto-export your library as BibLaTeX to:  $VAULT_PATH/.memoria/memoria.bib"
-  say "    (this overwrites the empty stub the vault ships with)"
-}
 
 # =============================================================================
 # Step 9 — secrets + next steps
@@ -683,12 +703,13 @@ print_secrets_guidance() {
 
 print_next_steps() {
   hdr "Next steps"
-  local first; first="$(printf '%s' "$ALL_PROFILES" | awk '{print $1}')"
+
   say "  1. Fill in the .env secrets (above)."
   [ -n "$VAULT_PATH" ] && say "  2. Open this folder in Obsidian as your vault:  $VAULT_PATH"
   say "  3. Verify the profiles:        hermes profile list"
-  say "  4. Smoke-test the ACP pane:    hermes -p memoria-socratic acp"
-  say "  5. Try a session:              hermes -p $first chat"
+  say "  4. Open the co-PI pane:        hermes -p memoria-copi acp   (or the Agent Client pane in Obsidian)"
+  say "  5. Switch to the Library workspace in Obsidian (Workspaces: Home | Library)"
+  say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
   # obsidian-git needs a repo to commit into; we deliberately don't auto-init (the
   # vault is the user's own repo). Surface the one-liner only if it's not a repo yet.
   if [ -n "$VAULT_PATH" ] && [ ! -d "$VAULT_PATH/.git" ]; then
@@ -778,6 +799,31 @@ wire_sweeps_cron() {
   ok "Sweeps cron wired"
 }
 
+wire_lint_cron() {
+  hdr "Linter cron"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the lint cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/lint-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-lint.sh"
+  if [ ! -f "$src" ]; then
+    warn "lint cron wrapper missing at $src — lint cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-lint"; then
+    say "  lint cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent \
+      --name memoria-lint --deliver local \
+      || warn "could not create the lint cron — create it manually"
+  fi
+  say "  (the engine monitors between commits: detectors + golden-copy drift, daily)"
+  ok "Lint cron wired"
+}
+
 # =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
@@ -790,6 +836,7 @@ main() {
     install_profiles
     wire_telemetry_cron
     wire_sweeps_cron
+    wire_lint_cron
     print_next_steps
     return
   fi
@@ -805,10 +852,11 @@ main() {
   install_skills
   wire_telemetry_cron
   wire_sweeps_cron
+  wire_lint_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
-    ensure_zotero
-    zotero_plugins
+    # Zotero setup moved to the tutorial (ADR-55) — it's the PI's bibliographic
+    # backbone choice, not core provisioning.
   fi
   print_secrets_guidance
   print_next_steps
