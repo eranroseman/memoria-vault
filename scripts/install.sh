@@ -154,7 +154,7 @@ print_plan() {
   say "  3. install Hermes (official installer) + verify ACP"
   say "  4. copy the runtime vault to your chosen folder"
   say "  5. install MCP server dependencies (pip)"
-  say "  6. deploy the seven memoria-* Hermes profiles"
+  say "  6. deploy the five memoria-* Hermes profiles"
   say "  7. provision skills (K-Dense clone + kepano/qmd hub skills; verify bundled official skills)"
   say "  8. guide the Obsidian install (Zotero moved to the tutorial)"
   say "  9. print where to put your API keys + next steps"
@@ -824,6 +824,31 @@ wire_lint_cron() {
   ok "Lint cron wired"
 }
 
+wire_metrics_cron() {
+  hdr "Metrics cron (fleet health)"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the metrics cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/metrics-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-metrics.sh"
+  if [ ! -f "$src" ]; then
+    warn "metrics cron wrapper missing at $src — metrics cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-metrics"; then
+    say "  metrics cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '30 6 * * 1' --script memoria-metrics.sh --no-agent \
+      --name memoria-metrics --deliver local \
+      || warn "could not create the metrics cron — create it manually"
+  fi
+  say "  (rolls audit + board + lint logs into system/metrics/ weekly for fleet-health)"
+  ok "Metrics cron wired"
+}
+
 # =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
@@ -837,6 +862,7 @@ main() {
     wire_telemetry_cron
     wire_sweeps_cron
     wire_lint_cron
+    wire_metrics_cron
     print_next_steps
     return
   fi
@@ -853,6 +879,7 @@ main() {
   wire_telemetry_cron
   wire_sweeps_cron
   wire_lint_cron
+  wire_metrics_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
     # Zotero setup moved to the tutorial (ADR-55) — it's the PI's bibliographic

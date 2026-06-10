@@ -79,7 +79,7 @@ Memoria's linting is the `memoria-linter` Hermes profile (structural validation 
 
 ## Related
 
-- Next step: [Set up Zotero](set-up-zotero.md)
+- Next step: [Set up Zotero](../zotero/set-up-zotero.md)
 - Plugin reference: [reference/obsidian-plugins/](../../reference/obsidian-plugins.md)
 - Callout types: [reference/obsidian-callouts](../../reference/obsidian-callouts.md)
 - Workspaces reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

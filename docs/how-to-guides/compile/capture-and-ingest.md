@@ -11,7 +11,7 @@ Move a paper, repository, or other source from discovery into the vault as a rev
 
 ## Prerequisites
 
-- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([Set up Zotero](../setup/set-up-zotero.md))
+- Zotero and Better BibTeX configured with autosync to `.memoria/memoria.bib` ([Set up Zotero](../zotero/set-up-zotero.md))
 - The Librarian profile installed and secrets filled ([Set up Hermes](../setup/set-up-hermes.md))
 
 ## Steps
@@ -79,6 +79,6 @@ Add each source to Zotero and pin its citekey; the `.bib` auto-export enqueues o
 ## Related
 
 - Next step: [Classify a source](classify-a-source.md)
-- If the citekey isn't found: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
+- If the citekey isn't found: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - Ingest reference (routing table, per-type enrichment): [Ingest routing](../../reference/ingest.md)
 - Source types and note formats: [Note types](../../reference/note-types.md)
