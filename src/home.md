@@ -44,7 +44,7 @@ empty. Full board: [[board-state|Board State]].
 - **Talk to the co-PI** — open the ACP pane (`Agent Client: Open chat view`). One
   conversation partner: it questions, explains the system, and delegates tasks to the
   background lanes for you.
-- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting` · `lint this note`
+- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting`
 
 ## Dashboards
 

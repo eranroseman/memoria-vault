@@ -31,32 +31,27 @@ groups:
   vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.delete_file]
   web:         [web_search, web_extract]          # "search_web" + "fetch_url"
   policy:      [policy.check_permission, policy.complete_write]
+  tasks:       [tasks.delegate_route_task]
+  cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
+  ingest_read: [ingest.ingest_pipeline]
 
 profiles:
+  memoria-copi:
+    allow: [vault_read, skills, todo, memory, policy, tasks, cluster_read, ingest_read]
+    notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
+
   memoria-librarian:
-    allow: [web, vault_read, vault_write, skills, todo, policy]
-    notes: "Discovery via web; vault read/write via obsidian (lane scopes writes to 10-inbox/ + 20-sources/). rest-passthrough is a skill, not a raw tool."
-
-  memoria-mapper:
-    allow: [vault_read, vault_write, skills, todo, policy]
-    notes: "No web/terminal (external APIs + drafting denied). vault_write capability is lane-scoped to 40-workbench/*/01-map/ scratch only."
-
-  memoria-socratic:
-    allow: [vault_read, skills, todo, policy]
-    notes: "Hard read-only: vault_write withheld at the capability layer, mirroring policy.allow.write: []. No web, no terminal."
+    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, ingest_read]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (web toolset stays off; the group name covers MCP search tools); vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
+    allow: [vault_read, vault_write, skills, todo, policy]
+    notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No web — it composes from the vault, never researches."
+
+  memoria-peer-reviewer:
     allow: [web, vault_read, vault_write, skills, todo, policy]
-    notes: "Drafting; vault_write lane-scoped to answers/drafts/framing/canvas and review-gated 02-reference/50-deliverables (degrade to dry_run)."
+    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). web for cite checks (external_api_policy: explicit_only); vault_write lane-scoped to inbox/ cards only."
 
-  memoria-verifier:
-    allow: [web, vault_read, vault_write, skills, todo, policy]
-    notes: "web for retraction/cite checks (external_api_policy: explicit_only); vault_write lane-scoped to verification reports + gap candidates."
-
-  memoria-coder:
+  memoria-engineer:
     allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
-    notes: "terminal + file for Git/repo + external-agent handoff; vault_write lane-scoped to 40-workbench/*/06-code/. No browser."
-
-  memoria-linter:
-    allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
-    notes: "the structural-detectors skill runs detectors.py via terminal; file reads the vault tree + Git; vault_write lane-scoped to 99-system/logs/. No web/browser."
+    notes: "The code lane (the ADR-21 Coder-lane exception): terminal + file for Git/repo + external-agent handoff; vault_write lane-scoped to projects/*/code/."

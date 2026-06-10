@@ -54,7 +54,7 @@ dv.table(
 
 ## Per-profile activity (last 24h)
 
-Is each profile writing where expected? Smells: any `memoria-socratic` write (write-denied), any `memoria-mapper`/`memoria-verifier` write outside its scratch path, a Librarian writing thousands/hour.
+Is each profile writing where expected? Smells: any `memoria-copi` write (write-denied), any `memoria-peer-reviewer` write outside `inbox/`, a Librarian writing thousands/hour.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {

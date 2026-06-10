@@ -22,7 +22,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 **Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../how-to-guides/compose/create-a-code-artifact.md).
 
-> **Current vs. planned agents.** The shipped Coder lane wires **`codex` and `claude-code`** as the current external coding agents (`opencode` also available) — the real Hermes `autonomous-ai-agents` skill IDs in [Coder SOUL](../../src/.memoria/profiles/memoria-coder/SOUL.md) and `lane-overrides/coder.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Coder's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
+> **Current vs. planned agents.** The shipped Coder lane wires **`codex` and `claude-code`** as the current external coding agents (`opencode` also available) — the real Hermes `autonomous-ai-agents` skill IDs in [Coder SOUL](../../src/.memoria/profiles/memoria-engineer/SOUL.md) and `lane-overrides/coder.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Coder's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
 
 ## Consequences
 

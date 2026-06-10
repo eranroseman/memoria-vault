@@ -45,8 +45,8 @@ COST_RELPATH = "system/logs/cost.jsonl"                      # API spend + token
 TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
-LANES = ("memoria-librarian", "memoria-mapper", "memoria-socratic", "memoria-writer",
-         "memoria-verifier", "memoria-coder", "memoria-linter")
+LANES = ("memoria-librarian", "memoria-writer", "memoria-peer-reviewer",
+         "memoria-engineer")   # the background agents (ADR-48); no co-PI/engine lanes
 LOW_CONFIDENCE_SAMPLES = 5          # below this, the score is flagged insufficient-data
 
 # --- Trust-score weights (tunable; bands are fixed by the glossary) ---------- #
