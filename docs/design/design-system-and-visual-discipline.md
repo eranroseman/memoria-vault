@@ -13,7 +13,7 @@ nav_order: 6
 A design capture of the vault's portable visual-style system: a single nine-section
 spec that drives CSS snippets, Pandoc exports, and open-design rendering, plus the
 anti-patterns the Linter enforces. Reconstructed from
-[`vault/.memoria/design-system.md`](../../vault/.memoria/design-system.md) and the
+[`vault/.memoria/design-system.md`](../../src/.memoria/design-system.md) and the
 generated snippet.
 
 > **Why capture this.** The design system is implemented and load-bearing (it governs
@@ -39,7 +39,7 @@ translation layer:
 The file is read, not copied, by every renderer:
 
 - **CSS-snippet generators** → produce
-  [`.obsidian/snippets/memoria-link-colors.css`](../../vault/.obsidian/snippets/memoria-link-colors.css)
+  [`.obsidian/snippets/memoria-link-colors.css`](../../src/.obsidian/snippets/memoria-link-colors.css)
   and similar.
 - **Pandoc export configs** → typography maps to font flags, color maps to header styles.
 - **open-design** → renders deliverables to PDF / HTML / slides.

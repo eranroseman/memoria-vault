@@ -202,15 +202,15 @@ ensure_prereqs() {
 # =============================================================================
 resolve_repo() {
   hdr "Memoria vault source"
-  # Running from inside a clone? (script dir or cwd has vault/.memoria)
+  # Running from inside a clone? (script dir or cwd has src/.memoria)
   local sdir=""
   if [ -f "${BASH_SOURCE[0]:-}" ]; then
     sdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   fi
-  if [ -n "$sdir" ] && [ -d "$sdir/vault/.memoria" ]; then
+  if [ -n "$sdir" ] && [ -d "$sdir/src/.memoria" ]; then
     REPO_DIR="$sdir"; ok "Using the clone this script lives in: $REPO_DIR"; return
   fi
-  if [ -d "./vault/.memoria" ]; then
+  if [ -d "./src/.memoria" ]; then
     REPO_DIR="$(pwd)"; ok "Using the clone in the current directory: $REPO_DIR"; return
   fi
   # Piped (curl | bash): clone fresh into a temp/staging dir (removed on exit).
@@ -218,7 +218,7 @@ resolve_repo() {
   STAGING_REPO="$REPO_DIR"
   say "Not run from a clone — fetching the repo to a staging dir."
   run git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$REPO_DIR"
-  [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/vault/.memoria" ] || die "Clone did not contain vault/.memoria."
+  [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/src/.memoria" ] || die "Clone did not contain src/.memoria."
   ok "Cloned to $REPO_DIR"
 }
 
@@ -264,7 +264,7 @@ ensure_hermes() {
 # image used to keep these alive with ~39 `.keep` placeholders that rode along
 # to every target. We drop the `.keep`s and recreate the skeleton here instead,
 # so a fresh deploy still has the full layout (and the linter can restore it).
-# Keep this list in sync with vault/ — these are the dirs that hold no tracked
+# Keep this list in sync with src/ — these are the dirs that hold no tracked
 # content of their own.
 SKELETON_DIRS=(
   .memoria/csl
@@ -319,7 +319,7 @@ copy_vault() {
   case "$target" in "~"/*) target="$HOME/${target#~/}" ;; "~") target="$HOME" ;; esac
   VAULT_PATH="$target"
 
-  local src="$REPO_DIR/vault"
+  local src="$REPO_DIR/src"
   [ -d "$src/.memoria" ] || die "No vault at $src (.memoria missing)."
 
   if [ -d "$VAULT_PATH/.memoria" ]; then
@@ -724,7 +724,7 @@ print_next_steps() {
 # =============================================================================
 resolve_vault_for_profiles() {
   if [ -n "$VAULT_OVERRIDE" ]; then VAULT_PATH="$VAULT_OVERRIDE"
-  elif [ -d "./vault/.memoria" ]; then VAULT_PATH="$(cd ./vault && pwd)"
+  elif [ -d "./src/.memoria" ]; then VAULT_PATH="$(cd ./src && pwd)"
   elif [ -d "$DEFAULT_TARGET/.memoria" ]; then VAULT_PATH="$DEFAULT_TARGET"
   else die "Cannot find a vault. Pass --vault DIR (the folder containing .memoria/)."; fi
   case "$VAULT_PATH" in "~"/*) VAULT_PATH="$HOME/${VAULT_PATH#~/}" ;; esac

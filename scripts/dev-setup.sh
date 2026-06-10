@@ -27,8 +27,8 @@ if [ -n "$PY" ]; then
   else
     note "pip install failed — install 'ruff' and 'yamllint' manually for local lint parity"
   fi
-  if [ -f vault/.memoria/mcp/requirements.txt ]; then
-    if "$PY" -m pip install --quiet -r vault/.memoria/mcp/requirements.txt; then
+  if [ -f src/.memoria/mcp/requirements.txt ]; then
+    if "$PY" -m pip install --quiet -r src/.memoria/mcp/requirements.txt; then
       note "MCP deps installed (self-tests will run)"
     else
       note "MCP requirements not installed — the .py --self-tests may skip deps"

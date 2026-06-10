@@ -13,7 +13,7 @@ nav_order: 24
 A design capture of the Linter as built: a deterministic detector engine, five
 agent-run drift procedures, a verdict band that gates scheduled work, and a cron
 cadence. Reconstructed from
-[`vault/.memoria/profiles/memoria-linter/`](../../vault/.memoria/profiles/memoria-linter).
+[`vault/.memoria/profiles/memoria-linter/`](../../src/.memoria/profiles/memoria-linter).
 Backed by [ADR-29](../adr/29-testing-framework.md) (layered testing) and
 [ADR-12](../adr/12-obsidian-linter-reference-only.md) (why not obsidian-linter).
 
@@ -27,7 +27,7 @@ Backed by [ADR-29](../adr/29-testing-framework.md) (layered testing) and
 Two tiers of checks, both reporting by default (never silently fixing canonical
 content):
 
-1. **The engine** — [`scripts/detectors.py`](../../vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py),
+1. **The engine** — [`scripts/detectors.py`](../../src/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py),
    a zero-LLM, pure-stdlib set of self-contained vault checks. Runs nightly.
 2. **The drift procedures** — five checks an agent runs because they need context the
    engine lacks (git, SHA-256 against the audit log, deployed-profile state). Run
@@ -78,7 +78,7 @@ These need git, hashes, or the audit log, so an agent runs them:
 
 ### Cadence
 
-[`cron/scheduled.yaml`](../../vault/.memoria/profiles/memoria-linter/cron/scheduled.yaml):
+[`cron/scheduled.yaml`](../../src/.memoria/profiles/memoria-linter/cron/scheduled.yaml):
 
 - **Nightly `0 2 * * *`** → `nightly-lint`: engine sweep only → card in `ready`.
 - **Weekly `0 4 * * MON`** → `weekly-drift-report`: engine + the five procedures → card in `ready`.

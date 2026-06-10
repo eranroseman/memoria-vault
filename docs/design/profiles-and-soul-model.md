@@ -14,7 +14,7 @@ A design capture of the seven agent profiles as they are actually configured —
 one's mission, write scope, posture, model, and MCP wiring — and the structural
 choices that shape the set (no orchestrator, no reviewer; postures separated by
 construction). Reconstructed from
-[`vault/.memoria/profiles/`](../../vault/.memoria/profiles). Implements
+[`vault/.memoria/profiles/`](../../src/.memoria/profiles). Implements
 [ADR-02](../adr/02-seven-specialist-profiles.md),
 [ADR-22](../adr/22-build-on-hermes-runtime.md),
 [ADR-27](../adr/27-hermes-native-config-and-gate-enforcement.md), and
