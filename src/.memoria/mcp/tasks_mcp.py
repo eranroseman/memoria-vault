@@ -164,7 +164,7 @@ def _self_test() -> int:
 
 
 def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH", "")
+    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
         sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
     v = Path(raw).expanduser()

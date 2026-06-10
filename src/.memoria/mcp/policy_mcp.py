@@ -169,7 +169,7 @@ def path_matches(path: str, patterns: list[str]) -> bool:
 
 
 def is_review_gated(path: str) -> bool:
-    return path.startswith(_GATED or REVIEW_GATED_PREFIXES)
+    return path.startswith(_gated_prefix_cache or REVIEW_GATED_PREFIXES)
 
 
 def within_scope(path: str, scope: list[str]) -> bool:
@@ -582,12 +582,12 @@ class PolicyEngine:
 # --------------------------------------------------------------------------- #
 # MCP server wrapper (thin; optional dependency)
 # --------------------------------------------------------------------------- #
-_GATED: tuple = ()
+_gated_prefix_cache: tuple = ()
 
 
 def build_server(vault: Path):
-    global _GATED
-    _GATED = load_gated_prefixes(vault)
+    global _gated_prefix_cache
+    _gated_prefix_cache = load_gated_prefixes(vault)
     """Wrap the engine as an MCP server. Imported lazily so the core/self-test
     don't require the `mcp` package."""
     from mcp.server.fastmcp import FastMCP  # type: ignore
@@ -646,8 +646,8 @@ def main() -> None:
     vault = resolve_vault(args.vault)
 
     if args.decide:
-        global _GATED
-        _GATED = load_gated_prefixes(vault)
+        global _gated_prefix_cache
+        _gated_prefix_cache = load_gated_prefixes(vault)
         req = json.loads(args.decide)
         engine = PolicyEngine(vault)
         print(json.dumps(engine.check(

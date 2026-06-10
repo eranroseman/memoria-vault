@@ -18,7 +18,7 @@ A paper on attention and working memory belongs in `cognitive-science/`, and in 
 
 Most knowledge systems respond by letting notes exist in multiple places (aliases, copies) or by moving topics to tags. But that creates a different problem: the folder is now redundant. If topics live in frontmatter and links, the folder adds no information. If the folder adds information, it must mean something other than topic.
 
-**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research-area`, `methodology`) and in links, where many-to-many can be expressed properly. This is the part of the original decision that survives unchanged — and it is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research_area`, `methodology`) and in links, where many-to-many can be expressed properly. This is the part of the original decision that survives unchanged — and it is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
@@ -66,7 +66,7 @@ One consequence to know: because Inbox cards use the same lifecycle vocabulary a
 
 With folders carrying the type and frontmatter carrying the state, topics are encoded as **facets** on source and claim notes:
 
-- `research-area` — seeded from OpenAlex topics by the ingest engine
+- `research_area` — seeded from OpenAlex topics by the ingest engine
 - `methodology` — a controlled vocabulary covering method and study design
 - `topics` on claim notes
 

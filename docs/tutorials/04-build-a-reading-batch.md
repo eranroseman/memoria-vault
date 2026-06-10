@@ -58,7 +58,7 @@ For each source, the Tutorial 03 loop: read (the extract lives at `.memoria/data
 Batch habits that pay off:
 
 - **Read in one topic, not round-robin.** By the third paper you'll notice agreements and tensions the first two hid — note them in each source's **Tensions** section.
-- **Keep vocabulary consistent.** If you tag one source `research-area: receptivity-detection`, don't tag the next `opportune-moments` for the same concept ([Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)).
+- **Keep vocabulary consistent.** If you tag one source `research_area: receptivity-detection`, don't tag the next `opportune-moments` for the same concept ([Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)).
 - **Advance the lifecycle as you go.** A source you've read and distilled from moves off `proposed` — and off the "To read & distill" view. The queue converging to empty is the success signal.
 
 Don't try to finish the batch in one session. The queue is durable; that's what it's for.
@@ -76,8 +76,8 @@ Don't try to finish the batch in one session. The queue is durable; that's what 
 
 ## What's next
 
-[Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) — distill what you read into claims, gather them under a hub, and map your corpus.
+[Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) — distill what you read into claims, gather them under a hub, and map your corpus.
 
 ---
 
-← [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) · [Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) →
+← [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) · [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) →

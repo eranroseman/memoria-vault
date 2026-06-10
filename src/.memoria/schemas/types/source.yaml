@@ -10,7 +10,7 @@ required:
   entity: str # wikilink to the Catalog entity this note is about
 optional:
   source_type: str
-  research-area: list
+  research_area: list
   methodology: list
   links: map # authored, typed note-links (ADR-52)
   created: date

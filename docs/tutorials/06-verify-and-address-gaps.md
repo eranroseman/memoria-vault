@@ -11,7 +11,7 @@ parent: Tutorials
 
 **You will use:** the co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the `map` task in your Inbox.
+**Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the `map` task in your Inbox.
 
 ---
 
@@ -81,4 +81,4 @@ Skip the gaps you don't buy — archive them with a clear conscience. The honest
 
 ---
 
-← [Tutorial 05: Synthesize toward a writing project](05-start-a-writing-project.md) · [Tutorial 07: Find new sources](07-find-new-sources.md) →
+← [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) · [Tutorial 07: Find new sources](07-find-new-sources.md) →

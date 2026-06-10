@@ -22,5 +22,5 @@ views:
     order:
       - file.name
       - entity
-      - research-area
+      - research_area
       - lifecycle

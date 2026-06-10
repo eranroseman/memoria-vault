@@ -1,4 +1,4 @@
-name: PR Review Gate
+name: pr-review-gate
 
 on:
   pull_request_target:

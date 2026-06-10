@@ -12,7 +12,7 @@
     "sources": "multitext",
     "topics": "multitext",
     "members": "multitext",
-    "research-area": "multitext",
+    "research_area": "multitext",
     "methodology": "multitext",
     "year": "number",
     "created": "date",

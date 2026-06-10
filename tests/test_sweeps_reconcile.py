@@ -3,7 +3,7 @@ import reconcile as _m
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
-def test_sweeps():
+def test_reconcile_intake():
     def _run():
         import tempfile
         with tempfile.TemporaryDirectory() as td:

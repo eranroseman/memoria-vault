@@ -15,6 +15,6 @@ optional:
   venue: str
   url: str
   relationships: map # given edges — cited_by, authored_by, published_in… (ADR-52)
-  research-area: list
+  research_area: list
   methodology: list
   created: date

@@ -29,7 +29,8 @@ PATTERNS_RELDIR = "system/patterns"
 PROVENANCE_RELPATH = "system/logs/patterns.jsonl"
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n?", re.S)
 
-FALLBACK_GATED = ("notes/claims/", "notes/hubs/")
+# Mirrors policy_mcp.REVIEW_GATED_PREFIXES — used only when folders.yaml is unreadable.
+REVIEW_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
 
 
 def _gated_prefixes(vault: Path) -> tuple:
@@ -39,7 +40,7 @@ def _gated_prefixes(vault: Path) -> tuple:
         f = vault / ".memoria" / "schemas" / "folders.yaml"
         return tuple(yaml.safe_load(f.read_text(encoding="utf-8"))["gated_prefixes"])
     except Exception:
-        return FALLBACK_GATED
+        return REVIEW_GATED_PREFIXES
 
 
 def _parse(path: Path) -> tuple[dict, str]:
@@ -182,7 +183,7 @@ def _self_test() -> int:
 
 
 def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH", "")
+    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
         sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
     v = Path(raw).expanduser()

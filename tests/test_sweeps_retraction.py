@@ -3,7 +3,7 @@ import retraction as _m
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
-def test_verify_mcp():
+def test_retraction_verdicts():
     def _run():
         import tempfile
         global _RW_INDEX

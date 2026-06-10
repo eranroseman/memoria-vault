@@ -177,7 +177,7 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "doi": doi,
         "url": f.get("url", ""),
         "relationships": {},                # given edges; Tier-1 link builds them (ADR-52)
-        "research-area": [],
+        "research_area": [],
         "methodology": [],
         "source_type": source_type,
         "zotero_uri": "",
@@ -196,7 +196,7 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "updated": now,
         "enriched_date": "",
         "schema_version": SCHEMA_VERSION,
-        "_proposed_classification": {"research-area": [], "methodology": []},
+        "_proposed_classification": {"research_area": [], "methodology": []},
     }
     body_lines = [f"# {fm['title'] or citekey}", ""]
     if fm["venue"]:

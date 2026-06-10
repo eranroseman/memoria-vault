@@ -64,7 +64,8 @@ def _contact() -> str:
 
 def rw_csv_path() -> Path:
     raw = (os.environ.get("MEMORIA_RW_CSV")
-           or os.environ.get("OBSIDIAN_VAULT_PATH", "") + "/.memoria/data/retraction_watch.csv")
+           or (os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH", ""))
+           + "/.memoria/data/retraction_watch.csv")
     return Path(raw).expanduser()
 
 

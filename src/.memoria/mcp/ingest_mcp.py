@@ -129,9 +129,9 @@ def build_server(vault: Path):
 
 
 def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("OBSIDIAN_VAULT_PATH") or os.environ.get("MEMORIA_VAULT_PATH")
+    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
-        sys.exit("no vault path: pass --vault <path> or set OBSIDIAN_VAULT_PATH")
+        sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
     vault = Path(raw).expanduser().resolve()
     if not vault.is_dir():
         sys.exit(f"not a directory: {vault}")
@@ -140,7 +140,7 @@ def resolve_vault(arg: str | None) -> Path:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Deterministic ingest pipeline as an MCP server (ADR-30)")
-    ap.add_argument("--vault", help="vault root (or set OBSIDIAN_VAULT_PATH)")
+    ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
     args = ap.parse_args()
     build_server(resolve_vault(args.vault)).run()
 
