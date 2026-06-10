@@ -59,6 +59,12 @@ KNOWN_TOP_DIRS = {
 # templates live in system/templates/ (ADR-47);
 # keep this the single source of truth so the skip can't drift from the move.
 SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns/")
+
+
+def is_untyped_infra(rp: str) -> bool:
+    """system/ holds infrastructure documents, not typed knowledge — only
+    system/patterns/ files carry a type schema (ADR-53)."""
+    return rp.startswith("system/") and not rp.startswith("system/patterns/")
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
@@ -81,6 +87,25 @@ DATAVIEW_KEYWORDS = {
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
 NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects")
+
+# --------------------------------------------------------------------------- #
+# Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
+# constants above are *derived* from the one schema home; the hardcodes remain
+# the dependency-free fallback so the engine still runs without PyYAML.
+# --------------------------------------------------------------------------- #
+TYPE_SCHEMAS: dict | None = None
+_FOLDERS: dict | None = None
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+    import schema as _schema
+
+    TYPE_SCHEMAS = _schema.load_types()
+    _FOLDERS = _schema.load_folders()
+    TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
+    KNOWN_TOP_DIRS = set(_FOLDERS["categories"])
+except Exception:                                  # pragma: no cover - fallback path
+    _schema = None
+
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
 
@@ -255,7 +280,7 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
     out = []
     for p in iter_notes(vault):
         rp = relpath(vault, p)
-        if rp.startswith(SCAFFOLD_PREFIXES):   # skeleton/assets/templates aren't typed notes
+        if is_untyped_infra(rp):               # system infra isn't typed knowledge
             continue
         if "/" not in rp:                      # vault-root pages (home, troubleshooting,
             continue                           # research-focus) are navigation, not typed notes
@@ -266,10 +291,52 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
         if not ntype:
             out.append(Finding("schema-check", "MEDIUM", rp, "missing required 'type' field"))
             continue
-        for field in REQUIRED_FIELDS.get(ntype, []):
-            if field not in fm:
+        if TYPE_SCHEMAS is not None:
+            sc = TYPE_SCHEMAS.get(ntype)
+            if sc is None:
                 out.append(Finding("schema-check", "MEDIUM", rp,
-                                   f"{ntype} missing required field '{field}'"))
+                                   f"unknown type '{ntype}' (no schema in .memoria/schemas/types/)"))
+                continue
+            for err in _schema.validate_frontmatter(fm, sc):
+                out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
+        else:
+            for field in REQUIRED_FIELDS.get(ntype, []):
+                if field not in fm:
+                    out.append(Finding("schema-check", "MEDIUM", rp,
+                                       f"{ntype} missing required field '{field}'"))
+    return out
+
+
+_WIKI_VAL = re.compile(r"\[\[([^\]|#]+)")
+
+
+def frontmatter_link_check(vault: Path) -> list[Finding]:
+    """Authored connections must resolve (ADR-52): every wikilink inside the
+    `links:` map and the `entity` field points at a real note. Citekeys in
+    `sources` are bibliographic, not note links -- checked by the sweeps, not here."""
+    notes = list(iter_notes(vault))
+    stems = {q.stem for q in notes}
+    out = []
+    for p in notes:
+        rp = relpath(vault, p)
+        if is_untyped_infra(rp) or "/" not in rp:
+            continue
+        fm = parse_frontmatter(read(p))
+        targets: list[str] = []
+        links = fm.get("links")
+        if isinstance(links, dict):
+            for vals in links.values():
+                for v in vals if isinstance(vals, list) else [vals]:
+                    if isinstance(v, str):
+                        targets += _WIKI_VAL.findall(v) or ([v] if v else [])
+        ent = fm.get("entity")
+        if isinstance(ent, str) and ent:
+            targets += _WIKI_VAL.findall(ent) or [ent]
+        for tgt in targets:
+            stem = Path(tgt.strip().rstrip("\\")).stem
+            if stem and stem not in stems:
+                out.append(Finding("frontmatter-link", "MEDIUM", rp,
+                                   f"frontmatter link [[{tgt.strip()}]] resolves to no note"))
     return out
 
 
@@ -289,6 +356,9 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
             target = m.group(1).strip().rstrip("\\")
             if not target:
                 continue
+            last = target.split("/")[-1]
+            if "." in last and not last.endswith(".md"):
+                continue   # non-note target (.base/.canvas/image embed), not a wikilink
             stem = Path(target).stem
             if stem not in stems:
                 out.append(Finding("broken-wikilink", "MEDIUM", relpath(vault, p),
@@ -418,7 +488,7 @@ def misplaced_note(vault: Path) -> list[Finding]:
     out = []
     for p in iter_notes(vault):
         rp = relpath(vault, p)
-        if rp.startswith(SCAFFOLD_PREFIXES) or "/" not in rp:
+        if is_untyped_infra(rp) or "/" not in rp:
             continue
         if rp.startswith(MISPLACED_SKIP_PREFIXES):
             continue
@@ -441,8 +511,8 @@ def out_empty() -> list[Finding]:
 
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
-    frontmatter_schema_check, broken_wikilinks, dashboard_field_drift, graph_analyze,
-    fama_exposure, misplaced_note,
+    frontmatter_schema_check, frontmatter_link_check, broken_wikilinks,
+    dashboard_field_drift, graph_analyze, fama_exposure, misplaced_note,
 ]
 
 

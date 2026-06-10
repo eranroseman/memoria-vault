@@ -103,3 +103,10 @@ def test_calibration_loads_with_confidence_floor():
     cal = schema.load_calibration()
     floor = cal["entity_resolution"]["confidence_floor"]
     assert 0.0 < floor < 1.0
+
+
+def test_policy_fallback_matches_folders_yaml():
+    """policy_mcp's dependency-free fallback must stay in sync with the schema home."""
+    import policy_mcp
+    folders = schema.load_folders()
+    assert tuple(folders["gated_prefixes"]) == policy_mcp.REVIEW_GATED_PREFIXES

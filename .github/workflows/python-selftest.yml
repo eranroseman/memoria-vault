@@ -50,5 +50,5 @@ jobs:
         # Only dashboard-field-drift blocks; vault content findings (broken
         # wikilinks, schema-check) stay advisory — they're not this gate's job.
         run: |
-          python src/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py \
+          python src/.memoria/engines/linter/detectors.py \
             --vault src --gate dashboard-field-drift

@@ -27,7 +27,7 @@ Backed by [ADR-29](../adr/29-testing-framework.md) (layered testing) and
 Two tiers of checks, both reporting by default (never silently fixing canonical
 content):
 
-1. **The engine** — [`scripts/detectors.py`](../../src/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py),
+1. **The engine** — [`engines/linter/detectors.py`](../../src/.memoria/engines/linter/detectors.py),
    a zero-LLM, pure-stdlib set of self-contained vault checks. Runs nightly.
 2. **The drift procedures** — five checks an agent runs because they need context the
    engine lacks (git, SHA-256 against the audit log, deployed-profile state). Run
