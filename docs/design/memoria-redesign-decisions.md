@@ -692,6 +692,33 @@ didn't); and "gap" naming both a report and a signal was the exact confusion to 
 
 ---
 
+## D48 — Red-team pass: scope-corrections + five open decisions *(→ refines D22/D42/D44; new opens)*
+
+**Decided (applied):** a six-pass adversarial review (full write-up:
+[Red-team findings](red-team-findings.md)) produced clear corrections, now in the docs:
+the strict-layering claim is **scoped to the agent write-path** (the PI/cron/CI are direct
+edges); a **3-actor cognitive headline** leads §2 with the seven layers as its build
+expansion (refines D42); **MCP is a trust boundary, not a stratum everyone crosses**; the
+Linter is an integrity **monitor**, not guarantor (it detects, doesn't block); **clustering
+decides display-only** and its parameters fall under the calibration/drift spec (refines
+D44); Appendix F's `resolved-by-redesign` issues are relabelled **design-resolved /
+build-pending**.
+
+**Why:** the review found the design's safeguards are mostly *informational / design-time*
+while the failure modes are *behavioral / runtime* — and surfaced four internal
+contradictions (transparency-vs-automation-bias; the high-cardinality gate exempted from
+the no-rubber-stamp rule; the false layering contract; D42 re-importing the actor axis).
+The first two are genuine decisions, not clarifications.
+
+**Open (the five decisions, with options/pros-cons in
+[Red-team findings](red-team-findings.md)):** (1) the **gate model** vs automation bias
+(blind-first / forced-rebuttal / attention instrumentation); (2) **write-time gate vs
+cron monitor**; (3) an **extraction-uncertainty gate**; (4) **conversational specialist
+work** (conversational lane vs one-shot cards); (5) **sequencing** (migration ADR + DAG +
+`effective_from`; rename the architecture target to a major version; close #198).
+
+---
+
 ## The meta-point
 
 This decision pipeline is structurally Memoria's own model: `docs/design/` = seeds, a
