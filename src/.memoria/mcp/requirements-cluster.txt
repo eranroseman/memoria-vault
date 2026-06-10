@@ -1,0 +1,6 @@
+# The cluster MCP's OPTIONAL heavy stack (ADR-33) — kept out of the policy-core
+# requirements.txt deliberately: bertopic pulls sentence-transformers -> torch.
+# The installer offers this as an opt-in step; cluster_build_graph (networkx)
+# works without it; cluster_model_topics errors cleanly when absent.
+networkx>=3.2
+bertopic>=0.16
