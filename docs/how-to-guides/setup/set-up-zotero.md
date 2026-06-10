@@ -48,7 +48,7 @@ For any item already in Zotero whose citekey might change if the formula is appl
 
 **5. Pin the key for every new item immediately after adding it.**
 
-Get into the habit: add PDF → right-click → Pin BibTeX key before doing anything else. A pinned key never changes; an unpinned key can drift if you edit the metadata.
+Better BibTeX pins citation keys automatically — a generated key never regenerates, even when you correct metadata later. No manual pinning step is needed; the lock icon in Zotero's item list confirms it.
 
 **6. Verify the export ran.**
 
@@ -112,5 +112,4 @@ Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes]
 - Next step: [Set up Hermes](set-up-hermes.md)
 - What ingest does with the `.bib`: [Capture and ingest a source](../compile/capture-and-ingest.md)
 - Fixing a stale `.bib`: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
-- Pin the citekey after import: [Pin a citekey](../compile/pin-a-citekey.md)
 - Citekey naming convention: [ADR-6](../../adr/06-citekey-naming-convention.md)

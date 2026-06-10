@@ -605,8 +605,8 @@ install_profiles() {
         *" $stale "*) ;;  # shipped — keep
         *)
           warn "stale profile from a previous install: $stale"
-          hermes profile remove "$stale" --yes 2>/dev/null \
-            || warn "  could not remove $stale — remove it manually: hermes profile remove $stale"
+          hermes profile delete -y "$stale" 2>/dev/null \
+            || warn "  could not remove $stale — remove it manually: hermes profile delete -y $stale"
           ;;
       esac
     done
