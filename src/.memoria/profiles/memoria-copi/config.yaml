@@ -39,6 +39,11 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/tasks_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 60
+  patterns:
+    # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 60
   paper_search:
     command: "{{PYTHON}}"
     args: ["-m", "paper_search_mcp.server"]

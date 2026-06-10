@@ -39,6 +39,11 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120
+  patterns:
+    # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 60
   paper_search:
     # Scholarly discovery across 20+ databases (openags/paper-search-mcp) — the MCP
     # backend for `find`, replacing the K-Dense paper-lookup/arxiv web-fetch skills.
