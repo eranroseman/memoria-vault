@@ -32,7 +32,7 @@ Choose by the question in your head, not by the paper on screen — the point of
 
 Open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (via the pane’s profile picker) — the active paper note auto-attaches — and ask it to read through the lens by slug, e.g. «read this through the `mamykina-sensemaking` lens».
 
-The `Memoria: read through <X> lens` palette command *(deferred — use the ACP pane / terminal today)* is not wired yet. From the terminal (fallback — full syntax in [Hermes CLI](../../reference/hermes-cli.md#socratic)):
+The `Memoria: read through <X> lens` palette command *(deferred — use the ACP pane / terminal today)* is not wired yet. From the terminal (fallback — full syntax in [Hermes CLI](../../reference/hermes-cli.md#the-profile-set)):
 
 ```bash
 hermes -p memoria-socratic chat -s lens-reading
@@ -79,4 +79,4 @@ Redeploy the Socratic profile so the updated skill ships ([Redeploy profiles](..
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Redeploy after adding a lens: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md); palette setup: [Command palette](../using-obsidian/obsidian-command-palette.md)
-- The profile behind it: [The Socratic profile](../../explanation/profiles/socratic.md)
+- The profile behind it: [The Socratic profile](../../explanation/profiles/co-pi.md)

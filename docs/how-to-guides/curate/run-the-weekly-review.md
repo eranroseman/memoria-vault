@@ -55,7 +55,7 @@ Claim notes at `maturity: evergreen` that haven't been promoted to `30-synthesis
 - Move to `30-synthesis/02-reference/`
 - Set `lifecycle: current`
 
-For the rule on when a claim qualifies as evergreen, see [frontmatter.md — `maturity` values](../../reference/frontmatter.md#maturity-values-claim-notes-only).
+For the rule on when a claim qualifies as evergreen, see [frontmatter.md — `maturity` values](../../reference/frontmatter.md#maturity--a-claim-property-never-a-gate).
 
 **Step 6 — Review orphan notes (5 min).**
 

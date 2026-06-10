@@ -5,86 +5,46 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the **in-Obsidian UI** for capture, note creation, and (as they ship) agent tasks. Invoked via `Cmd-P → Memoria: …` and registered by QuickAdd. For the per-profile Hermes CLI commands (`ingest`, `draft`, `lint`, board management) see [Hermes CLI](hermes-cli.md); for invocation patterns and hotkey discipline see [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md).
-
-> **v0.1 status — read the Status column.** This page is the **designed** palette surface; not all of it is wired yet. Each row is tagged:
->
-> - **✓ wired** — registered today (a QuickAdd Template or Macro). These work.
-> - **`[deferred]`** — designed, not yet wired. Where the task is conversational, the **agent-client (ACP) pane** is the working path *today* (open *Agent Client: Open chat view*, switch to the named profile — the active note auto-attaches); where it produces a vault artifact, use the **[Hermes CLI](hermes-cli.md)** until the command lands.
->
-> Wired today: seven QuickAdd **Templates** (`capture fleeting`, `write claim note`, `write MOC`, `write draft`, `scaffold canvas`, `scaffold code note`, `write project note`) and three **Macros** (`capture from Zotero selection`, `capture source from URL`, `lint this note` — each a QuickAdd UserScript → `hermes kanban create`). **Confirmed live:** `lint this note` runs the Linter end-to-end; `capture source from URL` creates the card but the Librarian **blocks bare/proxied URLs** pending DOI resolution (see its row). The rest land as the system fills in; see the [v0.1 release plan](../releasing/v0.1/release-plan-v0.1.md).
-
-Commander binds the top five to physical ribbon buttons.
+The `Memoria:` command-palette surface — the in-Obsidian capture commands, registered by QuickAdd (`Cmd-P → Memoria: …`). In v0.1.1 this surface is deliberately small: **the co-PI conversation is the primary route for agent tasks.** Instead of a palette command per task, you tell the co-PI what you want; it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)). The palette keeps only the capture entry points that must fire from inside the editor.
 
 ---
 
-## Capture
+## Surviving commands
 
-| Status | Command | Output | Implementation |
-| --- | --- | --- | --- |
-| ✓ | `Memoria: capture fleeting` | New note in `10-inbox/01-fleeting/` with timestamp. | QuickAdd Template (fleeting note) |
-| ✓ | `Memoria: capture from Zotero selection` | `intake:source` card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → Better BibTeX CAYW (`?selected=true`) → `hermes kanban create` (WSL on Windows) |
-| ✓ macro / ingest `[partial]` | `Memoria: capture source from URL` | `intake:source` card on the Librarian lane with the pasted URL. **The macro is wired**, but the Librarian's pipeline is citekey/`.bib`-driven: a URL **with a resolvable DOI** can be ingested, while a **bare/library-proxied URL, a repo, or a webpage blocks** asking for the DOI or citekey (full URL→metadata resolution is [deferred]). | QuickAdd Macro → prompt for URL → `hermes kanban create` |
-
-## Processing
-
-| Status | Command | Output | Implementation |
-| --- | --- | --- | --- |
-| `[deferred]` | `Memoria: ask about this note` | Opens the Socratic ACP pane (session-resident). No note writes. **Today:** open *Agent Client: Open chat view*, switch to Socratic — the active note auto-attaches. | QuickAdd → `open-chat-view` (agent: `memoria-socratic`; `autoMentionActiveNote: true`) |
-| `[deferred]` | `Memoria: discuss this fleeting note` | `discuss` card + Socratic ACP pane. Fleeting → claim transition path. | QuickAdd composing two commands |
-| ✓ | `Memoria: write claim note` | New note from the claim template in `30-synthesis/01-claims/`; `maturity: seedling`. | QuickAdd Template (claim note) |
-| ✓ | `Memoria: write MOC` | New Map of Content in `30-synthesis/03-moc/`. | QuickAdd Template (moc) |
-| ✓ | `Memoria: write draft` | New draft note in a chosen `40-workbench/<project>/04-drafts/`. | QuickAdd Template (draft) |
-| ✓ | `Memoria: scaffold canvas` | New canvas companion note in a chosen `40-workbench/<project>/03-canvas/`. | QuickAdd Template (canvas) |
-| ✓ | `Memoria: scaffold code note` | New note from the code-note template in a chosen `40-workbench/<project>/06-code/` folder. | QuickAdd Template (code note) |
-| ✓ | `Memoria: write project note` | New project note in a chosen `40-workbench/<project>/`. | QuickAdd Template (project note) |
-
-> **These four prompt for a destination folder under `40-workbench/`.** They write *into a project*, so the project folder must already exist — the folder picker is choosing *which active project* the draft/canvas/code-note/project-note belongs to, not creating one. If you have no project yet, create the `40-workbench/<project>/` folder first (or run `write project note` and point it at a new project folder). The picker is empty-looking until at least one workbench project exists.
-
-## Interactive retrieval (transient ACP — no file artifact, no card)
-
-Each is conversational. **Today, use the ACP pane** (open the named profile and ask) — the one-shot palette command is `[deferred]`.
-
-| Status | Command | Profile | Output |
-| --- | --- | --- | --- |
-| `[deferred]` | `Memoria: find related notes` | Mapper | Top 5–10 related notes by similarity, in chat. No file written. |
-| `[deferred]` | `Memoria: counter-outline this section` | Writer (`counter-outline` behavior) | 2–3 competing outlines in chat. No file written. |
-| `[deferred]` | `Memoria: similarity-check this claim` | Verifier | Top 3 most-similar claim notes, in chat. No audit entry. |
-
-## Project (card-based — produces file artifacts, Kanban-tracked)
-
-These are wired as QuickAdd Macros → user scripts that `hermes kanban create` a card on the matching lane (the dispatcher then claims it). `new project` scaffolds the `40-workbench/<slug>/` tree and its `README.md` first; the other three read the active note's `40-workbench/<project>/` path for context.
-
-| Status | Command | Output | Assignee |
-| --- | --- | --- | --- |
-| ✓ | `Memoria: new project` | `40-workbench/<name>/` + `README.md` (`project-note`); Mapper scope card. | `memoria-mapper` |
-| ✓ | `Memoria: scope this project` | `corpus-map.md` in `40-workbench/<project>/01-map/`. | `memoria-mapper` |
-| ✓ | `Memoria: frame this section` | Outlines in `40-workbench/<project>/02-framing/`. | `memoria-writer` |
-| ✓ | `Memoria: verify this draft` | Verification report in `40-workbench/<project>/05-verification/`. | `memoria-verifier` |
-
-## Maintenance
-
-| Status | Command | Output | Implementation |
-| --- | --- | --- | --- |
-| `[deferred]` | `Memoria: approve all link suggestions` | Bulk-approves all `review_status: requested` cards. | QuickAdd → POST Hermes API (bulk approve) |
-| ✓ | `Memoria: lint this note` | Linter card for the active note (findings reported on the card). | QuickAdd Macro → `hermes kanban create` (assignee: `memoria-linter`) |
-| `[deferred]` | `Memoria: show lane status` | Opens the `daily-health.md` (Daily Health) dashboard in right sidebar. | QuickAdd → workspace pane |
-
-## Lens-based reading (Socratic, parameterized)
-
-`[deferred]` — **today, use the Socratic ACP pane** and ask it to read through the named lens. Each lens is designed as one command; adding a lens = adding one QuickAdd entry.
-
-| Status | Command | Lens slug |
+| Command | Output | Implementation |
 | --- | --- | --- |
-| `[deferred]` | `Memoria: read through Mamykina lens` | `mamykina-sensemaking` |
-| `[deferred]` | `Memoria: read through Veinot equity lens` | `veinot-informational-justice` |
-| `[deferred]` | `Memoria: read through Design Justice lens` | `design-justice-costanza-chock` |
-| `[deferred]` | `Memoria: read through JITAI lens` | `jitai-receptivity-timing` |
+| `Memoria: capture fleeting` | A new fleeting note in `notes/fleeting/` from the fleeting template (`lifecycle: proposed`, `origin: human`). | QuickAdd Template → `system/templates/fleeting.md` |
+| `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
+| `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → [src/system/scripts/capture-from-url.js](../../src/system/scripts/capture-from-url.js) → `hermes kanban create` |
+| `Memoria: capture from Zotero selection` | A capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → [src/system/scripts/capture-from-zotero.js](../../src/system/scripts/capture-from-zotero.js) (Better BibTeX CAYW) → `hermes kanban create` |
+
+Template-based note creation (fleeting, claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md).
+
+---
+
+## Removed and retired commands
+
+| Command | Status | Where the job went |
+| --- | --- | --- |
+| `Memoria: lint this note` | **Removed** | The Linter is an engine, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
+| `Memoria: verify this draft` | Retired | Ask the co-PI to verify; it delegates to the `verify` lane. |
+| `Memoria: frame this section` | Retired | Ask the co-PI; it delegates to the `draft` lane. |
+| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.2 Project release; meanwhile the co-PI delegates `map` lane work. |
+
+---
+
+## The co-PI delegation path
+
+For anything that used to be a palette command, the working path is:
+
+1. Open the Agent Client pane (the co-PI; the active note auto-attaches).
+2. Say what you want ("verify this draft", "scope a project on X").
+3. The co-PI calls `delegate_route_task` — the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox.
 
 ---
 
 ## Related
 
-- Hermes CLI commands (per-profile + board management): [Hermes CLI](hermes-cli.md)
-- Policy on commands that target review-gated zones: [policy-mcp.md — Review-gated zones](policy-mcp.md)
-- Invocation patterns and hotkey discipline: [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md)
+- The delegation mechanics: [Kanban board reference](kanban-board.md)
+- The terminal surface: [Hermes CLI](hermes-cli.md)
+- The capture pipeline behind both macros: [Ingest routing](ingest.md)

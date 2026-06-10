@@ -27,7 +27,7 @@ Memoria supplies the *conventions on top*: the review-gate overlay in card `meta
 
 ## Why not build our own runtime
 
-A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that makes [Coder a thin front for external coding agents](../profiles/coder.md) rather than a reimplementation of them.
+A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that makes [Coder a thin front for external coding agents](../profiles/engineer.md) rather than a reimplementation of them.
 
 Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../kanban-board/card-schema.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
 
@@ -67,9 +67,9 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 
 **Explanation**
 
-- What Hermes coordinates — the three layers: [Why three layers, not one](why-three-layers.md)
+- What Hermes coordinates — the three layers: [Why the architecture is layered](why-three-layers.md)
 - The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
-- The card-schema overlay Memoria adds on top of Hermes: [Why the card schema is split](../kanban-board/card-schema.md)
+- The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../kanban-board/card-schema.md)
 - The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../architecture/human-channels.md)
 
 **Reference**

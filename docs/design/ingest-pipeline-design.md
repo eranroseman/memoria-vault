@@ -13,8 +13,8 @@ nav_order: 9
 A design capture of how a source becomes a vault note: the tiered deterministic
 pipeline, the capture-first durability anchor, ID-keyed entity dedup, and the two
 points where the Librarian (an LLM) makes a judgment. Reconstructed from
-[`vault/.memoria/mcp/ingest_mcp.py`](../../vault/.memoria/mcp/ingest_mcp.py) and
-the [`obsidian-paper-note`](../../vault/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note)
+[`vault/.memoria/mcp/ingest_mcp.py`](../../src/.memoria/mcp/ingest_mcp.py) and
+the [`obsidian-paper-note`](../../src/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note)
 skill. Implements [ADR-30](../adr/30-deterministic-ingest-pipeline.md),
 [ADR-05](../adr/05-zotero-as-bibliographic-backbone.md), and
 [ADR-06](../adr/06-citekey-naming-convention.md).
@@ -78,7 +78,7 @@ The pipeline declares exactly two gaps for the Librarian to fill
 
 1. **Classification.** From the abstract / tldr / extract, propose
    `_proposed_classification` (`study_design`, `methods`, `topic`) using terms from
-   [`00-meta/vocabulary.md`](../../vault/00-meta/vocabulary.md) — prefer a defined
+   [`00-meta/vocabulary.md`](../../src/system/vocabulary.md) — prefer a defined
    term; only propose a new one (`provisional: true`) when nothing fits. A confidence
    gate (default `0.85`) accepts the classifier's proposal directly; below it, the LLM
    decides. On landing, the note advances to `lifecycle: proposed`,

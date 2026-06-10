@@ -8,13 +8,13 @@ grand_parent: Dashboards
 
 # The weekly-review dashboard
 
-The weekly-review dashboard is the Friday-ritual entry point. Open it at the start of each weekly session and work top to bottom: clear the inbox, decide on discovery candidates, promote evergreen claim notes, check orphans, review project pages, glance at metrics. The discipline is **one ritual per week, ~90 minutes** — not "open whenever." A weekly cadence is what prevents the vault from accumulating drift faster than it produces synthesis.
+The weekly-review dashboard is the Friday-ritual entry point. Open it at the start of each weekly session and work top to bottom: clear the Inbox, triage candidate cards, revisit claim maturity, check orphans, review project pages, glance at the quiet-level findings. The discipline is **one ritual per week, ~90 minutes** — not "open whenever." A weekly cadence is what prevents the vault from accumulating drift faster than it produces synthesis.
 
 ---
 
 ## What this dashboard is not
 
-**Not [Daily Health](../daily-glance/daily-health.md).** Daily Health is the morning health glance — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
+**Not [Daily Health](../daily-glance/daily-health.md).** The daily glance (absorbed into `home.md`) is the morning health check — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
 
 **Not the only weekly view.** The `reading-pipeline`, `loose-ends`, and `drift-watch` dashboards are also recommended-weekly — but weekly-review is the ritual *entry point* that links to them and defines the order. It is the orchestrator of the weekly ritual, not just one surface among several.
 
@@ -38,7 +38,7 @@ The weekly-review dashboard is the Friday-ritual entry point. Open it at the sta
 
 **Explanation**
 
-- Dashboard opened first thing every morning: [Daily Health](../daily-glance/daily-health.md)
+- The morning glance this complements: [Daily Health](../daily-glance/daily-health.md)
 - Reading-side companion: [The reading-pipeline dashboard](../synthesis-agenda/reading-pipeline.md)
 - Why the ritual matters: [The knowledge cycle](../../knowledge/knowledge-cycle.md)
 - The dashboards overview: [Dashboards](../README.md)

@@ -8,30 +8,30 @@ permalink: /explanation/kanban-board/
 
 # The Kanban board
 
-The Kanban board is Memoria's **control plane** — the shared state machine that tracks every piece of in-progress work across profiles and sessions. Every meaningful operation produces a card that lives on the board until a human approves it into the vault, fails it, or decides it shouldn't exist. Nothing becomes canonical without passing through the board.
+The Kanban board is Memoria's **control plane** — the trigger-and-lanes end of the loop. Every unit of background **agent** work is a card on the Hermes board (`kanban.db`, projected into Obsidian): a human action (or cron) creates a card, the dispatcher assigns it to a **lane**, the lane's agent runs it, and the result resurfaces as an **Inbox** signal. It should feel like a teammate working in the background — invisible until it has something for you.
 
-The board's central design move is to keep a card's three dimensions separate — **execution** (`status`), **review** (`metadata.review_status`), and **agent recommendation** (`metadata.agent_recommendation`) — so that "a worker finished" never silently becomes "a human approved." A card is _work_ (transient, board-resident, archived when done); a vault note is _knowledge_ (durable). The pages below explain how that state machine is shaped, why the card schema is split, and how the board surfaces read-only in Obsidian.
+**Lanes are the four background agents** — Librarian, Writer, Peer-reviewer, Engineer (`assignee = memoria-<name>`). There is **no co-PI lane**: the co-PI converses at the desk (the ACP pane) and *delegates* to the board, never works on it. And there are **no engine lanes**: ingest, search, clustering, sweeps, and the Linter are deterministic engines that run on cron/CI, off the board.
+
+The board's central design move is to keep its dimensions separate. The Hermes-native execution `status` (`triage → … → done`) is the **hidden mechanic** the PI never sees; the card state the PI *does* see is the universal **lifecycle chain** — a card in `proposed` is a card awaiting you. A soft `agent_recommendation` rides alongside as a third, orthogonal dimension, so "a worker finished" never silently becomes "a human approved." A card is *work* (transient, archived when done); a vault note is *knowledge* (durable). **Rejection spawns a new card** rather than reopening the old one, so the audit trail can't lie.
 
 ## Documents in this section
 
-| Page                                                         | What it covers                                                                                                                                                                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [Board states and the review gate](states.md)                | Why execution and review are two separate lifecycles, what each transition means, the five rules of the review gate, where the WIP limits sit, and why Socratic is not a board lane.             |
-| [Why the card schema is split](card-schema.md)               | Why a card is Hermes' fixed fields plus a Memoria `metadata` overlay, why `review_status` is separate from `status`, and why the handoff payload is self-contained.                              |
-| [How the board surfaces in Obsidian](obsidian-projection.md) | The two one-way, ephemeral projections — the `99-system/board/` markdown export and the `board-state.jsonl` snapshot — that let Dataview and the status line read the authoritative `kanban.db`. |
+| Page                                                          | What it covers                                                                                                                                                                          |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Board states and the review gate](states.md)                 | Why execution and the PI-facing lifecycle are two separate dimensions, what each transition means, why rejection spawns a new card, where the WIP limits sit, and why the co-PI and the engines have no lanes. |
+| [The honesty card](card-schema.md)                            | The card the PI actually reads: argument for, argument against, what tipped it, certainty — and no verdict on proposals; finding-first verification cards; graded loudness.               |
+| [How the board surfaces in Obsidian](obsidian-projection.md)  | The read-only projections — the `inbox.base` board embedded in Home and the `system/board/` worker-card export — that let Obsidian read the authoritative `kanban.db`.                    |
 
-For the state lookup tables (the `status` and `review_status` enums, lane assignments, WIP caps, dispatch settings, and the post-rejection paths), see the [Kanban board reference](../../reference/kanban-board.md).
+For the state lookup tables (enums, lane assignments, WIP caps, dispatch settings, and the post-rejection paths), see the [Kanban board reference](../../reference/kanban-board.md).
 
 ## Related
 
 **Explanation**
 
-- State machine and the card lifecycle: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
 - Why review is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
-- The board as control plane: [Why three layers, not one](../rationale/why-three-layers.md)
-- Profiles that interact with the board: [Profiles](../profiles/README.md)
-- Flows that run on the board: [Workflows](../workflows/README.md)
+- The decision model behind the cards: [Why promotion is gated](../knowledge/promotion-model.md)
+- The Inbox card types: [Note types and epistemic roles](../knowledge/note-types.md)
 
 **Dashboards**
 
-- The dashboard that reads the board export: [The board-state dashboard](../dashboards/daily-glance/board-state.md)
+- The Inbox board view: [The board-state dashboard](../dashboards/daily-glance/board-state.md)

@@ -65,113 +65,99 @@ def test_policy_mcp():
                   and trav_entry["task_id"] == "T-TRAV")
 
         # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
-        coder = LanePolicy(
-            profile="memoria-coder",
-            allow_write=["40-workbench/*/06-code/**"],
-            deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
-                        "40-workbench/*/04-drafts/**", "50-deliverables/**"],
-            require=["audit_log"], write_scope=["40-workbench/*/06-code/"],
+        # Mirror the five real .memoria/lane-overrides/*.yaml (ADR-48) so the gate
+        # contract for every shipped agent is unit-covered, plus a synthetic
+        # maintenance lane exercising the auto-fix class machinery.
+        engineer = LanePolicy(
+            profile="memoria-engineer",
+            allow_write=["projects/*/code/**"],
+            deny_write=["notes/**", "catalog/**", "inbox/**", "system/**"],
+            require=["audit_log"], write_scope=["projects/*/code/"],
         )
         writer = LanePolicy(
             profile="memoria-writer",
-            allow_write=["10-inbox/02-answers/**", "40-workbench/*/04-drafts/**",
-                         "40-workbench/*/02-framing/**", "30-synthesis/02-reference/**"],
-            deny_write=["20-sources/**", "30-synthesis/01-claims/**", "50-deliverables/**"],
+            allow_write=["projects/**", "notes/hubs/**"],
+            deny_write=["notes/claims/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
         )
-        socratic = LanePolicy(profile="memoria-socratic", allow_write=[],
-                              deny_write=["**"], require=["audit_log"])
-        linter = LanePolicy(
-            profile="memoria-linter",
-            allow_write=["99-system/logs/**"],
+        copi = LanePolicy(profile="memoria-copi", allow_write=[],
+                          deny_write=["**"], require=["audit_log"])
+        maintenance = LanePolicy(
+            profile="memoria-linter-engine",
+            allow_write=["system/logs/**"],
             allow_auto_fix_classes=["safe-and-unambiguous", "authorized-targeted"],
-            deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
-                        "40-workbench/**", "50-deliverables/**"],
+            deny_write=["inbox/**", "catalog/**", "notes/**", "projects/**"],
             deny_auto_fix_classes=["schema-content", "review-gated-edit"],
-            require=["audit_log"], write_scope=["99-system/logs/"],
+            require=["audit_log"], write_scope=["system/logs/"],
         )
-        # The remaining three lanes mirror their real .memoria/lane-overrides/*.yaml
-        # so the gate contract for all seven profiles is unit-covered (closes the
-        # hermes-cli protocol's X1 / M4 / V-series write-walls — L2 gate testing).
         librarian = LanePolicy(
             profile="memoria-librarian",
-            allow_write=["10-inbox/01-fleeting/**", "10-inbox/03-candidates/**",
-                         "20-sources/**"],
-            deny_write=["30-synthesis/**", "40-workbench/**", "50-deliverables/**"],
+            allow_write=["inbox/**", "catalog/**", "notes/fleeting/**", "notes/source/**"],
+            deny_write=["notes/claims/**", "notes/hubs/**", "notes/index/**",
+                        "projects/**", "system/**"],
             require=["audit_log"],
-            write_scope=["10-inbox/01-fleeting/", "10-inbox/03-candidates/", "20-sources/"],
+            write_scope=["inbox/", "catalog/", "notes/fleeting/", "notes/source/"],
         )
-        mapper = LanePolicy(
-            profile="memoria-mapper",
-            allow_write=["40-workbench/*/01-map/corpus-map.md",
-                         "40-workbench/*/01-map/gap-report.md",
-                         "40-workbench/*/01-map/cluster-maps/**"],
-            deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
-                        "50-deliverables/**"],
-            require=["audit_log"], write_scope=["40-workbench/*/01-map/"],
-        )
-        verifier = LanePolicy(
-            profile="memoria-verifier",
-            allow_write=["40-workbench/*/05-verification/**", "10-inbox/03-candidates/**"],
-            deny_write=["20-sources/**", "30-synthesis/**",
-                        "40-workbench/*/04-drafts/**", "50-deliverables/**"],
-            require=["audit_log"],
-            write_scope=["40-workbench/*/05-verification/", "10-inbox/03-candidates/"],
+        peer_reviewer = LanePolicy(
+            profile="memoria-peer-reviewer",
+            allow_write=["inbox/**"],
+            deny_write=["notes/**", "catalog/**", "projects/**", "system/**"],
+            require=["audit_log"], write_scope=["inbox/"],
         )
 
         d = lambda p, a, pa, fl=None, sk=None: decide(p.profile, a, pa, p, flags=fl, skill_deny_write=sk).decision
 
         # ---- write decisions --------------------------------------------------- #
-        check("Coder write to own code scope -> allow",
-              d(coder, "write", "40-workbench/x/06-code/main.py") == "allow")
-        check("Coder write to drafts -> deny (lane deny)",
-              d(coder, "write", "40-workbench/x/04-drafts/d.md") == "deny")
-        check("Coder write to unmapped path -> deny (default-deny)",
-              d(coder, "write", "99-nowhere/x.md") == "deny")
-        check("Writer write to answers -> allow",
-              d(writer, "write", "10-inbox/02-answers/a.md") == "allow")
+        check("Engineer write to own code scope -> allow",
+              d(engineer, "write", "projects/x/code/main.py") == "allow")
+        check("Engineer write to notes -> deny (lane deny)",
+              d(engineer, "write", "notes/source/d.md") == "deny")
+        check("Engineer write to unmapped path -> deny (default-deny)",
+              d(engineer, "write", "99-nowhere/x.md") == "deny")
+        check("Writer write to project scratch -> allow",
+              d(writer, "write", "projects/x/draft.md") == "allow")
         check("Writer write to review-gated reference -> dry_run (degrade)",
-              d(writer, "write", "30-synthesis/02-reference/r.md") == "dry_run")
+              d(writer, "write", "notes/hubs/r.md") == "dry_run")
         check("Writer write to claims -> deny (lane deny beats degrade)",
-              d(writer, "write", "30-synthesis/01-claims/c.md") == "deny")
-        check("Socratic write anywhere -> deny (hard write-denial)",
-              d(socratic, "write", "10-inbox/01-fleeting/f.md") == "deny")
+              d(writer, "write", "notes/claims/c.md") == "deny")
+        check("co-PI write anywhere -> deny (hard write-denial)",
+              d(copi, "write", "notes/fleeting/f.md") == "deny")
 
         # ---- read decisions ---------------------------------------------------- #
-        check("Coder read normal zone -> allow",
-              d(coder, "read", "20-sources/01-papers/p.md") == "allow")
-        check("Coder read review-gated -> allow_with_log",
-              d(coder, "read", "30-synthesis/01-claims/c.md") == "allow_with_log")
+        check("Engineer read normal zone -> allow",
+              d(engineer, "read", "catalog/papers/p.md") == "allow")
+        check("Engineer read review-gated -> allow_with_log",
+              d(engineer, "read", "notes/claims/c.md") == "allow_with_log")
 
         # ---- auto_fix class gating (Linter) ------------------------------------ #
-        check("Linter auto_fix safe class in logs -> allow_with_log",
-              d(linter, "auto_fix", "99-system/logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
-        check("Linter auto_fix schema-content -> dry_run",
-              d(linter, "auto_fix", "99-system/logs/x.md", {"class": "schema-content"}) == "dry_run")
-        check("Linter auto_fix review-gated-edit -> deny",
-              d(linter, "auto_fix", "99-system/logs/x.md", {"class": "review-gated-edit"}) == "deny")
-        check("Linter auto_fix with no class -> deny",
-              d(linter, "auto_fix", "99-system/logs/x.md", None) == "deny")
+        check("Maintenance auto_fix safe class in logs -> allow_with_log",
+              d(maintenance, "auto_fix", "system/logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
+        check("Maintenance auto_fix schema-content -> dry_run",
+              d(maintenance, "auto_fix", "system/logs/x.md", {"class": "schema-content"}) == "dry_run")
+        check("Maintenance auto_fix review-gated-edit -> deny",
+              d(maintenance, "auto_fix", "system/logs/x.md", {"class": "review-gated-edit"}) == "deny")
+        check("Maintenance auto_fix with no class -> deny",
+              d(maintenance, "auto_fix", "system/logs/x.md", None) == "deny")
 
         # ---- delete / mkdir / report ------------------------------------------- #
-        check("Coder delete without authorization -> deny",
-              d(coder, "delete", "40-workbench/x/06-code/old.py") == "deny")
-        check("Coder delete with explicit_authorization in scope -> allow_with_log",
-              d(coder, "delete", "40-workbench/x/06-code/old.py", {"explicit_authorization": True}) == "allow_with_log")
-        check("Coder mkdir in write_scope -> allow",
-              d(coder, "mkdir", "40-workbench/x/06-code/sub") == "allow")
-        check("Coder report -> allow",
-              d(coder, "report", "40-workbench/x/06-code/") == "allow")
+        check("Engineer delete without authorization -> deny",
+              d(engineer, "delete", "projects/x/code/old.py") == "deny")
+        check("Engineer delete with explicit_authorization in scope -> allow_with_log",
+              d(engineer, "delete", "projects/x/code/old.py", {"explicit_authorization": True}) == "allow_with_log")
+        check("Engineer mkdir in write_scope -> allow",
+              d(engineer, "mkdir", "projects/x/code/sub") == "allow")
+        check("Engineer report -> allow",
+              d(engineer, "report", "projects/x/code/") == "allow")
 
         # ---- skill-conditional one-way narrowing ------------------------------- #
         # counter-outline narrows Writer to framing-only; drafts then deny.
-        co_deny = compose_skill_deny(writer, {"deny": {"write": ["40-workbench/*/04-drafts/**"]}})
+        co_deny = compose_skill_deny(writer, {"deny": {"write": ["projects/*/drafts/**"]}})
         check("counter-outline composes a draft-deny",
-              co_deny == ["40-workbench/*/04-drafts/**"])
+              co_deny == ["projects/*/drafts/**"])
         check("Writer+counter-outline: draft write now denied",
-              d(writer, "write", "40-workbench/x/04-drafts/d.md", None, co_deny) == "deny")
+              d(writer, "write", "projects/x/drafts/d.md", None, co_deny) == "deny")
         check("Writer+counter-outline: framing write still allowed",
-              d(writer, "write", "40-workbench/x/02-framing/f.md", None, co_deny) == "allow")
+              d(writer, "write", "projects/x/framing/f.md", None, co_deny) == "allow")
 
         # ---- L2 gate-contract: per-profile write-walls (hermes-cli §4/§5) ------- #
         # Lifted from the protocol's case IDs so the gate contract for librarian /
@@ -180,33 +166,24 @@ def test_policy_mcp():
         # — the protocol's "allow_with_log row" prose means logged, not the
         # allow_with_log decision, which is for review-gated reads / safe auto-fix.)
         check("L1/L2 Librarian write to candidates + sources -> allow",
-              d(librarian, "write", "20-sources/01-papers/smithA.md") == "allow"
-              and d(librarian, "write", "10-inbox/03-candidates/c.md") == "allow")
+              d(librarian, "write", "catalog/papers/smithA.md") == "allow"
+              and d(librarian, "write", "inbox/candidate-x.md") == "allow")
         check("X1 Librarian write to claims -> deny (write-wall)",
-              d(librarian, "write", "30-synthesis/01-claims/c.md") == "deny")
-        check("Librarian write to deliverables / another lane's map -> deny",
-              d(librarian, "write", "50-deliverables/d.md") == "deny"
-              and d(librarian, "write", "40-workbench/x/01-map/m.md") == "deny")
-        check("M1/M2/M3 Mapper write to its three map artifacts -> allow",
-              d(mapper, "write", "40-workbench/x/01-map/corpus-map.md") == "allow"
-              and d(mapper, "write", "40-workbench/x/01-map/gap-report.md") == "allow"
-              and d(mapper, "write", "40-workbench/x/01-map/cluster-maps/c.md") == "allow")
-        check("Mapper write to an unlisted map file -> deny (exact-file scope)",
-              d(mapper, "write", "40-workbench/x/01-map/other.md") == "deny")
-        check("M4 Mapper write outside its lane -> deny (write-wall)",
-              d(mapper, "write", "20-sources/p.md") == "deny"
-              and d(mapper, "write", "30-synthesis/01-claims/c.md") == "deny")
-        check("V1/V2 Verifier write to verification + gap candidates -> allow",
-              d(verifier, "write", "40-workbench/x/05-verification/report.md") == "allow"
-              and d(verifier, "write", "10-inbox/03-candidates/gap.md") == "allow")
-        check("V1 Verifier write to the draft under test -> deny (no self-edit)",
-              d(verifier, "write", "40-workbench/x/04-drafts/draft.md") == "deny")
-        check("Verifier write to synthesis -> deny (write-wall)",
-              d(verifier, "write", "30-synthesis/01-claims/c.md") == "deny")
+              d(librarian, "write", "notes/claims/c.md") == "deny")
+        check("Librarian write to projects/system -> deny",
+              d(librarian, "write", "projects/x/d.md") == "deny"
+              and d(librarian, "write", "system/templates/claim.md") == "deny")
+        check("V1/V2 Peer-reviewer write to inbox cards -> allow",
+              d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "allow"
+              and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "allow")
+        check("V1 Peer-reviewer write to the draft under test -> deny (no self-edit)",
+              d(peer_reviewer, "write", "projects/x/draft.md") == "deny")
+        check("Peer-reviewer write to claims -> deny (write-wall)",
+              d(peer_reviewer, "write", "notes/claims/c.md") == "deny")
 
         # ---- invalid action + missing task_id ---------------------------------- #
         check("unknown action -> deny",
-              d(coder, "frobnicate", "40-workbench/x/06-code/main.py") == "deny")
+              d(engineer, "frobnicate", "projects/x/code/main.py") == "deny")
 
         # ---- SHA-256 ----------------------------------------------------------- #
         check("empty/missing file hashes to the empty-string sha256",

@@ -1,0 +1,26 @@
+# The pattern picker (ADR-53) — filters the library by mode/action. Patterns land in P8.
+filters:
+  and:
+    - file.inFolder("system/patterns")
+    - 'type == "pattern"'
+    - 'lifecycle == "current"'
+views:
+  - type: table
+    name: "Library mode"
+    filters:
+      or:
+        - 'mode == "library"'
+        - 'mode == "both"'
+    order:
+      - file.name
+      - action
+      - posture
+      - output_target
+  - type: table
+    name: "All patterns"
+    order:
+      - file.name
+      - mode
+      - action
+      - posture
+      - version

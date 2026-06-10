@@ -5,121 +5,70 @@ parent: Reference
 
 # Installer (bootstrap)
 
-Lookup tables for the bootstrap installer — what it installs, on which platforms, what it touches, and what the user must still supply by hand. For *why* the installer is shaped this way, see [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
+The bootstrap installer ([scripts/install.sh](../../scripts/install.sh); Windows runs it under WSL2 via `install.ps1`): what each step does, the flags, and the crons it wires. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `src/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `src/`, and stages a restorable golden copy of every system file.
 
-## Platform support matrix
+Safety posture: no silent privilege escalation (every `sudo` is printed and confirmed), `--dry-run` echoes everything and touches nothing, and the recommended invocation is inspect-first (`curl -o install.sh`, read it, then run it).
 
-Two platforms only; **macOS is out of scope for v0.1**, and Linux is **Ubuntu/Debian only**.
+---
 
-| Component | Linux (Ubuntu/Debian) | Windows |
-|---|---|---|
-| Package source | `apt` + official `.deb` | winget (built in on Win 10/11) |
-| Obsidian | official Obsidian `.deb` | `winget install -e --id Obsidian.Obsidian` |
-| Zotero | `zotero-deb` apt repo | `winget install -e --id DigitalScholar.Zotero` |
-| Git | `apt` | in WSL2 (`apt`) — the one hard pre-Hermes prereq |
-| Pandoc | `apt` | in WSL2 (`apt`) — the one runtime Hermes does *not* provision |
-| uv, Python 3.11, Node 22, ripgrep, ffmpeg | provisioned by the Hermes installer | same (inside WSL2) |
-| Hermes runtime + `.memoria` Python | native (upstream `scripts/install.sh`) | **WSL2 (Ubuntu) only — else abort** |
+## Flags
 
-The Hermes installer auto-provisions uv, Python 3.11, Node.js 22, ripgrep, and ffmpeg, so the bootstrap installs only **Git** (if missing) and **Pandoc** before handing off. On Windows, Obsidian + Zotero + the vault files are Windows-native, while Hermes and everything it provisions live in WSL2 Ubuntu and read the vault across `/mnt/c`.
+| Flag | Effect |
+| --- | --- |
+| `--vault DIR` | Install the runtime vault here (default `~/Memoria`; prompted otherwise). Pick a folder outside any cloud-synced tree. |
+| `--profiles-only` | Skip the bootstrap; just (re)deploy MCP deps, profiles, and crons from an existing vault — **the maintenance path** after editing the vault source or adding keys to `~/.hermes/.env`. |
+| `--only NAMES` | Restrict the profile step to a comma-separated subset (e.g. `--only memoria-librarian`); pairs with `--profiles-only`. |
+| `--no-apps` | Skip the Obsidian guidance (headless / server installs). |
+| `--dry-run` | Print every command that would run; change nothing. |
+| `--yes` / `-y` | Non-interactive: accept all defaults, no prompts (CI). |
 
-## Install flow
+---
 
-1. **Download and explain** — print the plan and prompt for consent.
-2. **Copy the vault** — clone to a staging location, then copy `vault/` to a target off OneDrive (`%USERPROFILE%\Memoria` / `~/Memoria`), prompting to confirm or override. That path becomes `$VAULT_PATH`.
-3. **Obsidian** — detect; show the install command and run on consent. (Community plugins ship bundled inside `vault/`.)
-4. **Hermes** — detect; install via the upstream installer if absent (inside WSL2 on Windows).
-5. **Memoria components** — `pip install -r .memoria/mcp/requirements.txt`, then stage each profile, substitute `{{VAULT_PATH}}`, and `hermes profile install`; then provision the skills the profiles depend on.
-6. **Zotero** — detect; ask, and run the install command on agreement.
-7. **Explain secrets** — print the secrets checklist and exact file paths; never write keys.
-8. **Zotero plugins** (if Zotero is present) — download the recommended `.xpi`s (Better BibTeX required; MarkDB-Connect recommended; RTF/ODF Scan optional), verify checksums, and print the GUI install + Better BibTeX citekey-formula steps.
+## The install flow
 
-## Components installed
+| Step | What happens |
+| --- | --- |
+| 1. Prerequisites | Ensures `git` and `pandoc` (Hermes provisions uv-Python, Node, ripgrep, ffmpeg itself). |
+| 2. Fetch the repo | Clones `memoria-vault` to a temp staging dir (or uses a local checkout). |
+| 3. Hermes | Runs the official Hermes installer; verifies the ACP extra. |
+| 4. Scaffold + populate | Copies `src/` to the vault (rsync — a refresh overwrites author files, keeps your notes and `.env`), then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). |
+| 4a. Golden copy | Stages a canonical copy of every system file with a SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden.py stage`). |
+| 4b. Pre-commit gate | If the vault is a git repo, wires `.memoria/engines/linter/pre-commit` into `.git/hooks/` — every staged note must pass its schema. (The vault is _your_ repo; the installer never `git init`s for you.) |
+| 5. MCP dependencies | Creates the vault-local venv at `.memoria/.venv` and pip-installs `mcp/requirements.txt`. The **clustering stack is opt-in**: a confirm prompt offers `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
+| 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter) and `{{VAULT_PATH}}` into each `config.yaml`, runs `hermes profile install`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
+| 7. Skills | Clones the K-Dense bundle, verifies the bundled official Hermes skills, and installs the hub skills (`obsidian-markdown`, `qmd`). |
+| 8. Obsidian | Guided, not silent: detects Obsidian or offers the Flatpak; reminds you to turn off Restricted mode. **Zotero is no longer provisioned** — it moved to the bring-in-a-paper tutorial (it's the PI's bibliographic-backbone choice, not core provisioning). |
+| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` → re-run `--profiles-only` to propagate) and the first-session checklist (open the co-PI pane, switch to the Library workspace). |
 
-✅ automated · ⚠️ assisted (download + guide) · ❌ explained only.
+---
 
-| Layer | Method | Status |
-|---|---|---|
-| Git | prereq; `apt`/winget if missing | ✅ |
-| Pandoc | `apt`/winget (not provisioned by Hermes) | ✅ |
-| uv, Python 3.11, Node 22, ripgrep, ffmpeg | provisioned by the Hermes installer | ✅ |
-| Obsidian app | detect; show command, run on consent | ⚠️ |
-| Obsidian community plugins + configs | bundled in `vault/` | ✅ |
-| Obsidian REST API key | regenerated on first launch | ❌ (copy into `.env`) |
-| Hermes runtime | upstream installer (WSL2 on Win) | ✅ |
-| `.memoria` MCP servers (`policy_mcp.py`, `policy_hook.py`) | `pip install -r requirements.txt` | ✅ |
-| Seven Hermes profiles | stage + `{{VAULT_PATH}}` + `hermes profile install` | ✅ |
-| Skills — installable | clone K-Dense (7) + `hermes skills install` official (2) | ✅ |
-| Skills — Memoria-custom | authored as `SKILL.md` in the profile `skills/` dirs | ✅ (ship in vault) |
-| Per-profile `.env` | bootstrap from `.env.EXAMPLE` if absent | ✅ create / ❌ fill |
-| Zotero app + Better BibTeX (required), MarkDB-Connect, RTF/ODF Scan | detect; download `.xpi` + GUI install | ⚠️ |
-| API keys (KiloCode, OpenAlex email, S2, PubMed, GitHub) | user-supplied | ❌ explain |
+## The crons it wires
 
-See [Obsidian plugins](obsidian-plugins.md) and [Zotero plugins](zotero-plugins.md) for the plugin sets, and [On-disk layout](on-disk-layout.md) for where everything lands.
+All three are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappers are substituted into `~/.hermes/scripts/` and the job creation is idempotent.
 
-## Secrets
+| Cron | Schedule | Runs | Effect |
+| --- | --- | --- | --- |
+| `memoria-board-export` | `* * * * *` | `board_export.py` (+ metrics) | Projects the live kanban board into `system/board/` and appends the six-signal telemetry. |
+| `memoria-sweeps` | `*/15 * * * *` | `engines/sweeps/reconcile.py` | Recovers stalled captures: enqueues idempotent re-ingest cards (see [Ingest routing](ingest.md)). |
+| `memoria-lint` | `0 6 * * *` | `engines/linter/detectors.py` + `golden.py check` | The daily monitor: structural detectors + golden-copy drift (see [Linter: detectors and auto-fix](linter.md)). |
 
-The installer prints this checklist and the exact paths; it writes nothing. **v0.1 model provider is KiloCode only** — a user authenticates Hermes once to the KiloCode gateway and needs no separate Anthropic/OpenRouter key.
+A fourth wrapper ships for the monthly Retraction Watch refresh ([src/.memoria/scripts/refresh-retraction-watch.sh](../../src/.memoria/scripts/refresh-retraction-watch.sh) — `retraction.py --refresh` + `--sweep`).
 
-| Secret | Where to get it | Goes in |
-|---|---|---|
-| `KILOCODE_API_KEY` | [kilo.ai](https://kilo.ai) | each profile `.env` (or once in `~/.hermes/.env`) |
-| `OBSIDIAN_API_KEY` | Obsidian → Local REST API (first launch) | every profile `.env` |
-| `OPENALEX_API_KEY` | [openalex.org/settings/api](https://openalex.org/settings/api) (required since 2026-02) | Librarian `.env` |
-| `S2_API_KEY`, `NCBI_API_KEY`, `NCBI_EMAIL` | Semantic Scholar / NCBI account pages | Librarian `.env` (optional) |
-| Zotero | local desktop API, no key (`pyzotero` read-only) — see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md) | — |
-| `GITHUB_TOKEN`, `OPENAI_API_KEY` | GitHub PAT / OpenAI dashboard | Coder `.env` (optional) |
+---
 
-Profile `.env` paths: `~/.hermes/profiles/memoria-<name>/.env` (the WSL2 home on Windows).
+## What the user still supplies
 
-## Skills and MCP servers
+| Item | Where |
+| --- | --- |
+| `KILOCODE_API_KEY` (model access), `OBSIDIAN_API_KEY` (Local REST API), `OPENALEX_API_KEY` (required since 2026-02) | `~/.hermes/.env`, then `bash scripts/install.sh --profiles-only --vault <vault>` to propagate |
+| Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
+| git in the vault | `git init && git add -A && git commit` — obsidian-git and the pre-commit gate need a repo |
+| Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
-External access is **MCP-only** for the research lanes (Librarian, Mapper, Verifier) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers, not web-fetch skills (see [ADR-32](../adr/32-external-access-over-mcp.md)). What still installs as a *skill* is a small set:
-
-- **Memoria-authored, shipped in the vault** (`vault/.memoria/profiles/<p>/skills/`): `obsidian-paper-note` (Librarian), `retraction-check` + `claim-checks` (Verifier), `cluster-mapping` (Mapper), `structural-detectors` (Linter — wraps `detectors.py`).
-- **Installable from K-Dense** (`git clone` → `~/.hermes/skills/`): `scientific-writing` (Writer); `scikit-learn` + `umap-learn` (the Python clustering/dimensionality-reduction libraries the Mapper's `cluster-mapping` drives for HDBSCAN + UMAP).
-- **Installable from the official Hermes registry** (`hermes skills install official/...`): `obsidian`, `qmd`, `llm-wiki` (Writer), `obsidian-markdown` (Writer), `github-repo-management`, `codex`, `claude-code` (Coder).
-- **Retired** (replaced by MCP servers / the ingest pipeline): `paper-lookup`, `arxiv`, `citation-management`, `literature-review`, `ocr-and-documents`, the `pyzotero` web-fetch skill, and the `rest-passthrough` token.
-
-### MCP servers
-
-Each profile's `config.yaml` `mcp_servers` block wires the gated servers. Two are external `pip` installs; the rest ship in the vault and run from the vault venv.
-
-| Server | Source | Profiles | Install / setup |
-|---|---|---|---|
-| `policy` | vault `policy_mcp.py` | all | `requirements.txt` |
-| `obsidian` | Local REST API plugin (native MCP) | all | Obsidian plugin |
-| `ingest` | vault `ingest_mcp.py` | Librarian | `requirements.txt` |
-| `verify` | vault `verify_mcp.py` (retraction) | Verifier | `requirements.txt`; seed data with `verify_mcp.py --refresh` (Retraction Watch CSV) |
-| `paper_search` | upstream `openags/paper-search-mcp` | Librarian | `pip install paper-search-mcp` |
-| `pyzotero` | upstream read-only Zotero MCP | Librarian, Verifier | `pip install "pyzotero[mcp]"` |
-
-## `.memoria/mcp/requirements.txt`
-
-The dependency list for Memoria's MCP servers, installed in step 5 before profile registration. Deliberately minimal (the policy decision core is dependency-light):
-
-- `mcp>=1.2.0` — the Model Context Protocol SDK; provides the thin server wrapper around `policy_mcp.py`.
-- `PyYAML>=6.0` — parses the lane-override files the live policy server loads at startup.
-
-`.memoria/mcp/` also ships `policy_mcp.py`, `policy_hook.py`, `board_export.py`, `metrics_aggregate.py`, `ingest_mcp.py` (the Librarian's deterministic ingest pipeline), and `verify_mcp.py` (the Verifier's retraction server — stdlib-only). The two upstream MCP servers (`paper-search-mcp`, `pyzotero[mcp]`) are separate `pip` installs, not part of `requirements.txt`.
-
-## Per-profile wiring
-
-`hermes profile install` requires three files per profile; a profile missing any is skipped (graceful skip):
-
-- `SOUL.md` — the system prompt / identity.
-- `config.yaml` — model routing (`provider: kilocode`), the `mcp_servers` block (the `obsidian` vault-access server and the `policy` server, with `{{VAULT_PATH}}` placeholders the installer substitutes), and the `plugins` block enabling the `memoria-policy-gate` write gate (`pre_tool_call` / `post_tool_call` → `policy_hook.py`).
-- `distribution.yaml` — install metadata + `env_requires` (requires `KILOCODE_API_KEY`; `ANTHROPIC_API_KEY` optional).
-
-Profiles also carry `skills/` and `cron/` directories.
-
-## Models and ACP
-
-Per-profile model tiers are set in each `config.yaml` (`provider: kilocode`): Linter/Librarian/Coder → Haiku; Mapper/Writer → Sonnet; Socratic/Verifier → Opus. Auxiliary model slots are set in the global `~/.hermes/config.yaml` (a cheap model for title-gen/approval/compression), not per profile — see [Configure a profile](../how-to-guides/hermes-agent/configuration.md). The Obsidian chat pane needs the Hermes **ACP extra** (`pip install 'hermes-agent[acp]'`), which the bootstrap installs before the pane works.
+---
 
 ## Related
 
-- **Design rationale:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md).
-- **Redeploy path:** [Redeploy profiles](../how-to-guides/operate/redeploy-profiles.md) (`scripts/install.sh --profiles-only`).
-- **Setup guides:** [Set up the vault](../how-to-guides/setup/set-up-the-vault.md), [Set up Hermes](../how-to-guides/setup/set-up-hermes.md), [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
-- **Telemetry shipped by v0.1:** [Telemetry & logs](telemetry.md).
+- What the populated tree looks like: [On-disk layout](on-disk-layout.md)
+- The five profiles the install deploys: [Profile capabilities](profiles.md)
+- The gate and plugin the installer wires per lane: [Policy MCP](policy-mcp.md)

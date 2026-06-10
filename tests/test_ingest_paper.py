@@ -9,7 +9,7 @@ def test_ingest_paper():
         for ck, ntype, stype, want in _EXPECT:
             fm = ingest_text(ck, _FIXTURE)["frontmatter"]
             checks = [
-                ("captured", fm["lifecycle"] == "captured"),
+                ("current + tier0", fm["lifecycle"] == "current" and fm["ingest_status"] == "tier0"),
                 ("title", bool(fm["title"])),
                 ("note_type", fm["type"] == ntype),
                 ("source_type", fm["source_type"] == stype),

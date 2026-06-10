@@ -12,7 +12,7 @@ nav_order: 23
 
 A design capture of how Memoria records what its agents did: the hash-chained policy
 audit log, the per-session narrative summaries, and the fleet trust-score that rolls
-them up. Reconstructed from [`vault/.memoria/mcp/`](../../vault/.memoria/mcp) and
+them up. Reconstructed from [`vault/.memoria/mcp/`](../../src/.memoria/mcp) and
 the dashboards. Implements [ADR-25](../adr/25-session-logging-two-logs.md); the
 audit half is produced by the engine described in
 [Policy gate and permissions — the structural write boundary](policy-gate-and-permissions.md).
@@ -74,7 +74,7 @@ Adjacent operational logs in the same directory feed the dashboards:
 
 ### Fleet trust score
 
-[`vault/.memoria/mcp/metrics_aggregate.py`](../../vault/.memoria/mcp/metrics_aggregate.py)
+[`vault/.memoria/mcp/metrics_aggregate.py`](../../src/.memoria/mcp/metrics_aggregate.py)
 composes a per-lane trust score (`trust_score`) from those logs — a single 0–100
 number with fixed bands:
 
@@ -108,8 +108,8 @@ injection or misconfiguration. Below 5 samples the band is downgraded to
   trust model: the threat is silent corruption and agent error, not a malicious admin.
 - **One number for triage.** The trust score exists so the daily-glance can answer
   "is any lane slipping?" without reading raw logs; the underlying signals stay
-  available in [Fleet Health [placeholder]](../../vault/00-meta/01-dashboards/fleet-health.md)
-  and [Audit log](../../vault/00-meta/01-dashboards/audit-log.md).
+  available in [Fleet Health [placeholder]](../../src/system/dashboards/fleet-health.md)
+  and [Audit log](../../src/system/dashboards/audit-log.md).
 - **Denials are load-bearing.** A spike in denials is how a prompt-injection or
   misconfigured lane shows up; the formula reflects that by weighting it top.
 

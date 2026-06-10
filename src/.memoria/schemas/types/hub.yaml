@@ -1,0 +1,14 @@
+type: hub
+category: notes
+gated: true # review-gated zone
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:hub
+  lifecycle: enum:lifecycle
+  title: str
+  topic: str
+optional:
+  members: list
+  links: map
+  created: date

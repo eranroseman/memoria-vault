@@ -12,7 +12,7 @@ nav_order: 5
 
 A design capture of the eleven dashboards as built: what each shows, where it reads
 from, and how they group by the question they answer. Reconstructed from
-[`vault/00-meta/01-dashboards/`](../../vault/00-meta/01-dashboards) and the
+[`vault/00-meta/01-dashboards/`](../../src/system/dashboards) and the
 explanation site's grouping.
 
 > **Why capture this.** Eleven Dataview/Dataviewjs dashboards are live, but the only

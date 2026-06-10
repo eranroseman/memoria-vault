@@ -35,7 +35,7 @@ jobs:
       - name: Install ruff
         run: pip install --quiet ruff==0.15.15
       - name: ruff
-        run: ruff check scripts vault/.memoria
+        run: ruff check scripts src/.memoria
       - name: docs-doctor
         run: python scripts/docs-doctor.py docs
       - name: docs-links

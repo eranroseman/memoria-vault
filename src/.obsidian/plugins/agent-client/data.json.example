@@ -1,0 +1,58 @@
+{
+  "_comment": "Example agent-client config. Replace {{...}} placeholders with absolute paths on your machine before copying to vault/.obsidian/plugins/agent-client/data.json. After first launch, the plugin appends savedSessions[] \u2014 that's normal and safe to commit. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md",
+  "_customAgents_note": "Memoria configures ONE interactive agent \u2014 the co-PI (ADR-48): the only agent the PI converses with. It questions (the old Socratic role), explains the system, and DELEGATES tasks to the background lanes (Librarian, Writer, Peer-reviewer, Engineer) via the tasks MCP \u2014 those lanes run on Kanban dispatch, never in this pane. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md",
+  "customAgents": [
+    {
+      "id": "memoria-copi",
+      "displayName": "co-PI",
+      "command": "{{HOME}}/.local/bin/hermes",
+      "args": [
+        "-p",
+        "memoria-copi",
+        "acp"
+      ],
+      "env": []
+    }
+  ],
+  "defaultAgentId": "memoria-copi",
+  "autoAllowPermissions": false,
+  "autoMentionActiveNote": true,
+  "enableSystemNotifications": true,
+  "debugMode": false,
+  "nodePath": "",
+  "exportSettings": {
+    "defaultFolder": "projects",
+    "filenameTemplate": "agent_client_{date}_{time}",
+    "autoExportOnNewChat": false,
+    "autoExportOnCloseChat": false,
+    "openFileAfterExport": true,
+    "includeImages": true,
+    "imageLocation": "obsidian",
+    "imageCustomFolder": ".memoria/data",
+    "frontmatterTag": "agent-client"
+  },
+  "_wsl_note": "Set windowsWslMode: true if the agent commands above resolve through WSL on Windows. The plugin will translate Windows paths to /mnt/c/... format for the subprocess.",
+  "windowsWslMode": false,
+  "sendMessageShortcut": "enter",
+  "chatViewLocation": "right-tab",
+  "displaySettings": {
+    "autoCollapseDiffs": false,
+    "diffCollapseThreshold": 10,
+    "maxNoteLength": 10000,
+    "maxSelectionLength": 10000,
+    "showEmojis": true,
+    "fontSize": null
+  },
+  "_savedSessions_note": "After first launch the plugin appends savedSessions[] for the co-PI pane \u2014 normal and safe to commit.",
+  "savedSessions": [],
+  "lastUsedModels": {},
+  "lastUsedModes": {},
+  "enableFloatingChat": false,
+  "floatingButtonImage": "",
+  "floatingWindowSize": {
+    "width": 400,
+    "height": 500
+  },
+  "floatingWindowPosition": null,
+  "floatingButtonPosition": null
+}

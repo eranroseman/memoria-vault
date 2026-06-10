@@ -95,4 +95,4 @@ If the diff is wrong, `git reset --hard HEAD~1` returns you to the pre-migration
 
 **Explanation**
 
-- Why the Linter cannot apply schema changes unattended: [The Linter](../../explanation/profiles/linter.md)
+- Why the Linter cannot apply schema changes unattended: [The Linter](../../explanation/engines/README.md)

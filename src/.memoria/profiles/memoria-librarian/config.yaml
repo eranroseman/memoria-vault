@@ -1,0 +1,94 @@
+# memoria-librarian — find and ingest evidence
+# Per-profile Hermes config. Hermes reads model / mcp_servers / agent / terminal /
+# checkpoints / hooks from THIS file (ADR-27). The installer substitutes the
+# {{PYTHON}} interpreter and {{VAULT_PATH}} at deploy time.
+# Recommended: set agent.reasoning_effort per lane via `hermes -p memoria-librarian config set`.
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-haiku-latest
+
+# Vault access + policy gate run as MCP servers — loaded ONLY from config.yaml
+# mcp_servers (a standalone mcp.json is never read by Hermes; ADR-27 finding 1).
+mcp_servers:
+  policy:
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 30
+  ingest:
+    # The deterministic ingest pipeline (ADR-30) — the Librarian can't exec scripts
+    # (code_execution disabled), so the pipeline is reached over MCP. Read+compute
+    # only; the agent fills the two holes and writes via the gated obsidian MCP.
+    # Generous timeout: enrich makes throttled scholarly-API calls + extraction.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 180
+  obsidian:
+    # Native MCP from the Local REST API plugin over HTTP (loopback). Replaces uvx
+    # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
+    # (~/.hermes/.env) so a sandbox + a production vault can serve different ports
+    # and coexist. Requires the plugin's HTTP server enabled on that port. Hermes
+    # can't skip TLS verify for the self-signed HTTPS port, hence plain HTTP on
+    # loopback. The exact `Authorization: Bearer` header is required by the plugin.
+    url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    timeout: 30
+    headers:
+      Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  cluster:
+    # The clustering engine (ADR-33): typed graph + topics for the map lane.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 120
+  patterns:
+    # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 60
+  paper_search:
+    # Scholarly discovery across 20+ databases (openags/paper-search-mcp) — the MCP
+    # backend for `find`, replacing the K-Dense paper-lookup/arxiv web-fetch skills.
+    # Use the search_* tools only; PDF retrieval + extraction is the ingest pipeline's
+    # job (Marker via the ingest MCP), so the download_* / read_paper tools — and the
+    # optional Sci-Hub fallback inside download_with_fallback — are NOT used.
+    # Install once: pip install paper-search-mcp.
+    command: "{{PYTHON}}"
+    args: ["-m", "paper_search_mcp.server"]
+    timeout: 60
+    env:
+      PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: "${NCBI_EMAIL}"
+      PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: "${S2_API_KEY}"
+  pyzotero:
+    # Upstream read-only Zotero MCP (Zotero 7 local API at localhost:23119) — citekey /
+    # metadata resolution for ingest reads. Memoria uses Zotero read-only (the local API
+    # has no write path), so this fully replaces the pyzotero web-fetch skill — there is
+    # no Zotero write-back. Install once: pip install "pyzotero[mcp]".
+    command: "pyzotero-mcp"
+    timeout: 30
+
+# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
+# ingest / paper_search / pyzotero via MCP). `web` is DISABLED: discovery -> paper_search
+# MCP, Zotero reads -> pyzotero MCP, enrich/extract -> ingest MCP (server-side), vault
+# search -> qmd (local). The Librarian now makes no direct API calls. disabled_toolsets =
+# every Hermes toolset NOT in the keep-set. Update if Hermes adds toolsets.
+agent:
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
+
+# Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
+terminal:
+  cwd: "{{VAULT_PATH}}"
+
+# Shadow-git snapshot before destructive writes — mode-independent reversibility.
+checkpoints:
+  enabled: true
+
+# Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
+# Hermes registers MCP tools as mcp_<server>_<tool>, so the native obsidian writes
+# are mcp_obsidian_obsidian_append_content / _patch_content / _put_content; a shell hook (re.fullmatch
+# "obsidian.*", consent-gated, fail-OPEN) never fired. The plugin runs in-process
+# in every mode (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is
+# fail-CLOSED. policy_hook also hard-denies the native vault_delete/vault_move and
+# command_execute (no path to gate). Deployed per lane by the installer; see
+# .memoria/plugins/.
+plugins:
+  enabled:
+    - memoria-policy-gate

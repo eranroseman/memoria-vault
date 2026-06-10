@@ -1,0 +1,13 @@
+type: fleeting
+category: notes
+gated: false
+enums:
+  lifecycle: [proposed, archived]
+  origin: [human, agent]
+required:
+  type: literal:fleeting
+  lifecycle: enum:lifecycle
+  origin: enum:origin
+optional:
+  title: str
+  created: date

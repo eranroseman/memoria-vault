@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Verify every docs/ reference under vault/ resolves.
+# Verify every docs/ reference under src/ resolves.
 #
-# vault/ ships to the runtime WITHOUT the docs/ tree, so vault files must
+# src/ ships to the runtime WITHOUT the docs/ tree, so vault files must
 # reference Memoria's docs via absolute GitHub Pages URLs that map to a real docs
 # file. Bare docs/<path>.md mentions (a drift-detector's scan inputs) must also
 # name a real file. github blob URLs are banned (convention: Pages URLs only).
 # External Hermes docs (hermes-agent.nousresearch.com/docs/...) carry no `.md`
 # and are naturally skipped.
 #
-# Scans the whole vault/ tree — this is the CI backstop for the per-diff
+# Scans the whole src/ tree — this is the CI backstop for the per-diff
 # .githooks/pre-commit guard, which programmatic commits (obsidian-git
 # auto-backup) and --no-verify bypass.
 set -uo pipefail
@@ -36,11 +36,11 @@ while IFS= read -r f; do
   if grep -q 'github.com/eranroseman/memoria-vault/blob/main/docs/' "$f" 2>/dev/null; then
     echo "::error file=$f::uses a github blob URL for docs/ — use the Pages URL instead"; fail=1
   fi
-done < <(find vault -type f \( -name '*.md' -o -name '*.py' -o -name '*.yaml' -o -name '*.yml' \) \
-           -not -path 'vault/.obsidian/*')
+done < <(find src -type f \( -name '*.md' -o -name '*.py' -o -name '*.yaml' -o -name '*.yml' \) \
+           -not -path 'src/.obsidian/*')
 
 if [ "$fail" -ne 0 ]; then
-  echo "docs-links: FAILED — fix the references above (vault/ must use Pages URLs that resolve)."
+  echo "docs-links: FAILED — fix the references above (src/ must use Pages URLs that resolve)."
   exit 1
 fi
-echo "docs-links: OK — all vault/ docs references resolve."
+echo "docs-links: OK — all src/ docs references resolve."

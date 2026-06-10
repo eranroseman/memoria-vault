@@ -1,0 +1,14 @@
+type: organization
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:organization
+  lifecycle: enum:lifecycle
+  name: str
+optional:
+  subtype: str # lab · university · company · funder …
+  location: str
+  relationships: map
+  created: date

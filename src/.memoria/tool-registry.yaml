@@ -1,0 +1,58 @@
+# tool-registry.yaml — the authoritative per-profile TOOL allowlist.
+#
+# Designed in architecture/on-disk-layout.md as "the machine-read tool config:
+# it declares which tools each profile may call, so the policy MCP and the lane
+# overrides resolve against one authoritative list rather than per-profile
+# duplicates."
+#
+# Two layers, deliberately separate:
+#   - THIS file governs WHICH TOOLS a profile may invoke (capability).
+#   - lane-overrides/<lane>.yaml governs WHICH PATHS those tools may write (scope).
+# So a profile that writes only one folder still needs the vault_write *capability*
+# here; the narrowing to that folder lives in its lane-override. Only Socratic —
+# which writes nowhere (policy.allow.write: []) — is denied the write capability.
+#
+# Semantics:
+#   - `allow` is an allowlist; anything not listed is DENIED (default-deny).
+#   - An `allow` entry is either a GROUP name (expanded via `groups` below) or a
+#     bare Hermes built-in toolset name (skills, todo, terminal, file, ...).
+#   - Tool IDs: Hermes built-in toolset names + `<mcp-server>.<tool>` for MCP tools.
+#
+# Enforcement: the policy MCP / hook may read this to gate tool calls (TODO — today
+# writes are gated by path in the lane-overrides). Meanwhile it is the single
+# source of truth the Linter checks each profile's config.yaml/mcp.json against
+# for drift (a profile granted a toolset not in its registry entry is a finding).
+
+version: 1
+
+# Reusable capability groups -> concrete tool IDs.
+groups:
+  vault_read:  [obsidian.get_file_contents, obsidian.list_files, obsidian.search]
+  vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.delete_file]
+  web:         [web_search, web_extract]          # "search_web" + "fetch_url"
+  policy:      [policy.check_permission, policy.complete_write]
+  tasks:       [tasks.delegate_route_task]
+  cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
+  ingest_read: [ingest.ingest_pipeline]
+  patterns:     [patterns.patterns_list, patterns.patterns_run]
+
+profiles:
+  memoria-copi:
+    allow: [vault_read, skills, todo, memory, policy, tasks, cluster_read, ingest_read, patterns]
+    notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
+
+  memoria-librarian:
+    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, ingest_read, patterns]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (web toolset stays off; the group name covers MCP search tools); vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
+
+  memoria-writer:
+    allow: [vault_read, vault_write, skills, todo, policy]
+    notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No web — it composes from the vault, never researches."
+
+  memoria-peer-reviewer:
+    allow: [web, vault_read, vault_write, skills, todo, policy]
+    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). web for cite checks (external_api_policy: explicit_only); vault_write lane-scoped to inbox/ cards only."
+
+  memoria-engineer:
+    allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
+    notes: "The code lane (the ADR-21 Coder-lane exception): terminal + file for Git/repo + external-agent handoff; vault_write lane-scoped to projects/*/code/."

@@ -7,23 +7,26 @@ permalink: /tutorials/
 
 # Tutorials
 
-Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you follow concrete steps in Obsidian and end with something real in your vault. Work through them in order — each builds on the last.
+Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you follow concrete steps in Obsidian — and in conversation with the co-PI — and end with something real in your vault. Work through them in order; each builds on the last.
+
+You converse with **one** agent throughout: the co-PI, in the Agent Client pane. It questions your thinking, explains the system, and delegates work to the four background lanes (Librarian, Writer, Peer-reviewer, Engineer). You never address a background agent directly.
 
 ## Tutorial sequence
 
 | # | Tutorial | What you'll do | What you end with |
 | --- | --- | --- | --- |
-| [01](01-set-up-from-zero.md) | Set up from zero | Clone the vault, install plugins, wire up Zotero, run the installer | A working vault with all eight required plugins and all seven profiles installed |
-| [02](02-your-first-note.md) | Your first note | Capture a thought, discuss it with Socratic, write a claim note | One permanent claim note in `30-synthesis/01-claims/`, authored in your own words |
-| [03](03-bring-in-a-paper.md) | Bring in a paper | Ingest one paper from Zotero, classify it, write one claim note | One classified `paper-note` and one linked `claim-note` |
-| [04](04-build-a-reading-batch.md) | Build a reading batch | Ingest 5 papers, classify them, write 3 linked claim notes | Your first connected knowledge cluster |
-| [05](05-start-a-writing-project.md) | Start a writing project | Create a project, read the corpus map, commit a framing | A project folder with corpus map and a chosen outline |
-| [06](06-verify-and-address-gaps.md) | Verify and address a gap | Write a draft paragraph, run verification, address one failed trace | A verified draft with a complete citation trail |
-| [07](07-find-new-sources.md) | Find new sources | Run forward-citation and concept searches, triage the candidates queue, ingest one result | A populated candidates queue and one new paper-note ready to classify |
+| [01](01-set-up-from-zero.md) | Set up from zero | Run the one-line installer, add your API keys, open the vault, meet the co-PI | A working vault: five profiles installed, the co-PI pane answering, the Library workspace open |
+| [02](02-your-first-note.md) | Your first note | Capture a fleeting note from the palette, read its frontmatter, distill or archive it | One processed fleeting note and the distill-or-archive habit |
+| [03](03-bring-in-a-paper.md) | Bring in a paper | Optionally wire up Zotero, capture a paper, judge its candidate card, write a source note | A Catalog entity, a kept candidate, and a source note in your own words |
+| [04](04-build-a-reading-batch.md) | Build a reading batch | Ask the co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |
+| [05](05-synthesize-toward-a-writing-project.md) | Synthesize toward a writing project | Distill claims, gather them under a hub, delegate a `map` task for coverage | Your synthesis surface: claims, a hub, and a corpus map — *updated with a v0.1.2 project-workflow preview* |
+| [06](06-verify-and-address-gaps.md) | Verify and address gaps | Delegate a `verify` task, read the finding-first cards, let gaps re-trigger discovery | A checked corpus and your first turn of the compounding loop — *project-level verification expands in v0.1.2* |
+| [07](07-find-new-sources.md) | Find new sources | Ask the co-PI to find sources on a topic; keep or skip the candidates it surfaces | A worked Inbox of honest candidate cards and new Catalog entries |
 
 ---
 
 ## See also
 
-- [What Memoria is](../explanation/overview/what-memoria-is.md) — system identity, what it is and isn't, Compile/Compose directions
-- [How work moves through the system](../explanation/workflows/README.md) — the Zettelkasten model, the agent division of labour, and the board as coordination layer
+- [What Memoria is](../explanation/overview/what-memoria-is.md) — system identity, what it is and isn't
+- [Workflows](../explanation/workflows/README.md) — how work moves through the system: the lanes, the board, and the gates
+- [The co-PI](../explanation/profiles/co-pi.md) — the one agent you talk to, and why it delegates every write

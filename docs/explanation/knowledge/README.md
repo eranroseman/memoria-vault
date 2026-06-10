@@ -19,7 +19,7 @@ The vault stores durable knowledge organized by lifecycle stage. Understanding t
 | [Note types and epistemic roles](note-types.md)                    | The three epistemic roles (source / synthesis / working) behind the note types, and why agent permissions follow from them.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, and why the vault compounds rather than merely accumulates.                      |
 | [Note body structure](note-body-structure.md)                      | Why paper-notes, claim-notes, and MOCs have the body sections they do, and what each section makes the note able to do.                  |
-| [Why folders encode lifecycle, not topic](lifecycle-over-topic.md) | Why folders encode lifecycle stage rather than subject, what breaks if they don't, and how topics live in frontmatter and links instead. |
+| [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md) | Why folders encode lifecycle stage rather than subject, what breaks if they don't, and how topics live in frontmatter and links instead. |
 | [Why promotion is gated](promotion-model.md)                       | What promotion means, the one-way promotion map and its disallowed moves, and why the human gate sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |

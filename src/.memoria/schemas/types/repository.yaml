@@ -1,0 +1,15 @@
+type: repository
+category: catalog
+gated: false
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:repository
+  lifecycle: enum:lifecycle
+  name: str
+optional:
+  url: str
+  language: str
+  license: str
+  relationships: map
+  created: date

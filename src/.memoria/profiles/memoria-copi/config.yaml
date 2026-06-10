@@ -1,0 +1,70 @@
+# memoria-copi — the one conversational agent (ADR-48); read-only, delegates writes
+# Per-profile Hermes config. Hermes reads model / mcp_servers / agent / terminal /
+# checkpoints / plugins from THIS file (ADR-27). The installer substitutes the
+# {{PYTHON}} interpreter and {{VAULT_PATH}} at deploy time.
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-opus-latest
+
+# Vault access + policy gate + the read/compute engines run as MCP servers — loaded
+# ONLY from config.yaml mcp_servers (ADR-27 finding 1).
+mcp_servers:
+  policy:
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 30
+  obsidian:
+    # Native MCP from the Local REST API plugin over loopback HTTP (ADR-31). The
+    # co-PI uses it for READS; its lane-override has write_scope: [] so any write
+    # attempt is denied by the gate.
+    url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    timeout: 30
+    headers:
+      Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  ingest:
+    # Read/compute facade over the ingest engine (D41) — lets the co-PI inspect a
+    # citekey's draft bundle while discussing it; the gated writes stay lane-side.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 120
+  cluster:
+    # The clustering engine (ADR-33): typed graph + topics, read-only.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 120
+  tasks:
+    # The delegation path (ADR-48): every write the conversation produces goes out
+    # as a kanban card via delegate_route_task, ceiling-validated per lane.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/tasks_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 60
+  patterns:
+    # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 60
+  paper_search:
+    command: "{{PYTHON}}"
+    args: ["-m", "paper_search_mcp.server"]
+    timeout: 120
+
+# Capability allowlist (ADR-27): the co-PI keeps skills, todo, AND memory — it alone
+# carries the self-improving loop (memory · /goals · skills · /personality, D46).
+# Everything else stays disabled; the only write path would be the gated obsidian
+# MCP, and the copi lane-override denies every write.
+agent:
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
+
+# Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
+terminal:
+  cwd: "{{VAULT_PATH}}"
+
+# Shadow-git snapshot before destructive writes — mode-independent reversibility.
+checkpoints:
+  enabled: true
+
+# Write gate (ADR-28): the policy gate is a Python PLUGIN, fail-closed in every mode.
+plugins:
+  enabled:
+    - memoria-policy-gate

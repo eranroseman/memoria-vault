@@ -9,11 +9,11 @@ permalink: /explanation/dashboards/synthesis-agenda/
 
 # Synthesis agenda
 
-Dashboards that surface what to read, discuss, and reconcile — the queue of synthesis work.
+Dashboards that surface what to read, discuss, and reconcile — the queue of synthesis work. These are the *PI's* unfinished thinking (the structural-health group is the Linter's debt; the split is by actor).
 
 | Dashboard | Question it answers |
 |---|---|
-| [Reading pipeline](reading-pipeline.md) | What's queued, classified, and ready for claim-note writing? |
-| [Discuss queue](discuss-queue.md) | Which paper notes are waiting for a Socratic discussion pass? |
+| [Reading pipeline](reading-pipeline.md) | What's awaiting reading and distillation, and what claims came out of it? |
+| [Discuss queue](discuss-queue.md) | Which read sources are worth a pass with the co-PI before the claims firm up? |
 | [Open questions](open-questions.md) | What open questions has past synthesis raised? |
-| [Contradictions](contradictions.md) | Which claim notes disagree with each other? |
+| [Contradictions](contradictions.md) | Which claims disagree with each other? |

@@ -80,4 +80,4 @@ The Verifier will not flag accepted gaps on subsequent commits.
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- Conceptual background on the Verifier: [The Verifier](../../explanation/profiles/verifier.md)
+- Conceptual background on the Verifier: [The Verifier](../../explanation/profiles/peer-reviewer.md)

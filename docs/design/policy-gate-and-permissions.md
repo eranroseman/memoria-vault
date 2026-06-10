@@ -34,11 +34,11 @@ the write to a no-op and records the attempt.
 
 Three layers compose the boundary:
 
-1. **The policy decision engine** — [`vault/.memoria/mcp/policy_mcp.py`](../../vault/.memoria/mcp/policy_mcp.py).
-2. **The per-lane overrides** — seven YAML files in [`vault/.memoria/lane-overrides/`](../../vault/.memoria/lane-overrides) that scope each profile's write paths and skills.
-3. **The enforcement plugin** — [`vault/.memoria/plugins/memoria-policy-gate/`](../../vault/.memoria/plugins/memoria-policy-gate), a Hermes Python plugin that runs the engine on every tool call and fails closed.
+1. **The policy decision engine** — [`vault/.memoria/mcp/policy_mcp.py`](../../src/.memoria/mcp/policy_mcp.py).
+2. **The per-lane overrides** — seven YAML files in [`vault/.memoria/lane-overrides/`](../../src/.memoria/lane-overrides) that scope each profile's write paths and skills.
+3. **The enforcement plugin** — [`vault/.memoria/plugins/memoria-policy-gate/`](../../src/.memoria/plugins/memoria-policy-gate), a Hermes Python plugin that runs the engine on every tool call and fails closed.
 
-A fourth file, [`vault/.memoria/tool-registry.yaml`](../../vault/.memoria/tool-registry.yaml), is the *capability* allowlist (which tools a profile may invoke at all), complementary to the lane-overrides' *path* allowlist (where a profile may write).
+A fourth file, [`vault/.memoria/tool-registry.yaml`](../../src/.memoria/tool-registry.yaml), is the *capability* allowlist (which tools a profile may invoke at all), complementary to the lane-overrides' *path* allowlist (where a profile may write).
 
 ## How it works
 

@@ -10,7 +10,7 @@ scripts/install.ps1 @eranroseman
 .github/scripts/ @eranroseman
 
 # Agent profiles and vault machinery — core product logic
-vault/.memoria/ @eranroseman
+src/.memoria/ @eranroseman
 
 # Signed-off architecture decisions
 project-files/decisions/ @eranroseman

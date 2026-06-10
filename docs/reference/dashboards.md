@@ -5,120 +5,74 @@ parent: Reference
 
 # Dashboards
 
-The eleven dashboards shipped in `00-meta/01-dashboards/`: source file, sort order, and what each reads. For *why* each exists and when to open it, see [explanation/dashboards/](../explanation/dashboards) — this page is the lookup.
+The ten dashboards shipped in `system/dashboards/` ([src/system/dashboards/](../../src/system/dashboards)) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
 
-Dashboards are Dataview / DataviewJS views. They render existing vault state and logs; they never write. A dashboard with no data yet shows a placeholder, not an error.
+Two changes from v0.1.0: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
 ---
 
 ## Dashboard inventory
 
-| Dashboard | File | Reads from | Sort | Group |
-| --- | --- | --- | --- | --- |
-| Daily Health | `daily-health.md` | `board-state`, `lint-findings.jsonl`, fleet metrics, `cron-history.jsonl` (filtered subsets) | per-section | Daily glance |
-| Board state | `board-state.md` | `99-system/board/` markdown card projections | by lane / queue | Daily glance |
-| Reading pipeline | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), `30-synthesis/01-claims/` (`maturity`) | modification time | Synthesis agenda |
-| Discuss queue | `discuss-queue.md` | `20-sources/01-papers/` (`lifecycle: current`, no Socratic pass) | oldest first | Synthesis agenda |
-| Open questions | `open-questions.md` | `30-synthesis/01-claims/` + `20-sources/01-papers/` (`## Open questions` sections) | most-recently-modified | Synthesis agenda |
-| Contradictions | `contradictions.md` | `claim-note` `relations.contradicts` links (deduplicated pairs) | most-recently-modified | Synthesis agenda |
-| Drift watch | `drift-watch.md` | `99-system/logs/lint-findings.jsonl` | by detector | Structural health |
-| Loose ends | `loose-ends.md` | whole-vault filename scan (`TODO`/`tmp`/`untitled`) | most-recently-modified | Structural health |
-| Weekly review | `weekly-review.md` | inbox, candidates, synthesis, orphans, projects, metrics (multi-section) | top-to-bottom workflow order | Structural health |
-| Fleet health | `fleet-health.md` | `99-system/metrics/lane-metric-*` aggregates | by trust score | Operational health |
-| Audit log | `audit-log.md` | `99-system/logs/audit.jsonl` (current week) | newest first, cap 30 | Operational health |
+| Surface | Dashboard | File | Shows |
+| --- | --- | --- | --- |
+| Home | Board state | `board-state.md` | The Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`) plus live worker cards from `system/board/`. |
+| Library | Reading pipeline | `reading-pipeline.md` | Sources awaiting classify + claims by maturity. |
+| Library | Discuss queue | `discuss-queue.md` | Sources worth discussing → the co-PI desk. |
+| Library / Project | Open questions | `open-questions.md` | Unconnected claims — the synthesis backlog. |
+| Library / Project | Contradictions | `contradictions.md` | `contradicts` links — open tensions. |
+| Maintenance | Drift watch | `drift-watch.md` | Active/imminent structural drift; HIGH findings also raise an Inbox alert. |
+| Maintenance | Loose ends | `loose-ends.md` | Structural debt (TODO/tmp/untitled files). |
+| Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
+| Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |
+| Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 
-> The "Daily Health" view is the `daily-health.md` dashboard (Obsidian has no special "index" file, so it's named for what it is).
+Synthesis vs structural, split by actor: open-questions + contradictions are the _PI's_ unfinished thinking; loose-ends + drift-watch are the _Linter engine's_ structural debt — kept separate, not collapsed.
 
 ---
 
-## Verdict band (drift-watch, surfaced on Daily Health)
+## The Bases views
 
-Rollup of the Linter's eight structural detectors:
+Obsidian Bases (`.base` files) are the database views the dashboards and workspaces lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
+
+| Base | Lives at | View over |
+| --- | --- | --- |
+| `catalog.base` | `catalog/` | The Catalog — entity records by type (papers, people, organizations, venues, datasets, repositories), `lifecycle != archived`. |
+| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; converges to empty. |
+| `claims.base` | `system/dashboards/` | Claims by maturity. |
+| `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
+| `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |
+| `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
+
+---
+
+## Verdict band (drift-watch)
+
+Rollup of the Linter engine's detectors:
 
 | Band | Condition | Effect |
 | --- | --- | --- |
-| `PASS` | Only LOW/INFO findings (or none) | — |
-| `REVIEW` | Any HIGH or MEDIUM finding, no CRITICAL | Advisory (a HIGH-only vault is `REVIEW`, not `FAIL`) |
+| `PASS` | Only LOW findings (or none) | — |
+| `REVIEW` | Any HIGH or MEDIUM finding, no CRITICAL | Advisory |
 | `FAIL` | Any CRITICAL finding | Scheduled work pauses until resolved |
 
-Daily Health shows only the last-24h HIGH/CRITICAL subset; drift-watch shows the full per-detector view.
+## Trust score (fleet-health)
 
----
-
-## Trust score (fleet-health, surfaced on Daily Health)
-
-A 0–100 composite per lane. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and (for lanes producing `[!suggestions]`) accept/reject ratios. No single signal dominates.
-
-| Band | Range | Action |
-| --- | --- | --- |
-| Healthy | 90+ | None |
-| Watch | 70–89 | Something is slipping |
-| Act | < 70 | Pause scheduled work for that lane |
-
-Suggestion-ratio extremes both down-weight the score: accept rate **> ~90%** = rubber-stamping; **< ~20%** = candidate scoring needs tuning. Full formula and band definitions: [Glossary](glossary.md).
-
----
-
-## Board-state queue counters
-
-The four sections board-state projects (also summarized on the [status line](obsidian-status-line.md)):
-
-| Section | Shows |
-| --- | --- |
-| Active | Cards in `running`, per lane |
-| Review queue | `done` cards with `review_status: requested` |
-| Retry watch | Cards accumulating retries |
-| Claim maturity | `seedling → budding → evergreen` histogram |
-
-Board-state is a **read view** — state changes happen through Hermes commands or by editing card files, never through the dashboard. If Hermes is the sole source of truth with no markdown card export, board-state is intentionally empty (use the Hermes Workspace instead).
+A 0–100 composite per lane, computed by [src/.memoria/mcp/metrics_aggregate.py](../../src/.memoria/mcp/metrics_aggregate.py) into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
 
 ---
 
 ## Design rules (apply to all dashboards)
 
 - **One decision per dashboard.** Mixed queries produce lists the human can't batch-act on.
-- **Empty is success.** A healthy vault produces empty or near-empty dashboards; always-busy tables train the eye to ignore them.
-- **Sort by decision type.** Queues sort oldest-first (longest-waiting acted on first); logs sort newest-first (most recent is most actionable).
-- **Graceful degradation.** Missing dependency (plugin, log file, low volume) → explanatory placeholder, never an error or blank table.
-
----
-
-## Query patterns (for dashboard authors)
-
-Reference shapes for authoring dashboards. For full Dataview syntax see the [Dataview docs](https://blacksmithgu.github.io/obsidian-dataview/).
-
-- **TABLE** — the workhorse: `TABLE file.mtime AS "Modified", lifecycle AS "Status" FROM "20-sources/01-papers" WHERE lifecycle = "proposed" SORT file.mtime DESC LIMIT 20`
-- **LIST** — just links: `LIST FROM "30-synthesis/01-claims" WHERE maturity = "seedling"`
-- **TASK** — inline TODOs: `TASK FROM "10-inbox" WHERE !completed`
-- **FLATTEN** — one row per array item: `... FLATTEN sources AS flat-source`
-- **Field presence** — `WHERE topic` (has it) · `WHERE !topic` (lacks it) · `WHERE contains(topic, "hci")`
-- **dataviewjs** — only for external-file reads (logs); **must guard the load** so a missing file degrades gracefully, never throws:
-
-  ```js
-  const text = await dv.io.load("99-system/logs/audit.jsonl");
-  if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
-  const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
-  ```
-
-Common Memoria patterns: pending review (`WHERE review_status = "requested" SORT file.mtime ASC`); stale enrichment (`WHERE _enrichment AND enriched_date < date(today) - dur(30 days)`); orphan claims (`FROM "30-synthesis/01-claims" WHERE length(file.inlinks) = 0`).
-
-## Performance
-
-Keep dashboards responsive as the vault grows:
-
-- **Scope `FROM "folder"`** (narrow), never `FROM ""` (vault-wide) unless truly required.
-- **`LIMIT`** every query (~30); dashboards rarely need more.
-- **Stable field types** — a field that is sometimes a string and sometimes a list slows (and breaks) every query that touches it.
-- **Push string-parsing out of `WHERE`** into a frontmatter field.
-- **Promote queried fields to top-level** (e.g. `enriched_date`, not buried in `_enrichment`).
-- When one dashboard carries 10+ queries, split it into two specialized ones.
+- **Empty is success.** Always-busy tables train the eye to ignore them.
+- **Sort by decision type.** Queues oldest-first; logs newest-first.
+- **Graceful degradation.** A missing log or plugin shows an explanatory placeholder, never an error.
 
 ---
 
 ## Related
 
-- Why each dashboard exists and when to open it: [explanation/dashboards/](../explanation/dashboards)
-- The structural detectors behind the verdict band: [Linter: detectors and auto-fix](linter.md)
-- The audit-log event schema and rotation: [Memory substrates](memory.md#audit-log-event-fields)
-- The status-line counters board-state feeds: [Obsidian status line](obsidian-status-line.md)
-- Operating the dashboards: [Navigate the dashboards](../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- The detectors behind drift-watch: [Linter: detectors and auto-fix](linter.md)
+- The audit-log schema fleet-health and audit-log read: [Memory substrates](memory.md)
+- The card types the Inbox board groups: [Note types](note-types.md)
+- Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)

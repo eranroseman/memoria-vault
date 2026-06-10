@@ -208,7 +208,7 @@ recommendation never substitutes for human approval.
 | type | states | properties | 🔒 |
 |---|---|---|---|
 | fleeting | proposed → archived | origin(human/agent) | |
-| source | proposed → provisional → current → retracted → archived | source_type, entity→paper, research-area[], methodology[] | |
+| source | proposed → provisional → current → retracted → archived | source_type, entity→paper, research_area[], methodology[] | |
 | claim | current → retracted → archived | **maturity**, `links:` (supports/contradicts), sources[], topics | 🔒 |
 | hub | current → archived | topic, members[] | 🔒 |
 | index | current → archived | — | |
@@ -586,7 +586,7 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
 
 Two **facets** on source/claim notes (faceted, not a flat `topic[]`):
 
-- **research-area** — seeded from **OpenAlex Topics/Concepts** (the ingest engine already
+- **research_area** — seeded from **OpenAlex Topics/Concepts** (the ingest engine already
   enriches from OpenAlex, so the vocabulary is free and consistent).
 - **methodology** — a controlled vocab covering method *and* study design (RCT ·
   observational · qualitative · systematic-review · meta-analysis · simulation · …),

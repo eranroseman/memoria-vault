@@ -7,6 +7,11 @@ permalink: /how-to-guides/
 
 # How-to guides
 
+> **v0.1.1 note.** These guides are being updated for the v0.1.1 Library workspace —
+> some still describe v0.1.0 flows (old folder names, the seven-profile model, per-profile
+> ACP chats). The [Tutorials](../tutorials) and [Reference](../reference) are fully
+> current; when a guide disagrees with them, trust the tutorial/reference.
+
 Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already know the system — if you're new, start with the [Tutorials](../tutorials).
 
 For the *why* behind any design choice, see [Explanation](../explanation). For exact field names, schemas, and command flags, see [Reference](../reference).
@@ -74,7 +79,6 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Triage fleeting notes](compile/triage-fleeting-notes.md) | Clear `10-inbox/01-fleeting/`: promote, attach, or discard | Triage (on-ramp) |
 | [Capture and ingest a source](compile/capture-and-ingest.md) | Zotero → vault: the complete intake path | Capture + Enrich |
 | [Classify a source](compile/classify-a-source.md) | Review proposed metadata and promote to canonical | Classify |
-| [Pin a citekey](compile/pin-a-citekey.md) | Lock the Better BibTeX key before ingest so it never drifts | Capture (prep) |
 | [Discuss a paper](compile/discuss-a-paper.md) | Socratic session via the agent-client pane | Discuss |
 | [Read a paper through a Socratic lens](compile/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](compile/write-a-claim-note.md) | Distill a source into a durable claim | Distill |

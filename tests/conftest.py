@@ -5,9 +5,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 _DIRS = [
-    "vault/.memoria/mcp",
-    "vault/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note/scripts",
-    "vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts",
+    "src/.memoria/mcp",
+    "src/.memoria/engines/lib",
+    "src/.memoria/engines/ingest",
+    "src/.memoria/engines/sweeps",
+    "src/.memoria/engines/linter",
     "scripts",
     ".github/scripts",
 ]

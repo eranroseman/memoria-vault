@@ -1,0 +1,66 @@
+# The Catalog — entity records by type (ADR-49). Bases are views; the records
+# in catalog/ are the source of truth.
+filters:
+  and:
+    - 'file.ext == "md"'
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "Papers"
+    filters:
+      and:
+        - file.inFolder("catalog/papers")
+    order:
+      - file.name
+      - citekey
+      - authors
+      - year
+      - venue
+      - lifecycle
+  - type: table
+    name: "People"
+    filters:
+      and:
+        - file.inFolder("catalog/people")
+    order:
+      - file.name
+      - orcid
+      - affiliations
+  - type: table
+    name: "Organizations"
+    filters:
+      and:
+        - file.inFolder("catalog/organizations")
+    order:
+      - file.name
+      - subtype
+      - location
+  - type: table
+    name: "Venues"
+    filters:
+      and:
+        - file.inFolder("catalog/venues")
+    order:
+      - file.name
+      - subtype
+      - issn
+  - type: table
+    name: "Datasets"
+    filters:
+      and:
+        - file.inFolder("catalog/datasets")
+    order:
+      - file.name
+      - doi
+      - license
+      - lifecycle
+  - type: table
+    name: "Repositories"
+    filters:
+      and:
+        - file.inFolder("catalog/repositories")
+    order:
+      - file.name
+      - url
+      - language
+      - license

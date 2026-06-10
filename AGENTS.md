@@ -102,7 +102,7 @@ All must pass before merge:
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -117,7 +117,7 @@ All must pass before merge:
 | `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`.
+Sensitive paths: `src/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -140,7 +140,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 | Any docs PR | `/docs-review` *(project)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` | Before opening — catches bugs and simplification opportunities |
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` | PRs touching `scripts/`, `.github/`, `vault/.memoria/` |
+| Sensitive-path changes | `/security-review` | PRs touching `scripts/`, `.github/`, `src/.memoria/` |
 | Confirming a fix | `/verify` | After a change — runs the app to confirm actual behavior |
 | New or cut release | `/release` *(project)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
 
@@ -153,7 +153,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 - **Hermes config:** consult the local docs at `~/.hermes/hermes-agent/website/docs/`, `cli-config.yaml.example`, and the skills catalogs (`skills-catalog.md`, `optional-skills-catalog.md`) before any Hermes decision. Do not infer from Memoria's existing files — the docs are the source of truth.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to LF. Working on ext4 avoids CRLF churn.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
-- **Profiles:** `vault/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
+- **Profiles:** `src/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](docs/releasing/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
 
@@ -172,8 +172,8 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
 Mixed-quadrant pages are wrong — split them.
 
-- **Links:** `docs/` files → relative links; `vault/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; release plans (`docs/releasing/`) and test plans (`docs/testing/`) are ordinary intra-`docs/` relative links; links to non-doc files under `vault/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
+- **Links:** `docs/` files → relative links; `src/` (vault-tree) files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
+  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; release plans (`docs/releasing/`) and test plans (`docs/testing/`) are ordinary intra-`docs/` relative links; links to non-doc files under `src/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.

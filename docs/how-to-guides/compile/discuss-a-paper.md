@@ -31,6 +31,7 @@ Open the ACP pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon)
 **4. Let the profile run its opening questions.**
 
 The Socratic profile will ask the standard opening set:
+
 - What is the strongest single claim this paper makes?
 - What does it connect to in your existing notes?
 - What would falsify it?
@@ -74,6 +75,6 @@ The Socratic profile's lane policy is `policy.allow.write: []` — it cannot edi
 
 **Explanation**
 
-- Socratic profile design: [The Socratic](../../explanation/profiles/socratic.md)
+- Socratic profile design: [The Socratic](../../explanation/profiles/co-pi.md)
 - Discuss queue dashboard: [The discuss-queue dashboard](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)
 - Paper-note structure used as context: [Note body structure](../../explanation/knowledge/note-body-structure.md)

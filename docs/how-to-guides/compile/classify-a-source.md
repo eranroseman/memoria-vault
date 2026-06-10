@@ -86,4 +86,4 @@ Scroll to the "Key findings" section in the note body. Write 2–3 sentences sum
 - Previous step: [Capture and ingest a source](capture-and-ingest.md)
 - Next step: [Discuss a paper](discuss-a-paper.md)
 - Frontmatter schema reference: [Frontmatter fields](../../reference/frontmatter.md)
-- Vocabulary for `topic`, `methods`, `study_design`: [Frontmatter fields](../../reference/frontmatter.md#domain-fields)
+- Vocabulary for `topic`, `methods`, `study_design`: [Frontmatter fields](../../reference/frontmatter.md#the-field-kind-grammar)

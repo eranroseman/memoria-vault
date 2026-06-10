@@ -5,156 +5,87 @@ parent: Reference
 
 # Ingest routing
 
-Type detection dispatch table, per-type enrichment sources, and content extraction paths for the Librarian's ingest pipeline. For the full step-by-step procedure see [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
+The ingest engine ([src/.memoria/engines/ingest/](../../src/.memoria/engines/ingest)): the deterministic spine that turns a citekey into a draft paper-note bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP ([src/.memoria/mcp/ingest_mcp.py](../../src/.memoria/mcp/ingest_mcp.py)) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
 
 ---
 
-## Type detection dispatch
+## The pipeline
 
-Before any write, the Librarian identifies the input type and routes to the correct folder and template.
+[src/.memoria/engines/ingest/pipeline.py](../../src/.memoria/engines/ingest/pipeline.py) chains four deterministic stages into a single **draft bundle**:
 
-| Input signal | Detected type | Destination folder | Template |
-| --- | --- | --- | --- |
-| DOI or arXiv ID in `.bib` | Paper / preprint | `20-sources/01-papers/` | `paper-note.md` |
-| `github.com/…` or `gitlab.com/…` URL | Repository | `20-sources/02-items/` | `item-note.md` |
-| PyPI / npm / CRAN URL | Package | `20-sources/02-items/` | `item-note.md` |
-| Product or vendor URL | Product | `20-sources/02-items/` | `item-note.md` |
-| Standards body URL (IEEE, RFC, W3C) | Standard | `20-sources/02-items/` | `item-note.md` |
-| ORCID or person name | Person | `20-sources/03-entities/01-people/` | `person-note.md` |
-| ROR or institution name | Organization | `20-sources/03-entities/02-organizations/` | `organization-note.md` |
-| Conference / journal name | Venue | `20-sources/03-entities/03-venues/` | `venue-note.md` |
-| DOI not in `.bib` | Unknown | — | **Prompt human to add to Zotero first** |
+| Stage | Module | Does |
+| --- | --- | --- |
+| Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
+| Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref, merged per-field best-source-wins **with provenance**; references = the union across sources, deduped by DOI. |
+| Tier-1 extract | `extract.py` | Full text, pre-extracted-first: PMC JATS → local Zotero PDF via pymupdf4llm. A deterministic coherence check (chars/page, replacement-char ratio, word ratio) gatekeeps so only good text reaches the model; non-English text is flagged, never auto-failed. |
+| Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
 
-**Paper vs. item rule.** The split keys on a **stable publication ID, not medium**: a source carrying a DOI or arXiv ID is a `paper-note` (`01-papers/`). Datasets, software, repos, products, and standards *without* a DOI or arXiv ID are `item-note`s (`02-items/`).
+The bundle arrives **with two holes** the Librarian fills: `_proposed_classification` (LLM #1) and the `[!brief]` comparative read (LLM #2). `ingest_pipeline(citekey, enrich=True, pdf_path="")` is the MCP tool; without `enrich` only Tier-0 runs.
 
-If the type is ambiguous, the Librarian asks before proceeding. The agent never creates a note in the wrong folder.
+### Catalog outputs
+
+The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relationships.md)):
+
+- **Entities** — find-or-create records in `catalog/` (`paper`, `person`, `organization`, `venue`, `dataset`, `repository`), keyed on the stable ID so same-named entities never merge. Entities without a stable ID are recorded by name only, never node-created.
+- **Relationships** — the **given** edges on those entities (`cited_by`, `authored_by`, `published_in`, …), applied bidirectionally by the worker. Authored `links:` on notes are the PI's, never the engine's.
 
 ---
 
-## Per-type enrichment
+## The uncertainty floor (D51 / ADR-56)
 
-| Detected type | Metadata source | Content extraction | Cross-link checks |
-| --- | --- | --- | --- |
-| Article / preprint | OpenAlex + Semantic Scholar + PubMed | Marker extracts full text → `90-assets/extracts/<citekey>.md`; summary in note body | Authors → person-notes; cited works → existing paper citekeys |
-| Repository | GitHub API (REST or GraphQL) | `README.md` + `CHANGELOG.md` retrieved; summary into "What it is" | Primary maintainer → person-note; org owner → organization-note |
-| Package | PyPI / npm / CRAN API | Package description + project links | Maintainer → person-note; underlying repo → repo item-note |
-| Product | Homepage text via the ingest pipeline's MarkItDown extraction (HTML → Markdown) | Homepage text → summary | Vendor org → organization-note (if applicable) |
-| Standard | Standards body URL (IEEE, RFC, W3C) | MarkItDown for HTML standards docs | Issuing org → organization-note |
-| Person | ORCID API + OpenAlex Authors | (none — entity note) | Co-authors derived from shared paper-notes; affiliations → organization-notes |
-| Organization | ROR API + OpenAlex Institutions | (none — entity note) | Affiliated people → person-notes |
-| Venue | OpenAlex Venues + DBLP | (none — entity note) | (none) |
+The engine never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across the sources that resolved) in `[0,1]`; the floor comes from [src/.memoria/schemas/calibration.yaml](../../src/.memoria/schemas/calibration.yaml) (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
 
-**Content extraction fallback.** Marker handles PDFs; MarkItDown handles the long tail (HTML pages, Office documents, web standards). Extracted markdown lands in `90-assets/extracts/<citekey>.md`. Re-extraction is safe — overwriting the extract file does not affect the paper-note. For a PDF that arrives **without a DOI** (so the OpenAlex/Semantic Scholar metadata path can't resolve it), GROBID recovers header and reference fields from the PDF itself. For figure- and table-heavy papers where the key result is an image rather than prose, Hermes's `vision_analyze` is an alternative extraction path — available, not wired into the v0.1 pipeline (see the [MASSW-aspects proposal](../design/retrieval-and-schema-extensions.md)).
-
-### PDF extraction tools
-
-Marker is the chosen extractor; the others are documented for the cases Marker isn't the best fit.
-
-| Tool | Best for | Status |
-| --- | --- | --- |
-| **Marker** (Datalab) | Math-heavy papers; structured Markdown; `--use_llm` for accuracy | **Chosen** |
-| **Docling** (IBM / Linux Foundation) | General PDFs + tables/figures; ships a `docling-mcp` server that drops in alongside the Zotero/Obsidian MCPs | Strong alternative for table/figure-heavy corpora |
-| **PyMuPDF4LLM** | Fastest CPU-only path for clean, text-based PDFs | Pre-processing |
-| **MarkItDown** (Microsoft) | Web pages, Office docs, HTML → Markdown | Current fallback (above) |
-| **GROBID** (Inria) | Header / reference parsing for PDFs **without** a DOI (~0.87–0.90 F1) | Edge case only — not a pipeline stage |
-| **Nougat** (Meta) | Math LaTeX | Unmaintained — avoid |
-
-### Citation-format parsers — do not reimplement
-
-Every citation workflow rests on mature parsers. Encoding, cross-referencing, and CSL edge cases are deep; use the library rather than hand-rolling.
-
-| Format | Library | Note |
-| --- | --- | --- |
-| BibTeX / BibLaTeX | `bibtexparser` ≥ 2.0 | Handles encoding, special chars, cross-refs |
-| RIS | `rispy` | Round-trip; used internally by ASReview |
-| CSL-JSON | `citeproc-py` + `citeproc-py-styles` | CSL 1.0.1; plain/RST/HTML output |
-| JATS XML (publisher) | `pubmed-parser` or `lxml` | PMC + most publishers |
-| Convert between formats | `pypandoc` | Swiss-army knife across the above + Markdown |
-
-### Identifier reconciliation helpers
-
-For the enrichment path, when resolving an author, institution, or DOI to a stable identifier:
-
-- `habanero.content_negotiation(doi, format="bibtex")` — one call covers DOI → BibTeX / CSL-JSON / RIS.
-- [`drAbreu/alex-mcp`](https://github.com/drAbreu/alex-mcp) — author disambiguation (OpenAlex autocomplete + ORCID matching); installable as an MCP server companion.
-- OpenRefine + ORCID/ROR/Wikidata — bulk entity reconciliation for person and organization notes.
-- `python-orcid` (public search) and `pyalex.Institutions()["search"]` (→ ROR) — programmatic person/institution lookup.
+Below the floor, the bundle carries a `flag_needed` block instead of a silent best-source-wins merge: the Librarian raises a **near-tie `flag` card** in the Inbox ("Identity disagreement on `<citekey>`", with the agreement score and the disagreements), and the PI decides. One source found = trusted (1.0) — the floor measures _disagreement_, not coverage.
 
 ---
 
-## Frontmatter fields written at ingest
+## Derived artifacts
 
-Fields the Librarian populates on the new note at creation:
+The ingest MCP persists the un-gated derived artifacts the agent can't:
 
-| Field | Value | Notes |
+| Artifact | Path | Notes |
 | --- | --- | --- |
-| `type` | Detected type (see table above) | Set once; never changed. |
-| `lifecycle` | `captured` | The Tier-0 floor. The classification proposal promotes `captured → proposed`; the human promotes `proposed → current` at [Classify](../how-to-guides/compile/classify-a-source.md). |
-| `ingest_status` | `tier0` → `enriched` → `complete` | Pipeline progress while `captured`; `needs-human` is the terminal floor after bounded failed re-ingest. See [Frontmatter fields](frontmatter.md#ingest_status-values-ingested-source-notes). |
-| `created` | Today's date | `updated` is set to the same date at creation. |
-| `citekey` | From `.bib` | Paper notes only. |
-| `doi` | From `.bib` or OpenAlex | Promoted from `_enrichment` once verified. |
-| `extract_path` | `90-assets/extracts/<citekey>.md` | Paper notes only; populated after Marker runs. |
-| `pdf_uri` | `zotero://open-pdf/library/items/<key>` | Paper notes only. |
-| `zotero_uri` | `zotero://select/items/<key>` | Paper notes only. |
-| `enriched_date` | Today's date | Updated by each enrichment pass. |
-| `_proposed_classification` | Agent-proposed `topic`, `study_design`, `methods` | Reviewed and promoted by human at Classify. |
-| `_enrichment` | Citation count, abstract, venue, OA status, stable IDs | Refreshed on schedule by Librarian. |
-
-**Note body.** Beyond frontmatter, ingest leads the new paper note with a `[!brief]` comparative-read callout the Librarian composes in the same pass — top-5 most-similar existing sources selected via `qmd` (deterministic), then an LLM narrative ("overlaps with / may contradict / new construct"). The Librarian writes it because only the Librarian writes `20-sources/`. See [Obsidian callouts](obsidian-callouts.md).
-
-### Zotero fields without the Zotero API
-
-The pipeline reads only the `.bib`, so Zotero-native fields come from the Better BibTeX export — no live Zotero API dependency:
-
-- **`pdf_uri`** and the local PDF (for full-text extraction) are recovered from the bib `file` field — it carries the attachment path, whose `storage/<KEY>/` segment is the Zotero attachment key.
-- **`zotero_uri`** (the select-into-Zotero link) needs the *parent* item key, which a normal `.bib` omits. Add it with a one-line Better BibTeX **postscript** (Zotero → Better BibTeX → Preferences → Export → Postscript), which the pipeline reads from a `zoteroselect` field:
-
-  ```js
-  if (Translator.BetterBibTeX || Translator.BetterBibLaTeX) {
-    if (zotero.uri) {
-      tex.add({ name: 'zoteroselect',
-        value: zotero.uri.replace(/^https?:\/\/zotero\.org\/(?:users|groups)\/\w+\/items\/(\w+)$/,
-                                  'zotero://select/library/items/$1') })
-    }
-  }
-  ```
+| Full-text extract | `.memoria/data/extracts/<citekey>.md` | Outside the Librarian's write lane; the paper note's `extract_path` points here (the `extract-path-broken` detector checks it). |
+| Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** the gated note write — the durability anchor. |
 
 ---
 
-## Card states during ingest
+## The sweeps
 
-| Card state | Trigger | Notes |
-| --- | --- | --- |
-| `ready` | Watcher fires on `.bib` change or file-system event; watcher-triggered cards skip `triage` | — |
-| `running` | Dispatcher claims card (within 60 s of `ready`) | Librarian profile executes |
-| `done` | Librarian completes; sets `review_status: requested`; `_proposed_classification` populated | Human advances to Classify |
-| `blocked` | `max_retries` exhausted after repeated metadata fetch failures | Default retry limit: 3 |
+Two engines under [src/.memoria/engines/sweeps/](../../src/.memoria/engines/sweeps); neither writes the vault.
 
-For the step-by-step ingest procedure see [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
+### Re-ingest backstops — `reconcile.py`
+
+Re-ingest must be board-serialized, so each backstop is a detector that enqueues an **idempotent** re-ingest card (`hermes kanban create --idempotency-key reingest:<citekey>`); the board provides dedup, backoff, and the failure circuit-breaker (the `needs-human` floor).
+
+| Pass | Detects |
+| --- | --- |
+| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed). |
+| `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed). |
+
+`--dry-run` reports without touching the board. The installer wires both as the `memoria-sweeps` cron, every 15 minutes.
+
+### Retraction sweep — `retraction.py`
+
+Deterministic, read-only retraction-by-DOI from three sources, most authoritative first: the local Retraction Watch CSV (`--refresh` downloads it to `.memoria/data/retraction_watch.csv`; monthly cron), the live Crossref `update-to` delta, and Open Retractions as a cross-check. `retraction.py --sweep --vault V` scans the Catalog DOIs and raises Inbox **alerts** on hits — flag-don't-fix; the engine never flips a note.
 
 ---
 
-## Durability: the capture-intake log and the two sweeps
+## Frontmatter written at ingest
 
-Capture commits first. Before the gated note write, the capture entry point appends one line to `99-system/logs/capture-intake.jsonl` (un-gated — it is the durability anchor, so a failure anywhere downstream loses nothing):
-
-```json
-{"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero", "note_path": "20-sources/01-papers/<citekey>.md"}
-```
-
-Two backstops recover anything that stalls. Neither writes the vault — re-ingest must be **board-serialized** (single-lane WIP=1 makes find-or-create safe), so each is a detector that enqueues an **idempotent** re-ingest card (`hermes kanban create --idempotency-key reingest:<citekey>`). The board then provides dedup, backoff, and the failure circuit-breaker (the `needs-human` floor). Both live in `obsidian-paper-note/scripts/sweeps.py`:
-
-| Sweep | Detects | Re-drives |
-| --- | --- | --- |
-| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed) | Enqueues a re-ingest card so the first write is retried |
-| `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed) | Enqueues a re-ingest card to re-run enrichment |
-
-Run with `--dry-run` to report what would be enqueued without touching the board. The installer wires both passes as a deterministic, no-LLM cron (`memoria-sweeps`, every 15 minutes) that recovers stalled captures automatically.
+| Field | Value |
+| --- | --- |
+| `type` / `lifecycle` | `paper` / per the universal chain — `proposed` until the PI classifies. |
+| `citekey`, `title`, `doi`, `authors`, `year`, `venue`, `url` | From the merged record, with per-field provenance. |
+| `relationships` | The given edges from the link plan. |
+| `extract_path`, `pdf_uri` | The extract store path and the Zotero PDF URI. |
+| `_proposed_classification` | The Librarian's proposal (LLM hole #1), promoted by the PI at classify. |
 
 ---
 
 ## Related
 
-- The profile running the pipeline: [The Librarian](../explanation/profiles/librarian.md)
-- The note types routing dispatches to: [Note types and epistemic roles](../explanation/knowledge/note-types.md)
+- The schemas and field kinds these notes must satisfy: [Frontmatter fields](frontmatter.md)
+- The lane that runs the pipeline: [Profile capabilities](profiles.md)
+- The crons that wire the sweeps: [Installer (bootstrap)](installer.md)
+- The cards the sweeps and flags land in: [Kanban board reference](kanban-board.md)

@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Memoria turns your Obsidian vault into an active research workspace — seven AI agents that read your notes, surface connections, pull in papers, and write alongside you, with a human approval gate before any change lands.
+Memoria turns your Obsidian vault into an active research workspace — an AI research team — a co-PI you converse with and four background agents that read your notes, surface connections, pull in papers, and write alongside you, with a human approval gate before any change lands.
 
 Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A policy gate audits every proposed write; nothing reaches your notes without your confirmation.
 
@@ -17,17 +17,17 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 
 ---
 
-## The seven agents
+## The agents
 
 | Agent | Role |
 |---|---|
-| **Librarian** | Intake layer — fetches sources, enriches metadata, extracts PDF text, and proposes draft classifications for new items entering the vault |
-| **Mapper** | Read-only lens on your corpus — produces scope reports, gap reports, cluster density maps, and comparative briefs over what you already have |
-| **Socratic** | Interlocutor for your thinking — asks questions about a source, claim, or framing; architecturally write-denied so it can never touch your notes |
-| **Writer** | Turns evidence into draft prose (answer drafts, outlines, manuscript sections) that lands in review state, never directly into canonical synthesis |
-| **Verifier** | Traces claims back to sources, validates every `[@citekey]`, surfaces near-duplicates, and catches retracted sources before you publish |
-| **Coder** | Scaffolds handoffs to an external coding agent (Codex, Claude Code; Kilo Code and Aider planned) and records provenance in the vault |
-| **Linter** | Zero-LLM structural validator — frontmatter shape, link health, schema versions, and audit-log rotation; same result every run |
+| **co-PI** | The one agent you converse with (the ACP pane) — questions your thinking, explains the system, and delegates every write to a background lane; read-only by design |
+| **Librarian** | The four processing lanes (catalog · extract · link · map) — fetches and enriches sources, proposes classifications, link candidates, and corpus maps |
+| **Writer** | Turns evidence into draft prose (outlines, sections) in project scratch — review-gated, never directly into canonical synthesis |
+| **Peer-reviewer** | The independent verify gate — traces claims to sources, validates every `[@citekey]`, and red-teams arguments for soundness; flags, never fixes |
+| **Engineer** | Scaffolds handoffs to an external coding agent and owns the commit/revert gate |
+
+Five deterministic **engines** (ingest · search · clustering · verification sweeps · Linter) do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP.
 
 Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles)
 
@@ -35,7 +35,7 @@ Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explan
 
 ## How it works
 
-The installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the seven `memoria-*` profiles, provisions skills, and prints where to put your API keys.
+The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the five `memoria-*` profiles, provisions skills, and prints where to put your API keys.
 
 Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. A policy MCP layer intercepts every proposed write — you confirm or reject before anything lands in your vault.
 
@@ -57,7 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-**Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `vault/`):
+**Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `src/`):
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
@@ -88,7 +88,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 | Path | What |
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
-| `vault/` | The Obsidian vault — the runtime artifact the installer copies out |
+| `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
 | `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), the decision record (`adr/`), design notes (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
 
 ## Documentation
@@ -102,10 +102,16 @@ Start in [`docs/`](docs). New here? Begin with
 After editing vault source, re-deploy without reinstalling:
 
 ```bash
-bash scripts/install.sh --profiles-only                   # redeploy all seven profiles
+bash scripts/install.sh --profiles-only                   # redeploy all five profiles
 bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
 .\scripts/install.ps1 -ProfilesOnly                       # Windows equivalent
 ```
+
+## Citation
+
+If you use Memoria in your research, please cite it ([CITATION.cff](CITATION.cff)):
+
+> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents* (v0.1.1). <https://github.com/eranroseman/memoria-vault>
 
 ## Contributing
 

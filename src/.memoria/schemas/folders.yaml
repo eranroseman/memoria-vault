@@ -1,0 +1,52 @@
+# Canonical vault layout — THE single source for the type→folder map (ADR-47).
+# Read by: the Linter (lint:check-schema), the policy MCP (gated prefixes),
+# the pre-commit hook, the installer skeleton, and the template/Bases tests.
+categories: [catalog, notes, projects, inbox, system]
+
+# type → folder-home (relative to the vault root)
+homes:
+  paper: catalog/papers
+  person: catalog/people
+  organization: catalog/organizations
+  venue: catalog/venues
+  dataset: catalog/datasets
+  repository: catalog/repositories
+  fleeting: notes/fleeting
+  source: notes/source
+  claim: notes/claims
+  hub: notes/hubs
+  index: notes/index
+  candidate: inbox
+  gap: inbox
+  flag: inbox
+  alert: inbox
+  pattern: system/patterns
+
+# review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
+gated_prefixes:
+  - notes/claims/
+  - notes/hubs/
+
+# transient — items here converge to archived and leave active views
+transient_prefixes:
+  - inbox/
+
+# the full installer skeleton (content dirs get .gitkeep; ADR-55)
+skeleton:
+  - catalog/papers
+  - catalog/people
+  - catalog/organizations
+  - catalog/venues
+  - catalog/datasets
+  - catalog/repositories
+  - notes/fleeting
+  - notes/source
+  - notes/claims
+  - notes/hubs
+  - notes/index
+  - projects
+  - inbox
+  - system/logs
+  - system/templates
+  - system/patterns
+  - system/dashboards

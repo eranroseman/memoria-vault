@@ -1,0 +1,31 @@
+profile: memoria-peer-reviewer
+
+# The Peer-reviewer's lane ceiling (ADR-48/D38): the independent verify gate.
+# Flag, don't fix — it writes ONLY Inbox cards; everything under review is read-only.
+
+policy:
+  allow:
+    skills:
+      - obsidian
+      - qmd
+    write:
+      - "inbox/**"             # flag / gap cards (finding-first, ADR-51)
+  deny:
+    skills:
+      - review_gated_publish
+      - destructive_shell
+    write:
+      - "notes/**"             # never edits the thing under review
+      - "catalog/**"
+      - "projects/**"
+      - "system/**"
+  require:
+    - audit_log
+    - timeout_required
+    - source_tracking
+
+routing:
+  invocation: dispatched
+  external_api_policy: explicit_only
+  write_scope:
+    - "inbox/"

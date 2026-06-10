@@ -1,0 +1,17 @@
+type: claim
+category: notes
+gated: true # review-gated zone (ADR-03/ADR-47)
+enums:
+  lifecycle: [current, retracted, archived]
+  maturity: [seedling, budding, evergreen] # a property, never a gate (ADR-50)
+required:
+  type: literal:claim
+  lifecycle: enum:lifecycle
+  title: str
+  maturity: enum:maturity
+  sources: list # every claim → a citekey (provenance guardrail)
+optional:
+  links: map # supports / contradicts / … (ADR-52)
+  topics: list
+  superseded_by: str
+  created: date

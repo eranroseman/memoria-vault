@@ -49,7 +49,7 @@ The `.bib` auto-export from step 4 enqueues an `intake:source` card, and the gat
 - Propose `_proposed_classification` for your review
 - Write the result back to Zotero's `Extra` field (stable IDs only)
 
-**Manual re-ingest (fallback):** if the auto-dispatch didn't fire (a stale `.bib`, a dropped card), you can re-run ingest from the terminal (full syntax in [Hermes CLI](../../reference/hermes-cli.md#librarian)):
+**Manual re-ingest (fallback):** if the auto-dispatch didn't fire (a stale `.bib`, a dropped card), you can re-run ingest from the terminal (full syntax in [Hermes CLI](../../reference/hermes-cli.md#the-profile-set)):
 
 ```bash
 hermes -p memoria-librarian chat -s obsidian-paper-note
@@ -80,6 +80,5 @@ Add each source to Zotero and pin its citekey; the `.bib` auto-export enqueues o
 
 - Next step: [Classify a source](classify-a-source.md)
 - If the citekey isn't found: [Fix a stale .bib](../troubleshooting/fix-stale-bib.md)
-- Pin the citekey (step 2): [Pin a citekey](pin-a-citekey.md)
 - Ingest reference (routing table, per-type enrichment): [Ingest routing](../../reference/ingest.md)
 - Source types and note formats: [Note types](../../reference/note-types.md)

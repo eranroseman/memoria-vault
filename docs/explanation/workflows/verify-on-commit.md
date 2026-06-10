@@ -30,5 +30,5 @@ This is consistent with the rest of the system's posture: agents produce recomme
 
 ## Related
 
-- [The Verifier](../profiles/verifier.md) — what the Verifier checks and how
+- [The Verifier](../profiles/peer-reviewer.md) — what the Verifier checks and how
 - [Verify and revise a draft](../../how-to-guides/compose/verify-and-revise.md) — how to read the report and address gaps

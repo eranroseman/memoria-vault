@@ -1,0 +1,183 @@
+{
+  "workspaces": {
+    "Home": {
+      "main": {
+        "id": "home-main-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "home-main-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "home-main-home",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "home.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "vertical"
+      },
+      "left": {
+        "id": "home-left-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "home-left-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "home-left-files",
+                "type": "leaf",
+                "state": {
+                  "type": "file-explorer",
+                  "state": {}
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "right": {
+        "id": "home-right-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "home-right-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "home-right-board",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/board-state.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "horizontal",
+        "width": 360
+      },
+      "active": "home-main-home",
+      "lastOpenFiles": []
+    },
+    "Library": {
+      "main": {
+        "id": "library-main-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-main-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-main-empty",
+                "type": "leaf",
+                "state": {
+                  "type": "empty",
+                  "state": {}
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "vertical"
+      },
+      "left": {
+        "id": "library-left-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-left-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-left-reading",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/reading-pipeline.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "library-left-discuss",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/discuss-queue.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "library-left-catalog",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "catalog/catalog.base",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ],
+            "currentTab": 0
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "right": {
+        "id": "library-right-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-right-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-right-backlink",
+                "type": "leaf",
+                "state": {
+                  "type": "backlink",
+                  "state": {
+                    "collapseAll": false,
+                    "showSearch": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "active": "library-main-empty",
+      "lastOpenFiles": []
+    }
+  },
+  "active": "Home"
+}

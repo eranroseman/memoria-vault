@@ -1,0 +1,67 @@
+# memoria-peer-reviewer — verify, retraction/cite checks
+# Per-profile Hermes config. Hermes reads model / mcp_servers / agent / terminal /
+# checkpoints / hooks from THIS file (ADR-27). The installer substitutes the
+# {{PYTHON}} interpreter and {{VAULT_PATH}} at deploy time.
+# Recommended: set agent.reasoning_effort per lane via `hermes -p memoria-peer-reviewer config set`.
+model:
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: ~anthropic/claude-opus-latest
+
+# Vault access + policy gate run as MCP servers — loaded ONLY from config.yaml
+# mcp_servers (a standalone mcp.json is never read by Hermes; ADR-27 finding 1).
+mcp_servers:
+  policy:
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
+    timeout: 30
+  obsidian:
+    # Native MCP from the Local REST API plugin over HTTP (loopback). Replaces uvx
+    # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
+    # (~/.hermes/.env) so a sandbox + a production vault can serve different ports
+    # and coexist. Requires the plugin's HTTP server enabled on that port. Hermes
+    # can't skip TLS verify for the self-signed HTTPS port, hence plain HTTP on
+    # loopback. The exact `Authorization: Bearer` header is required by the plugin.
+    url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    timeout: 30
+    headers:
+      Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  pyzotero:
+    # Upstream read-only Zotero MCP (Zotero 7 local API) + Semantic Scholar citation tools
+    # (get_citations / get_references / find_related / search_semantic_scholar) — backs
+    # DOI/metadata resolution + citation context for cite-check and claim-trace without a
+    # terminal grant. Install once: pip install "pyzotero[mcp]" (or uv tool install).
+    command: "pyzotero-mcp"
+    timeout: 30
+  # academic (optional, not yet installed): hunter-heidenreich/academic-tools-mcp adds
+  # CrossRef + OpenCitations reference resolution (get_paper_references,
+  # search_crossref_by_title) for deeper cite-check; arXiv 2603.17339 `citecheck` is an
+  # alternative, purpose-built bibliographic-verification MCP. Enable either after
+  # installing it and confirming its run command.
+
+# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
+# verify / pyzotero via MCP). `web` is DISABLED: every external lookup (retraction,
+# Zotero, Semantic Scholar citation context) now goes through the verify + pyzotero MCP
+# servers — gated, audited, deterministic — so the agent makes no direct API calls and
+# the only vault-write path is the gated obsidian MCP. disabled_toolsets = every Hermes
+# toolset NOT in the keep-set. Update if Hermes adds toolsets.
+agent:
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
+
+# Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
+terminal:
+  cwd: "{{VAULT_PATH}}"
+
+# Shadow-git snapshot before destructive writes — mode-independent reversibility.
+checkpoints:
+  enabled: true
+
+# Write gate (ADR-28): the policy gate is a Python PLUGIN, not a shell hook.
+# Hermes registers MCP tools as mcp_<server>_<tool>, so the obsidian write is
+# mcp_obsidian_obsidian_append_content / _patch_content / _put_content; a shell hook (re.fullmatch "obsidian.*",
+# consent-gated, fail-OPEN) never fired. The plugin runs in-process in every mode
+# (-z/gateway/cron/ACP), matches in Python, gets the task_id, and is fail-CLOSED.
+# Deployed per lane by the installer (deploy_policy_plugin); see .memoria/plugins/.
+plugins:
+  enabled:
+    - memoria-policy-gate

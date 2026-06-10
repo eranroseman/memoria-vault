@@ -5,75 +5,72 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-Structural detectors, auto-fix classes, and severity scale for the Memoria Linter profile. For design rationale see [The Linter](../explanation/profiles/linter.md). For profile identity, permissions, and invocation level see [Profile capabilities](profiles.md).
+The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under [src/.memoria/engines/linter/](../../src/.memoria/engines/linter). Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. It is a _monitor, not a guarantor_: live in-app edits land immediately and are only caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
 
 ---
 
-## The eight structural detectors
+## The detectors
 
-Eight deterministic, zero-LLM checks. Full per-detector procedures live in [Structural detectors: silent-failure checks](https://github.com/eranroseman/memoria-vault/blob/main/vault/.memoria/profiles/memoria-linter/skills/structural-detectors/references/structural-detectors.md).
+[src/.memoria/engines/linter/detectors.py](../../src/.memoria/engines/linter/detectors.py) — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the engine running without dependencies.
 
-**Implementation:** three detectors are functions in `detectors.py` (pure Python stdlib); five run as live-Linter agent procedures that need runtime context the script lacks (git diff, SHA-256 audit-log pass, commit timestamps). `detectors.py` itself defines nine functions in total — these three structural detectors plus six housekeeping checks (broken-wikilink, fama-exposure, graph-analyze, orphan-working-files, schema-check, stale-answer-drafts, stale-fleeting) — so the "nine functions vs. eight structural detectors" counts measure different things and do not contradict.
+| Detector | Severity | Catches |
+| --- | --- | --- |
+| `schema-check` | MEDIUM | A typed note failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
+| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
+| `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
+| `misplaced-note` | MEDIUM / LOW | A typed note outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
+| `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
+| `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
+| `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |
+| `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
+| `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
+| `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
+| `stale-answer-drafts` | LOW | Unreviewed answer drafts older than 90 days (folder retired in v0.1.1; the check remains for migrated vaults). |
 
-| Slug | Severity | Implementation | Catches |
-| --- | --- | --- | --- |
-| `profile-install-drift` | LOW | agent procedure (git diff) | Deployed copy under `~/.hermes/profiles/memoria-<name>/` differs from its vault source (usually a `git pull` without re-running `scripts/install.sh --profiles-only`). |
-| `vault-hash-drift` | CRITICAL | agent procedure (SHA-256 vs audit log) | File written outside the policy MCP, or tampered with — the audit-log SHA-256 chain no longer matches. |
-| `skeleton-drift` | MEDIUM | agent procedure (git timestamps) | Human-facing `00-meta/` skeleton notes lag the design spec they mirror. |
-| `dashboard-field-drift` | HIGH | `detectors.py` (stdlib) | A Dataview query references a field no template emits → query returns zero rows and human sees "nothing to do" when there is work. |
-| `command-vocab-drift` | MEDIUM | agent procedure (SOUL.md scan) | A command named in the design isn't declared in its owner profile's SOUL.md (or vice versa). |
-| `plugin-config-drift` | MEDIUM | agent procedure (git HEAD diff) | Working `.obsidian/plugins/<plugin>/data.json` differs from the version committed at git HEAD. HIGH if `agent-client.autoAllowPermissions` flips to `true`. |
-| `orphan-working-files` | LOW | `detectors.py` (stdlib) | Editor backups / `.tmp.*` / `.bak` leftovers accumulated outside transient zones. |
-| `extract-path-broken` | HIGH | `detectors.py` (stdlib) | A paper-note's `extract_path` points at a Marker extract file that doesn't exist. |
+Run it directly:
 
-The defining property of all eight: **silent** — each failure looks like "nothing to do" while something is actually wrong.
+```bash
+python3 .memoria/engines/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift]
+```
+
+`--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
+
+---
+
+## The pre-commit gate
+
+The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md) D50): the installer wires [src/.memoria/engines/linter/pre-commit](../../src/.memoria/engines/linter/pre-commit) into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to [src/.memoria/engines/linter/precommit_check.py](../../src/.memoria/engines/linter/precommit_check.py), which validates each typed note against its schema via the shared loader ([src/.memoria/engines/lib/schema.py](../../src/.memoria/engines/lib/schema.py)). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+
+---
+
+## The golden copy
+
+[src/.memoria/engines/linter/golden.py](../../src/.memoria/engines/linter/golden.py) turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+
+| Command | Effect |
+| --- | --- |
+| `golden.py --vault V stage` | Stage/refresh the golden copy from the live system files (installer runs this). |
+| `golden.py --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
+| `golden.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
+| `golden.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
+
+---
+
+## The daily cron
+
+The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors and `golden.py check` over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
 
 ---
 
 ## Auto-fix classes
 
-Every proposed fix carries a class, hard-coded by the detector. The class determines whether the fix applies automatically or requires human action; the policy MCP enforces the gate at the tool layer.
-
-| Class | Examples | Default behavior |
-| --- | --- | --- |
-| `safe-and-unambiguous` | Trailing whitespace, missing `created` timestamp, missing required template field with one obvious value | **Auto-fix** (granted; delegated to Templater) |
-| `authorized-targeted` | Audit-log rotation, lint-findings file truncation, dashboard `last_updated` refresh | **Auto-fix** (granted; Linter's own logs/dashboards only) |
-| `schema-content` | Frontmatter field rename, value-set change, deprecated field removal | **Dry-run always** (not granted; requires `schema-migrate`) |
-| `review-gated-edit` | Any write to `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/` | **Deny** |
-
-Policy gate: `policy.allow.auto_fix.classes: ["safe-and-unambiguous", "authorized-targeted"]` in `lane-overrides/linter.yaml` — the two granted classes; the other two appear under `deny.auto_fix.classes`. The `review-gated-edit` *class* is denied outright (`AUTO_FIX_DENY_CLASSES`). Separately, a mutating write to a review-gated *zone* (a different mechanism) degrades to `dry_run` — see [Policy MCP](policy-mcp.md#auto-fix-policy).
-
----
-
-## Severity scale
-
-| Severity | Meaning | Dashboard surfacing |
-| --- | --- | --- |
-| `LOW` | Cosmetic or eventually-fixable. Does not block. | Aggregated weekly in `weekly-review`. |
-| `MEDIUM` | Real drift that hasn't yet caused breakage. | Surfaced in `weekly-review`; reviewed in the Friday ritual. |
-| `HIGH` | Active or imminent breakage. | Surfaced in Daily Health and `drift-watch`; pushed to Telegram. |
-| `CRITICAL` | System integrity at risk. Blocks dispatch until acknowledged. | Always pushed to Telegram. |
-
-**Verdict band rollup:** `PASS` if only LOW/INFO findings (or none). `REVIEW` if any HIGH or MEDIUM and no CRITICAL. `FAIL` only if any CRITICAL. A HIGH-only run is `REVIEW`, never `FAIL`.
-
----
-
-## Schedule
-
-The Linter is the first lane cleared for scheduled dispatch (read-mostly, low blast radius). Its jobs are defined in the profile's `cron/scheduled.yaml`:
-
-| Cron | Card | Cadence | Scope |
-| --- | --- | --- | --- |
-| `0 2 * * *` | `nightly-lint` | Nightly 02:00 | engine only (`detectors.py` — the 9 self-contained checks) |
-| `0 4 * * MON` | `weekly-drift-report` | Weekly, Monday 04:00 | engine + the 5 agent-procedure drift detectors |
-
-Both jobs dispatch the one `structural-detectors` skill; the card task selects the scope. The five drift detectors (git diff, SHA-256 over `~/.hermes`, audit-log pass) are heavier, so they run weekly, not nightly. Dispatch stays **disabled** until the lane has produced stable dry-run reports (`approvals.cron_mode` defaults to `deny`); it is enabled deliberately, not on install. The Linter also runs on demand and after each ingest batch.
+Auto-fix remains class-gated at the policy layer ([Policy MCP](policy-mcp.md)): `safe-and-unambiguous` and `authorized-targeted` may proceed (logged, within the lane's write scope), `schema-content` always degrades to `dry_run`, and `review-gated-edit` is always denied. The shipped v0.1.1 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
 
 ---
 
 ## Related
 
-- Profile identity, permissions, and invocation level: [Profile capabilities](profiles.md)
-- Design rationale: [The Linter](../explanation/profiles/linter.md)
-- Workflow: [run the Linter](../how-to-guides/operate/run-the-linter.md)
-- Recovery: [fix broken frontmatter](../how-to-guides/troubleshooting/fix-broken-frontmatter.md), [fix profile drift](../how-to-guides/troubleshooting/fix-profile-drift.md)
+- The schemas the detectors validate against: [Frontmatter fields](frontmatter.md)
+- The class gate enforcing auto-fix policy: [Policy MCP](policy-mcp.md)
+- Where the findings surface: [Dashboards](dashboards.md)
+- The crons the installer wires: [Installer (bootstrap)](installer.md)

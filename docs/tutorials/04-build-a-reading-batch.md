@@ -3,159 +3,81 @@ title: "Tutorial 04: Build a reading batch"
 parent: Tutorials
 ---
 
-
 # Tutorial 04: Build a reading batch
 
-**You will end with:** 5 classified paper-notes, 3 linked claim notes, and your first connected knowledge cluster visible in the vault.
+**You will end with:** a reading queue of around five sources on one topic, built by delegation, and the habit of working it as **one worklist** — not card by card.
 
-**Time:** 2–3 hours (spread across multiple sessions if needed).
+**Time:** 30 minutes to build the queue; reading time is yours, spread across sessions.
 
-**You will use:** Zotero, Obsidian command palette, and the reading-pipeline and open-questions dashboards.
+**You will use:** the co-PI pane, the Inbox, `sources.base`, and the reading-pipeline dashboard.
 
-**Prerequisite:** [Tutorial 03](03-bring-in-a-paper.md) complete.
-
----
-
-## Step 1 — Choose your batch
-
-Add 5 papers to Zotero that are all on the same topic area — the same area as the paper from Tutorial 03.
-
-Choose papers by this criteria:
-
-- Pick papers you've actually been meaning to read, not the most famous ones in the field
-- Mix: at least one older foundational paper, two or three recent ones (last 3 years), one you're uncertain about
-- Aim for papers that might disagree with each other — divergence produces better claim notes than consensus
-
-After adding all five to Zotero, verify each has a Better BibTeX citekey.
+**Prerequisite:** [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) complete.
 
 ---
 
-## Step 2 — Ingest the batch
+## Step 1 — Ask the co-PI for a batch
 
-For each paper in Zotero, click the item to select it, then:
+Open the co-PI pane and name a topic — the same area as your Tutorial 03 paper. For example:
 
-Press `Cmd+P` → type `capture zotero` → select **Memoria: capture from Zotero selection**.
+> "Build me a reading batch on notification receptivity — find the key papers and bring in the ones I should read. Mix foundational and recent; include something that might disagree with the rest."
 
-Do this 5 times, once per paper.
+The co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
 
-**What you'll see:** Each capture creates an `intake:source` card on the Librarian lane. The Librarian processes them in order. If you open `reading-pipeline.md`, you'll watch the notes arrive one by one over the next few minutes.
-
-Wait until all 5 notes appear in the dashboard before moving on.
+You can also seed the batch yourself: capture papers you already know via **Memoria: capture from Zotero selection** or **Memoria: capture source from URL**, exactly as in Tutorial 03. Both routes feed the same queue.
 
 ---
 
-## Step 3 — Read the briefs
+## Step 2 — Judge the candidates as a batch
 
-Open each new paper-note. Read its `[!brief]` callout before doing anything else.
+Candidate cards accumulate in the Inbox (`home.md` → **What needs me**), each with the honesty body from Tutorial 03. Sit down once and judge them together:
 
-By the third or fourth paper, the briefs will reference your earlier papers — "overlaps with `<earlier-citekey>` on receptivity timing." If a brief flags a potential contradiction with an earlier paper, pay extra attention to that section when you read. If it flags a new construct, note it in a fleeting note.
+- Read each card's `argument_against` and `certainty` first.
+- **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.
 
-Take brief notes (in a fleeting note, or directly in the paper-note body) about what each paper is actually saying. Not a summary — just the one or two things that matter to your thinking.
+This is the batch discipline ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): high-cardinality decisions belong in **one worklist worked in one sitting**, never N cards trickling at you. A queue you clear in a pass keeps your judgment sharp; a drip-feed trains you to wave things through.
 
----
-
-## Step 4 — Classify all five papers
-
-Work through each paper-note in turn. The classification flow from Tutorial 03:
-
-1. Review `_proposed_classification`
-2. Promote the fields you agree with into the main YAML
-3. Adjust the terms if needed
-4. Delete the `_proposed_classification` block
-5. Set `lifecycle: current`
-
-**Pay attention to vocabulary consistency.** If paper 1 uses `topic: receptivity-detection` and the Librarian proposed `topic: opportune-moments` for paper 3 — these probably refer to the same concept. Pick one term and use it across all five. You can always rename later with the Linter's `schema-migrate` command, but consistency now saves work later.
-
-After classifying all five, open `reading-pipeline.md`. All five should show `lifecycle: current`.
+For each kept paper, the Catalog entity already exists. Create its source note stub in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`) — or ask the co-PI to have stubs prepared for the keeps.
 
 ---
 
-## Step 5 — Write three claim notes
+## Step 3 — Open your reading queue
 
-From the five papers, write three claim notes. Choose claims that:
+Your queue is **not** the Inbox — candidates were a keep/skip decision; reading is a different kind of work, on a different surface:
 
-- You found genuinely surprising, or that changed how you think about the topic
-- Appear in more than one paper (multiple sources = stronger grounding)
-- Include at least one that *contradicts* or *qualifies* another — the tension is where synthesis happens
+- **`system/dashboards/sources.base`**, view **"To read & distill"** — every source note still at `lifecycle: proposed`, i.e. awaiting your reading.
+- **`system/dashboards/reading-pipeline.md`** — the same queue plus your claims by maturity: the whole Library side at a glance.
 
-For each claim note:
-
-Press `Cmd+P` → type `write claim` → select **Memoria: write claim note**
-
-Fill in:
-
-- **Title:** One falsifiable sentence. Your words, not the paper's.
-- **Body:** 3–5 sentences. Why you believe this, what would overturn it, what it connects to.
-- **sources:** The citekeys of the papers that support this claim: `[[citekey1]], [[citekey2]]`
-- **maturity:** `seedling` (the default — keep it)
-
-If your title contains "and" doing real work, you have two claims — split them into separate notes.
-
-After writing all three, you have a synthesis zone with three permanent notes.
-
-**See also:** [Note types — claim-note](../explanation/knowledge/note-types.md) — atomicity discipline and when to split a compound claim.
+The Library workspace (Tutorial 01) opens the reading pipeline in its left tabs — switch to it for reading sessions.
 
 ---
 
-## Step 6 — Link the claims to each other
+## Step 4 — Work the queue
 
-Open the first claim note. Read its body. Ask: which of the other two claims does this connect to?
+For each source, the Tutorial 03 loop: read (the extract lives at `.memoria/data/extracts/<citekey>.md`), then fill the source note — **In my words**, **Worth distilling**, **Tensions**.
 
-If claim A supports claim B, add to claim A's `relations:` frontmatter:
+Batch habits that pay off:
 
-```yaml
-relations:
-  supports:
-    - "[[claim-b-title]]"
-```
+- **Read in one topic, not round-robin.** By the third paper you'll notice agreements and tensions the first two hid — note them in each source's **Tensions** section.
+- **Keep vocabulary consistent.** If you tag one source `research_area: receptivity-detection`, don't tag the next `opportune-moments` for the same concept ([Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)).
+- **Advance the lifecycle as you go.** A source you've read and distilled from moves off `proposed` — and off the "To read & distill" view. The queue converging to empty is the success signal.
 
-If claim A contradicts claim C, add:
-
-```yaml
-relations:
-  contradicts:
-    - "[[claim-c-title]]"
-```
-
-Do this for all three claim notes — check whether each connects to the others. Not every note needs to connect to every other; link only where the relationship would matter in a future reading session.
-
-After linking, open the Obsidian graph view (`Cmd+P → Open graph view`). You'll see your 5 paper-notes and 3 claim notes connected.
-
----
-
-## Step 7 — Check the open-questions dashboard
-
-Open `00-meta/01-dashboards/open-questions.md`.
-
-This dashboard surfaces notes with `lifecycle: proposed` that have been sitting unclassified for too long, and claim notes with no incoming links (orphans). Check it now.
-
-If any of your five papers are still showing as `proposed`, go back and classify them.
-
-If any claim note shows as an orphan (no links in or out), add at least one link — either to a paper-note in `sources:` or to another claim note in `relations:`.
+Don't try to finish the batch in one session. The queue is durable; that's what it's for.
 
 ---
 
 ## What you have
 
-- 5 classified paper-notes (`lifecycle: current`)
-- 3 claim notes (`maturity: seedling`) linked to their source papers
-- Some claim-to-claim links in `relations:`
-- A visible cluster in the graph view
-- `reading-pipeline.md`: 5 items moved through the pipeline
-- `open-questions.md`: no orphans
-
-**The `[!brief]` callouts in your earlier papers have also updated.** Open one of the first papers you ingested — the brief now has more to compare against. The corpus is becoming denser.
+- ~5 Catalog entities and kept candidates, judged in one sitting
+- Source notes in `notes/source/`, filling in your own words as you read
+- A reading queue in `sources.base` / the reading-pipeline dashboard that you work down as a batch
+- A growing sense of where your sources agree and where they fight — fuel for the next tutorial
 
 ---
 
 ## What's next
 
-When you have roughly 15–20 notes on this topic (papers + claims combined), you're ready for a MOC — a Map of Content that gives the cluster a navigational hub. The threshold is in [Wikilink and link conventions](../reference/linking.md#moc-thresholds).
-
-When you're ready to write something from what you've built:
-
-[Tutorial 05 — Start a writing project](05-start-a-writing-project.md): scope the corpus for a project, let Mapper produce a corpus map, choose a framing, and commit an outline.
+[Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) — distill what you read into claims, gather them under a hub, and map your corpus.
 
 ---
 
-← [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) · [Tutorial 05: Start a writing project](05-start-a-writing-project.md) →
+← [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) · [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) →
