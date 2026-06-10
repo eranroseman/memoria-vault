@@ -27,8 +27,8 @@ def test_policy_hook():
         check("classify: prefixed file write", classify("file__write_file") == "write")
         check("classify: read_file -> None", classify("read_file") is None)
         check("classify: search_files -> None", classify("search_files") is None)
-        check("extract_path: filepath", extract_path({"filepath": "20-sources/x.md"}) == "20-sources/x.md")
-        check("extract_path: file_path", extract_path({"file_path": "20-sources/y.md"}) == "20-sources/y.md")
+        check("extract_path: filepath", extract_path({"filepath": "notes/source/x.md"}) == "notes/source/x.md")
+        check("extract_path: file_path", extract_path({"file_path": "notes/source/y.md"}) == "notes/source/y.md")
 
         # evaluate against a temp vault + real lane files -------------------------
         with tempfile.TemporaryDirectory() as td:
@@ -46,9 +46,9 @@ def test_policy_hook():
                         vault / ".memoria" / "mcp" / "_shared.py")
             (lanes / "writer.yaml").write_text(
                 "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
-                "      - \"10-inbox/02-answers/**\"\n      - \"30-synthesis/02-reference/**\"\n"
-                "  deny:\n    write:\n      - \"30-synthesis/01-claims/**\"\n"
-                "  require:\n    - audit_log\nrouting:\n  write_scope:\n    - \"10-inbox/02-answers/\"\n",
+                "      - \"inbox/**\"\n      - \"notes/hubs/**\"\n"
+                "  deny:\n    write:\n      - \"notes/claims/**\"\n"
+                "  require:\n    - audit_log\nrouting:\n  write_scope:\n    - \"inbox/\"\n",
                 encoding="utf-8")
 
             ev = lambda tool, path: evaluate_pre(
@@ -56,41 +56,41 @@ def test_policy_hook():
                  "extra": {"task_id": "T1"}}, "memoria-writer", vault)
 
             check("read tool not gated -> {}", ev("obsidian_get_file_contents", "x.md") == {})
-            check("allowed write -> {}", ev("obsidian_patch_content", "10-inbox/02-answers/a.md") == {})
-            r_dry = ev("obsidian_patch_content", "30-synthesis/02-reference/r.md")
+            check("allowed write -> {}", ev("obsidian_patch_content", "inbox/a.md") == {})
+            r_dry = ev("obsidian_patch_content", "notes/hubs/r.md")
             check("review-gated write -> block", r_dry.get("decision") == "block" and "review-gated" in r_dry["reason"])
-            r_deny = ev("obsidian_delete_file", "30-synthesis/01-claims/c.md")
+            r_deny = ev("obsidian_delete_file", "notes/claims/c.md")
             check("denied write -> block", r_deny.get("decision") == "block")
             # missing task_id -> fail-closed block
             r_fc = evaluate_pre({"tool_name": "obsidian_patch_content",
-                                 "tool_input": {"filepath": "10-inbox/02-answers/a.md"}},
+                                 "tool_input": {"filepath": "inbox/a.md"}},
                                 "memoria-writer", vault)
             check("missing task_id -> fail-closed block", r_fc.get("decision") == "block")
 
             # native obsidian MCP (Local REST API plugin) tool names are gated the same -
             check("native vault_write allowed zone -> {}",
-                  ev("mcp_obsidian_vault_write", "10-inbox/02-answers/n.md") == {})
+                  ev("mcp_obsidian_vault_write", "inbox/n.md") == {})
             check("native vault_write denied zone -> block",
-                  ev("mcp_obsidian_vault_write", "30-synthesis/01-claims/c.md").get("decision") == "block")
+                  ev("mcp_obsidian_vault_write", "notes/claims/c.md").get("decision") == "block")
             # hard-deny: blocked even in an ALLOWED zone (overrides the lane check)
             check("native command_execute -> hard block",
                   ev("mcp_obsidian_command_execute", "").get("decision") == "block")
             check("native vault_delete (allowed zone) -> hard block",
-                  ev("mcp_obsidian_vault_delete", "10-inbox/02-answers/a.md").get("decision") == "block")
+                  ev("mcp_obsidian_vault_delete", "inbox/a.md").get("decision") == "block")
             check("native vault_move (allowed zone) -> hard block",
-                  ev("mcp_obsidian_vault_move", "10-inbox/02-answers/a.md").get("decision") == "block")
+                  ev("mcp_obsidian_vault_move", "inbox/a.md").get("decision") == "block")
 
             # Hermes `file` toolset writes are gated the same way (#51, Coder/Linter) ---
             evf = lambda tool, path: evaluate_pre(
                 {"tool_name": tool, "tool_input": {"file_path": path},
                  "extra": {"task_id": "T1"}}, "memoria-writer", vault)
-            check("file write_file allowed zone -> {}", evf("write_file", "10-inbox/02-answers/f.md") == {})
-            r_fg = evf("write_file", "30-synthesis/01-claims/c.md")
+            check("file write_file allowed zone -> {}", evf("write_file", "inbox/f.md") == {})
+            r_fg = evf("write_file", "notes/claims/c.md")
             check("file write_file denied zone -> block", r_fg.get("decision") == "block")
             # to_vault_relative: absolute-under-vault relativized -> gated against lane globs
-            abs_claim = str(vault / "30-synthesis" / "01-claims" / "c.md")
+            abs_claim = str(vault / "notes" / "claims" / "c.md")
             check("to_vault_relative: abs under vault -> relative",
-                  to_vault_relative(abs_claim, vault) == "30-synthesis/01-claims/c.md")
+                  to_vault_relative(abs_claim, vault) == "notes/claims/c.md")
             check("file write abs in-vault denied zone -> block",
                   evf("write_file", abs_claim).get("decision") == "block")
             # absolute path OUTSIDE the vault -> None -> not gated (proceeds)
@@ -100,19 +100,19 @@ def test_policy_hook():
                   evf("write_file", "/tmp/external-repo/main.py") == {})
 
             # pre -> post reversibility roundtrip (paired before/after hash) ------
-            (vault / "10-inbox" / "02-answers").mkdir(parents=True, exist_ok=True)
+            (vault / "inbox").mkdir(parents=True, exist_ok=True)
             ev_payload = {"tool_name": "obsidian_put_content",
-                          "tool_input": {"filepath": "10-inbox/02-answers/round.md"},
+                          "tool_input": {"filepath": "inbox/round.md"},
                           "extra": {"task_id": "T9", "tool_call_id": "call-xyz"}}
             pre = evaluate_pre(ev_payload, "memoria-writer", vault)
             stash = _pending_file(vault, _stash_key(ev_payload))
             check("pre allow stashes before_hash", pre == {} and stash.is_file())
             # the tool "runs": the file now exists with content
-            (vault / "10-inbox" / "02-answers" / "round.md").write_text("answer body", encoding="utf-8")
+            (vault / "inbox" / "round.md").write_text("answer body", encoding="utf-8")
             post = evaluate_post(ev_payload, "memoria-writer", vault)
             # A missing audit file means complete_write failed (swallowed above); report
             # it as a clear check instead of crashing the whole suite on read_text().
-            audit_file = vault / "99-system" / "logs" / "audit.jsonl"
+            audit_file = vault / "system" / "logs" / "audit.jsonl"
             check("post wrote the audit log", audit_file.is_file())
             audit_lines = audit_file.read_text(encoding="utf-8").splitlines() if audit_file.is_file() else []
             completes = [json.loads(ln) for ln in audit_lines if json.loads(ln).get("decision") == "write_complete"]

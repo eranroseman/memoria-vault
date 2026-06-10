@@ -1,0 +1,14 @@
+# Fleeting captures — distill or archive (proposed → archived; ADR-50).
+filters:
+  and:
+    - file.inFolder("notes/fleeting")
+views:
+  - type: table
+    name: "To process"
+    filters:
+      and:
+        - 'lifecycle == "proposed"'
+    order:
+      - file.name
+      - origin
+      - file.ctime

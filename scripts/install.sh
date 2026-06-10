@@ -269,43 +269,28 @@ ensure_hermes() {
 SKELETON_DIRS=(
   .memoria/csl
   .memoria/lane-overrides
-  .memoria/profiles/memoria-coder/cron
-  .memoria/profiles/memoria-coder/skills
   .memoria/profiles/memoria-librarian/cron
   .memoria/profiles/memoria-librarian/skills
-  .memoria/profiles/memoria-linter/cron
-  .memoria/profiles/memoria-mapper/cron
-  .memoria/profiles/memoria-mapper/skills
-  .memoria/profiles/memoria-socratic/cron
-  .memoria/profiles/memoria-socratic/skills
-  .memoria/profiles/memoria-verifier/cron
-  .memoria/profiles/memoria-verifier/skills
-  .memoria/profiles/memoria-writer/cron
-  .memoria/profiles/memoria-writer/skills
-  10-inbox/01-fleeting
-  10-inbox/02-answers
-  10-inbox/03-candidates
-  20-sources/01-papers
-  20-sources/02-items
-  20-sources/03-entities/01-people
-  20-sources/03-entities/02-organizations
-  20-sources/03-entities/03-venues
-  30-synthesis/01-claims
-  30-synthesis/02-reference
-  30-synthesis/03-moc
-  40-workbench
-  50-deliverables/01-manuscripts
-  50-deliverables/02-presentations
-  50-deliverables/03-media
-  50-deliverables/04-releases
-  90-assets/extracts
-  95-archive
-  99-system/board
-  99-system/eval
-  99-system/logs
-  99-system/logs/sessions
-  99-system/metrics
-  99-system/skills
+  catalog/papers
+  catalog/people
+  catalog/organizations
+  catalog/venues
+  catalog/datasets
+  catalog/repositories
+  notes/fleeting
+  notes/source
+  notes/claims
+  notes/hubs
+  notes/index
+  projects
+  inbox
+  system/board
+  system/logs
+  system/logs/sessions
+  system/metrics
+  system/templates
+  system/patterns
+  system/dashboards
 )
 
 copy_vault() {

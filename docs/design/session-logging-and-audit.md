@@ -108,8 +108,8 @@ injection or misconfiguration. Below 5 samples the band is downgraded to
   trust model: the threat is silent corruption and agent error, not a malicious admin.
 - **One number for triage.** The trust score exists so the daily-glance can answer
   "is any lane slipping?" without reading raw logs; the underlying signals stay
-  available in [Fleet Health [placeholder]](../../src/00-meta/01-dashboards/fleet-health.md)
-  and [Audit log](../../src/00-meta/01-dashboards/audit-log.md).
+  available in [Fleet Health [placeholder]](../../src/system/dashboards/fleet-health.md)
+  and [Audit log](../../src/system/dashboards/audit-log.md).
 - **Denials are load-bearing.** A spike in denials is how a prompt-injection or
   misconfigured lane shows up; the formula reflects that by weighting it top.
 

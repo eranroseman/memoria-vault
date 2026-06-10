@@ -62,10 +62,8 @@ MUTATING_ACTIONS = frozenset({"write", "append", "move", "delete", "mkdir", "aut
 # action here degrades to dry_run so a human approves the write. (policy.md
 # "decision protocol" + "two structural rules".)
 REVIEW_GATED_PREFIXES = (
-    "30-synthesis/01-claims/",
-    "30-synthesis/02-reference/",
-    "30-synthesis/03-moc/",
-    "50-deliverables/",
+    "notes/claims/",
+    "notes/hubs/",
 )
 
 # Linter auto_fix is class-gated. These two classes may proceed; the other two
@@ -77,7 +75,7 @@ AUTO_FIX_DENY_CLASSES = frozenset({"review-gated-edit"})
 # SHA-256 of the empty byte string -- the before_hash of a freshly-created file.
 EMPTY_SHA256 = "sha256:" + hashlib.sha256(b"").hexdigest()
 
-AUDIT_RELPATH = "99-system/logs/audit.jsonl"
+AUDIT_RELPATH = "system/logs/audit.jsonl"
 LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 
 
@@ -418,7 +416,7 @@ def sha256_file(path: Path) -> str:
 
 
 def append_audit(vault: Path, entry: dict) -> None:
-    """Append one JSON object (one line) to 99-system/logs/audit.jsonl. The
+    """Append one JSON object (one line) to system/logs/audit.jsonl. The
     append-only JSONL format survives crashes and is grep-friendly."""
     append_jsonl(vault / AUDIT_RELPATH, [entry])
 

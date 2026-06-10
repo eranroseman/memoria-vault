@@ -1,0 +1,26 @@
+# The reading list — source notes by lifecycle (proposed = awaiting your reading).
+filters:
+  and:
+    - file.inFolder("notes/source")
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "To read & distill"
+    filters:
+      and:
+        - 'lifecycle == "proposed"'
+    order:
+      - file.name
+      - entity
+      - source_type
+      - file.mtime
+  - type: table
+    name: "All sources"
+    groupBy:
+      property: lifecycle
+      direction: ASC
+    order:
+      - file.name
+      - entity
+      - research-area
+      - lifecycle

@@ -16,7 +16,7 @@ Quick checks that the system itself is up (run from a terminal):
 | Hermes + profiles | `hermes profile list` | all 7 `memoria-*` profiles respond |
 | Gateway / API | `hermes gateway status` | running on `:8642` |
 | Policy + obsidian MCP | trigger a write, watch `99-system/logs/audit.jsonl` | new `allow_with_log` rows appear |
-| Cron scheduler | [[daily-health\|Daily Health]] § Cron status | the four standard tasks show recent runs |
+| Cron scheduler | [[board-state\|Board State]] § Live worker cards | the four standard tasks show recent runs |
 | Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
 
 Profiles: `memoria-{librarian, mapper, socratic, writer, verifier, coder, linter}`.
@@ -32,7 +32,7 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 | ACP pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
 | Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state\|Board State]] |
 | New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
-| Linter findings stale | Cron not running | Cron status in [[daily-health\|Daily Health]] |
+| Linter findings stale | Cron not running | freshness in [[drift-watch\|Drift Watch]] |
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |
 
@@ -42,7 +42,7 @@ Step-by-step recipes for the common ones: [stuck card](https://eranroseman.githu
 
 The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/safe-mode); the essentials:
 
-**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `20-sources/01-papers/<citekey>.md` from the [[paper-note|paper-note template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/compile/capture-and-ingest).)
+**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `catalog/papers/<citekey>.md` from the [[paper|paper template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/compile/capture-and-ingest).)
 
 **Review ([policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** the runtime gate is bypassed — **treat every write as if it could land somewhere it shouldn't.** Edit carefully, `git commit` often; replay the audit log when the MCP returns.
 

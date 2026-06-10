@@ -14,7 +14,7 @@ Two write families are gated (see classify):
     matcher, so a file-tool write to a review-gated zone is blocked too (#51).
 The `terminal` toolset is deliberately NOT gated here: an arbitrary shell command
 has no single path to evaluate, so those lanes stay bounded by their lane-override
-`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> 99-system/logs/) plus
+`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> system/logs/) plus
 review-to-promote. The complete write boundary for non-Coder/Linter lanes is the
 *capability* layer -- they don't get the terminal/file toolsets at all
 (`agent.disabled_toolsets`; tool-registry.yaml). This hook is the path layer.
@@ -157,7 +157,7 @@ def _stash_key(payload: dict) -> str:
 
 
 def _pending_file(vault: Path, key: str) -> Path:
-    return vault / "99-system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
+    return vault / "system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
 
 
 def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:

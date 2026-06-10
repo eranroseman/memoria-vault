@@ -75,7 +75,7 @@ def test_policy_mcp():
         writer = LanePolicy(
             profile="memoria-writer",
             allow_write=["10-inbox/02-answers/**", "40-workbench/*/04-drafts/**",
-                         "40-workbench/*/02-framing/**", "30-synthesis/02-reference/**"],
+                         "40-workbench/*/02-framing/**", "notes/hubs/**"],
             deny_write=["20-sources/**", "30-synthesis/01-claims/**", "50-deliverables/**"],
             require=["audit_log"],
         )
@@ -83,12 +83,12 @@ def test_policy_mcp():
                               deny_write=["**"], require=["audit_log"])
         linter = LanePolicy(
             profile="memoria-linter",
-            allow_write=["99-system/logs/**"],
+            allow_write=["system/logs/**"],
             allow_auto_fix_classes=["safe-and-unambiguous", "authorized-targeted"],
             deny_write=["10-inbox/**", "20-sources/**", "30-synthesis/**",
                         "40-workbench/**", "50-deliverables/**"],
             deny_auto_fix_classes=["schema-content", "review-gated-edit"],
-            require=["audit_log"], write_scope=["99-system/logs/"],
+            require=["audit_log"], write_scope=["system/logs/"],
         )
         # The remaining three lanes mirror their real .memoria/lane-overrides/*.yaml
         # so the gate contract for all seven profiles is unit-covered (closes the
@@ -131,7 +131,7 @@ def test_policy_mcp():
         check("Writer write to answers -> allow",
               d(writer, "write", "10-inbox/02-answers/a.md") == "allow")
         check("Writer write to review-gated reference -> dry_run (degrade)",
-              d(writer, "write", "30-synthesis/02-reference/r.md") == "dry_run")
+              d(writer, "write", "notes/hubs/r.md") == "dry_run")
         check("Writer write to claims -> deny (lane deny beats degrade)",
               d(writer, "write", "30-synthesis/01-claims/c.md") == "deny")
         check("Socratic write anywhere -> deny (hard write-denial)",
@@ -141,17 +141,17 @@ def test_policy_mcp():
         check("Coder read normal zone -> allow",
               d(coder, "read", "20-sources/01-papers/p.md") == "allow")
         check("Coder read review-gated -> allow_with_log",
-              d(coder, "read", "30-synthesis/01-claims/c.md") == "allow_with_log")
+              d(coder, "read", "notes/claims/c.md") == "allow_with_log")
 
         # ---- auto_fix class gating (Linter) ------------------------------------ #
         check("Linter auto_fix safe class in logs -> allow_with_log",
-              d(linter, "auto_fix", "99-system/logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
+              d(linter, "auto_fix", "system/logs/audit.jsonl", {"class": "safe-and-unambiguous"}) == "allow_with_log")
         check("Linter auto_fix schema-content -> dry_run",
-              d(linter, "auto_fix", "99-system/logs/x.md", {"class": "schema-content"}) == "dry_run")
+              d(linter, "auto_fix", "system/logs/x.md", {"class": "schema-content"}) == "dry_run")
         check("Linter auto_fix review-gated-edit -> deny",
-              d(linter, "auto_fix", "99-system/logs/x.md", {"class": "review-gated-edit"}) == "deny")
+              d(linter, "auto_fix", "system/logs/x.md", {"class": "review-gated-edit"}) == "deny")
         check("Linter auto_fix with no class -> deny",
-              d(linter, "auto_fix", "99-system/logs/x.md", None) == "deny")
+              d(linter, "auto_fix", "system/logs/x.md", None) == "deny")
 
         # ---- delete / mkdir / report ------------------------------------------- #
         check("Coder delete without authorization -> deny",

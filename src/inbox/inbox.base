@@ -1,0 +1,41 @@
+# The Inbox board — the agent→human action queue (ADR-51). One base grouped by
+# card type; "Needs me" = cards in `proposed` (awaiting the PI). Converges to empty.
+filters:
+  and:
+    - file.inFolder("inbox")
+    - 'file.ext == "md"'
+formulas:
+  age_days: '(now() - file.ctime).days.round(0)'
+properties:
+  formula.age_days:
+    displayName: "Age (days)"
+views:
+  - type: table
+    name: "Needs me"
+    filters:
+      and:
+        - 'lifecycle == "proposed"'
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - file.name
+      - type
+      - certainty
+      - loudness
+      - raised_by
+      - formula.age_days
+  - type: table
+    name: "All cards"
+    filters:
+      not:
+        - 'lifecycle == "archived"'
+    groupBy:
+      property: type
+      direction: ASC
+    order:
+      - file.name
+      - type
+      - lifecycle
+      - raised_by
+      - formula.age_days

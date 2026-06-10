@@ -1,20 +1,24 @@
 {
   "workspaces": {
-    "Human": {
+    "Home": {
       "main": {
-        "id": "human-main-root",
+        "id": "home-main-root",
         "type": "split",
         "children": [
           {
-            "id": "human-main-tabs",
+            "id": "home-main-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "human-main-empty",
+                "id": "home-main-home",
                 "type": "leaf",
                 "state": {
-                  "type": "empty",
-                  "state": {}
+                  "type": "markdown",
+                  "state": {
+                    "file": "home.md",
+                    "mode": "preview",
+                    "source": false
+                  }
                 }
               }
             ]
@@ -23,207 +27,15 @@
         "direction": "vertical"
       },
       "left": {
-        "id": "human-left-root",
+        "id": "home-left-root",
         "type": "split",
         "children": [
           {
-            "id": "human-left-tabs",
+            "id": "home-left-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "human-left-daily-health",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "00-meta/01-dashboards/daily-health.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "right": {
-        "id": "human-right-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "human-right-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "human-right-board-state",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "00-meta/01-dashboards/board-state.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "active": "human-main-empty",
-      "lastOpenFiles": [
-        "00-meta/01-dashboards/daily-health.md",
-        "00-meta/01-dashboards/board-state.md"
-      ]
-    },
-    "Reading & Processing": {
-      "main": {
-        "id": "reading-main-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "reading-main-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "reading-main-empty",
-                "type": "leaf",
-                "state": {
-                  "type": "empty",
-                  "state": {}
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical"
-      },
-      "left": {
-        "id": "reading-left-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "reading-left-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "reading-left-discuss-queue",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "00-meta/01-dashboards/discuss-queue.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "reading-left-reading-pipeline",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "00-meta/01-dashboards/reading-pipeline.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ],
-            "currentTab": 0
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "right": {
-        "id": "reading-right-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "reading-right-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "reading-right-backlink",
-                "type": "leaf",
-                "state": {
-                  "type": "backlink",
-                  "state": {
-                    "collapseAll": false,
-                    "showSearch": false
-                  }
-                }
-              },
-              {
-                "id": "reading-right-outgoing-link",
-                "type": "leaf",
-                "state": {
-                  "type": "outgoing-link",
-                  "state": {
-                    "linksCollapsed": false,
-                    "unlinkedCollapsed": true
-                  }
-                }
-              },
-              {
-                "id": "reading-right-acp",
-                "type": "leaf",
-                "state": {
-                  "type": "agent-client-view",
-                  "state": {}
-                }
-              }
-            ],
-            "currentTab": 2
-          }
-        ],
-        "direction": "horizontal",
-        "width": 360
-      },
-      "active": "reading-main-empty",
-      "lastOpenFiles": [
-        "00-meta/01-dashboards/discuss-queue.md",
-        "00-meta/01-dashboards/reading-pipeline.md"
-      ]
-    },
-    "Drafting": {
-      "main": {
-        "id": "drafting-main-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "drafting-main-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "drafting-main-empty",
-                "type": "leaf",
-                "state": {
-                  "type": "empty",
-                  "state": {}
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical"
-      },
-      "left": {
-        "id": "drafting-left-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "drafting-left-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "drafting-left-file-explorer",
+                "id": "home-left-files",
                 "type": "leaf",
                 "state": {
                   "type": "file-explorer",
@@ -237,15 +49,117 @@
         "width": 320
       },
       "right": {
-        "id": "drafting-right-root",
+        "id": "home-right-root",
         "type": "split",
         "children": [
           {
-            "id": "drafting-right-tabs",
+            "id": "home-right-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "drafting-right-backlink",
+                "id": "home-right-board",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/board-state.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "horizontal",
+        "width": 360
+      },
+      "active": "home-main-home",
+      "lastOpenFiles": []
+    },
+    "Library": {
+      "main": {
+        "id": "library-main-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-main-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-main-empty",
+                "type": "leaf",
+                "state": {
+                  "type": "empty",
+                  "state": {}
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "vertical"
+      },
+      "left": {
+        "id": "library-left-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-left-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-left-reading",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/reading-pipeline.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "library-left-discuss",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/discuss-queue.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "library-left-catalog",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "catalog/catalog.base",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ],
+            "currentTab": 0
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "right": {
+        "id": "library-right-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "library-right-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "library-right-backlink",
                 "type": "leaf",
                 "state": {
                   "type": "backlink",
@@ -261,9 +175,9 @@
         "direction": "horizontal",
         "width": 320
       },
-      "active": "drafting-main-empty",
+      "active": "library-main-empty",
       "lastOpenFiles": []
     }
   },
-  "active": "Human"
+  "active": "Home"
 }
