@@ -15,9 +15,9 @@ nav_exclude: true
 > boundaries, and the flow principle. This is the **one model** — it serves as both the
 > cognitive model and the build view (an earlier draft kept two and mapped them; one good
 > model beats two perfect ones). The redesign's
-> [§2](memoria-redesign.md) is the summary; this is the full treatment. Firm decisions
+> [§2](memoria-design-update.md) is the summary; this is the full treatment. Firm decisions
 > graduate to ADRs (rationale in
-> [Memoria redesign — decisions & rationale](memoria-redesign-decisions.md), D36/D40/D41/D42).
+> [Memoria design update — decisions & rationale](memoria-design-update-decisions.md), D36/D40/D41/D42).
 
 ## 1. Guiding principle
 

@@ -12,7 +12,7 @@ nav_exclude: true
 # Graph visualization — typed projections of the relationships/links graph
 
 > **Status: exploration** (a capability bundle a design note, not yet adopted). Builds on the
-> [four-layer redesign](memoria-redesign.md) — specifically the **relationships vs
+> [four-layer redesign](memoria-design-update.md) — specifically the **relationships vs
 > links** distinction — and on issue #197 (the OSS graph/cluster/NLP survey, largely
 > resolved by [ADR-33](../adr/33-cluster-mcp-bertopic.md)). #197 answers _what
 > computes the graph_; this explores _what the human sees_. Firm decisions graduate to
