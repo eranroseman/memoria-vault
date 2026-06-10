@@ -22,6 +22,10 @@ Below the Inbox sits the execution layer. A board-export cron projects each live
 
 The same pass appends a compact snapshot line to `system/logs/board-state.jsonl` with per-lane counts and review-queue depth; Home's status glance and the [status line](../obsidian/the-status-line.md) read this instead of re-querying the database, keeping their refresh lightweight.
 
+## The two layers meet at `done`
+
+The layers are not parallel feeds the PI has to watch separately — they are unified at the moment a lane finishes. When the export pass observes a worker card transition into `done`, it raises **one `work-prompt` card in the Inbox**: which lane finished, the card's goal, where the output landed, and the action (review, then accept or archive). So a finished work product never waits silently in the mechanic's view — it surfaces in the same "Needs me" queue as every other agent→human signal, written through the shared card writer under the honesty rules ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)): action + what happened + where to look, never a verdict. The emit is idempotent — the export diffs against its state cache and names the prompt after the card id, so a done card raises exactly one prompt, once.
+
 ---
 
 ## The projections are one-way and ephemeral

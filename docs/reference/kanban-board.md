@@ -61,12 +61,18 @@ triage ──► todo ──► ready ──► running ──► done ──►
 | `ready` | Dispatchable. | Human (`hermes kanban release`) — delegation-created cards arrive ready to specify |
 | `running` | A lane owns the card and is executing. | Dispatcher (atomic claim + spawn); workers do not self-claim |
 | `blocked` | Worker cannot proceed; carries a `reason`. | Worker blocks; human clears (`hermes kanban unblock`) |
-| `done` | Worker finished; the result surfaces as an Inbox card or a proposed note. | Worker |
+| `done` | Worker finished; the result surfaces as an Inbox card or a proposed note. The board export raises **one `work-prompt` review card** in `inbox/` on this transition (see below). | Worker |
 | `archived` | Terminal. | `hermes kanban archive` |
 
 Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (`clean` / `issues-found` / `inconclusive` — the soft verdict on verification cards, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
 
 **Rejection spawns a new card** (`supersedes: <original-id>`; the original archives as `superseded`), mirroring claim supersession — each card is one attempt, so the audit trail can't lie. Abandoned work archives as `discarded`.
+
+### Done → review prompt
+
+The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — a finished card must surface there, not wait silently in a board column. When the board-export cron ([src/.memoria/mcp/board_export.py](../../src/.memoria/mcp/board_export.py)) observes a card transition into `done`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — review the work product, then accept it or archive the board card. Honesty rules apply: action + what happened + where to look, never a verdict.
+
+The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same done card never produces two prompts across cron runs. On a fresh cache (first run), only cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
 
 ---
 

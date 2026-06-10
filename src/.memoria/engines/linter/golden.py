@@ -31,6 +31,7 @@ SYSTEM_PREFIXES = (
     "system/templates/",
     "system/dashboards/",
     "system/patterns/",
+    "system/eval/",
     "system/scripts/",
 )
 SYSTEM_FILES = ("home.md", "system/vocabulary.md", "AGENTS.md")

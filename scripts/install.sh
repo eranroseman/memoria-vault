@@ -292,6 +292,7 @@ SKELETON_DIRS=(
   system/metrics
   system/templates
   system/patterns
+  system/eval
   system/dashboards
 )
 
@@ -851,6 +852,31 @@ wire_metrics_cron() {
   ok "Metrics cron wired"
 }
 
+wire_eval_cron() {
+  hdr "Eval cron (vault-eval, ADR-11)"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the eval cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/eval-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-eval.sh"
+  if [ ! -f "$src" ]; then
+    warn "eval cron wrapper missing at $src — eval cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-eval"; then
+    say "  eval cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '0 7 1 */3 *' --script memoria-eval.sh --no-agent \
+      --name memoria-eval --deliver local \
+      || warn "could not create the eval cron — create it manually"
+  fi
+  say "  (quarterly: fans the system/eval/ gold set out as idempotent eval cards — diagnostic, never gating)"
+  ok "Eval cron wired"
+}
+
 # =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
@@ -865,6 +891,7 @@ main() {
     wire_sweeps_cron
     wire_lint_cron
     wire_metrics_cron
+    wire_eval_cron
     print_next_steps
     return
   fi
@@ -882,6 +909,7 @@ main() {
   wire_sweeps_cron
   wire_lint_cron
   wire_metrics_cron
+  wire_eval_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
     # Zotero setup moved to the tutorial (ADR-55) — it's the PI's bibliographic
