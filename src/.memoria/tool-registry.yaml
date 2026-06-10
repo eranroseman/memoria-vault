@@ -34,14 +34,15 @@ groups:
   tasks:       [tasks.delegate_route_task]
   cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
   ingest_read: [ingest.ingest_pipeline]
+  patterns:     [patterns.patterns_list, patterns.patterns_run]
 
 profiles:
   memoria-copi:
-    allow: [vault_read, skills, todo, memory, policy, tasks, cluster_read, ingest_read]
+    allow: [vault_read, skills, todo, memory, policy, tasks, cluster_read, ingest_read, patterns]
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, ingest_read]
+    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, ingest_read, patterns]
     notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (web toolset stays off; the group name covers MCP search tools); vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
