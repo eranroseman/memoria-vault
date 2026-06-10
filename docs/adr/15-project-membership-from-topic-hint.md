@@ -32,7 +32,7 @@ Two design forces pull against each other:
 
 - The corpus-profile *scoring matrix* (`expected_study_designs` + `expected_methods` per project)
   is exactly the kind of human-maintained config that **drifts** — the redesign shed similar
-  weight elsewhere, and [Frontmatter fields](../reference/frontmatter.md#domain-fields)
+  weight elsewhere, and [Frontmatter fields](../reference/frontmatter.md#the-field-kind-grammar)
   deliberately leaves `study_design` / `methods` / `topic` open rather than controlled.
 - But "which of my projects does this paper belong to?" is a real, repetitive judgment the agent
   *can* usefully **propose** — losing it entirely pushes pure manual tagging onto the human.
@@ -92,4 +92,4 @@ explicit and auditable.
 - **Source:** the predecessor vault's corpus-profiles mechanism (internal salvage analysis).
 - **Profile:** [Librarian](../explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
 - **Schema:** [Frontmatter fields](../reference/frontmatter.md) (`projects`, `_proposed_classification`).
-- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../reference/frontmatter.md#domain-fields); a project hint is not a controlled vocabulary.
+- **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../reference/frontmatter.md#the-field-kind-grammar); a project hint is not a controlled vocabulary.

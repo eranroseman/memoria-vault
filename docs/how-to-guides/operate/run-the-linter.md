@@ -13,7 +13,7 @@ Trigger a structural health check on the vault — either on demand or to review
 
 - **On demand:** after a large batch ingest, after editing profile files, or when a Dataview query returns unexpected results
 - **Weekly:** as part of the [weekly review](../curate/run-the-weekly-review.md), step 8
-- **Automatically:** the Linter runs on a cron schedule (see [Linter § Schedule](../../reference/linter.md#schedule)) and after each ingest batch
+- **Automatically:** the Linter runs on a cron schedule (see [Linter § Schedule](../../reference/linter.md#the-daily-cron)) and after each ingest batch
 
 ## Steps
 
@@ -93,5 +93,5 @@ git commit -m "maintenance: resolve lint findings"
 - Weekly review (lint is step 8): [Run the weekly review](../curate/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 - Fix profile drift: [Fix profile drift](../troubleshooting/fix-profile-drift.md)
-- Linter profile design: [The Linter](../../explanation/profiles/linter.md)
-- Severity scale: [explanation/profiles/linter.md § severity-scale](../../explanation/profiles/linter.md)
+- Linter profile design: [The Linter](../../explanation/engines/README.md)
+- Severity scale: [explanation/engines/README.md § severity-scale](../../explanation/engines/README.md)

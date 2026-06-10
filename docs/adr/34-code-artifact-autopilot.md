@@ -31,7 +31,6 @@ Recurring analyses currently need a manual trigger every time. For a genuinely r
 
 A specific recurring analysis (e.g. a weekly metric refresh) has been run manually on a regular cadence and the manual kickoff is the felt friction — not a hypothetical "might be useful."
 
-
 ## Alternatives considered
 
 **Adopt now with a global flag.** Rejected: no current use case warrants the safety overhead.
@@ -41,6 +40,6 @@ A specific recurring analysis (e.g. a weekly metric refresh) has been run manual
 ## Related
 
 - **Workflows:** [Code](../how-to-guides/compose/create-a-code-artifact.md)
-- **Files:** [The Coder](../explanation/profiles/coder.md), `99-system/templates/code-note.md`
+- **Files:** [The Coder](../explanation/profiles/engineer.md), `99-system/templates/code-note.md`
 - **Related proposal:** [Discovery loop and autonomy within the boundary](../design/discovery-loop.md) §2 (Coder experiment loop) — the keep/revert variant of the same Coder-lane autonomy; this proposal is the *scheduled-script* variant.
 - **Bounded by:** [ADR-21 L3 autonomy ceiling](21-l3-autonomy-ceiling.md) (the Coder exception).

@@ -42,6 +42,6 @@ Memoria builds **on** Hermes rather than implementing its own runtime. Hermes ow
 
 ## Related
 
-- **Supporting rationale:** [Why Hermes](../explanation/rationale/why-hermes.md) (what Hermes provides, the boundary table, the API surface), [Why three layers, not one](../explanation/rationale/why-three-layers.md) (thin-control-over-thick-state), [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md) (this as a deliberate "borrow").
+- **Supporting rationale:** [Why Hermes](../explanation/rationale/why-hermes.md) (what Hermes provides, the boundary table, the API surface), [Why the architecture is layered](../explanation/rationale/why-three-layers.md) (thin-control-over-thick-state), [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md) (this as a deliberate "borrow").
 - **Related decisions:** [ADR-01 three-layer architecture](01-three-layer-architecture.md) (the layers Hermes coordinates); [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles *are* Hermes profiles, and there is no Orchestrator); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (same thin-front rationale).
 - **Source discussion:** retroactively records the runtime choice already embedded in `why-hermes.md`. The evolving detail of the boundary lives in that doc; the decision to build on Hermes rather than reimplement it is what this ADR fixes.

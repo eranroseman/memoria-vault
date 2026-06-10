@@ -82,4 +82,4 @@ Same result, different surface.
 - Promote to claim note: [Write a claim note](../compile/write-a-claim-note.md)
 - Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../curate/run-the-weekly-review.md)
 - The profile running the query: [The Writer](../../explanation/profiles/writer.md)
-- Query vs Socratic discussion: [The Socratic](../../explanation/profiles/socratic.md)
+- Query vs Socratic discussion: [The Socratic](../../explanation/profiles/co-pi.md)

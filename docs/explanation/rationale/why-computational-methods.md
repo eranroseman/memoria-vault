@@ -24,13 +24,14 @@ If a regex, a graph algorithm, or a similarity threshold would produce the right
 
 The most common pattern in Memoria is deterministic narrowing followed by LLM enrichment on the narrow result:
 
-```
+```text
 N candidates → deterministic ranking → K candidates (K ≪ N) → LLM composes over K
 ```
 
 This matters for two reasons beyond cost. First, the deterministic step is auditable — you can show which candidates were selected, by what score, and why. The LLM's prose is visible but opaque; the selection is what the audit trail and the fleet-health accept/reject ratios actually measure. Second, it makes the system testable: the deterministic layer has a single right answer you can assert in a test; the LLM's composition layer doesn't.
 
 Concrete examples:
+
 - **`[!suggestions]`**: 5,000 vault notes → top-10 candidates by weighted similarity → optional LLM explanation per candidate. The LLM works on 10, not 5,000.
 - **`cite-check`**: 80 claims in a draft → citekey resolution + embedding similarity score per pair → LLM judges only the middle band (similarity 0.4–0.75). Above 0.75 auto-clean; below 0.4 auto-fail.
 - **`_proposed_classification`**: new paper note → small classifier proposes labels with confidence → if confidence > 0.85, accept; else fall back to LLM proposal.
@@ -43,5 +44,5 @@ Without an explicit classification, there is pressure to route every task to an 
 
 - [Callouts](../obsidian/callouts.md) — how the hybrid pattern produces callout content
 - Which profile handles which task type: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
-- The zero-LLM profile this rationale produces: [The Linter](../profiles/linter.md)
+- The zero-LLM profile this rationale produces: [The Linter](../engines/README.md)
 - [Retrieval and analysis methods](../../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses

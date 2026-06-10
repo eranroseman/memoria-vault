@@ -5,122 +5,116 @@ parent: Reference
 
 # Profile capabilities
 
-Lane identifiers, capability table, invocation levels, and folder permission matrix for the seven Memoria profiles. For the profile model and design rationale see [explanation/profiles/](../explanation/profiles).
+The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): posture, board lanes, write scopes, MCP servers, and bundled skills. Every value on this page is read from the shipped sources — the profile packages under [src/.memoria/profiles/](../../src/.memoria/profiles), the lane ceilings under [src/.memoria/lane-overrides/](../../src/.memoria/lane-overrides), and the per-profile tool allowlist in [src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml).
 
 ---
 
-## Lane identifiers
+## The five profiles
 
-One token governs routing. The Kanban dispatcher matches `task.assignee` to this string. The lane id appears in: card `assignee`, `hermes kanban create --assignee`, cron `assignee:`, skill-note `lane:`.
+One conversational agent (the co-PI) plus four background agents, each defined by a posture rather than a tool list:
 
-| Profile (prose) | Assignee = lane id | Lane-override file |
-| --- | --- | --- |
-| Librarian | `memoria-librarian` | `.memoria/lane-overrides/librarian.yaml` |
-| Mapper | `memoria-mapper` | `.memoria/lane-overrides/mapper.yaml` |
-| Socratic | `memoria-socratic` | `.memoria/lane-overrides/socratic.yaml` |
-| Writer | `memoria-writer` | `.memoria/lane-overrides/writer.yaml` |
-| Verifier | `memoria-verifier` | `.memoria/lane-overrides/verifier.yaml` |
-| Coder | `memoria-coder` | `.memoria/lane-overrides/coder.yaml` |
-| Linter | `memoria-linter` | `.memoria/lane-overrides/linter.yaml` |
-
-**Three forms, one token.** Prose uses the short name ("the Librarian lane"). Config, overrides, board, and cron use `memoria-<name>`. The override file is keyed by its `profile:` field, not the filename. Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
-
----
-
-## Profile distribution packages
-
-Each profile distribution package lives at `.memoria/profiles/memoria-<name>/`:
-
-| File | Status | Notes |
-| --- | --- | --- |
-| `SOUL.md` | shipped | Profile prompt. The agent's identity and rules. |
-| `config.yaml` | shipped | Model routing (`provider: kilocode` + per-tier model), the `mcp_servers` block (`policy` + `obsidian`, plus per-profile servers — e.g. `ingest`/`paper_search`/`pyzotero` for the Librarian, `verify`/`pyzotero` for the Verifier; `{{VAULT_PATH}}` substitution target), the `agent.disabled_toolsets` allowlist (`web` disabled fleet-wide — external access is MCP-only; `terminal` only on Coder/Linter), and a `plugins` block enabling the `memoria-policy-gate` write gate. Required by the profile-install step. |
-| `distribution.yaml` | shipped | Install metadata + `env_requires`. Required by the profile-install step. |
-| `.env.EXAMPLE` | shipped | **Generated** by `hermes profile install` from `distribution.yaml` `env_requires`, then copied to `.env`. |
-| `cron/` | shipped | Placeholder (`.keep`). Linter and Mapper ship `cron/scheduled.yaml` with content. |
-| `skills/` | shipped | Holds Memoria-**authored** skills (Librarian: `obsidian-paper-note`; Verifier: `retraction-check`, `claim-checks`; Mapper: `cluster-mapping`; Linter: `structural-detectors`); Coder/Socratic/Writer ship `.keep`. Shared skills (K-Dense, official) live in `~/.hermes/skills/` **globally** (K-Dense via `git clone`, auto-discovered), not here. |
-
----
-
-## Capability table
-
-| Profile | Primary role | Core commands | Allowed skills | Invocation level |
+| Profile | Posture | Role | Invocation | Default model |
 | --- | --- | --- | --- | --- |
-| **Librarian** | Find and ingest evidence | `find`, `ingest`, `enrich`, `classify`, `query`, `export prior-labels` | `obsidian-paper-note`, `obsidian`, `qmd` — discovery via the `paper_search` MCP, Zotero via the read-only `pyzotero` MCP | Level 2 (Kanban) |
-| **Mapper** | Map the corpus | `scope-project`, `gap-report`, `cluster-map` | `cluster-mapping`, `obsidian`, `qmd`, `scikit-learn`, `umap-learn` | Level 1 (cron) + Level 2 (Kanban) |
-| **Socratic** | Question without producing | `socratic-processing`, `lens-reading` | `obsidian` (read-only) | Level 3 (interactive only) |
-| **Writer** | Draft and synthesize | `draft`, `query`, `lint`, `promote` | `llm-wiki`, `obsidian-markdown`, `scientific-writing`, `obsidian`, `qmd` | Level 2 (Kanban) with review gate |
-| **Verifier** | Verify claims, citations, duplicates | `cite-check`, `claim-trace`, `similarity-check`, `find-duplicates`, `retraction-check` | `claim-checks`, `retraction-check`, `qmd`, `obsidian` — retraction via the `verify` MCP, Zotero/citation context via the read-only `pyzotero` MCP | Level 2 (Kanban) |
-| **Coder** | Code artifacts | `code`, `commit`, `revert`, `workspace`, `scaffold` | `obsidian`, `codex`, `claude-code`, `github-repo-management` | Level 2 (external dispatch) |
-| **Linter** | Validate and report | `lint`, `report`, `schema-check`, `schema-migrate`, `health-report`, `graph-analyze`, `session-log`, `dry-run` | `structural-detectors` | Level 1 (cron) |
-
-> **Commands vs. skills.** Core commands are the profile's command surface (CLI / palette). Allowed skills are the Hermes/K-Dense skill IDs the lane-override grants (the policy gate). `obsidian-paper-note`, `retraction-check`, `claim-checks`, `cluster-mapping`, and the Linter's `structural-detectors` are authored as skills; `qmd` is a skills.sh skill. The `structural-detectors` skill wraps the shipped `detectors.py` engine. **External access is MCP-only for the Librarian, Mapper, and Verifier** (their `web` toolset is disabled) — discovery, Zotero, citation, and retraction lookups go through gated MCP servers (`paper_search`, `pyzotero`, `verify`), not skills; see [ADR-32](../adr/32-external-access-over-mcp.md). Source of truth: `vault/.memoria/lane-overrides/*.yaml`.
-
-### Invocation levels
-
-| Level | Cadence | Description |
-| --- | --- | --- |
-| Level 1 | Background / cron | Runs unattended on a schedule. Produces reports only; never acts on canonical content. |
-| Level 2 | Kanban-pulled | Picks up cards from its lane queue. Produces output to review-gated paths. |
-| Level 2 (review gate) | Kanban-pulled | Produces drafts that require explicit human approval before becoming canonical. |
-| Level 2 (external dispatch) | Kanban-pulled | Hands off to an external coding agent (Claude Code, Aider, Codex) via handoff payloads. |
-| Level 3 | Interactive | Invoked synchronously by the human (ACP pane, command palette). No queue. |
+| `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the desk / ACP pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
+| `memoria-librarian` | Faithful | Finds, ingests, enriches, and draft-classifies evidence. Four processing lanes: catalog · extract · link · map. | `dispatched` | `claude-haiku-latest` |
+| `memoria-writer` | Generative | Drafts and synthesizes into project scratch; review-gated. | `dispatched` | `claude-sonnet-latest` |
+| `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
+| `memoria-engineer` | Coordinating | The code lane: scaffolds handoffs to an external coding agent and owns the commit/revert gate in `projects/*/code/`. | `dispatched` | `claude-haiku-latest` |
 
 ---
 
-## Denied capabilities
+## Board lanes
 
-| Profile | Hard denials |
+A lane _is_ an `assignee` value on the Hermes board. The task-lane → profile map is enforced by the tasks MCP ([src/.memoria/mcp/tasks_mcp.py](../../src/.memoria/mcp/tasks_mcp.py)):
+
+| Task lane | Profile |
 | --- | --- |
-| **Librarian** | Review-gated publish, destructive shell, all direct HTTP (`web` disabled — discovery/Zotero/enrich go through MCP servers) |
-| **Mapper** | All write tools outside its scratch paths, external APIs, drafting |
-| **Socratic** | All write tools (`policy.allow.write: []`); all external APIs; queue dispatch |
-| **Writer** | `rest-passthrough`; external-API skills; publish without review gate |
-| **Verifier** | All write tools except verification reports and gap candidate-notes (`source: gap`); drafting |
-| **Coder** | Review-gated-zone edits; prose ownership |
-| **Linter** | Review-gated-zone edits; schema-content auto-fixes; work spawning |
+| `catalog` · `extract` · `link` · `map` | `memoria-librarian` |
+| `draft` | `memoria-writer` |
+| `verify` | `memoria-peer-reviewer` |
+| `code` | `memoria-engineer` |
+
+The co-PI has **no lane** — it converses at the desk and delegates via `delegate_route_task`, which validates every handoff against the receiving lane's ceiling. See [Kanban board reference](kanban-board.md).
 
 ---
 
-## Folder permission matrix
+## Write scopes (lane ceilings)
 
-`W` = write · `R` = read · `—` = no access. The grid shows the coarse read/write stance; the **per-profile write detail** below specifies the exact subfolder, note types, and command/skill responsible.
+From `routing.write_scope` and the `policy` block in each lane-override. The policy MCP enforces these per path; a card's `allowed_paths` may narrow but never widen them (lane = ceiling, payload = floor).
 
-Read access is universal — agents ground on the whole vault to do narrow work well. The trust boundary is the write gate. The one read withheld from all profiles is secrets: `.env` and `auth.json` are outside the vault. See [Why specialist profiles, not a generalist agent](../explanation/rationale/why-specialist-profiles.md) for the design rationale.
+| Profile | Write scope | Explicitly denied |
+| --- | --- | --- |
+| `memoria-copi` | `[]` — **no write paths at all** (`deny.write: "**"`) | everything |
+| `memoria-librarian` | `inbox/` · `catalog/` · `notes/fleeting/` · `notes/source/` | `notes/claims/**` · `notes/hubs/**` · `notes/index/**` · `projects/**` · `system/**` |
+| `memoria-writer` | `projects/` | `notes/claims/**` · `notes/hubs/**` · `catalog/**` · `inbox/**` · `system/**` |
+| `memoria-peer-reviewer` | `inbox/` (flag / gap cards only) | `notes/**` · `catalog/**` · `projects/**` · `system/**` |
+| `memoria-engineer` | `projects/*/code/` | `notes/**` · `catalog/**` · `inbox/**` · `system/**` |
 
-| Profile | `00-meta` | `10-inbox` | `20-sources` | `30-synthesis/01-claims` | `30-synthesis/02-reference` | `30-synthesis/03-moc` | `40-workbench` | `50-deliverables` |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Librarian** | R | W (`01-fleeting`, `03-candidates`) | W (create, enrich) | R | R | R | R | R |
-| **Mapper** | R | R | R | R | R | R | W (`*/01-map/` only) | R |
-| **Socratic** | R | R | R | R | R | R | R | R |
-| **Writer** | R | W (`02-answers/`) | R | R | W drafts (review-gated) | R (suggest only) | W (drafts, framing, canvas) | R (export = dry-run) |
-| **Verifier** | R | W (`03-candidates/` only) | R | R | R | R | W (`*/05-verification/*`) | R |
-| **Coder** | R | R | R | R | R | R | W (`*/06-code/`) | R (export = dry-run) |
-| **Linter** | W (`99-system/logs/` only) | R | R | R | R | R | R | R |
-
-### Per-profile write detail — where, what, why
-
-| Profile | Where (exact subfolder) | What (note types) | Why (command / skill) |
-| --- | --- | --- | --- |
-| **Librarian** | `10-inbox/03-candidates/`, `20-sources/01-papers/`, `20-sources/02-items/`, `20-sources/03-entities/` | `candidate-note`, `paper-note`, `item-note`, entity notes | `find` (candidates), `ingest` / `obsidian-paper-note` skill (sources), `enrich` |
-| **Mapper** | `40-workbench/*/01-map/` only | `corpus-map.md`, `gap-report.md` | `scope-project`, `gap-report`, `cluster-map` |
-| **Socratic** | *(none — `policy.allow.write: []`)* | — | write-denied by design |
-| **Writer** | `10-inbox/02-answers/`; `40-workbench/*/{02-framing,03-canvas,04-drafts}/`; `30-synthesis/02-reference/**` and `50-deliverables/**` (both review-gated → `dry_run`) | `answer-note`, framing/canvas/`draft`; proposed `reference-note`, `deliverable` | `draft`, `query`, `promote` (handoff); `llm-wiki` / `obsidian-markdown` / `scientific-writing` skills |
-| **Verifier** | `10-inbox/03-candidates/` (gap cards), `40-workbench/*/05-verification/` | gap candidate notes, `[!verification]` reports | `cite-check`, `similarity-check`, `find-duplicates` |
-| **Coder** | `40-workbench/*/06-code/` | `code-note`, code artifacts | `code`, `scaffold`, `commit`, `revert` |
-| **Linter** | `99-system/logs/` only | audit/session logs, rotation archive | `session-log`, log rotation (auto-fix class `authorized-targeted`) |
-
-**Canonical synthesis (`30-synthesis/`) and schema governance (`00-meta/`) remain human-owned.** The Linter's only write zone is `99-system/logs/`. Project scratch (`40-workbench/`) and the inbox (`10-inbox/`) are the multi-profile write zones — each profile writes only to its own named subfolder. Writes to review-gated paths (`30-synthesis/02-reference/`, `50-deliverables/`) are allowed in the lane-override but the policy MCP degrades them to `dry_run` until a human approves. Source of truth for every path: `vault/.memoria/lane-overrides/*.yaml`.
+All five lanes require `audit_log`; the dispatched four also require `timeout_required`, and the Librarian and Peer-reviewer additionally require `source_tracking`. `routing.external_api_policy` is `explicit_only` everywhere except the Writer (`blocked` — it composes from the vault, never researches).
 
 ---
 
-## Linter: detectors, auto-fix, severity
+## MCP servers per profile
 
-The Linter's eight structural detectors, the four auto-fix classes, the severity scale, and the verdict-band rollup are documented once in [Linter: detectors and auto-fix](linter.md) — the canonical reference. For design rationale see [The Linter](../explanation/profiles/linter.md).
+From each profile's `config.yaml` (`mcp_servers` — the only place Hermes loads servers from, per [ADR-27](../adr/27-hermes-native-config-and-gate-enforcement.md)). The `policy` and `obsidian` servers are universal; the rest follow the lane's job:
+
+| Server | copi | librarian | writer | peer-reviewer | engineer |
+| --- | --- | --- | --- | --- | --- |
+| `policy` (the write gate) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `obsidian` (Local REST API native MCP, loopback HTTP) | ✓ (reads only, by lane) | ✓ | ✓ | ✓ | ✓ |
+| `ingest` (the deterministic pipeline) | ✓ (read/compute) | ✓ | — | — | — |
+| `cluster` (typed graph + topics, read-only) | ✓ | ✓ | — | — | — |
+| `tasks` (`delegate_route_task`) | ✓ | — | — | — | — |
+| `patterns` (the pattern runner) | ✓ | ✓ | — | — | — |
+| `paper_search` (scholarly discovery, 20+ databases) | ✓ | ✓ | — | — | — |
+| `pyzotero` (read-only Zotero 7 local API) | — | ✓ | — | ✓ | — |
+
+The `web` toolset is disabled on every lane — all external lookups go through MCP servers (gated, audited, deterministic). The write gate itself is the `memoria-policy-gate` Hermes plugin, enabled per profile and fail-closed; see [Policy MCP](policy-mcp.md).
+
+---
+
+## Bundled skills
+
+Skills that ship inside the vault profiles (under `src/.memoria/profiles/<profile>/skills/`):
+
+| Profile | Skill | What it does |
+| --- | --- | --- |
+| `memoria-copi` | `delegate-task` | Turn a conversational request into a ceiling-validated board card via the tasks MCP. |
+| `memoria-copi` | `explain-the-system` | Answer "how does Memoria work?" questions from the shipped docs and vocabulary. |
+| `memoria-librarian` | `obsidian-paper-note` | The full capture → enrich → classify → write flow around the ingest engine. |
+| `memoria-librarian` | `cluster-mapping` | The map lane: corpus maps and topic clusters via the cluster MCP. |
+| `memoria-peer-reviewer` | `claim-checks` | Judgment verification: claim trace and citation checks, with sub-check references. |
+
+Skill names are migrating to the `<task>:<verb>-<object>` convention — see [Hermes CLI](hermes-cli.md) for the full map with legacy names.
+
+---
+
+## Capability allowlist
+
+[src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml) is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
+
+- `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
+- `memoria-engineer` is the only profile with `terminal` + `file` (the ADR-21 Coder-lane exception, under its new name).
+
+---
+
+## Retired profiles (v0.1.0 → v0.1.1)
+
+The previous seven-profile fleet consolidated into the five above ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). The installer prunes stale `memoria-*` profiles from `~/.hermes/profiles/` on upgrade so an old SOUL never answers the ACP pane:
+
+| Retired profile | Where its job went |
+| --- | --- |
+| `memoria-socratic` | The co-PI (`memoria-copi`) — the conversational front, now hard read-only |
+| `memoria-mapper` | The Librarian's `map` lane + the cluster MCP |
+| `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps engine (deterministic checks) |
+| `memoria-coder` | `memoria-engineer` |
+| `memoria-linter` | The Linter **engine** — pre-commit gate + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
 
 ---
 
 ## Related
 
-- Conceptual grouping and rationale: [Profiles](../explanation/profiles/README.md)
-- Linter detectors, auto-fix classes, and severity scale: [Linter: detectors and auto-fix](linter.md)
+- The write-gate decisions and lane-override shape: [Policy MCP](policy-mcp.md)
+- The board the lanes pull from: [Kanban board reference](kanban-board.md)
+- The CLI surface per profile: [Hermes CLI](hermes-cli.md)
+- Where profiles live on disk: [On-disk layout](on-disk-layout.md)

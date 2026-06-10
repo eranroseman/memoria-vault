@@ -1,12 +1,12 @@
 ---
-title: Why folders encode lifecycle, not topic
+title: Lifecycle, not topic — and state, not folders
 parent: Knowledge
 nav_order: 4
 ---
 
-# Why folders encode lifecycle, not topic
+# Lifecycle, not topic — and state, not folders
 
-The vault's top-level folders (`00-meta`, `10-inbox`, `20-sources`, `30-synthesis`, `40-workbench`, `50-deliverables`) encode where a note is in its lifecycle, not what it's about. A paper on cognitive load lives in `20-sources/01-papers/`, not in `cognitive-science/`. This principle is not a stylistic choice; it is the organizational decision that makes the vault's structure stable and the agent's permissions enforceable.
+Two organizational decisions shape the vault. The first survives from the earliest design: **a note's position in the system is its lifecycle, never its topic**. The second is newer (ADR-47/ADR-50) and changes the mechanism: **lifecycle is a state property in frontmatter, not a folder**. Folders now encode one thing only — the *type-first category* a note belongs to (`catalog/`, `notes/source/`, `notes/claims/`, …). Where a note stands — `proposed`, `provisional`, `current`, `retracted`, `archived` — is a frontmatter field on the universal chain.
 
 ---
 
@@ -14,72 +14,70 @@ The vault's top-level folders (`00-meta`, `10-inbox`, `20-sources`, `30-synthesi
 
 Topic folders seem natural. "Put all my cognitive science notes in `cognitive-science/`." The problem is that topics are **many-to-many**:
 
-A paper on attention and working memory belongs in `cognitive-science/`, and in `neuroscience/`, and in `HCI/`, and possibly in `productivity-tools/` if it's relevant to a current project. A topic folder forces a choice: pick one folder and lose the connections to the others, or create duplicates that immediately diverge.
+A paper on attention and working memory belongs in `cognitive-science/`, and in `neuroscience/`, and in `HCI/`, and possibly in a project's orbit if it's relevant to current work. A topic folder forces a choice: pick one folder and lose the connections to the others, or create duplicates that immediately diverge.
 
-Most knowledge management systems respond to this by allowing notes to exist in multiple places (aliases, copies) or by using tags for the cross-cutting topics. But this creates a different problem: the folder is now redundant. If topics live in tags and links, the folder adds no information. If the folder adds information, it must mean something other than topic.
+Most knowledge systems respond by letting notes exist in multiple places (aliases, copies) or by moving topics to tags. But that creates a different problem: the folder is now redundant. If topics live in frontmatter and links, the folder adds no information. If the folder adds information, it must mean something other than topic.
 
-**Lifecycle stage is what the folder can uniquely encode.** A note is at exactly one lifecycle stage: it's either in the inbox, or it's a classified source, or it's a synthesis note, or it's a deliverable in progress. Folders encode the thing that is one-to-one with the note; topics live in frontmatter and links where the many-to-many relationship can be expressed properly.
-
----
-
-## What the stages mean
-
-The numbered folders form a progression from capture to shipping:
-
-- **`10-inbox/`** — *not yet classified*. The note exists but its role hasn't been decided. The inbox is a queue, not storage.
-- **`20-sources/`** — *describes the world*. Classified source material: papers, tools, people, organizations, venues. An external perspective.
-- **`30-synthesis/`** — *expresses the human's thinking*. Claims in the human's own words, reference pages, Maps of Content. An internal perspective.
-- **`40-workbench/`** — *active work*. A project folder, with all its artifacts, organized by the effort not the lifecycle.
-- **`50-deliverables/`** — *finished and shipped*. Manuscripts, presentations, exports.
-
-The numbers are not just labels — they encode a one-way progression. Moving forward (inbox → sources → synthesis) is promotion. Moving backward doesn't happen structurally; deprecated notes go to `95-archive/`.
+**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research-area`, `methodology`) and in links, where many-to-many can be expressed properly. This is the part of the original decision that survives unchanged — and it is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
-## What this enables
+## What changed: lifecycle moved out of the folder names
 
-**Agent permissions align with stages.** The Librarian can write to `20-sources/` (creating paper notes) but cannot write to `30-synthesis/` (creating claim notes). This permission can be expressed simply: "write to stage X" rather than "write to everything tagged `cognitive-science` that isn't someone's personal synthesis." Lifecycle stages make permissions tractable.
+v0.1.0 encoded lifecycle stage in numbered folders (`10-inbox/ → 20-sources/ → 30-synthesis/ → 50-deliverables/`), and promotion meant moving the file forward. The design update found the flaw: numbered folders imply a **pipeline**, and the knowledge is a **network**. A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
 
-**The agent's job is well-defined.** The Librarian knows its domain: everything in `20-sources/`. It doesn't need to understand topics to know where a source belongs. The Linter knows what it's looking for: schema violations, broken links, orphan notes — all of which are detectable without understanding topical context.
+So the vault's top level is now organized by **category** ([ADR-47](../../adr/47-type-first-category-folders.md)):
 
-**Queries are predictable.** A Dataview query asking "what are all the papers on attention?" uses the `topic:` frontmatter field. A query asking "what notes are awaiting classification?" uses the folder. The two questions use different mechanisms because they're asking about different things.
+```text
+catalog/      structured entity records (papers, people, organizations, venues, datasets, repositories)
+notes/        prose (Zettelkasten) — fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
+projects/     work artifacts, project-scoped
+inbox/        agent→human messages (the board and queue dashboards are views of it)
+system/       visible infrastructure — logs · templates · patterns · dashboards
+```
+
+One folder never mixes two categories, there are no lifecycle numbers, and there is no archive folder. Direction lives in the `lifecycle` frontmatter property — one chain for everything ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)):
+
+```text
+proposed → provisional → current → retracted → archived
+```
+
+Each type uses a subset of the chain (the per-type subsets live in `.memoria/schemas/types/`). A source note awaiting reading is `proposed`; a claim the PI stands behind is `current`; a claim invalidated by new evidence is `retracted`, with lineage links to its successor.
 
 ---
 
-## The workbench: the web and the thread
+## Why state-not-folders is strictly better
 
-`40-workbench/` looks like an exception to the lifecycle principle, but it is better understood as its second half. Both the web zones (`10-inbox/`, `20-sources/`, `30-synthesis/`) and the workbench subdivide internally — sources split into papers/items/entities, the workbench into `01-map/`, `02-framing/`, `03-canvas/`, `04-drafts/`, `05-verification/`, `06-code/`. What differs is the *shape* of the organization, not whether it encodes lifecycle.
+**Promotion is a frontmatter edit, not a file move.** Under the numbered-folder model, every state change moved a file — and every move risked breaking wikilinks, losing Git history continuity, and invalidating saved queries. Under the state model, nothing moves. A note is born in its type-home and dies in its type-home.
 
-In the knowledge base, notes form a **web**. A paper note connects to many claim notes, a claim note to many sources and MOCs — all many-to-many. You find a note in the web by querying the graph or following a MOC; its folder tells you its lifecycle stage, and its links tell you what it relates to. There is no single reading order, because the knowledge isn't a single argument.
+**Links survive every transition.** A claim cited by twelve other notes can be retracted, superseded, and archived without a single inbound link breaking. Provenance — the property the whole system is built to protect — no longer depends on link-rewriting tooling getting every move right.
 
-The workbench is the **thread**, where one project distills a single train of thought. Its sub-folders aren't a smaller web — they are the stages of one argument: map the terrain, frame the question, draft, verify, build. Notes are grouped by that one thread because a draft, its framing, and its verification all belong to exactly one effort. This is why the workbench groups by project: not because it breaks the "lifecycle, not topic" rule (a project is not a topic — it's a bounded, transient effort), but because a single line of reasoning is organized linearly, while a knowledge base is organized as a web.
+**`archived` is a state, not a folder.** The old `95-archive/` is gone. An archived note stays exactly where it always lived and simply drops out of active views (Bases and Dataview filter on `lifecycle`). It remains readable, linkable, and traceable from every note that ever cited it — *archive, never delete* with zero file churn.
 
-This also dissolves the apparent anti-duplication tension. The rule against topic folders exists because a source has many topics and so can't live in one folder. Workbench artifacts are single-project by construction, so the many-to-many problem never arises. When the project ships, its durable output migrates back into the web — claim notes to `30-synthesis/01-claims/`, paper notes to `20-sources/01-papers/`, the deliverable to `50-deliverables/` — and the project folder archives as a unit. The workbench is temporary; the web is permanent.
+**Queries get honest.** "What's awaiting me?" is a lifecycle query (`lifecycle: proposed`), "what is this thing?" is a folder fact, and "what's it about?" is a facet query — three different questions, three different mechanisms, none overloaded onto the others.
+
+**The agent's permissions stay tractable.** The gated zones (`notes/claims/`, `notes/hubs/`) are stable paths that never gain or lose members through state changes. The policy gate reasons about *where an agent may write*, and the answer never shifts under it mid-task.
+
+One consequence to know: because Inbox cards use the same lifecycle vocabulary as notes (a card awaiting you is `proposed`), queries that filter on `lifecycle` scope by category folder — which the type-first tree makes trivial.
 
 ---
 
 ## Topics in frontmatter, not folders
 
-With lifecycle folders handling the organizational dimension that folders can uniquely carry, topics are encoded in frontmatter:
+With folders carrying the type and frontmatter carrying the state, topics are encoded as **facets** on source and claim notes:
 
-- `topic: [cognitive-science, attention]` on a paper note
-- `study_design: observational` on a paper note
-- `topic: [working-memory, cognitive-load]` on a claim note
+- `research-area` — seeded from OpenAlex topics by the ingest engine
+- `methodology` — a controlled vocabulary covering method and study design
+- `topics` on claim notes
 
-(`topic`, `study_design`, and `methods` are the schema's domain fields — see [Frontmatter fields](../../reference/frontmatter.md#domain-fields). There is no `domain` or `keywords` field.)
-
-This makes topic queries Dataview queries: `WHERE contains(topic, "cognitive-science")`. It makes cross-topic connections explicit: a claim note about HCI that cites cognitive science papers is connected to both topics through its links, not through its folder location.
-
-The vault's navigation structure (MOCs — Maps of Content) builds the topical view on top of the lifecycle structure. A `cognitive-science` MOC is a note in `30-synthesis/03-moc/` that links to the relevant paper notes, claim notes, and reference pages — regardless of which sub-projects they were created for.
-
-Putting topics in links rather than folders is itself a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a flat sequence and a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships. The MOC is the modern Map-of-Content form of that idea (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+Topical *navigation* is built on top by **hubs** (`notes/hubs/` — the renamed Maps of Content): curated notes that link the relevant sources and claims for an area, regardless of state or project. A hub is authored perspective over the graph, not a folder in disguise.
 
 ---
 
 ## Related
 
-- What the stages mean for note types: [Note types and epistemic roles](note-types.md)
-- How notes move between stages: [Why promotion is gated](promotion-model.md)
-- How agent permissions map to stages: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
-- The folders this rationale structures: [The vault](../architecture/vault.md)
-- The frontmatter fields involved: [Frontmatter fields](../../reference/frontmatter.md)
+- The type system the folders encode: [Note types and epistemic roles](note-types.md)
+- How state changes are gated: [Why promotion is gated](promotion-model.md)
+- The decisions: [ADR-47](../../adr/47-type-first-category-folders.md), [ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)
+- The folder tree itself: [The vault](../architecture/vault.md)
+- The facet fields: [Frontmatter fields](../../reference/frontmatter.md)

@@ -6,13 +6,13 @@ nav_order: 4
 
 # Interaction channels
 
-Memoria's primary UI is Obsidian. Beyond it are two secondary channels for reaching the system when Obsidian isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
+Memoria's primary UI is Obsidian — and within it, the **Inbox** is the one place agents speak to the PI: candidate, gap, flag, and alert cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)) feeding Home's "what needs me?" surface. Beyond Obsidian are two secondary channels for reaching the system when it isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
 
 The organizing principle: **each channel owns one mode.** Using one for another's job produces slow erosion — daily operations done via CLI compound into friction that eventually stops the behavior; push notifications wired for the wrong events train the human to ignore them all.
 
 | Channel | Mode | Purpose |
 | --- | --- | --- |
-| **Obsidian** | Desktop, focused, deliberate | Daily triage, reading, authoring, agent conversations on the active note |
+| **Obsidian** | Desktop, focused, deliberate | Daily triage (the Inbox), reading, authoring, the co-PI conversation in the ACP pane |
 | **CLI** (`hermes …`) | Desktop, occasional, precise | Forensic queries, profile administration, manual dispatch, backup |
 | **Telegram** | Mobile, async, lightweight | Fleeting capture, source-URL queuing, urgent push notifications |
 
@@ -38,13 +38,28 @@ For command syntax and available operations, see [Hermes CLI](../../reference/he
 
 ---
 
+## Graded loudness — how a signal picks its surface
+
+Every agent and engine finding carries one of four loudness levels, and the level decides where it surfaces:
+
+| Level | Outcome |
+| --- | --- |
+| **Quiet** | logged only; aggregated in the weekly review; no interruption |
+| **Notice** | appears in the relevant dashboard + weekly review; no push |
+| **Alert** | appears in Home's "what needs me" + Daily Health; pushed; does **not** block |
+| **Block** | blocks the action (dispatch / promotion) until acknowledged; pushed |
+
+The test for push vs dashboard: *does it change what the PI does in the next 30 minutes?* Only Alert and Block ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
+
+---
+
 ## Why Telegram has two distinct modes
 
 Telegram serves two purposes that are easy to conflate but that need to remain separate: push notification for urgent signals, and lightweight mobile capture.
 
-The push notification mode is for things that cannot wait for the morning Daily Health glance — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. The critical distinction is whether the notification changes what the human would do in the next 30 minutes. If it doesn't, it should surface in a dashboard, not Telegram. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
+The push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
 
-The mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, quick corpus lookups, or Socratic processing while in motion. The key constraint is that the Telegram toolset is intentionally narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
+The mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, or quick corpus lookups while in motion. The key constraint is that the Telegram toolset is intentionally narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
 
 Confining Telegram to one messaging channel is also intentional. Each additional channel — Discord, Slack, WhatsApp — competes for attention and demands its own notification discipline. Until there is a concrete need that Telegram cannot serve, additional channels add noise without value.
 

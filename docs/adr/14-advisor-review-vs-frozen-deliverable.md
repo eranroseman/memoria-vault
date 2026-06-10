@@ -71,4 +71,4 @@ not reimplement citation-field injection.
 
 - **Workflows affected:** [export a draft](../how-to-guides/compose/export-a-draft.md) (companion how-to, added with this ADR), [Export routes and formats](../reference/export.md) (the existing static path)
 - **Files affected:** the `deliverable` note type — [Note types](../reference/note-types.md)
-- **Profiles:** [Coder](../explanation/profiles/coder.md) runs the Pandoc mechanics
+- **Profiles:** [Coder](../explanation/profiles/engineer.md) runs the Pandoc mechanics

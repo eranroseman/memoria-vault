@@ -37,7 +37,7 @@ lifecycle: current
 promoted_date: 2026-05-31
 ```
 
-(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [Frontmatter fields](../../reference/frontmatter.md#lifecycle-values).)
+(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [Frontmatter fields](../../reference/frontmatter.md#lifecycle--the-one-chain).)
 
 **5. Add a MOC entry** (if a relevant MOC exists).
 

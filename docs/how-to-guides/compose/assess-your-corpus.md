@@ -83,4 +83,4 @@ Whichever you run, read the output by pattern:
 - Previous step: [Start a writing project](start-a-writing-project.md)
 - Next step: [Frame a project](frame-a-project.md)
 - Find new sources (if gaps need filling): [Find new sources](../compile/find-new-sources.md)
-- Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/mapper.md)
+- Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/librarian.md)

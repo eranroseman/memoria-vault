@@ -26,7 +26,7 @@ The two flows form one cycle: Compile's claims are Compose's raw material, and g
 
 **`discuss` and `sketch` are the cycle's two reflective phases** — the deliberate "think before you commit" beats where the human does the intellectual work the rest of the cycle exists to set up and capture. They're engaged by judgment (a difficult source, a tangled argument), not run on every item — a matter of cadence, not importance.
 
-The flows are not sequential end-to-end — they're ongoing. The Compile flow runs continuously as new sources are discovered; the Compose flow runs per-project when the human decides to synthesize. A mature vault might have dozens of projects in various phases of the Compose flow while the Compile flow runs nightly. For per-phase definitions see the [Glossary → Cycle phases](../../reference/glossary.md#cycle-phases); for which profile owns each phase, see [Profiles](../profiles/README.md); the source and writing how-to guides walk through each.
+The flows are not sequential end-to-end — they're ongoing. The Compile flow runs continuously as new sources are discovered; the Compose flow runs per-project when the human decides to synthesize. A mature vault might have dozens of projects in various phases of the Compose flow while the Compile flow runs nightly. For per-phase definitions see the [Glossary → Cycle phases](../../reference/glossary.md#notes-and-lifecycle); for which profile owns each phase, see [Profiles](../profiles/README.md); the source and writing how-to guides walk through each.
 
 ---
 
@@ -34,5 +34,5 @@ The flows are not sequential end-to-end — they're ongoing. The Compile flow ru
 
 - The board that coordinates both flows: [The board as a state machine (the control plane)](board-as-state-machine.md)
 - Which profile owns each phase: [Profiles](../profiles/README.md)
-- The cycle-phase definitions: [Glossary → Cycle phases](../../reference/glossary.md#cycle-phases)
+- The cycle-phase definitions: [Glossary → Cycle phases](../../reference/glossary.md#notes-and-lifecycle)
 - Why distinct phases with validation points: [Why pattern provenance](../rationale/why-pattern-provenance.md)

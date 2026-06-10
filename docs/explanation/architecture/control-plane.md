@@ -6,58 +6,36 @@ nav_order: 3
 
 # The control plane
 
-The board defines what state a card is in. The policy MCP defines where a worker may write. The control plane is the third concern: how a human request reaches Hermes in the first place. It has three thin layers:
-
-```
-Obsidian (Command Palette / ACP pane)  ──►  Hermes API  ──►  MCP servers  ──►  Hermes
-              (UI)                         (port 8642)   (policy + obsidian)  (worker)
-```
-
-Each layer has exactly one job. None of them owns business logic except the MCP servers.
-
-| Layer | What it does | What it does not do |
-| --- | --- | --- |
-| **Command Palette / ACP pane** | The two human entry points inside Obsidian. The Command Palette reads frontmatter from the active note and POSTs a JSON payload to the Hermes API. The ACP pane provides a conversational interface to Hermes alongside the active note. | No database access. No policy evaluation. No task state changes. |
-| **Hermes API** | Receives the POST and dispatches the operation — add a card, run a task, query the audit log — into the MCP-gated worker. Upstream Hermes, not custom Memoria code. | No persistent state. No business rules. |
-| **MCP servers** | `policy_mcp` checks permissions and writes the audit log; the `obsidian` server gates vault reads/writes. Board state is managed by Hermes's **native kanban tools**, not a Memoria MCP. | No UI. No direct vault writes outside their declared tool surface. |
-| **Hermes** | Runs the actual skill, writes the vault note via the `obsidian` server, advances the card through its native kanban tools, and returns a structured result. | No bespoke task MCP — board management is native Hermes. |
+Every unit of **agent** work is a card on the kanban board — the Tasks layer of the [seven-layer stack](README.md). A trigger (the PI, the co-PI, or cron) creates a card; the dispatcher assigns it to a **lane**; the lane's agent runs it under propose-not-dispose; the result resurfaces as an Inbox signal. Engines run *off* the board — on cron/CI or behind an MCP facade, never as cards.
 
 ---
 
-## Why thin layers
+## Lanes are the four background agents
 
-**Each layer is trivially replaceable.** The Command Palette and the `hermes` CLI are interchangeable front-ends over the same Hermes API and MCP layer. Swapping one for the other touches nothing in the policy or task logic.
+The board's lanes are exactly the background agents ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): **Librarian · Writer · Peer-reviewer · Engineer** (`assignee = memoria-<name>`). Two lanes that might seem missing are absent by design:
 
-**Failure isolation.** If the Obsidian plugin breaks, the same operations run from the CLI. If the API server is down, Hermes can still execute via the CLI and its own MCP client. No single layer's failure takes down the whole system.
+- **No co-PI lane.** The co-PI converses at the desk (the ACP pane) and never appears on the board. It is read-only — when the conversation produces work that writes, the co-PI **delegates** it: the tasks MCP's `delegate_route_task` creates a card on the board, assigned to the right lane. Delegation through the board is the co-PI's *only* write path.
+- **No engine lanes.** Engines are deterministic and have no posture; ingest, search, clustering, the sweeps, and the Linter run on cron/CI or are invoked directly, never claimed as cards.
 
-**One source of truth per concern.** Policy is in the policy MCP; task state is in the board (Hermes's native kanban) — never in the palette glue, which holds no state. The principle: never put business logic in the palette or QuickAdd wiring. That glue should be thin enough to rebuild in an afternoon; behavior lives in the MCP servers and Hermes.
+## Hidden mechanic vs PI-facing state
 
----
+The board's native execution **`status`** (`triage → todo → ready → running → done → blocked → archived`) is the **hidden mechanic** — the PI never sees it. The PI-facing state of any card is the universal **lifecycle chain** (`proposed → provisional → current → retracted → archived`, [ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)): a card awaiting you is `proposed`; you act and it moves on; closed cards are `archived`.
 
-## Why the API is fail-closed
+Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution), the lifecycle state (the PI's decision), and `agent_recommendation` (a soft verdict, never a gate). **Rejection spawns a new card** (`supersedes`), mirroring claim supersession — each card is one attempt, so the audit trail cannot lie.
 
-The Hermes API is the dispatch entry point with the largest blast radius if misconfigured — anything that reaches it can dispatch tasks and trigger writes. The design responds to this with two complementary constraints.
+## The handoff payload and ceiling-narrowing
 
-First, the API defaults to binding on loopback only (`127.0.0.1`). The local-only, local-mesh, and obsidian-sync deployment configurations never need to go beyond this — the network surface is unexposed by default. Non-loopback binding is an explicit opt-in, and it requires the auth token to be set before binding takes effect.
+A card's handoff payload is self-contained: `goal · context · allowed_paths · expected_outputs · review_checks`. The receiving lane inherits the structured payload, never the sender's session context — that is what makes handoffs reliable without agents sharing state.
 
-Second, authentication is required for every deployment without exception, including the default loopback bind. The vault side mirrors this: the obsidian-local-rest-api plugin requires its own `apiKey` whenever it is reachable beyond loopback.
+`allowed_paths` may **narrow** but never **widen** the lane's write scope: the lane is the ceiling, the payload is the floor, and the policy MCP enforces both. A delegated task can be more constrained than its lane, never less.
 
-The reason there is no "add the token later" path is that misconfiguration here is invisible — the system functions without tokens, but unexpected entries begin appearing in the audit log. A silent security failure is worse than a startup failure. The fail-closed posture makes the misconfiguration immediately visible.
-
----
-
-## Why MCP servers are registered per profile, not globally
-
-MCP servers are registered per profile. Each profile's `config.yaml` carries an `mcp_servers` block listing the servers that profile may talk to. Memoria registers two servers across all profiles — `obsidian` for vault read/write and `policy` for permission checking and audit logging — but not every profile gets every tool from every server. (Board state is handled by Hermes's native kanban tools, so no `tasks` MCP is registered; a Memoria `tasks_mcp` was evaluated and dropped as unnecessary — see [On-disk layout](../../reference/on-disk-layout.md).)
-
-The reason for per-profile registration rather than a global server list is the same reason for separate profiles at all: `tools.include` filters let each profile's surface be narrowed to what it actually needs. The Socratic profile gets the `obsidian` server but only its read-side tools. This is the mechanism that makes "Socratic cannot write" enforceable at the API level, not just at the prompt level.
-
-For the per-profile permission matrices, see [Profile capabilities](../../reference/profiles.md).
+**WIP limits** apply back-pressure on the human bottleneck: a bounded review queue of `done` cards, one `running` card per lane.
 
 ---
 
 ## Related
 
-- Board state machine (the cards being dispatched): [Kanban board](../kanban-board/README.md)
-- Human channels (which access paths reach the API): [Interaction channels](human-channels.md)
-- Policy MCP (what the rules are): [Policy MCP](../../reference/policy-mcp.md)
+- The lanes' postures and boundaries: [Profiles](../profiles/README.md)
+- The board state machine in detail: [Kanban board](../kanban-board/README.md)
+- The signal end of the loop: [ADR-51](../../adr/51-inbox-category-and-honesty-card.md)
+- What the policy boundary enforces: [Policy MCP](../../reference/policy-mcp.md)
