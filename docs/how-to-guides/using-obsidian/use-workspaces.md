@@ -6,7 +6,7 @@ nav_order: 2
 
 # Workspaces
 
-Switch between Memoria's three cognitive-mode workspaces — Human, Reading & Processing, and Drafting — using a single hotkey.
+Switch between Memoria's two shipped pane layouts — **Home** and **Library** — without rebuilding your panes by hand.
 
 ## Prerequisites
 
@@ -16,45 +16,33 @@ The **Workspaces** core plugin ships pre-enabled in the vault (`.obsidian/core-p
 
 ## Steps
 
-**1. Open each workspace by name.**
+**1. Load a workspace by name.**
 
-The three workspaces ship pre-configured in the vault's `.obsidian/workspaces.json`. Load them:
+Both layouts ship pre-configured in the vault's `.obsidian/workspaces.json` (pane-by-pane contents: [Obsidian workspaces](../../reference/obsidian-workspaces.md)):
 
 - Click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**)
-- Load **Human** — verifies the Daily Health dashboard opens in the left pane
-- Load **Reading & Processing** — verifies the discuss-queue + ACP pane open on the right
-- Load **Drafting** — verifies the project tree opens on the left
+- Load **Home** — `home.md` front and center: the above-the-fold inbox and the daily glance
+- Load **Library** — the reading-and-processing layout: catalog and notes side by side
 
-**2. Bind the hotkeys** (first time only).
+Switch when your cognitive mode changes — not per task within a mode. A **Project** workspace arrives with the v0.1.2 Project release.
 
-Settings → Hotkeys → search `workspace` → assign:
+**2. (Optional) Bind hotkeys.**
 
-| Workspace                            | Hotkey             |
-| ------------------------------------ | ------------------ |
-| Load workspace: Human                | `Cmd-1` / `Ctrl-1` |
-| Load workspace: Reading & Processing | `Cmd-2` / `Ctrl-2` |
-| Load workspace: Drafting             | `Cmd-3` / `Ctrl-3` |
+No workspace hotkeys ship by default. For one-key switching: Settings → Hotkeys → search `Load workspace` → assign e.g. `Ctrl-1` to **Home** and `Ctrl-2` to **Library**.
 
-**3. Switch workspaces during a session.**
+**3. Save changes to a workspace** (when you've rearranged panes).
 
-- `Cmd/Ctrl-1` — Human (morning glance, board review)
-- `Cmd/Ctrl-2` — Reading & Processing (one source, full context)
-- `Cmd/Ctrl-3` — Drafting (single-focus on the active draft)
-
-Switch when your cognitive mode changes — not per task within a mode.
-
-**4. Save changes to a workspace** (when you've rearranged panes).
-
-`Cmd/Ctrl-P` → **Manage workspaces** → click **Save** next to the workspace name. Unsaved layout changes revert when you next switch away.
+`Cmd/Ctrl-P` → **Manage workspaces** → click **Save** next to the workspace name. Unsaved layout changes revert when you next switch away — which is the feature: layout experiments don't stick unless you save them.
 
 ## Verify
 
-- `Ctrl/Cmd-1`, `Ctrl/Cmd-2`, `Ctrl/Cmd-3` each load a distinct pane layout without reloading Obsidian
-- The ACP profile picker switches the active Hermes profile independently of the workspace layout
+- Loading **Home** then **Library** swaps to a distinct pane layout without reloading Obsidian
+- The ACP pane (the co-PI) keeps its session across workspace switches
 
 ## Related
 
 - Workspace layout reference (what each pane shows): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Opening the ACP pane within Reading workspace: [Agent-client pane](use-the-acp-pane.md)
+- The homepage the Home layout centers on: [Vault homepage](use-the-vault-homepage.md)
+- Opening the co-PI pane: [Agent-client pane](use-the-acp-pane.md)
 - Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
-- Why three workspaces, not more: [Visual-style discipline](../../explanation/obsidian/visual-discipline.md)
+- Why few workspaces, not many: [Visual-style discipline](../../explanation/obsidian/visual-discipline.md)
