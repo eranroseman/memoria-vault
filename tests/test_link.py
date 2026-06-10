@@ -27,13 +27,13 @@ def test_link():
         ents = ep["entities"]
         nt = lambda t: [e for e in ents if e["note_type"] == t]
         checks = [
-            ("venue note by ISSN", len(nt("venue-note")) == 1 and nt("venue-note")[0]["id"] == "2398-6352"),
-            ("venue path is ID-keyed", nt("venue-note")[0]["path"] == "20-sources/03-entities/03-venues/2398-6352.md"),
-            ("person notes only for ORCID authors (2 of 3)", len(nt("person-note")) == 2),
-            ("ORCID kept bare (no URI)", all("/" not in e["id"] for e in nt("person-note"))),
-            ("person path is ID-keyed (ORCID)", all(e["path"] == f"20-sources/03-entities/01-people/{e['id']}.md" for e in nt("person-note"))),
-            ("org deduped by ROR (1, not 2)", len(nt("organization-note")) == 1),
-            ("org path is ID-keyed (ROR)", nt("organization-note")[0]["path"] == "20-sources/03-entities/02-organizations/042nb2s44.md"),
+            ("venue note by ISSN", len(nt("venue")) == 1 and nt("venue")[0]["id"] == "2398-6352"),
+            ("venue path is ID-keyed", nt("venue")[0]["path"] == "catalog/venues/2398-6352.md"),
+            ("person notes only for ORCID authors (2 of 3)", len(nt("person")) == 2),
+            ("ORCID kept bare (no URI)", all("/" not in e["id"] for e in nt("person"))),
+            ("person path is ID-keyed (ORCID)", all(e["path"] == f"catalog/people/{e['id']}.md" for e in nt("person"))),
+            ("org deduped by ROR (1, not 2)", len(nt("organization")) == 1),
+            ("org path is ID-keyed (ROR)", nt("organization")[0]["path"] == "catalog/organizations/042nb2s44.md"),
             ("no-ORCID author recorded by name", ep["recorded_by_name"]["authors"] == ["Bob B"]),
             ("no-ROR affiliation recorded by name", "Acme Lab" in ep["recorded_by_name"]["orgs"]),
             ("cites matched + deduped (2 edges)", len(cites) == 2),

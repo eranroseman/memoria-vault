@@ -10,7 +10,7 @@ do — over **MCP**. This thin server wraps `pipeline.run()` as a single tool:
 
 The tool **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link). It
 writes no vault notes — but it does persist the *un-gated derived artifacts* the
-agent can't: the full-text extract under `90-assets/extracts/` (outside the
+agent can't: the full-text extract under `.memoria/data/extracts/` (outside the
 librarian write lane) and the capture-intake anchor (see `append_intake_anchor`).
 The agent fills the two holes (_proposed_classification and the [!brief]) and
 writes the notes through the gated obsidian MCP, exactly as before.
@@ -26,11 +26,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# pipeline.py (and the modules it imports) live in the skill's scripts dir, which
+# pipeline.py (and the modules it imports) live in the ingest engine dir, which
 # sits beside this mcp/ dir under .memoria/. Resolve it relative to __file__ so the
 # import works identically in the repo and in a deployed vault.
 SCRIPTS_DIR = (Path(__file__).resolve().parent.parent
-               / "profiles/memoria-librarian/skills/obsidian-paper-note/scripts")
+               / "engines/ingest")
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -64,7 +64,7 @@ def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
 def build_server(vault: Path):
     """Wrap the pipeline as an MCP server. Imported lazily so the self-test
     doesn't require the `mcp` package."""
-    import pipeline  # from SCRIPTS_DIR
+    import pipeline  # from the ingest engine dir
     from mcp.server.fastmcp import FastMCP  # type: ignore
 
     server = FastMCP("memoria-ingest")
@@ -77,7 +77,7 @@ def build_server(vault: Path):
         metadata + _enrichment, the extract status, the link plan, and
         holes=[_proposed_classification, brief] for the agent to fill. Writes no
         vault notes; it does persist the un-gated derived artifacts (the full-text
-        extract under 90-assets/ and the capture-intake anchor). Set enrich=False
+        extract under .memoria/data/ and the capture-intake anchor). Set enrich=False
         for the Tier-0 floor."""
         if not bib_path.is_file():
             return {"error": "bib-not-found", "bib": str(bib_path)}
@@ -92,15 +92,31 @@ def build_server(vault: Path):
             return {"error": "pipeline-error",
                     "citekey": citekey,
                     "detail": f"{type(exc).__name__}: {exc}"}
-        # persist the full-text extract to 90-assets/ (outside the agent's write lane,
+        # D51/ADR-56: a low-agreement merge becomes an Inbox near-tie flag — the
+        # writing layer raises it, never the agent
+        flag = bundle.pop("flag_needed", None)
+        if flag:
+            try:
+                sys.path.insert(0, str(SCRIPTS_DIR.parent / "lib"))
+                import inbox as inbox_writer
+                inbox_writer.write_finding(
+                    vault, "flag", flag["title"], flag["finding"],
+                    raised_by="ingest", agent_recommendation="inconclusive",
+                    citekey=flag.get("citekey", ""), loudness="alert")
+                bundle["flag_raised"] = True
+            except Exception as exc:   # never fail the ingest on card-writing
+                bundle["flag_raised"] = False
+                bundle.setdefault("degraded", []).append(f"flag-write: {exc}")
+
+        # persist the full-text extract to .memoria/data/ (outside the agent's write lane,
         # so the tool writes it, not the worker) and strip the bulk text from the reply
         ex = bundle.get("extract")
         if isinstance(ex, dict):
             text = ex.pop("text", "")
             if text:
                 safe_ck = citekey.replace("/", "_").replace("..", "_").replace("\\", "_")
-                dest = vault / "90-assets" / "extracts" / f"{safe_ck}.md"
-                if not dest.resolve().is_relative_to((vault / "90-assets").resolve()):
+                dest = vault / ".memoria" / "data" / "extracts" / f"{safe_ck}.md"
+                if not dest.resolve().is_relative_to((vault / ".memoria" / "data").resolve()):
                     return {"error": "invalid-citekey", "citekey": citekey,
                             "message": "citekey would escape the assets directory"}
                 dest.parent.mkdir(parents=True, exist_ok=True)

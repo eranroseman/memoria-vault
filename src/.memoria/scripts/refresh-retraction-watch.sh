@@ -15,4 +15,5 @@
 # The installer substitutes {{PYTHON}} (the vault venv interpreter) and {{VAULT_PATH}}
 # when it copies this to ~/.hermes/scripts/memoria-refresh-rw.sh.
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/verify_mcp.py" --refresh >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/retraction.py" --refresh >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/retraction.py" --sweep --vault "{{VAULT_PATH}}" >/dev/null || true

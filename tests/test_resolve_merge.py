@@ -74,3 +74,24 @@ def test_resolve_merge():
         print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: resolve_merge merge-logic self-test")
         return 1 if bad else 0
     assert _run() == 0
+
+
+def test_agreement_confidence_d51():
+    """ADR-56: cross-source identity disagreement scores below the floor."""
+    one = {"crossref": {"found": True, "title": "Same Work", "year": 2024}}
+    score, dis = agreement(one)
+    assert score == 1.0 and dis == []
+
+    agree = {"crossref": {"found": True, "title": "Same Work", "year": 2024},
+             "openalex": {"found": True, "title": "Same Work!", "year": 2024}}
+    score, dis = agreement(agree)   # punctuation-insensitive
+    assert score == 1.0 and dis == []
+
+    clash = {"crossref": {"found": True, "title": "Work A", "year": 2024},
+             "openalex": {"found": True, "title": "Entirely Different Work", "year": 2019}}
+    score, dis = clash and agreement(clash)
+    assert score == 0.0 and len(dis) == 2
+
+    nothing = {"crossref": {"found": False}}
+    score, dis = agreement(nothing)
+    assert score == 0.0 and dis

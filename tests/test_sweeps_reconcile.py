@@ -1,5 +1,5 @@
 """L1 component test for sweeps — extracted from its former --self-test (ADR-44)."""
-import sweeps as _m
+import reconcile as _m
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -8,7 +8,7 @@ def test_sweeps():
         import tempfile
         with tempfile.TemporaryDirectory() as td:
             v = Path(td)
-            papers = v / "20-sources/01-papers"
+            papers = v / "catalog/papers"
             papers.mkdir(parents=True)
             # one captured/tier0 note (a retry target) + one already-enriched + one proposed
             (papers / "stuck2024A.md").write_text(
@@ -20,7 +20,7 @@ def test_sweeps():
             # capture log: A + B present on disk, ghost2024Z never landed
             log = v / "capture-intake.jsonl"
             log.write_text(
-                '{"citekey": "stuck2024A", "note_path": "20-sources/01-papers/stuck2024A.md"}\n'
+                '{"citekey": "stuck2024A", "note_path": "catalog/papers/stuck2024A.md"}\n'
                 '{"citekey": "done2024B"}\n'
                 '{"citekey": "ghost2024Z"}\n'
                 "not-json-skip-me\n")

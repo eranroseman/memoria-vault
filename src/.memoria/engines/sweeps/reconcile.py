@@ -21,7 +21,7 @@ capture-intake.jsonl record (one JSON object per line, append-only; written by t
 capture entry point *before* the gated note write — the durability anchor):
 
     {"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero",
-     "note_path": "20-sources/01-papers/<citekey>.md"}
+     "note_path": "catalog/papers/<citekey>.md"}
 """
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ except ImportError:  # executed from elsewhere
     sys.path.insert(0, str(Path(__file__).parent))
     from link import read_frontmatter
 
-SOURCE_FOLDERS = ("20-sources/01-papers", "20-sources/02-items")
+SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
 LIBRARIAN = "memoria-librarian"
 SKILL = "obsidian-paper-note"
 
@@ -137,7 +137,7 @@ def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Ingest backstops: reconcile + retry sweeps (ADR-30)")
     ap.add_argument("--vault", help="vault root")
-    ap.add_argument("--log", help="capture-intake.jsonl (default <vault>/99-system/logs/capture-intake.jsonl)")
+    ap.add_argument("--log", help="capture-intake.jsonl (default <vault>/system/logs/capture-intake.jsonl)")
     ap.add_argument("--reconcile", action="store_true", help="run pass (a) only")
     ap.add_argument("--retry", action="store_true", help="run pass (b) only")
     ap.add_argument("--dry-run", action="store_true", help="report without enqueuing")
@@ -145,7 +145,7 @@ def main() -> int:
     if not a.vault:
         ap.error("provide --vault")
     vault = Path(a.vault)
-    log = Path(a.log) if a.log else vault / "99-system/logs/capture-intake.jsonl"
+    log = Path(a.log) if a.log else vault / "system/logs/capture-intake.jsonl"
     do_both = not (a.reconcile or a.retry)
     out = []
     if a.reconcile or do_both:

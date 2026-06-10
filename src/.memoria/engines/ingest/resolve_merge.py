@@ -243,6 +243,37 @@ def union_refs(parts: dict) -> list[dict]:
     return out
 
 
+
+def _norm_title(s: str) -> str:
+    return "".join(c for c in (s or "").lower() if c.isalnum())
+
+
+def agreement(parts: dict) -> tuple[float, list[str]]:
+    """Cross-source identity agreement in [0,1] + the disagreements (ADR-56).
+
+    The merge is per-field best-source-wins, which silently papers over a source
+    that resolved a *different work*. Score: title agreement (normalized exact
+    across found sources) and year agreement. One source found = trusted (1.0) —
+    nothing to disagree with; zero found = 0.0.
+    """
+    found = [s for s in ("crossref", "openalex", "s2") if parts.get(s, {}).get("found")]
+    if not found:
+        return 0.0, ["no source resolved this work"]
+    if len(found) == 1:
+        return 1.0, []
+    disagreements: list[str] = []
+    titles = {s: _norm_title(parts[s].get("title", "")) for s in found if parts[s].get("title")}
+    if len(set(titles.values())) > 1:
+        disagreements.append("title differs across sources: "
+                             + "; ".join(f"{s}={parts[s].get('title','')!r}" for s in titles))
+    years = {s: parts[s].get("year") for s in found if parts[s].get("year")}
+    if len({y for y in years.values() if y}) > 1:
+        disagreements.append("year differs across sources: "
+                             + "; ".join(f"{s}={y}" for s, y in years.items()))
+    score = 1.0 - 0.5 * len(disagreements)
+    return max(score, 0.0), disagreements
+
+
 def merge(parts: dict) -> dict:
     # authors: prefer the source carrying the most ORCIDs (OpenAlex, per the spike)
     auth_src = max(("openalex", "s2", "crossref"),
@@ -268,6 +299,7 @@ def merge(parts: dict) -> dict:
         "references": refs,
         "citation_count": parts.get("s2", {}).get("citation_count"),
         "provenance": {"title": t_src, "year": y_src, "venue": v_src, "authors": auth_src},
+        "agreement": dict(zip(("score", "disagreements"), agreement(parts), strict=True)),
     }
 
 

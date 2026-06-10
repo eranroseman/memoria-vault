@@ -59,7 +59,7 @@ def read_frontmatter(md: Path) -> dict:
 def index_vault(vault: Path) -> dict:
     """Map DOI / arXiv-id (lowercased) -> citekey for existing source notes."""
     idx = {}
-    for folder in ("20-sources/01-papers", "20-sources/02-items"):
+    for folder in ("catalog/papers", "catalog/datasets", "catalog/repositories"):
         d = vault / folder
         if not d.is_dir():
             continue
@@ -73,9 +73,9 @@ def index_vault(vault: Path) -> dict:
     return idx
 
 
-# entity note_type -> its folder under 20-sources/03-entities/
-ENTITY_FOLDER = {"person-note": "01-people", "organization-note": "02-organizations",
-                 "venue-note": "03-venues"}
+# entity type -> its Catalog home (ADR-47)
+ENTITY_FOLDER = {"person": "catalog/people", "organization": "catalog/organizations",
+                 "venue": "catalog/venues"}
 
 
 def plan_entities(merged: dict) -> dict:
@@ -91,20 +91,20 @@ def plan_entities(merged: dict) -> dict:
             # path is keyed on the stable id (not the name) so find-or-create is
             # idempotent — same ORCID/ROR/ISSN always resolves to the same file.
             rec = {"note_type": note_type, "id_type": idtype, "id": idval, "name": name or "",
-                   "path": f"20-sources/03-entities/{ENTITY_FOLDER[note_type]}/{idval}.md"}
+                   "path": f"{ENTITY_FOLDER[note_type]}/{idval}.md"}
             by_key[key] = rec
             entities.append(rec)
         return True
 
-    if not add("venue-note", "issn", merged.get("issn", ""), merged.get("venue", "")):
+    if not add("venue", "issn", merged.get("issn", ""), merged.get("venue", "")):
         if merged.get("venue"):
             by_name["venues"].append(merged["venue"])
 
     for a in merged.get("authors", []) or []:
-        if not add("person-note", "orcid", a.get("orcid", ""), a.get("name", "")):
+        if not add("person", "orcid", a.get("orcid", ""), a.get("name", "")):
             if a.get("name"):
                 by_name["authors"].append(a["name"])
-        if not add("organization-note", "ror", a.get("ror", ""), a.get("affiliation", "")):
+        if not add("organization", "ror", a.get("ror", ""), a.get("affiliation", "")):
             if a.get("affiliation"):
                 by_name["orgs"].append(a["affiliation"])
 

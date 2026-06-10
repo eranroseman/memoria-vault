@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""verify_mcp.py — retraction lookup by DOI, exposed as an MCP tool.
+"""retraction.py — the retraction sweep engine (ADR-46/D41: cron-only, no MCP facade).
 
 The Verifier reaches every external service over MCP (code_execution / terminal /
 web are disabled on the lane), so retraction status arrives the same way vault
@@ -24,9 +24,9 @@ human decides (flag-don't-fix). Stdlib only (urllib, csv), so the self-test runs
 offline against fixtures with no `mcp` package and no network. If the RW CSV is
 absent the server still works, degraded to the two live-API sources.
 
-    python verify_mcp.py --serve                 # run the MCP server over stdio
-    python verify_mcp.py --refresh               # download/refresh the RW CSV
-    python verify_mcp.py --doi 10.x/y            # one-off CLI lookup (live)
+    python retraction.py --refresh               # download/refresh the RW CSV
+    python retraction.py --doi 10.x/y            # one-off CLI lookup (live)
+    python retraction.py --sweep --vault V       # scan catalog DOIs; alert on retractions
 """
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -230,8 +231,11 @@ def _summary(doi: str, overall: bool | None, agreement: str) -> str:
     return f"{d}: retraction status UNKNOWN — no source returned data; do not assume clean"
 
 
-def check_doi(doi: str) -> dict:
-    """Fetch all sources for a DOI and return the combined verdict. Read-only."""
+def check_doi(doi: str, offline: bool = False) -> dict:
+    """Fetch all sources for a DOI and return the combined verdict. Read-only.
+
+    offline=True checks the local Retraction Watch CSV only — the cron-sweep mode
+    (no per-DOI HTTP; the monthly --refresh keeps the CSV current)."""
     doi = normalize_doi(doi)
     if not doi:
         return {"error": "no-doi", "note": "pass a non-empty DOI"}
@@ -241,6 +245,9 @@ def check_doi(doi: str) -> dict:
     # 1. Retraction Watch (authoritative, local)
     sources["retraction_watch"] = rw_lookup(doi)
     errors["retraction_watch"] = None if sources["retraction_watch"] is not None else "csv-not-loaded"
+
+    if offline:
+        return combine(doi, sources, errors)
 
     # 2. CrossRef (real-time delta)
     cr_status, cr_json, cr_err = _get_json(CROSSREF_URL.format(doi=doi))
@@ -255,41 +262,63 @@ def check_doi(doi: str) -> dict:
     return combine(doi, sources, errors)
 
 
-def build_server():
-    from mcp.server.fastmcp import FastMCP  # type: ignore
-    server = FastMCP("memoria-verify")
 
-    @server.tool()
-    def retraction_check(doi: str) -> dict:
-        """Check whether a DOI has been retracted, using the local Retraction Watch
-        dataset (authoritative) plus CrossRef (update-to / is-retracted-by) and Open
-        Retractions as real-time/fallback cross-checks. Returns a deterministic verdict
-        {retracted: true|false|null, agreement, nature, retraction_doi, retraction_date,
-        sources}. Read-only — reports only; never flips a note's pub_status.
-        `retracted: null` means no source returned data (status unknown, not clean)."""
-        return check_doi(doi)
+def sweep(vault: Path, offline: bool = True) -> dict:
+    """Scan catalog paper/dataset DOIs against the local RW CSV; raise an Inbox
+    `alert` for each retracted work (the writing half of the sweep engine)."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
+    import inbox as inbox_writer
 
-    return server
+    fm_re = re.compile(r"^---\n(.*?)\n---", re.S)
+    doi_re = re.compile(r"^doi:\s*[\"']?([^\"'\n]+)", re.M)
+    ck_re = re.compile(r"^citekey:\s*[\"']?([^\"'\n]+)", re.M)
+    checked = hits = 0
+    for folder in ("catalog/papers", "catalog/datasets"):
+        d = vault / folder
+        if not d.is_dir():
+            continue
+        for note in sorted(d.glob("*.md")):
+            m = fm_re.match(note.read_text(encoding="utf-8"))
+            if not m:
+                continue
+            doi_m = doi_re.search(m.group(1))
+            if not doi_m or not doi_m.group(1).strip():
+                continue
+            checked += 1
+            result = check_doi(doi_m.group(1).strip(), offline=offline)
+            if result.get("retracted"):
+                hits += 1
+                ck = (ck_re.search(m.group(1)) or [None, ""])[1]
+                inbox_writer.write_finding(
+                    vault, "alert", f"Retraction: {note.stem}",
+                    f"DOI {doi_m.group(1).strip()} is retracted "
+                    f"({result.get('nature') or 'see retraction record'}); claims citing it "
+                    "need re-adjudication.",
+                    raised_by="sweep", agent_recommendation="issues-found",
+                    target=f"{folder}/{note.name}", citekey=ck, loudness="alert")
+    return {"checked": checked, "retracted": hits}
 
 
-# --------------------------------------------------------------------------- #
-# Self-test — offline, fixtures only                                          #
-# --------------------------------------------------------------------------- #
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Retraction lookup (Retraction Watch CSV + CrossRef + Open Retractions) as an MCP server")
-    ap.add_argument("--serve", action="store_true", help="run the MCP server over stdio")
+    ap = argparse.ArgumentParser(description="Retraction sweep engine (Retraction Watch CSV + CrossRef + Open Retractions)")
     ap.add_argument("--refresh", action="store_true", help="download/refresh the Retraction Watch CSV and exit")
     ap.add_argument("--doi", help="one-off CLI lookup (makes live HTTP calls)")
+    ap.add_argument("--sweep", action="store_true", help="scan catalog DOIs; write Inbox alerts for retracted works")
+    ap.add_argument("--vault", type=Path, help="vault root (for --sweep)")
+    ap.add_argument("--offline", action="store_true", default=True,
+                    help="local RW CSV only — the cron default")
     args = ap.parse_args()
     if args.refresh:
         sys.exit(0 if refresh_rw() >= 0 else 1)
     if args.doi:
         print(json.dumps(check_doi(args.doi), indent=2))
         return
-    if args.serve:
-        build_server().run()
+    if args.sweep:
+        if not args.vault:
+            ap.error("--sweep needs --vault")
+        print(json.dumps(sweep(args.vault, offline=args.offline)))
         return
-    ap.error("pass --serve, --refresh, or --doi <doi>")
+    ap.error("pass --refresh, --doi <doi>, or --sweep --vault <path>")
 
 
 if __name__ == "__main__":
