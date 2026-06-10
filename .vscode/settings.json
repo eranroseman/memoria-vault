@@ -20,8 +20,29 @@
       "enabled": true
     }
   },
-  "[python]": {
+  "harper.enabled": true,
+  "harper.diagnosticSeverity": "hint",
+  "harper.diagnosticsOnChange": false,
+  "harper.enabledRules": {
+    "SpellCheck": false
+  },
+  "[markdown]": {
+    "harper.enabled": true,
     "editor.formatOnSave": false
+  },
+  "[plaintext]": {
+    "harper.enabled": true,
+    "editor.formatOnSave": false
+  },
+  "[python]": {
+    "editor.formatOnSave": false,
+    "harper.enabled": false
+  },
+  "[yaml]": {
+    "harper.enabled": false
+  },
+  "[shellscript]": {
+    "harper.enabled": false
   },
   "cSpell.ignorePaths": [
     "docs/reference/bibliography.md",
@@ -189,5 +210,8 @@
     "Memora",
     "FAMA",
     "PARNESS"
-  ]
+  ],
+  "python.testing.pytestArgs": ["tests"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }
