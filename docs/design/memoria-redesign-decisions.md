@@ -545,14 +545,14 @@ functional name — agents get role names, not tool names); **Editor** (editors 
 violating flag-don't-fix; overlaps the Writer and the Linter); **Reviewer** (too generic;
 clashes with the board's `review_status`). [Tolerable cost: minor `review_status` overlap.]
 
-## D39 — The project workflow (v0.2) *(→ new; defines §3 Projects / the Project perspective)*
+## D39 — The project workflow (v0.1.2) *(→ new; defines §3 Projects / the Project perspective)*
 
-**Decided:** the Project workflow is defined for **v0.2** as phases 1–5 —
+**Decided:** the Project workflow is defined for **v0.1.2** as phases 1–5 —
 **brief → relevance scan → lit-search → canvas → outline** — each with a per-phase agent
 chosen by posture: *brief* = co-PI (+ Writer for prose); *relevance scan* & *lit-search* =
 Librarian (`map`/`find`, surfaced as batch-worklist reports, D37); *canvas* =
 Librarian-seeds / PI-authors; *outline* = Writer, a **one-way seed** from the canvas.
-**Write · code · verify (phases 6–8) are sequenced but v0.3** (not yet detailed). Detail:
+**Write · code · verify (phases 6–8) are sequenced but come later in v0.1.2** (not yet detailed). Detail:
 [Memoria redesign — architecture](memoria-redesign.md) Appendix H.
 
 **Why:** the brief is the cascade root (get it wrong and every later phase inherits the
@@ -564,7 +564,7 @@ faithful-processing posture.
 
 **Alternatives weighed:** RQ-formulation as a Librarian task (rejected — generative/
 dialogic, belongs to co-PI/Writer); two-way canvas↔outline sync (rejected — complexity);
-detailing write/code/verify now (deferred to v0.3 — not yet specified).
+detailing write/code/verify now (deferred within v0.1.2 — not yet specified).
 
 ## D40 — Sandbox model: policy-via-MCP baseline; execution isolation only for untrusted code *(→ refines D36)*
 
@@ -772,24 +772,26 @@ while keeping clean facts frictionless.
 **Alternatives weighed:** keep all extraction ungated (rejected — silent wrong-merges); gate
 all extraction (rejected — friction on clean facts).
 
-## D52 — Implement the redesign as one complete effort (v0.1.1); fresh-install, not in-place migration *(→ resolves red-team #5; reverses Theme-D incremental rec)*
+## D52 — Phased fresh-install builds (v0.1.1 Library, v0.1.2 Project); not in-place migration *(→ resolves red-team #5; reverses Theme-D incremental rec)*
 
-**Decided (big-bang):** the redesign is the **completion of v0.1**, shipped as **v0.1.1** —
-it was split out only for issue tracking. It is implemented as **one complete effort**, not
-an incremental ADR-cluster migration: the system is **useless without the complete
-redesign**, so no partial/half-migrated state has user value and there is no
-incremental-delivery benefit to weigh against migration risk. The red-team's "half-renamed
-running vault" risk is avoided not by incrementalism but by the **fresh-install model**
-([Installation redesign](installation-redesign.md), #310): build the complete system from
-`src/` and install it fresh, **replacing** the v0.1 prototype rather than migrating in place.
+**Decided:** v0.1.0 (shipped) was the **infrastructure**. The workspace implementations land
+as **complete, fresh-installed releases** — **v0.1.1 (Library workspace)** then **v0.1.2
+(Project workspace)**, with **UI** the phase after — *not* an incremental in-place
+ADR-cluster migration of the running vault. Each release builds the complete system from
+`src/` and installs it fresh, **replacing** the prototype rather than migrating in place
+([Installation redesign](installation-redesign.md), #310), so there is never a half-migrated
+state (the red-team's Theme-D risk). The releases are workspace-sized because each is a
+coherent, usable slice — but each lands whole, not as partial ADR clusters.
 
-**Why:** when no intermediate state is shippable or usable, big-bang is the rational choice;
-fresh-install sidesteps the in-place half-state failure mode the red-team flagged. It is
-v0.1's completion, not a later major version.
+**Why:** fresh-install sidesteps the in-place half-state failure mode the red-team flagged;
+phasing by *workspace* (each a coherent slice) avoids both a risky one-shot of everything
+and the half-migrated-vault risk. v0.1.0 stays as shipped — it is **not** renamed.
 
-**Alternatives weighed:** incremental migration ADR + dependency DAG across versions, or
-deferring to a new major version (the red-team rec — rejected: no valuable partial states,
-and the redesign is v0.1's completion).
+**Alternatives weighed:** an incremental migration ADR + dependency DAG that mutates the
+running vault across versions (the red-team rec — rejected: in-place migration is the risk
+here, not the cure); renaming v0.1.0 → v0.0.1 (rejected — it is already tagged and
+published); one big-bang of the whole system at once (rejected — workspace-sized slices are
+each independently coherent and testable).
 
 ---
 

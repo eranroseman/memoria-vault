@@ -48,7 +48,7 @@ graduates via the [decisions pipeline](../adr/README.md).
 - Appendix E — the board (control plane)
 - Appendix F — related backlog
 - Appendix G — ADR impact (detail)
-- Appendix H — the project workflow (v0.2)
+- Appendix H — the project workflow (v0.1.2)
 
 ---
 
@@ -563,10 +563,13 @@ worklist** (§3.4), not N cards — one aggregate work-prompt points at the work
 
 ## 9. To revisit
 
-- **Projects / the Project Workspace** — the project workflow is now defined in
-  **Appendix H** (v0.2: brief → relevance scan → lit-search → canvas → outline). Still
-  open: the `plan→draft→deliverable`-as-states model, and **write · code · verify** detail
-  — **v0.3**.
+- **Release phasing.** v0.1.0 (shipped) was the **infrastructure**; **v0.1.1** is the
+  **Library workspace** (catalog · extract · link + the Catalog/Notes/Inbox/co-PI/engines
+  that serve it); **v0.1.2** is the **Project workspace** (map · draft · verify + the project
+  workflow, Appendix H); **the UI** is the phase after v0.1.2. (v0.1.0 stays as shipped — not
+  renamed.)
+- **Projects / the Project Workspace (v0.1.2)** — still open within it: the
+  `plan→draft→deliverable`-as-states model and the write/code/verify detail (Appendix H).
 - **Profile consolidation** ripples through existing docs — old Librarian + Analyst now
   unify as **Librarian** (catalog·extract·link·map); Verifier splits (judgment →
   **Peer-reviewer**, sweeps → engines); Coder → **Engineer**; **Socratic folds into the
@@ -741,11 +744,11 @@ schema; a spike, not a swap.
 
 ### Scoping
 
-This redesign supersedes ADR-01/04 and renames profiles/folders — it is the **completion of
-v0.1**, shipped as **v0.1.1** (split out only for issue tracking). It lands as **one
-complete effort** (big-bang, D52), not incrementally — the system isn't usable until it
-does; the **fresh-install** model replaces the v0.1 prototype rather than migrating it in
-place.
+This work supersedes ADR-01/04 and renames profiles/folders. v0.1.0 (shipped) was the
+**infrastructure**; the workspace implementations follow as **v0.1.1 (Library workspace)**
+then **v0.1.2 (Project workspace)** — each a complete, **fresh-installed** slice (build from
+`src/`, replace the prototype), not an incremental in-place migration (D52). **UI work
+follows v0.1.2.**
 
 ## Appendix G — ADR impact (detail)
 
@@ -795,12 +798,13 @@ If adopted, each firm decision graduates via the
 10 (claim supersession), 21 (autonomy ceiling), 22 (Hermes runtime),
 24 (single-researcher), 33 (BERTopic clustering).
 
-## Appendix H — the project workflow (v0.2)
+## Appendix H — the project workflow (v0.1.2)
 
 A project moves through phases — **iterative, not linear**, but with a natural progression
-from *gathering* (Library side) to *producing* (Project side). **v0.2 defines phases 1–5**
-(brief → outline); **write · code · verify (6–8) are v0.3** — sequenced, not yet detailed.
-Each phase composes the six delegable tasks (§4.1); the agent is chosen by **posture**.
+from *gathering* (Library side) to *producing* (Project side). The whole project workflow is
+the **Project workspace (v0.1.2)**; phases 1–5 (brief → outline) come first, then write ·
+code · verify (6–8). Each phase composes the six delegable tasks (§4.1); the agent is chosen
+by **posture**.
 
 | # | Phase | Agent | Input | Output (type) | Gate / mechanism |
 |---|---|---|---|---|---|
@@ -809,9 +813,9 @@ Each phase composes the six delegable tasks (§4.1); the agent is chosen by **po
 | 3 | **Literature search** | **Librarian** (`catalog` + `map`) | brief + linked sources | a **new-sources report** (`report`) | same worklist shape; recommends catalog additions, then re-links |
 | 4 | **Canvas** — the thread | **Librarian** proposes (`map:seed-canvas`); **PI** authors | linked claims/sources | a **canvas** (`sketch`) | deep work; the ZK-style connecting phase |
 | 5 | **Outline** | **Writer** (`draft`) | the canvas | an **outline** (`sketch` → `composition`) | **one-way seed** from the canvas, then it diverges (no two-way sync) |
-| 6 | **Write** | **Writer** (`draft`) | outline + claims | `composition` (draft → deliverable 🔒) | **v0.3** |
-| 7 | **Code** | **Engineer** (`code`) | composition | `code` handoff | **v0.3** |
-| 8 | **Verify** | **Peer-reviewer** (`verify`) | the draft / deliverable | the certify gate | **v0.3** |
+| 6 | **Write** | **Writer** (`draft`) | outline + claims | `composition` (draft → deliverable 🔒) | **later in v0.1.2** |
+| 7 | **Code** | **Engineer** (`code`) | composition | `code` handoff | **later in v0.1.2** |
+| 8 | **Verify** | **Peer-reviewer** (`verify`) | the draft / deliverable | the certify gate | **later in v0.1.2** |
 
 **The relevance / new-source report structure** (phases 2–3): a *scope + screening header*
 (the question, the catalog scanned, and an include/exclude line *with reason* per source —
