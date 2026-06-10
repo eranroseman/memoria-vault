@@ -32,9 +32,9 @@ from __future__ import annotations
 
 import argparse
 import csv
-import re
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
