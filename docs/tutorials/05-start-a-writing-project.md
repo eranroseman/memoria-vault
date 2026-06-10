@@ -128,7 +128,7 @@ Save `CHOSEN.md`.
 
 **Your corpus is scoped. Your framing is committed. The next step is prose.**
 
-**See also:** [The Mapper](../explanation/profiles/mapper.md) — how scope-project builds a corpus map and what the clustering and gap signals mean.
+**See also:** [The Mapper](../explanation/profiles/librarian.md) — how scope-project builds a corpus map and what the clustering and gap signals mean.
 
 ---
 

@@ -6,115 +6,57 @@ nav_order: 1
 
 # The vault
 
-The vault is where durable knowledge lives. Everything else in Memoria — the board, the profiles, the dashboards — exists to serve it. This document explains the vault's structure: what the folders mean, how notes move through it, and the conventions that keep it navigable.
-
-For the conceptual model behind the design choices (why lifecycle folders, what note types represent, why promotion is gated), see [Knowledge](../knowledge).
+The vault is where durable knowledge lives. Everything else in Memoria — the board, the agents, the engines, the dashboards — exists to serve it. This page explains its structure: the category folders, the type homes, the gated zones, and the conventions that keep it sound.
 
 ---
 
-## Folder structure
+## Category folders, not lifecycle numbers
 
-Folders encode **lifecycle stage**, not subject area. The top-level number indicates where in the capture → describe → think → work → ship progression a note sits.
+The top level is organized by **category** — one content kind per folder, no lifecycle numbers ([ADR-47](../../adr/47-type-first-category-folders.md)). The knowledge is a *network*, not a pipeline: direction lives in the state property, not in folder ordering.
 
 ```text
 <vault-root>/
-├── home.md              ← front door (obsidian-homepage opens it on launch)
-├── research-focus.md  ← Librarian's session-start input (human-edited)
-├── troubleshooting.md   ← offline-fallback help (kept in-vault by design)
-├── 00-meta/             ← the human's read surface: dashboards
-│   └── 01-dashboards/
-│   (reference notes live on the website; templates live in 99-system/)
-├── 10-inbox/            ← not yet classified; queue, not storage
-│   ├── 01-fleeting/
-│   ├── 02-answers/
-│   └── 03-candidates/
-├── 20-sources/          ← describes the world
-│   ├── 01-papers/
-│   ├── 02-items/
-│   └── 03-entities/
-├── 30-synthesis/        ← expresses the human's thinking
-│   ├── 01-claims/       ← review-gated; human-authored
-│   ├── 02-reference/    ← review-gated
-│   └── 03-moc/          ← review-gated
-├── 40-workbench/        ← active work, organized by project
-│   └── <project>/
-│       ├── 01-map/
-│       ├── 02-framing/
-│       ├── 03-canvas/
-│       ├── 04-drafts/
-│       ├── 05-verification/
-│       └── 06-code/
-├── 50-deliverables/     ← finished and shipped; review-gated
-├── 90-assets/           ← attachments and binary files
-├── 95-archive/          ← deprecated or superseded notes
-├── 99-system/           ← machine-consumed/generated, Obsidian-visible: logs, board, metrics, eval, skills, templates
-│   ├── logs/
-│   ├── board/
-│   ├── metrics/
-│   ├── eval/
-│   ├── skills/
-│   └── templates/      ← 17 template files: 16 note-type templates (QuickAdd instantiates these) + screening-protocol.md (a program-control template)
-├── .obsidian/           ← Obsidian config (auto-hidden)
-└── .memoria/            ← Memoria tooling (auto-hidden)
-    ├── profiles/        ← seven Hermes profile directories
-    ├── mcp/
-    ├── lane-overrides/
-    └── memoria.bib
+├── home.md         ← front door
+├── catalog/        ← CATALOG: structured entity records (Obsidian Bases)
+│   papers · people · organizations · venues · datasets · repositories
+├── notes/          ← NOTES: prose (Zettelkasten)
+│   fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
+├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.1)
+├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert cards
+├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
+├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
+└── .memoria/       ← hidden runtime (MCP, profiles, schemas, golden copy)
 ```
 
-The four **review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) are structurally protected — no profile can write to them without a human `review_status: approved`. The policy MCP enforces this at the filesystem level.
+**One folder never mixes two categories**, and folders are named for their *content*, not for a doer — both the ingest engine and the Librarian agent operate *on* `catalog/`. The type → folder-home map is machine-read (`.memoria/schemas/folders.yaml`) and is the single source for the Linter, the policy gate, the installer skeleton, and the tests.
 
----
+## Types and their homes
 
-## Why the structure is this way
+- **Catalog** — entity records: paper, person, organization, venue, dataset, repository. Built by the ingest engine from metadata APIs; flat, Bases-queryable frontmatter; **not gated** — relationships are given facts (with one escape valve: low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
+- **Notes** — prose: fleeting, source, claim 🔒, hub 🔒, index. The claim is the unit of the PI's thinking; the hub (the renamed MOC) is its structure note.
+- **Projects** — report, sketch, composition, code — project-scoped work artifacts. Empty in v0.1.1; the Project workspace ships in v0.1.2.
+- **Inbox** — candidate, gap, flag, alert cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). The kanban board and queue dashboards are *views* of this folder.
+- **System** — logs, templates, patterns, dashboards, board: visible, git-tracked infrastructure (hidden runtime stays in `.memoria/`).
 
-**Lifecycle over topic** — a paper about attention lives in `20-sources/01-papers/`, not `cognitive-science/`. Topics live in frontmatter where they can be many-to-many; lifecycle stage lives in the folder where it is one-to-one. See [Why folders encode lifecycle, not topic](../knowledge/lifecycle-over-topic.md).
+## Gated zones
 
-**`30-synthesis/` is human territory** — claim notes and MOCs are human-authored. Agents draft candidates that land in `10-inbox/`; the human writes the canonical synthesis. The review-gated-zone deny rule enforces this structurally.
+The review-gated zones 🔒 — `notes/claims/` and `notes/hubs/` in v0.1.1 (project deliverables join in v0.1.2) — are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment.
 
-**`40-workbench/` groups by project — the downstream half of the same principle.** The web zones (`10`–`30`) hold a *web* of notes, navigated many-to-many through MOCs and queries; the workbench holds the *thread*, where one project distills a single train of thought. Its sub-folders (`01-map`, `02-framing`, `04-drafts`, …) are the stages of that one thread, and the whole project archives as a unit when it ships. A project is not a topic — it's a bounded, transient effort. See [lifecycle-over-topic.md → "The workbench"](../knowledge/lifecycle-over-topic.md#the-workbench-the-web-and-the-thread).
+## Archived is a state, not a folder
 
-**`90-assets/` does not hold PDFs** — PDFs live in Zotero's storage; paper notes reference them via `pdf_uri`. `90-assets/` holds Marker-extracted markdown and binary attachments.
+Everything the PI sees uses one lifecycle chain — `proposed → provisional → current → retracted → archived` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)), each type using a subset. A state change is a frontmatter edit, never a file move: an archived note stays in its type-home and drops from active views, preserving links and provenance. There is no archive folder. Likewise `links:` on notes are authored connections the PI confirms, while `relationships` on entities are given facts built by ingest ([ADR-52](../../adr/52-links-vs-relationships.md)) — two kinds of connection, two fields, two trust models.
 
----
+## Bases is the view layer; the Linter keeps it sound
 
-## Special files
+Catalog entities (and the Inbox board, and the per-type note queues) surface through **Obsidian Bases** — saved database views over frontmatter. Every row is a file; the records are the source of truth; nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
 
-A small set of singleton files at the **vault root** shape how the system runs:
-
-| File | Purpose | Owned by |
-|---|---|---|
-| `home.md` | The front door, opened on launch by obsidian-homepage. One status glance, then links to the dashboards, the in-vault help note, and the website. | Human (rarely changes) |
-| `research-focus.md` | Current research priorities and synthesis gaps. The Librarian reads this at session start. An empty or stale file produces an unfocused Librarian. | Human (refresh weekly) |
-| `troubleshooting.md` | Offline-fallback help: verify the plumbing, the three core workflows (ingest / review / export) with minimal commands, and recovery. Folds in the former runtime-health snapshot. Kept in-vault — needed precisely when Hermes or ACP is down. | Human (rarely changes) |
-
----
-
-## Promotion map
-
-Knowledge moves left-to-right through the folder numbers: capture (`10-inbox/`) into sources (`20-sources/`) or synthesis (`30-synthesis/`), and on to deliverables (`50-deliverables/`). Each move is a *promotion* — a fleeting note becomes a classified paper- or item-note (Librarian enriches, human classifies) or a claim note (human writes directly); an answer note distills into a claim note; a claim note matures into a reference note or joins a MOC; a draft exports to a deliverable. A `paper-note` never becomes a `claim-note` directly — the distinction between "what the source says" and "what the human thinks" is preserved. Archived notes stay in place for provenance, and only humans move notes to `95-archive/`.
-
-The move-by-move map, the disallowed moves, and the reasoning behind the synthesis gate live in [Why promotion is gated](../knowledge/promotion-model.md) — the single source for the promotion model. This overview states the path in prose rather than reproducing the diagram, so the two cannot drift.
-
----
-
-## Common pitfalls
-
-See [Common pitfalls](../knowledge/common-pitfalls.md) for the recurring failure modes: unpinned citekeys, inbox accumulation, summaries masquerading as synthesis, and promotion anti-patterns.
+Bases has no integrity guarantees — no schema, no constraints. That gap is the **Linter engine's** job: it validates every record against its type schema in `.memoria/schemas/` (required fields, value types, enum vocabularies, `links:`/`relationships` resolving to real targets) and flags drift as Inbox `flag`s. It is a **monitor and a commit gate**: a pre-commit `schema-check` gates git-tracked writes at commit, and the cron/CI sweep monitors between commits. It does not block a live in-app edit — between a bad edit and the next sweep a Base can briefly serve a malformed record; that window is accepted under the solo premise and bounded by the commit gate. On detected drift in system files, the Linter can restore from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ---
 
 ## Related
 
-**Explanation**
-
-- Why notes move through the folders: [The knowledge cycle](../knowledge/knowledge-cycle.md)
-- Why review-gated zones exist: [Why the review gate is structural](../rationale/why-human-gate.md)
-- How the vault ships and deploys: [Distribution model](../deployment/distribution-model.md)
-
-**Reference**
-
-- Frontmatter fields: [Frontmatter fields](../../reference/frontmatter.md)
-- Note types (all 16, with templates): [Note types](../../reference/note-types.md)
-- Linking patterns: [Wikilink and link conventions](../../reference/linking.md)
-- On-disk layout (full tree): [On-disk layout](../../reference/on-disk-layout.md)
+- The full stack the vault sits under: [Architecture](README.md)
+- The agent→human signal folder in depth: [ADR-51](../../adr/51-inbox-category-and-honesty-card.md)
+- The engines that maintain the vault: [Engines](../engines/README.md)
+- Why the review gate is structural: [Why the review gate is structural](../rationale/why-human-gate.md)

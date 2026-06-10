@@ -84,7 +84,7 @@ Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
 
 **Ingest setup (once):**
 
-- [ ] Better BibTeX **postscript** applied so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../reference/ingest.md#zotero-fields-without-the-zotero-api). Re-export the `.bib`.
+- [ ] Better BibTeX **postscript** applied so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../reference/ingest.md#frontmatter-written-at-ingest). Re-export the `.bib`.
 - [ ] A seeded `00-meta/vocabulary.md` is present (ships with the vault).
 
 **Run a real paper end-to-end** (Zotero capture → card, or a manual ingest card):

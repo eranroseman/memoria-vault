@@ -91,7 +91,7 @@ For each included paper:
 
 1. Add to Zotero — Better BibTeX auto-assigns a citekey
 2. Pin the citekey if needed: [Pin a citekey](pin-a-citekey.md)
-3. Let the `.bib` auto-export trigger Librarian ingest, or run manually (full syntax in [Hermes CLI](../../reference/hermes-cli.md#librarian)):
+3. Let the `.bib` auto-export trigger Librarian ingest, or run manually (full syntax in [Hermes CLI](../../reference/hermes-cli.md#the-profile-set)):
 
 ```bash
 hermes -p memoria-librarian chat -s obsidian-paper-note

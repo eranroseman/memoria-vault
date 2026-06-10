@@ -130,7 +130,7 @@ This is the human gate that makes Memoria safe to run unattended — agents prop
 
 **You've experienced the complete research loop.** Compile: you brought in papers and wrote claim notes. Compose: you scoped, framed, wrote, and verified. The verification found a gap. You addressed it.
 
-**See also:** [The Verifier](../explanation/profiles/verifier.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the Compile loop.
+**See also:** [The Verifier](../explanation/profiles/peer-reviewer.md) — how the Verifier traces claims, what similarity-check findings mean, and why gap cards close the Compile loop.
 
 ---
 

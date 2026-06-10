@@ -5,42 +5,45 @@ nav_order: 2
 grand_parent: Dashboards
 ---
 
-
 # The board-state dashboard
 
-The board-state dashboard is the human's Obsidian window into the Hermes Kanban board. Open it when you're already in Obsidian and want to see card state without switching to the Hermes workspace view.
+The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox board — the agent→human action queue. Open it when Home's "Needs me" view isn't enough and you want everything: every card, every state, plus what the workers are executing underneath.
 
 ---
 
 ## What it shows
 
-Four sections, each answering a different question about work in flight: **active cards** (what's running, per lane), the **review queue** (`done` cards awaiting the human's `review_status` decision), **retry watch** (cards accumulating retries — the signal that something is broken, not just slow), and the **claim-note maturity histogram** (`seedling → budding → evergreen`, the downstream output of the board's work). It reads the markdown card projections in `99-system/board/` via Dataview.
+The page is built on **`inbox.base`** — the one Obsidian Base over `inbox/`, grouped by card type ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)). Its **"Needs me"** view (cards in `proposed` — the same view `home.md` embeds) comes first; an **"All cards"** view (everything in flight, whatever its state) follows. A third section lists the **live worker cards** — the read-only markdown exports in `system/board/` that mirror what each Hermes lane is currently executing.
+
+Cards in `proposed` are waiting on you; the queue converges to empty. That convergence is the design: batch screening never lands here as N cards (one aggregate work-prompt points at the worklist instead), so a long queue always means real decisions, not noise.
 
 ---
 
 ## What this dashboard is not
 
-**Not the authoritative board.** The authoritative board lives in `kanban.db` (Hermes); the `99-system/board/` markdown cards are read-only projections (no configuration makes them authoritative). Board-state is a *read view*. State changes happen through Hermes commands, not through this dashboard — and not by editing the projected card files, which does nothing.
+**Not a separate query page.** Board state *is* the Inbox rendered through a Base — the same files, the same state. Acting on a card here (its lifecycle edit) is the real action, not a mirror of one.
 
-**Not [Daily Health](daily-health.md)'s "today's queue."** Daily Health shows only `blocked` cards and those awaiting review, capped at ten. Board-state shows the full board across all states — every active card, every lane, everything in retry watch.
+**Not the authoritative execution board.** The worker-card section reads the `system/board/` projections of `kanban.db`. Those are one-way and ephemeral — editing a projected file does nothing; the execution `status` chain is the hidden mechanic the PI never manages.
 
-**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is a Compile-side cognitive-discipline view — paper notes classified but not yet Socratically processed. Board-state is a workflow-execution view — cards moving through states regardless of content type.
+**Not Home's "Needs me" view.** Home shows only the `proposed` slice, capped for a 30-second glance. Board-state shows the whole board — everything in flight, plus the worker layer.
+
+**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is a Library-side cognitive-discipline view — sources read but not yet distilled. Board-state is the action-and-execution view — cards, regardless of content.
 
 ---
 
 ## Why it's designed this way
 
-**Four sections, four distinct concerns.** Active cards surface work-in-flight visibility. The review queue shows who owes what review — the human's obligation toward agent output. Retry watch shows which cards are accumulating retries — the signal that something is broken rather than just slow. The claim-note maturity histogram shows whether the board is actually advancing the knowledge graph (covered just below). Each section names a different thing to watch; separating them prevents the human from having to parse a single mixed list.
+**One Base, several views — not several dashboards.** "What needs me?", "what's in flight?", and "what are the workers doing?" are slices of one queue. Keeping them as views of `inbox.base` means there is exactly one definition of a card and one place its state lives; a second source of truth is what the old standalone board dashboard kept threatening to become.
 
-**The claim-note maturity histogram is an end-of-board signal.** The board processes upstream work; claim notes at `maturity: seedling → budding → evergreen` are the downstream output of that work. A board that flows cards without producing maturity is a board that is not advancing the knowledge graph. Showing both on the same dashboard makes the throughput relationship visible.
+**The lifecycle chain is the card state you see.** No execution vocabulary leaks into the view: `proposed` = awaiting you, `current` = acted on, `archived` = closed — the same chain every note uses, scoped to `inbox/` so card-state and note-state never collide.
 
-**Markdown-backed only.** The dashboard queries assume board cards are represented as markdown files in `99-system/board/`. If Hermes is the sole source of truth and there is no markdown export, this dashboard is intentionally empty — Hermes Workspace is the right surface in that case.
+**Worker cards are included but last.** They answer "is the machine actually working?" — useful when a lane seems stuck — but they are the mechanic's view, deliberately below the decisions the PI owns.
 
 ---
 
 ## Related
 
-- Filtered daily subset: [Daily Health](daily-health.md)
-- Compile-discipline complement: [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md)
-- Troubleshooting guides for board problems: [fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
-- Kanban state machine explanation: `kanban-board/README.md`
+- The Home surface this feeds: [The Daily Health dashboard](daily-health.md)
+- How the projections work: [How the board surfaces in Obsidian](../../kanban-board/obsidian-projection.md)
+- The card format: [The honesty card](../../kanban-board/card-schema.md)
+- Troubleshooting board problems: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

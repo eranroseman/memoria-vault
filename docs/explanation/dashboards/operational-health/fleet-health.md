@@ -13,11 +13,11 @@ Tracks whether the Hermes agent fleet is performing well over time. This dashboa
 
 Operational health per lane over time: cost per task, success rate, retry frequency, latency, and the headline **trust score** (0–100). The trust score is the number to read first; the rest are the signals it rolls up.
 
-The trust score for each lane is a composite of several signals: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and — for lanes that produce `[!suggestions]` callouts — accept/reject ratios on those suggestions.
+The trust score for each lane is a composite of several signals: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and — for lanes that raise proposal cards — the PI's accept/reject ratios and time-on-gate on those proposals (the gate's attention instrumentation, D49).
 
-The score is designed so that no single signal dominates, which means a lane can have a perfect citation-check record but a low trust score if its suggestion accept rate signals rubber-stamping. Conversely, a high accept rate combined with a low success rate would still produce a low score. The composite is what makes the number a summary of overall lane health rather than a measure of any one metric.
+The score is designed so that no single signal dominates, which means a lane can have a perfect citation-check record but a low trust score if its proposal accept rate signals rubber-stamping. Conversely, a high accept rate combined with a low success rate would still produce a low score. The composite is what makes the number a summary of overall lane health rather than a measure of any one metric.
 
-The suggestion-ratio signal is worth understanding in both directions. A very high accept rate (above ~90%) indicates the human is approving suggestions without reading them — the signal has become noise. A very low accept rate (below ~20%) indicates the candidate scoring algorithm is producing poor candidates that need tuning. Both extremes down-weight the lane score, because both represent a failure of the suggestions mechanism to do useful work.
+The accept-ratio signal is worth understanding in both directions. A very high accept rate (above ~90%) indicates the human is approving proposals without reading them — the honesty card's against-case has stopped being read, and the signal has become noise. A very low accept rate (below ~20%) indicates the lane is producing poor proposals that need tuning. Both extremes down-weight the lane score, because both represent a failure of the proposal mechanism to do useful work.
 
 For the exact band thresholds and the score formula, see [Glossary](../../../reference/glossary.md).
 
@@ -31,7 +31,7 @@ For the exact band thresholds and the score formula, see [Glossary](../../../ref
 
 ## When it shows real data
 
-The dashboard and its metrics aggregator ship with the starter vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. The dashboard degrades gracefully: it shows explanatory text rather than empty or misleading small-sample tables.
+The dashboard and its metrics aggregator ship in `src/` and deploy with the vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. The dashboard degrades gracefully: it shows explanatory text rather than empty or misleading small-sample tables.
 
 ## Related
 

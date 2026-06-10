@@ -6,17 +6,17 @@ nav_order: 6
 
 # Vocabulary discipline
 
-A vault that grows without vocabulary discipline accumulates a silent failure: the same concept gets different names in different notes, and Dataview queries return half the corpus on a topic while the human believes coverage is thin. This document explains why the three classification fields are separate, how vocabulary drift happens, and why the stabilization happens in stages.
+A vault that grows without vocabulary discipline accumulates a silent failure: the same concept gets different names in different notes, and queries return half the corpus on a topic while the PI believes coverage is thin. This document explains why the classification facets are separate, how vocabulary drift happens, and why the stabilization happens in stages.
 
-For the exact field definitions, allowed values, and the open `study_design` vocabulary, see [Frontmatter fields](../../reference/frontmatter.md).
+For the exact field definitions and allowed values, see [Frontmatter fields](../../reference/frontmatter.md).
 
-## Why three separate fields, not one
+## Why separate facets, not one tag field
 
-Memoria uses three distinct classification fields — `study_design`, `methods`, and `topic` — rather than one general-purpose tag field. The separation is not bureaucratic; it reflects that these three dimensions answer categorically different questions.
+Memoria classifies sources with two distinct facets — `research-area` and `methodology` — plus `topics` on claim notes, rather than one general-purpose tag field. The separation is not bureaucratic; the facets answer categorically different questions.
 
-`study_design` captures research architecture: *how* a study was structured. `methods` captures specific techniques used. `topic` captures conceptual content: *what* the work is about. A query asking "show me all RCTs" is a question about `study_design`. A query asking "everything on sensemaking" is a question about `topic`. Routing these to the same field makes both queries unreliable — the field can't simultaneously be the answer to orthogonal questions.
+`methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research-area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research-area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
 
-The Linter's `schema-check` command validates that field values match the defined vocabulary, but only after the vocabulary has been defined. Drift from a vocabulary that doesn't yet exist is invisible to the Linter.
+The Linter's `lint:check-schema` pass validates that facet values match the defined vocabulary, but only after the vocabulary has been defined. Drift from a vocabulary that doesn't yet exist is invisible to the Linter.
 
 ## Why vocabulary stabilization is deferred
 
@@ -24,17 +24,17 @@ Early in a vault's life, forcing term consistency is counterproductive. The righ
 
 The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
 
-This is also why reference taxonomies (MeSH, ACM CCS, OpenAlex) are kept in the `_enrichment` namespace rather than in `topic`. Those taxonomies are too granular and inconsistently applied across databases to serve as Dataview query targets. The custom `topic` vocabulary is what the human queries; the API taxonomies are what the human browses.
+This is also why `research-area` is seeded from **OpenAlex topics** by the ingest engine: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
 
 ## Why drift fails silently
 
-Vocabulary drift — the same concept appearing as `topic: receptivity-detection` in some notes and `topic: opportune-moments` in others — produces no error. Queries return incomplete results; the human infers thin coverage when coverage is adequate; research directions are shaped by a false gap signal. The failure is invisible until the vocabulary is audited.
+Vocabulary drift — the same concept appearing as `topics: receptivity-detection` in some claims and `topics: opportune-moments` in others — produces no error. Queries return incomplete results; the PI infers thin coverage when coverage is adequate; research directions are shaped by a false gap signal. The failure is invisible until the vocabulary is audited.
 
-This is the class of failure the Linter's `schema-check` command is designed to catch, but only after the canonical vocabulary is defined. Before the canonical list exists, drift is entirely silent. See [Common pitfalls](common-pitfalls.md) for the concrete failure scenario and how it compounds over time.
+This is the class of failure the Linter's `lint:check-schema` pass is designed to catch, but only after the canonical vocabulary is defined. Before the canonical list exists, drift is entirely silent. See [Common pitfalls](common-pitfalls.md) for the concrete failure scenario and how it compounds over time.
 
 ## Related
 
-- The Linter's schema-check command: [The Linter](../profiles/linter.md)
+- The engine that validates the vocabulary: [Engines](../engines/README.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
 - The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/curate/manage-vocabulary.md)
-- Field definitions and the open `study_design` vocabulary: [Frontmatter fields](../../reference/frontmatter.md)
+- Field definitions: [Frontmatter fields](../../reference/frontmatter.md)

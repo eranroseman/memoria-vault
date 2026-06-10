@@ -5,93 +5,51 @@ parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research commands, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface. For the in-Obsidian `Memoria:` palette see [Obsidian command palette](obsidian-command-palette.md).
+Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is the co-PI conversation (the ACP pane), which delegates board work for you. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
 
-Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile research commands run as `hermes -p memoria-<name> chat -s <command> [args]`.
+Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the desk pane).
 
 ---
 
-## Per-profile commands
+## The profile set
 
-Run as: `hermes -p memoria-<name> chat -s <command> [args]`
+Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)). The v0.1.0 profiles `memoria-mapper` / `-socratic` / `-verifier` / `-coder` / `-linter` are retired; the installer prunes them.
 
-### Librarian
+---
 
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `find` | Forward/backward citation search or concept-driven search. Writes candidates to `10-inbox/03-candidates/`. Flags below. | No |
-| `ingest` | Create the note for a source in the right folder with enrichment. | No |
-| `enrich` | Re-run API enrichment on existing notes. | No |
-| `classify` | Re-propose `_proposed_classification` on a note still needing review. | No |
-| `obsidian-paper-note` | Full ingest pipeline including PDF extraction via Marker and the inline `[!brief]` comparative read. | No |
-| `query` | Deterministic vault search (standalone retrieval). | No |
-| `export prior-labels` | Export vault papers as ASReview priors for pre-ingest screening (frontmatter filter + format conversion). | No |
+## Skill names: the `<task>:<verb>-<object>` convention
 
-**`find` flags** — issued inside the session after `hermes -p memoria-librarian chat -s find`:
+Every skill follows **`<task>:<verb>-<object>`** (snake `<task>_<verb>_<object>` when serialized as an MCP tool): the task/lane is the prefix, the verb comes from a closed set, the object is the artifact — so a skill's name says which task delegates it. The v0.1.0 command names migrate to this scheme; **legacy names in parentheses**:
 
-| Flag | Meaning |
+| Actor | Skills |
 | --- | --- |
-| `--source <citekey>` | Seed paper for a citation search. |
-| `--direction backward` | Papers *cited by* the seed (default is forward — papers that cite it). |
-| `--depth 1` \| `2` | First-order connections vs. broader two-hop sweeps (far more candidates). |
-| `--query "<text>"` | Concept search by research question (query rewrite + hybrid retrieval) instead of a seed. |
-| `--limit <n>` | Cap the number of candidates returned. |
+| **co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` |
+| **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (enrich) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-map) · `map:seed-canvas` (canvas-seed) |
+| **Writer** (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
+| **Peer-reviewer** (verify) | `verify:check-citation` (cite-check) · `verify:trace-claim` (claim-trace) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
+| **Ingest** engine | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
+| **Search** engine | `search:query-vault` (query) · `search:find-similar` |
+| **Clustering** engine | `cluster:model-topics` · `cluster:build-graph` |
+| **Sweeps** engine | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
+| **Linter** engine | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
 
-### Mapper
+Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands.
 
-| Command | What it does | Dry-run? |
+---
+
+## The MCP tool surface
+
+Tools the profiles call (and you can exercise directly when debugging — each server also runs one-shot from the CLI):
+
+| Server | Tool | Does |
 | --- | --- | --- |
-| `scope-project` | Corpus map for a project. Writes `corpus-map.md` to `<project>/01-map/`. | No |
-| `gap-report` | Thin-coverage topics adjacent to a project brief. | No |
-| `cluster-map` | Density / recency map for an arbitrary topic. | No |
-
-### Socratic
-
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `socratic-processing` | Question-only conversation about a note. No writes. | N/A (read-only) |
-| `lens-reading` | Read through a named theoretical lens. Parameterized by lens slug. | N/A (read-only) |
-
-### Writer
-
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `draft` | Search vault and produce an answer note for human review. | No |
-| `query` | Pre-draft vault search step. | No |
-| `lint` | Request a Linter pass on the current draft (Linter executes; Writer only requests). | N/A (handoff) |
-| `promote` | Propose promotion of a claim → reference note (handoff; human approves). | N/A (handoff) |
-
-### Verifier
-
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `cite-check` | Verify every citekey in a draft resolves to a real paper note. | Yes (default) |
-| `claim-trace` | Trace each substantive claim to a supporting claim note (wikilink walk → citekey+similarity → similarity search; LLM only on the ambiguous middle band). | Yes |
-| `similarity-check` | Top-N most-similar notes; flag at threshold ~0.8; never auto-merge. | Yes |
-| `find-duplicates` | Identify semantically similar claim notes for merge review. | Yes; never auto-merges |
-| `retraction-check` | Scan paper notes against Zotero retraction alerts and CrossRef. | Yes (default) |
-
-### Coder
-
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `code` | Scaffold a `code-note` handoff for the external coding agent. | No |
-| `commit` | Commit one logical change per call. | No |
-| `revert` | Revert a prior Coder commit; scoped small. | No |
-| `workspace` | Set up VS Code workspace (vault read-only; code zone writable). | N/A |
-| `scaffold` | Generate the `code-note` skeleton from the template. | No |
-
-### Linter
-
-| Command | What it does | Dry-run? |
-| --- | --- | --- |
-| `lint` | Structural health check across the vault. | Yes (default) |
-| `schema-check` | Verify frontmatter against the authoritative schema. | Yes |
-| `schema-migrate` | Propose schema changes between versions. Always dry-run first. | Yes (always required first) |
-| `graph-analyze` | Knowledge graph health: orphans, hubs, clusters, link density. | Yes |
-| `health-report` | Rolls structural findings into the verdict band (PASS / REVIEW / FAIL). | Yes |
-| `session-log` | Write per-session log to `99-system/logs/`. | N/A |
-| `dry-run` | Run any check in report-only mode. | Yes (by definition) |
+| tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
+| cluster | `cluster_build_graph(seed)` | NetworkX over authored `links:` + given `relationships` → nodes, typed edges, communities, centrality, layout. Read-only; params echoed. |
+| cluster | `cluster_model_topics(folder, min_cluster_size)` | BERTopic over note text → topics, doc-topic map, outliers (needs the opt-in cluster stack). |
+| patterns | `patterns_list(mode)` | Runnable (`lifecycle: current`) patterns, optionally filtered by `library` / `project`. |
+| patterns | `patterns_run(pattern_id, input_text, input_ref)` | Compose preamble + pattern + input → the prompt + staging target; gated targets degrade to dry-run; every run provenance-logged to `system/logs/patterns.jsonl`. |
+| ingest | `ingest_pipeline(citekey, enrich, pdf_path)` | The deterministic draft bundle with the two LLM holes. See [Ingest routing](ingest.md). |
+| policy | `check_permission` / `complete_write` | The write gate. See [Policy MCP](policy-mcp.md). |
 
 ---
 
@@ -101,17 +59,14 @@ Run as: `hermes -p memoria-<name> chat -s <command> [args]`
 | --- | --- |
 | `hermes kanban list` | List all cards on the board. |
 | `hermes kanban show <card-id>` | Full card state: status, retry count, blocker reason, handoff summary. |
-| `hermes kanban create "<title>" --assignee memoria-<name>` | Create a new card in `triage`. |
+| `hermes kanban create "<title>" --assignee memoria-<name>` | Create a card (the tasks MCP shells out to this same command; `--idempotency-key` dedupes). |
 | `hermes kanban specify <id>` | Flesh out a `triage` card into a concrete spec → `todo`. |
 | `hermes kanban release <id>` | Release a `todo` card to `ready` for dispatch. |
-| `hermes kanban dispatch` | Run one dispatcher pass (claims all `ready` cards for matching lanes). |
-| `hermes kanban claim <id>` | Manually claim a `ready` card (script/debug use only). |
-| `hermes kanban unblock <id>` | Clear a `blocked` card → `ready` (after fixing the underlying issue). |
-| `hermes kanban edit <id> --assignee <lane>` | Correct an unresolvable assignee on a stuck-ready card. |
+| `hermes kanban dispatch` | Run one dispatcher pass. |
+| `hermes kanban unblock <id>` | Clear a `blocked` card → `ready`. |
+| `hermes kanban edit <id> --assignee <lane>` | Correct an unresolvable assignee. |
 | `hermes kanban archive <id> --reason "<text>"` | Archive a terminal card with an explicit reason. |
 | `hermes kanban decompose <id>` | Fan out a `triage` card into child task cards. |
-
-See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on commands that target synthesis or deliverable folders.
 
 ---
 
@@ -119,10 +74,10 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 | Command | What it does |
 | --- | --- |
-| `hermes profile list` | List all registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --alias <alias> --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` — it handles `{{VAULT_PATH}}` substitution first. |
-| `hermes profile show <alias>` | Show a profile's `SOUL.md`, MCP servers, allowed skills, and `.env` key names (values redacted). |
-| `hermes profile remove <alias>` | Remove the profile registration. Does not delete the vault source files under `.memoria/profiles/`. |
+| `hermes profile list` | List registered profiles: alias, status, installed path. |
+| `hermes profile install <dir> --name <name> --alias --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` — it handles the `{{PYTHON}}`/`{{VAULT_PATH}}` substitution and the env seeding first. |
+| `hermes profile show <alias>` | A profile's `SOUL.md`, MCP servers, skills, and `.env` key names (values redacted). |
+| `hermes profile remove <alias>` | Remove the registration (used by the installer to prune the retired five). Does not delete the vault source under `.memoria/profiles/`. |
 
 ---
 
@@ -130,9 +85,8 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 | Command | What it does |
 | --- | --- |
-| `hermes skills list` | List all available skills. |
-| `hermes skills install <skill-name>` | Install a skill. |
-| `hermes profile show <alias> \| grep skills` | Check which skills a profile currently loads. |
+| `hermes skills list` | List installed skills. |
+| `hermes skills install <id> --yes` | Install a hub skill (the installer fetches `obsidian-markdown` and `qmd` this way). |
 
 ---
 
@@ -140,26 +94,16 @@ See [policy-mcp.md — Review-gated zones](policy-mcp.md) for the rule on comman
 
 | Command | What it does |
 | --- | --- |
-| `hermes cron list` | List all scheduled tasks with next-run times. |
+| `hermes cron list` | List scheduled tasks with next-run times (you should see `memoria-board-export`, `memoria-sweeps`, `memoria-lint`). |
+| `hermes cron create '<spec>' --script <name>.sh --no-agent --name <name> --deliver local` | The shape the installer uses for the deterministic crons. |
 | `hermes cron run <task-name>` | Run a scheduled task immediately. |
-| `hermes cron enable <task-name>` | Enable a disabled task. |
-| `hermes cron disable <task-name>` | Disable a task without removing it. |
+| `hermes cron enable <task-name>` / `disable <task-name>` | Toggle a task without removing it. |
 
 ---
 
 ## Related
 
-**Reference**
-
 - In-Obsidian command palette (`Memoria:` entries): [Obsidian command palette](obsidian-command-palette.md)
-- Lane identifiers the commands map to: [Profile capabilities](profiles.md)
-
-**How-to**
-
-- How to start a chat session: [Run a CLI chat session](../how-to-guides/hermes-agent/chat-with-hermes.md)
-- How to configure a profile: [Configure a profile](../how-to-guides/hermes-agent/configuration.md)
-- Kanban how-to (stuck cards, unblocking): [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md)
-
-**Explanation**
-
-- The profile explanation pages: [Profiles](../explanation/profiles/README.md)
+- The lane identifiers the commands map to: [Profile capabilities](profiles.md)
+- The delegation path behind the board: [Kanban board reference](kanban-board.md)
+- What the installer wires for you: [Installer (bootstrap)](installer.md)

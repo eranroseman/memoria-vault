@@ -45,6 +45,6 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 
 - **Supporting rationale:** [Session logging](../explanation/architecture/session-logging.md) (the two-log table and the not-pre-created rationale).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-23 memory substrates](23-scoped-memory-substrates.md) (audit memory is the append-only substrate); [ADR-24 single-researcher scope](24-single-researcher-scope.md) (multi-machine, single-user safety).
-- **Profiles affected:** the [Linter](../explanation/profiles/linter.md) (owns `99-system/logs/`, writes session summaries, rotates the audit log, runs `vault-hash-drift`).
+- **Profiles affected:** the [Linter](../explanation/engines/README.md) (owns `99-system/logs/`, writes session summaries, rotates the audit log, runs `vault-hash-drift`).
 - **Reference:** [Policy MCP](../reference/policy-mcp.md) (audit log format and enforcement).
 - **Source discussion:** retroactively records the two-log separation already embedded in `session-logging.md`.

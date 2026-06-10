@@ -24,12 +24,14 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 | Substrate | What it holds | Scope · lifespan | Backing |
 | --- | --- | --- | --- |
-| **Handoff memory** | What travels with a task card between profiles: goal, context, allowed paths, expected outputs. | one card · across profiles | Memoria — Kanban |
-| **Agent memory** (`MEMORY.md` + `USER.md`) | What one agent durably knows about its world — environment, conventions, learned preferences, plus your working style. Frozen snapshot at session start, under hard token caps (~800 / ~500). | one agent (profile) · durable | Hermes |
-| **Session history** | Searchable record of that agent's past conversations. Recall only — carries no authority, never gates promotion. | one agent, all sessions · indefinite | Hermes |
+| **Handoff memory** | What travels with a task card between lanes: goal, context, allowed paths, expected outputs. | one card · across lanes | Memoria — Kanban |
+| **Agent memory** (`MEMORY.md` + `USER.md`) | What the **co-PI** durably knows about its world — environment, conventions, learned preferences, plus your working style. Frozen snapshot at session start, under hard token caps (~800 / ~500). The co-PI is the **sole memory carrier**; the background lanes are stateless. | the co-PI · durable | Hermes |
+| **Session history** | Searchable record of the co-PI's past conversations. Recall only — carries no authority, never gates promotion. | the co-PI, all sessions · indefinite | Hermes |
 | **Working memory** | The current session's active reasoning — goal, recent tool results, in-flight thought. | one session · cleared on `/clear` | Hermes |
 
-`SOUL.md` is adjacent but is *not* memory — it's the profile's identity prompt, stable across sessions by design.
+`SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
+
+**Why the co-PI alone carries memory.** Concentrating every conversation in one agent is what lets Hermes' self-improving loop — **memory · /goals · skills** — compound into a genuine co-PI rather than fragmenting across lanes that never converse ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The background lanes (Librarian, Writer, Peer-reviewer, Engineer) are stateless propose-then-dispose executors: each run grounds on the card's handoff payload and the vault, never on remembered context.
 
 ---
 
@@ -37,29 +39,29 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 The scoping isn't arbitrary — it follows from what each substrate holds, and the cost of getting it wrong.
 
-**Program memory** is program-wide and persistent because it's the standing strategy you set for the whole research effort — what to pursue (`research-focus`) and how to screen (`screening-protocol`). Every profile that touches the program reads it; you refresh it on your own cadence. It never archives, because the program outlives any one sub-project.
+**Program memory** is program-wide and persistent because it's the standing strategy you set for the whole research effort — what to pursue (`research-focus`) and how to screen (`screening-protocol`). Every agent that touches the program reads it; you refresh it on your own cadence. It never archives, because the program outlives any one sub-project.
 
-**Project memory** is scoped to a single sub-project and archives with it. A project in `40-workbench/<project>/` is a bounded, transient effort; its open questions and decisions are working state that matters while the project is live and becomes provenance once it ships. Keeping it separate from program memory holds "what I want pursued overall" apart from "where this one project's thinking is" — different scope, different lifespan.
+**Project memory** is scoped to a single sub-project and archives with it. A project in `projects/<project>/` is a bounded, transient effort; its open questions and decisions are working state that matters while the project is live and becomes provenance once it ships. Keeping it separate from program memory holds "what I want pursued overall" apart from "where this one project's thinking is" — different scope, different lifespan.
 
-**Audit memory** is append-only because its value is the complete, unmodified chain. Profiles read it; the Policy MCP writes an entry at every gated write, and the Linter only rotates the log weekly (it does not write the entries). The constraint is enforced, not advisory — the Linter's `vault-hash-drift` detector catches files modified outside the trail. Capture must start from day one, because the cost and human-loop trends it tracks can't be reconstructed retroactively.
+**Audit memory** is append-only because its value is the complete, unmodified chain. Agents read it; the Policy MCP writes an entry at every gated write, and the Linter only rotates the log weekly (it does not write the entries). The constraint is enforced, not advisory — the Linter's `vault-hash-drift` detector catches files modified outside the trail. Capture must start from day one, because the cost and human-loop trends it tracks can't be reconstructed retroactively.
 
-**Handoff memory** is per-card rather than per-profile because the handoff is the unit of cross-profile communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-profile handoffs reliable without profiles sharing session state.
+**Handoff memory** is per-card rather than per-agent because the handoff is the unit of cross-lane communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-lane handoffs reliable without agents sharing session state.
 
-**Agent memory** is per-agent and frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
+**Agent memory** belongs to the co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
 
 **Session history** is the cross-session recall channel but carries no authority. It's searchable history — useful for "did we discuss X before?" — but it never gates promotion and is never authoritative over the vault. A session-history result that contradicts a vault note loses; the vault is ground truth.
 
-**Working memory** is correctly session-scoped because it's the agent's active reasoning state. Sharing it across profiles would bleed one lane's in-flight reasoning into another's. Discarding it on `/clear` costs nothing — anything worth keeping must be written to a durable substrate.
+**Working memory** is correctly session-scoped because it's the agent's active reasoning state. Sharing it across agents would bleed one lane's in-flight reasoning into another's. Discarding it on `/clear` costs nothing — anything worth keeping must be written to a durable substrate.
 
 ---
 
 ## Why the split matters
 
-This is thin-control-over-thick-state applied to memory. The Hermes-native substrates are deliberately thin — bounded working memory, capped agent notes, on-demand session history — so a profile carries minimal persistent state. The durable, compounding knowledge lives in thick files: the board's handoff payloads while work is in flight, and the vault while it's settled.
+This is thin-control-over-thick-state applied to memory. The Hermes-native substrates are deliberately thin — bounded working memory, capped agent notes, on-demand session history — so an agent carries minimal persistent state. The durable, compounding knowledge lives in thick files: the board's handoff payloads while work is in flight, and the vault while it's settled.
 
 The vault side then splits by *purpose and lifespan*: **program memory** is your standing steering (persistent, program-wide); **project memory** is one effort's working state (bounded, archives with the project); **audit memory** is the immutable record of what happened. Collapsing program and project into one bucket — as the model originally did — hid that a program-wide steering file and per-project scratch are different kinds of memory, on different scopes and lifespans ([ADR-23](../../adr/23-scoped-memory-substrates.md)).
 
-Without the split, every cross-session question collapses into "store it and hope," and profiles either share too much (leaking context between lanes) or too little (re-deriving the goal every session). The substrates make "where does X live?" answerable by scope and lifespan.
+Without the split, every cross-session question collapses into "store it and hope," and agents either share too much (leaking context between lanes) or too little (re-deriving the goal every session). The substrates make "where does X live?" answerable by scope and lifespan.
 
 ---
 
@@ -73,7 +75,7 @@ A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
 | Your working style or preferences | Agent `USER.md` | `MEMORY.md` (keep identity vs. preference separate) |
 | What you want the system to pursue | Program memory (`research-focus`) | `project-hints.yaml` |
 | Which topics map to which project | `.memoria/project-hints.yaml` (config) | a memory substrate |
-| A synthesized claim or finding | Vault notes (`30-synthesis/`) | any memory substrate |
+| A synthesized claim or finding | Vault notes (`notes/claims/`) | any memory substrate |
 
 The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
 
@@ -83,7 +85,7 @@ The test: **memory is read back as recall; configuration is read as rules.** "To
 
 **Explanation**
 
-- Board handoff payload (handoff memory travels here): [Why the card schema is split](../kanban-board/card-schema.md)
+- Board handoff payload (handoff memory travels here): [The honesty card](../kanban-board/card-schema.md)
 - Architecture overview: [Architecture](README.md)
 
 **How-to**

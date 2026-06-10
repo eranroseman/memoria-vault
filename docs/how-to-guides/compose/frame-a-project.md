@@ -49,6 +49,7 @@ The Socratic profile is write-denied — its outputs appear in the ACP pane only
 **4. Choose a framing and write `CHOSEN.md`.**
 
 Create `40-workbench/<project-slug>/02-framing/CHOSEN.md` with:
+
 - The selected outline (copy from one of the options, edit freely)
 - 2–3 sentences explaining why you chose this framing over the alternatives
 
@@ -63,5 +64,5 @@ The `CHOSEN.md` file is required before the project card can advance to drafting
 
 - Previous step: [Assess your corpus](assess-your-corpus.md)
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- Socratic lens-reading and write-denial: [The Socratic](../../explanation/profiles/socratic.md)
+- Socratic lens-reading and write-denial: [The Socratic](../../explanation/profiles/co-pi.md)
 - The Writer's counter-outline: [The Writer](../../explanation/profiles/writer.md)

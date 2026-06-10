@@ -76,6 +76,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 **Implementation:** `scikit-learn` for tabular and TF-IDF features; fine-tuned DistilBERT for deeper text. Trained on the human's past classification decisions — the human-confirmed `lifecycle: current` notes are the training set.
 
 Training guidance:
+
 - Multi-label (one-vs-rest) for `topic` and `methods`; multi-class for `study_design`.
 - Retrain monthly or when the human-override rate on proposed labels exceeds 25%.
 - Filter training data to `lifecycle: current` only — `proposed` notes are not yet ground truth.
@@ -153,5 +154,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md), [Mapper](../explanation/profiles/mapper.md), [Verifier](../explanation/profiles/verifier.md), [Linter](../explanation/profiles/linter.md)
+- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md), [Mapper](../explanation/profiles/librarian.md), [Verifier](../explanation/profiles/peer-reviewer.md), [Linter](../explanation/engines/README.md)
 - Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/

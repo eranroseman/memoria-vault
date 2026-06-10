@@ -1,58 +1,48 @@
 ---
 title: The Librarian
 parent: Profiles
-nav_order: 1
+nav_order: 2
 ---
-
 
 # The Librarian
 
-The Librarian is Memoria's intake layer — the profile responsible for deciding what enters the vault. It fetches sources, enriches metadata, extracts PDF text, proposes draft classifications, and composes the inline `[!brief]` comparative read on each new paper note. Its defining posture is **optimistic-by-default**: when in doubt, include the candidate and propose a classification, letting Verifier and the human do the gatekeeping at filing time.
+The Librarian runs Memoria's four processing lanes — **catalog · extract · link · map** — covering everything between "a source exists somewhere" and "the corpus is mapped for a project." Its defining posture is **faithful**: include generously, report state accurately, and let the gate filter. The cost of a missing source is invisible; the cost of an over-inclusive candidate is one human decision. Given that asymmetry, generosity is the right policy for an intake agent — and fidelity to the source material is what keeps the generosity honest.
 
-This posture is a deliberate design choice, not a shortcut. The cost of a missing source is invisible — you don't know what you don't have. The cost of an over-inclusive candidate that gets reviewed and rejected is just one human decision. Given that asymmetry, optimism is the right policy for an intake profile.
+A research librarian does both intake and literature search, so the old Mapper's corpus work (scope reports, gap analysis, cluster maps) merged into this agent ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the **map** lane is the same faithful posture pointed at what the vault already holds.
 
 ---
+
+## The four lanes
+
+| Lane | Work | Inbox signal |
+| --- | --- | --- |
+| **catalog** | find sources, propose intake, the comparative `[!brief]`, draft classifications | `candidate` |
+| **extract** | claim-stubs and distill nudges from kept sources | work prompt |
+| **link** | note-link candidates with evidence and stance reasoning | link proposal |
+| **map** | corpus-maps, coverage-reports, cluster maps, writability reads, seeded canvases | `gap` |
+
+The lanes are individually triggered, not a pipeline — a human gate (often a long gap) sits between each. Gaps found in *map* raise Inbox `gap`s that re-trigger *catalog*: the loop that compounds.
 
 ## Why it's designed this way
 
-**One card per source, not one card per batch.** Librarian's unit of work is the source, not the batch. A 30-paper import produces 30 cards. This keeps retries scoped (one broken PDF doesn't fail the batch), audit entries clean, and policy decisions atomic. Batching might feel efficient but it hides failures and makes provenance tracing harder.
+**The engine/agent split.** The mechanical half of cataloging — fetch metadata, extract text, build entity `relationships`, create Catalog records — is the **ingest engine**, not the Librarian. The agent fills the two LLM holes: composing the comparative `[!brief]` and proposing the classification. Keeping the mechanics deterministic keeps the high-volume path reproducible, auditable, and cheap; the agent spends LLM judgment only where judgment is needed. Below a confidence floor the engine's fuzzy calls (entity resolution, dedup) emit a `flag` rather than merging silently ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
 
-**Mostly deterministic, two LLM steps at ingest.** Citation graph walks, metadata enrichment, PDF extraction, classification rule dispatch, and the `[!brief]`'s top-5 candidate selection (shared-citation + embedding + topic overlap via `qmd`) — all deterministic. Only two steps are generative: proposing the classification, and composing the `[!brief]` comparative narrative over those 5 candidates. Keeping selection deterministic and prose-only generative keeps costs proportionate to a high-volume profile and most of Librarian's behavior reproducible and auditable.
+**Faithful, not optimistic-and-loose.** The posture is generous about *inclusion* and strict about *representation*: a brief reports what the paper says, a coverage-report reports what the corpus holds, and neither editorializes. The gate can only filter well if the proposals beneath it are faithful.
 
-**Why the Librarian owns the `[!brief]`, not the Mapper.** The comparative read lives at the top of a paper note in `20-sources/01-papers/` — and only the Librarian may write `20-sources/` (the Mapper is read-only across the vault). Since ingest is already a Librarian operation and the Librarian holds `qmd`, composing the brief in the same pass avoids a cross-zone write and a separate hand-off. The Mapper owns *corpus-level* maps (scope, gaps, clusters); the Librarian owns the *per-source* intake read.
-
-**Highest external surface in the system — but no longer reached directly.** Librarian is the profile that touches the most external data (OpenAlex, Semantic Scholar, Crossref, PubMed, Unpaywall), but its `web` toolset is disabled: every external lookup goes through a gated MCP server — `paper_search` for discovery, the `ingest` pipeline for server-side enrichment, the read-only `pyzotero` MCP for Zotero. Concentrating the external surface in one profile *and* routing it entirely through audited MCP makes it visible, auditable, and controllable by construction ([ADR-32](../../adr/32-external-access-over-mcp.md)).
-
-> **Browser fallback (available, not wired in v0.1).** Some discovery targets — publisher landing pages, lab sites, preprint servers, research GitHub repos — expose no structured API the calls above can reach. Hermes's browser capability covers that long tail by rendering the page and extracting elements. If adopted, it is scoped to the discovery (`find`) path only and never to canonical-zone writes — it surfaces candidates, it does not file them.
-
----
+**One external surface, fully gated.** The Librarian touches the most external data in the system (OpenAlex, Crossref, Semantic Scholar, …), and every lookup goes through MCP — discovery tools and the ingest facade — never raw web access. Concentrating the external surface in one agent and routing it through the policy boundary makes it auditable by construction.
 
 ## What the Librarian is not
 
-**Not a synthesizer.** Librarian curates evidence; Writer composes claims from that evidence. Librarian never writes to `30-synthesis/`. The boundary is firm: curation is about fidelity to source material; synthesis is about argument — different cognitive operations that should not be blurred in a single profile.
+**Not a synthesizer.** It curates and maps evidence; the Writer composes arguments and the PI writes claims. It never writes `notes/claims/` or `notes/hubs/`.
 
-**Not the gatekeeper.** Verifier is the system's quality bar. Librarian proposes optimistically; Verifier checks conservatively. The asymmetry between them is the design — two profiles with opposing postures produce better outcomes than one profile trying to be both.
+**Not its own reviewer.** The agent that gathers and proposes must not also grade the result — that is the [Peer-reviewer](peer-reviewer.md)'s independence, the anti-rubber-stamp principle.
 
-**Not Mapper.** Librarian and Mapper share retrieval tooling but face opposite directions: Librarian reaches outward to new sources; Mapper maps what already exists in the corpus. Giving them the same tooling without the same mission keeps the distinction sharp.
-
-**Not autonomous about classification.** The `_proposed_classification` block Librarian writes lives in its own agent-owned frontmatter namespace, never in the main human-owned fields — a proposal the human or Verifier promotes on review. This is not a limitation; it's what makes optimistic proposals safe to ship without human attention on every one.
+**Not the ingest engine.** You *run* ingest; you *delegate* to the Librarian. The folder is named `catalog/` for its content because both operate on it.
 
 ---
 
 ## Related
 
-**Explanation**
-
-- The Librarian's opposing counterpart on posture: [Verifier](verifier.md)
-- Directional counterpart on retrieval: [Mapper](mapper.md)
-- Why intake is separated from synthesis: [why specialist profiles](../rationale/why-specialist-profiles.md)
-
-**How-to**
-
-- Workflows the Librarian drives: [capture and ingest](../../how-to-guides/compile/capture-and-ingest.md), [find new sources](../../how-to-guides/compile/find-new-sources.md)
-
-**Reference**
-
-- External APIs the Librarian calls: [External integrations](../../reference/integrations.md)
-- The ingest routing and enrichment table: [Ingest routing](../../reference/ingest.md)
-- The `[!brief]` callout the Librarian composes at ingest: [Obsidian callouts](../../reference/obsidian-callouts.md), [Callouts](../obsidian/callouts.md)
+- The mechanical counterpart: [Engines](../engines/README.md)
+- The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
+- Why intake is separated from verification: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)

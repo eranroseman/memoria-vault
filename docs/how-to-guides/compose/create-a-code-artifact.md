@@ -32,11 +32,13 @@ hermes -p memoria-coder chat
 ```
 
 For example:
+
 ```text
 /scaffold --project jitai-receptivity-review --name figure-3-receptivity-curve --claim receptivity-decreases-under-high-cognitive-load
 ```
 
 The Coder creates `40-workbench/<project-slug>/06-code/figure-3-receptivity-curve.md` — a `code-note` with:
+
 - Link to the motivating claim note or source
 - Empty sections for: Purpose, Implementation, Dependencies, How to run, Outputs
 
@@ -64,6 +66,7 @@ Apply the same review gate as any other research output: does the code do what t
 **6. Update the code-note with final details.**
 
 After review, fill in the remaining code-note sections:
+
 - **Dependencies:** list packages and versions
 - **How to run:** exact command to reproduce the output
 - **Outputs:** what files are produced and where they land
@@ -83,7 +86,7 @@ git commit -m "code: figure-3 receptivity curve — <project-slug>"
 
 ## Related
 
-- Coder profile design: [The Coder](../../explanation/profiles/coder.md)
+- Coder profile design: [The Coder](../../explanation/profiles/engineer.md)
 - Why code is a research output (principle 8): [Design principles](../../explanation/overview/design-principles.md)
 - The Coder autonomous-loop exception: [Why Memoria doesn't pursue full autonomy](../../explanation/rationale/why-not-autonomous.md)
 - ADR-07 (external coding agent boundary): [Code agent attachment](../../adr/07-delegate-coding-to-external-agents.md)

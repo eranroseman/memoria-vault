@@ -3,7 +3,7 @@
 # Memoria bootstrap installer  (Ubuntu/Debian, or WSL2 on Windows via install.ps1)
 # =============================================================================
 # One command sets up the whole system: clones the vault, installs Hermes + the
-# ACP extra, deploys the seven memoria-* profiles, provisions skills, and guides
+# ACP extra, deploys the five memoria-* profiles, provisions skills, and guides
 # the GUI app (Obsidian). macOS is not supported. (Zotero: see the tutorial.)
 #
 # Inspect-first (recommended):
@@ -497,7 +497,7 @@ deploy_policy_plugin() {
 }
 
 # =============================================================================
-# Step 6 — deploy the seven profiles  (the original profile-installer logic)
+# Step 6 — deploy the five profiles  (the original profile-installer logic)
 # =============================================================================
 install_profiles() {
   hdr "Hermes profiles"

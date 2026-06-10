@@ -31,7 +31,6 @@ Memoria catches duplicates **retrospectively**: `find-duplicates` runs on a cade
 
 Both hold: (a) a live `qmd` index in the agent retrieval path, and (b) a synthesis corpus dense enough that filing a duplicate is a real risk — the point at which the similarity threshold and false-positive rate can be tuned against real notes.
 
-
 ## Proposed mechanism (for when the trigger fires)
 
 Before filing, run a `qmd` similarity check against existing synthesis notes. If the top match exceeds a threshold (start at cosine **0.8**, tune), flag the note and present the candidate neighbours; the human confirms new / merges / overrides — never an automatic block or merge. The gate is owned by the **Linter** (validation discipline) or **Mapper** (it already surfaces neighbouring notes); the decision stays at the human review gate.
@@ -55,5 +54,5 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 
 - **Pairs with:** [ADR-39 — note-acceptance checklists (deferred)](39-note-acceptance-checklists.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
-- **Profiles:** [Linter](../explanation/profiles/linter.md), [Mapper](../explanation/profiles/mapper.md)
+- **Profiles:** [Linter](../explanation/engines/README.md), [Mapper](../explanation/profiles/librarian.md)
 - **Note types gated:** [claim-note, reference-note](../reference/note-types.md)

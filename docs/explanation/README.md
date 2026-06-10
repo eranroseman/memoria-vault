@@ -38,7 +38,7 @@ Read from the inside out: start with what the system is, then why it's shaped th
 
 ### Why the design is shaped this way
 
-1. **[Why three layers, not one](rationale/why-three-layers.md)** — why board, workers, and vault are kept separate.
+1. **[Why the architecture is layered](rationale/why-three-layers.md)** — why board, workers, and vault are kept separate.
 2. **[Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md)** — why seven specialists instead of one generalist agent.
 3. **[Why the review gate is structural](rationale/why-human-gate.md)** — why the review gate is structural, not advisory.
 4. **[Why Memoria doesn't pursue full autonomy](rationale/why-not-autonomous.md)** — the autonomy ceiling and why Memoria doesn't cross it.
@@ -53,7 +53,7 @@ Read from the inside out: start with what the system is, then why it's shaped th
 
 ## Entry points by background
 
-**New to Memoria:** The two identity documents, then [Why three layers, not one](rationale/why-three-layers.md), the [knowledge model overview](knowledge/README.md), and the [workflow overview](workflows/README.md) together give a working mental model. The architecture, knowledge, and workflow sections fill in the detail.
+**New to Memoria:** The two identity documents, then [Why the architecture is layered](rationale/why-three-layers.md), the [knowledge model overview](knowledge/README.md), and the [workflow overview](workflows/README.md) together give a working mental model. The architecture, knowledge, and workflow sections fill in the detail.
 
 **Coming from another agent system (LangChain, CrewAI, autogen, etc.):** The key differences — specialist lanes, structural human gate, no reasoning orchestrator — are concentrated in [Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md), [Why the review gate is structural](rationale/why-human-gate.md), and [The board as a state machine (the control plane)](workflows/board-as-state-machine.md).
 

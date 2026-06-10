@@ -11,11 +11,11 @@ Turns the vault into a research agenda by collecting every note that contains an
 
 ## What it shows
 
-All claim notes and paper notes that contain a `## Open questions` heading section, sorted by most-recently-modified. The dashboard doesn't extract the questions into a list — it shows which notes have them, so you navigate to the note and read the questions in context.
+All claim notes and source notes that contain a `## Open questions` heading section, sorted by most-recently-modified. The dashboard doesn't extract the questions into a list — it shows which notes have them, so you navigate to the note and read the questions in context.
 
 ## Two source folders
 
-The dashboard reads from `30-synthesis/01-claims/` and `20-sources/01-papers/`. These are where durable questions accumulate naturally. Project pages might also have open-questions sections, but those tend to be operational ("what should we do next?") rather than research-direction questions ("what's still unknown in the field?").
+The dashboard reads from `notes/claims/` and `notes/source/`. These are where durable questions accumulate naturally. Project pages might also have open-questions sections, but those tend to be operational ("what should we do next?") rather than research-direction questions ("what's still unknown in the field?").
 
 ## What it is not
 

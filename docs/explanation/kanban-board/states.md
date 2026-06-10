@@ -4,58 +4,63 @@ parent: Kanban board
 nav_order: 1
 ---
 
-
 # Board states and the review gate
 
-This page explains why the board's state machine is shaped the way it is: why execution and review are two separate lifecycles, what each state transition represents, why the review gate has five rules, and why the WIP limits are set where they are. For the state lookup tables — the `status` enum, the `review_status` enum, the lane-assignment table, and the WIP-cap values — see the [board-states reference](../../reference/kanban-board.md).
+This page explains why the board's state machine is shaped the way it is: why the execution chain is hidden, why the PI sees only the lifecycle chain, why rejection spawns a new card, and why the WIP limits are set where they are. For the state lookup tables — the `status` enum, lane assignments, and the WIP-cap values — see the [Kanban board reference](../../reference/kanban-board.md).
 
 ---
 
-## The execution lifecycle
+## The execution chain is the hidden mechanic
 
-The execution lifecycle is linear with two escape edges. This is deliberate:
+Hermes runs every card through its native execution `status`: `triage → todo → ready → running → done → blocked → archived`. This chain is real and load-bearing — it is what the dispatcher schedules on — but the **PI never sees it**. It is plumbing, and its design serves the workers:
 
-**`triage → todo → ready` exists so work is never dispatched before it's specified.** The dispatcher ignores `triage` cards. This is not a limitation — it is what makes "specify before release" enforceable rather than advisory. A `triage` card will never be accidentally claimed by a worker; only a human's deliberate release moves it to `ready`.
+**`triage → todo → ready` exists so work is never dispatched before it's specified.** The dispatcher ignores `triage` cards. A card will never be accidentally claimed by a worker; only a deliberate release moves it to `ready`.
 
-**Retries are not a distinct state.** A recoverable run failure returns the card to `ready` for re-dispatch on the same card. A transient failure looks like a re-queue rather than a new state to reason about. Only unrecoverable failures — those that require human judgment before work can continue — move the card to `blocked`.
+**Retries are not a distinct state.** A recoverable run failure returns the card to `ready` for re-dispatch on the same card. Only unrecoverable failures — those that require human judgment before work can continue — move the card to `blocked`, with a reason, for a human to clear.
 
-**`blocked` exists for failures a worker cannot resolve alone.** When the dispatcher escalates a card to `blocked` (after `max_retries`, or when the worker explicitly signals an unresolvable problem), it carries a reason. Only a human can clear it back to `ready`. This is the board's mechanism for surfacing stuck work rather than letting it silently fail or retry forever.
+## The lifecycle chain is what the PI sees
+
+The human-facing card state is the same universal chain every note uses ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)):
+
+```text
+proposed → current → archived
+```
+
+A card in **`proposed` is awaiting you** — that is the whole convention. You act on it → `current`; closed → `archived`. There is no separate `review-request` card type and no second state vocabulary to learn: "what needs me?" is one query (`lifecycle: proposed`, scoped to `inbox/`), the same query the Home surface embeds. Because Inbox cards and vault notes share the vocabulary, queries scope by category folder, so card-state and note-state never collide.
 
 ---
 
-## The review lifecycle
+## Three orthogonal dimensions
 
-The review lifecycle only becomes meaningful once `status` reaches `done`. This separation is what lets a worker make progress on a card without implying anything about whether the human will accept it.
+A card carries three independent signals, and keeping them separate is what prevents an agent verdict from rubber-stamping a human decision:
 
-The review lifecycle rests on five design commitments that are worth understanding together rather than in isolation.
+- **`status`** — execution (hidden): did the worker run, finish, or get stuck?
+- **lifecycle state** — the PI's decision: has the human acted on this?
+- **`agent_recommendation`** — the soft verdict (`inconclusive → issues-found → clean`), agent-set, never a gate.
 
-**Agent recommendation and human acceptance are distinct dimensions.** `agent_recommendation: clean` (from Verifier or Linter) and `review_status: approved` (from the human) are not the same thing and cannot substitute for each other. This separation is the mechanism that prevents an agent's recommendation from becoming a rubber stamp — the two assessments can legitimately disagree, and each remains meaningful only if they are kept separate.
+A worker finishing implies nothing about acceptance; a `clean` recommendation never substitutes for the PI acting. The review gate is enforced, not advisory: state transitions are lifecycle operations the state machine controls, backed by the policy MCP — a worker cannot declare its own output approved.
 
-**Review is a state, not a convention.** A card becomes canonical only when `review_status: approved` is set as a field. A worker claiming to be finished, or a comment saying "looks fine," carries no weight. This matters because field values can be queried, enforced, and audited; comments and claims cannot.
-
-**Review states are blocking, not advisory.** Cards in `done`, `blocked`, `triage`, or `todo` are not claimable by any worker. The review gate is not a suggestion that workers respect — it is a dispatch precondition enforced by Hermes and reinforced by the policy MCP.
-
-**Review has a named owner.** The `review_owner` field records who owes the next decision — human, Verifier, or Linter depending on the card type. This makes the review queue queryable: at any moment it is possible to ask "what is waiting for human review?" and get a precise answer.
-
-**Rejection creates a new card, not a revision of the old one.** A rejected card is archived. Rework begins on a fresh card with a revised specification. This preserves the audit trail: each card represents one attempt with a stated outcome, and the history of attempts is traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.
+**Rejection creates a new card, not a revision of the old one.** A rejected card is archived; rework begins on a fresh card that records what it `supersedes` — mirroring claim supersession. Each card is one attempt with one stated outcome, so the history of attempts stays traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.
 
 ---
 
 ## Why the WIP limits
 
-Three distinct caps, each motivated by a different failure mode:
+Three distinct caps, each motivated by a different failure mode (dispatcher polls every 60 seconds):
 
-**Active per profile = 1.** The strictest cap, and the only one Hermes enforces natively. Parallel runs of the same profile would contend for the same write scope and make the audit trail ambiguous about which run touched what file. Keeping one `running` card per profile at a time keeps the per-write attribution unambiguous.
+**One `running` card per lane.** Parallel runs of the same agent would contend for the same write scope and make the audit trail ambiguous about which run touched what file. One running card per lane keeps per-write attribution unambiguous.
 
-**Review-queue depth (bounded).** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than a human can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue depth exceeds its cap, the dispatcher slows new work on that lane — back-pressure that forces the queue depth to become visible before it becomes invisible.
+**Review queue = 5 `done` cards.** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than the PI can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue hits its cap, the dispatcher stops releasing new work — back-pressure that makes the queue depth visible before it becomes invisible.
 
-**Writer lane (bounded).** Too many drafts in flight simultaneously means synthesis quality drops because evidence cannot be fully integrated. A writer working on many drafts integrates none of them well. The cap protects synthesis quality, not throughput.
+**Writer lane bounded.** Too many drafts in flight means synthesis quality drops because evidence cannot be fully integrated. The cap protects synthesis quality, not throughput.
 
 ---
 
-## Socratic is not a board lane
+## The co-PI and the engines are not lanes
 
-Socratic runs synchronously through the ACP pane — the human opens it, converses, and closes it. It never appears on the board, never claims a card, and never produces a `done` card. Its write-denial and interactive-only routing make it architecturally incompatible with board dispatch. This is not a gap; it is the design.
+**The co-PI has no lane.** It is the one agent the PI converses with, interactively, in the ACP pane at the desk. It is read-only itself: every *write* it wants goes out as a delegated task card to a background lane. It never claims a card and never produces a `done` card — that is the design, not a gap.
+
+**Engines have no lanes either.** Ingest, search, clustering, the verification sweeps, and the Linter are deterministic — no posture, no LLM judgment — so they run on cron and CI, off the board. Their findings still arrive in the Inbox (as `flag`/`alert` cards), but the work itself is never dispatched as a card.
 
 ---
 
@@ -64,15 +69,13 @@ Socratic runs synchronously through the ACP pane — the human opens it, convers
 **Explanation**
 
 - Conceptual overview: [Kanban board](README.md)
-- Card fields: [Why the card schema is split](card-schema.md)
-- Why review is human-only (no Reviewer profile): [Why the review gate is structural](../rationale/why-human-gate.md)
-- Why routing is by rule (no Orchestrator): [The board as a state machine § Why no Orchestrator](../workflows/board-as-state-machine.md#why-no-orchestrator)
-- The review dimension over these states: [Review as a first-class state](../workflows/review-as-state.md)
-- The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
+- The card the PI reads: [The honesty card](card-schema.md)
+- Why review is human-only: [Why the review gate is structural](../rationale/why-human-gate.md)
+- The decision-kind model the gate implements: [Why promotion is gated](../knowledge/promotion-model.md)
 
 **How-to**
 
-- Troubleshooting for stuck cards: [how-to-guides/troubleshooting/fix-stuck-card](../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Troubleshooting for stuck cards: [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md)
 
 **Reference**
 

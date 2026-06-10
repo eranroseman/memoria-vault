@@ -6,52 +6,61 @@ nav_order: 2
 
 # The knowledge cycle
 
-Every note in the vault is somewhere in a long-term progression from ingested source to written output. Understanding the cycle as a whole — what it is for, where it gets stuck, and what makes it compound — is the conceptual foundation for understanding why the vault is structured the way it is.
+Every note in the vault is somewhere in a long-term progression from catalogued source to written output. Understanding the cycle as a whole — what it is for, where it gets stuck, and what makes it compound — is the conceptual foundation for understanding why the vault is structured the way it is.
 
-## The progression
+## The six delegable tasks
 
-The cycle runs as two flows. **Compile** turns sources into claims — `find → capture → enrich → classify → discuss → distill → connect` — and **Compose** turns claims into deliverables — `assess → frame → sketch → draft → verify → export` (see [The Compile and Compose flows](../workflows/compile-and-compose.md)). Each flow has one reflective phase — `discuss` / `sketch` — engaged by judgment. A new source arrives as a candidate, is captured and enriched into a paper-note, is classified by the human, is questioned through Socratic discussion when it warrants it, and is distilled into claim notes that the human connects into the existing graph. Those claims mature, cross-link, and — when stable — are promoted to reference notes; once enough accumulate, a writing project assesses the corpus, frames an argument, drafts, verifies, and exports a deliverable.
+The PI works in two modes — **Library** (take knowledge in) and **Project** (put work out) — not a pipeline. Within them, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
 
-This cycle runs in parallel across many sources simultaneously. A healthy vault at any given time has paper-notes in active classification, claim notes in early stages of development, a growing MOC for a cluster, and an active draft being assembled. The stages coexist; the cycle is not one flow but many running concurrently.
+| Mode    | Task        | What it does                                            | Inbox signal    |
+| ------- | ----------- | ------------------------------------------------------- | --------------- |
+| Library | **catalog** | find and record a source (entity record + candidate)    | `candidate`     |
+|         | **extract** | distill a kept source toward claim stubs                | (work prompt)   |
+|         | **link**    | propose connections between claims                      | (link proposal) |
+| Project | **map**     | scope a corpus — coverage, clusters, writability        | `gap`           |
+|         | **draft**   | generate proposed prose with bound citations            | —               |
+|         | **verify**  | check citations, trace claims, red-team the argument    | `flag`          |
+
+The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. catalog, extract, link, and map are four lanes of the one Librarian posture; draft is the Writer; verify is the Peer-reviewer. All six are reachable from either mode via the command palette.
+
+A new source typically arrives as a `candidate` card, is kept at triage, and becomes a Catalog entity plus a `proposed` source note. The PI reads it, distills claims in their own words, and confirms the links that connect them into the graph. Those claims mature and cross-link; once enough accumulate, a project maps the corpus, drafts, verifies, and ships.
+
+**The loop that compounds:** gaps found in _map_ and _verify_ raise Inbox `gap` cards that re-trigger _catalog_. The output end of the cycle feeds the intake end — what you write exposes what you're missing, and what you catalog next is shaped by what you tried to write.
 
 ## Why the cycle is not a linear path
 
-The cycle describes the intended direction of flow, not a timeline or a required sequence. A claim note can remain at `maturity: seedling` for months — that is normal, not broken. A paper note can sit classified for a year before there is enough surrounding context to synthesize claim notes from it. A new paper may arrive and retroactively change what an older claim note was arguing.
+The cycle describes the intended direction of flow, not a timeline or a required sequence. A claim can remain at `maturity: seedling` for months — that is normal, not broken. A source note can sit `current` for a year before there is enough surrounding context to extract claims from it. A new paper may arrive and retroactively change what an older claim was arguing.
 
-What the cycle prevents is the two common failure modes at opposite ends: notes that are captured but never synthesized (the vault grows but never compounds), and claims that are synthesized but never written from (the knowledge accumulates but never produces output). The cycle's shape names these as distinct failure modes because they look identical from the outside — both appear as an active vault — but indicate different structural problems.
+What the cycle prevents is the two failure modes at opposite ends: notes that are captured but never synthesized (the vault grows but never compounds), and claims that are synthesized but never written from (the knowledge accumulates but never produces output). The cycle's shape names these as distinct failure modes because they look identical from the outside — both appear as an active vault — but indicate different structural problems.
 
 ## Why the vault compounds rather than accumulates
 
-The distinction between a vault that compounds and one that merely accumulates is in the density of the claim-note layer. A vault with 500 paper-notes and 10 claim notes is a sophisticated reading list — useful for finding sources but not for writing from. A vault with 50 paper-notes and 40 claim notes that link to each other and to MOCs is a structure the human can write from directly, navigating the graph of connected ideas rather than remembering what they read.
+The distinction between a vault that compounds and one that merely accumulates is in the density of the claim layer. A vault with 500 catalog entities and 10 claims is a sophisticated reading list — useful for finding sources but not for writing from. A vault with 50 source notes and 40 claims that link to each other and to hubs is a structure the PI can write from directly, navigating the graph of connected ideas rather than remembering what they read.
 
-This is Karpathy's compiler insight applied to personal research: the vault's value is not in its size but in its integration. A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes.
-
-Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim-note density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes. Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ## Where the cycle gets stuck
 
-The dashboards exist to surface exactly where in the cycle work has stopped. Classification backlog surfaces in `reading-pipeline.md`. Orphan claim notes with no connections surface in `open-questions.md` and `loose-ends.md`. Verification gaps surface in `board-state.md`. The correspondence between stuck points and dashboard views is not accidental — the dashboards were designed to make the cycle's failure modes visible before they compound.
+The Inbox and the dashboards surface exactly where work has stopped. Sources awaiting reading and distillation surface in the reading-pipeline dashboard. Unconnected claims surface in open-questions and loose-ends. Open verification findings surface as `flag`/`alert` cards on the board. The correspondence between stuck points and views is not accidental — they were designed to make the cycle's failure modes visible before they compound.
 
-The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. This is also the hardest gap to notice because a vault full of well-developed claim notes looks healthy even when nothing is being written.
+The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. It is also the hardest gap to notice, because a vault full of well-developed claims looks healthy even when nothing is being written. (The _map_ task's writability and readiness reports exist to prompt exactly this.)
 
 ## Why archiving preserves the cycle's integrity
 
-Notes that are no longer useful do not become invisible by deletion — they become gaps in the provenance graph. A deleted source note breaks every claim note that cited it. A deleted claim note leaves claims in later notes without their grounding.
+Notes that are no longer useful do not become invisible by deletion — they become gaps in the provenance graph. A deleted source note breaks every claim that cited it; a deleted claim leaves later notes without their grounding.
 
-Archiving preserves the chain: the note moves to `95-archive/`, remains readable and in Git history, disappears from active Dataview queries and from the agent's search scope, but can still be traced from any note that linked to it. The cycle's integrity depends on every step being traceable backward, not just forward.
-
-For the archive procedure, see [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md).
+Archiving preserves the chain, and since `archived` became a **state rather than a folder** ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)), it costs nothing structurally: the note stays in its type-home, remains readable and in Git history, drops out of active views and the agents' working scope, and can still be traced from any note that linked to it. No file moves, so no links break. The cycle's integrity depends on every step being traceable backward, not just forward. Archiving itself is propose-only for every actor but the PI.
 
 ## Related
 
 **Explanation**
 
-- Why the cycle needs weekly attention: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
+- The ritual that keeps the cycle from stalling: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
 - The epistemic roles of note types: [Note types and epistemic roles](note-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
 
 **How-to**
 
-- The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md)
+- The weekly maintenance pass: [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md)
 - The cycle's key transition: [Write a claim note](../../how-to-guides/compile/write-a-claim-note.md)

@@ -1,12 +1,12 @@
 ---
-title: Why three layers, not one
+title: Why the architecture is layered
 parent: Design rationale
 nav_order: 1
 ---
 
-# Why three layers, not one
+# Why the architecture is layered
 
-Memoria separates three concerns — active work, execution, and settled knowledge — into three distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable.
+Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. The argument was first made for three layers ([ADR-01](../../adr/01-three-layer-architecture.md): board, workers, vault) and survives intact in the seven-layer stack that superseded it ([ADR-46](../../adr/46-seven-layer-architecture.md)) — the refinement added layers; it never weakened the separation.
 
 ---
 
@@ -24,48 +24,57 @@ The failure mode of most single-agent or single-document systems is that these t
 
 ## What happens when they collapse
 
-**Board + workers collapsed (no separate orchestration layer):**
+**Orchestration + execution collapsed (no separate board):**
 Work state lives in agent memory or chat context. When a session ends, the state is gone. The next session starts fresh: it doesn't know what was already done, what failed and why, or where the previous worker left off. Retries duplicate work. Handoffs lose context. Long-horizon tasks that span multiple sessions become unreliable.
 
-**Workers + vault collapsed (no separation between execution and knowledge):**
-Agents write directly to canonical knowledge without review. There is no gate between "the agent finished" and "this is now trusted information." A confidently-wrong agent writes claims that downstream work cites — and those errors compound.
+**Execution + knowledge collapsed (agents write canon directly):**
+There is no gate between "the agent finished" and "this is now trusted information." A confidently-wrong agent writes claims that downstream work cites — and those errors compound.
 
-**Board + vault collapsed (tasks and knowledge share the same store):**
-Task history pollutes the knowledge graph. In-flight notes get confused with settled notes. The canonical vault contains both "this is a claim" and "this is a work-in-progress" — and there is no structural way to tell them apart. Queries against the vault return noise.
+**Orchestration + knowledge collapsed (tasks and knowledge share a store):**
+Task history pollutes the knowledge graph. In-flight notes get confused with settled notes, and there is no structural way to tell them apart. Queries against the vault return noise.
 
 ---
 
 ## Thin control over thick state
 
-The three-layer design follows a principle that several independent research systems identified from different starting points:
+The layered design follows a principle that several independent research systems identified from different starting points:
 
 **[Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
 
 **AgentRxiv** ([Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv)) shows that agents reading prior agent-generated reports gain ~11% over isolated agents on MATH-500. Cross-session knowledge persistence is the mechanism; agents that can't read prior work start from scratch every time.
 
-**PARNESS** ([Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The architecture is near-identical to Memoria's three-layer split; the defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
+**PARNESS** ([Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
 
 Unrelated systems, different architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. (A further corroboration at the claim grain is catalogued in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md).)
 
 ---
 
-## The load-bearing rules
+## From three layers to seven
 
-The three-layer separation is maintained by three rules that cannot be violated without breaking the design:
+ADR-01's three layers described the v0.1.0 infrastructure but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). The design update pulled them apart, and [ADR-46](../../adr/46-seven-layer-architecture.md) superseded ADR-01 with the seven-layer stack: **PI · Interface · co-PI · Tasks · MCP · Engines · Vault.**
 
-**The board never holds knowledge.** It tracks work. Cards die at `archived`; knowledge lives in the vault. A card can reference a vault note by path; it never *is* a note.
+Each refinement is the old argument carried further, not a new one:
 
-**The workers never hold permanent state.** They claim cards, act, and release. Continuity comes from the board (in-flight) or the vault (settled). Between sessions, a worker re-grounds on the files it can read — it does not rely on conversational memory.
+- The **board and workers** became the **Tasks** layer, with the **co-PI** lifted out as its own layer — the one agent that converses and remembers, separated from the stateless lanes that execute.
+- The **policy boundary** became an explicit layer (**MCP**) rather than an implementation detail of the worker layer — naming where allow-listing, write-scoping, and audit actually live.
+- Deterministic work was pulled out of the worker set into **engines** — reproducible mechanism that needs no posture and no lane.
+- The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (co-PI → Tasks → MCP → Engines/Vault); the PI and cron/CI are direct edges.
 
-**The vault never schedules work.** It is the destination, not the orchestrator. A vault note does not trigger agent action; a board card does.
+The file-as-bus, durable-state core — thick files, thin everything else — is unchanged from ADR-01 to ADR-46.
 
 ---
 
-## The policy MCP as the guard
+## The load-bearing rules
 
-The boundary between workers and vault is enforced at runtime by a policy MCP that intercepts every vault write. Without this enforcement, a worker could write to review-gated zones simply by issuing the file operation. The MCP makes the boundary structural rather than relying on prompt discipline.
+The separation is maintained by rules that cannot be violated without breaking the design:
 
-Review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) always degrade to `dry_run` for any profile. Every allowed write is audited. The boundary isn't "a worker should not write here" — it's "a worker cannot write here."
+**The board never holds knowledge.** It tracks work. Cards die at `archived`; knowledge lives in the vault. A card can reference a vault note by path; it never *is* a note.
+
+**The agents never hold permanent state.** Lanes claim cards, act, and release; the co-PI's memory holds working style and conventions, never canon. Continuity comes from the board (in-flight) or the vault (settled).
+
+**The vault never schedules work.** It is the destination, not the orchestrator. A vault note does not trigger agent action; a board card does.
+
+**The boundary is enforced, not promised.** The policy MCP intercepts every agent write; the gated zones degrade to proposals for every lane. The boundary isn't "an agent should not write here" — it's "an agent cannot write here."
 
 ---
 
@@ -73,10 +82,9 @@ Review-gated zones (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30
 
 **Explanation**
 
-- The three layers described: [Architecture](../architecture/README.md)
-- How the worker layer is structured: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
+- The seven layers described: [Architecture](../architecture/README.md)
+- How the agent layer is structured: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
 - Why the vault's review gate is structural: [Why the review gate is structural](why-human-gate.md)
-- How the knowledge model is organized: [Knowledge](../knowledge/README.md)
 
 **Reference**
 

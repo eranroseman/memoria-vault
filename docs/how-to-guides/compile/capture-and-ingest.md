@@ -49,7 +49,7 @@ The `.bib` auto-export from step 4 enqueues an `intake:source` card, and the gat
 - Propose `_proposed_classification` for your review
 - Write the result back to Zotero's `Extra` field (stable IDs only)
 
-**Manual re-ingest (fallback):** if the auto-dispatch didn't fire (a stale `.bib`, a dropped card), you can re-run ingest from the terminal (full syntax in [Hermes CLI](../../reference/hermes-cli.md#librarian)):
+**Manual re-ingest (fallback):** if the auto-dispatch didn't fire (a stale `.bib`, a dropped card), you can re-run ingest from the terminal (full syntax in [Hermes CLI](../../reference/hermes-cli.md#the-profile-set)):
 
 ```bash
 hermes -p memoria-librarian chat -s obsidian-paper-note

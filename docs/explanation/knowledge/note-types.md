@@ -6,78 +6,99 @@ nav_order: 1
 
 # Note types and epistemic roles
 
-The vault distinguishes sixteen note types. But the types are not arbitrary — they map onto three fundamental epistemic roles that define what a note *is* in terms of who created it, from whose perspective, and what status it has in the knowledge system.
-
-Understanding the roles matters more than memorizing the types.
+The vault's types are not arbitrary — each one answers a different question about who created the content, from whose perspective, and what status it has in the knowledge system. The deepest split is between the **Catalog** (structured entity records, built mechanically) and **Notes** (prose, written by someone). Understanding that split matters more than memorizing the type list.
 
 ---
 
-## The three epistemic roles
+## Entities vs notes: Luhmann's two boxes
+
+The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliographic index** (who wrote what, where) physically separate from the **main slip-box** (his own thinking). Memoria does the same (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)):
+
+- **`catalog/` — entity records.** Structured facts about things in the world: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Built by the **ingest engine** from metadata APIs, surfaced through Obsidian Bases, not review-gated — they are extractions of given facts, not judgments. Entities carry `relationships` (cited-by, authored-by, published-in): **given** connections the engine derives mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)).
+- **`notes/` — prose.** What a source says, what you think, how it all hangs together. Written by the PI or proposed by an agent. Notes carry `links:` — **authored** connections (supports, contradicts, hub membership) that an agent may propose but only the PI confirms.
+
+"Relationships are given; links are authored." A connection between two entities is always a relationship; `links:` endpoints are always notes. Keeping the two boxes separate is what lets the mechanical half run ungated while the judgment half stays human.
+
+---
+
+## The six entity types
+
+All in `catalog/`, all engine-built, all Base-backed:
+
+| Entity         | What it records                            |
+| -------------- | ------------------------------------------ |
+| `paper`        | citekey, DOI, title, authors, year, venue, relationships |
+| `person`       | name, ORCID, affiliations                  |
+| `organization` | name, type, location                       |
+| `venue`        | name, type, ISSN                           |
+| `dataset`      | name, DOI, URL, license                    |
+| `repository`   | name, URL, language, license               |
+
+An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/source/` that points back at the entity.
+
+---
+
+## The five note types
 
 ### Source notes: describing the world
 
-Source notes record what something external says, does, or is. They are written from an outside perspective — the perspective of a reporter, not a thinker.
+A **`source`** note records what a source says — the brief, the key concepts, the limitations, the critique. It is written from an outside perspective: a source note never says what the PI thinks; it says what the source argues. That constraint is the mechanism that makes citation tracing work. If source notes expressed opinions, the boundary between "what the source says" and "what I think" would collapse, and provenance would become unverifiable.
 
-- **`paper-note`** — what a paper argues, structured as: one-sentence summary, abstract, key concepts, detailed notes, limitations, connections. Written by the Librarian, reviewed by the human.
-- **`item-note`** — what a tool, repository, package, or dataset does. Same structure; different subject.
-- **Entity notes** (`person-note`, `organization-note`, `venue-note`) — who someone is, what an organization does, what a venue is known for.
+(v0.1.0's `paper-note`/`item-note` distinction is gone: identification now lives on the *entity* — paper vs repository vs dataset — and the prose is one `source` note type regardless.)
 
-The key constraint: *a source note never says what the human thinks*. It says what the source says. A paper note doesn't claim "this approach is better" — it records "the paper argues that this approach is better." The distinction is not pedantic; it is the mechanism that makes citation tracing work. If source notes express opinions, the boundary between "what the source says" and "what the human thinks" collapses, and provenance becomes unverifiable.
+### Claim notes: the synthesis atom
 
-### Synthesis notes: expressing human thinking
+A **`claim`** is one durable assertion in the PI's own words, linked to the sources that support it. It is the most important note type and the one that distinguishes a research vault from a document store. A vault full of source notes is a bibliography with annotations; a vault with interlinked claims is a knowledge graph the PI can write from.
 
-Synthesis notes record what the human thinks, grounded in sources but in the human's own words.
+Claims live in `notes/claims/` — a **review-gated zone** (🔒): agents draft claim *stubs* into staging, but the canonical claim is human-made. The discipline is atomicity — one claim per note, Luhmann's one-idea-per-slip rule — because wikilinks citing a multi-claim note are ambiguous, and a multi-claim note cannot be cleanly superseded when evidence changes. The test: if the title contains an "and" doing real conceptual work, it is two notes.
 
-- **`claim-note`** — one durable claim in the human's own words, linked to the sources that support it. The most important note type. Only humans write claim notes; agents can suggest and draft, but the canonical claim is human-authored.
-- **`reference-note`** — a stable reference page that synthesizes a topic. More durable than a claim note; less atomic. Written collaboratively (Writer drafts, human edits, human canonizes).
-- **`moc`** (Map of Content) — a navigational hub that links notes on a topic with context and annotation. Written by the human; agents can suggest additions.
+Claims carry `maturity` (`seedling → budding → evergreen`) — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
 
-The key property of synthesis notes: they are *owned* by the human. "Owned" is not just a policy choice — it reflects the nature of synthesis. A claim is the human's judgment that something is true and worth keeping. That judgment cannot be delegated without losing what makes it valuable.
+### Hubs: authored navigation
 
-### Working notes: notes in transit
+A **`hub`** (the renamed Map of Content / MOC) is a curated, annotated view of an area: what it is about, what matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also gated 🔒, because a hub is an act of judgment about what belongs together, not a query result. Agents can propose additions; the PI curates.
 
-Working notes are not yet source or synthesis; they are becoming.
+### Fleeting and index notes
 
-- **`fleeting-note`** — raw capture: a thought, a URL, a quote, anything worth recording before deciding what to do with it. The inbox is where fleeting notes land. Fleeting notes either get promoted or get discarded; they don't persist indefinitely.
-- **`answer-note`** — a draft answer to a question, generated by the Writer in response to a human query. It's a proposal, not a claim. The human reviews it; if accepted, the human distills it into a claim note.
-Other working note types — `draft`, `canvas`, `code-note`, `project-note`, `deliverable` — are artifacts of specific workflow stages. They track active work rather than representing settled knowledge.
-
-(A `candidate-note` — a transient lead the Librarian surfaces during discovery, a Verifier gap-card, or an ingestion dead-letter, all awaiting screening — is the **16th** type, adopted in v0.1 (ADR-17). Session logs and verification reports are workflow *artifacts*, not note types.)
+A **`fleeting`** note is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. An **`index`** note is a register — Luhmann's entry-point list into the web.
 
 ---
 
-## Why the distinction matters
+## Why `reference` was dropped
 
-**Provenance.** If a source note could contain the human's claims, then "what does this paper say?" becomes mixed with "what does the human think about this paper?" The Verifier cannot check citations in synthesis without knowing which statements are supposed to trace back to sources.
-
-**Agent permissions.** The Librarian can write `paper-note` and `item-note`. It cannot write `claim-note`. This permission makes sense because of what those types represent: the Librarian can record what a source says, but it cannot assert the human's synthesis. The permission structure follows from the epistemic roles.
-
-**Promotion logic.** A `fleeting-note` might become a `paper-note` (after Librarian enrichment) or a `claim-note` (if the human decides the fleeting thought is a durable claim). It would never become a `moc` directly — a MOC requires a topic to have enough notes to navigate. The promotion rules encode the epistemic progression, not just an arbitrary workflow.
+v0.1.0 had a `reference` note type for "settled" synthesis pages. It was retired ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) for two reasons. It **double-encoded maturity**: an `evergreen` claim already *is* the settled unit, so a second type restated a property as a type. And it **collided with Zettelkasten vocabulary**, where a "reference note" means a literature note — our `source`. Existing reference-type material becomes evergreen claims or source notes.
 
 ---
 
-## The `paper-note` as the center of gravity
+## The four card types
 
-The paper note is the most important source note, and the most carefully designed. Papers are the primary raw material of research synthesis. A paper note needs to capture enough for the human to work from without re-reading the paper for each downstream use.
+The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its four types are *transient cards*, not knowledge:
 
-The distinction between `paper-note` and `item-note` is sometimes unclear (a codebase can be referenced like a paper, a paper can describe a tool). The rule keys on **how the source is identified, not on whether it carries a citekey** — in a Zotero workflow almost everything acquires a citekey, items included. A source identified by a stable publication ID (DOI, arXiv, PMID, ISBN) is a `paper-note`; a source identified only by name or URL (a repository, package, product, dataset, or standard) is an `item-note`. The [ingest dispatch](../../reference/ingest.md#type-detection-dispatch) encodes exactly this test. The epistemic role is identical either way — both describe the world from an outside perspective.
+| Card        | What it carries                       | Raised by                |
+| ----------- | ------------------------------------- | ------------------------ |
+| `candidate` | a *found* source proposed for intake  | Librarian (catalog)      |
+| `gap`       | a *missing*-source need               | Librarian / Peer-reviewer |
+| `flag`      | a verification or integrity issue     | Peer-reviewer / Linter   |
+| `alert`     | a drift or retraction notice          | Linter / sweeps          |
+
+A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/card-schema.md).
 
 ---
 
-## The claim note as the synthesis atom
+## Why the distinctions matter
 
-The claim note is what distinguishes a research vault from a document store. A vault full of paper notes is just a bibliography with annotations — useful, but not compounding. A vault with claim notes is a knowledge graph: the human's own assertions, grounded in evidence, connected to each other.
+**Provenance.** If a source note could contain the PI's claims, "what does this paper say?" gets mixed with "what do I think about it?", and the Peer-reviewer cannot trace citations in a draft back to what sources actually said.
 
-The discipline is atomicity: one claim per note. This is Luhmann's **Zettelkasten** rule — one idea per slip so it can be linked and recombined independently (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)) — and it is hard to maintain under time pressure. When a claim note starts covering multiple claims, the wikilinks become ambiguous (does citing this note support claim A or claim B?), the maturity is harder to assess, and the note becomes difficult to supersede when evidence changes.
+**Agent permissions.** The boundary follows the epistemic roles: agents (and the ingest engine) build entity records and propose source-note material, but `notes/claims/` and `notes/hubs/` are gated — recording what a source says is bookkeeping; asserting the PI's synthesis is not delegable.
 
-The test: if the claim note's title contains the word "and" doing real conceptual work, it should be two notes.
+**Lifecycle subsets.** Every type uses a subset of the one chain (`proposed → provisional → current → retracted → archived`), declared in its schema file under `.memoria/schemas/types/`. The subset encodes the epistemic shape: entities are born `current` (facts don't await approval); source notes start `proposed` (awaiting reading); claims exist only once the PI makes them `current`.
 
 ---
 
 ## Related
 
-- Why these roles map to lifecycle folders: [Why folders encode lifecycle, not topic](lifecycle-over-topic.md)
-- How notes move between roles: [Why promotion is gated](promotion-model.md)
+- Why folders carry the type and frontmatter carries the state: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
+- How material crosses the gates: [Why promotion is gated](promotion-model.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
-- Operating the paper note: [Discuss a paper](../../how-to-guides/compile/discuss-a-paper.md)
-- Complete note-type reference (fields, templates): [Note types](../../reference/note-types.md)
+- The card format in depth: [The honesty card](../kanban-board/card-schema.md)
+- Complete type reference (fields, templates): [Note types](../../reference/note-types.md)

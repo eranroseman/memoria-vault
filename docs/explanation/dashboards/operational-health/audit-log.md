@@ -11,9 +11,9 @@ The forensic trail for every vault write the policy MCP touched. Open it when so
 
 ## What it shows
 
-The dashboard reads directly from `99-system/logs/audit.jsonl` — the append-only policy MCP event stream. Its primary view is **recent denies and dry-runs**, sorted newest-first and capped at 30. These are the action queue: anything here for more than a day without a corresponding board card is an unhandled escalation.
+The dashboard reads directly from `system/logs/audit.jsonl` — the append-only policy MCP event stream. Its primary view is **recent denies and dry-runs**, sorted newest-first and capped at 30. These are the action queue: anything here for more than a day without a corresponding board card is an unhandled escalation.
 
-A second view lists **writes to review-gated zones** (`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`) for periodic audit. Even when these writes were allowed, they warrant occasional review because they represent changes to canonical content.
+A second view lists **writes to review-gated zones** (`notes/claims/`, `notes/hubs/`) for periodic audit. Even when these writes were allowed, they warrant occasional review because they represent changes to canonical content.
 
 ## What it is not
 
@@ -29,7 +29,7 @@ Memoria ingests untrusted PDFs — a potential indirect prompt injection surface
 
 ## Log rotation
 
-The Linter rotates `audit.jsonl` weekly to `99-system/logs/archive/audit-YYYY-WW.jsonl`. The dashboard queries the current week's file. Archive files accumulate in `99-system/logs/archive/` and are not queried by default.
+The Linter rotates `audit.jsonl` weekly to `system/logs/archive/audit-YYYY-WW.jsonl`. The dashboard queries the current week's file. Archive files accumulate in `system/logs/archive/` and are not queried by default.
 
 ## Related
 

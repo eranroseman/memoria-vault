@@ -16,7 +16,7 @@ The `why-*` pages: the durable conceptual arguments behind Memoria's core design
 
 | Page                                                              | The question it answers                                                                                             |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [Why three layers, not one](why-three-layers.md)                  | Why board, workers, and vault are kept separate — the thin-control-thick-state principle and what breaks without it |
+| [Why the architecture is layered](why-three-layers.md)                  | Why board, workers, and vault are kept separate — the thin-control-thick-state principle and what breaks without it |
 | [Why specialist profiles](why-specialist-profiles.md)             | Why seven narrow specialists instead of one generalist, and why there is no Orchestrator                            |
 | [Why the review gate is structural](why-human-gate.md)            | Why the human approval gate is enforced by architecture, not advised by convention                                  |
 | [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md) | The autonomy ceiling — why synthesis stays human-owned                                                              |
