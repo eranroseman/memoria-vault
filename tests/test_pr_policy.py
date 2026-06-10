@@ -17,7 +17,7 @@ def test_pr_policy():
         # --- is_safe ---
         check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
         check("is_safe: releasing docs prefix", is_safe("docs/releasing/v0.1/release-plan-v0.1.md"))
-        check("is_safe: design notes prefix", is_safe("docs/design/idea.md"))
+        check("is_safe: design notes prefix", is_safe("docs/design/README.md"))
         check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
         check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
         check("is_safe: .md suffix (arbitrary path)", is_safe("README.md"))
