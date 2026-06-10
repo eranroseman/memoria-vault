@@ -184,6 +184,15 @@ def fetch_openalex(ids: dict, key: str, email: str) -> dict:
         "authors": authors, "orcid_count": sum(1 for a in authors if a["orcid"]),
         "venue": src.get("display_name", ""), "issn": (src.get("issn_l") or ""),
         "topics": [t.get("display_name") for t in d.get("topics") or []],
+        # scored topics feed the classify stage (D21/ADR-54) — keep the OpenAlex
+        # score and the subfield/field/domain rollup, no extra network call needed
+        "topics_scored": [
+            {"name": t.get("display_name", ""),
+             "score": float(t.get("score") or 0.0),
+             "subfield": ((t.get("subfield") or {}).get("display_name", "")),
+             "field": ((t.get("field") or {}).get("display_name", "")),
+             "domain": ((t.get("domain") or {}).get("display_name", ""))}
+            for t in d.get("topics") or []],
         "referenced_works": d.get("referenced_works") or [],  # OpenAlex W-ids (different keyspace)
         "ror_count": sum(1 for a in authors if a.get("ror")),
     }
@@ -295,6 +304,7 @@ def merge(parts: dict) -> dict:
         "tldr": parts.get("s2", {}).get("tldr", ""),
         "fields_of_study": parts.get("s2", {}).get("fields_of_study") or [],
         "topics": parts.get("openalex", {}).get("topics") or [],
+        "topics_scored": parts.get("openalex", {}).get("topics_scored") or [],
         "publication_types": parts.get("s2", {}).get("publication_types") or [],
         "references": refs,
         "citation_count": parts.get("s2", {}).get("citation_count"),
