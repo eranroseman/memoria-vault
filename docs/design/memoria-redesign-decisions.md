@@ -692,7 +692,7 @@ didn't); and "gap" naming both a report and a signal was the exact confusion to 
 
 ---
 
-## D48 — Red-team pass: scope-corrections + five open decisions *(→ refines D22/D42/D44; new opens; decision #1 resolved in D49)*
+## D48 — Red-team pass: scope-corrections + five open decisions *(→ refines D22/D42/D44; new opens; #1 resolved in D49; #2/#3/#5 in D50/D51/D52; #4 deferred — routing-agent rejected)*
 
 **Decided (applied):** a six-pass adversarial review (full write-up:
 [Red-team findings](red-team-findings.md)) produced clear corrections, now in the docs:
@@ -740,6 +740,56 @@ both sides symmetrically is itself the research-backed anti-bias move.
 **Alternatives weighed:** ship the verdict (D22 — vacuous for proposals); blind-first /
 hide-the-verdict (nothing to hide; the recommendation is implied); a verdict on every item
 (rejected — only verification/adjudication has a non-given verdict).
+
+---
+
+## D50 — Write-time gate: a pre-commit `schema-check` *(→ resolves red-team #2; refines D44/§3.5)*
+
+**Decided:** add a **pre-commit `schema-check`** so git-tracked writes are gated **at
+commit** (a real write-time gate); live in-app/plugin edits are still caught on the next
+cron sweep. So the Linter **gates at commit and monitors between** — it is a guarantor for
+committed state, a monitor for the live working set.
+
+**Why:** closes the biggest integrity window cheaply, at the natural enforcement point in a
+git-backed vault, without standing up a file-watcher daemon (the thing the engine model
+avoids).
+
+**Alternatives weighed:** cron-only (honest "monitor" but leaves a window — red-team #2 A);
+pre-commit + incremental file-watcher (closes the live-edit window too, but a daemon —
+deferred).
+
+## D51 — Extraction-uncertainty gate *(→ resolves red-team #3; refines D16/D44/§3.4)*
+
+**Decided:** the Catalog stays **ungated for clean extractions**, but **low-confidence
+extraction calls — entity-resolution, dedup, license/venue typing — route to a `flag`/
+near-tie** below a confidence floor instead of writing canon silently. The gate triggers on
+**extraction uncertainty**, not on the given-vs-authored distinction.
+
+**Why:** the "mechanical ingest = ungated" line leaked at the fuzzy seams (a
+confidently-wrong entity-merge entered canon ungated); gating *uncertainty* closes the hole
+while keeping clean facts frictionless.
+
+**Alternatives weighed:** keep all extraction ungated (rejected — silent wrong-merges); gate
+all extraction (rejected — friction on clean facts).
+
+## D52 — Implement the redesign as one complete effort (v0.1.1); fresh-install, not in-place migration *(→ resolves red-team #5; reverses Theme-D incremental rec)*
+
+**Decided (big-bang):** the redesign is the **completion of v0.1**, shipped as **v0.1.1** —
+it was split out only for issue tracking. It is implemented as **one complete effort**, not
+an incremental ADR-cluster migration: the system is **useless without the complete
+redesign**, so no partial/half-migrated state has user value and there is no
+incremental-delivery benefit to weigh against migration risk. The red-team's "half-renamed
+running vault" risk is avoided not by incrementalism but by the **fresh-install model**
+([installation-redesign](installation-redesign.md), #310): build the complete system from
+`src/` and install it fresh, **replacing** the v0.1 prototype rather than migrating in place.
+
+**Why:** when no intermediate state is shippable or usable, big-bang is the rational choice;
+fresh-install sidesteps the in-place half-state failure mode the red-team flagged. It is
+v0.1's completion, not a later major version.
+
+**Alternatives weighed:** incremental migration ADR + dependency DAG across versions, or
+deferring to a new major version (the red-team rec — rejected: no valuable partial states,
+and the redesign is v0.1's completion).
 
 ---
 

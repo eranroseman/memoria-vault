@@ -99,7 +99,9 @@ non-given verdict — they **lead with the finding**. Keep **attention instrumen
 | **B. Pre-commit `schema-check`** on changed files | a real gate on git-tracked writes; cheap | doesn't catch live in-app/plugin edits before commit |
 | **C. Hybrid: pre-commit + an incremental file-watcher** | closes most of the window | a watcher is a daemon — the very thing the engine model avoids; complexity |
 
-*Recommendation:* **A is honest for v0.2 ("monitor"); add B as a cheap win; defer C.**
+**Resolved (D50): B** — add a pre-commit `schema-check` (a real write-time gate on
+git-tracked writes); the Linter **gates at commit, monitors between** sweeps. C's
+file-watcher is deferred (a daemon the engine model avoids).
 
 ### 3 — Extraction-uncertainty gate · Theme B
 
@@ -108,7 +110,8 @@ non-given verdict — they **lead with the finding**. Keep **attention instrumen
 | **A. Keep extraction ungated** (Catalog "not gated") | simple; relationships are mostly clean facts | confidently-wrong entity-merges / license / venue calls enter ungated |
 | **B. Route low-confidence extraction (entity-resolution, dedup, license/venue) to a `flag`/near-tie card** | catches the fuzzy seam; reuses the existing gate; small | needs a confidence signal from the ingest engine; some false-positive flags |
 
-*Recommendation:* **B — gate on *uncertainty*, not all extraction.** (Clustering-params drift already applied.)
+**Resolved (D51): B** — low-confidence entity-resolution / dedup / license calls route to a
+`flag`/near-tie; clean extractions stay ungated. (Clustering-params drift already applied.)
 
 ### 4 — Conversational specialist work · Theme C
 
@@ -118,7 +121,10 @@ non-given verdict — they **lead with the finding**. Keep **attention instrumen
 | **B. Conversational lane** — a card stays `running` and takes follow-up turns relayed by the co-PI; task-scoped composition memory | fits how drafting/verifying actually work; preserves specialist context; keeps one conversational front | more complex lane lifecycle; long-running lanes complicate WIP/board semantics |
 | **C. Allow direct chats with a few specialists** (the option D26 deferred) | simplest UX for interrogation | reintroduces "who do I talk to?"; splits the learning loop |
 
-*Recommendation:* **B — a conversational lane via the co-PI;** defer C.
+**Deferred — needs further thinking.** Constraint: a **routing agent is rejected**, so
+option B (the co-PI *relaying* turns to a specialist) is out, and C (direct specialist
+chats) conflicts with D26. The open question: how to make a delegated task *iterable*
+without the co-PI becoming a router and without separate specialist chats.
 
 ### 5 — Sequencing / the big-bang risk · Theme D
 
@@ -128,4 +134,8 @@ non-given verdict — they **lead with the finding**. Keep **attention instrumen
 | **B. Migration ADR + dependency DAG + atomic ADR clusters + `effective_from: vX.Y` + a v0.2 walking-skeleton** | incremental, de-risked; supersession dated to the *shipping* release | more upfront planning; slower |
 | **C. Defer the whole redesign to a major version (v1.0); keep v0.2 = small as-built fixes** | honest (Appendix F already says "major-version-sized"); v0.2 ships cleanly | the redesign waits |
 
-*Recommendation:* **B + C** — rename the architecture target to a major version, keep v0.2 small, write the migration ADR/DAG, add `effective_from`, and close **#198** with that scope.
+**Resolved (D52): A — big-bang.** The redesign is the **completion of v0.1**, shipped as
+**v0.1.1** (split out only for issue tracking); the system is useless without it, so no partial state has value
+and there's no incremental-delivery benefit to trade against migration risk. The
+"half-migrated vault" risk is avoided by the **fresh-install** model (build the complete
+system from `src/`, replace the v0.1 prototype) — not by incrementalism.
