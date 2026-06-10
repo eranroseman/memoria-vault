@@ -3,7 +3,7 @@ topic: decisions
 id: 43
 title: Skill governance and lifecycle
 status: deferred
-folded_into: memoria-redesign  # the pattern-library governance (D11)
+folded_into: memoria-design-update  # the pattern-library governance (D11)
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions

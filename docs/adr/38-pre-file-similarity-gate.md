@@ -3,7 +3,7 @@ topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: superseded
-folded_into: memoria-redesign  # near-tie/dedup residue (R2) + Fact-checker similarity-check
+folded_into: memoria-design-update  # near-tie/dedup residue (R2) + Fact-checker similarity-check
 assumes: []
 date_proposed: 2026-05-30
 parent: Decisions

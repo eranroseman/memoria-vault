@@ -2,7 +2,7 @@
 topic: explorations
 title: Measurement, quality, and verification
 status: deferred
-folded_into: memoria-redesign  # partial - calibration/guardrails (D11/D12)
+folded_into: memoria-design-update  # partial - calibration/guardrails (D11/D12)
 created: 2026-05-31
 parent: Design notes
 grand_parent: Explanation
