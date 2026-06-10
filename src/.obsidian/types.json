@@ -1,0 +1,23 @@
+{
+  "types": {
+    "type": "text",
+    "lifecycle": "text",
+    "maturity": "text",
+    "certainty": "text",
+    "agent_recommendation": "text",
+    "loudness": "text",
+    "origin": "text",
+    "authors": "multitext",
+    "affiliations": "multitext",
+    "sources": "multitext",
+    "topics": "multitext",
+    "members": "multitext",
+    "research-area": "multitext",
+    "methodology": "multitext",
+    "year": "number",
+    "created": "date",
+    "updated": "date",
+    "enriched_date": "date",
+    "full_text_reviewed": "checkbox"
+  }
+}
