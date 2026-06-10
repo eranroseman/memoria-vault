@@ -70,6 +70,44 @@
       }
     },
     {
+      "id": "9d3f2b71-4e8a-4c5d-9b06-2f7c81d4a350",
+      "name": "Memoria: delegate a task",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: delegate a task",
+        "id": "b41c7e92-6a0d-4f38-8e15-c93da70b62f1",
+        "commands": [
+          {
+            "name": "delegate-task",
+            "type": "UserScript",
+            "id": "3e85a1c4-92f7-4d6b-a02e-58b1f6c43d97",
+            "path": "system/scripts/delegate-task.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "a7f04d28-31b5-49ce-bd62-0e95c8a7f413",
+      "name": "Memoria: resolve inbox card",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: resolve inbox card",
+        "id": "d92b5f6e-08a3-47c1-9354-7ab2ce10d8f6",
+        "commands": [
+          {
+            "name": "resolve-inbox-card",
+            "type": "UserScript",
+            "id": "5c1d9a07-e4b6-42f8-b3a9-160df72e84c5",
+            "path": "system/scripts/resolve-inbox-card.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
       "name": "Memoria: write claim note",
       "type": "Template",
