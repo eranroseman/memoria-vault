@@ -17,6 +17,7 @@ The ingest engine ([src/.memoria/engines/ingest/](../../src/.memoria/engines/ing
 | --- | --- | --- |
 | Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
 | Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref, merged per-field best-source-wins **with provenance**; references = the union across sources, deduped by DOI. |
+| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity (D21 / [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). No extra network call; without enrichment it is a no-op. |
 | Tier-1 extract | `extract.py` | Full text, pre-extracted-first: PMC JATS → local Zotero PDF via pymupdf4llm. A deterministic coherence check (chars/page, replacement-char ratio, word ratio) gatekeeps so only good text reaches the model; non-English text is flagged, never auto-failed. |
 | Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
 
@@ -39,6 +40,25 @@ Below the floor, the bundle carries a `flag_needed` block instead of a silent be
 
 ---
 
+## Automated classification (D21 / ADR-54)
+
+classify is **not a gate** ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): low-stakes metadata a human would rubber-stamp is automated, audited, and correctable. `classify.py` reads the **scored OpenAlex topics already in the enrichment payload** (no new network call), rolls them up to their subfield (the research-area granularity, best score per area), and decides:
+
+- **Clear winner** — the top score clears the floor _and_ beats the runner-up by the near-tie margin → `research_area` is applied silently. A `methodology` facet is applied whenever it is derivable from the S2 publication types (Review, MetaAnalysis, ClinicalTrial, CaseReport, Dataset — deterministic, independent of topic ambiguity).
+- **Genuine ambiguity** — below the floor or within the margin → the field **stays unset** and ingest raises **one** Inbox `flag` card: what was ambiguous and the top candidates with scores, never a verdict (the [ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty rules).
+- **No data** (enrichment off, or no topics resolved) → a no-op.
+
+The thresholds live beside the entity-resolution floor in [src/.memoria/schemas/calibration.yaml](../../src/.memoria/schemas/calibration.yaml), under the same drift-bound discipline:
+
+| Knob | Default | Means |
+| --- | --- | --- |
+| `classify.confidence_floor` | `0.6` | Below this top-candidate score, nothing is applied. |
+| `classify.near_tie_margin` | `0.15` | The top candidate must beat the runner-up by at least this much. |
+
+Every applied or flagged decision appends **one JSONL audit line** to `system/logs/classify.jsonl` (timestamp, run id, citekey, decision, the candidates with scores, the reason, and the thresholds in force) — the audit trail that makes the automation correctable: the PI edits the frontmatter, never approves a card.
+
+---
+
 ## Derived artifacts
 
 The ingest MCP persists the un-gated derived artifacts the agent can't:
@@ -47,6 +67,7 @@ The ingest MCP persists the un-gated derived artifacts the agent can't:
 | --- | --- | --- |
 | Full-text extract | `.memoria/data/extracts/<citekey>.md` | Outside the Librarian's write lane; the paper note's `extract_path` points here (the `extract-path-broken` detector checks it). |
 | Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** the gated note write — the durability anchor. |
+| Classify audit | `system/logs/classify.jsonl` | One append-only line per classify decision (applied or flagged) — see Automated classification above. |
 
 ---
 
@@ -78,6 +99,7 @@ Deterministic, read-only retraction-by-DOI from three sources, most authoritativ
 | `type` / `lifecycle` | `paper` / per the universal chain — `proposed` until the PI classifies. |
 | `citekey`, `title`, `doi`, `authors`, `year`, `venue`, `url` | From the merged record, with per-field provenance. |
 | `relationships` | The given edges from the link plan. |
+| `research_area`, `methodology` | Applied by the automated classify stage when the decision is clear; left unset (plus one Inbox flag) on genuine ambiguity. |
 | `extract_path`, `pdf_uri` | The extract store path and the Zotero PDF URI. |
 | `_proposed_classification` | The Librarian's proposal (LLM hole #1), promoted by the PI at classify. |
 

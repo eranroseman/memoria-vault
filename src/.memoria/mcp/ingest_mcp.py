@@ -92,17 +92,20 @@ def build_server(vault: Path):
             return {"error": "pipeline-error",
                     "citekey": citekey,
                     "detail": f"{type(exc).__name__}: {exc}"}
-        # D51/ADR-56: a low-agreement merge becomes an Inbox near-tie flag — the
-        # writing layer raises it, never the agent
-        flag = bundle.pop("flag_needed", None)
-        if flag:
+        # D51/ADR-56: a low-agreement merge becomes an Inbox near-tie flag; and
+        # D21/ADR-54: an ambiguous classify decision becomes ONE Inbox flag —
+        # the writing layer raises them, never the agent
+        flags = [f for f in (bundle.pop("flag_needed", None),
+                             bundle.pop("classify_flag_needed", None)) if f]
+        if flags:
             try:
                 sys.path.insert(0, str(SCRIPTS_DIR.parent / "lib"))
                 import inbox as inbox_writer
-                inbox_writer.write_finding(
-                    vault, "flag", flag["title"], flag["finding"],
-                    raised_by="ingest", agent_recommendation="inconclusive",
-                    citekey=flag.get("citekey", ""), loudness="alert")
+                for flag in flags:
+                    inbox_writer.write_finding(
+                        vault, "flag", flag["title"], flag["finding"],
+                        raised_by="ingest", agent_recommendation="inconclusive",
+                        citekey=flag.get("citekey", ""), loudness="alert")
                 bundle["flag_raised"] = True
             except Exception as exc:   # never fail the ingest on card-writing
                 bundle["flag_raised"] = False
