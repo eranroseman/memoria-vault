@@ -71,7 +71,7 @@ Skip the gaps you don't buy — archive them with a clear conscience. The honest
 - The retraction sweep running on cron behind you
 - At least one gap turned back into a discovery task — one full turn of the loop
 
-> **Coming in v0.1.2:** project-level verification — drafts in `projects/` checked claim by claim against your vault before anything ships.
+> **Coming in v0.1.0-alpha.3:** project-level verification — drafts in `projects/` checked claim by claim against your vault before anything ships.
 
 ---
 

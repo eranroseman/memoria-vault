@@ -51,7 +51,7 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 ## From three layers to seven
 
-ADR-01's three layers described the v0.1.0 infrastructure but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). The design update pulled them apart, and [ADR-46](../../adr/46-seven-layer-architecture.md) superseded ADR-01 with the seven-layer stack: **PI · Interface · co-PI · Tasks · MCP · Engines · Vault.**
+ADR-01's three layers described the v0.1.0-alpha.1 infrastructure but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). The design update pulled them apart, and [ADR-46](../../adr/46-seven-layer-architecture.md) superseded ADR-01 with the seven-layer stack: **PI · Interface · co-PI · Tasks · MCP · Engines · Vault.**
 
 Each refinement is the old argument carried further, not a new one:
 

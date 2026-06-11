@@ -40,7 +40,7 @@ For command syntax and available operations, see [Hermes CLI](../../reference/he
 
 ## Graded loudness — how a signal picks its surface
 
-> **Partially built in v0.1.1.** Loudness levels ship as metadata, and the quiet/notice surfaces (logs, dashboards, the Inbox) work today. The **push and block routing** for the alert/block levels is **deferred** — nothing pushes to Telegram or blocks dispatch on loudness yet; tracked in [#343](https://github.com/eranroseman/memoria-vault/issues/343).
+> **Partially built in v0.1.0-alpha.2.** Loudness levels ship as metadata, and the quiet/notice surfaces (logs, dashboards, the Inbox) work today. The **push and block routing** for the alert/block levels is **deferred** — nothing pushes to Telegram or blocks dispatch on loudness yet; tracked in [#343](https://github.com/eranroseman/memoria-vault/issues/343).
 
 Every agent and engine finding carries one of four loudness levels, and the level decides where it surfaces:
 

@@ -28,7 +28,7 @@ Memoria commits to a **two-part publication strategy**:
 
 ## Consequences
 
-- **Build order is now ordered by the paper, not by feature appeal.** The Verifier profile and a public vault-CiteME fixture are the critical path; everything else is downstream. The board-export cron (Phase 1 in the [timeline](../releasing/v0.1/release-plan-v0.1-appendix.md)) becomes a publication prerequisite, not just an observability nicety — without it the six-signal logs never populate.
+- **Build order is now ordered by the paper, not by feature appeal.** The Verifier profile and a public vault-CiteME fixture are the critical path; everything else is downstream. The board-export cron (Phase 1 in the [timeline](../releasing/0.1.0/release-plan-0.1.0-appendix.md)) becomes a publication prerequisite, not just an observability nicety — without it the six-signal logs never populate.
 - **The de-risking is deliberate.** If within-vault citation-attribution numbers come out *worse* than public CiteME, the Verifier-as-gate thesis weakens — and we learn that before staking a system paper on it.
 - **n=1 operator data is accepted as a known weakness** of the later system-paper path, to be mitigated by detailed logging and a within-subject comparison arm (blocking vs. advisory review, see [ADR-41](41-configurable-review-gate-mode.md)) rather than by more operators.
 - **The novelty surface is fixed to a triad** — policy-MCP-enforced zone permissions, structurally blocking review state, and structural human-set claim supersession ([ADR-10](10-claim-supersession.md)) as the answer to the FAMA failure mode — plus the measurable knowledge-work consequences that only data can supply. We explicitly will **not** anchor a paper on the seven-profile design, the LLM-Wiki/Zettelkasten/Memex synthesis, or Obsidian-as-substrate; each is prior art or operational, not contributory.
@@ -46,7 +46,7 @@ Memoria commits to a **two-part publication strategy**:
 
 ## Related
 
-- **Files affected:** [Telemetry & logs](../reference/telemetry.md) (the six-signal schemas), [Release plan — v0.1.0 — appendix](../releasing/v0.1/release-plan-v0.1-appendix.md) (step 8, six-signal capture; board-export cron is the prerequisite).
+- **Files affected:** [Telemetry & logs](../reference/telemetry.md) (the six-signal schemas), [Release plan — v0.1.0-alpha.1 — appendix](../releasing/0.1.0/release-plan-0.1.0-appendix.md) (step 8, six-signal capture; board-export cron is the prerequisite).
 - **Related decisions / Depends on:** [ADR-11 vault-eval](11-vault-eval-maintenance.md) (the eval program this paper instantiates); [ADR-10 claim supersession](10-claim-supersession.md) (the FAMA-exposure signal and a novelty-triad pillar); [ADR-03 structural review gate](03-structural-review-gate.md) (the blocking-review thesis the later system/position paper would test).
 - **Proposals:** [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (analysis harnesses, deferred); [ADR-41](41-configurable-review-gate-mode.md) (the comparison arm).
 - **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../explanation/rationale/why-not-autonomous.md), [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md), [Why the review gate is structural](../explanation/rationale/why-human-gate.md), [Intellectual foundations](../explanation/overview/intellectual-foundations.md).

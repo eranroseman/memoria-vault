@@ -29,7 +29,7 @@ mcp_servers:
 
 # Policy sandbox (D40/ADR-46): agents reach the vault, engines, and APIs ONLY
 # through MCP — no exceptions. Keep toolsets = skills, todo; disabled_toolsets =
-# every Hermes toolset NOT in the keep-set. The v0.1.0 Coder kept terminal+file
+# every Hermes toolset NOT in the keep-set. The v0.1.0-alpha.1 Coder kept terminal+file
 # (ADR-27 §4); the Engineer does not — code scaffolds go through the gated
 # obsidian MCP into projects/*/code/, and the external coding agent it hands
 # off to is third-party code that gets EXECUTION isolation when introduced (D40).

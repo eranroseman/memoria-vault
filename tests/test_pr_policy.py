@@ -16,8 +16,8 @@ def test_pr_policy():
 
         # --- is_safe ---
         check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
-        check("is_safe: releasing docs prefix", is_safe("docs/releasing/v0.1/release-plan-v0.1.md"))
-        check("is_safe: design notes prefix", is_safe("docs/design/README.md"))
+        check("is_safe: releasing docs prefix", is_safe("docs/releasing/0.1.0/release-plan-0.1.0.md"))
+        check("is_safe: explanation prose prefix", is_safe("docs/explanation/architecture/human-channels.md"))
         check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
         check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
         check("is_safe: .md suffix (arbitrary path)", is_safe("README.md"))
@@ -36,7 +36,7 @@ def test_pr_policy():
         check("is_sensitive: adr (docs/adr/)", is_sensitive("docs/adr/29-testing-framework.md"))
         check("is_sensitive: testing docs NOT sensitive", not is_sensitive("docs/testing/coverage-matrix.md"))
         check("is_sensitive: docs/ NOT sensitive", not is_sensitive("docs/reference/policy-mcp.md"))
-        check("is_sensitive: design notes NOT sensitive", not is_sensitive("docs/design/system-architecture.md"))
+        check("is_sensitive: explanation prose NOT sensitive", not is_sensitive("docs/explanation/overview/what-memoria-is.md"))
         check("is_sensitive: README NOT sensitive", not is_sensitive("README.md"))
         # docs/adr/ is both safe (docs/ prefix) and sensitive (docs/adr/ prefix) — sensitive wins
         d, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)

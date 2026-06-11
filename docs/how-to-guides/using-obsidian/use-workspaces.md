@@ -24,7 +24,7 @@ Both layouts ship pre-configured in the vault's `.obsidian/workspaces.json` (pan
 - Load **Home** — `home.md` front and center: the above-the-fold inbox and the daily glance
 - Load **Library** — the reading-and-processing layout: catalog and notes side by side
 
-Switch when your cognitive mode changes — not per task within a mode. A **Project** workspace arrives with the v0.1.2 Project release.
+Switch when your cognitive mode changes — not per task within a mode. A **Project** workspace arrives with the v0.1.0-alpha.3 Project release.
 
 **2. (Optional) Bind hotkeys.**
 

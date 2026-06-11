@@ -105,7 +105,7 @@ Run the [GUI test plan](gui-test-plan.md) on the Windows side and **fully comple
 - [ ] **Part A** — all bundled plugins load/enable; REST round-trip; settings verified (no "didn't verify" caveat).
 - [ ] **Part B** — Zotero + Better BibTeX export works; the capture macro fires.
 - [ ] **Part C (G4)** — **all ten dashboards render** on real data (Dataview queries resolve), including the ingested note + entities from G10.
-- [ ] **Part D — Bases render check (v0.1.1).** Open every shipped `.base` in Obsidian and confirm each view renders without a YAML/format error: `catalog/catalog.base` (6 entity views), `inbox/inbox.base` ("Needs me" + "All cards" — also embedded in `home.md`), `system/dashboards/claims.base` / `sources.base` / `fleeting.base`, `system/patterns/patterns.base`. The format is young and our CI only schema-syncs properties — rendering is verifiable only in the app.
+- [ ] **Part D — Bases render check (v0.1.0-alpha.2).** Open every shipped `.base` in Obsidian and confirm each view renders without a YAML/format error: `catalog/catalog.base` (6 entity views), `inbox/inbox.base` ("Needs me" + "All cards" — also embedded in `home.md`), `system/dashboards/claims.base` / `sources.base` / `fleeting.base`, `system/patterns/patterns.base`. The format is young and our CI only schema-syncs properties — rendering is verifiable only in the app.
 
 ## G5 — telemetry signals  → records G5
 

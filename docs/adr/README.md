@@ -72,7 +72,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
 | [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded → ADR-48, ADR-46 |
-| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (25 skills > 15, v0.1.1) |
+| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (25 skills > 15, v0.1.0-alpha.2) |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [45](45-release-management-model.md) | Release management — gates as a tracking-issue checklist, release-please for versioning | accepted |
 | [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · co-PI · Tasks · MCP · Engines · Vault | accepted |
@@ -109,7 +109,7 @@ Rules:
 - **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
 - **Deferred is revisited, not gated.** A `deferred` ADR records `assumes:` (the decisions/mechanisms it rests on) so a change that invalidates it is detectable; it is re-judged each release cycle, never held on a static trigger.
-- **Sequencing is not decided here.** *When* a decision ships lives in the [release plan](../releasing/v0.1/release-plan-v0.1.md), which changes independently of these decisions. Link to it rather than restating phase order, so a re-plan does not strand stale dates here.
+- **Sequencing is not decided here.** *When* a decision ships lives in the [release plan](../releasing/0.1.0/release-plan-0.1.0.md), which changes independently of these decisions. Link to it rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR
 

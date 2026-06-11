@@ -7,7 +7,7 @@ parent: Reference
 
 The ten dashboards shipped in `system/dashboards/` ([src/system/dashboards/](../../src/system/dashboards)) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
 
-Two changes from v0.1.0: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
+Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
 ---
 

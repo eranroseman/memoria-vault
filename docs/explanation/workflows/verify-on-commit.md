@@ -6,7 +6,7 @@ nav_order: 4
 
 # Verify-on-commit
 
-> **Not built in v0.1.1 — deferred.** The post-commit trigger described here does not exist yet; committing a draft creates no verify card. Use `Memoria: verify a draft` from the palette (or ask the co-PI) to verify manually. Tracked in [#377](https://github.com/eranroseman/memoria-vault/issues/377). The page stands as design intent for the trigger.
+> **Not built in v0.1.0-alpha.2 — deferred.** The post-commit trigger described here does not exist yet; committing a draft creates no verify card. Use `Memoria: verify a draft` from the palette (or ask the co-PI) to verify manually. Tracked in [#377](https://github.com/eranroseman/memoria-vault/issues/377). The page stands as design intent for the trigger.
 
 Committing a draft to `projects/<project>/` automatically creates a verification card in the Peer-reviewer's verify lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.
 

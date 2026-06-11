@@ -26,7 +26,7 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
 | `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
-| `stale-answer-drafts` | LOW | Unreviewed answer drafts older than 90 days (folder retired in v0.1.1; the check remains for migrated vaults). |
+| `stale-answer-drafts` | LOW | Unreviewed answer drafts older than 90 days (folder retired in v0.1.0-alpha.2; the check remains for migrated vaults). |
 
 Run it directly:
 
@@ -65,7 +65,7 @@ The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script mem
 
 ## Auto-fix classes
 
-Auto-fix remains class-gated at the policy layer ([Policy MCP](policy-mcp.md)): `safe-and-unambiguous` and `authorized-targeted` may proceed (logged, within the lane's write scope), `schema-content` always degrades to `dry_run`, and `review-gated-edit` is always denied. The shipped v0.1.1 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
+Auto-fix remains class-gated at the policy layer ([Policy MCP](policy-mcp.md)): `safe-and-unambiguous` and `authorized-targeted` may proceed (logged, within the lane's write scope), `schema-content` always degrades to `dry_run`, and `review-gated-edit` is always denied. The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
 
 ---
 

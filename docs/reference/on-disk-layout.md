@@ -86,7 +86,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in [src/.obsidian/](../../src/.obsidian): `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, agent-client, Local REST API). [src/.obsidian/workspaces.json](../../src/.obsidian/workspaces.json) ships the two saved layouts — **Home** and **Library** (see [Obsidian workspaces](obsidian-workspaces.md)); the Project workspace arrives with v0.1.2.
+Shipped in [src/.obsidian/](../../src/.obsidian): `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, agent-client, Local REST API). [src/.obsidian/workspaces.json](../../src/.obsidian/workspaces.json) ships the two saved layouts — **Home** and **Library** (see [Obsidian workspaces](obsidian-workspaces.md)); the Project workspace arrives with v0.1.0-alpha.3.
 
 ### The Bases views
 

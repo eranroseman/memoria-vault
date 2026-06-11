@@ -43,7 +43,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 | [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a thought, discuss it, write a claim note        | One permanent claim note in your own words          |
 | [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Wire Zotero (optional), ingest one paper, judge its card | A Catalog entity, a candidate card, a source note   |
 | [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ingest five papers, write three linked claim notes       | Your first connected knowledge cluster              |
-| [05 — Synthesize toward a writing project](tutorials/05-synthesize-toward-a-writing-project.md)  | Synthesize claims + hubs; delegate a map task            | Coverage views over your corpus (workflow: v0.1.2)  |
+| [05 — Synthesize toward a writing project](tutorials/05-synthesize-toward-a-writing-project.md)  | Synthesize claims + hubs; delegate a map task            | Coverage views over your corpus (workflow: v0.1.0-alpha.3)  |
 | [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Write a draft paragraph, run verification, close the gap | A verified draft with a complete citation trail     |
 | [07 — Find new sources](tutorials/07-find-new-sources.md)                | Run forward-citation search, triage candidates           | A populated candidates queue and one new paper-note |
 

@@ -13,7 +13,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See the [v0.1 release plan](docs/releasing/v0.1/release-plan-v0.1.md) for current build state before installing.
+> **Status: v0.1 — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See the [v0.1 release plan](docs/releasing/0.1.0/release-plan-0.1.0.md) for current build state before installing.
 
 ---
 
@@ -111,7 +111,7 @@ bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
 
 If you use Memoria in your research, please cite it ([CITATION.cff](CITATION.cff)):
 
-> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents* (v0.1.1). <https://github.com/eranroseman/memoria-vault>
+> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents* (v0.1.0-alpha.2). <https://github.com/eranroseman/memoria-vault>
 
 ## Contributing
 

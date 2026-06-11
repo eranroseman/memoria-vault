@@ -49,7 +49,7 @@ Adopting this would **supersede the WSL2-only rule** ([Bootstrap installer](../e
 This is a deferral, not a gate — revisit when these hold, rather than on a fixed trigger:
 
 - **Hermes native Windows is confirmed GA.** The claim comes from Nous's own docs; a third-party source still calls it experimental, and the project is young. Re-check `hermes-agent.nousresearch.com/docs/user-guide/windows-native` at decision time.
-- **The v0.1.x workspace releases have shipped** (revisit after v0.1.2, with or after the UI phase) so re-platforming does not disrupt a tested build.
+- **The v0.1.x workspace releases have shipped** (revisit after v0.1.0-alpha.3, with or after the UI phase) so re-platforming does not disrupt a tested build.
 - **The ACP pane's dependency is settled** — confirm Memoria's pane needs only the native CLI/MCP and not Hermes's WSL2-only embedded-terminal pane, which decides whether the pane works natively.
 - **Vector search, if [ADR-33](33-cluster-mcp-bertopic.md)'s stack ships.** Avoid base `hnswlib` on Windows: its sdist-only package needs MSVC to build. Swap to FAISS / `chroma-hnswlib` and pin Python 3.10–3.13.
 

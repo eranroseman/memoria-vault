@@ -49,7 +49,7 @@ shipped shape (`src/`, not a live vault) and the new restore capability.
 - The Linter becomes a repairer, not just a detector — drift is fixable from a
   known-good baseline without re-running the installer.
 - The golden-copy update path on release upgrades (refresh without clobbering user
-  customizations) is the known open question to resolve when v0.1.2 ships.
+  customizations) is the known open question to resolve when v0.1.0-alpha.3 ships.
 - The installer gets simpler to reason about: scaffold and populate are idempotent,
   separately testable steps.
 

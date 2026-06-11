@@ -1,6 +1,6 @@
 ---
 title: Memoria v0.1 manual testing
-parent: v0.1
+parent: 0.1.0
 grand_parent: Releasing
 nav_order: 5
 ---

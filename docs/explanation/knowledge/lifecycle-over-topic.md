@@ -24,7 +24,7 @@ Most knowledge systems respond by letting notes exist in multiple places (aliase
 
 ## What changed: lifecycle moved out of the folder names
 
-v0.1.0 encoded lifecycle stage in numbered folders (`10-inbox/ → 20-sources/ → 30-synthesis/ → 50-deliverables/`), and promotion meant moving the file forward. The design update found the flaw: numbered folders imply a **pipeline**, and the knowledge is a **network**. A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
+v0.1.0-alpha.1 encoded lifecycle stage in numbered folders (`10-inbox/ → 20-sources/ → 30-synthesis/ → 50-deliverables/`), and promotion meant moving the file forward. The design update found the flaw: numbered folders imply a **pipeline**, and the knowledge is a **network**. A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
 
 So the vault's top level is now organized by **category** ([ADR-47](../../adr/47-type-first-category-folders.md)):
 

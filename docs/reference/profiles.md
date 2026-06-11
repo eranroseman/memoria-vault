@@ -94,11 +94,11 @@ See [Hermes CLI](hermes-cli.md) for the full skill map (including any legacy-nam
 [src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml) is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
-- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, engines, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
+- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, engines, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0-alpha.1 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
 
 ---
 
-## Retired profiles (v0.1.0 → v0.1.1)
+## Retired profiles (v0.1.0-alpha.1 → v0.1.0-alpha.2)
 
 The previous seven-profile fleet consolidated into the five above ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). The installer prunes stale `memoria-*` profiles from `~/.hermes/profiles/` on upgrade so an old SOUL never answers the ACP pane:
 

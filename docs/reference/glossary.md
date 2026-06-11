@@ -91,7 +91,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
-## Retired terms (v0.1.0 → v0.1.1)
+## Retired terms (v0.1.0-alpha.1 → v0.1.0-alpha.2)
 
 | Retired | Replaced by |
 | --- | --- |

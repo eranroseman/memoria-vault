@@ -6,7 +6,7 @@ nav_order: 8
 
 # Set up a VPS for always-on operation [deferred]
 
-> **Status — deferred.** v0.1.1 ships and is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](../../explanation/deployment/deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../../adr/63-multi-machine-deployment.md)). This guide documents the intended setup.
+> **Status — deferred.** v0.1.0-alpha.2 ships and is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](../../explanation/deployment/deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../../adr/63-multi-machine-deployment.md)). This guide documents the intended setup.
 
 Move Hermes from local WSL2 to a persistent VPS so the system runs the scheduled crons overnight, processes board cards unattended, and stays reachable from any device. The VPS becomes the **one dispatcher** for the vault — the desktop keeps Obsidian and Zotero, and Syncthing carries the vault between them.
 
