@@ -124,13 +124,18 @@ class Finding:
 # Helpers
 # --------------------------------------------------------------------------- #
 def iter_files(vault: Path):
-    """Yield every file under vault, skipping SKIP_DIRS."""
-    for p in vault.rglob("*"):
-        if p.is_dir():
-            continue
-        if any(part in SKIP_DIRS for part in p.relative_to(vault).parts):
-            continue
-        yield p
+    """Yield every file under vault, skipping SKIP_DIRS.
+
+    Prunes skipped directories DURING the walk (os.walk dirnames surgery)
+    rather than filtering rglob output afterwards: rglob still stats every
+    file inside .memoria/.venv and .git, which on a Windows-mounted vault
+    (WSL 9p) turns the daily lint cron into a minutes-long crawl."""
+    import os
+
+    for dirpath, dirnames, filenames in os.walk(vault):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for name in sorted(filenames):
+            yield Path(dirpath) / name
 
 
 def iter_notes(vault: Path):
