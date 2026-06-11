@@ -11,6 +11,11 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 * **palette:** six per-task lane commands + pattern runner; deferred docs marked ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) ([#388](https://github.com/eranroseman/memoria-vault/issues/388)) ([8ed00bb](https://github.com/eranroseman/memoria-vault/commit/8ed00bb64b2e76f89695bb646575b4e9a366d3b9))
 
+
+### Bug Fixes
+
+* **dashboards:** audit-log panels query the v0.1.1 gated zones; skill count 25 ([#395](https://github.com/eranroseman/memoria-vault/issues/395)) ([e17e59b](https://github.com/eranroseman/memoria-vault/commit/e17e59b0a703485e1393d19e82d1e9c4dc1369e8))
+
 ## [0.2.1](https://github.com/eranroseman/memoria-vault/compare/v0.2.0...v0.2.1) (2026-06-11)
 
 
