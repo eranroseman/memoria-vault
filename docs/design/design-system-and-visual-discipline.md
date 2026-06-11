@@ -12,7 +12,8 @@ nav_order: 6
 
 A design capture of the vault's portable visual-style system: a single nine-section
 spec that drives CSS snippets, Pandoc exports, and open-design rendering, plus the
-anti-patterns the Linter enforces. Reconstructed from
+anti-pattern rules it pins down (whose automated enforcement is deferred —
+[#378](https://github.com/eranroseman/memoria-vault/issues/378)). Reconstructed from
 [`vault/.memoria/design-system.md`](../../src/.memoria/design-system.md) and the
 generated snippet.
 
@@ -48,29 +49,45 @@ The file is read, not copied, by every renderer:
 The shipped CSS snippet colors internal links by lifecycle folder (sources grey,
 claims blue, references purple-bold, MOCs amber-italic, drafts/inbox muted, archive
 struck-through), driven by Style Settings variables so the human can tune them. It
-depends on the `supercharged-links` plugin to apply `data-href` attributes.
+depends on the `supercharged-links` plugin to apply `data-href` attributes — which
+v0.1.1 does **not** install (`community-plugins.json` doesn't list it), so the
+lifecycle coloring is inert until the enforcement work lands
+([#378](https://github.com/eranroseman/memoria-vault/issues/378)).
 
-### Anti-patterns the Linter enforces
+### Anti-patterns the spec pins down (enforcement deferred)
 
-Section 9 is not advice — several items are linted:
+Section 9 is not advice — each item is written to be mechanically checkable:
 
-- **Colors outside the palette** — breaks export consistency; the Linter flags it.
+- **Colors outside the palette** — breaks export consistency.
 - **Font sizes outside the scale** — refactor the scale, don't one-off.
 - **Rainbow callouts** — three callout types in three hues defeats eye-training; the
   three callouts (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent and
-  differ by *icon*, not color.
+  differ by *icon*, not color. (Of the three, only `[!brief]` has a shipped producer —
+  the ingest pipeline; the `[!suggestions]` / `[!verification]` producers are
+  deferred, [#376](https://github.com/eranroseman/memoria-vault/issues/376).)
 - **Emoji in note titles** — titles are filenames; emoji break cross-OS portability
   (body emoji is fine).
 - **Branded fonts the human can't install** — stick to system stacks so exports work
   everywhere.
 - **Capitalization inconsistency** — `claim-note` ≠ `Claim Note` ≠ `claimnote`.
 
+> **Deferred — v0.1.2 enforcement.** None of these anti-patterns is linted yet:
+> the v0.1.1 Linter engine
+> ([`detectors.py`](../../src/.memoria/engines/linter/detectors.py)) carries no
+> design-system detector, and the supercharged-links dependency above is not
+> installed. The Linter checks (palette, font scale, emoji-in-titles, rainbow
+> callouts, capitalization) and the lifecycle link coloring are tracked together
+> in [#378](https://github.com/eranroseman/memoria-vault/issues/378). Until they
+> land, section 9 binds by convention, not by machine.
+
 ### Drift discipline (spec is authoritative)
 
-The Linter's structural-drift check is deliberately asymmetric: if a CSS snippet or
-Pandoc config references a style not present in the spec, it flags the **consumer**,
+The drift rule is deliberately asymmetric: if a CSS snippet or Pandoc config
+references a style not present in the spec, the **consumer** is flagged,
 never the spec. The answer is always "update the consumer to match the spec," never
-the reverse. The vault file is the spec; consumers are subordinate.
+the reverse. The vault file is the spec; consumers are subordinate. (As with the
+anti-patterns, the automated check belongs to the deferred
+[#378](https://github.com/eranroseman/memoria-vault/issues/378) enforcement work.)
 
 ## Design rationale
 
@@ -92,5 +109,5 @@ the reverse. The vault file is the spec; consumers are subordinate.
 
 - [Integrations and adjacent surfaces](adjacent-tool-integrations.md) — open-design as the polished-deliverable renderer
 - [Structural linter and drift detection — zero-LLM vault health](structural-linter-and-drift.md) — the anti-pattern / drift enforcement
-- [Dashboards — eleven views, four groups, two data sources](dashboards-design.md) — single-accent discipline shared with dashboards/callouts
+- [Dashboards — ten views, four groups, two data sources](dashboards-design.md) — single-accent discipline shared with dashboards/callouts
 - Explanation: [`docs/explanation/obsidian/design-system.md`](../explanation/obsidian/design-system.md), [`visual-discipline.md`](../explanation/obsidian/visual-discipline.md)
