@@ -6,6 +6,8 @@ nav_order: 4
 
 # Verify-on-commit
 
+> **Not built in v0.1.1 — deferred.** The post-commit trigger described here does not exist yet; committing a draft creates no verify card. Use `Memoria: verify a draft` from the palette (or ask the co-PI) to verify manually. Tracked in [#377](https://github.com/eranroseman/memoria-vault/issues/377). The page stands as design intent for the trigger.
+
 Committing a draft to `40-workbench/<project>/04-drafts/` automatically creates a verification card in the Verifier's lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.
 
 ## Why automation is the right fit here
