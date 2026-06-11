@@ -107,6 +107,14 @@ repos:
         files: ^docs/.*\.md$
         pass_filenames: true
 
+      # Block 9b: cspell spell-check (docs/ + src/ + root markdown)
+      - id: cspell
+        name: cspell
+        language: system
+        entry: npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files
+        files: ^docs/.*\.md$|^src/.*\.md$|^[^/]+\.md$
+        pass_filenames: true
+
       # Block 10: ADR index current
       - id: adr-index
         name: adr-index
