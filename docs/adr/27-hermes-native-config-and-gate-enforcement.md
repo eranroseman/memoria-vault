@@ -155,6 +155,13 @@ non-terminal lane has.** Concretely:
    Their file writes are gated by the hook (`write_file|patch` matcher) and
    scoped by lane `write_scope`; their shell writes are bounded by `write_scope`
    plus, optionally, a Docker terminal backend (see Consequences).
+   *(v0.1.1 update — this exception is retired by D40/[ADR-46](46-seven-layer-architecture.md):
+   the Linter became a cron/CI engine (no agent), and the Engineer — the Coder's
+   successor — is MCP-only like every lane. No Memoria profile ships `terminal`,
+   `file`, or `code_execution`; the policy-gate plugin additionally hard-denies
+   those tool families fail-closed for every lane. The external coding agent the
+   Engineer hands off to is third-party code and gets execution isolation when
+   introduced, per D40.)*
 
 5. **Shared keys are seeded into each profile `.env`** by the installer
    (`seed_profile_env`, idempotent; re-run `--profiles-only` after adding keys).

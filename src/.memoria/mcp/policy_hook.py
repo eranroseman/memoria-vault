@@ -7,17 +7,16 @@ matched tool, maps the tool to a policy action, asks the same tested decision
 core, and BLOCKS denied / review-gated writes by printing
 ``{"decision": "block", "reason": ...}``. Allowed actions print ``{}`` (proceed).
 
-Two write families are gated (see classify):
-  - the `obsidian` MCP write tools (every profile's vault-write path), and
-  - the Hermes `file` toolset writes (`write_file`, `patch`) -- gated on the two
-    lanes that legitimately keep terminal+file (Coder, Linter) via a "file"
-    matcher, so a file-tool write to a review-gated zone is blocked too (#51).
-The `terminal` toolset is deliberately NOT gated here: an arbitrary shell command
-has no single path to evaluate, so those lanes stay bounded by their lane-override
-`write_scope` (Coder -> 40-workbench/*/06-code/, Linter -> system/logs/) plus
-review-to-promote. The complete write boundary for non-Coder/Linter lanes is the
-*capability* layer -- they don't get the terminal/file toolsets at all
-(`agent.disabled_toolsets`; tool-registry.yaml). This hook is the path layer.
+The sandbox model is policy-via-MCP, MCP-only (D40/ADR-46): agents reach the
+vault, engines, and external APIs ONLY through MCP servers. Accordingly:
+  - the `obsidian` MCP write tools (every profile's one vault-write path) are
+    PATH-GATED -- mapped to a policy action and decided by the lane policy; and
+  - every direct-capability tool (`file`, `terminal`, code-exec families --
+    DENY_DIRECT_TOOLS) is HARD-DENIED for every lane. No Memoria profile ships
+    those toolsets (`agent.disabled_toolsets`); a call reaching us anyway means
+    config drift (e.g. a Hermes update adding a toolset the denylist doesn't
+    know), so the gate fails closed rather than trusting the capability layer.
+The capability layer is the first wall; this hook is the second, in-process one.
 
 This one script handles BOTH the gate and the audit completion, branching on
 `hook_event_name`:
@@ -76,13 +75,17 @@ WRITE_KEYWORDS = {
     "rename": "move",
     "move": "move",
 }
-# Hermes `file` toolset WRITE tools (gated on Coder/Linter via a "file" matcher --
-# the two lanes that legitimately keep terminal+file; #51). The bare tool name is
-# matched exactly so we never gate an unrelated tool that merely contains "patch".
-# Reads (read_file, search_files) are absent -> not gated. The `terminal` toolset
-# is deliberately NOT here: an arbitrary shell command has no single path to gate,
-# so those writes stay bounded by the lane-override write_scope, not this hook.
-FILE_WRITE_TOOLS = {"write_file": "write", "patch": "write"}
+# Direct-capability tools hard-denied for EVERY lane (D40/ADR-46: agents reach
+# the vault, engines, and APIs ONLY through MCP — no exceptions). No Memoria
+# profile ships the `file`/`terminal` toolsets, so any such call is config drift
+# (e.g. a Hermes update adding toolsets the denylist doesn't know) — fail closed.
+# Bare tool names matched exactly so an unrelated tool merely containing "patch"
+# is never caught.
+DENY_DIRECT_TOOLS = frozenset({
+    "write_file", "patch", "read_file", "search_files",   # file toolset
+    "terminal", "run_command",                              # terminal toolset
+    "code_execution", "execute_code",                       # code-exec toolset
+})
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
 # Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
@@ -105,8 +108,7 @@ def classify(tool_name: str) -> str | None:
             if kw in t:
                 return action
         return None
-    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]   # strip server/toolset prefix
-    return FILE_WRITE_TOOLS.get(base)
+    return None
 
 
 def extract_path(tool_input: dict) -> str:
@@ -171,6 +173,12 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
         return {"decision": "block",                # hard deny -> never reaches a lane check
                 "reason": f"policy gate: '{tool_name}' is not permitted for any lane "
                           f"(arbitrary command execution / destructive op has no path to gate)."}
+    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]   # strip server/toolset prefix
+    if base in DENY_DIRECT_TOOLS:
+        return {"decision": "block",                # MCP-only sandbox (D40) -> fail closed
+                "reason": f"policy gate: '{tool_name}' is direct filesystem/shell access -- "
+                          f"agents reach the vault only through MCP (D40/ADR-46); no lane "
+                          f"is permitted this toolset."}
     action = classify(tool_name)
     if action is None:
         return {}                                  # read / terminal / ungated tool -> not our concern

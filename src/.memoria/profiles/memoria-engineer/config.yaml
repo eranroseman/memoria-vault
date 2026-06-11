@@ -27,11 +27,15 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
 
-# Capability allowlist (ADR-27): keep toolsets = file, skills, terminal, todo (+ obsidian/policy via
-# MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
-# vault-write path is the gated obsidian MCP. Update if Hermes adds toolsets.
+# Policy sandbox (D40/ADR-46): agents reach the vault, engines, and APIs ONLY
+# through MCP — no exceptions. Keep toolsets = skills, todo; disabled_toolsets =
+# every Hermes toolset NOT in the keep-set. The v0.1.0 Coder kept terminal+file
+# (ADR-27 §4); the Engineer does not — code scaffolds go through the gated
+# obsidian MCP into projects/*/code/, and the external coding agent it hands
+# off to is third-party code that gets EXECUTION isolation when introduced (D40).
+# Update if Hermes adds toolsets.
 agent:
-  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, tts, video, video_gen, vision, web, x_search, yuanbao]
+  disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
 terminal:
