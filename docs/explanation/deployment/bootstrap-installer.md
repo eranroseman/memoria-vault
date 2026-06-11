@@ -51,7 +51,7 @@ The installer is offered two ways, with **inspect-first as the documented primar
 
 Per Memoria's runtime model, **Hermes runs only on Linux/WSL2; Windows is the editing surface**. WSL2 is therefore a **hard prerequisite for the entire Windows install**, checked first:
 
-> **Reevaluation (2026-06):** the two rationales for this rule have since weakened — Hermes now supports **native Windows** (out of beta) and the Python analysis-stack wheels exist, so WSL2 is no longer *forced* by capability. Native Windows is the direction **after v0.1.2** (it also removes the WSL2↔Windows fragility); see [Native Windows vs WSL2 — platform reevaluation](../../design/native-windows.md). **This rule remains in force for the v0.1.x releases.**
+> **Reevaluation (2026-06):** the two rationales for this rule have since weakened — Hermes now supports **native Windows** (out of beta) and the Python analysis-stack wheels exist, so WSL2 is no longer *forced* by capability. Native Windows is the direction **after v0.1.2** (it also removes the WSL2↔Windows fragility); see [Native Windows vs WSL2 — platform reevaluation](../../adr/64-native-windows-support.md). **This rule remains in force for the v0.1.x releases.**
 
 - **No WSL2 → the installer does nothing.** It explains that Memoria on Windows requires WSL2, links Microsoft's guide, and exits without installing anything (enabling WSL2 needs admin + a reboot, so the installer won't attempt it).
 - **WSL2 present → proceed.** The thin `scripts/install.ps1` ensures Obsidian on the Windows side, then hands the entire rest of the flow to `bash scripts/install.sh` inside WSL2.
@@ -89,6 +89,5 @@ Each trades a little breadth for much less shell to build and maintain:
 
 - **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../../adr/26-repo-as-install-unit.md) (the repo is the install unit).
-- **Design:** [Installation redesign — src/ + scaffold-and-populate + a restorable golden copy](../../design/installation-redesign.md).
 - **Explanation:** [Distribution model](distribution-model.md), [Why Hermes](../rationale/why-hermes.md) (the runtime the installer provisions).
 - **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Tutorial 01: Set up from zero](../../tutorials/01-set-up-from-zero.md).

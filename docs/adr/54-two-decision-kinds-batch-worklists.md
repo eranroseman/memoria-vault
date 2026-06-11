@@ -64,5 +64,3 @@ through exactly the confident-wrong outputs the gate exists to catch.
 
 - **Related decisions / Depends on:** [ADR-03](03-structural-review-gate.md),
   [ADR-51](51-inbox-category-and-honesty-card.md), [ADR-15](15-project-membership-from-topic-hint.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §7,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D12/D21/D22/D37)

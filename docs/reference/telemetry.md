@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement design note [Measurement, quality, and verification](../design/measurement-and-verification.md) (the "six-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see [ADR-20 (publication path)](../adr/20-publication-path.md) and the deferred [ADR-62 (measurement and verification harnesses)](../adr/62-measurement-and-verification-harnesses.md).
 
 ## Conventions (apply to every log)
 

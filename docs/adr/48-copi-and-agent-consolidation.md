@@ -71,5 +71,3 @@ separation of duties — the agent that synthesizes must not grade its own work.
 - **Resolves / supersedes:** [ADR-02](02-seven-specialist-profiles.md)
 - **Related decisions / Depends on:** [ADR-46](46-seven-layer-architecture.md),
   [ADR-21](21-l3-autonomy-ceiling.md), [ADR-23](23-scoped-memory-substrates.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §4,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D26/D27/D34/D38/D46)

@@ -28,7 +28,7 @@ At high discovery volume, one profile doing both `find` and `ingest` may have it
 
 ## When this matters
 
-Discovery volume genuinely overwhelms the unified Librarian — e.g. the [discovery loop](../design/discovery-loop.md) running at scale, where discovery scoring and classification visibly contend.
+Discovery volume genuinely overwhelms the unified Librarian — e.g. the [nightly discovery loop](61-nightly-discovery-loop.md) running at scale, where discovery scoring and classification visibly contend.
 
 
 ## Alternatives considered

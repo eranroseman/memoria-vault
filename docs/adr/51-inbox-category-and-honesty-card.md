@@ -68,5 +68,3 @@ select-all-accept.
 
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-03](03-structural-review-gate.md); amends [ADR-17](17-shared-candidate-frontmatter.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §3.4/§7,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D6/D18/D35/D37/D49)

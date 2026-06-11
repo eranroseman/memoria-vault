@@ -173,7 +173,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 Mixed-quadrant pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `src/` (vault-tree) files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/` and design notes under `docs/design/`, so links to them are ordinary intra-`docs/` relative links; release plans (`docs/releasing/`) and test plans (`docs/testing/`) are ordinary intra-`docs/` relative links; links to non-doc files under `src/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
+  - From `docs/`, cross-folder repo references follow the target: ADRs live under `docs/adr/`, release plans under `docs/releasing/`, and test plans under `docs/testing/` — links to them are ordinary intra-`docs/` relative links; links to non-doc files under `src/` or `scripts/` use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), since those have no Pages route.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
@@ -208,8 +208,13 @@ superseded_by: []
 ## Alternatives considered
 ```
 
-Background design analysis that informs an ADR lives in [`docs/design/`](docs/design),
-not in the ADR itself.
+Background design analysis lives **in the ADR itself** — there is no separate
+design-notes folder. A forward-looking or not-yet-built decision is a
+`status: deferred` ADR (`nav_exclude: true`) whose Context / Decision /
+*When this matters* sections carry the analysis and the revisit triggers.
+`docs/` describes only the current system; the decision history lives in the ADRs
+(and the full git history). Transient scratch that never graduates to a decision
+stays in the gitignored `_reports/` / `_notes/`.
 
 ### Release plans (`docs/releasing/`)
 
@@ -225,14 +230,14 @@ One file per version, copied from `docs/releasing/release-plan-template.md` — 
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`/`deferred`) |
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) |
 | Release readiness (gates/stages) | the **"Release vX.Y" tracking issue** — a gate checklist (progress bar), *not* the plan §2/§3 |
-| Durable analysis that informs ADRs | `docs/design/` (tracked) |
+| Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: deferred` for forward-looking) |
 | Transient scratch / personal notes | `_reports/` / `_notes/` (gitignored) |
 
 - GitHub project board: "Memoria backlog" — Inbox → Scheduled → In progress → In review → Done.
 - Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis that informs an ADR is tracked in `docs/design/`; **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `docs/` or the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `docs/` or the repo root.
 
 ---
 

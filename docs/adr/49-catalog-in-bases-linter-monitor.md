@@ -63,5 +63,3 @@ commit gate + sweep bound the risk acceptably.
 
 - **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md),
   [ADR-50](50-universal-lifecycle-and-maturity.md), [ADR-12](12-obsidian-linter-reference-only.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §3.5,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D3/D50)

@@ -87,6 +87,15 @@ condition. See [the template](_template.md) for the required fields per status.
 | [55](55-src-scaffold-populate-golden-copy.md) | The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
+| [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | deferred |
+| [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | deferred |
+| [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | deferred |
+| [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | deferred |
+| [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | deferred |
+| [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | deferred |
+| [64](64-native-windows-support.md) | Native Windows support (deferred): the port approach | deferred |
+| [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
+| [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | deferred |
 
 <!-- ADR-INDEX:END -->
 
