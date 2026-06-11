@@ -1,6 +1,6 @@
 ---
 name: catalog-classify-source
-description: "Fill or refresh the vocabulary-constrained classification proposal on a captured source — read the note (or the ingest bundle's draft), pick study_design / methods / topic values from system/vocabulary.md, and write them into the note's _proposed_classification block. Proposal only (D16/D21): classification is audited metadata, never a gate; the human promotes at triage. Use when a note sits at captured/needs-human without a classification, or a re-classification is requested."
+description: "Fill or refresh the vocabulary-constrained classification proposal on a captured source — read the note (or the ingest bundle's draft), pick research_area / methodology values from system/vocabulary.md, and write them into the note's _proposed_classification block. Proposal only (D16/D21): classification is audited metadata, never a gate; the human promotes at triage. Use when a note sits at captured/needs-human without a classification, or a re-classification is requested."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -30,7 +30,7 @@ metadata:
 
 *(legacy name: `classify`; load on disk as `catalog-classify-source`.)*
 
-Propose how a source is filed — `study_design`, `methods`, `topic` — without ever
+Propose how a source is filed — `research_area`, `methodology` — without ever
 deciding it. Classification is **audited metadata, not a gate** (D16/D21): your values
 land in the note's `_proposed_classification` block; the human-owned main fields stay
 empty until the PI promotes at triage. Normally `catalog:enrich-record` fills this hole
@@ -41,7 +41,7 @@ re-read.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| citekey / path | yes | The catalog note to classify (`catalog/papers/<citekey>.md` or `02-items/…`). |
+| citekey / path | yes | The catalog note to classify (`catalog/papers/<citekey>.md` or another `catalog/<type>/…` entity). |
 | reason | no | Why re-classifying (vocabulary changed, prior proposal stale). |
 
 ## Procedure
@@ -55,7 +55,7 @@ re-read.
    `system/vocabulary.md`** — prefer a defined term. Only when nothing fits, propose a
    new term flagged `provisional: true` for later consolidation; never coin casually.
 3. **Write — gated.** Patch the note's `_proposed_classification`
-   (`study_design`, `methods`, `topic`) via the `obsidian` skill. **Never touch the
+   (`research_area`, `methodology`) via the `obsidian` skill. **Never touch the
    human-owned main fields**, and never overwrite a previous proposal the human has
    acted on — supersede it (`_proposed_classification` is yours; promoted fields are
    not).

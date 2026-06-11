@@ -6,24 +6,37 @@ title: Topic vocabulary
 
 # Vocabulary
 
-The single source of truth for the controlled values of the three classification
-fields — `topic`, `study_design`, and `methods`. The Librarian's ingest classifier
-reads this note in-context and **prefers a term defined here**; when nothing fits it
-may propose a new *provisional* term (flagged in `_proposed_classification`) for you
-to consolidate later. The Linter's `schema-check` validates note values against
-these lists.
+The single source of truth for the controlled values of the classification fields —
+`research_area` and `methodology` (on `paper` and `source` notes) and `topics` (on
+`claim` notes). These are the exact field names the schemas declare
+(`.memoria/schemas/types/paper.yaml`, `source.yaml`, `claim.yaml`); keep this note and
+the schemas in lockstep. The Librarian's ingest classifier reads this note in-context
+and **prefers a term defined here**; when nothing fits it may propose a new
+*provisional* term (flagged in `_proposed_classification`) for you to consolidate
+later. The Linter's `schema-check` validates note values against these lists.
+
+How each field is populated:
+
+- **`research_area`** — *what the work is about.* Seeded mechanically from OpenAlex
+  topics by the ingest engine (`classify.py`), so the vocabulary is free and consistent
+  across sources; the list below is the curated preferred set you consolidate toward.
+- **`methodology`** — *how the study was structured, and the techniques it used.* A
+  coarse facet is derived from the S2 publication types at ingest; the rest is
+  human-extended against the list below.
+- **`topics`** (claims only) — *what a claim is about.* Human-set; draw from the
+  `research_area` vocabulary so claims and sources stay queryable together.
 
 Each term carries a one-line definition so classification is grounded rather than
-guessed. Keep `topic` to ~30 terms; consolidate drift at roughly fifty papers
+guessed. Keep `research_area` to ~30 terms; consolidate drift at roughly fifty papers
 (see [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/curate/manage-vocabulary/)
 and [Vocabulary discipline](https://eranroseman.github.io/memoria-vault/explanation/knowledge/vocabulary-discipline/)).
 
 Reference taxonomies (MeSH, ACM CCS, OpenAlex fields-of-study) are **not** here —
 they live in each note's `_enrichment` namespace for browsing, not querying.
 
-## topic
+## research_area
 
-Many values per note. *What the work is about.*
+Many values per note. *What the work is about.* Claim `topics` draw from this same list.
 
 - personal-informatics — Self-tracking systems and how people collect, reflect on, and act on data about their own behavior and health.
 - mobile-health — Health interventions and tools delivered through smartphones and mobile devices (mHealth).
@@ -53,9 +66,13 @@ Many values per note. *What the work is about.*
 - jitai — Just-in-time adaptive interventions that deliver support tailored to a person's changing state and context.
 - ema-self-report — Ecological momentary assessment and self-report capture of in-the-moment experience.
 
-## study_design
+## methodology
 
-One value per note. *The research architecture — how the study was structured.*
+Many values per note. *How the study was structured, and the techniques it used.* The
+schema carries study architecture and specific technique in this one field; both groups
+below are valid `methodology` values.
+
+### Research architecture — how the study was structured
 
 - rct — Randomized controlled trial.
 - quasi-experiment — Controlled comparison without randomization.
@@ -71,9 +88,7 @@ One value per note. *The research architecture — how the study was structured.
 - meta-analysis — Statistical pooling of results across studies.
 - secondary-analysis — New analysis of an existing dataset.
 
-## methods
-
-Many values per note. *The specific techniques used.*
+### Specific methods — the techniques used
 
 - semi-structured-interview — Open-ended interviews around a guiding protocol.
 - thematic-analysis — Coding qualitative data into recurring themes.
@@ -94,3 +109,10 @@ Many values per note. *The specific techniques used.*
 - content-analysis — Systematic categorization of communication content.
 - participant-observation — Researcher embeds in the setting being studied.
 - ab-test — Randomized comparison of two variants in deployment.
+
+## topics
+
+Claim notes only. Many values per note. *What the claim is about.* Draw from the
+`research_area` vocabulary above so a claim and the sources it rests on share the same
+controlled terms (and surface together in queries); propose a new provisional term only
+when no `research_area` value fits.

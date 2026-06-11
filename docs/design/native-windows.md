@@ -62,7 +62,7 @@ Native Windows collapses the two-OS topology into one and deletes them:
 
 The current build is deeply WSL2-wired; a native path is a **port**, not a flag:
 
-- **Provisioning** — `install.sh` is apt-based bash (~830 lines, nine steps); native needs
+- **Provisioning** — `install.sh` is apt-based bash (~981 lines, nine steps); native needs
   winget/`uv` provisioning (or wrapping Hermes's own native installer). Today
   `install.ps1` is only a thin WSL2 launcher.
 - **Scheduling** — Hermes-internal cron + bash cron-wrappers → Windows Task Scheduler, or

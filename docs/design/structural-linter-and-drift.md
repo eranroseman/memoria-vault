@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Structural linter and drift detection — zero-LLM vault health
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 24
 ---
 
 # Structural linter and drift detection — zero-LLM vault health
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 Linter and is kept for
+> design rationale only. The current sources are
+> [ADR-29](../adr/29-testing-framework.md) and
+> [Linter reference](../reference/linter.md).
 
 A design capture of the Linter as built: a deterministic detector engine, a
 restorable golden copy, a commit-time schema gate, a verdict band, and the cron

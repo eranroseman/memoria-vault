@@ -8,8 +8,8 @@ fallback for the low-confidence tail, and human review as the final authority.
 ## The four steps
 
 1. **Classifier proposal (deterministic).** A small multi-label classifier trained on the
-   human's past `lifecycle: current` paper-notes proposes values for `topic`, `methods`, and
-   `study_design`. The classifier emits a calibrated softmax probability per label.
+   human's past `lifecycle: current` papers proposes values for `research_area` and
+   `methodology`. The classifier emits a calibrated softmax probability per label.
 2. **Confidence gate.** If the classifier's confidence exceeds the threshold (default `0.85`),
    accept the proposal directly into `_proposed_classification`.
 3. **LLM fallback.** For sources where classifier confidence is below the threshold, fall back

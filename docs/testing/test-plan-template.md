@@ -46,7 +46,7 @@ results table at the end.
 ## 0. Preconditions
 
 <!-- Everything that must already be true before step 1. Each a checkable line. -->
-- [ ] {{precondition — e.g. installer has run; `hermes profile list` shows 7 profiles}}
+- [ ] {{precondition — e.g. installer has run; `hermes profile list` shows 5 profiles}}
 - [ ] {{precondition — apps installed / keys set / network mode / data seeded}}
 - [ ] {{…}}
 

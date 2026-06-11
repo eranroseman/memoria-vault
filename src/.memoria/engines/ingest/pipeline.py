@@ -183,7 +183,10 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
                          "degraded": ex["degraded"], "text": ex.get("text", "")}
     if ex["degraded"]:
         bundle["degraded"].append("extract")
-    fm["extract_path"] = f"90-assets/extracts/{citekey}.md" if ex["chars"] else ""
+    # the extract store lives at .memoria/data/extracts/ (ingest_mcp persists it there,
+    # outside the agent write lane) — the frontmatter must point at that real path so
+    # the Linter's extract-path-broken detector resolves it (ADR-47 type-first layout).
+    fm["extract_path"] = f".memoria/data/extracts/{citekey}.md" if ex["chars"] else ""
 
     # link plan (entities + cites) — needs the vault for cites matching
     if vault is not None:

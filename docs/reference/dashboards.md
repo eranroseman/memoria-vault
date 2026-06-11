@@ -16,12 +16,12 @@ Two changes from v0.1.0: **daily-health was absorbed into the homepage** (`home.
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
 | Home | Board state | `board-state.md` | The Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`) plus live worker cards from `system/board/`. |
-| Library | Reading pipeline | `reading-pipeline.md` | Sources awaiting classify + claims by maturity. |
-| Library | Discuss queue | `discuss-queue.md` | Sources worth discussing → the co-PI desk. |
-| Library / Project | Open questions | `open-questions.md` | Unconnected claims — the synthesis backlog. |
-| Library / Project | Contradictions | `contradictions.md` | `contradicts` links — open tensions. |
-| Maintenance | Drift watch | `drift-watch.md` | Active/imminent structural drift; HIGH findings also raise an Inbox alert. |
-| Maintenance | Loose ends | `loose-ends.md` | Structural debt (TODO/tmp/untitled files). |
+| Library | Reading pipeline | `reading-pipeline.md` | Sources at `lifecycle: proposed` awaiting reading & distillation + claims by maturity. |
+| Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a co-PI pass. |
+| Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
+| Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
+| Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also push to Home. |
+| Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
 | Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
 | Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |
 | Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |

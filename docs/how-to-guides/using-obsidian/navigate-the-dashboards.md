@@ -53,7 +53,7 @@ Read-but-not-distilled sources worth a co-PI pass. Open a paper from this queue,
 
 **Open Questions** — open manually.
 
-Unconnected claims — the synthesis backlog. Review during the weekly review or when starting a new topic cluster. These are things your existing notes flag but can't answer — discovery prompts.
+Unconnected claims — the synthesis backlog: `current` claims with zero inbound links, that no hub holds and nothing links to yet. Review during the weekly review or when starting a new topic cluster. These are facts the corpus has captured but not yet woven in — connect each to a hub or to related claims.
 
 ### "Are any of my claims contradicted by other claims?"
 
@@ -85,11 +85,11 @@ Per-decision forensics over `system/logs/audit.jsonl`. Open when a write didn't 
 
 The Friday aggregator: classify backlog, outstanding discovery candidates, drift-watch verdict, retraction candidates. The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks through it step by step.
 
-### "What orphan or noise files are in the vault?"
+### "What low-stakes structural debt has piled up?"
 
 **Loose Ends** — open during the weekly review or after a lint pass.
 
-Structural debt: files named `TODO`, `tmp`, `untitled`, or matching other noise patterns. More than five is a cleanup signal.
+Structural debt batched at Notice loudness: `flag` cards in `proposed` with `loudness = notice` — cosmetic and low-stakes findings the Linter never pushes. More than five is a cleanup signal.
 
 ---
 

@@ -17,7 +17,7 @@ For the rationale — why deterministic over LLM, the hybrid pattern, cost and a
 
 **For:** parsing structured text (citations, frontmatter, wikilinks), pattern detection in filenames, deterministic transformations (normalize whitespace, sort YAML keys).
 
-**Used by:** Linter structural detectors, Verifier `cite-check`, schema validation, Librarian ingest type-detection dispatch table.
+**Used by:** Linter structural detectors, Peer-reviewer `verify:check-citation`, schema validation, Librarian ingest type-detection dispatch table.
 
 **Cost:** free. Latency: microseconds. Determinism: total.
 
@@ -47,7 +47,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 **For:** corpus density analysis, identifying conceptual clusters in a project scope, gap detection.
 
-**Used by:** Mapper `cluster-map`, `scope-project`, `gap-report`.
+**Used by:** the Librarian's map lane — `map:cluster-corpus`, `map:scope-project`, `map:report-coverage`.
 
 **Implementation:** HDBSCAN over note embeddings (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
 
@@ -77,7 +77,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 Training guidance:
 
-- Multi-label (one-vs-rest) for `topic` and `methods`; multi-class for `study_design`.
+- Multi-label (one-vs-rest) for `research_area`, `methodology`, and `topics` — all list-valued.
 - Retrain monthly or when the human-override rate on proposed labels exceeds 25%.
 - Filter training data to `lifecycle: current` only — `proposed` notes are not yet ground truth.
 - Starts useful at ~200–500 classified notes; well-calibrated at ~1,000.
@@ -116,7 +116,7 @@ Training guidance:
 
 **Proposed use:** candidate-proposer for the `contradicts` relation and contradictions dashboard. The relation and surface ship human-set; NLI is the deferred engine that *proposes* pairs to confirm.
 
-**Implementation:** sentence-pair NLI model (`roberta-large-mnli`, `deberta-v3-large-mnli`, or domain-tuned variant) over claim-note pairs. Pre-filter to topically-near pairs using the embedding index (cosine above a threshold) so NLI runs on O(k) candidate pairs, not O(n²). Output: per-pair label + confidence; above threshold → proposed `contradicts` link the human confirms — never auto-written.
+**Implementation:** sentence-pair NLI model (`roberta-large-mnli`, `deberta-v3-large-mnli`, or domain-tuned variant) over claim pairs. Pre-filter to topically-near pairs using the embedding index (cosine above a threshold) so NLI runs on O(k) candidate pairs, not O(n²). Output: per-pair label + confidence; above threshold → proposed `contradicts` link the human confirms — never auto-written.
 
 **Cost:** tens of ms per pair on CPU, bounded by embedding pre-filter. Determinism: total.
 
@@ -154,5 +154,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md), [Mapper](../explanation/profiles/librarian.md), [Verifier](../explanation/profiles/peer-reviewer.md), [Linter](../explanation/engines/README.md)
+- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [engines](../explanation/engines/README.md) (Linter, Clustering, Sweeps)
 - Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/

@@ -22,7 +22,7 @@ The top level is organized by **category** — one content kind per folder, no l
 ├── notes/          ← NOTES: prose (Zettelkasten)
 │   fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
 ├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.1)
-├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert cards
+├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
 ├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
 └── .memoria/       ← hidden runtime (MCP, profiles, schemas, golden copy)
@@ -35,7 +35,7 @@ The top level is organized by **category** — one content kind per folder, no l
 - **Catalog** — entity records: paper, person, organization, venue, dataset, repository. Built by the ingest engine from metadata APIs; flat, Bases-queryable frontmatter; **not gated** — relationships are given facts (with one escape valve: low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
 - **Notes** — prose: fleeting, source, claim 🔒, hub 🔒, index. The claim is the unit of the PI's thinking; the hub (the renamed MOC) is its structure note.
 - **Projects** — report, sketch, composition, code — project-scoped work artifacts. Empty in v0.1.1; the Project workspace ships in v0.1.2.
-- **Inbox** — candidate, gap, flag, alert cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). The kanban board and queue dashboards are *views* of this folder.
+- **Inbox** — candidate, gap, flag, alert, and work-prompt cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). The kanban board and queue dashboards are *views* of this folder.
 - **System** — logs, templates, patterns, dashboards, board: visible, git-tracked infrastructure (hidden runtime stays in `.memoria/`).
 
 ## Gated zones

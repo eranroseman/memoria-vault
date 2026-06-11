@@ -11,7 +11,7 @@ Surfaces claim notes that disagree with each other as a synthesis starting point
 
 ## What it shows
 
-Every claim carrying a PI-confirmed `contradicts` link (a typed entry in the note's `links:` block — [ADR-52](../../../adr/52-links-vs-relationships.md)) appears here, listed as conflicting pairs. The pairs are deduplicated — if both claim A and claim B link to each other as contradictions, the pair appears once, not twice. Sorted by most-recently-modified first.
+Every `current` claim carrying a PI-confirmed `contradicts` link (a typed entry in the note's `links:` block, so the query reads `links.contradicts` — [ADR-52](../../../adr/52-links-vs-relationships.md)) appears here, with the claim it contradicts and its `maturity`. Sorted by most-recently-modified first.
 
 ## What it is not
 

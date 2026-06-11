@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Design system and visual discipline — one spec, many consumers
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 6
 ---
 
 # Design system and visual discipline — one spec, many consumers
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 design system and is
+> kept for design rationale only. The current sources are
+> [Design system](../explanation/obsidian/design-system.md) and
+> [Visual discipline](../explanation/obsidian/visual-discipline.md).
 
 A design capture of the vault's portable visual-style system: a single nine-section
 spec that drives CSS snippets, Pandoc exports, and open-design rendering, plus the

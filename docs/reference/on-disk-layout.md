@@ -48,7 +48,7 @@ Hidden from Obsidian; everything agents and engines need, shipped in [src/.memor
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      16 per-type frontmatter schemas
+│   ├── types/<type>.yaml      18 per-type frontmatter schemas
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution floor, cluster params)
 ├── engines/                 the five engines' deterministic cores

@@ -28,7 +28,7 @@ The alternative to a board is chat-based coordination: a human messages an agent
 
 **Chat has no WIP visibility.** In a chat-based system, there's no way to ask "what's in progress right now?" without reading the conversation. The board answers that question with a query.
 
-**Chat doesn't survive handoffs.** When a task passes from the Librarian to the Verifier, what carries the context? In a chat system, the answer is "we re-explain it in the new session." In a board system, the answer is the card's `summary` and `metadata` — structured, persistent, and readable by any profile that picks it up.
+**Chat doesn't survive handoffs.** When a task passes from the Librarian to the Peer-reviewer, what carries the context? In a chat system, the answer is "we re-explain it in the new session." In a board system, the answer is the card's `summary` and `metadata` — structured, persistent, and readable by any profile that picks it up.
 
 **Chat conflates work with knowledge.** When a useful answer appears in a chat, it's trapped there. The vault and the board create two separate channels: the board is for work, the vault is for knowledge. The discipline separates "this is in progress" from "this has been established."
 
@@ -42,7 +42,7 @@ A card is not just a task title. It carries:
 
 **Review state** — `review_status` (a Memoria overlay: `unreviewed` (the default) → `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
 
-**Agent recommendation** — `agent_recommendation` (optional, from Verifier or Linter). This answers "what does the checking agent advise?" — separate from the human's decision.
+**Agent recommendation** — `agent_recommendation` (optional, from the Peer-reviewer or an engine such as the Linter). This answers "what does the checking pass advise?" — separate from the human's decision.
 
 **Handoff payload** — `summary`, `metadata.allowed_paths`, `metadata.expected_outputs`, `metadata.promote_target`. The context the next worker needs to continue without re-reading the conversation.
 
@@ -78,7 +78,7 @@ A natural confusion: does a card "produce a note"? Sometimes, but they are diffe
 
 **A note is knowledge** — durable, lives in the vault, persists. It represents what was established.
 
-A card may reference a note by path (its `metadata.promote_target` is a note path). A card may produce a note (a Librarian card produces a `paper-note`). But a card is never a note — card fields (`status`, `review_status`, `assignee`) and note fields (`lifecycle`, `maturity`, `type`, `citekey`) are deliberately disjoint. Mixing them confuses what has been *done* with what has been *established*.
+A card may reference a note by path (its `metadata.promote_target` is a note path). A card may produce a note (a Librarian card produces a `paper` entity or `source` note). But a card is never a note — card fields (`status`, `review_status`, `assignee`) and note fields (`lifecycle`, `maturity`, `type`, `citekey`) are deliberately disjoint. Mixing them confuses what has been *done* with what has been *established*.
 
 ---
 
@@ -86,7 +86,7 @@ A card may reference a note by path (its `metadata.promote_target` is a note pat
 
 Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files. There is no reasoning agent that decides lane assignments.
 
-This is deliberate. An Orchestrator profile that reasons about routing would make routing decisions hard to audit. "Why did the Orchestrator assign this to the Writer instead of the Mapper?" requires re-reading the Orchestrator's reasoning. With lane-override rules, the same question has a deterministic answer: "because the card's `assignee` is `memoria-writer`."
+This is deliberate. An Orchestrator profile that reasons about routing would make routing decisions hard to audit. "Why did the Orchestrator assign this to the Writer instead of the Librarian's map lane?" requires re-reading the Orchestrator's reasoning. With lane-override rules, the same question has a deterministic answer: "because the card's `assignee` is `memoria-writer`."
 
 If routing rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. This is the design — silent reasoning about routing is exactly what the policy MCP and the lane-override system exist to prevent.
 
@@ -94,7 +94,7 @@ If routing rules can't decide (no eligible profile, or ambiguous assignment), th
 
 ## Related
 
-- Why the three layers require explicit separation: [Why the architecture is layered](../rationale/why-three-layers.md)
+- Why the layered architecture requires explicit separation: [Why the architecture is layered](../rationale/why-three-layers.md)
 - Why review is a first-class state: [Review as a first-class state](review-as-state.md)
 - How the knowledge model complements the board: [Knowledge](../knowledge/README.md)
 - The board's conceptual overview: [Kanban board](../kanban-board/README.md)

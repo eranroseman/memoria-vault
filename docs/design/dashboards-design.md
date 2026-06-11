@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Dashboards — ten views, four groups, two data sources
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 5
 ---
 
 # Dashboards — ten views, four groups, two data sources
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 dashboard set and is
+> kept for design rationale only. The current set is ten dashboards (not eleven) over
+> `links.contradicts` — see [Dashboards reference](../reference/dashboards.md) and
+> [Dashboards explanation](../explanation/dashboards/README.md).
 
 A design capture of the dashboards as shipped in v0.1.1: what each shows, where it
 reads from, and how they group by the question they answer. Reconstructed from

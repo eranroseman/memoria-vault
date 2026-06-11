@@ -196,7 +196,7 @@ def all_frontmatter_keys(text: str) -> set[str]:
 
     Unlike parse_frontmatter (top-level only), this captures keys nested under
     blocks like `_proposed_classification:` -- which is where claim/paper notes
-    keep `maturity`, `topic`, `methods`, `study_design`, etc."""
+    keep `maturity`, `topics`, `research_area`, `methodology`, etc."""
     if not text.startswith("---"):
         return set()
     end = text.find("\n---", 3)

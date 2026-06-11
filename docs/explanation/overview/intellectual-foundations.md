@@ -30,7 +30,7 @@ What Memoria doesn't take from this pattern: Karpathy's framing implies an agent
 
 **Explicit linking** — notes earn their place by connecting to existing notes. A note that connects to nothing has not been integrated into the system; it is still just a document.
 
-**Type distinction** — Luhmann distinguished _fleeting notes_ (raw capture), _literature notes_ (what a source says), and _permanent notes_ (the human's own durable claim). Each type has a different epistemic status and a different lifespan. Memoria preserves this three-way distinction under different names: `fleeting-note`, `paper-note` (what the source says), and `claim-note` (what the human thinks). The rename reflects a software context; the distinction is unchanged.
+**Type distinction** — Luhmann distinguished _fleeting notes_ (raw capture), _literature notes_ (what a source says), and _permanent notes_ (the human's own durable claim). Each type has a different epistemic status and a different lifespan. Memoria preserves this three-way distinction under different names: `fleeting`, `source` (what the source says), and `claim` (what the human thinks). The rename reflects a software context; the distinction is unchanged.
 
 Zettelkasten's weakness in modern workflows is that it is entirely human-maintained — the linking discipline breaks down under load. Memoria delegates the maintenance work to the agent. Classifying notes, detecting orphans, suggesting cross-links, enforcing schema — these are the tasks the Librarian and Linter handle. The _intellectual_ work of the Zettelkasten (writing claim notes, forming arguments, building MOCs) remains human.
 
@@ -54,7 +54,7 @@ Key patterns adopted by Memoria include the following:
 
 **Stage-gated pipelines** appear across nearly every end-to-end system surveyed ([LitSearch](../../reference/bibliography.md#ajith2024litsearch), [ResearchArena](../../reference/bibliography.md#kang2024researcharena), [MLR-Copilot](../../reference/bibliography.md#li2025mlrcopilot), [Agent Laboratory](../../reference/bibliography.md#schmidgall2025agentlaboratory)). Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape.
 
-**Thin control over thick state** ([Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous), [Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv), [Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) is the finding that agents fail when state lives in chat and succeed when state lives in files. Three independent systems reach the same conclusion. Memoria's three-layer split is the structural form of that finding.
+**Thin control over thick state** ([Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous), [Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv), [Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) is the finding that agents fail when state lives in chat and succeed when state lives in files. Three independent systems reach the same conclusion. Memoria's layered split is the structural form of that finding.
 
 **Explicit agent roles** ([AI co-scientist](../../reference/bibliography.md#gottweis2025aicoscientist), [MetaGPT](../../reference/bibliography.md#hong2024metagpt), [Agent Laboratory](../../reference/bibliography.md#schmidgall2025agentlaboratory)) — separate specialists over a generalist — reduce permission ambiguity and make quality responsibility traceable.
 
@@ -91,5 +91,5 @@ The design is not a novel invention — it is an integration of patterns that al
 - What the foundations produced: [Design principles](design-principles.md)
 - Full borrow/adapt/ignore breakdown: [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md)
 - What Memoria is: [What Memoria is](what-memoria-is.md)
-- The three-layer architecture (structural form of thin-control-thick-state): [Architecture](../architecture/README.md)
+- The layered architecture (structural form of thin-control-thick-state): [Architecture](../architecture/README.md)
 - Why the autonomy boundary is where it is: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)

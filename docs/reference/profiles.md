@@ -75,17 +75,17 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 
 ## Bundled skills
 
-Skills that ship inside the vault profiles (under `src/.memoria/profiles/<profile>/skills/`):
+**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`, named by the `<task>-<verb>-<object>` convention:
 
-| Profile | Skill | What it does |
+| Profile | Skills | Count |
 | --- | --- | --- |
-| `memoria-copi` | `delegate-task` | Turn a conversational request into a ceiling-validated board card via the tasks MCP. |
-| `memoria-copi` | `explain-the-system` | Answer "how does Memoria work?" questions from the shipped docs and vocabulary. |
-| `memoria-librarian` | `obsidian-paper-note` | The full capture → enrich → classify → write flow around the ingest engine. |
-| `memoria-librarian` | `cluster-mapping` | The map lane: corpus maps and topic clusters via the cluster MCP. |
-| `memoria-peer-reviewer` | `claim-checks` | Judgment verification: claim trace and citation checks, with sub-check references. |
+| `memoria-copi` | `ask-question-source`, `ask-read-lens`, `delegate-route-task`, `explain-the-system`, `explore-branch-framings` | 5 |
+| `memoria-librarian` | `catalog-classify-source`, `catalog-enrich-record`, `catalog-find-source`, `catalog-rank-candidate`, `extract-flag-distill`, `extract-stub-claim`, `link-suggest-claim`, `link-surface-tension`, `map-cluster-corpus`, `map-report-coverage`, `map-scope-project`, `map-seed-canvas` | 12 |
+| `memoria-writer` | `draft-bind-citation`, `draft-outline-argument`, `draft-score-outline`, `draft-write-section` | 4 |
+| `memoria-peer-reviewer` | `verify-card-gap`, `verify-check-citation`, `verify-propose-fix`, `verify-trace-claim` | 4 |
+| `memoria-engineer` | _none bundled — the code lane scaffolds an external-agent handoff_ | 0 |
 
-Skill names are migrating to the `<task>:<verb>-<object>` convention — see [Hermes CLI](hermes-cli.md) for the full map with legacy names.
+See [Hermes CLI](hermes-cli.md) for the full skill map (including any legacy-name aliases).
 
 ---
 
@@ -94,7 +94,7 @@ Skill names are migrating to the `<task>:<verb>-<object>` convention — see [He
 [src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml) is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
-- `memoria-engineer` is the only profile with `terminal` + `file` (the ADR-21 Coder-lane exception, under its new name).
+- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, engines, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
 
 ---
 

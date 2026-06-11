@@ -27,7 +27,7 @@ The system surfaces when a topic cluster has crossed the MOC-creation threshold 
 
 There is an asymmetry in how the two human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([Obsidian command palette](../reference/obsidian-command-palette.md)). A `moc` gets none — it is human-authored start to finish ([Build a Map of Content](../how-to-guides/curate/build-a-moc.md): "You author and curate the MOC"), and the Mapper's `SOUL.md` has no MOC verb at all.
 
-Yet the Mapper already computes the exact signal a MOC proposal needs: `cluster-map` finds dense topic clusters, and [Wikilink and link conventions](../reference/linking.md#moc-thresholds) defines the ≥15–20-note threshold that says "time for a MOC." The capability is present; it is simply not wired to a proposal. Today the human must manually track note counts per topic to know when a MOC is due — a bookkeeping task the system is otherwise built to absorb.
+Yet the Mapper already computes the exact signal a MOC proposal needs: `cluster-map` finds dense topic clusters, and [Wikilink and link conventions](../reference/linking.md#hub-thresholds) defines the ≥15–20-note threshold that says "time for a MOC." The capability is present; it is simply not wired to a proposal. Today the human must manually track note counts per topic to know when a MOC is due — a bookkeeping task the system is otherwise built to absorb.
 
 ## Trade-offs
 
@@ -39,5 +39,5 @@ Yet the Mapper already computes the exact signal a MOC proposal needs: `cluster-
 ## Dependencies
 
 - Linter running end-to-end (for the Tier 1 alert).
-- Mapper `cluster-map` + the MOC thresholds in [Wikilink and link conventions](../reference/linking.md#moc-thresholds) (already defined).
+- Mapper `cluster-map` + the MOC thresholds in [Wikilink and link conventions](../reference/linking.md#hub-thresholds) (already defined).
 - Tier 2 additionally needs a `propose-moc` Mapper command and a handoff target outside the review-gated zone.

@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Session logging and audit — two logs, tamper-evidence, fleet trust
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 23
 ---
 
 # Session logging and audit — two logs, tamper-evidence, fleet trust
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 logging layout and is
+> kept for design rationale only. Logs now live under `system/logs/` and the Linter
+> is an engine — see [ADR-25](../adr/25-session-logging-two-logs.md) and
+> [Telemetry](../reference/telemetry.md).
 
 A design capture of how Memoria records what its agents did in v0.1.1: the
 hash-paired policy audit log, the operational JSONL logs around it, and the fleet

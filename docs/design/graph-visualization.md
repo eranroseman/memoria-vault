@@ -11,7 +11,9 @@ nav_exclude: true
 
 # Graph visualization — typed projections of the relationships/links graph
 
-> **Status: exploration** (a capability bundle a design note, not yet adopted). Builds on the
+> **Status: exploration** (a capability bundle a design note). Most of this is not yet
+> adopted, **except the typed claim graph** (§2: `cluster_emit_canvas` in the cluster
+> MCP), which **shipped in #345**. Builds on the
 > [four-layer redesign](memoria-design-update.md) — specifically the **relationships vs
 > links** distinction — and on issue #197 (the OSS graph/cluster/NLP survey, largely
 > resolved by [ADR-33](../adr/33-cluster-mcp-bertopic.md)). #197 answers _what

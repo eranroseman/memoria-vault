@@ -109,9 +109,10 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
-- Linter `auto_fix` outside the gated classes (`safe-and-unambiguous` / `authorized-targeted`).
-- Socratic with any allowed write (lane is `write: []`).
-- Mapper/Verifier allowed write outside its declared scratch path.
+- co-PI (`memoria-copi`) with any allowed write (its lane is `write: []`).
+- Peer-reviewer (`memoria-peer-reviewer`) allowed write outside `inbox/`.
+- Writer (`memoria-writer`) allowed write outside `projects/`.
+- Engineer (`memoria-engineer`) allowed write outside `projects/*/code/`.
 - Librarian `allow`/`allow_with_log` to `notes/claims/**` or `notes/hubs/**`.
 - Any allowed write missing `before_hash` / `after_hash`.
 
@@ -126,14 +127,14 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
-const mapperScratch = (p) => /^40-workbench\/[^/]+\/01-map\/(corpus-map\.md|gap-report\.md|cluster-maps\/)/.test(p ?? "");
-const verifierScratch = (p) => /^40-workbench\/[^/]+\/05-verification\//.test(p ?? "") || /^10-inbox\/03-candidates\//.test(p ?? "");
+const inInbox = (p) => /^inbox\//.test(p ?? "");
+const inProjects = (p) => /^projects\//.test(p ?? "");
+const inCode = (p) => /^projects\/[^/]+\/code\//.test(p ?? "");
 const anomalies = events.filter(e =>
-  (e.profile === "memoria-linter" && e.action === "auto_fix" && isAllowed(e.decision) &&
-    !["safe-and-unambiguous", "authorized-targeted"].some(c => (e.policy_rule ?? "").includes(c))) ||
-  (e.profile === "memoria-socratic" && writeAction(e.action) && isAllowed(e.decision)) ||
-  (e.profile === "memoria-mapper" && writeAction(e.action) && isAllowed(e.decision) && !mapperScratch(e.path)) ||
-  (e.profile === "memoria-verifier" && writeAction(e.action) && isAllowed(e.decision) && !verifierScratch(e.path)) ||
+  (e.profile === "memoria-copi" && writeAction(e.action) && isAllowed(e.decision)) ||
+  (e.profile === "memoria-peer-reviewer" && writeAction(e.action) && isAllowed(e.decision) && !inInbox(e.path)) ||
+  (e.profile === "memoria-writer" && writeAction(e.action) && isAllowed(e.decision) && !inProjects(e.path)) ||
+  (e.profile === "memoria-engineer" && writeAction(e.action) && isAllowed(e.decision) && !inCode(e.path)) ||
   (e.profile === "memoria-librarian" && ((e.path ?? "").startsWith("notes/claims/") || (e.path ?? "").startsWith("notes/hubs/")) && isAllowed(e.decision)) ||
   (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash))
 );

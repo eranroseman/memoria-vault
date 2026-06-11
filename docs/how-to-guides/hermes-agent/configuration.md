@@ -120,7 +120,7 @@ Put keys in the **global** `~/.hermes/.env`, then propagate — profile runs rea
 bash scripts/install.sh --profiles-only --vault <vault>
 ```
 
-To change a single profile's value directly, edit `~/.hermes/profiles/memoria-<name>/.env` — no installer run needed; `.env` changes take effect on the next session start. `.env` files are never committed and never overwritten by re-installs.
+Always edit the global `~/.hermes/.env` and re-run `--profiles-only` — that is the one supported path; the per-profile `~/.hermes/profiles/memoria-<name>/.env` files are installer-managed, so hand-editing them drifts from the global source. The seed never overwrites a value already set, and `.env` files are never committed.
 
 ## Verify a configuration change
 

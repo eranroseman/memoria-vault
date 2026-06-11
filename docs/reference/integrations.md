@@ -20,7 +20,7 @@ APIs and tools the Librarian profile reaches during ingest and enrichment. All e
 
 ## Metadata enrichment APIs
 
-Used during `enrich` to populate or refresh paper-note fields.
+Used during `enrich` to populate or refresh `paper` catalog-entity fields.
 
 | API | What it provides | Key fields populated |
 |---|---|---|
@@ -40,9 +40,9 @@ Used during enrichment to link paper notes to person, organization, and venue en
 
 | API | Role |
 |---|---|
-| **ORCID** | Unique author identifiers; links `paper-note` → `person-note` |
-| **ROR (Research Organization Registry)** | Institution identifiers; links to `organization-note` |
-| **GitHub API** | Repository metadata for `item-note` (tools, packages, code) |
+| **ORCID** | Unique author identifiers; links `paper` → `person` |
+| **ROR (Research Organization Registry)** | Institution identifiers; links to `organization` |
+| **GitHub API** | Repository metadata for `repository` (tools, packages, code) |
 
 ---
 
@@ -51,8 +51,8 @@ Used during enrichment to link paper notes to person, organization, and venue en
 | Integration | Role |
 |---|---|
 | **Obsidian Local REST API** (native MCP, loopback HTTP port 27123) | Lets Hermes profiles read and write vault files through the plugin's native MCP rather than direct filesystem calls. Required for the Librarian and other write-active profiles. |
-| **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (Socratic, ad-hoc queries). Separate from queue-dispatched card work. |
-| **qmd** | Hybrid BM25 + vector search over the vault. Used by Mapper (`cluster-map`, `gap-report`) and Verifier (`similarity-check`, `find-duplicates`). |
+| **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
+| **qmd** | Hybrid BM25 + vector search over the vault. Used by the Librarian's map lane (`map:cluster-corpus`, `map:report-coverage`) and the Sweeps engine (`sweep:check-similarity`, `sweep:find-duplicates`). |
 | **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
 
 ---
@@ -74,7 +74,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Claude API** | Primary LLM for synthesis, classification proposals, and narrative composition. Model routing: Claude for synthesis; cheaper models for embed/classify/summarize tasks. |
-| **Kilocode / Aider / Claude Code** | External coding agent that the Coder profile delegates substantive code work to. Not invoked by other profiles. |
+| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset (the v0.1.0 Coder exception was retired, ADR-21); it writes scaffolds through the gated obsidian MCP into `projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
 
 ---
 

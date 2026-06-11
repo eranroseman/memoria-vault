@@ -29,7 +29,7 @@ A clean commit beforehand makes the migration one diff you can review — and re
 **2. Enumerate the affected notes — your dry run.**
 
 ```bash
-grep -rl "^study_design: rct" notes/ catalog/ | tee /tmp/migration-files.txt
+grep -rl "^methodology: rct" notes/ catalog/ | tee /tmp/migration-files.txt
 wc -l /tmp/migration-files.txt
 ```
 
@@ -44,7 +44,7 @@ Edit `.memoria/schemas/types/<type>.yaml` so the new field name or value set is 
 For a mechanical rename over the reviewed file list:
 
 ```bash
-xargs -a /tmp/migration-files.txt sed -i 's/^study_design: rct$/study_design: randomized-controlled-trial/'
+xargs -a /tmp/migration-files.txt sed -i 's/^methodology: rct$/methodology: randomized-controlled-trial/'
 ```
 
 For anything non-mechanical (restructuring a map, splitting a field), edit by hand or with a one-off script — but always over the step-2 list.
@@ -61,7 +61,7 @@ python3 .memoria/engines/linter/detectors.py --vault .
 
 ```bash
 git diff --stat       # only the expected files, only the expected change
-git add -A && git commit -m "schema: rename study_design rct → randomized-controlled-trial"
+git add -A && git commit -m "schema: rename methodology rct → randomized-controlled-trial"
 ```
 
 If the diff is wrong, `git reset --hard HEAD~1` returns you to the step-1 snapshot.

@@ -83,7 +83,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 | Name | Values | Set by | Scope |
 | --- | --- | --- | --- |
-| `agent_recommendation` | `clean` / `issues-found` / `inconclusive` | Peer-reviewer / engines | the soft verdict on a verification card — advisory only |
+| `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / engines | the soft verdict on a verification card — advisory only |
 | verdict band | `PASS` / `REVIEW` / `FAIL` | Linter engine | structural rollup over the detectors |
 | `certainty` | `confident` / `likely` / `unsure` | proposing agent | the calibrated confidence on an honesty card |
 

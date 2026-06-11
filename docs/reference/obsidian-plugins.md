@@ -80,7 +80,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `templates_folder` | `99-system/templates` | Must match vault schema convention. |
+| `templates_folder` | `system/templates` | Must match vault schema convention. |
 | `trigger_on_file_creation` | `false` | Auto-trigger races with agent writes. |
 | `enable_system_commands` | `false` | Not required by Memoria; increases attack surface. |
 
@@ -130,7 +130,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `defaultAgentId` | `memoria-socratic` | Default chat partner for reading sessions. |
+| `defaultAgentId` | `memoria-copi` | The co-PI is the only ACP chat partner (`test_acp_pane_is_copi_only`). |
 | `autoMentionActiveNote` | `true` | Active note is automatically attached as context. |
 
 ### callout-manager
