@@ -4,6 +4,13 @@ All notable changes to Memoria are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/eranroseman/memoria-vault/compare/v0.2.1...v0.3.0) (2026-06-11)
+
+
+### Features
+
+* **palette:** six per-task lane commands + pattern runner; deferred docs marked ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) ([#388](https://github.com/eranroseman/memoria-vault/issues/388)) ([8ed00bb](https://github.com/eranroseman/memoria-vault/commit/8ed00bb64b2e76f89695bb646575b4e9a366d3b9))
+
 ## [0.2.1](https://github.com/eranroseman/memoria-vault/compare/v0.2.0...v0.2.1) (2026-06-11)
 
 
