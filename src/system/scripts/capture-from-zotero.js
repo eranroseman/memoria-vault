@@ -3,7 +3,7 @@
  *
  * Reads the item currently selected in Zotero (Better BibTeX CAYW) and creates
  * an `intake:source` card on the Librarian lane (`hermes kanban create`). The
- * gateway's embedded dispatcher then ingests the citekey into 20-sources/.
+ * gateway's embedded dispatcher then ingests the citekey into catalog/papers/.
  *
  * Both the Zotero read and the card-create go through `bash -lc` (wrapped in
  * wsl.exe on Windows). We deliberately use `curl`, NOT Obsidian's requestUrl:
@@ -76,7 +76,7 @@ module.exports = async (params) => {
       ts: new Date().toISOString(),
       citekey,
       source: "zotero",
-      note_path: `20-sources/01-papers/${citekey}.md`,
+      note_path: `catalog/papers/${citekey}.md`,
     }) + "\n";
     const adapter = app.vault.adapter;
     let prev = "";
@@ -93,15 +93,15 @@ module.exports = async (params) => {
     "intake:source — captured from Zotero. " +
     "Ingest the source with citekey `" + citekey + "`" +
     (title ? " (title: " + title + ")" : "") +
-    " using the obsidian-paper-note skill: run `/obsidian-paper-note --source " + citekey + "`. " +
-    "Create the paper-note under 20-sources/, enrich it, propose the classification, " +
+    " using the catalog-enrich-record skill: run `/catalog-enrich-record --source " + citekey + "`. " +
+    "Create the paper entity under catalog/papers/, enrich it, propose the classification, " +
     "then kanban_complete with review_status: requested.";
 
   new Notice(`Capturing ${citekey}…`, 3000);
   try {
     await run(
       "hermes kanban create " + shq(cardTitle) +
-      " --assignee memoria-librarian --skill obsidian-paper-note --created-by quickadd" +
+      " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
       " --body " + shq(body)
     );
     new Notice(`✓ Captured ${citekey} → intake card created on the Librarian lane.`, 6000);

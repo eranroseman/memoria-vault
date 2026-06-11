@@ -34,15 +34,15 @@ module.exports = async (params) => {
 
   const body =
     "intake:source — captured from URL. Resolve and ingest the source at " + url + " " +
-    "using the obsidian-paper-note skill: fetch its metadata (DOI / identifiers), add it to the " +
-    "library, create the paper-note under 20-sources/, enrich it, propose the classification, then " +
+    "using the catalog-enrich-record skill: fetch its metadata (DOI / identifiers), add it to the " +
+    "library, create the paper entity under catalog/papers/, enrich it, propose the classification, then " +
     "kanban_complete with review_status: requested.";
 
   new Notice("Capturing " + url + " …", 3000);
   try {
     await run(
       "hermes kanban create " + shq("Ingest source: " + url) +
-      " --assignee memoria-librarian --skill obsidian-paper-note --created-by quickadd" +
+      " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
       " --body " + shq(body)
     );
     new Notice("✓ Captured → intake card created on the Librarian lane.", 6000);

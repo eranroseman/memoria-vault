@@ -74,7 +74,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 ## Default Pandoc command
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<chapter>.md \
+pandoc projects/<project>/composition/<chapter>.md \
   --citeproc \
   --bibliography .memoria/memoria.bib \
   --csl .memoria/csl/apa.csl \
