@@ -26,7 +26,8 @@ l1() {
   if python3 -c "import pytest" >/dev/null 2>&1; then
     run python3 -m pytest tests/ -q
   else
-    echo "→ pytest             (not installed — pip install pytest; CI enforces it)"
+    echo "→ pytest             ✗ NOT INSTALLED — pip install pytest (L1 was NOT run)"
+    fail=1
   fi
 }
 

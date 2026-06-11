@@ -83,6 +83,8 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
 
 
 def get_pr_files(session, repo: str, pr_number: str) -> list:
+    import requests  # lazy, like main() — offline unit tests never import it
+
     files, page = [], 1
     while True:
         try:
