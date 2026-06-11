@@ -40,9 +40,8 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const canonical = events
   .filter(e => e.path && (
-    e.path.startsWith("30-synthesis/01-claims/") ||
-    e.path.startsWith("30-synthesis/03-moc/") ||
-    e.path.startsWith("50-deliverables/")
+    e.path.startsWith("notes/claims/") ||
+    e.path.startsWith("notes/hubs/")
   ))
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   .slice(0, 20);
@@ -113,7 +112,7 @@ Patterns the query flags — each is a configuration bug; see [policy MCP](https
 - Linter `auto_fix` outside the gated classes (`safe-and-unambiguous` / `authorized-targeted`).
 - Socratic with any allowed write (lane is `write: []`).
 - Mapper/Verifier allowed write outside its declared scratch path.
-- Librarian `allow`/`allow_with_log` to `30-synthesis/**`.
+- Librarian `allow`/`allow_with_log` to `notes/claims/**` or `notes/hubs/**`.
 - Any allowed write missing `before_hash` / `after_hash`.
 
 ```dataviewjs
@@ -135,7 +134,7 @@ const anomalies = events.filter(e =>
   (e.profile === "memoria-socratic" && writeAction(e.action) && isAllowed(e.decision)) ||
   (e.profile === "memoria-mapper" && writeAction(e.action) && isAllowed(e.decision) && !mapperScratch(e.path)) ||
   (e.profile === "memoria-verifier" && writeAction(e.action) && isAllowed(e.decision) && !verifierScratch(e.path)) ||
-  (e.profile === "memoria-librarian" && (e.path ?? "").startsWith("30-synthesis/") && isAllowed(e.decision)) ||
+  (e.profile === "memoria-librarian" && ((e.path ?? "").startsWith("notes/claims/") || (e.path ?? "").startsWith("notes/hubs/")) && isAllowed(e.decision)) ||
   (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash))
 );
 dv.table(
