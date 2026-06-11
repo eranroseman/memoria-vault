@@ -4,6 +4,13 @@ All notable changes to Memoria are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2](https://github.com/eranroseman/memoria-vault/compare/v0.3.1...v0.3.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **editor:** disable Harper spellcheck with the correct setting key ([#402](https://github.com/eranroseman/memoria-vault/issues/402)) ([9efc856](https://github.com/eranroseman/memoria-vault/commit/9efc8561aa6704da64359f98b384eae6090f2b6f))
+
 ## [0.3.1](https://github.com/eranroseman/memoria-vault/compare/v0.3.0...v0.3.1) (2026-06-11)
 
 
