@@ -41,8 +41,10 @@ independent* — never merged with the Librarian; separation of duties), **Engin
 the profile set. Each agent = a shared layer (the vault `AGENTS.md`) + a unique layer
 (`SOUL.md`, `skills/`, `config.yaml`, MCP wiring).
 
-**v0.1.1 ships co-PI + Librarian**; Writer, Peer-reviewer, and Engineer ship with the
-Project workspace (v0.1.2).
+**v0.1.1 ships all five profiles** (the original plan shipped only co-PI + Librarian,
+with the rest deferred to v0.1.2; the PI expanded the scope mid-build — 2026-06-09 — so
+Writer, Peer-reviewer, and Engineer landed in v0.1.1 as well; their *Project-workspace
+workflows* still arrive with v0.1.2).
 
 ## Consequences
 

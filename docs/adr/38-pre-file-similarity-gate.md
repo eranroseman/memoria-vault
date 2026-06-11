@@ -2,13 +2,13 @@
 topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
-status: superseded
-folded_into: memoria-design-update  # near-tie/dedup residue (R2) + Fact-checker similarity-check
-assumes: []
+status: deferred
+assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against — its original trigger (live qmd index + dense synthesis corpus) still governs
 date_proposed: 2026-05-30
 parent: Decisions
 grand_parent: Explanation
 nav_order: 38
+nav_exclude: true
 ---
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note

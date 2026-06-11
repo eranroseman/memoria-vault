@@ -15,7 +15,7 @@
 ## Checklist
 
 - [ ] I have read [Contributing to Memoria](../CONTRIBUTING.md)
-- [ ] Profile changes follow the seven-profile structure (no new orchestrator/reviewer lane added)
+- [ ] Profile changes follow the five-profile structure — co-PI + four background lanes (no new orchestrator/reviewer lane added)
 - [ ] SOUL.md and AGENTS.md edits are consistent with each other within the profile
 - [ ] Install script (`scripts/install.sh` / `scripts/install.ps1`) updated if new files need to be copied
 - [ ] Docs updated in `docs/` (not `raw/` or `reports/`)

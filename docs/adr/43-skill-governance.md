@@ -2,8 +2,7 @@
 topic: decisions
 id: 43
 title: Skill governance and lifecycle
-status: deferred
-folded_into: memoria-design-update  # the pattern-library governance (D11)
+status: deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (26 skills > 15, v0.1.1)
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions
@@ -18,7 +17,7 @@ Not part of the active design. Adding a skill today means editing `policy.allow.
 
 ## What
 
-A formal lifecycle for skills: a state machine (`intake → proposed → scaffolded → testing → needs-review → approved → active → archived`), per-skill governance notes in `99-system/skills/`, a `skill-lifecycle` dashboard, and a 7-step onboarding checklist for new skills.
+A formal lifecycle for skills: a state machine (`intake → proposed → scaffolded → testing → needs-review → approved → active → archived`), per-skill governance notes in `system/skills/`, a `skill-lifecycle` dashboard, and a 7-step onboarding checklist for new skills.
 
 ## Why
 
@@ -31,7 +30,7 @@ Standing up the governance layer requires authoring per-skill notes for every ex
 ## When this matters
 
 At least two of these are true:
-- > 15 active skills across the seven profiles
+- > 15 active skills across the profiles *(v0.1.1: 26 skills across five profiles — the trigger has fired)*
 - ≥ 2 passthrough-to-dedicated graduations per quarter
 - Recurring confusion about which skills are active in which lane
 
@@ -45,8 +44,8 @@ At least two of these are true:
 ## Related
 
 - **Runtime mechanism:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **Placeholder:** `99-system/skills/` ships empty until this is stood up (see [On-disk layout](../reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([Release plan — v0.1.0 — appendix](../releasing/v0.1/release-plan-v0.1-appendix.md)).
+- **Placeholder:** `system/skills/` ships empty until this is stood up (see [On-disk layout](../reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([Release plan — v0.1.0 — appendix](../releasing/v0.1/release-plan-v0.1-appendix.md)).
 
 ## Dependencies
 
-None beyond the runtime mechanism that already exists. Standing up the governance layer is mostly authoring per-skill notes in `99-system/skills/` and enabling the dashboard.
+None beyond the runtime mechanism that already exists. Standing up the governance layer is mostly authoring per-skill notes in `system/skills/` and enabling the dashboard.

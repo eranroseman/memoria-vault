@@ -3,7 +3,7 @@ topic: decisions
 id: 36
 title: Dedicated review-note type
 status: superseded
-folded_into: memoria-design-update  # subsumed by the Inbox review-request type (D6)
+superseded_by: [51]  # the Inbox category + universal lifecycle (D18) — a card in `proposed` IS the review surface; durable review provenance = disposition.jsonl + the audit chain
 assumes: []
 date_proposed: 2026-05-15
 parent: Decisions
