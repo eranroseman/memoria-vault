@@ -1,0 +1,20 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "dictionaryDefinitions": [
+    { "name": "project-words", "path": "./project-words.txt", "addWords": true }
+  ],
+  "dictionaries": ["project-words"],
+  "ignorePaths": [
+    "docs/reference/bibliography.md",
+    "src/.obsidian/**",
+    "_papers/**",
+    "_notes/**",
+    "_reports/**",
+    "**/_site/**",
+    "docs/.jekyll-cache/**",
+    "**/*.lock",
+    "**/package-lock.json",
+    "project-words.txt"
+  ]
+}

@@ -47,21 +47,6 @@
   "[python]": {
     "editor.formatOnSave": false
   },
-  "cSpell.ignorePaths": [
-    "docs/reference/bibliography.md",
-    "src/.obsidian/**",
-    "_papers/**",
-    "**/_site/**",
-    "docs/.jekyll-cache/**"
-  ],
-  "cSpell.customDictionaries": {
-    "memoria-project": {
-      "name": "memoria-project",
-      "path": "${workspaceFolder}/.cspell/project-words.txt",
-      "scope": "workspace",
-      "addWords": true
-    }
-  },
   "python.testing.pytestArgs": ["tests"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true
