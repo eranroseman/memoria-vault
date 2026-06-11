@@ -558,6 +558,7 @@ install_profiles() {
     if [ -f "$dst/config.yaml" ]; then
       run_sh "sed -e 's|{{PYTHON}}|$pybin|g' \
                   -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
+                  -e 's|{{QMD}}|${QMD_BIN:-qmd}|g' \
                   \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
     fi
 
@@ -831,6 +832,41 @@ wire_lint_cron() {
   ok "Lint cron wired"
 }
 
+# qmd — the search engine binary (@tobilu/qmd). PATH lookup is unsafe: an
+# unrelated conda package also installs a `qmd`; prefer the npm-global binary.
+resolve_qmd() {
+  local npm_qmd=""
+  if have npm; then npm_qmd="$(npm prefix -g 2>/dev/null)/bin/qmd"; fi
+  if [ -n "$npm_qmd" ] && [ -x "$npm_qmd" ]; then printf '%s' "$npm_qmd"; return; fi
+  command -v qmd 2>/dev/null || printf 'qmd'
+}
+
+ensure_qmd() {
+  hdr "qmd search engine"
+  local q; q="$(resolve_qmd)"
+  if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
+    ok "qmd present: $q"
+  elif have npm && node --version 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])'; then
+    run npm install -g @tobilu/qmd \
+      || warn "qmd install failed — search MCP will not serve (npm install -g @tobilu/qmd)"
+    q="$(resolve_qmd)"
+  else
+    warn "qmd not installed and Node >=22 unavailable — search MCP will not serve until you: npm install -g @tobilu/qmd"
+  fi
+  QMD_BIN="$q"
+  # Register the vault collection (instant; BM25 search works without models).
+  if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
+    run "$q" collection add "$VAULT_PATH" --name vault \
+      || warn "qmd collection add failed — register manually: qmd collection add \"$VAULT_PATH\" --name vault"
+    # Vector embeddings download ~2GB of local models on first run — opt-in.
+    if confirm "Build the qmd vector index now (first run downloads ~2GB of local models)?"; then
+      run "$q" embed || warn "qmd embed failed — re-run later: qmd embed"
+    else
+      say "  (skipped — BM25 search works now; run 'qmd embed' later for semantic search)"
+    fi
+  fi
+}
+
 wire_commit_gate() {
   # The commit gate (D50): if the vault is a git repo, wire the pre-commit hook.
   # Called from BOTH install paths: a fresh install has no .git yet (the
@@ -905,6 +941,7 @@ main() {
   if [ "$PROFILES_ONLY" -eq 1 ]; then
     resolve_vault_for_profiles
     install_mcp_deps
+    ensure_qmd
     install_profiles
     wire_telemetry_cron
     wire_sweeps_cron
@@ -923,6 +960,7 @@ main() {
   ensure_hermes
   copy_vault
   install_mcp_deps
+  ensure_qmd
   install_profiles
   install_skills
   wire_telemetry_cron
