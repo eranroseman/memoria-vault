@@ -20,10 +20,8 @@ nav_order: 46
 ADR-01's three layers (board, workers, vault) described the v0.1.0 infrastructure but
 conflated two distinctions the design update pulled apart: *where* things live
 (structure) and *who* acts (actor-kind). The design work
-([Memoria design update](../design/memoria-design-update.md), decisions D25/D36/D42)
 converged on a single model that serves as both the cognitive and the build view, with
-the MCP trust boundary made explicit. An adversarial review
-([Red-team findings](../design/red-team-findings.md)) then scoped its layering claim
+the MCP trust boundary made explicit. An adversarial review then scoped its layering claim
 honestly.
 
 ## Decision
@@ -71,5 +69,3 @@ False in practice — the PI edits the Vault directly; claiming otherwise mislea
 - **Resolves / supersedes:** [ADR-01](01-three-layer-architecture.md)
 - **Related decisions / Depends on:** [ADR-22](22-build-on-hermes-runtime.md),
   [ADR-48](48-copi-and-agent-consolidation.md)
-- **Source discussion:** [Memoria system architecture — the seven-layer stack](../design/system-architecture.md),
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D25/D36/D40/D41/D42/D48)

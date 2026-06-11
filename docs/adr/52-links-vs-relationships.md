@@ -61,5 +61,3 @@ words the PI would say.
 - **Resolves / supersedes:** [ADR-08](08-typed-relations-frontmatter.md)
 - **Related decisions / Depends on:** [ADR-09](09-contradictions-dashboard.md),
   [ADR-10](10-claim-supersession.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §3.1,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D17/D47)

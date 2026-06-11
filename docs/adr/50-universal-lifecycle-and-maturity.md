@@ -68,5 +68,3 @@ type where a property suffices.
 - **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md),
   [ADR-18](18-rename-agent-verdict.md), [ADR-10](10-claim-supersession.md); amends
   [ADR-19](19-moc-threshold-alert.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §3.2–3.3,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D4/D5/D18/D19/D24)

@@ -20,7 +20,7 @@ At low claim-note density the human holds conflicts in their head; as claims acc
 
 ## Decision
 
-Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `links.contradicts` links (ADR-52 renamed the old `relations:` namespace to `links:`) and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([Classical method displacements](../design/classical-methods-over-llm.md)), to be added when claim density makes manual noticing insufficient.
+Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `links.contradicts` links (ADR-52 renamed the old `relations:` namespace to `links:`) and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([Classical method displacements](59-classical-method-displacements.md)), to be added when claim density makes manual noticing insufficient.
 
 ## Consequences
 
@@ -30,7 +30,7 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement, quality, and verification](../design/measurement-and-verification.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)) independently confirms LLM memory/similarity judgments are unreliable.
 
 **Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
@@ -38,5 +38,5 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies the contradicts edges — now `links.contradicts` after [ADR-52](52-links-vs-relationships.md)).
 - **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda/contradictions.md) (new), [Dashboards](../explanation/dashboards/README.md) (index).
-- **Future proposer:** [Classical method displacements](../design/classical-methods-over-llm.md) — the deterministic NLI candidate-generation engine that populates v2.
+- **Future proposer:** [Classical method displacements](59-classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

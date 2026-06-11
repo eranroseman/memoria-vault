@@ -58,5 +58,3 @@ repeatedly — the floor here routes *to* a human, never around one.
 
 - **Related decisions / Depends on:** amends [ADR-30](30-deterministic-ingest-pipeline.md);
   [ADR-51](51-inbox-category-and-honesty-card.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)
-- **Source discussion:** [Red-team findings](../design/red-team-findings.md) (theme B),
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D51)

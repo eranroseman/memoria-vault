@@ -62,5 +62,3 @@ on epistemics.
 
 - **Related decisions / Depends on:** [ADR-03](03-structural-review-gate.md),
   [ADR-43](43-skill-governance.md), [ADR-51](51-inbox-category-and-honesty-card.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §6,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D11/D43-fold)

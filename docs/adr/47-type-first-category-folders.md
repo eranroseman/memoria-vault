@@ -65,5 +65,3 @@ reasons it was rejected there — topics are facets, not locations.
 - **Resolves / supersedes:** [ADR-04](04-lifecycle-over-topic-folders.md)
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-49](49-catalog-in-bases-linter-monitor.md)
-- **Source discussion:** [Memoria design update](../design/memoria-design-update.md) §3,
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D2/D24)

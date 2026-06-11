@@ -20,7 +20,7 @@ nav_order: 55
 The repo carried a top-level `vault/` — effectively a live-vault template — which
 blurred "source of truth" with "a running instance" and offered no recovery path when
 a deployed system file drifted or was corrupted: the Linter could *detect* but not
-*restore* ([Installation redesign](../design/installation-redesign.md); D52 chose
+*restore* (this ADR chooses
 fresh-installed releases over in-place migration).
 
 ## Decision
@@ -66,5 +66,3 @@ install; `src/` populate + golden staging keeps authoring (repo) and restoring
 
 - **Related decisions / Depends on:** amends [ADR-26](26-repo-as-install-unit.md);
   [ADR-49](49-catalog-in-bases-linter-monitor.md), [ADR-47](47-type-first-category-folders.md)
-- **Source discussion:** [Installation redesign](../design/installation-redesign.md),
-  [Memoria design update — decisions & rationale](../design/memoria-design-update-decisions.md) (D52)
