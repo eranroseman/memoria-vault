@@ -4,6 +4,35 @@ All notable changes to Memoria are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/eranroseman/memoria-vault/compare/v0.1.0...v0.2.0) (2026-06-11)
+
+
+### Features
+
+* **acp:** route chat exports to notes/fleeting/chats and stamp them into fleeting triage ([#185](https://github.com/eranroseman/memoria-vault/issues/185)) ([#354](https://github.com/eranroseman/memoria-vault/issues/354)) ([8463b48](https://github.com/eranroseman/memoria-vault/commit/8463b48d96fa4324e3ad4bc8491f068d1f11bca9))
+* add Harper grammar check (editor + CI + pre-commit advisory) ([#348](https://github.com/eranroseman/memoria-vault/issues/348)) ([8193e56](https://github.com/eranroseman/memoria-vault/commit/8193e56ee10449873c624889243a5c9a7b8c5c46))
+* **board:** done-card raises a review work-prompt in the Inbox ([#341](https://github.com/eranroseman/memoria-vault/issues/341)) ([#357](https://github.com/eranroseman/memoria-vault/issues/357)) ([93b7e45](https://github.com/eranroseman/memoria-vault/commit/93b7e45cb899e493d7559045ab02d283a31ee5d2))
+* **cluster:** cluster_emit_canvas — the claim-debate map ([#345](https://github.com/eranroseman/memoria-vault/issues/345)) ([#359](https://github.com/eranroseman/memoria-vault/issues/359)) ([f8e9a8b](https://github.com/eranroseman/memoria-vault/commit/f8e9a8be7b58093b30fd9c4a36116a698115f9b2))
+* **eval:** activate vault-eval gold set, dispatch, and quarterly cron (ADR-11) ([#358](https://github.com/eranroseman/memoria-vault/issues/358)) ([04f6dfb](https://github.com/eranroseman/memoria-vault/commit/04f6dfb49e04a5320f272a06d018f4b1946026b1)), closes [#206](https://github.com/eranroseman/memoria-vault/issues/206)
+* **ingest:** automate classification — audited, flag-on-ambiguity ([#335](https://github.com/eranroseman/memoria-vault/issues/335)) ([#355](https://github.com/eranroseman/memoria-vault/issues/355)) ([293b695](https://github.com/eranroseman/memoria-vault/commit/293b69570a5c94fbade1b6fb8d84b2b001f176c9))
+* **palette:** add delegate-a-task and resolve-inbox-card commands ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) ([#353](https://github.com/eranroseman/memoria-vault/issues/353)) ([7066e8b](https://github.com/eranroseman/memoria-vault/commit/7066e8baf12d5b504421a4a6ee089c8c5d110ee0))
+* **skills:** Appendix-C skill registry — 26 skills, &lt;task&gt;:&lt;verb&gt;-&lt;object&gt; names ([#340](https://github.com/eranroseman/memoria-vault/issues/340)) ([#362](https://github.com/eranroseman/memoria-vault/issues/362)) ([26adcdd](https://github.com/eranroseman/memoria-vault/commit/26adcddf9bf7b145308f871dca9795bc991debaa))
+
+
+### Bug Fixes
+
+* **harper:** install pre-built binary instead of cargo compile ([#351](https://github.com/eranroseman/memoria-vault/issues/351)) ([079897b](https://github.com/eranroseman/memoria-vault/commit/079897b40ba16c7b35d1706e90b03f89a5c902b5))
+* **install:** refresh mirrors authored .memoria infra (scoped rsync --delete) ([#363](https://github.com/eranroseman/memoria-vault/issues/363)) ([a42df0a](https://github.com/eranroseman/memoria-vault/commit/a42df0a277b1f0907ff1fe2ea4f673b5187e9dec))
+* **install:** wire the pre-commit gate from --profiles-only too (D50) ([#360](https://github.com/eranroseman/memoria-vault/issues/360)) ([88820be](https://github.com/eranroseman/memoria-vault/commit/88820be81577f0dbb37c0805b565b74c4922a3ac))
+* **mcp,linter:** Batch-2 code defects from the v0.1.1 review (B1-B7) ([#384](https://github.com/eranroseman/memoria-vault/issues/384)) ([8a7e873](https://github.com/eranroseman/memoria-vault/commit/8a7e8731e4698dafa7b9a363cc3ba12aeafa77a6))
+* **policy:** MCP-only sandbox, no exceptions — D40/ADR-46 enforced literally ([#171](https://github.com/eranroseman/memoria-vault/issues/171)) ([#364](https://github.com/eranroseman/memoria-vault/issues/364)) ([8e71674](https://github.com/eranroseman/memoria-vault/commit/8e71674cc69a5eeed9c2658d4ca161a905204b66))
+* **v0.1.1:** Zotero how-to group, metrics cron, installer banner ([#149](https://github.com/eranroseman/memoria-vault/issues/149), [#205](https://github.com/eranroseman/memoria-vault/issues/205)) ([#352](https://github.com/eranroseman/memoria-vault/issues/352)) ([ba49e47](https://github.com/eranroseman/memoria-vault/commit/ba49e47874dda85dd3820e778a014863e120dc51))
+
+
+### Performance Improvements
+
+* **linter:** prune SKIP_DIRS during the walk, not after rglob ([#361](https://github.com/eranroseman/memoria-vault/issues/361)) ([77d0a23](https://github.com/eranroseman/memoria-vault/commit/77d0a2375e2093116e901298f44913b7c2802b49))
+
 ## 0.1.0 (2026-06-09)
 
 
