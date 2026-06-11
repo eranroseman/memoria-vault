@@ -14,53 +14,44 @@ nav_order: 1
 
 ## Ingest a source
 
-**Must work:**
+**Must work:** enqueue the capture card from the terminal — the same card the palette commands create:
 
 ```bash
-hermes -p memoria-librarian chat -s obsidian-paper-note
-# in session:
-/obsidian-paper-note --source <citekey>
+hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 ```
 
-**If the ACP pane is unresponsive** — the terminal is always the fallback. ACP is a convenience layer over the same Hermes operations.
+**If the ACP pane is unresponsive** — the terminal is always the fallback: the pane and the palette macros shell out to the same `hermes kanban create`. A direct lane chat (`hermes -p memoria-librarian chat`) also works as a debugging posture.
 
-**If enrichment APIs are unreachable** — ingest still creates the note with Zotero metadata. Run enrichment separately once connectivity is restored:
-
-```bash
-hermes -p memoria-librarian chat -s obsidian-paper-note
-/obsidian-paper-note --source <citekey> --skip-enrichment
-```
-
-A note without enrichment is better than a deferred ingest.
+**If enrichment APIs are unreachable** — ingest still creates the Catalog entity from the `.bib` metadata; the per-field provenance records what's missing. The enrichment fills in on a later re-ingest once connectivity is restored — a thin entity is better than a deferred ingest.
 
 **If `.bib` is not synced** — push it manually first:
 
 ```bash
-git add vault/.memoria/memoria.bib
+git add .memoria/memoria.bib
 git commit -m "manual: bib update"
 git push
 ```
 
 Then ingest.
 
-**Never run automatically:** `schema-migrate`. Schema changes require human review of every proposed field change.
+**Never run automatically:** a schema migration. Schema changes require human review of every proposed field change ([Run a schema migration](../operate/run-a-schema-migration.md)).
 
 ---
 
 ## Review and triage
 
-**Must work:** open `00-meta/01-dashboards/weekly-review.md` in Obsidian. The Dataview queries surface the triage queue without any Hermes involvement.
+**Must work:** open `system/dashboards/weekly-review.md` in Obsidian. The Dataview queries surface the triage queue without any Hermes involvement.
 
-**If Hermes is unreachable** — triage is a human-only action. Classify by hand:
+**If Hermes is unreachable** — triage is a human-only action anyway. Classify by hand:
 
-1. Open the paper note in `20-sources/01-papers/`
-2. Copy fields from the `_proposed_classification` comment block into main frontmatter
-3. Delete the comment block
-4. Set `lifecycle: current` (the "classified" marker; triage completion is a board state, not a note field)
+1. Open the paper entity in `catalog/papers/`
+2. Copy the fields you accept from the `_proposed_classification` block into the main frontmatter
+3. Delete the `_proposed_classification:` block
+4. Set `lifecycle: current` ([Classify a source](../compile/classify-a-source.md))
 
 **If Dataview is not rendering** — search manually in Obsidian for `lifecycle: proposed` to find unclassified notes.
 
-**Never run automatically:** promote claim notes from `10-inbox/` to `30-synthesis/`. Every inbox note requires human review — agent synthesis is unverified until a human confirms the citekeys and claims.
+**Never run automatically:** accept Inbox cards in bulk. Every `proposed` card requires human review — agent output is unverified until you confirm the citekeys and claims.
 
 ---
 
@@ -69,10 +60,10 @@ Then ingest.
 **Must work:**
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
+pandoc projects/<slug>/<draft>.md \
   --citeproc \
-  --bibliography vault/.memoria/memoria.bib \
-  --csl vault/.memoria/csl/<style>.csl \
+  --bibliography .memoria/memoria.bib \
+  --csl .memoria/csl/<style>.csl \
   -o /tmp/<output>.docx
 ```
 

@@ -7,80 +7,65 @@ nav_order: 2
 
 # Run a CLI chat session
 
-Start a terminal chat session with a specific Memoria profile to run skills, ingest sources, lint the vault, or run any other profile-specific command. (This is the `hermes … chat` CLI — not the Telegram messaging gateway, which is covered in [Set up messaging](../setup/set-up-messaging.md).)
+Start a terminal session with a Memoria profile — the co-PI without Obsidian, or a background lane for debugging. (This is the `hermes … chat` CLI — not the in-Obsidian Agent Client pane, which speaks ACP to the same profiles.)
 
 ## When to use the CLI vs. Obsidian
 
-Use the Hermes CLI chat when:
+Day to day you talk to **one** agent — the co-PI — in the Agent Client pane, and it delegates board cards to the background lanes ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Use a CLI chat session instead when:
 
-- Running **setup or maintenance tasks** (ingest, lint, rebuild index, check profile drift)
-- Running a **one-off skill** outside of the normal Kanban flow (e.g., re-ingesting a single source)
-- **Debugging** a profile's behavior or checking audit logs
+- **Obsidian isn't running** (a server, SSH, or you just prefer the terminal) — a co-PI desk session works the same from the CLI
+- **Debugging a lane profile** — exercising the Librarian or Peer-reviewer directly, outside the board dispatch
+- **Verifying a configuration change** — confirming a redeployed profile loads its MCP servers and skills
 
-Use the **Obsidian command palette** (Cmd-P → Memoria: …) for day-to-day work: discussing a paper, requesting a draft, checking the board. Those commands route to Hermes profiles over the agent-client plugin without needing a terminal.
+Maintenance work that used to be a chat session is an **engine** now, not an agent: lint is `python3 .memoria/engines/linter/detectors.py --vault .` ([Run the Linter](../operate/run-the-linter.md)), and the retraction sweep is `retraction.py` ([Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
 
 ## Start a session
 
 ```bash
-hermes -p <profile-alias> chat -s <skill-name>
+hermes -p <profile-alias> chat
 ```
 
-- `-p <profile-alias>` — which profile to invoke (e.g., `memoria-librarian`)
-- `-s <skill-name>` — load a specific skill at session start (e.g., `obsidian-paper-note`, `lint`, `draft`)
+- `-p <profile-alias>` — which profile to invoke (a **global** Hermes flag, so it also works with other subcommands, e.g. `hermes -p memoria-copi acp` for the pane's stdio server)
 
-If `-s` is omitted, the profile starts with no skill loaded — useful for exploratory sessions.
+The five aliases: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`.
 
 ## Common session starters
 
 | Goal | Command |
 | --- | --- |
-| Ingest a source | `hermes -p memoria-librarian chat -s obsidian-paper-note` |
-| Lint the vault | `hermes -p memoria-linter chat -s lint` |
-| Check vault health | `hermes -p memoria-linter chat -s health-report` |
-| Run a similarity check | `hermes -p memoria-verifier chat -s similarity-check` |
-| Get a draft outline | `hermes -p memoria-writer chat -s draft` |
-| Scope a writing project | `hermes -p memoria-mapper chat -s scope-project` |
-| Discuss a paper (CLI fallback) | `hermes -p memoria-socratic chat --command socratic-processing --source <citekey>` |
+| Talk to the co-PI from the terminal | `hermes -p memoria-copi chat` |
+| Delegate a task (via the co-PI) | `hermes -p memoria-copi chat`, then e.g. "verify the draft in projects/jitai/draft.md" |
+| Debug the ingest path | `hermes -p memoria-librarian chat`, then ask it to dry-run `catalog-find-source` on a citekey |
+| Debug the verify checks | `hermes -p memoria-peer-reviewer chat`, then ask for a `verify-trace-claim` pass on a claim note |
 
-## Inside a session
+The co-PI is the only profile designed for conversation — it reads the vault, answers, and delegates writes as board cards via `delegate_route_task`. The dispatched lanes normally run from the Kanban board, so a direct chat with them is a debugging posture, not a workflow.
 
-Once in a session, type `/skill-command [args]` to invoke the loaded skill:
+Type `exit` or Ctrl-C to end a session cleanly.
 
-```text
-/obsidian-paper-note --source mamykina2010sense
-/lint --dry-run
-/lint --target 20-sources/
-/draft "outline the argument on JITAI receptivity"
-/similarity-check "receptivity decreases under cognitive load"
-```
+## Dry-run is the gate's job
 
-Type `help` or `/help` to list available commands for the loaded skill.
+You don't need a special flag to test safely:
 
-Type `exit` or Ctrl-C to end the session cleanly.
+- The **co-PI can write nothing** — its lane denies every path, so a desk session can never damage the vault.
+- Any lane write to a review-gated prefix (`notes/claims/`, `notes/hubs/`) **degrades to `dry_run`** at the policy gate and lands in the review queue instead of on disk ([Work the review queue](../compose/work-the-review-queue.md)).
+- Every decision — allowed, denied, or held — is one line in `system/logs/audit.jsonl`.
 
-## Dry-run mode
-
-Most write-producing commands accept `--dry-run`. This reports what would be written without touching the vault:
-
-```text
-/obsidian-paper-note --source mamykina2010sense --dry-run
-```
-
-Use dry-run when testing a new profile configuration or checking a command's behavior before committing.
-
-## Piping output to a file
-
-For commands that produce a report (lint, health-report, scope-project), redirect output to a file for review in Obsidian:
+To test a single permission decision without any agent at all, use the policy MCP's one-shot mode:
 
 ```bash
-hermes -p memoria-linter chat -s lint <<< "/lint --dry-run" > lint-report.md
+.memoria/.venv/bin/python .memoria/mcp/policy_mcp.py --vault <vault> \
+  --decide '{"profile":"memoria-writer","action":"write","path":"projects/x/draft.md","task_id":"T1"}'
 ```
 
-Or run the session normally and copy the output — the profile logs session output to `99-system/logs/session-log.md` if session-logging is enabled.
+## Watching what a session did
+
+- `system/logs/audit.jsonl` — every gated action the session attempted
+- `system/logs/sessions/` — session transcripts
+- `hermes kanban list` — cards a co-PI session delegated to the board
 
 ## Related
 
 - Profile configuration: [Configure a profile](configuration.md)
+- The pane that replaces most CLI chats: [Agent-client pane](../using-obsidian/use-the-acp-pane.md)
 - Ingest: [Capture and ingest a source](../compile/capture-and-ingest.md)
-- Lint: [Run the Linter](../operate/run-the-linter.md)
 - Administrative CLI commands (profile, kanban, skills, cron): [Hermes CLI](../../reference/hermes-cli.md)

@@ -6,17 +6,15 @@ nav_order: 3
 
 # Run a schema migration
 
-Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal — using the Linter's `schema-migrate` command, always dry-run first.
+Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal. In v0.1.1 there is **no automated migration command**: a migration is a deliberate, git-disciplined manual pass, validated by the schemas. That's by design — schema changes fall in the `schema-content` class, which the policy gate never lets run unattended ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
-Use this for **structural** frontmatter changes that touch many notes. For renaming a single controlled-vocabulary term (e.g. a `topic` value), [Manage your topic vocabulary](../curate/manage-vocabulary.md) covers the lighter path; this guide is for changes to the schema itself.
-
-> **High-stakes, human-only.** `schema-migrate` falls in the `schema-content` auto-fix class, which is **always dry-run / report-only** under the policy gate ([Linter: detectors and auto-fix](../../reference/linter.md)). The Linter cannot apply a migration on its own — you review the dry-run and re-run without `--dry-run` deliberately. Commit first so the change is reversible.
+Use this for **structural** changes that touch many notes. For renaming a single vocabulary term, [Manage your topic vocabulary](../curate/manage-vocabulary.md) covers the lighter path.
 
 ## Prerequisites
 
-- A clean working tree — `git status` shows nothing uncommitted (so the migration is a single reviewable diff)
-- The Linter profile installed and running ([Set up Hermes](../setup/set-up-hermes.md))
+- A clean working tree — `git status` shows nothing uncommitted, so the migration is one reviewable diff
 - A clear before/after for the field you're changing
+- If the schema itself changes: the matching edit ready for `.memoria/schemas/types/<type>.yaml` (the single schema source the Linter, the pre-commit gate, and the policy MCP all read)
 
 ## Steps
 
@@ -26,73 +24,63 @@ Use this for **structural** frontmatter changes that touch many notes. For renam
 cd ~/Memoria && git add -A && git commit -m "pre-migration snapshot"
 ```
 
-A migration rewrites frontmatter across many files. A clean commit beforehand makes the migration one diff you can review — and revert in one command if it's wrong.
+A clean commit beforehand makes the migration one diff you can review — and revert in one command.
 
-**2. Start a Linter session.**
-
-```bash
-hermes -p memoria-linter chat -s lint
-```
-
-**3. Run the migration as a dry-run.**
-
-Name the field and the change. Examples:
-
-```text
-# Field value rename
-/schema-migrate --field study_design --from rct --to randomized-controlled-trial --dry-run
-
-# Deprecated field removal
-/schema-migrate --field legacy_tag --remove --dry-run
-
-# Schema version bump after a breaking field change
-/schema-migrate --bump-schema-version --from 1 --to 2 --dry-run
-```
-
-The dry-run reports every note it *would* touch and the exact before/after for each — but changes nothing.
-
-**4. Review the dry-run output carefully.**
-
-Confirm the affected-note count matches your expectation and the before/after is correct. If the count is surprisingly high or low, your `--field`/`--from` selector is wrong — fix it and re-run the dry-run. Do not proceed on a surprising count.
-
-**5. Apply the migration.**
-
-Re-run the exact same command with `--dry-run` removed:
-
-```text
-/schema-migrate --field study_design --from rct --to randomized-controlled-trial
-```
-
-**6. Verify and commit.**
-
-Check the diff, run a lint pass to confirm no schema drift remains, then commit:
+**2. Enumerate the affected notes — your dry run.**
 
 ```bash
-cd ~/Memoria && git diff --stat
+grep -rl "^study_design: rct" notes/ catalog/ | tee /tmp/migration-files.txt
+wc -l /tmp/migration-files.txt
+```
+
+If the count is surprisingly high or low, your selector is wrong — fix it before touching anything. Do not proceed on a surprising count.
+
+**3. Update the schema first (if the field definition changes).**
+
+Edit `.memoria/schemas/types/<type>.yaml` so the new field name or value set is legal *before* the notes change — otherwise every migrated note fails validation.
+
+**4. Apply the change.**
+
+For a mechanical rename over the reviewed file list:
+
+```bash
+xargs -a /tmp/migration-files.txt sed -i 's/^study_design: rct$/study_design: randomized-controlled-trial/'
+```
+
+For anything non-mechanical (restructuring a map, splitting a field), edit by hand or with a one-off script — but always over the step-2 list.
+
+**5. Validate.**
+
+```bash
+python3 .memoria/engines/linter/detectors.py --vault .
+```
+
+`schema-check` must report nothing for the migrated field. The pre-commit gate will re-validate every staged note at commit, so a missed file blocks rather than lands.
+
+**6. Review and commit.**
+
+```bash
+git diff --stat       # only the expected files, only the expected change
 git add -A && git commit -m "schema: rename study_design rct → randomized-controlled-trial"
 ```
 
-If the diff is wrong, `git reset --hard HEAD~1` returns you to the pre-migration snapshot from step 1.
+If the diff is wrong, `git reset --hard HEAD~1` returns you to the step-1 snapshot.
 
 ## Verify
 
-- `git diff --stat` shows only the intended field change, across the expected note count
-- A follow-up `/lint --dry-run` reports no `schema-content` drift for the migrated field
-- Dataview queries that filter on the field still return the expected notes
+- `git diff --stat` showed only the intended change across the expected note count before commit
+- The detectors report no `schema-check` findings for the migrated field
+- Dataview/Bases views that filter on the field still return the expected notes
 
 ## Related
 
 **How-to**
 
-- Renaming a single vocabulary term (lighter path): [Manage your topic vocabulary](../curate/manage-vocabulary.md)
-- The structural health check that flags schema drift: [Run the Linter](run-the-linter.md)
-- Recovering from broken frontmatter after a bad edit: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
+- The lighter, single-term path: [Manage your topic vocabulary](../curate/manage-vocabulary.md)
+- The validation pass: [Run the Linter](run-the-linter.md)
+- Recovering from a bad edit: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 
 **Reference**
 
-- The `schema-content` auto-fix class (always dry-run): [Linter: detectors and auto-fix](../../reference/linter.md)
-- Frontmatter field definitions: [Frontmatter fields](../../reference/frontmatter.md)
-
-**Explanation**
-
-- Why the Linter cannot apply schema changes unattended: [The Linter](../../explanation/engines/README.md)
+- The schema source and what reads it: [Note types](../../reference/note-types.md)
+- Why `schema-content` never runs unattended: [Linter: detectors and auto-fix](../../reference/linter.md)

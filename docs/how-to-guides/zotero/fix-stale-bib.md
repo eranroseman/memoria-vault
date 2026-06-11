@@ -7,7 +7,7 @@ nav_order: 5
 
 # Fix a stale .bib
 
-**Symptom:** running `/obsidian-paper-note --source <citekey>` returns `"citekey not found"` or `"not in memoria.bib"` at ingest.
+**Symptom:** a capture card fails at ingest with `"citekey not found"` or `"not in memoria.bib"` — the candidate never lands, and the failure surfaces on the card or in the Librarian's session log.
 
 **Diagnosis:** the citekey is missing from `memoria.bib` — either Zotero's auto-export hasn't run, or the Hermes node hasn't pulled the latest `.bib`. Confirm with a `grep` before reaching for a fix.
 
@@ -53,14 +53,13 @@ grep <citekey> vault/.memoria/memoria.bib        # entry present
 git log --oneline vault/.memoria/memoria.bib | head -3   # recent commit timestamp
 ```
 
-Then retry the ingest:
+Then retry the ingest — re-run the capture (`Cmd/Ctrl-P` → **Memoria: capture from Zotero selection** with the item selected), or enqueue the card from the terminal:
 
 ```bash
-hermes -p memoria-librarian chat -s obsidian-paper-note
-/obsidian-paper-note --source <citekey> --dry-run
+hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 ```
 
-`--dry-run` should complete without a "not found" error.
+The Librarian's run should now complete without a "not found" error and raise the candidate card in `inbox/`.
 
 ## Prevent recurrence
 

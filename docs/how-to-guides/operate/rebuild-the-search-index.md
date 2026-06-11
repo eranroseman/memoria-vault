@@ -7,11 +7,12 @@ nav_order: 5
 
 # Rebuild the search index
 
-Re-run the `qmd` embedding to restore semantic search when the Writer returns empty results or when a large batch of notes has been added.
+Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vector search, installed as a Hermes hub skill by the installer) is the **shared** similarity index: the co-PI's vault search runs on it, the Librarian's comparative `[!brief]` and `map-cluster-corpus` candidate pulls use it, and the Peer-reviewer's verify checks (`verify-trace-claim`, `verify-card-gap`) score against it — one mechanism, per-lane thresholds.
 
 ## When to rebuild
 
-- The Writer's `/draft` command returns no vault results despite relevant notes existing
+- The co-PI's vault answers miss notes you know exist ([Query the vault](../compose/query-the-vault.md))
+- New papers stop showing up in `[!brief]` comparisons or similarity checks
 - A batch of 20+ notes was ingested and you haven't rebuilt since
 - `qmd search "known term"` returns empty or omits notes you know exist
 
@@ -24,16 +25,17 @@ A full `qmd embed` re-embeds *every* note — it's the right tool only for genui
 | One new note isn't found | Not yet indexed | Confirm it's saved to disk; a few notes rarely justify a full rebuild — let the scheduled rebuild (step 4) catch it |
 | Search misses many notes or returns empty | Stale or missing index | Full `qmd embed` (this guide) |
 | Found by keyword but not by meaning | Vectors stale / embedding model changed | Full `qmd embed` — re-embedding is the only fix when the vectors are stale |
-| Found in `qmd search` but missing from `/draft` | Not an index problem — a Writer retrieval issue | Check the query, not the index |
+| Found by `qmd search` but the co-PI doesn't cite it | Not an index problem — a retrieval/prompt issue | Push the co-PI ("which note says that?"), not the index |
 
-A full re-embed is genuinely *required* only when the embedding model or config changed, `.qmd-index/` is corrupt or missing, or a large batch (20+) landed. For a handful of notes, the scheduled rebuild is cheaper than an ad-hoc full pass.
+A full re-embed is genuinely *required* only when the embedding model or config changed, the index is corrupt or missing, or a large batch (20+) landed.
 
 ## Steps
 
 **1. Confirm the symptom.**
 
 ```bash
-qmd search "<term you know exists in a note>" --vault <absolute-vault-path>
+cd <vault>
+qmd search "<term you know exists in a note>"
 ```
 
 If this returns empty or fewer results than expected, the index is stale.
@@ -41,7 +43,7 @@ If this returns empty or fewer results than expected, the index is stale.
 **2. Run a full rebuild.**
 
 ```bash
-cd <absolute-vault-path>
+cd <vault>
 qmd embed
 ```
 
@@ -53,46 +55,39 @@ This re-embeds every note in the vault. Estimated time:
 | 500–2000 notes | 5–15 minutes |
 | 2000+ notes | 15–30 minutes |
 
-The index is written to `.qmd-index/` inside the vault. This folder is gitignored — never commit it.
+The index lives inside the vault and is gitignored — never commit it.
 
 **3. Verify the rebuild.**
 
 ```bash
-qmd search "<term>" --vault <absolute-vault-path>
+qmd search "<term>"
 ```
 
-Confirm the expected notes now appear. Then test in a Writer session:
-
-```bash
-hermes -p memoria-writer chat -s draft
-# then, in the session:
-/draft "<known topic>" 
-```
-
-The response should reference vault notes with citekeys.
+Confirm the expected notes now appear. Then test the consumer you actually noticed the staleness in — ask the co-PI a question whose answer lives in a recently added note and check it cites that note.
 
 **4. Set up automatic rebuilds** (optional).
 
-To rebuild on a schedule, add to the Linter's cron tasks in `vault/.memoria/profiles/memoria-linter/cron/`:
+The installer wires no qmd cron — embedding is incremental in normal operation. If your ingest volume makes weekly full rebuilds worthwhile, drop a one-line wrapper in `~/.hermes/scripts/` and register it the same way the installer registers its deterministic crons:
 
-```yaml
-- name: rebuild-qmd-index
-  schedule: "0 3 * * 0"   # 3 AM every Sunday
-  command: "qmd embed"
-  working_dir: "{{VAULT_PATH}}"
+```bash
+printf '#!/usr/bin/env bash\ncd <vault> && qmd embed\n' > ~/.hermes/scripts/memoria-qmd-embed.sh
+chmod +x ~/.hermes/scripts/memoria-qmd-embed.sh
+hermes cron create '0 3 * * 0' --script memoria-qmd-embed.sh --no-agent \
+  --name memoria-qmd-embed --deliver local
 ```
 
-Run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows) to register the new cron task.
+`hermes cron list` should then show `memoria-qmd-embed` with a next-run time.
 
 ## Verify
 
 ```bash
-qmd search "claim note you recently wrote" --vault <vault-path>
+qmd search "claim note you recently wrote"
 ```
 
-Returns the note. The Writer's `/draft` command uses vault notes in its response.
+Returns the note, and the co-PI's vault answers cite recently added notes again.
 
 ## Related
 
-- Stale search index failure mode: [Failure modes](../../reference/failure-modes.md) — "Stale qmd index"
-- Writer profile: [The Writer](../../explanation/profiles/writer.md)
+- Stale-index failure mode: [Failure modes](../../reference/failure-modes.md) — "qmd search index stale"
+- The search consumer you'll notice first: [Query the vault](../compose/query-the-vault.md)
+- Where qmd sits in the toolchain: [External integrations](../../reference/integrations.md)

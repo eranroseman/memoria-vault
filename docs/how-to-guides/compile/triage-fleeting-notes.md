@@ -4,74 +4,61 @@ parent: Compile
 nav_order: 2
 ---
 
-
 # Triage fleeting notes
 
-Clear the fleeting inbox: promote each note to something durable, attach it to an existing note, or discard it. Fleeting notes are raw captures — they have a short shelf life by design.
+Clear `notes/fleeting/`: promote each note to something durable, attach it to an existing note, or archive it. Fleeting notes are raw captures — they have a short shelf life by design, and the Linter's `stale-fleeting` detector flags anything older than 7 days.
 
 ## Prerequisites
 
-- At least one note in `10-inbox/01-fleeting/`
+- At least one note in `notes/fleeting/`
 - Obsidian open (all steps are in the vault UI)
 
 ## Steps
 
-**1. Open the Reading Pipeline dashboard.**
+**1. Open the fleeting queue.**
 
-Open `00-meta/01-dashboards/reading-pipeline.md` (the Reading Pipeline dashboard) from the file explorer or your homepage. *(A `Memoria: open reading pipeline` palette command is [deferred].)*
-
-The dashboard surfaces fleeting notes older than a few days. Any note sitting in `01-fleeting/` beyond that threshold is stale capture.
+Open `system/dashboards/fleeting.base` (the **To process** view), or the **Fleeting backlog** section of `system/dashboards/weekly-review.md`. Both surface every fleeting note still at `lifecycle: proposed`.
 
 **2. Open each fleeting note and decide its fate.**
 
-For each note in the queue, choose one of three actions:
-
 **Promote — it's a real idea worth keeping.**
 
-If the note contains a distinct observation or argument:
-
-- If it connects cleanly to an existing claim note: open the claim note and add the idea as a supporting point. Delete the fleeting note.
-- If it could become a standalone claim: use it as a seed to [write a claim note](write-a-claim-note.md). Delete the fleeting note after the claim is written.
-- If it's a question that deserves an answer: move it to `10-inbox/02-answers/` with `type: question-note`.
+- If it connects cleanly to an existing claim: open the claim note and work the idea into its Evidence or Connections section. Archive the fleeting note.
+- If it could stand alone as a claim: use it as the seed for [Write a claim note](write-a-claim-note.md), then archive the fleeting note.
+- If it's a paper or source to chase: capture it (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand it to the co-PI), then archive the fleeting note.
 
 **Attach — it's context for something else.**
 
-If the note is a reaction to a specific paper or project:
-
-- Open the relevant source note or workbench note
-- Add the content as a bullet or paragraph in the appropriate section
-- Delete the fleeting note
+Open the relevant source note or hub, add the content where it belongs, archive the fleeting note.
 
 **Discard — the capture served its purpose.**
 
-If the note is a passing thought you no longer need, a duplicate of something you already have, or a reference you've already added to Zotero:
+Set `lifecycle: archived` (or delete outright — a fleeting note has no provenance value once judged).
 
-- Delete the file directly in Obsidian (right-click → Delete) or move to trash
-
-**3. Confirm `01-fleeting/` is empty** (or contains only notes from the current session).
+**3. Confirm the queue is empty** (or contains only notes from the current session).
 
 ## Verify
 
-- `10-inbox/01-fleeting/` has no notes older than a few days
-- The reading pipeline dashboard shows zero stale fleeting notes
+- `notes/fleeting/` has no `proposed` notes older than 7 days
+- The fleeting backlog on the weekly-review dashboard is empty
 
 ## Notes
 
 **Chat exports count too.** Closed ACP-pane sessions are auto-exported to `notes/fleeting/chats/` and stamped by the sweep with fleeting frontmatter (`origin: chat`), so they show up in the same queue and the same stale-fleeting flags. Triage them like any other fleeting note: promote the durable insight, attach context to the relevant note, or discard the transcript. See [Agent-client pane](../using-obsidian/use-the-acp-pane.md).
 
-The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising count of stale fleeting notes in the weekly review is a signal to run this triage before the next session.
+The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising fleeting backlog in the weekly review is a signal to run this triage before the next session.
 
 ## Related
 
 **How-to**
 
 - Write a claim note: [Write a claim note](write-a-claim-note.md)
-- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../curate/run-the-weekly-review.md)
-- Messaging gateway (how fleeting notes arrive): [Set up the messaging gateway](../setup/set-up-messaging.md)
+- Weekly review (the Friday aggregator): [Run the weekly review](../curate/run-the-weekly-review.md)
+- Mobile capture into this queue: [Set up messaging](../setup/set-up-messaging.md)
 
 **Reference**
 
-- Note types: [Note types](../../reference/note-types.md)
+- The fleeting type and its lifecycle subset: [Note types](../../reference/note-types.md)
 
 **Explanation**
 

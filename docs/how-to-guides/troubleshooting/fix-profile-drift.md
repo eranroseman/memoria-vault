@@ -7,81 +7,72 @@ nav_order: 6
 
 # Fix profile drift
 
-**Symptom:** the deployed Hermes instance runs stale behavior, or the Linter's `profile-install-drift` detector reports a SHA-256 mismatch — the deployed profile in `~/.hermes/profiles/` no longer matches the vault source in `vault/.memoria/profiles/`.
+**Symptom:** a deployed Hermes profile runs stale behavior — an edit you made to a `SOUL.md`, skill, or lane-override doesn't show up, or a profile acts like a version you've since changed. The deployed copy in `~/.hermes/profiles/` no longer matches the vault source in `<vault>/.memoria/profiles/`.
 
-**Diagnosis:** either the vault source changed and the install script hasn't been re-run, or someone edited the deployed copy directly. Run the health report to confirm, then decide which case you're in before fixing.
+**Diagnosis:** either the vault source changed and the install script hasn't been re-run, or someone edited the deployed copy directly. Compare the two to confirm, then decide which case you're in before fixing.
 
-**Fix:** resolve the cause, then re-run the profile-install to bring the deployed copy back in sync.
+**Fix:** resolve the cause, then re-run the profile install to bring the deployed copy back in sync.
 
 ## Detect
 
-The Linter's `profile-install-drift` detector reports a SHA-256 mismatch:
-
-```yaml
-MEDIUM: profile-install-drift — memoria-linter/SOUL.md hash mismatch
-  vault source:   8f4a...
-  deployed copy:  3b2c...
-```
-
-Run it on demand to confirm:
+Compare the vault source against the deployed copy, per profile:
 
 ```bash
-hermes -p memoria-linter chat -s health-report
-# then, in the session:
-/health-report --detectors profile-install-drift
+diff -r <vault>/.memoria/profiles/memoria-librarian ~/.hermes/profiles/memoria-librarian \
+  --exclude .env   # config.yaml will differ by the substituted {{PYTHON}}/{{VAULT_PATH}} placeholders
 ```
 
-This compares the SHA-256 of every file in `vault/.memoria/profiles/` against its deployed counterpart.
+Any difference beyond the `.env` and the placeholder substitutions is drift. Repeat for each of the five profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`).
+
+Also confirm the registration list is clean:
+
+```bash
+hermes profile list
+```
+
+Exactly the five `memoria-*` profiles — a retired v0.1.0 name (`mapper` / `socratic` / `verifier` / `coder` / `linter`) still registered is drift too; the installer prunes them on the next run.
 
 ## Diagnose before fixing
 
 There are two causes with different implications:
 
 **Cause A: The vault source changed and the install script hasn't been re-run.**
-This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile-install (`bash scripts/install.sh --profiles-only`, or `.\scripts/install.ps1 -ProfilesOnly` on Windows).
+This is the normal case after a `git pull` or after editing a `SOUL.md`. Fix: re-run the profile install (below).
 
 **Cause B: Someone edited the deployed copy directly.**
 
-```powershell
-diff (Get-Content "vault\.memoria\profiles\memoria-linter\SOUL.md") `
-     (Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-linter\SOUL.md")
-```
-
 If the diff shows meaningful changes in the deployed copy (not in the vault source), decide:
 
-- **Promote the edit to vault source:** copy the change into `vault/.memoria/profiles/memoria-<name>/SOUL.md`, commit, then re-deploy (below)
+- **Promote the edit to vault source:** copy the change into `<vault>/.memoria/profiles/memoria-<name>/`, commit, then re-deploy (below)
 - **Discard the edit:** just re-deploy (it overwrites the deployed copy with the vault source)
 
 ## Fix
 
-Re-run the profile-install after resolving Cause A or B (from the repo clone):
+Re-run the profile install after resolving Cause A or B (from the repo clone):
 
 ```bash
-bash scripts/install.sh --profiles-only      # Linux / WSL2
+bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2
 ```
 
 ```powershell
-.\scripts/install.ps1 -ProfilesOnly          # Windows
+.\scripts/install.ps1 -ProfilesOnly          # Windows (forwards to WSL2)
 ```
 
 To fix drift on a single profile only:
 
 ```bash
-bash scripts/install.sh --profiles-only --only memoria-linter
+bash scripts/install.sh --profiles-only --only memoria-librarian
 ```
 
 ```powershell
-.\scripts/install.ps1 -ProfilesOnly -Only memoria-linter
+.\scripts/install.ps1 -ProfilesOnly -Only memoria-librarian
 ```
 
 ## Verify
 
-```bash
-hermes -p memoria-linter chat -s health-report
-/health-report --detectors profile-install-drift
-```
-
-No drift reported for any profile.
+- The `diff -r` above is clean for every profile (modulo `.env` and placeholders)
+- `hermes profile list` shows exactly the five `memoria-*` profiles
+- `hermes profile show memoria-<name>` reflects the edit you expected to land
 
 ## Related
 

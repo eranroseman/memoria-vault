@@ -4,86 +4,54 @@ parent: Compile
 nav_order: 4
 ---
 
-
 # Classify a source
 
-When the Librarian ingests a paper it doesn't decide the final metadata — it only *proposes*. It writes its best guess into a sandboxed `_proposed_classification` block in the frontmatter and leaves the note at `lifecycle: proposed`.
+In v0.1.1 most classification is **automated**: the ingest engine's classify stage reads the OpenAlex topics already in the enrichment payload and applies `research_area` (and a `methodology` facet where derivable) silently when the decision is clear — audited, never gated ([Ingest routing](../../reference/ingest.md)). What's left for you is the judgment the automation refuses to make:
 
-**Classifying is the human step that turns that proposal into the note's real metadata.** You review each proposed field, copy the ones you accept (edited for accuracy) into the main frontmatter, delete the proposal block, and flip the note to `lifecycle: current`. No profile writes to the note while you do this — it's a deliberate checkpoint so the agent's guess never becomes canonical without your review.
-
-The steps below are that loop: **review → promote → clean up → mark done.**
+- **Genuine ambiguity** — the engine left the field unset and raised one Inbox `flag` card with the top candidates and scores
+- **The Librarian's proposal** — the `_proposed_classification` block on the paper entity, promoted by you
+- **Corrections** — the automation applied something you disagree with; you edit the frontmatter, no card involved
 
 ## Prerequisites
 
-- The source has been ingested and is at `lifecycle: proposed` with a `_proposed_classification` block ([Capture and ingest a source](capture-and-ingest.md))
+- A paper ingested to `catalog/papers/<citekey>.md` ([Capture and ingest a source](capture-and-ingest.md))
 
 ## Steps
 
-**1. Open the note in Obsidian.**
+**1. Handle any classify `flag` card first.**
 
-Navigate to `20-sources/01-papers/<citekey>.md` (or `20-sources/02-items/<citekey>.md` for non-paper sources).
+If ingest hit genuine ambiguity, a flag card titled along the lines of "Ambiguous research area for `<citekey>`" sits in your Inbox. It carries the `finding` and the scored candidates — never a verdict. Pick the right value, write it into the paper entity's frontmatter yourself, then resolve the card (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**).
 
-**2. Find the `_proposed_classification` block.**
+**2. Open the paper entity and review what the automation applied.**
 
-It is an agent-owned namespace in the note's YAML frontmatter — a nested block the Librarian wrote, separate from the main (human-owned) fields:
+In `catalog/papers/<citekey>.md`, check `research_area` and `methodology` against the paper itself. The thresholds (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`; every applied or flagged decision is one JSONL line in `system/logs/classify.jsonl`. If a value is wrong, **edit the frontmatter directly** — the audit line is what makes the automation correctable; there is nothing to approve.
 
-```yaml
-_proposed_classification:
-  study_design: ...
-  methods: [...]
-  topic: [...]
-```
+**3. Promote the `_proposed_classification` block.**
 
-`projects` is human-owned and is **not** proposed here — you set it yourself in step 4.
+The Librarian's proposal (LLM hole #1) is a sandboxed namespace in the entity's frontmatter, separate from the main fields. Review each proposed value, copy the ones you accept (edited for accuracy) into the main frontmatter, then delete the entire `_proposed_classification:` block — it is transient.
 
-**3. Review each field.**
+**4. Flip the entity's lifecycle.**
 
-Compare the proposed values against the paper itself. The Librarian extracts these from the abstract and title — check for:
-
-- **topic:** Is this the right concept vocabulary term? If the paper is about JITAI receptivity, `receptivity-detection` is correct; `jitai` alone is too broad.
-- **methods:** Is `field-study` accurate, or was it also a `qualitative-interview` study? Add precision.
-- **study_design:** `observational` vs. `experimental` — confirm from the methods section.
-
-**4. Promote accepted fields to main frontmatter.**
-
-Copy the fields you accept into the YAML frontmatter block at the top of the note. Edit for accuracy. Example:
-
-```yaml
-topic:
-  - receptivity-detection
-methods:
-  - field-study
-  - qualitative-interview
-study_design: observational
-projects:
-  - jitai-timing
-```
-
-**5. Delete the `_proposed_classification` block.**
-
-Remove the entire `_proposed_classification:` block from the frontmatter once you've promoted the fields you accept. The block is transient — it exists only until classification is complete.
-
-**6. Set `lifecycle: current`.**
-
-In frontmatter — this state *is* the "classified" marker (triage completion is tracked as a Kanban board state, not a note field):
+A paper entity arrives at `lifecycle: proposed`. Once you've judged its candidate card and settled the classification, set it to `current`:
 
 ```yaml
 lifecycle: current
 ```
 
-**7. Write a brief Key Findings entry.**
+**5. Carry the vocabulary into your source note.**
 
-Scroll to the "Key findings" section in the note body. Write 2–3 sentences summarizing the paper's core contribution in your own words. This is the first place the note captures your thinking, not just the agent's extraction.
+When you write the source note in `notes/source/`, reuse the same `research_area` / `methodology` terms — vocabulary drift between catalog and notes is what makes queries lie ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
 ## Verify
 
-- The note appears in the "classification complete" Dataview query on the `weekly-review.md` dashboard
-- `lifecycle: current` is set and the `_proposed_classification` frontmatter block is gone
-- The note does not appear in the "classification debt" queue on `weekly-review.md`
+- The paper entity carries `lifecycle: current`, a settled `research_area`, and no `_proposed_classification` block
+- No classify `flag` card for this citekey remains `proposed` in the Inbox
+- `system/logs/classify.jsonl` records the decision (applied or flagged) for this citekey
 
 ## Related
 
 - Previous step: [Capture and ingest a source](capture-and-ingest.md)
 - Next step: [Discuss a paper](discuss-a-paper.md)
-- Frontmatter schema reference: [Frontmatter fields](../../reference/frontmatter.md)
-- Vocabulary for `topic`, `methods`, `study_design`: [Frontmatter fields](../../reference/frontmatter.md#the-field-kind-grammar)
+- The automation's thresholds and audit trail: [Ingest routing](../../reference/ingest.md)
+- Field semantics: [Frontmatter fields](../../reference/frontmatter.md)
+- Optional per-project hints the proposal draws on: [Configure project hints](../setup/configure-project-hints.md)

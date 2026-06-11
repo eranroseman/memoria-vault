@@ -4,80 +4,60 @@ parent: Compose
 nav_order: 7
 ---
 
-
 # Verify and revise a draft
 
-Read the verification callout after each commit, address the flagged gaps, and loop until the draft is clean or remaining gaps are accepted.
+Put a draft in front of the **Peer-reviewer** — the independent, adversarial `verify` lane — read the finding-first flag cards it raises, close the gaps, and loop until clean or the remaining gaps are consciously accepted. The Peer-reviewer's posture is *flag, don't fix*: the only thing it can write is Inbox cards; every edit is yours.
+
+> Per-commit project verification — drafts in `projects/` checked claim by claim on every commit — ships with the v0.1.2 Project release. In v0.1.1 you run verify passes deliberately, as below.
 
 ## Prerequisites
 
-- A draft section committed to git in `40-workbench/<project>/04-drafts/`
-- The Verifier profile installed
+- A draft in `projects/<slug>/` ([Draft with the Writer](draft-with-writer.md)), or any text whose claims you want traced
 
 ## Steps
 
-**1. Open the draft in Obsidian after committing.**
+**1. Delegate a verify pass.**
 
-After a `git commit`, the Verify hook fires automatically and updates the `[!verification]` callout at the top of the draft file. Open the draft.
+In the co-PI pane:
 
-**2. Read the verification callout.**
+> "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 
-The callout shows one of three statuses:
+The co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify a draft** — defaults to the active note when it's under `projects/`.) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
 
-| Status | Meaning |
-| --- | --- |
-| `verify-clean` | All five sub-checks pass — citations supported and traceable |
-| `verify-needs-revision` | A failed claim-trace, citation, or completeness check — one or more claims lack supporting source notes |
-| `verify-needs-attention` | A retraction or near-duplicate surfaced (e.g. a cited note marked `superseded_by`) — human judgment, not a clean revise |
+**2. Read the flag cards.**
+
+Findings land in the Inbox as **`flag` cards** — finding-first, with the verdict carried as `agent_recommendation` (`clean` / `issues-found` / `inconclusive`). A `clean` flag closes nothing by itself; an `issues-found` flag changes nothing by itself. You act.
 
 **3. Address each gap.**
 
-For each flagged item:
+- **A cited source doesn't say what the draft says:** revise the sentence, or soften it and acknowledge the weakness.
+- **An unsupported assertion:** add the citation, write the missing claim note from a source you hold, or rewrite the line as explicitly your view.
+- **A superseded claim cited:** the draft leans on a claim with `superseded_by` set — cite the successor instead (the Linter's `fama-exposure` detector hunts the same failure across the vault).
+- **A missing source:** capture it first ([Capture and ingest a source](../compile/capture-and-ingest.md)), or cut the placeholder.
 
-- **Missing source note:** The draft cites a citekey that has no note in `20-sources/`. Ingest the source first ([Capture and ingest a source](../compile/capture-and-ingest.md)), or remove the citation if it was a placeholder.
-- **Unsupported claim:** A statement has no citekey. Either add a citation or rewrite the claim as explicitly stated as the author's view (no citation needed).
-- **Superseded citation:** The draft cites `[[old-claim]]` which has `superseded_by: [[new-claim]]`. Update the draft to cite the new claim note instead.
+Resolve each handled flag (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**); the Inbox converges to empty.
 
-**4. Run Revise for larger gaps** (optional).
+**4. Loop.**
 
-For systematic gap-closing rather than line edits, open the agent-client pane (`Agent Client: Open chat view`), switch to the **Writer** (via the pane’s profile picker), attach the draft and its verification report (`05-verification/<section>.md`) via the paperclip, and ask it to suggest edits that close each flagged gap. Review and accept the edits manually.
+After revising, delegate another pass over the same file. Verify ↔ fix is a loop, not a single gate.
 
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
+**5. Accept a gap without closing it** (when appropriate).
 
-```bash
-hermes -p memoria-writer chat -s revise
-# then, in the session:
-/revise --draft 40-workbench/<project>/04-drafts/<section>.md \
-        --verification 40-workbench/<project>/05-verification/<section>.md
-```
+A genuine open question you're flagging *in the paper* is a limitation, not a failure — say so in the draft's text, archive the flag, and move on. The honesty body exists so you can disagree with the agent.
 
-**5. Re-commit after revisions.**
+**6. Remember the check you never run.**
 
-```bash
-git add 40-workbench/<project>/04-drafts/<section>.md
-git commit -m "revise: address verification gaps in <section>"
-```
-
-The verify hook fires again. Repeat steps 2–5 until the callout shows `verify-clean` or you explicitly accept remaining gaps.
-
-**6. Accept a gap without closing it** (when appropriate).
-
-If a gap represents a genuine open question you're flagging in the paper rather than a failure, add to the draft's frontmatter:
-
-```yaml
-accepted_gaps:
-  - "no empirical support for X — acknowledged as a limitation"
-```
-
-The Verifier will not flag accepted gaps on subsequent commits.
+The retraction sweep runs on cron behind you and raises Inbox `alert` cards on hits ([Run a retraction sweep](../operate/run-a-retraction-sweep.md)) — but a pre-submission manual sweep is cheap insurance.
 
 ## Verify
 
-- `[!verification]` callout shows `verify-clean` or lists only accepted gaps
-- No `superseded_by` citations remain in active drafts
+- The latest verify pass came back `clean`, or every remaining `issues-found` flag is consciously accepted in the draft's own text
+- No flag cards for this draft remain `proposed` in the Inbox
+- No citation in the draft points at a superseded claim
 
 ## Related
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- Conceptual background on the Verifier: [The Verifier](../../explanation/profiles/peer-reviewer.md)
+- The guided first pass: [Tutorial 06: Verify and address gaps](../../tutorials/06-verify-and-address-gaps.md)
+- The adversarial lane: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)

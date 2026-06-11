@@ -4,89 +4,64 @@ parent: Compose
 nav_order: 10
 ---
 
-
 # Create a code artifact
 
-Scaffold a code-note linked to the motivating research, then hand off implementation to an external coding agent. Code in Memoria is a research output with provenance — the note records *why* this code exists and what claim it supports.
+Delegate analysis or figure code to the **Engineer** — the `code` lane. Code in Memoria is a research output with provenance: the Engineer coordinates (scaffolds the handoff to an external coding agent and owns the commit/revert gate in `projects/*/code/`); the *why* — what claim or figure the code serves — is yours to state.
 
 ## Prerequisites
 
-- A writing project in `40-workbench/<project-slug>/` with a `06-code/` subfolder
-- The Coder profile installed
-- An external coding agent available (Claude Code, Aider, Codex, or similar)
+- A `projects/<slug>/` scratch folder with a `code/` subfolder — the Engineer's write scope is `projects/*/code/`
+- An external coding agent available (Claude Code, Aider, Codex, or similar) — substantive implementation is delegated outward by design ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md))
 
 ## Steps
 
-**1. Create the `06-code/` subfolder** if it doesn't exist.
+**1. Delegate the code task.**
 
-```powershell
-New-Item -ItemType Directory "vault\40-workbench\<project-slug>\06-code\" -Force
-```
+In the co-PI pane, state the artifact and the claim it serves:
 
-**2. Start a Coder session to scaffold the code-note.**
+> "Code task: produce the figure-3 receptivity curve for `projects/<slug>/`, from the data behind `[[receptivity-decreases-under-high-cognitive-load]]`."
 
-```bash
-hermes -p memoria-coder chat
-# then, in the session:
-/scaffold --project <project-slug> --name <artifact-name> --claim <citekey-or-claim-note>
-```
+The co-PI delegates a **`code`** task to the Engineer. (Palette twin: **Memoria: delegate a task** → `code`.)
 
-For example:
+**2. Let the Engineer scaffold.**
 
-```text
-/scaffold --project jitai-receptivity-review --name figure-3-receptivity-curve --claim receptivity-decreases-under-high-cognitive-load
-```
+The Engineer prepares the handoff in `projects/<slug>/code/` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. It is the only lane with `terminal` + `file` capability, and the narrowest write scope to go with it.
 
-The Coder creates `40-workbench/<project-slug>/06-code/figure-3-receptivity-curve.md` — a `code-note` with:
+**3. State the purpose yourself.**
 
-- Link to the motivating claim note or source
-- Empty sections for: Purpose, Implementation, Dependencies, How to run, Outputs
-
-**3. Open the code-note and fill the Purpose section.**
-
-The Coder generates the scaffold but the *purpose* is yours to state. Write 2–3 sentences: what this code produces, what research question it addresses, and which claim it supports.
+Open the scaffolded note and write 2–3 sentences: what this code produces, what research question it addresses, which claim it supports. The scaffold records provenance; the purpose is yours.
 
 **4. Hand off to the external coding agent.**
 
-Open the code-note in a split pane alongside your preferred coding tool. Give the coding agent the code-note as context:
+Point your coding tool at the scaffold:
 
 ```text
 # In Claude Code (or equivalent):
-Read 40-workbench/<project-slug>/06-code/figure-3-receptivity-curve.md, 
-then implement the code described in the Purpose section.
-Place the implementation in the same 06-code/ directory.
+Read projects/<slug>/code/<artifact>.md, then implement the code it
+describes. Place the implementation in the same code/ directory.
 ```
-
-The external agent writes the code; the Coder profile does not implement — it only scaffolds and records provenance.
 
 **5. Review the implementation.**
 
-Apply the same review gate as any other research output: does the code do what the Purpose section says? Does the output match what the claim asserts? Run the code and check the output.
+Apply the same gate as any research output: does the code do what the purpose says? Does the output match what the claim asserts? Run it and check.
 
-**6. Update the code-note with final details.**
+**6. Record the runbook and commit.**
 
-After review, fill in the remaining code-note sections:
-
-- **Dependencies:** list packages and versions
-- **How to run:** exact command to reproduce the output
-- **Outputs:** what files are produced and where they land
-
-Commit the code-note and the implementation together:
+Fill in dependencies, the exact command to reproduce the output, and where outputs land. Commit the note and implementation together (the Engineer's commit/revert gate covers `projects/*/code/`):
 
 ```bash
-git add "vault/40-workbench/<project-slug>/06-code/"
-git commit -m "code: figure-3 receptivity curve — <project-slug>"
+git add "projects/<slug>/code/"
+git commit -m "code: figure-3 receptivity curve — <slug>"
 ```
 
 ## Verify
 
-- The code-note exists in `06-code/` with all sections filled
+- The provenance note in `projects/<slug>/code/` names the motivating claim and the reproduction command
 - The implementation runs and produces the expected output
-- The commit links code-note and implementation in the same changeset
+- One changeset links note and implementation
 
 ## Related
 
-- Coder profile design: [The Coder](../../explanation/profiles/engineer.md)
-- Why code is a research output (principle 8): [Design principles](../../explanation/overview/design-principles.md)
-- The Coder autonomous-loop exception: [Why Memoria doesn't pursue full autonomy](../../explanation/rationale/why-not-autonomous.md)
-- ADR-07 (external coding agent boundary): [Code agent attachment](../../adr/07-delegate-coding-to-external-agents.md)
+- The lane's design: [The Engineer](../../explanation/profiles/engineer.md)
+- Why implementation is delegated outward: [Why Memoria doesn't pursue full autonomy](../../explanation/rationale/why-not-autonomous.md)
+- The decision: [ADR-07](../../adr/07-delegate-coding-to-external-agents.md)

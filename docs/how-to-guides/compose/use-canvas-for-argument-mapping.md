@@ -6,7 +6,7 @@ nav_order: 4
 
 # Use canvas for argument mapping
 
-This guide shows you how to arrange claim notes spatially in an Obsidian Canvas to find the argument structure before drafting.
+Arrange claim notes spatially in an Obsidian Canvas to find the argument structure before drafting — the cycle's *sketch* phase, engaged by judgment when the argument is tangled, not run on every section.
 
 ## When to use it
 
@@ -14,48 +14,44 @@ Open a canvas when you have 8–15 relevant claim notes on a topic and need to s
 
 ## Steps
 
-**1. Create the canvas file**
+**1. Create the canvas file.**
 
-In `40-workbench/<project>/03-canvas/`, create a new Obsidian Canvas file. Name it after the chapter or argument section: `chapter-2-receptivity-argument.canvas`.
+Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the v0.1.2 Project release scaffolds it). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
 
-**2. Collect the notes**
+**2. Collect the notes.**
 
-Drag the relevant claim notes from the file explorer onto the canvas. Include paper-notes for key sources if helpful, but primarily use claim notes — they already state the argument in your words.
+Drag the relevant claim notes from the file explorer onto the canvas. A hub's `members` list is the natural shopping list. Include Catalog paper entities for key sources if helpful, but primarily use claims — they already state the argument in your words.
 
-**3. Arrange spatially**
+**3. Arrange spatially.**
 
-Group notes by sub-argument. Place notes that support the same claim together. Draw arrows to show logical flow: premise → implication → conclusion. Use text cards (no wikilink) for transitional claims that aren't in any note yet — these are gaps.
+Group notes by sub-argument. Place claims that support the same point together; let `contradicts` pairs face each other. Draw arrows for logical flow: premise → implication → conclusion. Use text cards (no wikilink) for transitional claims that aren't in any note yet — these are gaps.
 
-**4. Identify gaps**
+**4. Identify gaps.**
 
-Any text card that points to an empty space is a gap. A claim you've written on the canvas but haven't grounded in a claim note is an unverified assertion. Before drafting, either find a claim note that supports it, or write one from a source.
+Any text card not grounded in a claim note is an unverified assertion. Before drafting, either write the claim from a source you hold, or queue the missing source (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand the gap to the co-PI — [Find new sources](../compile/find-new-sources.md)).
 
-**5. Build the outline**
+**5. Build the outline.**
 
-Once the spatial arrangement is stable, write an outline directly from the canvas groupings. Each group becomes a section; the notes within a group become the evidence for that section's claim.
+Once the arrangement is stable, write the outline from the canvas groupings: each group becomes a section; the notes in a group become its evidence. Save it as (or fold it into) `projects/<slug>/chosen-framing.md` ([Frame a project](frame-a-project.md)).
 
-Save the outline as `40-workbench/<project>/02-framing/CHOSEN.md` (or extend an existing framing document).
+**6. Draft.**
 
-**6. Draft**
-
-Open the canvas in a split pane. Draft section by section from the outline, citing citekeys from the claim notes visible on the canvas. You should never be improvising claims in the draft — every substantive claim in the prose should correspond to a claim note on the canvas.
+Open the canvas in a split pane and draft section by section — yourself, or by delegating sections to the `draft` lane ([Draft with the Writer](draft-with-writer.md)). Every substantive claim in the prose should correspond to a claim note on the canvas; never improvise claims in the draft.
 
 ## Conventions
 
-- One canvas per argument cluster or chapter section, not one per paper
-- Archive the canvas when the section is complete: set `lifecycle: archived` on the canvas note
-- Canvas files live in `40-workbench/<project>/03-canvas/` — the agent's search scope excludes this folder (canvas files are not queryable by Dataview)
-- Never embed a canvas in a draft note — canvas format does not export to Pandoc
+- One canvas per argument cluster or chapter section, not one per paper.
+- Canvases are sketches, not knowledge — the claims are the durable units; delete or shelve the canvas when the section is done.
+- Never embed a canvas in a draft note — the canvas format does not export through Pandoc.
 
-## When a canvas gap can't be filled
+## Verify
 
-If a text card can't be grounded in a claim note, either soften the outline claim or queue the missing source via `Cmd+P → Memoria: capture source from URL`. See [Find new sources](../compile/find-new-sources.md) for the full candidate triage flow.
-
----
+- Every text card on the canvas is either grounded in a claim note or queued as a discovery task
+- The outline you drafted maps one-to-one onto the canvas groupings
 
 ## Related
 
-- Drafting from a committed outline: [Draft with the Writer](draft-with-writer.md)
-- Producing the outline the canvas maps: [Frame a project](frame-a-project.md)
-- Triage candidates for gaps the canvas exposes: [Find new sources](../compile/find-new-sources.md)
+- Producing the framing the canvas maps: [Frame a project](frame-a-project.md)
+- Drafting from the stable arrangement: [Draft with the Writer](draft-with-writer.md)
+- Filling exposed gaps: [Find new sources](../compile/find-new-sources.md)
 - Why claim notes (not canvas cards) are the knowledge unit: [Note body structure](../../explanation/knowledge/note-body-structure.md)

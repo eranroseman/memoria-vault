@@ -4,93 +4,59 @@ parent: Curate
 nav_order: 1
 ---
 
-
 # Run the weekly review
 
-Walk through the Friday ritual: clear classification debt, process the discuss queue, promote evergreen claims, and run a lint check. The whole session takes up to ~90 minutes — closer to 30–60 once the vault is established and classification debt is low.
+Walk the Friday ritual: refresh your research focus, sweep the Inbox, work the weekly-review aggregator top to bottom, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
 
 ## Prerequisites
 
 - Obsidian open with the vault
-- The `weekly-review.md` dashboard open (navigate to `00-meta/01-dashboards/weekly-review.md`, or open it from the dashboard index)
+- `system/dashboards/weekly-review.md` open — the Friday aggregator: Notice-level findings, the week's new catalog entries and notes, and the fleeting backlog
 
 ## Steps
 
-Work through the dashboard top to bottom. Each section surfaces a queue; your job is to empty or consciously defer each one.
+**Step 1 — Refresh research priorities (2 min).**
 
-**Step 1 — Review research priorities (2 min).**
+Open `research-focus.md`. Confirm or update the active questions and reading focus — the Librarian reads this to aim discovery, and it sets the lens for every decision below.
 
-Open `research-focus.md`. Confirm or update the week's active projects and reading focus. This sets the lens for every decision in the steps below.
+**Step 2 — Sweep the Inbox (10–15 min).**
 
-**Step 2 — Clear unreviewed synthesis (10–15 min).**
+Open `home.md` → **What needs me** (every card at `lifecycle: proposed`) and work it as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, flags and alerts acted on and resolved ([Work the review queue](../compose/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
 
-The dashboard shows any notes in `30-synthesis/` added since the last review with `lifecycle: proposed`. For each:
+**Step 3 — Notice-level findings (5 min).**
 
-- Accept and set `lifecycle: current`, or
-- Delete if it's a duplicate or error
+The dashboard's top section lists cards at `loudness: notice` — things that didn't demand attention mid-week. Resolve each or consciously defer.
 
-These are usually Writer-session drafts or claim notes you started but didn't finalize.
+**Step 4 — Review the week's movement (5–10 min).**
 
-**Step 3 — Process discovery candidates (5–10 min).**
+The **New this week** sections list catalog entries and notes created in the last 7 days. Scan for anything that landed and stalled: a kept paper with no source note, a source stuck at `proposed`, a claim with no connections (cross-check `system/dashboards/open-questions.md`).
 
-The `10-inbox/` queue surfaces notes flagged as discovery candidates — sources that appeared in a paper note's `[!brief]` comparative read but aren't in your vault yet. For each:
+**Step 5 — Clear the fleeting backlog (10–15 min).**
 
-- Add to Zotero and queue for ingest, or
-- Mark `excluded: true` with a reason (out of scope, already have equivalent, etc.)
+The dashboard embeds the fleeting **To process** view. Promote, attach, or archive each note — including the week's chat exports ([Triage fleeting notes](../compile/triage-fleeting-notes.md)). Target: zero notes older than a week.
 
-Don't leave this queue growing unbounded — it becomes invisible background debt.
+**Step 6 — Advance settled claims (5 min).**
 
-**Step 4 — Resolve classification debt (10–15 min).**
+Scan `system/dashboards/claims.base` for long-stable `budding` claims with several inlinks; advance the genuinely settled ones to `evergreen` and slot them into hubs ([Advance a claim to evergreen](../compile/promote-a-claim.md)). Don't advance to clear a queue.
 
-All notes at `lifecycle: proposed` with a `_proposed_classification` block. For each:
+**Step 7 — Check structural health (5 min).**
 
-- Run the [Classify a source](../compile/classify-a-source.md) steps: review, promote, set `lifecycle: current`
+Open `system/dashboards/drift-watch.md` and `loose-ends.md` — the Linter engine's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
 
-Target: zero notes in this queue by end of session. If you can't finish all, accept the residual and note the count.
+**Step 8 — Glance at fleet health (1 min).**
 
-**Step 5 — Promote evergreen claims (5–10 min).**
-
-Claim notes at `maturity: evergreen` that haven't been promoted to `30-synthesis/02-reference/`. For each qualifying note:
-
-- Move to `30-synthesis/02-reference/`
-- Set `lifecycle: current`
-
-For the rule on when a claim qualifies as evergreen, see [frontmatter.md — `maturity` values](../../reference/frontmatter.md#maturity--a-claim-property-never-a-gate).
-
-**Step 6 — Review orphan notes (5 min).**
-
-Notes with no inbound or outbound links. For each:
-
-- Add at least one `[[link]]` to a related note, or
-- Add the note to a relevant MOC, or
-- Archive if genuinely standalone and no longer relevant
-
-**Step 7 — Inspect stale literature (5 min).**
-
-Source notes whose enrichment timestamp is more than 90 days old. For each:
-
-- Run `/obsidian-paper-note --source <citekey>` to refresh enrichment, or
-- Archive if the source is no longer active
-
-**Step 8 — Run lint dry-run (1 min + review).**
-
-```bash
-hermes -p memoria-linter chat -s lint
-# then, in the session:
-/lint --dry-run
-```
-
-Read the report. Address any CRITICAL or HIGH findings immediately. Defer MEDIUM and LOW if they're cosmetic. Close the session.
+`system/dashboards/fleet-health.md` — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
 
 ## Verify
 
-- Classification debt queue is empty or has a known acceptable residual
-- No CRITICAL or HIGH lint findings outstanding
-- The `weekly-review.md` dashboard shows all queue sections at zero or explicitly deferred
-- A new per-session log file in `99-system/logs/sessions/` (named `YYYY-MM-DD-HHMM.jsonl`) records the date and any decisions made
+- The Inbox shows nothing at `lifecycle: proposed`
+- The fleeting backlog on the dashboard is empty
+- No HIGH or CRITICAL finding is outstanding on drift-watch
+- `research-focus.md` reflects what you actually intend to read next week
 
 ## Related
 
-- Classify a source: [Classify a source](../compile/classify-a-source.md)
-- Run the Linter: [Run the Linter](../operate/run-the-linter.md)
-- Dashboard explanation: [The weekly-review dashboard](../../explanation/dashboards/structural-health/weekly-review.md)
+- The Inbox discipline: [Work the review queue](../compose/work-the-review-queue.md)
+- Fleeting triage in depth: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
+- The detectors behind drift-watch: [Run the Linter](../operate/run-the-linter.md)
+- The dashboard inventory: [Dashboards](../../reference/dashboards.md)

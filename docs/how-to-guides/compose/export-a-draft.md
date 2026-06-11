@@ -4,145 +4,99 @@ parent: Compose
 nav_order: 9
 ---
 
-
 # Export a draft
 
-Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission.
+Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission. Export is a terminal operation you run yourself — there is no export lane or palette command in v0.1.1.
 
 ## Prerequisites
 
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
-- The draft is committed and the `[!verification]` callout shows `status: clean`
-- A `.bib` file in `.memoria/memoria.bib` (for bibliography rendering)
+- The draft verified — the latest verify pass clean or its gaps consciously accepted ([Verify and revise a draft](verify-and-revise.md))
+- `.memoria/memoria.bib` current (your Better BibTeX auto-export target)
+- A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
 ## Steps
 
-**1. Confirm the draft has a title and bibliography pragma.**
+**1. Decide the final editor before exporting.**
 
-At the top of your draft `.md` file, ensure:
+Citations convert mostly one-way (see [Export routes and formats](../../reference/export.md)). Static Pandoc citations are frozen; live Word/LibreOffice fields stay restylable; Google Docs has no automated route at all.
 
-```yaml
----
-title: "Your Paper Title"
-author: "Your Name"
-date: 2026-05-31
-bibliography: ../../../../.memoria/memoria.bib
-csl: ../../../../.memoria/csl/apa.csl   # or whichever CSL you're using
----
-```
+**2. Export to Word (`.docx`) — the default static route.**
 
-Adjust the relative path to `.memoria/memoria.bib` based on your draft's depth inside the vault folder. For a draft at `40-workbench/project/04-drafts/draft.md`, four `../` climbs back to the vault root.
-
-**2. Export to Word (`.docx`).**
+Run from the vault root; the draft lives in your `projects/<slug>/` scratch:
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
+pandoc projects/<slug>/<draft>.md \
   --from markdown+smart \
   --to docx \
-  --output 50-deliverables/01-manuscripts/<output>.docx \
-  --citeproc
+  --citeproc \
+  --bibliography .memoria/memoria.bib \
+  --csl .memoria/csl/apa.csl \
+  --output projects/<slug>/exports/<output>.docx
 ```
 
 **3. Export to PDF.**
 
-Requires a LaTeX distribution (`pdflatex` or `lualatex` on your `PATH`):
+Requires a LaTeX engine (`pdflatex` or `lualatex` on your `PATH`):
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
+pandoc projects/<slug>/<draft>.md \
   --from markdown+smart \
   --to pdf \
   --pdf-engine=lualatex \
-  --output 50-deliverables/01-manuscripts/<output>.pdf \
-  --citeproc
+  --citeproc \
+  --bibliography .memoria/memoria.bib \
+  --csl .memoria/csl/apa.csl \
+  --output projects/<slug>/exports/<output>.pdf
 ```
 
-**4. Export to clean Markdown** (for conference submissions or CMS upload).
+**4. Export to clean Markdown** (conference systems, CMS upload):
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
-  --from markdown+smart \
-  --to gfm \
-  --output 50-deliverables/01-manuscripts/<output>.md \
-  --citeproc
+pandoc projects/<slug>/<draft>.md \
+  --from markdown+smart --to gfm --citeproc \
+  --bibliography .memoria/memoria.bib \
+  --output projects/<slug>/exports/<output>.md
 ```
 
-**5. Use the Export workflow for automated runs** (optional).
+**5. Convert wikilinks first.**
 
-```bash
-hermes -p memoria-writer chat -s export
-# then, in the session:
-/export --project <project-slug> --format docx
-```
-
-This runs the same Pandoc command via the Writer profile and writes the output to `50-deliverables/01-manuscripts/`. Because `50-deliverables/` is a review-gated zone, the Writer's write lands in `dry_run` until you approve it (see [Work the review queue](work-the-review-queue.md)).
-
-**6. Version the deliverable** when finalized.
-
-`50-deliverables/` subfolders by output kind — `01-manuscripts/`, `02-presentations/`, `03-media/`, `04-releases/` (see [Export routes and formats](../../reference/export.md)). Add a version suffix in place:
-
-```powershell
-Move-Item "vault\50-deliverables\01-manuscripts\<output>.docx" `
-          "vault\50-deliverables\01-manuscripts\<output>-v1.docx"
-```
+Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to plain text (or standard Markdown links) before export, or use a Pandoc Lua filter.
 
 ## Live Word citations via `zotero.lua` (optional)
 
-The steps above produce static citations — correctly formatted text, but uneditable by Word's Zotero plugin. To get live, editable Zotero fields in Word:
+The routes above produce static citations. For live, restylable Zotero fields in Word:
 
-**Prerequisites:** Pandoc ≥ 2.16.2; Zotero running; `zotero.lua` filter (download from the [Better BibTeX documentation](https://retorque.re/zotero-better-bibtex/exporting/zotero.lua)).
+**Prerequisites:** Pandoc ≥ 2.16.2; Zotero running; the `zotero.lua` filter from the [Better BibTeX documentation](https://retorque.re/zotero-better-bibtex/exporting/zotero.lua).
 
-**Do not add `--citeproc` to this command** — `zotero.lua` handles citation conversion; `--citeproc` would interfere.
+**Do not add `--citeproc`** — `zotero.lua` handles citation conversion:
 
 ```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
-  --from markdown+smart \
-  --to docx \
+pandoc projects/<slug>/<draft>.md \
+  --from markdown+smart --to docx \
   --lua-filter=/path/to/zotero.lua \
-  --output 40-workbench/<project>/04-drafts/<output>.docx
+  --output projects/<slug>/exports/<output>.docx
 ```
 
-After export: open the `.docx` in Word → Zotero tab → Refresh. Citations convert to live Word fields and a bibliography is inserted.
+Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live fields and a bibliography is inserted.
 
-**Known failures with this route:**
+**Known failures:** the `lpeg` Lua dependency often needs build tools on Windows — test on a one-citation document first; a corrupt `.docx` on first open is known behavior — rerun Pandoc; the filter does not work for LibreOffice — use the ODT route below.
 
-- **Windows `lpeg` error:** The `zotero.lua` filter requires the `lpeg` Lua library. On Windows this often requires Visual Studio Build Tools. Test on a one-citation document before using on a manuscript.
-- **Corrupt `.docx` on first open:** Known behavior — rerun Pandoc if Word reports a corrupt file.
-- **Does not work with LibreOffice:** Target `.odt` instead, or use the ODT scan route below.
+## Live LibreOffice citations via ODF scan (optional)
 
-## Live LibreOffice citations via ODT scan (optional)
-
-Export as ODT with Scannable Cite markers, then run Zotero's RTF/ODF Scan to convert them to live LibreOffice citations.
-
-**Prerequisites:** Zotero RTF/ODF Scan add-on installed; Better BibTeX; LibreOffice.
-
-**1.** Export from Pandoc to `.odt` (no `--citeproc`):
-
-```bash
-pandoc 40-workbench/<project>/04-drafts/<draft>.md \
-  --from markdown+smart \
-  --to odt \
-  --output 40-workbench/<project>/04-drafts/<output>.odt
-```
-
-**2.** In Zotero: Tools → RTF/ODF Scan → select the `.odt` file → scan. Zotero rewrites the file with live LibreOffice Reference Mark citations.
-
-**3.** Open the rewritten `.odt` in LibreOffice — citations are live and editable via the Zotero plugin.
-
-## Known issues
-
-- **Pandoc + Better BibTeX `.docx` citation rendering:** Some citation styles produce corrupt output in Pandoc < 3.1 with Better BibTeX export. If the bibliography renders incorrectly, test on a single-citation document first. See [Failure modes](../../reference/failure-modes.md) — "Pandoc + BBT DOCX corrupt."
-- **Obsidian wiki-links in draft:** Pandoc does not understand `[[wikilink]]` syntax. Convert links to standard Markdown `[text](path)` before export, or use a Pandoc Lua filter.
+1. Export to `.odt` without `--citeproc`.
+2. Zotero: Tools → RTF/ODF Scan (add-on) → select the `.odt` → scan. Zotero rewrites it with live Reference Mark citations.
+3. Open in LibreOffice — citations are live via the Zotero plugin.
 
 ## Verify
 
-- The output file exists in `50-deliverables/01-manuscripts/` (the canonical manuscript target)
-- Bibliography entries render correctly (check the last section of the output)
-- All `[@citekey]` citations are resolved — none appear as bare `[@...]` in the output
+- The output file opens cleanly and the bibliography renders at the end
+- All `[@citekey]` citations resolved — none appear as bare `[@...]` in the output
+- The export landed where you pointed it; the draft `.md` in `projects/` remains the source of truth
 
 ## Related
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
-- Zotero .bib configuration export depends on: [Set up Zotero](../zotero/set-up-zotero.md)
-- Export reference (formats, CSL): [Export routes and formats](../../reference/export.md)
-- The works-cited reference: [Bibliography](../../reference/bibliography.md)
-- CSL styles: stored at `.memoria/csl/` in the vault
+- Routes, states, and failure modes: [Export routes and formats](../../reference/export.md)
+- The `.bib` behind the bibliography: [Set up Zotero](../zotero/set-up-zotero.md)
+- The works-cited backbone: [Bibliography](../../reference/bibliography.md)

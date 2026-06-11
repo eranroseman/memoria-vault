@@ -6,48 +6,65 @@ nav_order: 2
 
 # Run a retraction sweep
 
-This guide shows you how to identify papers in your vault that have been retracted, corrected, or flagged since you ingested them, and update any claim notes that cite them.
+Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps engine** — deterministic, read-only Python at `.memoria/engines/sweeps/retraction.py`; flag-don't-fix: it raises Inbox **`alert`** cards and never flips a note.
 
-## When to run it
+## When it runs without you
 
-Monthly, or whenever you're about to cite a cluster of older papers in a draft. A retracted paper silently corrupting several claim notes is the kind of structural debt that only surfaces embarrassingly late if you don't check.
+The installer ships a monthly cron wrapper (`refresh-retraction-watch.sh`) that refreshes the local Retraction Watch dataset and sweeps. Run it by hand before citing a cluster of older papers in a draft, or right after hearing of a retraction in your field.
 
 ## Steps
 
-1. **Start a Verifier session:**
+**1. Refresh the local dataset** (skippable if the monthly cron just ran):
 
-   ```bash
-   hermes -p memoria-verifier chat -s retraction-sweep
-   ```
+```bash
+python3 .memoria/engines/sweeps/retraction.py --refresh
+```
 
-2. **Run the sweep:**
+Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 
-   ```text
-   /retraction-sweep
-   ```
+**2. Run the sweep.**
 
-   The Verifier checks each paper-note's `pub_status` against Zotero retraction alerts and CrossRef retraction metadata. For any paper whose external status disagrees with the note, it **flags** the disagreement and surfaces the affected notes — it never changes `pub_status` itself; updating the field is your call.
+```bash
+python3 .memoria/engines/sweeps/retraction.py --sweep --vault .
+```
 
-3. **Review the findings.** The Verifier writes a report listing:
-   - Papers whose `pub_status` should change (e.g., `active` → `retracted`)
-   - Claim notes that cite each affected paper
+The sweep scans the Catalog's DOIs against three sources, most authoritative first: the local Retraction Watch index, the live Crossref `update-to` delta, and Open Retractions as a cross-check. Each hit raises one finding-first **`alert`** card in `inbox/`.
 
-4. **Decide what to do with each affected claim.** For each claim note citing a retracted paper, you have three options:
-   - **Soften the claim** — rewrite to hedge: "X was suggested by [author], though the paper was subsequently retracted."
-   - **Supersede the claim** — find a cleaner source, write a new claim note with that source, set `superseded_by` on the old one.
-   - **Accept with a caveat** — if the specific finding wasn't part of the retraction, note the retraction in the claim body and keep it.
+**3. Read the alert cards.**
 
-   No claim is rewritten automatically. The judgment is always yours.
+Each card leads with the `finding` — what was retracted (or corrected, or flagged with an expression of concern) and which citekey. Open the paper entity and the claims that cite it (backlinks panel, or search the citekey across `notes/claims/`).
 
-5. **Update the `contradictions` dashboard.** After updating claims, check `contradictions.md` — retraction-related updates sometimes surface new tensions between notes.
+**4. Decide per affected claim.** Three honest options:
 
-## Owners
+- **Soften** — rewrite to hedge: "X was suggested by [author], though the paper was subsequently retracted."
+- **Supersede** — find a cleaner source, write a new claim on it, set `superseded_by` on the old one and archive it.
+- **Accept with a caveat** — if the specific finding wasn't part of the retraction, note the retraction in the claim body and keep it.
 
-The Verifier detects and flags status changes. You decide what to do with affected claims.
+No claim is rewritten automatically. The judgment is always yours.
+
+**5. Update the paper entity.**
+
+Set the entity's lifecycle to match the record:
+
+```yaml
+lifecycle: retracted
+```
+
+Then resolve the alert card (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**).
+
+**6. Check for new tensions.**
+
+A retraction sometimes resolves — or creates — a contradiction. Glance at `system/dashboards/contradictions.md` after updating claims.
+
+## Verify
+
+- Every alert card from the sweep is resolved
+- Affected paper entities carry `lifecycle: retracted`
+- Each citing claim was softened, superseded, or caveated — and a re-run raises no new alerts
 
 ## Related
 
-- [Verify and revise a draft](../compose/verify-and-revise.md) — the per-draft citation check (different workflow, same Verifier)
-- [Frontmatter fields](../../reference/frontmatter.md) — `pub_status` values (`active`, `preprint`, `retracted`, `deprecated`, `expression-of-concern`)
-- The failure mode sweeps prevent: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
-- The profile running the sweep: [The Verifier](../../explanation/profiles/peer-reviewer.md)
+- The pipeline context: [Ingest routing](../../reference/ingest.md)
+- Archiving the fallout: [Archive a source](../compile/archive-a-source.md)
+- The per-draft complement: [Verify and revise a draft](../compose/verify-and-revise.md)
+- Why the engine never flips a note: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)

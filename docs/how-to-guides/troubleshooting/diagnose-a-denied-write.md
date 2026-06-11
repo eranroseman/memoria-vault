@@ -18,7 +18,7 @@ nav_order: 4
 
 ## Prerequisites
 
-- The policy MCP wired and running — it writes `99-system/logs/audit.jsonl`. Until the gate runs live, that log does not exist; a missing *file* is a wiring problem, not a denial.
+- The policy MCP wired and running — it writes `system/logs/audit.jsonl`. Until the gate runs live, that log does not exist; a missing *file* is a wiring problem, not a denial.
 - The [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md) available in Obsidian
 
 ## Steps
@@ -39,7 +39,7 @@ Read the fields ([full schema](../../reference/memory.md#audit-log-event-fields)
 | `policy_rule` | exactly which lane-override rule fired |
 | `reason` | the human-readable cause |
 
-- **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `30-synthesis/01-claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
+- **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `notes/claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
 - **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../compose/work-the-review-queue.md).
 
 **3. No matching entry at all? The write never reached the gate.**

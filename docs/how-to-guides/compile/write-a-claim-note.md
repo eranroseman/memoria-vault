@@ -4,118 +4,85 @@ parent: Compile
 nav_order: 8
 ---
 
-
 # Write a claim note
 
-Distill a discussed source into a single, durable claim in `30-synthesis/01-claims/`. One claim per note; no more than 2–3 claims per source.
+Distill a source into a single, durable claim in `notes/claims/`. One claim per note; no more than 2–3 claims per source. Claims live in a **review-gated zone** — agents can only propose writes there; you author claims directly, because they're yours.
 
 ## Prerequisites
 
-- The source has been discussed and you've decided it yields a claim ([Discuss a paper](discuss-a-paper.md))
-- The Writer profile is installed (for optional prose assistance)
-- The Verifier profile is installed (for the similarity check)
+- A read source whose **Worth distilling** section names the candidate ([Discuss a paper](discuss-a-paper.md) sharpens it first)
 
 ## Steps
 
-**1. Run the similarity check first.**
+**1. Check for a near-duplicate first.**
 
-Before creating the note, check if a near-duplicate already exists. Open the agent-client pane (`Agent Client: Open chat view`), switch to **Verifier** (via the pane’s profile picker) — the active note auto-attaches — and ask it to «similarity-check this claim: "<one-sentence statement of your claim>"».
+Ask the co-PI: "Do I already hold a claim like *\<one-sentence statement\>*?" — it searches the vault read-only and answers in the pane. For a systematic pass over a whole folder, delegate a `verify` task instead (the Peer-reviewer's duplicate hunt returns flag cards). If a close match exists, extend that note rather than creating a twin.
 
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
+**2. Create the note from the template.**
 
-```bash
-hermes -p memoria-verifier chat -s similarity-check
-# then, in the session:
-/similarity-check "<one-sentence statement of your claim>"
+`Cmd/Ctrl-P` → **Memoria: write claim note** — a new note in `notes/claims/` from `system/templates/claim.md`, with the frontmatter pre-populated:
+
+```yaml
+type: claim
+lifecycle: current
+maturity: seedling
+sources: []
+topics: []
+links:
+  supports: []
+  contradicts: []
 ```
-
-If the top result is above ~0.8 similarity, review that existing note. Decide whether to extend it instead of creating a new one, or confirm the claim is genuinely distinct.
-
-**2. Open the claim note template.**
-
-Cmd-P → Memoria: write claim note
-
-This opens `30-synthesis/01-claims/` with the claim-note template pre-populated.
 
 **3. Name the file with the claim as the title.**
 
-The filename *is* the claim: `receptivity-decreases-under-high-cognitive-load.md`, not `receptivity.md` or `mamykina-claim.md`. A topic stub is not a claim note.
+The filename *is* the claim: `receptivity-decreases-under-high-cognitive-load.md`, not `receptivity.md` or `mamykina-claim.md`. One falsifiable sentence, in your words. A topic stub is not a claim note.
 
-**4. Write the claim in the note body.**
+**4. Write the body.**
 
-One to three sentences, in your own words. The claim should stand alone — a reader with no access to the source should understand what it asserts. Do not quote the paper directly.
+- **Claim** — the assertion, standing alone; a reader with no access to the source should understand it.
+- **Evidence** — why this seems true; **every line traces to a citekey in `sources`** (the provenance guardrail).
+- **Connections** — the conceptual neighbors, in prose.
 
-**5. Cite the source.**
+Do not quote the paper directly — distillation, not transcription.
 
-In the `Sources` section, link the source note: `[[mamykina2010sense]]`. If multiple sources support this claim, list them all.
+**5. Fill `sources`.**
 
-**6. Set the maturity and lifecycle.**
-
-```yaml
-maturity: seedling
-lifecycle: current
-```
-
-New claims start at `seedling`. As cross-links accumulate (other notes linking to or from this claim), maturity advances to `budding` and eventually `evergreen`.
-
-**7. Add relations if applicable.**
-
-If the claim contradicts an existing claim:
+List the citekey(s) of the supporting paper(s):
 
 ```yaml
-relations:
-  contradicts:
-    - "[[other-claim-note]]"
+sources: ["mamykina2010sense"]
 ```
 
-If it supports an existing claim:
+**6. Leave maturity at `seedling`.**
 
-```yaml
-relations:
-  supports:
-    - "[[other-claim-note]]"
-```
+Maturity (`seedling → budding → evergreen`) tracks development, never trust — a seedling isn't a doubted claim, it's a young one. It advances as connections accumulate: [Advance a claim to evergreen](promote-a-claim.md).
 
-If it supersedes an existing claim (replaces it as current belief):
+**7. Add typed links if applicable.**
 
-```yaml
-relations:
-  superseded_by: "[[this-new-claim]]"   # add this to the OLD note, not this one
-```
+If the claim supports or contradicts an existing claim, say so in `links:` — the contradictions are the valuable ones. If it *replaces* an existing claim, set `superseded_by` on the **old** note instead. Details: [Link related claims](link-related-claims.md).
 
-**8. Optionally, get Writer assistance for phrasing or cross-links.**
+**8. Close the loop on the source.**
 
-With the new claim note active, open the agent-client pane (`Agent Client: Open chat view`), switch to **Writer** (via the pane’s profile picker) — the active note auto-attaches — and ask it to «suggest related notes for this claim».
-
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
-
-```bash
-hermes -p memoria-writer chat -s draft
-# then, in the session:
-/draft "suggest related notes for: <claim statement>" --context 30-synthesis/01-claims/<new-note>.md
-```
-
-The Writer can suggest links to existing claim notes but cannot author the claim itself — that's yours.
+Advance the source note past `provisional` and, if a candidate card is still open for this paper, resolve it — its job is done.
 
 ## Verify
 
-- The file exists at `30-synthesis/01-claims/<claim-title>.md`
-- `maturity: seedling` and `lifecycle: current` are set
-- At least one source citekey is linked in the `Sources` section
-- The `discuss` card for the source is now closed (auto-closed by the git hook on file creation)
-- The note appears in the "seedling claims" Dataview view
+- The file exists at `notes/claims/<claim-as-a-sentence>.md` with `maturity: seedling`, `lifecycle: current`
+- At least one citekey in `sources`, and every Evidence line traces to one
+- The claim appears in `system/dashboards/claims.base` under seedling
 
 ## Related
 
 **How-to**
 
 - Previous step: [Discuss a paper](discuss-a-paper.md)
-- When the claim reaches `evergreen`: [Promote a claim](promote-a-claim.md)
+- When the claim settles: [Advance a claim to evergreen](promote-a-claim.md)
+- Relating it to its neighbors: [Link related claims](link-related-claims.md)
 
 **Reference**
 
-- Linking patterns: [Wikilink and link conventions](../../reference/linking.md)
-- Frontmatter schema: [Frontmatter fields](../../reference/frontmatter.md)
+- The claim schema: [Note types](../../reference/note-types.md)
+- Field semantics: [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**
 

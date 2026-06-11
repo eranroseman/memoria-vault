@@ -4,78 +4,54 @@ parent: Compose
 nav_order: 6
 ---
 
-
 # Draft with the Writer
 
-Use the Writer profile to generate outline proposals, draft prose, and suggest structural organization. Drafting is human-led — the Writer assists with phrasing and linking, but the argument assembly is yours.
+Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — the co-PI delegates, the board dispatches, and the result resurfaces through the Inbox.
 
 ## Prerequisites
 
-- A writing project scaffolded with a corpus map ([Start a writing project](start-a-writing-project.md))
-- At least one framing chosen — either from a Writer `counter-outline` session or written by hand in `02-framing/CHOSEN.md`
-- The Writer profile installed
+- A chosen framing and the claims it stands on ([Frame a project](frame-a-project.md))
+- A `projects/<slug>/` scratch folder — the Writer's write scope is `projects/`
 
 ## Steps
 
-**1. Optionally, generate competing framings first.**
+**1. Delegate a section.**
 
-If you haven't committed to a structure yet, open the agent-client pane (`Cmd-P → Agent Client: Open chat view`), switch to the **Writer** (via the pane’s profile picker), attach `01-map/corpus-map.md` via the paperclip, and ask it to counter-outline your research question. The Writer generates 2–3 competing argument structures — save the one you choose to `02-framing/CHOSEN.md`.
+In the co-PI pane, name the section, the framing, and the working set:
 
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
+> "Draft the introduction for `<deliverable>` from `projects/<slug>/chosen-framing.md`, using my claims on `<topic>`. Cite citekeys in-text."
 
-```bash
-hermes -p memoria-writer chat -s draft
-# then, in the session:
-/counter-outline "question: <your research question>" \
-  --context 40-workbench/<project>/01-map/corpus-map.md
-```
+The co-PI calls `delegate_route_task` — the handoff (goal, context, `allowed_paths`, expected outputs, review checks) is validated against the Writer's lane ceiling, and the card lands on the board. (Palette twin: **Memoria: draft a section** — prompts for the goal or outline ref.)
 
-**2. For section-length work (8–15 claims), arrange on Canvas before drafting.**
+**2. Know what the lane can and can't do.**
 
-Create a new `.canvas` file in `40-workbench/<project>/03-canvas/`. Drag claim notes from the file explorer onto the canvas. Group them by sub-argument, draw arrows for logical flow. Identify any gap (a text card pointing to an empty space) as a missing claim or source that needs work before drafting.
+The Writer writes **only** under `projects/` — claims, hubs, catalog, and inbox are denied. Its external-API policy is `blocked`: it composes from the vault, never researches, so it can't cite a source you don't hold. One `running` card at a time; drafts in flight stay bounded — that protects synthesis quality, not throughput.
 
-**3. Start the drafting session.**
+**3. Pick up the result.**
 
-Open the agent-client pane and switch to the **Writer** (via the pane’s profile picker). Keep it open for the section.
+The done card surfaces in the Inbox with the draft's location in `projects/<slug>/`. Open the draft and edit freely — the Writer's output is a starting point, never the deliverable.
 
-**4. Draft section by section.**
+**4. Don't draft past unsupported claims.**
 
-In the Writer pane, attach your chosen framing (`02-framing/CHOSEN.md`) and the relevant claim notes via the paperclip, then ask it to draft each section — e.g. "write an introduction for: \<section topic\>". Write the resulting prose into `40-workbench/<project>/04-drafts/<section>.md`. Cite citekeys in-text (`[@mamykina2010sense]`). Edit freely — the Writer's output is a starting point.
+If the prose asserts something with no claim note behind it, stop: find the source, write the claim, or cut the assertion. The verify lane will flag it anyway ([Verify and revise a draft](verify-and-revise.md)) — it's faster to address now.
 
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
+**5. Cite citekeys in-text.**
 
-```bash
-hermes -p memoria-writer chat -s draft
-/draft "write an introduction for: <section topic>" \
-  --context 40-workbench/<project>/02-framing/CHOSEN.md \
-  --context 30-synthesis/01-claims/<claim1>.md \
-  --context 30-synthesis/01-claims/<claim2>.md
-```
+Keep citations in Pandoc form (`[@mamykina2010sense]`) so the export route renders the bibliography ([Export a draft](export-a-draft.md)).
 
-**5. Do not draft past unsupported claims.**
+**6. Iterate by new delegation, not by nagging.**
 
-If your outline includes a claim with no backing in your claim notes, stop and either find the source or acknowledge the gap. The Verifier will flag it on commit regardless — it's faster to address it now.
-
-**6. Commit each section as you finish it.**
-
-Committing triggers the Verify hook, which checks all citations and flags unsupported claims:
-
-```bash
-git add 40-workbench/<project>/04-drafts/<section>.md
-git commit -m "draft: <section name>"
-```
-
-Read the `[!verification]` callout at the top of the draft file after each commit.
+A rejected draft is not "redo it better" on the same card — delegate a corrected spec (the board archives the old card as superseded). Small fixes you just make yourself in the file.
 
 ## Verify
 
-- Each committed draft section has a `[!verification]` callout at the top
-- The callout shows `status: clean` or lists specific gaps to address
-- The Canvas file (if used) is saved to `03-canvas/` and not embedded in any draft
+- The draft exists under `projects/<slug>/` and the done card is resolved
+- Every substantive claim in the prose corresponds to a claim note; every citation is a citekey in your `.bib`
+- `system/logs/audit.jsonl` shows the Writer's writes confined to `projects/`
 
 ## Related
 
-- Previous step: [Start a writing project](start-a-writing-project.md)
+- Previous step: [Frame a project](frame-a-project.md)
 - Next step: [Verify and revise a draft](verify-and-revise.md)
-- Canvas sub-workflow: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
-- Conceptual background on the Writer: [The Writer](../../explanation/profiles/writer.md)
+- The spatial sketch behind the outline: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
+- The lane's posture and scope: [The Writer](../../explanation/profiles/writer.md)

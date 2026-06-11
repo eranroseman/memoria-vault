@@ -6,28 +6,27 @@ nav_order: 13
 
 # Run a systematic review
 
-Set up a PRISMA-compliant screening protocol and process the results into Memoria. Use this when you need a defensible, reproducible literature search — not for exploratory snowballing, which the normal [find → ingest](find-new-sources.md) path handles.
+Set up a PRISMA-compliant screening protocol and process the results into Memoria. Use this when you need a defensible, reproducible literature search — not for exploratory discovery, which the normal [find → capture](find-new-sources.md) path handles.
 
-> **Status: implemented as a manual procedure.** There is no single "run systematic review" command. The workflow composes existing pieces — the `screening-protocol` template, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard Librarian ingest. Every step below works today; the protocol discipline is yours to keep.
+> **Status: a manual procedure.** There is no "run systematic review" command and no screening template in v0.1.1. The workflow composes existing pieces — a protocol note you author, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard capture pipeline. Every step below works today; the protocol discipline is yours to keep.
 
 ## Prerequisites
 
-- Memoria installed and the Librarian profile running
+- Memoria installed and the Librarian lane running
 - A defined, written research question
-- Access to at least two literature databases (PubMed, ACM DL, Scopus, arXiv, etc.)
+- Access to at least two literature databases (PubMed, ACM DL, Scopus, arXiv, …)
+- Zotero + Better BibTeX — batch ingest without a `.bib` backbone is not worth the friction
 - [ASReview](https://asreview.nl/) installed if the title/abstract pool exceeds ~200 records
 
 ## Steps
 
-**1. Create a screening-protocol note.**
+**1. Create a protocol note.**
 
-In Obsidian: `Cmd-P → Templater: Insert template → screening-protocol`. The template is at `99-system/templates/screening-protocol.md`.
-
-Fill in: review title, project ID, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
+Author it as an index note in `notes/index/` (from `system/templates/index.md`) — e.g. `notes/index/jitai-scoping-review-protocol.md`. Record: review title, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
 
 **2. Write your research question and criteria.**
 
-In the screening-protocol note, complete:
+In the protocol note, complete:
 
 - **Research question** — one sentence, specific enough to determine inclusion at the abstract stage
 - **Inclusion criteria** — 3–5 explicit conditions a source must meet
@@ -37,21 +36,11 @@ Commit the protocol before running any searches. A protocol written after seeing
 
 **3. Run database searches.**
 
-Run your search string in each database. Record in the protocol table:
-
-| Column | What to fill in |
-|---|---|
-| Database | PubMed, ACM DL, Scopus, arXiv, … |
-| Search date | ISO date |
-| Records retrieved | Integer count |
-
-Export each result set to RIS or BibTeX. Combine into a single file and remove duplicates.
+Run your search string in each database. Record in a protocol table: database, search date, records retrieved. Export each result set to RIS or BibTeX, combine, and deduplicate.
 
 **4. Screen titles and abstracts.**
 
-**Under ~200 records — screen manually:**
-
-For each record, apply your inclusion/exclusion criteria. Mark decisions directly in the screening-protocol note's decision log table (`Citekey / DOI | Decision | Exclusion reason`).
+**Under ~200 records — screen manually:** apply your criteria per record; log decisions in the protocol note's decision table (`Citekey / DOI | Decision | Exclusion reason`).
 
 **200+ records — use ASReview:**
 
@@ -59,57 +48,28 @@ For each record, apply your inclusion/exclusion criteria. Mark decisions directl
 asreview oracle combined_export.ris
 ```
 
-Label records as relevant / irrelevant in the ASReview interface. When the active-learning curve flattens, export the labeled dataset. Map decisions back to the protocol decision log.
-
-Either way, record `ASReview_relevant`, `ASReview_irrelevant`, or `ASReview_not_seen` as the Zotero RIS tag for each record before ingest — this preserves the screening provenance in Zotero.
+Label records in the ASReview interface; when the active-learning curve flattens, export the labeled dataset and map decisions back to the protocol log. Either way, tag each record's screening outcome in Zotero before ingest so the provenance survives.
 
 **5. Full-text assess included records.**
 
-For each record marked relevant at the abstract stage:
-
-1. Retrieve the full text
-2. Re-apply inclusion/exclusion criteria against the full paper
-3. Record the final decision and any exclusion reason in the protocol
+For each record marked relevant at the abstract stage: retrieve the full text, re-apply the criteria, record the final decision and any exclusion reason.
 
 **6. Update the PRISMA counts.**
 
-Complete the decision log table in the screening-protocol note:
+Complete the protocol's flow table: identified → duplicates removed → screened → excluded (title/abstract) → full-text assessed → excluded (full text) → **included**.
 
-| Stage | Fill in |
-|---|---|
-| Identified | Total records across all databases |
-| Duplicates removed | |
-| Screened (title/abstract) | |
-| Excluded (title/abstract) | |
-| Full text assessed | |
-| Excluded (full text) | |
-| **Included** | Final count for ingest |
+**7. Capture the included sources.**
 
-**7. Ingest included sources.**
-
-For each included paper:
-
-1. Add to Zotero — Better BibTeX auto-assigns a citekey
-2. Citekeys are pinned automatically by Better BibTeX — no manual step.
-3. Let the `.bib` auto-export trigger Librarian ingest, or run manually (full syntax in [Hermes CLI](../../reference/hermes-cli.md#the-profile-set)):
-
-```bash
-hermes -p memoria-librarian chat -s obsidian-paper-note
-/ingest --source <citekey>
-```
-
-The paper-note lands in `20-sources/01-papers/` after classification.
+Add each included paper to Zotero (Better BibTeX pins the citekey), then capture it: select the item and run `Cmd/Ctrl-P` → **Memoria: capture from Zotero selection**, one per paper. The ingest engine builds the Catalog entity and raises the candidate card ([Capture and ingest a source](capture-and-ingest.md)) — for a protocol-screened paper, the keep decision is already made, so resolve each card to `current` and move on.
 
 ## Verify
 
-- The screening-protocol note has all PRISMA counts filled in
-- Every included source has a paper-note in `20-sources/01-papers/`
+- The protocol note has all PRISMA counts filled in and `lifecycle: current`
+- Every included source has a Catalog entity in `catalog/papers/`
 - Every excluded source has a decision and reason recorded in the protocol
-- The protocol note's `lifecycle` field is set to `current`
 
 ## Related
 
 - Exploratory discovery (no protocol needed): [Find new sources](find-new-sources.md)
-- After ingest, classify each paper: [Classify a source](classify-a-source.md)
-- The screening-protocol template: `99-system/templates/screening-protocol.md`
+- The intake path per paper: [Capture and ingest a source](capture-and-ingest.md)
 - The adopt-on-demand decision: [ADR-16](../../adr/16-systematic-review-adopt-on-demand.md)

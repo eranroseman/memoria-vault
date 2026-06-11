@@ -6,9 +6,9 @@ nav_order: 7
 
 # Set up the messaging gateway [deferred]
 
-> **v0.1 status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component. This guide documents the intended setup; the bot wiring and inbound capture path are not validated end-to-end in v0.1. Use Obsidian capture ([Triage fleeting notes](../compile/triage-fleeting-notes.md)) as the supported path until this lands.
+> **Status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component; the bot wiring and inbound capture path are not validated end-to-end in v0.1.1 (tracked in [#382](https://github.com/eranroseman/memoria-vault/issues/382)). Use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported path until this lands.
 
-Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's inbox.
+Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's fleeting queue.
 
 ## Prerequisites
 
@@ -28,22 +28,18 @@ Message `@userinfobot` in Telegram. Copy the numeric `Id` it returns — this is
 
 **3. Configure the Hermes gateway.**
 
-```powershell
-notepad "$env:USERPROFILE\.hermes\gateway.yaml"
-```
-
-Add the Telegram integration block:
+Edit `~/.hermes/gateway.yaml` and add the Telegram integration block:
 
 ```yaml
 telegram:
   token: "1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ"
   allowed_users:
     - <your numeric user ID>
-  inbox_path: "vault/10-inbox/01-fleeting/"
+  inbox_path: "<vault>/notes/fleeting/"
   profile: memoria-librarian
 ```
 
-Adjust `inbox_path` to the absolute path for your vault's fleeting-note inbox (`10-inbox/01-fleeting/`). Do **not** route captures into `.memoria/` — that directory is dot-hidden from Obsidian's scanner, so notes landing there are invisible in the vault.
+Point `inbox_path` at the absolute path of your vault's fleeting folder (`notes/fleeting/` — the same queue the palette's **Memoria: capture fleeting** writes to). Do **not** route captures into `inbox/` (reserved for agent-raised honesty cards) or `.memoria/` (dot-hidden from Obsidian's scanner, so notes landing there are invisible in the vault).
 
 **4. Start the gateway.**
 
@@ -62,17 +58,17 @@ systemctl --user start hermes-gateway
 
 **6. Test the connection.**
 
-Send any message to your bot in Telegram. Within a few seconds, a `.md` file should appear in `vault/10-inbox/01-fleeting/` with the message text as its body.
+Send any message to your bot in Telegram. Within a few seconds, a `.md` file should appear in `<vault>/notes/fleeting/` with the message text as its body.
 
 ## Verify
 
-- Sending a Telegram message to your bot creates a file in `10-inbox/01-fleeting/`
-- The file has the message text in the body and `lifecycle: proposed` in frontmatter (the value all fleeting notes carry)
+- Sending a Telegram message to your bot creates a file in `notes/fleeting/`
+- The file carries fleeting frontmatter (`type: fleeting`, `lifecycle: proposed` — the value all fleeting notes carry). A capture that lands without frontmatter still enters the flow: the sweeps cron stamps unstamped files in `notes/fleeting/`, after which it shows up in the fleeting queue for triage
 - `systemctl --user status hermes-gateway` shows `active (running)` if you set it up as a service
 
 ## Related
 
 - Fleeting note triage workflow: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
-- Vault-access and agent-interface integrations: [External integrations](../../reference/integrations.md)
+- The supported capture path meanwhile: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 - The two HTTP roles of the gateway: [Distribution model](../../explanation/deployment/distribution-model.md)
 - Hermes gateway docs: [hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs)

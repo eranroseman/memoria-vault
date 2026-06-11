@@ -1,66 +1,66 @@
 ---
-title: Promote a claim to canonical reference
+title: Advance a claim to evergreen
 parent: Compile
 nav_order: 11
 ---
 
+# Advance a claim to evergreen
 
-# Promote a claim to canonical reference
+Mark a claim as settled knowledge by advancing its `maturity` to `evergreen`. In v0.1.1 there is **no promotion move and no reference folder** — the v0.1.0 `reference` type was dropped because it double-encoded maturity ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). An evergreen claim *is* the settled unit; it stays in `notes/claims/` where it has always lived.
 
-Move an evergreen claim note from `30-synthesis/01-claims/` to `30-synthesis/02-reference/` once it has enough cross-links to be treated as settled knowledge.
+`maturity` (`seedling → budding → evergreen`) is a claim **property describing development, never a gate** — it doesn't change what the claim may do, only how you read it.
 
 ## Prerequisites
 
-- The claim note is at `maturity: evergreen` (cross-linked from at least 3 distinct sources or claim notes)
-- The note does **not** carry `superseded_by` — superseded claims do not promote
+- The claim has accumulated real connections — cross-linked from several distinct sources or claims, and stable across recent reading
+- The claim does **not** carry `superseded_by` — a superseded claim represents prior belief and never advances
 
 ## Steps
 
-**1. Find promotion candidates in the weekly review.**
+**1. Find candidates.**
 
-The `weekly-review.md` dashboard's "Promotion queue" section surfaces all claim notes at `maturity: evergreen` that haven't been promoted yet. Open the note from there.
+`system/dashboards/claims.base` groups claims by maturity; `reading-pipeline.md` shows the same rollup. Long-stable `budding` claims with several inlinks are the candidates. The weekly review is the natural moment.
 
-**2. Write a framing introduction** (optional but recommended for important claims).
+**2. Re-read the claim as a stranger.**
 
-A reference note may be read months from now without the original context. Add 1–2 sentences at the top framing what this claim asserts and why it matters. This is the note's "canonical version" — write it for that reader.
+An evergreen claim will be read months from now without its original context. Tighten the body: the claim in one falsifiable sentence, the evidence with every line tracing to a `sources` citekey, the connections in prose.
 
-**3. Move the file to `30-synthesis/02-reference/`.**
-
-In Obsidian: right-click the note → Move file → `30-synthesis/02-reference/`. You may rename the file to a cleaner reference title if the current name is too narrow (e.g., `receptivity-decreases-under-high-cognitive-load.md` → `cognitive-load-and-receptivity.md`).
-
-If you rename, update any `[[wikilinks]]` to this note elsewhere in the vault. Obsidian can do this automatically: right-click → Rename → confirm "Update links."
-
-**4. Set `lifecycle: current` and `promoted_date` in frontmatter.**
+**3. Advance the maturity.**
 
 ```yaml
-lifecycle: current
-promoted_date: 2026-05-31
+maturity: evergreen
 ```
 
-(`current` is the canonical, human-reviewed state — there is no `canonical` lifecycle value; see [Frontmatter fields](../../reference/frontmatter.md#lifecycle--the-one-chain).)
+No move, no rename, no lifecycle change — `lifecycle: current` was already the claim's state from creation.
 
-**5. Add a MOC entry** (if a relevant MOC exists).
+**4. Give it a navigational home.**
 
-Open the Map of Contents note for this topic (e.g., `[[jitai-design-moc]]`) and add a link to the newly promoted note under the appropriate heading.
+If a hub for the topic exists in `notes/hubs/`, add the claim to its `members` list. If this is the third or fourth settled claim on a topic with no hub, create one: [Build a hub](../curate/build-a-moc.md).
 
-If no MOC exists yet and this is the third or fourth note on this topic, consider creating one.
+**5. Handle supersession separately.**
+
+If this claim *replaces* an older one, set on the **old** note:
+
+```yaml
+superseded_by: "[[this-new-claim]]"
+lifecycle: archived
+```
+
+The Linter's `fama-exposure` detector then flags any downstream note still wikilinking the superseded claim — reuse of obsolete memory.
 
 ## Verify
 
-- The note is in `30-synthesis/02-reference/` with `lifecycle: current`
-- The "Promotion queue" on `weekly-review.md` no longer lists this note
-- All existing `[[wikilinks]]` to this note still resolve (check Obsidian's backlinks panel)
+- The claim shows under **evergreen** in `system/dashboards/claims.base`
+- A hub lists it as a member (or you've consciously decided the topic doesn't need one)
+- No `superseded_by` claim was advanced
 
 ## Notes
 
-**Do not promote a note just to clear the queue.** The promotion decision is a judgment that this claim represents settled knowledge in your corpus. If you're uncertain, leave it at `maturity: evergreen` in `01-claims/` — that is not a penalty state.
-
-**Superseded claims stay in `01-claims/`.** A claim with `superseded_by` set is intentionally excluded from the promotion queue — it represents prior belief, not current knowledge.
+**Don't advance to clear a queue.** Evergreen is a judgment that this claim is settled in your corpus. If you're uncertain, leave it at `budding` — that is not a penalty state.
 
 ## Related
 
-- Previous step: [Write a claim note](write-a-claim-note.md) (maturity accumulates there)
-- Weekly review (step 5 — promote evergreen claims): [Run the weekly review](../curate/run-the-weekly-review.md)
-- Add the MOC entry (step 5): [Build a Map of Content](../curate/build-a-moc.md)
-- MOC creation thresholds: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
-- The rules promotion enforces: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)
+- Where claims are born: [Write a claim note](write-a-claim-note.md)
+- The hub the evergreen claim joins: [Build a hub](../curate/build-a-moc.md)
+- Maturity vs lifecycle, and why `reference` was dropped: [Frontmatter fields](../../reference/frontmatter.md)
+- The promotion rules: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)

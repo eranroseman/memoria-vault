@@ -6,44 +6,22 @@ nav_order: 3
 
 # Agent-client pane
 
-Drive Memoria's conversational profiles from inside Obsidian without switching to a terminal. This guide covers opening the pane, selecting a profile, attaching context, reading responses, and ending a session cleanly.
+Talk to the co-PI from inside Obsidian without switching to a terminal. This guide covers opening the pane, attaching context, reading responses, and ending a session cleanly.
 
 ## Prerequisites
 
 - Obsidian open with the vault
 - `agent-client` plugin installed and the Hermes gateway reachable ([Set up Hermes](../setup/set-up-hermes.md))
-- The three workspace layouts configured ([Obsidian workspaces](../../reference/obsidian-workspaces.md))
 
-## Which profile to open
+## One agent in the picker — by design
 
-Four profiles appear in the ACP picker. Choose based on what you're about to do:
+The picker offers exactly one agent: the **co-PI** (`memoria-copi`, ADR-48). It is the only profile you converse with — it questions your reading Socratically, explains how the system works, and **delegates** every write-task to the background lanes (Librarian, Writer, Peer-reviewer, Engineer) as ceiling-validated board cards via `delegate_route_task`. The lanes run on Kanban dispatch and never appear in this pane; their results resurface as cards in your Inbox. For the design rationale, see [The agent-client pane](../../explanation/obsidian/agent-client-picker.md).
 
-| Profile      | Use it for                                            | Pattern                            |
-| ------------ | ----------------------------------------------------- | ---------------------------------- |
-| **Socratic** | Thinking through a paper or claim in conversation     | Sustained — keep open across notes |
-| **Mapper**   | Asking what's ready, thin, or missing in your corpus  | One-shot — clear after each task   |
-| **Writer**   | Drafting a claim note or outline section              | One-shot — clear after each task   |
-| **Verifier** | Checking if a draft claim duplicates an existing note | One-shot — clear after each task   |
-
-Start with Socratic by default. Switch to the others only when you have a specific one-shot task.
-
-For the design rationale behind the picker — why three profiles are absent and why the labels name identities rather than actions — see [The agent-client pane](../../explanation/obsidian/agent-client-picker.md).
+The co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 
-**From the Reading & Processing workspace** (`Ctrl+2` on Windows, `Cmd+2` on Mac):
-The ACP pane appears in the right column. If it's not visible, click the Hermes icon in the left ribbon, or `Cmd/Ctrl+P` → **Agent Client: Open chat view**.
-
-**From any other workspace:**
-`Cmd/Ctrl+P` → **Agent Client: Open chat view**, or click the Hermes ribbon icon.
-
-## Switching profiles
-
-Click the profile name at the top of the ACP pane to open the dropdown, then select a different profile.
-
-> The pane has no profile-switch keyboard shortcut. Obsidian doesn't ship one, and the plugin exposes no per-profile command to bind in Settings → Hotkeys — switch from the picker.
-
-Switch profiles between tasks, not mid-conversation. The conversation history clears on switch — this is intentional. A Mapper session's context should not bleed into a Socratic session.
+`Cmd/Ctrl+P` → **Agent Client: Open chat view**, or click the Hermes icon in the left ribbon. The pane keeps its session across workspace switches ([Workspaces](use-workspaces.md)).
 
 ## Attaching a note as context
 
@@ -52,29 +30,18 @@ Switch profiles between tasks, not mid-conversation. The conversation history cl
 **Via the pane directly:**
 Click the paperclip icon at the top of the ACP pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
 
-The attached note appears as a named context card at the top of the conversation. The profile reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
+The attached note appears as a named context card at the top of the conversation. The co-PI reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
 
 ## Reading responses
 
-**Socratic** responses are conversational: questions, observations, gentle pushback. You are expected to reply. Socratic will not produce a finished note — when you've arrived at a durable claim, close the pane and write the claim note yourself.
+Two kinds of turn come back:
 
-The transient profiles return structured outputs:
-
-| Profile  | Output format                                                        | What to do with it                                         |
-| -------- | -------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Mapper   | `[!corpus-map]` callout — dense clusters, thin topics, gaps          | Read the gap list before framing a writing project         |
-| Writer   | Draft prose or outline, written directly in the response             | Copy the sections you want into your draft file            |
-| Verifier | `[!similarity-report]` — ranked similar notes with similarity scores | Check any note with score ≥ 0.8 before writing a new claim |
-
-A similarity score ≥ 0.8 from Verifier means the claim likely already exists in your vault in different wording. Open the similar note and decide: are these the same claim? If yes, write into the existing note rather than creating a new one.
+- **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The co-PI will not produce a finished note: when you've arrived at a durable claim, write the claim note yourself (`Memoria: write claim note`).
+- **Delegation receipts** — when you ask for work ("verify this draft", "bring in this paper"), the co-PI raises a card on the right lane and tells you so. Track it on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
 
 ## Ending a session
 
-**Transient profiles (Mapper, Writer, Verifier):** after reading the response, press **Clear** at the top of the pane to close the conversation. This frees the context window for the next task. Do not let transient sessions accumulate across multiple tasks.
-
-**Socratic:** leave the pane open during a reading session — it's designed for sustained conversation across multiple notes on the same topic. Clear explicitly at the end of the session: when you're done with a paper or topic cluster, press **Clear** before switching to unrelated work.
-
-Do not let Socratic accumulate more than one session's worth of conversation. Long histories degrade response quality. Clear when done.
+Leave the pane open during a reading session — sustained questioning across the notes of one topic is its purpose. Press **Clear** at the top of the pane when you finish a paper or topic cluster, before switching to unrelated work. Long histories degrade response quality.
 
 ## Exporting a session
 
@@ -106,14 +73,14 @@ On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** a
 
 ## Verify
 
-- Selecting **Socratic** from the picker switches the pane without reloading Obsidian
+- The picker shows one agent — **co-PI** — and the pane connects
 - Opening the pane with a note active attaches it as a context card (auto-mention)
-- After a Mapper query, the `[!corpus-map]` callout appears in the response area
+- Asking for lane work ("verify this draft") produces a card on the board, not prose-only
 - Pressing **Clear** empties the pane and resets the session
 
 ## Related
 
 - Discussing a paper end-to-end: [Discuss a paper](../compile/discuss-a-paper.md)
-- Workspace layouts and hotkeys: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Workspace layouts: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- Profile picker design: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)
+- Why one agent, not a picker of specialists: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)
