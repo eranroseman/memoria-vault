@@ -4,77 +4,76 @@ parent: Compile
 nav_order: 9
 ---
 
-
 # Link related claims
 
-Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. A `relations:` block records `supports` / `contradicts` as machine-queryable, **human-set** links — and a `contradicts` link is the data the [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md) reads. This guide is for adding a typed relation between two claims that **already exist**. To set one at the moment you write a claim, use Step 7 of [Write a claim note](write-a-claim-note.md) instead.
+Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. The `links:` map on a claim records `supports` / `contradicts` as machine-queryable, **authored** edges — yours, never an agent's ([ADR-52](../../adr/52-links-vs-relationships.md)) — and a `contradicts` link is the data the contradictions dashboard reads. This guide adds a typed link between two claims that **already exist**; to set one while writing a claim, see [Write a claim note](write-a-claim-note.md).
+
+Don't confuse `links:` with `relationships`: `links:` are authored edges on notes (your thinking); `relationships` are given edges on Catalog entities (facts from the record, written by the ingest engine).
 
 ## Prerequisites
 
-- At least two claim notes in `30-synthesis/01-claims/`
-- These links are yours to set — agents only *propose* relations, never write them (ADR-08)
+- At least two claim notes in `notes/claims/`
+- These links are yours to set — `notes/claims/` is review-gated; agents only *propose*, never write
 
 ## Steps
 
 **1. Decide whether the relationship is worth typing.**
 
-Link for usefulness, not completeness. Add a typed relation only when "*what contradicts X?*" or "*what supports X?*" would matter in a later reading or writing session. Untyped concept links (a plain `[[wikilink]]` in the body) remain first-class — don't promote every link to a typed one. The vocabulary is deliberately small precisely so the block stays meaningful.
+Link for usefulness, not completeness. Add a typed link only when "*what contradicts X?*" or "*what supports X?*" would matter in a later reading or writing session. Untyped concept links (a plain `[[wikilink]]` in the body) remain first-class — don't promote every connection.
 
-**2. Pick the relation type.**
+**2. Pick the link type.**
 
-| Relation | Meaning | Direction |
+| Link | Meaning | Direction |
 | --- | --- | --- |
 | `supports` | This claim supports the linked claim | Directional — set it on the supporting claim |
 | `contradicts` | The two claims disagree | Symmetric — set it on either; the dashboard reads both ways |
 
-These are the only two relation types in v1. There is no `extends`/`refines` relation — if you reach for one, it doesn't exist yet (it's named as future work in ADR-08). If the relationship is *temporal replacement* — this claim makes an older one obsolete — that is **not** a `relations:` entry; it's supersession (`superseded_by`), covered in [Promote a claim](promote-a-claim.md) and Step 7 of [Write a claim note](write-a-claim-note.md).
+If the relationship is *temporal replacement* — this claim makes an older one obsolete — that is **not** a `links:` entry; it's supersession (`superseded_by` on the old claim), covered in [Advance a claim to evergreen](promote-a-claim.md).
 
-**3. Add the block to the claim you're editing.**
+**3. Add the entry to the claim's `links:` map.**
 
-Open the claim note and add (or extend) the `relations:` block in frontmatter:
+Open the claim note and extend the frontmatter block the claim template ships:
 
 ```yaml
-relations:
+links:
+  supports: []
   contradicts:
     - "[[receptivity-decreases-under-high-cognitive-load]]"
 ```
 
-`supports` and `contradicts` can both appear, each a list — a claim may support one claim and contradict another.
+Both keys can carry lists — a claim may support one claim and contradict another.
 
-**4. Point with the exact slug.**
+**4. Point with the exact note name.**
 
-The target is a wikilink to the other claim's **permanent slug** (lowercase kebab-case, subject-verb-object — see [Wikilink and link conventions](../../reference/linking.md#slug-conventions-for-wikilinks)). A mistyped slug is a dangling relation the dashboard can't resolve, and it fails silently. Copy the slug from the target note's filename rather than retyping it.
+The target is a wikilink to the other claim note (lowercase kebab-case, the claim as a sentence). Copy it from the target's filename rather than retyping — the Linter's `frontmatter-link` detector flags any frontmatter wikilink that resolves to no note, but only on its next pass.
 
-**5. Let the agent propose, but confirm it yourself.**
+**5. Let agents propose; confirm yourself.**
 
-The Verifier or Mapper may surface a candidate contradiction into the proposal namespace (`_proposed_classification`). Never treat an agent-proposed relation as canonical — read it, judge it, then set the link by hand. Typing a link is a canonical-surface judgment; the agent proposes, you dispose (the autonomy boundary, ADR-08).
+The Librarian's `link` lane surfaces candidate connections and tensions as Inbox proposals ([Review link suggestions](review-link-suggestions.md)). Never copy a proposed link into `links:` unread — the agent proposes, you dispose.
 
 **6. Confirm it surfaced.**
 
-For a `contradicts` link, open the [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md). The pair should now appear there — that visibility is the whole payoff of typing the link rather than leaving it untyped.
+For a `contradicts` link, open `system/dashboards/contradictions.md`. The pair should appear — that visibility is the payoff of typing the link.
 
 ## Verify
 
-- The `relations:` block validates against the vocabulary — the Linter's `schema-check` flags any key outside `supports` / `contradicts`.
-- A `contradicts` pair appears on the contradictions dashboard.
-- Every relation target resolves to a real claim note (no dangling slug).
+- The `links:` keys stay within `supports` / `contradicts` (the Linter's `schema-check` flags anything else)
+- A `contradicts` pair appears on the contradictions dashboard
+- Every link target resolves to a real claim note
 
 ## Related
 
 **How-to**
 
-- Set a relation while authoring: [Write a claim note](write-a-claim-note.md) (Step 7)
-- The temporal complement (replacement, not disagreement): [Promote a claim](promote-a-claim.md), supersession (ADR-10)
+- Set a link while authoring: [Write a claim note](write-a-claim-note.md)
+- Triage agent-proposed links: [Review link suggestions](review-link-suggestions.md)
+- The temporal complement (replacement, not disagreement): [Advance a claim to evergreen](promote-a-claim.md)
 
 **Reference**
 
-- Syntax and vocabulary: [linking.md — Typed relations](../../reference/linking.md#typed-relations-relations-block), [Frontmatter fields](../../reference/frontmatter.md)
+- The two edge kinds: [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**
 
-- The consumer: [contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md)
-- Why the Connections section is required: [Note body structure](../../explanation/knowledge/note-body-structure.md)
-
-**Background**
-
-- Why typed links are human-set and opt-in: [ADR-08](../../adr/08-typed-relations-frontmatter.md)
+- The consumer: [The contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md)
+- Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

@@ -4,65 +4,48 @@ parent: Compose
 nav_order: 3
 ---
 
-
 # Frame a project
 
-Generate 2–3 competing argument structures, optionally run a lens reading through the Socratic profile, and commit to one framing before drafting. This prevents the first outline from winning by default.
+Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft:outline-argument`, `draft:score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)); the choice is yours.
+
+> The formal framing step — a project brief in `projects/` that the outline scores against — ships with the v0.1.2 Project release. The delegation below works today; keep the outputs in your own `projects/<slug>/` scratch folder.
 
 ## Prerequisites
 
-- A corpus map exists for this project ([Assess your corpus](assess-your-corpus.md))
-- The Writer and Socratic profiles are installed
+- A corpus dense enough to write from ([Assess your corpus](assess-your-corpus.md))
+- A stated research question and deliverable
 
 ## Steps
 
-**1. Run `counter-outline` to generate competing framings.**
+**1. Delegate competing outlines.**
 
-`Memoria: counter-outline this section` *(deferred — use the ACP pane / terminal today)*. For this card-producing Writer task, the working path today is the CLI (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
+In the co-PI pane:
 
-```bash
-hermes -p memoria-writer chat -s counter-outline
-# then, in the session:
-/counter-outline --project <project-slug>
-```
+> "Outline the argument for `<research question>` two or three different ways — chronological, mechanism-of-action, and theory-first. Work from my claims on `<topic>`."
 
-The Writer generates 2–3 alternative outlines, each foregrounding a different structure (e.g., chronological vs. mechanism-of-action vs. theoretical-lens). Outputs land in `40-workbench/<project-slug>/02-framing/` as `option-A.md`, `option-B.md`, `option-C.md`.
+The co-PI delegates a **`draft`** task to the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
 
-**2. Read each option.**
+**2. Read each option — then let them sit.**
 
-Open the framing options in Obsidian. Don't commit immediately — let them sit for at least an hour. The framing that feels obvious after a break is usually the right one.
+Don't commit immediately; the framing that still feels right after a break is usually the one. The options are competing *structures*, not drafts — judge which order of argument your claims actually support.
 
-**3. Optionally, run a lens reading with the Socratic profile.**
+**3. Stress-test the leading framing with the co-PI.**
 
-To stress-test a framing through a specific theoretical lens, open the agent-client pane (`Agent Client: Open chat view`), switch to **Socratic** (via the pane’s profile picker), and ask it to read the framing through the lens — e.g. "read this through an equity lens" or "…through an ecological-validity lens". *(The `Memoria: read through <X> lens` palette commands are [deferred] — use the pane today.)*
+At the desk: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../compile/read-through-a-lens.md) — the same move pointed at your own outline). The co-PI is read-only; copy anything useful into your notes yourself.
 
-**From the terminal (fallback)** — full syntax in [Hermes CLI](../../reference/hermes-cli.md):
+**4. Choose and record the framing.**
 
-```bash
-hermes -p memoria-socratic chat -s lens-reading
-# then, in the session:
-/lens <lens-name> --project <project-slug>
-```
-
-The Socratic profile is write-denied — its outputs appear in the ACP pane only. Copy or paraphrase anything useful into a new `02-framing/lens-notes.md` file manually.
-
-**4. Choose a framing and write `CHOSEN.md`.**
-
-Create `40-workbench/<project-slug>/02-framing/CHOSEN.md` with:
-
-- The selected outline (copy from one of the options, edit freely)
-- 2–3 sentences explaining why you chose this framing over the alternatives
-
-The `CHOSEN.md` file is required before the project card can advance to drafting. An empty or one-line `CHOSEN.md` is not a valid framing decision.
+Write `projects/<slug>/chosen-framing.md` yourself: the selected outline (edited freely) plus 2–3 sentences on why this framing beat the alternatives. An empty or one-line choice is not a framing decision.
 
 ## Verify
 
-- `40-workbench/<project-slug>/02-framing/CHOSEN.md` exists with an outline and a rationale
-- The project card has advanced beyond `framing` on the Kanban board
+- 2–3 genuinely different outline options exist — not one outline with cosmetic variations
+- `chosen-framing.md` carries both the outline and the rationale
+- Every section of the chosen outline names claims you actually hold; anything else is a gap to fill first
 
 ## Related
 
 - Previous step: [Assess your corpus](assess-your-corpus.md)
+- Sketching the chosen framing spatially: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
 - Next step: [Draft with the Writer](draft-with-writer.md)
-- Socratic lens-reading and write-denial: [The Socratic](../../explanation/profiles/co-pi.md)
-- The Writer's counter-outline: [The Writer](../../explanation/profiles/writer.md)
+- The lane behind the outlines: [The Writer](../../explanation/profiles/writer.md)

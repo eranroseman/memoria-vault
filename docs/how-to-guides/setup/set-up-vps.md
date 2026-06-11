@@ -6,7 +6,9 @@ nav_order: 8
 
 # Set up a VPS for always-on operation [deferred]
 
-Move Hermes from local WSL2 to a persistent VPS so the system runs overnight batch jobs, handles scheduled tasks, and stays reachable from any device. This is the always-on deployment option.
+> **Status — deferred.** v0.1.1 ships and is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](../../explanation/deployment/deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../../design/multi-machine-deployment.md)). This guide documents the intended setup.
+
+Move Hermes from local WSL2 to a persistent VPS so the system runs the scheduled crons overnight, processes board cards unattended, and stays reachable from any device. The VPS becomes the **one dispatcher** for the vault — the desktop keeps Obsidian and Zotero, and Syncthing carries the vault between them.
 
 ## Prerequisites
 
@@ -17,29 +19,11 @@ Move Hermes from local WSL2 to a persistent VPS so the system runs overnight bat
 
 ## Steps
 
-**1. Install dependencies on the VPS.**
+**1. Install base dependencies on the VPS.**
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y git curl build-essential python3-pip syncthing
-```
-
-Install Hermes:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
-hermes --version   # confirm
-```
-
-Install the document/search tools:
-
-```bash
-pip install markitdown --break-system-packages   # PDF / Office → markdown
-
-# qmd (hybrid BM25 + vector search) is a Node CLI, NOT a pip package. Install it
-# via npm (the Hermes installer already provides Node), or as a Hermes skill:
-#   hermes skills install skills-sh/moltbot/skills/qmd
-# See github.com/tobi/qmd for the exact npm package + GGUF embedding-model setup.
+sudo apt install -y git curl pandoc syncthing
 ```
 
 **2. Set up passwordless SSH.**
@@ -51,179 +35,101 @@ ssh-copy-id user@your-vps-ip
 ssh user@your-vps-ip   # confirm passwordless
 ```
 
-**3. Clone the vault on the VPS.**
+**3. Run the Memoria installer on the VPS (headless).**
 
 ```bash
 # on VPS
-git clone git@github.com:<your-handle>/memoria-vault.git ~/memoria-vault
-cd ~/memoria-vault && git log --oneline -3   # confirm current
+curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
+bash install.sh --no-apps --vault ~/Memoria
 ```
 
-**4. Configure Syncthing on the VPS.**
+`--no-apps` skips the Obsidian guidance. The installer provisions Hermes (+ the ACP extra and the `qmd` hub skill), scaffolds and populates the runtime vault, deploys the five profiles, and wires the four maintenance crons (`memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`).
+
+**4. Configure the VPS profiles — remove the Obsidian MCP server.**
+
+The VPS has no running Obsidian instance, so the Local REST API native MCP is unreachable there. Edit each profile's `config.yaml` under `~/.hermes/profiles/memoria-<name>/` and remove the `obsidian` entry from its `mcp_servers` block. The vault-shipped servers (`policy`, `ingest`, `cluster`, `tasks`, `patterns`) remain — they run on the vault venv and need no Obsidian.
+
+**5. Set environment variables on the VPS.**
+
+```bash
+# Copy the global secrets file, then propagate per profile
+scp ~/.hermes/.env user@your-vps-ip:~/.hermes/.env
+# on VPS:
+bash install.sh --profiles-only --vault ~/Memoria
+grep KILOCODE_API_KEY ~/.hermes/profiles/memoria-librarian/.env   # confirm seeded
+```
+
+**6. Sync the vault with Syncthing.**
 
 ```bash
 # on VPS
 systemctl --user enable syncthing && systemctl --user start syncthing
+sudo loginctl enable-linger $USER   # survive SSH logout
 ```
 
-Expose the Syncthing UI temporarily via SSH tunnel:
-
-```bash
-# from WSL2
-ssh -L 8384:localhost:8384 user@your-vps-ip
-```
-
-Open `http://localhost:8384`. Add the vault folder at `/home/user/memoria-vault/vault`. On your desktop's Syncthing UI, add the VPS as a device and share the vault folder.
-
-Add a `.stignore` in the vault root to exclude noise:
+Expose the Syncthing UI temporarily via SSH tunnel (`ssh -L 8384:localhost:8384 user@your-vps-ip`, then open `http://localhost:8384`). Share the runtime vault folder (`~/Memoria`) with your desktop device, and add a `.stignore` in the vault root to exclude the noisy, machine-local files:
 
 ```text
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
-90-assets/*.pdf
+.memoria/.venv
+.memoria/data
 .git
 ```
 
-**5. Install the Memoria profiles on the VPS.**
+The vault stays a git repo on both machines — Git is the version-history layer, Syncthing the sync layer. Distribute `.memoria/memoria.bib` over Git pulls, not Syncthing, to avoid the mid-transfer race ([Failure modes](../../reference/failure-modes.md)).
+
+**7. Make the VPS the only dispatcher.**
+
+Only **one** machine may run the cron + dispatch side against a synced vault — two dispatchers race on card writes and produce conflicting audit logs. The VPS installer already wired its crons; on the desktop, disable yours:
 
 ```bash
-# on VPS — from the repo root (headless: skip the Obsidian/Zotero guidance)
-cd ~/memoria-vault
-bash scripts/install.sh --no-apps
+# on WSL2 (desktop)
+for c in memoria-board-export memoria-sweeps memoria-lint memoria-metrics; do
+  hermes cron disable "$c"
+done
 ```
 
-Hermes is already installed (step 1), so the installer detects it, copies the vault, and deploys the profiles. Use `--vault <dir>` to control where the runtime vault lands.
+**8. Point the co-PI pane at the VPS (optional).**
 
-**6. Configure the VPS profiles — remove the Obsidian MCP server.**
+ACP is a stdio protocol — the `agent-client` plugin launches the agent as a command. To converse with the VPS-side co-PI from desktop Obsidian, set the agent command in Settings → **Agent Client** to an SSH invocation:
 
-The VPS has no running Obsidian instance. Edit each profile's `config.yaml` under `~/.hermes/profiles/memoria-<name>/config.yaml` and remove the `obsidian` entry from its `mcp_servers` block. The `policy` server remains (there is no separate `tasks` server — the board uses the native Hermes kanban tools).
-
-**7. Set environment variables on the VPS.**
-
-```bash
-# Copy from local machine
-scp ~/.hermes/profiles/memoria-librarian/.env user@your-vps-ip:~/.hermes/profiles/memoria-librarian/.env
-# Repeat for other profiles that need keys
+```text
+ssh user@your-vps-ip hermes -p memoria-copi acp
 ```
 
-Confirm:
+(On Windows, keep WSL mode on so the `ssh` runs inside WSL2.) Alternatively, keep running the co-PI locally — it only reads the vault, so the desktop copy is safe even with dispatch on the VPS.
 
-```bash
-# on VPS
-cat ~/.hermes/profiles/memoria-librarian/.env | grep KILOCODE_API_KEY
-```
-
-**8. Start Hermes as a persistent systemd service.**
-
-Create `~/.config/systemd/user/hermes-gateway.service` on the VPS:
-
-```ini
-[Unit]
-Description=Hermes Agent gateway — Memoria
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/home/user/memoria-vault/vault
-ExecStart=hermes gateway run
-Restart=on-failure
-EnvironmentFile=/home/user/.hermes/profiles/memoria-librarian/.env
-
-[Install]
-WantedBy=default.target
-```
-
-```bash
-systemctl --user daemon-reload
-systemctl --user enable hermes-gateway
-systemctl --user start hermes-gateway
-sudo loginctl enable-linger $USER   # survive SSH logout
-hermes gateway status
-```
-
-**9. Set up the SSH tunnel for ACP from Obsidian.**
-
-Create `~/.config/systemd/user/hermes-tunnel.service` on WSL2 (your local machine):
-
-```ini
-[Unit]
-Description=SSH tunnel — Hermes gateway (VPS→desktop)
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=ssh -N -L 8642:localhost:8642 \
-  -o ServerAliveInterval=60 \
-  -o ExitOnForwardFailure=yes \
-  user@your-vps-ip
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=default.target
-```
-
-```bash
-systemctl --user daemon-reload
-systemctl --user enable hermes-tunnel
-systemctl --user start hermes-tunnel
-curl http://localhost:8642/health   # confirm tunnel working
-```
-
-The agent-client plugin URL in Obsidian stays `http://localhost:8642` regardless of where Hermes runs.
-
-**10. Build the search index and smoke test.**
+**9. Smoke test.**
 
 ```bash
 # on VPS
-cd ~/Memoria          # the runtime vault the installer copied to (or your --vault path)
-qmd embed
-git pull --ff-only
-hermes -p memoria-librarian chat -s obsidian-paper-note
-# in session:
-/obsidian-paper-note --source <a-known-citekey> --dry-run
+hermes profile list                 # five memoria-* profiles
+hermes cron list                    # the four crons with next-run times
+hermes -p memoria-copi chat         # ask: "explain how this vault is organized"
+cd ~/Memoria && qmd embed           # build the search index
 ```
 
-Verify in Obsidian: dry-run output appears and the Syncthing sync completes within ~15 seconds.
-
-**11. Schedule recurring jobs.**
-
-```bash
-# on VPS
-hermes cron create "0 2 * * *" --profile memoria-linter --prompt "Run lint check on vault"
-hermes cron create "0 3 * * 0" --profile memoria-linter --prompt "Run retraction sweep"
-hermes cron list
-```
-
-**12. Decommission local Hermes (optional).**
-
-Once the VPS is running reliably, the desktop only needs: Obsidian, Zotero, Syncthing. Keep a local fallback config in case the VPS is unreachable:
-
-```bash
-cp ~/.hermes/config.yaml ~/.hermes/config.local.yaml
-```
-
-If the VPS goes down, start Hermes locally and point the agent-client at `http://localhost:8642`.
+Then capture a source from desktop Obsidian (`Cmd/Ctrl-P` → **Memoria: capture source from URL**) and confirm the Catalog entity appears on the desktop via Syncthing within ~15 seconds of the VPS-side ingest.
 
 ## Verify
 
-- `hermes gateway status` on VPS shows `active (running)`
-- `systemctl --user status hermes-tunnel` on WSL2 shows `active (running)`
-- Syncthing web UI shows both devices connected and vault folder in sync
-- A test ingest from the VPS creates a note in Obsidian via Syncthing within 15 seconds
-- `hermes cron list` shows scheduled jobs registered
+- `hermes cron list` on the VPS shows the four maintenance crons; the desktop's are disabled
+- Syncthing web UI shows both devices connected and the vault folder in sync
+- A test capture from the desktop produces `catalog/papers/<citekey>.md` and an Inbox candidate card, synced back within seconds
+- `system/logs/audit.jsonl` shows the VPS-side gated writes
 
 ## What runs where
 
-| Component                    | Runs on                       |
-| ---------------------------- | ----------------------------- |
-| Obsidian, Zotero, Syncthing  | Desktop (Windows)             |
-| Hermes, cron jobs, qmd index | VPS                           |
-| vault files                  | Syncthing-synced between both |
+| Component | Runs on |
+| --- | --- |
+| Obsidian, Zotero, Syncthing | Desktop (Windows) |
+| Hermes dispatch, crons, qmd index | VPS |
+| Vault files | Syncthing-synced between both |
 
 ## Related
 
 - Local install prerequisite: [Quickstart](quickstart.md)
+- The topology trade-offs and dispatcher rule: [Deployment options](../../explanation/deployment/deployment-options.md)
 - Profile configuration: [Configure a profile](../hermes-agent/configuration.md)
-- Redeploying profiles after vault changes: [Redeploy profiles](../operate/redeploy-profiles.md)
-- Tunnel drops on restart: [Failure modes](../../reference/failure-modes.md) — see `VPS tunnel drops`
+- Connection drops on restart: [Failure modes](../../reference/failure-modes.md)

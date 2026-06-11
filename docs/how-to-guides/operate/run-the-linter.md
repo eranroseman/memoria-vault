@@ -4,94 +4,73 @@ parent: Operate
 nav_order: 1
 ---
 
-
 # Run the Linter
 
-Trigger a structural health check on the vault — either on demand or to review a scheduled report. The Linter detects orphaned notes, broken links, stale enrichment, schema drift, and profile install drift.
+Run a structural health check on the vault, or review the scheduled report. The Linter is an **engine, not an agent** — deterministic, zero-LLM Python under `.memoria/engines/linter/`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
-## When to run
+## When it runs without you
 
-- **On demand:** after a large batch ingest, after editing profile files, or when a Dataview query returns unexpected results
-- **Weekly:** as part of the [weekly review](../curate/run-the-weekly-review.md), step 8
-- **Automatically:** the Linter runs on a cron schedule (see [Linter § Schedule](../../reference/linter.md#the-daily-cron)) and after each ingest batch
+- **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed the drift-watch and loose-ends dashboards.
+- **Pre-commit gate** — every staged `.md` is schema-validated; an invalid typed note blocks the commit.
+
+Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
 
 ## Steps
 
-**1. Start a Linter session.**
+**1. Run the detectors.**
+
+From the vault root:
 
 ```bash
-hermes -p memoria-linter chat -s lint
+python3 .memoria/engines/linter/detectors.py --vault .
 ```
 
-**2. Run a dry-run scan.**
+Add `--json` for machine-readable output. The detectors cover schema validity, broken frontmatter and body wikilinks, misplaced typed notes, dashboard field drift, superseded-claim reuse (`fama-exposure`), broken extract paths, orphan synthesis notes, leftover working files, and stale fleeting notes.
 
-```text
-/lint --dry-run
-```
-
-This reports findings without making any changes. Review the output before deciding which fixes to apply.
-
-**3. Scope the scan if needed.**
-
-To limit the scan to a specific folder (faster for targeted checks):
-
-```text
-/lint --target 20-sources/ --dry-run
-/lint --target 30-synthesis/ --dry-run
-```
-
-**4. Read the report by severity.**
-
-The Linter categorizes findings by severity:
+**2. Read the report by severity.**
 
 | Severity | Meaning | Action |
 | --- | --- | --- |
-| CRITICAL | Vault integrity or security at risk | Fix immediately, this session |
+| CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL and scheduled work pauses |
 | HIGH | Silent or active breakage | Fix this session |
-| MEDIUM | Real drift, will compound | Address in weekly review |
+| MEDIUM | Real drift, will compound | Address in the weekly review |
 | LOW | Cosmetic or easily recovered | Defer or accept |
 
-**5. Apply auto-fixes for safe findings.**
+The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM or HIGH) / **FAIL** (any CRITICAL) — the same band drift-watch shows.
 
-For findings the Linter can fix without human judgment (e.g., whitespace normalization, missing `lifecycle` defaults on new notes):
+**3. Check golden-copy drift.**
 
-```text
-/lint --fix --target 20-sources/
+```bash
+python3 .memoria/engines/linter/golden.py --vault . check
 ```
 
-Review what was changed with `git diff` before committing.
+Reports any system file (templates, dashboards, patterns, scripts, `home.md`, `system/vocabulary.md`, `AGENTS.md`) that drifted from the installer-staged golden copy. To repair:
 
-**6. Fix manual findings by hand.**
-
-For findings that require judgment (broken links, schema mismatches, orphaned notes), address them in Obsidian directly. The most common ones have dedicated recovery guides — see the Related section below.
-
-**7. Run a health report** to check cross-cutting system status:
-
-```text
-/health-report
+```bash
+python3 .memoria/engines/linter/golden.py --vault . restore          # propose-only: lists what it would restore
+python3 .memoria/engines/linter/golden.py --vault . restore --apply  # write the golden bytes back, deliberately
 ```
 
-This checks profile install drift, policy MCP connectivity, audit log rotation, and the `.bib` sync status in one pass.
+**4. Fix findings by hand.**
+
+Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit gate re-validates what you staged.
+
+**5. Confirm the cron is alive** (occasionally):
+
+```bash
+hermes cron list        # memoria-lint should show with a next-run time
+hermes cron run memoria-lint   # force a pass now
+```
 
 ## Verify
 
-Run the scan again after fixes:
-
-```text
-/lint --dry-run
-```
-
-Confirm CRITICAL and HIGH findings are gone. Commit any changes made:
-
-```bash
-git add vault/
-git commit -m "maintenance: resolve lint findings"
-```
+- A re-run reports no CRITICAL or HIGH findings
+- `golden.py check` exits clean
+- Drift-watch and loose-ends show the improvement after the next cron pass
 
 ## Related
 
-- Weekly review (lint is step 8): [Run the weekly review](../curate/run-the-weekly-review.md)
+- Weekly review (the structural-health step): [Run the weekly review](../curate/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
-- Fix profile drift: [Fix profile drift](../troubleshooting/fix-profile-drift.md)
-- Linter profile design: [The Linter](../../explanation/engines/README.md)
-- Severity scale: [explanation/engines/README.md § severity-scale](../../explanation/engines/README.md)
+- The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/linter.md)
+- Where findings surface: [Dashboards](../../reference/dashboards.md)

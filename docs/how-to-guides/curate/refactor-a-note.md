@@ -6,56 +6,48 @@ nav_order: 2
 
 # Refactor claim notes
 
-This guide shows you how to keep claim notes atomic and remove duplication without losing provenance.
+Keep claim notes atomic and remove duplication without losing provenance. Agents surface the candidates; every structural decision — merge, split, or leave — is yours, because `notes/claims/` is review-gated.
 
 ## When to refactor
 
-- A claim note's body contains "and" doing real work — two distinct ideas in one note
-- The Verifier's `find-duplicates` flags two notes with high similarity (≥ 0.85)
-- A note has grown to the point where you hesitate to link to it because only part of it applies
+- A claim's body contains an "and" doing real work — two distinct ideas in one note
+- A duplicate hunt flags two notes saying the same thing in different words
+- A note has grown to where you hesitate to link it because only part of it applies
 
 ## Find duplicate candidates
 
-The Verifier identifies near-duplicate notes using embedding similarity:
+Delegate the hunt from the co-PI pane:
 
-```bash
-hermes -p memoria-verifier chat -s find-duplicates
-```
+> "Verify my claims on `<topic>` for near-duplicates."
 
-Then in the session:
-
-```text
-/find-duplicates --folder 30-synthesis/01-claims --threshold 0.85
-```
-
-The Verifier returns pairs with similarity scores. It never auto-merges.
+The Peer-reviewer's `verify` lane (and the sweeps engine's similarity checks) return findings as **flag cards** in the Inbox, each naming the suspect pair. Nothing is auto-merged — the lane can only write cards.
 
 ## Merge two notes into one
 
-1. **Review the pair.** Open both notes side by side. Decide which is the stronger formulation.
-2. **Combine the content.** Copy any non-redundant body text from the weaker note into the stronger.
-3. **Merge the sources.** Add all citekeys from the weaker note's `sources:` to the stronger note's `sources:`.
-4. **Update backlinks.** Search for wikilinks pointing to the weaker note (`[[weaker-note-title]]`) and redirect them to the stronger note.
-5. **Update MOC entries.** If the weaker note was in any MOC's member list, replace it with the stronger note.
-6. **Archive the weaker note.** Set `lifecycle: archived` and add `superseded_by: [[stronger-note-title]]`. Do not delete — the note has provenance value.
+1. **Review the pair side by side.** Decide which is the stronger formulation.
+2. **Combine the content.** Copy any non-redundant Evidence from the weaker note into the stronger.
+3. **Merge the sources.** Union the citekeys into the stronger note's `sources:`.
+4. **Merge the links.** Carry any `supports` / `contradicts` entries (and `topics`) the weaker note held.
+5. **Redirect backlinks.** Search for wikilinks to the weaker note and point them at the stronger one; update any hub `members` lists.
+6. **Archive the weaker note.** Set `lifecycle: archived` and `superseded_by: "[[stronger-note]]"`. Do not delete — the note has provenance value, and the Linter's `fama-exposure` detector will flag anything still leaning on it.
 
 ## Split one note into two
 
-1. **Create the second note** using `Cmd+P → Memoria: write claim note`.
-2. **Move the second claim** from the original note's body into the new note.
-3. **Divide the sources.** Assign source citekeys to whichever note each source actually supports.
-4. **Link the pair** if they're related: add a `relations: supports` or `relations: contradicts` entry as appropriate.
-5. **Update MOC entries** and backlinks to point to the correct note.
+1. **Create the second note** via `Cmd/Ctrl-P` → **Memoria: write claim note**.
+2. **Move the second claim** out of the original's body — each note one falsifiable sentence.
+3. **Divide the sources.** Assign citekeys to whichever claim each source actually supports.
+4. **Link the pair** if they relate: a `supports` or `contradicts` entry in `links:`.
+5. **Update backlinks and hub members** to point at the right half.
 
-## Owners
+## Verify
 
-The Verifier surfaces candidates. You make every structural decision — merge, split, or leave.
-
----
+- Each resulting note states exactly one claim, with every Evidence line tracing to its own `sources`
+- The archived note carries `superseded_by`, and no active note wikilinks it (the `fama-exposure` detector confirms on its next pass)
+- The flag card that started this is resolved
 
 ## Related
 
-- Run the Linter after structural edits: [Run the Linter](../operate/run-the-linter.md)
-- The compound-note failure refactoring fixes: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
-- The note structure you are refactoring toward: [Note body structure](../../explanation/knowledge/note-body-structure.md)
-- Note types and their boundaries: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)
+- Validation after structural edits: [Run the Linter](../operate/run-the-linter.md)
+- The compound-note failure this fixes: [Common pitfalls](../../explanation/knowledge/common-pitfalls.md)
+- The note shape you're refactoring toward: [Note body structure](../../explanation/knowledge/note-body-structure.md)
+- The lane that surfaces candidates: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)

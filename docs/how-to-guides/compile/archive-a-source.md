@@ -4,68 +4,63 @@ parent: Compile
 nav_order: 12
 ---
 
-
 # Archive a source
 
-Retire a source note that is no longer active — superseded, irrelevant to current projects, or fully processed with nothing new to extract.
+Retire a source note that is no longer active — superseded, irrelevant to current projects, or fully processed with nothing new to extract. Archiving is a **lifecycle change, not a folder move**: the note stays where it is and `lifecycle: archived` takes it out of every active view.
 
 ## Prerequisites
 
-- The note is at `lifecycle: current` (fully processed) or you've decided it won't be processed further
+- The source note is at `lifecycle: current` (fully distilled), or you've decided it won't be processed further
 
 ## Steps
 
-**1. Confirm there are no pending cards for this source.**
+**1. Confirm there are no open board cards for this source.**
 
-Check the Kanban board for open `discuss`, `distill`, or `ingest` cards referencing this citekey ([board commands](../../reference/hermes-cli.md#board-management)):
+Check for open cards referencing this citekey ([Hermes CLI](../../reference/hermes-cli.md#board-management)):
 
 ```bash
-hermes kanban list --filter citekey=<citekey>
+hermes kanban list
 ```
 
-If open cards exist, close them with `outcome: archived` before archiving the note.
+If an open card references the citekey, archive it with a reason first:
 
-**2. Open the note in Obsidian.**
+```bash
+hermes kanban archive <card-id> --reason "source archived: superseded"
+```
 
-Navigate to `20-sources/01-papers/<citekey>.md` or `20-sources/02-items/<citekey>.md`.
+**2. Open the source note in Obsidian.**
+
+Navigate to `notes/source/<note>.md` — your reading record for the source.
 
 **3. Set `lifecycle: archived` in frontmatter.**
 
 ```yaml
 lifecycle: archived
-archived_date: 2026-05-31
-archived_reason: "superseded by newer work / out of scope / fully processed"
 ```
 
-Write a brief reason — this is the only record of why this source left the active pool.
+Add one line at the top of the body saying why ("superseded by newer work", "out of scope", "fully processed"). This is the only record of why this source left the active pool.
 
-**4. Move the note to `95-archive/`.**
+**4. Decide whether the Catalog entity archives too.**
 
-In Obsidian: right-click the note → Move file → `95-archive/`. Keep the same filename.
+The paper entity at `catalog/papers/<citekey>.md` is the bibliographic record, not your reading of it — it usually stays `current` so its `relationships` edges keep serving the graph. Set the entity to `lifecycle: archived` only when the record itself should leave the Catalog views (for a *retracted* paper, use `lifecycle: retracted` instead — usually prompted by a retraction `alert` card).
 
-Alternatively, in the terminal:
+**5. Confirm any claims that cite this source still stand.**
 
-```powershell
-Move-Item vault\20-sources\01-papers\<citekey>.md vault\95-archive\<citekey>.md
-```
-
-**5. Confirm any claim notes that cite this source still stand.**
-
-Open the backlinks panel (Obsidian → Backlinks) before archiving. If claim notes link to this source, they remain valid — the source is archived, not deleted. The `[!brief]` callout and Key Findings in the archived note preserve the rationale.
+Open the backlinks panel before walking away. Claims citing the source remain valid — the source is archived, not deleted, and every `sources:` citekey still resolves. If the archive was prompted by a retraction, revisit those claims deliberately (soften, supersede, or caveat).
 
 ## Verify
 
-- The note is in `95-archive/` with `lifecycle: archived`
-- No open Kanban cards reference this citekey
-- Dataview queries that filter on `lifecycle: current` no longer include this note
-- Claim notes that cite this source still show their backlinks pointing at `95-archive/<citekey>.md`
+- The source note carries `lifecycle: archived` and no longer appears in the active views of `system/dashboards/sources.base`
+- No open board cards reference this citekey
+- Claims citing this source still resolve their `sources:` citekeys
 
 ## When not to archive
 
-Do not archive a source just to clear it from a queue. If the discuss card has been open for weeks but you still plan to think about the paper, leave it open — the backpressure is intentional. Archive only when you've made a deliberate decision that this source is done.
+Do not archive a source just to clear it from a queue. If a source has sat unread for weeks but you still plan to read it, leave it at `lifecycle: proposed` — the backpressure is intentional. Archive only when you've made a deliberate decision that this source is done.
 
 ## Related
 
 - Weekly review (surfaces stale sources): [Run the weekly review](../curate/run-the-weekly-review.md)
 - Lifecycle field values: [Frontmatter fields](../../reference/frontmatter.md)
 - Why archived notes aren't deleted: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)
+- What happens on a retraction hit: [Run a retraction sweep](../operate/run-a-retraction-sweep.md)

@@ -1,49 +1,63 @@
 ---
-title: Build a Map of Content
+title: Build a hub
 parent: Curate
 nav_order: 3
 ---
 
-# Build a Map of Content
+# Build a hub
 
-This guide shows you how to create a navigational hub note that gives a dense claim cluster a stable entry point.
+Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point. The hub is the renamed MOC ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs live in a **review-gated zone**: agents only propose; you author.
 
-## When to create a MOC
+## When to create a hub
 
-Create one when a topic cluster crosses roughly 15–20 related claim notes, or a recurring topic appearing across 3 or more source notes. See [Wikilink and link conventions](../../reference/linking.md#moc-thresholds) for the full threshold table including child-MOC thresholds.
+When a topic has accumulated a handful of claims that belong together — typically by the third or fourth settled claim on one topic. Earlier is premature structure; much later and the cluster is already hard to navigate.
 
 ## Steps
 
-1. **Open `30-synthesis/03-moc/`.** In the file tree, right-click `30-synthesis/03-moc/` → New note from template → `moc.md`.
+**1. Create the note from the template.**
 
-2. **Name the MOC.** Use the topic slug plus `-moc` suffix: `jitai-design-moc`, `receptivity-timing-moc`.
+In `notes/hubs/`, create a new note from `system/templates/hub.md`:
 
-3. **Write the overview.** Two to four sentences covering what the cluster is about, what it includes, and what it doesn't.
+```yaml
+type: hub
+lifecycle: current
+topic: <your-topic>
+members: []
+links: {}
+```
 
-4. **Link the member notes.** Under a `## Notes` section, list the claim notes and paper notes that belong. Use wikilinks. Curate — omit tangentially related notes.
+**2. Name it after the topic.**
 
-5. **Update member notes.** Open each member note and add the MOC to its `moc:` frontmatter field: `moc: [[jitai-design-moc]]`.
+`receptivity-timing.md`, not `receptivity-timing-moc.md` — the folder already says what it is.
 
-6. **Add a `## Gaps` section.** Note what the cluster is missing — thin sub-topics, open questions, papers not yet ingested. This section feeds the `open-questions` dashboard.
+**3. Write the shape of the topic.**
 
-## Splitting a child MOC
+Two to four sentences in the **Shape of the topic** section: what this cluster is about, how the member claims relate, what's settled, what's still contested.
 
-When a branch within an existing MOC grows beyond 20 claim notes and 10 paper notes, split it:
+**4. List the members.**
 
-1. Create a new MOC for the branch.
-2. Move the branch member notes into the new MOC (`moc:` frontmatter updated).
-3. In the parent MOC, replace the individual note list for that branch with a link to the child MOC.
-4. Add `parent_moc: [[parent-moc-name]]` to the child MOC's frontmatter.
+Add the claim notes (and key source notes) to the `members` list and wikilink them in the **Members** section. Curate — omit tangentially related notes; one strong hub beats a complete-but-noisy one.
+
+**5. Name the gaps.**
+
+Note what the cluster is missing — thin sub-topics, open questions, papers not yet captured. Each named gap is a ready-made discovery prompt for the co-PI ([Find new sources](../compile/find-new-sources.md)).
+
+## Splitting a hub
+
+When one branch of a hub grows past ~15–20 member claims, split it: create a new hub for the branch, move those members over, and in the parent replace the individual links with one link to the child hub.
 
 ## Owners
 
-You author and curate the MOC. The Linter's `skeleton-drift` detector will flag if the MOC's `updated` timestamp lags behind its member notes' modification dates.
+You author and curate hubs. The Librarian's `map` lane can propose that a cluster deserves one (a `gap` card in the Inbox), and the Linter's `graph-analyze` detector flags orphan hubs with zero inlinks — but every structural decision is yours.
 
----
+## Verify
+
+- The hub validates: `type: hub`, `topic` set, every `members` entry resolving to a real note
+- The member claims link back (open the backlinks panel on the hub)
+- The hub shows up where you'd look for the topic — link it from `research-focus.md` or a parent hub if not
 
 ## Related
 
-- Promotion adds MOC entries (step 5): [Promote a claim to canonical reference](../compile/promote-a-claim.md)
-- MOC creation thresholds and link vocabulary: [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)
-- The MOC as a note type: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)
-- Why hubs matter to the knowledge cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)
+- The claims that fill it: [Advance a claim to evergreen](../compile/promote-a-claim.md)
+- The hub type and schema: [Note types](../../reference/note-types.md)
+- Why hubs matter to the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

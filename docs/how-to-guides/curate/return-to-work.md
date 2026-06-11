@@ -10,26 +10,23 @@ Three checks before starting any research session after being away — a day, a 
 
 ## Steps
 
-**1. Confirm environment variables are loaded.**
-
-```bash
-echo $KILOCODE_API_KEY $OPENALEX_API_KEY
-```
-
-Both should return non-empty values. If either is blank, the corresponding Hermes operations will fail silently or with cryptic errors. Source your env file:
-
-```bash
-source ~/.hermes/profiles/memoria-librarian/.env
-```
-
-**2. Confirm Hermes is reachable.**
+**1. Confirm Hermes and the profiles are healthy.**
 
 ```bash
 hermes --version
 hermes profile list
 ```
 
-`hermes --version` returns a version number. `hermes profile list` shows all seven `memoria-*` profiles registered. If profiles are missing, re-deploy them from the repo clone: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
+`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy from the repo clone: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
+
+**2. Confirm the secrets are in place.**
+
+```bash
+grep -c '=' ~/.hermes/.env
+cat ~/.hermes/profiles/memoria-librarian/.env | grep -E 'KILOCODE|OPENALEX|OBSIDIAN' | sed 's/=.*/=set/'
+```
+
+`KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, and `OPENALEX_API_KEY` should all show as set. A blank key fails silently mid-task. If you rotated keys in `~/.hermes/.env`, propagate them: `bash scripts/install.sh --profiles-only`.
 
 **3. Confirm the vault is synced.**
 
@@ -39,19 +36,21 @@ git pull --ff-only
 git status
 ```
 
-Expected: either "Already up to date" or a list of fast-forward changes. A merge conflict or diverged branch means another machine pushed while this one was offline — resolve before starting work.
+Expected: "Already up to date" or a clean fast-forward. A diverged branch means another machine pushed while this one was offline — resolve before starting work.
+
+Then open `home.md`: the status glance and **What needs me** show what accumulated while you were away (the crons kept running — sweeps every 15 minutes, lint daily).
 
 ## What's fragile
 
-**ACP pane not responding** — all workflows have a terminal equivalent. `Cmd-P` commands that invoke Hermes can also be run from the CLI. The ACP pane is a convenience layer, not a requirement.
+**ACP pane not responding** — the co-PI also runs in a terminal: `hermes -p memoria-copi acp` to test the server, and every delegation has a CLI equivalent (`hermes kanban create`). The pane is a convenience layer; see [Safe mode](../troubleshooting/safe-mode.md).
 
-**qmd search index stale** — if you modified notes outside a Hermes session, the search index may lag. Rebuild: see [Rebuild the search index](../operate/rebuild-the-search-index.md). Signs of staleness: Writer's `/draft` command returns no vault results.
+**qmd search index stale** — if notes changed outside a session, vault search may lag. Rebuild: [Rebuild the search index](../operate/rebuild-the-search-index.md).
 
-**Syncthing not synced** — check the Syncthing status bar in Obsidian or open `http://localhost:8384`. Notes created on another device won't be queryable until sync completes.
+**Sync (Syncthing/multi-device) incomplete** — notes created on another device won't be queryable until sync completes; check before blaming retrieval.
 
 ## If something is broken
 
-See [Safe mode](../troubleshooting/safe-mode.md) — the three core workflows (ingest, triage, export) and their fallbacks when optional tooling is unavailable.
+See [Safe mode](../troubleshooting/safe-mode.md) — the minimal working paths when optional tooling is down.
 
 ## Related
 

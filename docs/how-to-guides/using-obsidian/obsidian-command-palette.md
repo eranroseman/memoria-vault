@@ -6,7 +6,7 @@ nav_order: 4
 
 # Command palette
 
-Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leaving Obsidian. This guide covers the pre-wired commands and how to add the rest.
+Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Windows) without leaving Obsidian. This guide covers the pre-wired commands and how to make them fast.
 
 ## Prerequisites
 
@@ -18,46 +18,47 @@ Drive Memoria's daily operations from `Cmd-P` (`Ctrl-P` on Windows) without leav
 
 **1. Open the palette and confirm the pre-wired commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Mem`. **Seven note-creation commands ship pre-wired** in the starter vault — each a QuickAdd _Template_ choice that instantiates one of the raw-note templates in `99-system/templates/`:
+`Cmd-P` (or `Ctrl-P`) → type `Mem`. The commands ship pre-wired in the starter vault, in two groups ([Obsidian command palette](../../reference/obsidian-command-palette.md) has the full catalog):
 
-- `Memoria: capture fleeting` — fleeting note in `10-inbox/01-fleeting/`
-- `Memoria: write claim note` — claim note in `30-synthesis/01-claims/`
-- `Memoria: write MOC` — Map of Content in `30-synthesis/03-moc/`
-- `Memoria: write draft` · `Memoria: scaffold canvas` · `Memoria: scaffold code note` · `Memoria: write project note` — workbench notes (you pick the `40-workbench/<project>/` subfolder)
+**Capture and note creation** — the entry points that must fire from inside the editor:
 
-Each stamps `created`/`updated` automatically and takes its title from a prompt (`capture fleeting` uses a timestamp instead). The **card-producing** agent commands are also wired as QuickAdd Macros → user scripts that `hermes kanban create` a card on the matching lane: `lint this note`, `new project`, `scope this project`, `frame this section`, and `verify this draft`. The remaining **conversational** commands (`ask about this note`, `find related notes`, …) run through the ACP pane today and are tracked as a build gap ([#203](https://github.com/eranroseman/memoria-vault/issues/203)). Add the ones you need per step 2.
+- `Memoria: capture fleeting` — fleeting note in `notes/fleeting/` from `system/templates/fleeting.md`
+- `Memoria: write claim note` — claim note in `notes/claims/` from `system/templates/claim.md` (review-gated home: only you create here)
+- `Memoria: capture source from URL` — a capture card on the Librarian lane from a pasted URL
+- `Memoria: capture from Zotero selection` — the same capture card, citekey pre-filled from the current Zotero selection
+- `Memoria: resolve inbox card` — flips the active Inbox note's `lifecycle` to your verdict in place
 
-**2. Add a QuickAdd entry for each agent command you use.**
+**Per-task lane commands** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) — one command per lane task, each prompting only for what the task needs and creating a correctly-addressed board card:
 
-Settings → QuickAdd → Add choice → name it exactly as it appears in the catalog (e.g., `Memoria: ask about this note`). Set the type and implementation per the catalog's Implementation column (Macro → user script → Hermes API).
+- `Memoria: catalog a source` · `Memoria: extract claims` · `Memoria: link a claim` · `Memoria: map the corpus` — the Librarian's four tasks
+- `Memoria: draft a section` — the Writer's `draft` lane
+- `Memoria: verify a draft` — the Peer-reviewer's `verify` lane
+- `Memoria: run a pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along
+- `Memoria: delegate a task` — the generic fallback: pick any lane (including `code`) and type a free-form goal
 
-Start with the agent commands you'll reach for most:
+The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file.
 
-- `Memoria: ask about this note` — open the Socratic ACP pane on the current note
-- `Memoria: lint this note` — run the Linter on the current note
-- `Memoria: find related notes`
-- `Memoria: new project` — scaffold a full project folder under `40-workbench/`
+**2. Or skip the palette and ask the co-PI.**
+
+The conversational route does the same thing: open the Agent Client pane, say what you want, and the co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane and task; use the co-PI when you don't, or when the work spans several tasks. Two things have no command at all by design: linting needs no invocation — the Linter is an engine on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the v0.1.2 Project release. The assist surface (find/search/ask from the palette) is tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380).
 
 **3. Use the palette by type, not by scroll.**
 
 `Cmd-P` → type `M` → the palette filters to `Memoria:` commands only. Type 1–3 more letters to narrow further. The filter is fast enough that you do not need physical hotkeys for most commands.
 
-**4. Pin the highest-frequency commands to the Commander toolbar** (optional).
+**4. Assign a physical hotkey to any command you invoke more than ten times a day** (optional).
 
-If you have the Commander plugin installed: Commander settings → toolbar → add your most-used commands as toolbar buttons. These give one-click access without opening the palette.
-
-**5. Assign a physical hotkey to any command you invoke more than ten times a day** (optional).
-
-Settings → Hotkeys → search for the command name → assign a key combination. Reserve physical hotkeys for the genuinely highest-frequency commands only. More than five hotkeys and the bindings become difficult to remember.
+Settings → Hotkeys → search for the command name → assign a key combination. Reserve physical hotkeys for the genuinely highest-frequency commands only — `Memoria: capture fleeting` is the usual candidate.
 
 ## Verify
 
-- `Cmd-P` → `M` returns a filtered list of `Memoria:` commands
-- `Memoria: capture fleeting` creates a new note in `10-inbox/01-fleeting/`
-- `Memoria: write claim note` creates a titled claim note in `30-synthesis/01-claims/` from the template — Properties populated, clean body, no template scaffolding
+- `Cmd-P` → `M` returns the `Memoria:` commands in both groups
+- `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
+- `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding
+- A task command (e.g. `Memoria: map the corpus`) lands a card on the board: `hermes kanban list` shows it addressed to the right lane
 
 ## Related
 
-- Full command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md)
-- ACP pane and profile switching: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- QuickAdd plugin reference: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Full command catalog, including the removed and retired commands: [Obsidian command palette](../../reference/obsidian-command-palette.md)
+- The conversational route: [Agent-client pane](use-the-acp-pane.md)
+- QuickAdd and the rest of the plugin set: [Obsidian plugins](../../reference/obsidian-plugins.md)

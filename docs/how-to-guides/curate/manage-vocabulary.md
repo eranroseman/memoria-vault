@@ -4,203 +4,84 @@ parent: Curate
 nav_order: 4
 ---
 
-
 # Manage your topic vocabulary
 
-This guide shows you how to keep the `topic`, `study_design`, and `methods` fields consistent across your corpus — so Dataview queries stay reliable and classification stays navigable as your vault grows.
+Keep the `research_area`, `methodology`, and `topics` values consistent across your corpus — so Dataview and Bases views stay reliable and classification stays navigable as the vault grows. The controlled lists live in **`system/vocabulary.md`**, which ships with the vault (and is golden-copied, so the Linter can detect drift from the shipped scaffold once you've made it yours).
 
-## Prerequisites
-
-- A vault with at least a handful of classified source notes
-- Obsidian open with the vault
-
----
+These vocabularies are deliberately **open** — yours to define. The fixed Memoria vocabularies (lifecycle, maturity, certainty, card types) are schema-enforced and not yours to extend.
 
 ## When to do each task
 
 | Trigger | Task |
 | --- | --- |
-| Starting a new corpus or project | Define your initial vocabulary list |
-| Active `topic` list exceeds ~30 terms | Prune and consolidate |
+| Starting a new corpus | Define your initial lists |
+| The active list exceeds ~30 terms | Prune and consolidate |
 | A term's meaning has drifted or split | Rename it safely |
 | Annually, or after a major reading batch | Full vocabulary review |
 
----
+## Step 1 — Make `system/vocabulary.md` yours
 
-## Step 1 — Create your vocabulary reference note
-
-If it doesn't exist yet, create `00-meta/vocabulary.md`. This note is the single source of truth for your allowed values.
-
-Structure it with one section per field:
-
-```yaml
-type: reference-note
-lifecycle: current
-```
+Open it and structure one section per field:
 
 ```markdown
-## topic
-- sensemaking
-- jitai-design
-- ecological-momentary-assessment
-...
-
-## study_design
-- rct
-- observational
-- field-study
-- meta-analysis
-...
-
-## methods
-- experience-sampling
-- thematic-analysis
-- regression
-...
-```
-
-Keep the `topic` list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable Dataview queries.
-
-### Worked example — HCI + digital health (copy, edit, discard)
-
-*One* example, not a Memoria default — `topic`/`study_design`/`methods` are deliberately open. Copy what fits, rename the rest, delete the remainder; nothing here is enforced.
-
-```yaml
-## topic — ~30 terms
-# Intervention design
-- jitai                     # Just-in-Time Adaptive Interventions
-- ema-experience-sampling   # Ecological momentary assessment
-- receptivity-detection     # Optimal-moment detection for delivery
-- behavior-change
-- implementation-science
-# Health domains
-- self-management
-- health-coaching
-- motivational-interviewing
-- mental-health-wellbeing
-- chronic-disease
-- mhealth
-# Research methods (conceptual)
-- hci-methods
-- design-science
-- causal-inference
-- qualitative-methods
-# Systems and technology
-- conversational-agents
-- wearables-sensors
-- digital-phenotyping
-- ubicomp
-- llm-ai-health
-# Knowledge and equity
-- sensemaking
+## research_area
+- receptivity-detection
+- ema-experience-sampling
 - health-equity
-- health-informatics
-- patient-provider
 
-## study_design — one value per note, most specific that applies
-- RCT
-- controlled-experiment
-- quasi-experimental
-- observational
-- systematic-review
+## methodology
+- field-study
+- qualitative-interview
 - meta-analysis
-- qualitative
-- mixed-methods
-- design-science
-- technical          # algorithm/model/benchmark — no human participants
-- theoretical        # framework / conceptual / position paper
-- secondary-analysis
 
-## methods — list-valued
-# Data collection
-- semi-structured-interview
-- survey
-- diary-study
-- ema-probe
-- log-analysis
-- biometric-sensing
-- think-aloud
-# Analysis
-- thematic-analysis
-- grounded-theory
-- content-analysis
-- statistical-modelling
-- machine-learning
-- nlp-text-analysis
-- causal-dag
-# Design and evaluation
-- participatory-design
-- usability-testing
-- field-deployment
-- wizard-of-oz
-- ab-test
+## topics (claims)
+- receptivity-timing
+- sensemaking
 ```
 
-(`maturity` and MOC `scope` are *fixed* Memoria vocabularies, not open — see [Frontmatter fields](../../reference/frontmatter.md).)
+Keep each list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable queries ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
----
+Note the consumers: the ingest engine's automated classify stage rolls OpenAlex topics into `research_area` on paper entities ([Ingest routing](../../reference/ingest.md)); you carry the same terms onto source notes and use `topics` on claims. Your list is what keeps the human side consistent with the automated side.
 
 ## Step 2 — Add a new term
 
-Before adding a term, check your vocabulary note to confirm it doesn't already exist under a different name.
-
-1. Add the term to the relevant section in `vocabulary.md`.
-2. Use it in the note you're classifying.
-3. If you're adding a `topic` term and the list is already at 30, first check whether an existing term could cover the same ground.
-
----
+1. Check the relevant section first — the term may already exist under another name. That check is the whole discipline.
+2. Add it to `system/vocabulary.md`, then use it in the note you're classifying.
+3. If the list is already at ~30, ask whether an existing term covers the ground before adding.
 
 ## Step 3 — Rename a term safely
 
-Never search-replace topic values manually across notes — it bypasses the Linter and leaves no audit trail.
+There is no automated migration command in v0.1.1 — a rename is a deliberate, git-disciplined pass:
 
-**Option A — Obsidian tag-wrangler (for small corpora):**
-
-1. Install the Tag Wrangler plugin if not present.
-2. Open the Tags panel (Cmd-P → Tag Wrangler: Rename tag).
-3. Rename the old value to the new value. Tag Wrangler updates every occurrence.
-4. Update `vocabulary.md` to reflect the new term.
-
-**Option B — Linter schema-migrate (for large corpora or automated runs):**
+1. **Commit first** so the rename is one reviewable diff: `git add -A && git commit -m "pre-rename snapshot"`.
+2. **Find every occurrence:** Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/` in the terminal).
+3. **Edit each frontmatter occurrence** to the new term. For a large corpus, a scripted `sed` pass over the matched files is fine — you reviewed the file list in step 2.
+4. **Update `system/vocabulary.md`.**
+5. **Validate:** run the Linter's detectors and review the diff before committing:
 
 ```bash
-hermes -p memoria-linter chat -s lint
+python3 .memoria/engines/linter/detectors.py --vault . 
+git diff --stat && git add -A && git commit -m "vocab: rename old-term → new-term"
 ```
 
-```text
-/schema-migrate --field topic --from old-term --to new-term --dry-run
-```
-
-Review the dry-run output. If it looks correct, remove `--dry-run` and run again.
-
-After either option, run a lint check to confirm no stale values remain:
-
-```text
-/lint --check schema
-```
-
----
+The pre-commit gate re-validates every staged typed note against its schema, so a botched edit blocks the commit instead of landing.
 
 ## Step 4 — Annual vocabulary review
 
-Once a year (or after a major reading batch), open `vocabulary.md` and walk through each list:
+Once a year (or after a major reading batch), walk each list:
 
-1. **Prune.** Remove terms that appear on fewer than 3 notes — they're not load-bearing.
-2. **Consolidate.** Merge terms that have drifted to mean the same thing (use Option A or B above to rename the smaller into the larger).
-3. **Split.** If a term has grown ambiguous (covering two distinct concepts), add both new terms, rename existing notes, and remove the old term.
-4. After changes, run `/lint --check schema` to catch any notes still using retired values.
-
----
+1. **Prune** terms appearing on fewer than ~3 notes — they're not load-bearing.
+2. **Consolidate** terms that drifted to mean the same thing (rename the smaller into the larger, per Step 3).
+3. **Split** a term that now covers two distinct concepts.
 
 ## Verify
 
-- `vocabulary.md` reflects the current active term list
-- No notes use values not in `vocabulary.md` (confirmed by lint schema check)
-- Active `topic` list is ≤ 30 terms
+- `system/vocabulary.md` reflects the current active lists, each ≤ ~30 terms
+- A grep for each retired term returns no frontmatter hits
+- The Linter's `schema-check` and `dashboard-field-drift` detectors report nothing new
 
 ## Related
 
-- Classify a source: [Classify a source](../compile/classify-a-source.md)
-- Run the Linter: [Run the Linter](../operate/run-the-linter.md)
-- Field definitions: [reference/linking.md#vocabulary-discipline](../../reference/linking.md#vocabulary-discipline)
-- Vocabulary discipline (why three fields, why open): [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
+- Where the automated side applies terms: [Classify a source](../compile/classify-a-source.md)
+- The validation pass: [Run the Linter](../operate/run-the-linter.md)
+- Why three open fields and a small list: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)

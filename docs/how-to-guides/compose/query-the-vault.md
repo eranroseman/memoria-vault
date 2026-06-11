@@ -4,82 +4,58 @@ parent: Compose
 nav_order: 5
 ---
 
-
 # Query the vault
 
-Ask the vault a research question and get a cited synthesis — an answer-note with every assertion tagged to a source. Query is a read operation: it doesn't create claim notes; it produces a draft answer for your review.
+Ask the vault a research question and get a grounded answer in the co-PI pane. Query is a read operation — nothing is written; the v0.1.0 answer-note inbox is retired, and anything worth keeping you author yourself.
 
 ## Which retrieval path?
 
-Several retrieval surfaces overlap; pick by what you want *out*:
+Several surfaces overlap; pick by what you want *out*:
 
 | You want… | Use | Output |
 | --- | --- | --- |
-| A cited written synthesis you'll verify and maybe keep | **Writer `query`** (this guide) | answer-note in `10-inbox/02-answers/` |
-| To sharpen your *own* thinking by being questioned | **Socratic pane** (*Agent Client: Open chat view* → Socratic) | conversation, no file |
-| A fast deterministic lookup of a known term or field | **Librarian `query`** | results in chat, no file |
-| The notes most similar to one you're looking at | **Mapper `find related notes`** | top matches in chat, no file |
+| A synthesized answer grounded in your notes | **Ask the co-PI** (this guide) | conversation in the pane |
+| To sharpen your *own* thinking by being questioned | The co-PI's questioning posture — say "push back on this" | conversation in the pane |
+| A written, citable synthesis to keep | Delegate a **`draft`** task | a draft in `projects/`, via the Inbox |
+| A fast lookup of a known term or field | Obsidian search, or a Dataview/Bases view | results in the UI |
 
-Rule of thumb: reach for **Socratic** when *you* should do the synthesizing; reach for **`query`** when you want the synthesis drafted for your review.
+Rule of thumb: converse when *you* should do the synthesizing; delegate a draft when you want prose you'll verify and keep.
 
 ## Prerequisites
 
-- At least a handful of ingested and classified sources in `20-sources/`
-- The Writer (or Librarian) profile installed
+- At least a handful of classified sources and a few claims — retrieval needs something to retrieve
+- The `qmd` search index current (the co-PI's vault search runs on it — [Rebuild the search index](../operate/rebuild-the-search-index.md) if results look stale)
 
 ## Steps
 
-**1. Ask your question via the agent-client pane in Obsidian.**
+**1. Ask in natural language.**
 
-Open the agent-client pane (`Cmd-P → Agent Client: Open chat view`, or the ribbon icon) and switch to the **Writer** profile for a cited synthesis (or **Socratic** to be questioned). The active note auto-attaches; ask your question in the pane. *(A one-shot `Memoria: ask about this note` palette command is [deferred] — use the pane today.)*
-
-Type your question in natural language:
+Open the Agent Client pane and ask the question, not keywords:
 
 > "What predicts JITAI receptivity?"
-> "What methods have been used to measure ecological momentary assessment compliance?"
-> "Which papers contradict the claim that cognitive load reduces receptivity?"
+> "Which of my claims would the 2024 papers contradict?"
+> "What methods have my sources used to measure EMA compliance?"
 
-**2. Wait for the synthesis.**
+The active note auto-attaches; attach others via the paperclip when the question is about a specific cluster.
 
-The Writer (or Librarian for retrieval-heavy queries) runs a hybrid keyword + dense search across claim notes, reference notes, and paper notes. Superseded claim notes (`superseded_by`) are excluded by default — the synthesis reflects current beliefs.
+**2. Interrogate the answer.**
 
-The result is drafted to `10-inbox/02-answers/` as an answer-note, each assertion tagged with `[@citekey]`.
+The co-PI reads the vault directly (hybrid keyword + vector search over `qmd`, plus the typed graph). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
 
-**3. Open the answer-note and verify.**
+**3. Keep what's worth keeping — yourself.**
 
-Navigate to `10-inbox/02-answers/`. Open the new note. For each assertion:
-
-- Check that the cited citekey actually supports the claim — open the source note and verify
-- Edit any overreach (the synthesis may state something more strongly than the source warrants)
-- Delete or rewrite anything that doesn't hold up
-
-**4. Decide what to do with the verified answer.**
-
-| Situation | Action |
-| --- | --- |
-| The answer represents a genuine new synthesis you'll cite later | Promote it: [write a claim note](../compile/write-a-claim-note.md) from it, then delete the answer-note |
-| It's useful context for a specific writing project | Move it to `40-workbench/<project>/` |
-| It answered a one-off question and you won't return to it | Delete it — answer-notes that aren't promoted surface in the weekly review after 90 days as stale |
-
-## Via the CLI (alternative)
-
-```bash
-hermes -p memoria-writer chat -s draft
-# then, in the session:
-/draft "what predicts JITAI receptivity?" --mode query
-```
-
-Same result, different surface.
+- A genuine new synthesis → distill it properly: [Write a claim note](../compile/write-a-claim-note.md).
+- Context for a writing project → copy into your `projects/<slug>/` scratch.
+- A one-off answer → close the pane. The transcript auto-exports to `notes/fleeting/chats/` and surfaces in fleeting triage, so nothing silently rots.
 
 ## Verify
 
-- `10-inbox/02-answers/` contains the answer-note with `[@citekey]` tags
-- Every assertion has been manually verified against its cited source
-- The note has been promoted, moved, or deleted — not left indefinitely in the answers inbox
+- Every assertion you kept traces to a note or citekey you checked
+- Anything durable from the session exists as *your* note, not just a transcript
 
 ## Related
 
-- Promote to claim note: [Write a claim note](../compile/write-a-claim-note.md)
-- Weekly review (step 2 — unreviewed synthesis): [Run the weekly review](../curate/run-the-weekly-review.md)
-- The profile running the query: [The Writer](../../explanation/profiles/writer.md)
-- Query vs Socratic discussion: [The Socratic](../../explanation/profiles/co-pi.md)
+- Distilling a kept answer: [Write a claim note](../compile/write-a-claim-note.md)
+- The transcript's afterlife: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
+- The search engine underneath: [Rebuild the search index](../operate/rebuild-the-search-index.md)
+- The agent across the desk: [The co-PI](../../explanation/profiles/co-pi.md)

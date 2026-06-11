@@ -4,83 +4,53 @@ parent: Compose
 nav_order: 2
 ---
 
-
 # Assess your corpus
 
-Run the Mapper's `scope-project` command to get a corpus map — a structured report of what claim notes and sources you have, where coverage is dense, and where the gaps are. The corpus map is the decision point before framing or drafting.
+Delegate a **`map`** task to get a corpus map — a structured read of what claims and sources you hold, where coverage is dense, and where the gaps are. The map is the decision point before drafting: write now, or read more first.
 
 ## Prerequisites
 
-- A project folder scaffolded in `40-workbench/<project-slug>/` with its `README.md` project-note (from [Start a writing project](start-a-writing-project.md))
-- The Mapper profile installed
-- At least 5 claim notes in `30-synthesis/` (fewer than that and the map is mostly gaps)
+- At least ~5 claim notes in `notes/claims/` (fewer than that and the map is mostly gaps)
+- The Agent Client pane connected
 
 ## Steps
 
-**1. Confirm the project-note describes the deliverable.**
+**1. Name the question.**
 
-The Mapper scopes against the project-note (`40-workbench/<project-slug>/README.md`, `type: project-note`) created in the previous step. Before running, make sure its body states the deliverable and target — for example:
+The map lane scopes against what you ask, so bring the deliverable into the question: the topic, the intended output, any framing constraints ("must cover 2020–2025", "needs to foreground equity").
 
-```text
-Deliverable: journal article / chapter / report / etc.
-Audience: who reads it
-Length: approx. word count or page count
-```
+**2. Delegate the map task.**
 
-and 2–4 sentences on the research question and any framing constraints (e.g., "needs to foreground equity considerations," "must cover 2020–2025 literature only"). Fill `scope` and `research_question` in the frontmatter to match.
+In the co-PI pane:
 
-**2. Start a Mapper session and run `scope-project`.**
+> "Map my corpus on `<topic>` — what do I have good coverage on, and where is it thin? I'm aiming at `<deliverable>`."
 
-Open a note inside `40-workbench/<project>/` and run `Memoria: scope this project` — it creates the Mapper card that produces `01-map/corpus-map.md`. The CLI is the equivalent fallback (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
+The co-PI delegates a **`map`** task to the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). (Palette twin: **Memoria: map the corpus** — prompts for an optional scope.)
 
-```bash
-hermes -p memoria-mapper chat -s scope-project
-# then, in the session:
-/scope-project --project <project-slug>
-```
+**3. Read the results from the Inbox.**
 
-The Mapper retrieves all claim notes and reference notes matching the brief, computes cluster density and recency distribution, and identifies adjacent topics with thin coverage.
+The coverage read comes back through the Inbox, with **`gap` cards** for the thin areas — each carrying the honesty body, never a verdict. Read by pattern:
 
-**3. Read the corpus map.**
-
-The output is written to `40-workbench/<project-slug>/01-map/corpus-map.md`. Open it in Obsidian. Look for:
-
-- **Dense clusters** — areas with multiple claims; safe to draft from
-- **Thin clusters** — mentioned but under-evidenced; may need more reading before drafting
-- **Gaps** — topics the brief requires but the vault doesn't cover at all
+- **Dense + recent cluster** — draft from it; the evidence is there and current.
+- **Dense + stale cluster** — well-read a while ago; check for newer work before leaning on it.
+- **Thin cluster** — mentioned but under-evidenced; read more first.
+- **Gap the deliverable requires** — fill it or explicitly scope it out. A gap you neither fill nor acknowledge becomes an unsupported section later.
 
 **4. Decide: write now or read more?**
 
-- **Dense enough:** proceed to [frame the project](frame-a-project.md)
-- **Gaps that matter:** return to the Compile flow — run [find new sources](../compile/find-new-sources.md) or add specific papers to Zotero
+- **Dense enough** (a hub with several mutually linked claims is the tell): proceed to sketching and drafting.
+- **Gaps that matter:** hand each gap card you agree with straight back — "that gap is real, find sources to fill it" ([Find new sources](../compile/find-new-sources.md)). Archive the gaps you don't buy.
 
-Don't proceed to framing until the gaps are either filled or explicitly accepted as out-of-scope for this deliverable.
-
-## Interpreting the output — and when to reach for `cluster-map` / `gap-report`
-
-`scope-project` is the project-scoped map. Two narrower Mapper commands answer related questions when you don't have a brief yet:
-
-| Command | Question it answers | When to run |
-| --- | --- | --- |
-| `scope-project` | "For *this* brief, what do I have and what's missing?" | Before framing or drafting a specific deliverable |
-| `cluster-map` | "How is my corpus distributed across a topic — dense where, recent where?" | Exploring a topic with no project yet |
-| `gap-report` | "What adjacent topics are thin relative to a brief?" | Deciding what to read next |
-
-Whichever you run, read the output by pattern:
-
-- **Dense + recent cluster** — draft from it; the evidence is there and current.
-- **Dense + stale cluster** — well-read a while ago; check for newer work before drafting (run [find new sources](../compile/find-new-sources.md)).
-- **Thin cluster** — mentioned but under-evidenced; read more before you lean on it.
-- **Gap the brief requires** — fill it via the Compile flow, or explicitly scope it out. A gap you neither fill nor acknowledge becomes an unsupported section later.
+Two standing dashboards answer the same questions continuously: `system/dashboards/open-questions.md` (unconnected claims — the synthesis backlog) and `contradictions.md` (open tensions).
 
 ## Verify
 
-- `40-workbench/<project-slug>/01-map/corpus-map.md` exists and has content
+- The map results and gap cards arrived in the Inbox, and every gap card is resolved — turned into a discovery task or archived
 - You've made an explicit "write now / read more" decision — not just noted the map and moved on
 
 ## Related
 
-- Previous step: [Start a writing project](start-a-writing-project.md)
-- Next step: [Frame a project](frame-a-project.md)
-- Find new sources (if gaps need filling): [Find new sources](../compile/find-new-sources.md)
-- Conceptual background on the Mapper: [The Mapper](../../explanation/profiles/librarian.md)
+- Filling the gaps: [Find new sources](../compile/find-new-sources.md)
+- Next step when dense: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
+- The guided walk: [Tutorial 05: Synthesize toward a writing project](../../tutorials/05-synthesize-toward-a-writing-project.md)
+- The lane behind the map: [The Librarian](../../explanation/profiles/librarian.md)

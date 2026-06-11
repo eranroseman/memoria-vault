@@ -4,58 +4,50 @@ parent: Compose
 nav_order: 8
 ---
 
-
 # Work the review queue
 
-When an agent finishes a task that writes to a review-gated zone (`30-synthesis/01-claims/`, `02-reference/`, `03-moc/`, or `50-deliverables/`), its card lands in `done` with `review_status: requested` and **blocks** — the write is held in `dry_run` until you decide. This guide is how you, the human, clear that queue: inspect each card, then approve (let the write land) or reject (nothing lands, and you choose what happens next).
+Clear the decisions waiting on you. In v0.1.1 the review surface is the **Inbox**: agents finish board cards, and what needs your judgment lands as typed cards (`candidate` / `gap` / `flag` / `alert`) at `lifecycle: proposed`. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
 
 ## Prerequisites
 
-- The board exporter (`board_export.py`) running, so the dashboards reflect the live board
-- At least one card in `done` with `review_status: requested`
-- A working grasp of the review-state model — see [Review as a first-class state](../../explanation/workflows/review-as-state.md)
+- Cards in the Inbox at `lifecycle: proposed` (`home.md` → **What needs me**, or `inbox/inbox.base`)
 
 ## Steps
 
-**1. Open the review queue.**
+**1. Open the queue and work it as one batch.**
 
-From `home.md` — the front-door note that opens on startup — go to the **board-state dashboard** (`00-meta/01-dashboards/board-state.md`). The review queue is every card in `done` whose `review_status` is `requested`; the dashboard surfaces them under the review-queue count. For dashboard navigation see [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md).
+Sit down once and sweep the queue — high-cardinality decisions belong in one worklist worked in one sitting, never N cards trickling at you ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
-**2. Inspect one card.**
+**2. Read each card the right way round.**
 
-Each card shows the **assignee** (which lane produced it), the **`agent_recommendation`** (`clean` / `issues-found` / `inconclusive`), and a summary of the proposed write. For a synthesis or deliverable write, open the target zone and read the proposed change — the policy MCP keeps the write in `dry_run` until you approve, so nothing has landed yet and there is no risk in reading first.
+- **Proposals** (`candidate`, `gap`) carry the honesty body — read `argument_against` and `certainty` first; the card existing *is* the recommendation, so there is no verdict field.
+- **Verification cards** (`flag`, `alert`) lead with the `finding` and carry `agent_recommendation` (`clean` / `issues-found` / `inconclusive`) — a recommendation, never the decision. You can reject a `clean` and accept an `issues-found`.
 
-**3. Weigh the agent verdict — but decide for yourself.**
+**3. Act, then resolve.**
 
-`agent_recommendation` is a *recommendation*, not the decision. You can reject a card the Verifier marked `clean`, or approve one it flagged after reading the flag and judging it minor. Approval means "good enough to move forward" — not "every claim in this output is verified."
+Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card** sets your verdict (`current` = accepted, `retracted` = rejected, or straight to `archived`) and stamps `resolved:`. The Inbox converges to empty; empty is success.
 
-**4. Approve.**
+**4. Reject cleanly.**
 
-Set the card's `review_status` to `approved`. The dispatcher then lets the gated write proceed and the policy MCP stops applying `dry_run` to that card's target. For link-suggestion cards specifically, `Cmd-P → Memoria: approve all link suggestions` bulk-approves every `requested` card at once.
+Rejecting costs one decision and leaves nothing behind — the proposed write never landed. If the *task* behind a card was mis-specified and should be redone, delegate a corrected card via the co-PI; on the board, rejection spawns a new card (`supersedes:` the original) rather than re-running the old one, so the audit trail can't lie.
 
-**5. Reject — then choose a path.**
+**5. Mind the back-pressure.**
 
-Set `review_status` to `rejected`. A rejected card is **not** handed back to the worker — there is no "do the same thing but better." Pick one path (see [Post-rejection paths](../../explanation/workflows/review-as-state.md#post-rejection-paths)):
+The board caps `done` cards awaiting you at 5 — when the queue fills, the dispatcher slows new work on that lane. That's the system protecting your review capacity, not a malfunction. If a lane stalls, clear your queue rather than wishing the cap away.
 
-- **Supersede** — create a new card on the same lane with a corrected specification; the old card is archived with `archive_reason: superseded`. Use this when the *spec* was wrong, not just the execution.
-- **Discard** — archive the card with `archive_reason: discarded`. Use this when the task itself should never have existed.
+**6. Watch your own accept rate.**
 
-Don't confuse rejection with a **retry** — a retry is automatic re-dispatch of the *same* card after a transient failure (rate limit, timeout). Retries address execution failures; rejections address quality failures.
-
-**6. Mind the WIP cap.**
-
-The `done-awaiting-review` queue has a cap. When it fills, the dispatcher slows new work on that lane — this is back-pressure that keeps the board from racing ahead of your review capacity, not a malfunction. If a lane stalls, clear its review queue rather than raising the cap.
+The fleet-health dashboard tracks accept/reject ratios per proposing lane: near-100% acceptance reads as rubber-stamping; below ~20% means candidate scoring needs tuning. Both are signals to act on.
 
 ## Verify
 
-- The board-state dashboard's review-queue count drops as you approve or reject.
-- Approved synthesis/deliverable writes now appear in their target zone (no longer held in `dry_run`); rejected cards left nothing behind.
-- No card sits in `done` + `review_status: requested` longer than your review cadence.
+- No card sits at `lifecycle: proposed` longer than your review cadence (the weekly review is the backstop)
+- Every accepted proposal resulted in a change made by your hand; rejected cards left nothing behind
+- `home.md`'s **What needs me** view is empty at the end of the pass
 
 ## Related
 
-- Where the queue is surfaced: [Navigate the dashboards](../using-obsidian/navigate-the-dashboards.md), [board-state dashboard](../../explanation/dashboards/daily-glance/board-state.md)
-- The write-gate that enforces it: [Policy MCP reference](../../reference/policy-mcp.md)
-- Why review is a state, not a convention: [Review as a first-class state](../../explanation/workflows/review-as-state.md)
-- Why the gate is structural: [Why a human gate](../../explanation/rationale/why-human-gate.md)
-- Decisions: [ADR-03 structural review gate](../../adr/03-structural-review-gate.md), [ADR-14 advisor review](../../adr/14-advisor-review-vs-frozen-deliverable.md), [ADR-16 adopt-on-demand](../../adr/16-systematic-review-adopt-on-demand.md)
+- Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
+- The card shapes and their fields: [Note types](../../reference/note-types.md)
+- The gate that holds agent writes: [Policy MCP](../../reference/policy-mcp.md)
+- Why review is structural, not a convention: [Why a human gate](../../explanation/rationale/why-human-gate.md)

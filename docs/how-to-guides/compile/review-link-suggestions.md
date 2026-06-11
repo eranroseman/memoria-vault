@@ -6,57 +6,66 @@ nav_order: 10
 
 # Review link suggestions
 
-Work through the `[!suggestions]` callout the Librarian attaches to a note — approving the candidate links that belong and rejecting the rest. This is the curation step that turns proposed connections into real wikilinks without rubber-stamping.
+Work through the link proposals the Librarian's **`link` lane** raises — candidate connections (`link:suggest-claim`) and tensions (`link:surface-tension`) — approving the ones that belong and rejecting the rest. This is the curation step that turns proposed connections into real `links:` entries without rubber-stamping.
 
-This is different from [linking related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` relation you've decided on; this one is for *triaging the agent's proposals*.
+This is different from [Link related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` link you've decided on; this one is for *triaging the agent's proposals*.
 
-> **`[deferred]` — not yet wired.** Nothing produces the `[!suggestions]` callout today: the Librarian's linker is Tier-1 *deterministic citation linking* (ADR-30), not a similarity-ranked suggestion pass, and the `Memoria: approve all link suggestions` command is itself `[deferred]` ([command palette](../../reference/obsidian-command-palette.md)). The shipped similarity surface today is the **`[!brief]` callout** at the top of each paper note — the Librarian's top-5 comparative read composed during ingest ([Capture and ingest a source](capture-and-ingest.md), [Obsidian callouts](../../reference/obsidian-callouts.md)). This guide describes the designed curation step; the producer is a scoped follow-up. The steps below are the intended workflow once it lands.
+## Why proposals arrive as Inbox cards
+
+`notes/claims/` is a review-gated zone — every agent write there degrades to `dry_run`, so the link lane **cannot** edit your `links:` maps even if it wanted to. Its findings land as Inbox cards instead: a suggested connection arrives as a **`gap`** proposal carrying the honesty body (`argument_for`, `argument_against`, `what_tipped_it`, `certainty` — never a verdict); a surfaced tension between claims leads with the `finding`.
 
 ## Prerequisites
 
-- A note carrying a `[!suggestions]` callout (the Librarian attaches one after an `enrich` or weekly link pass)
-- The Callout Manager plugin active ([Set up Obsidian](../setup/set-up-obsidian.md))
+- Link-lane cards in the Inbox — from asking the co-PI ("suggest links among my receptivity claims") or from a `map`/`verify` pass that ran the link lane
 
 ## Steps
 
-**1. Open the note and expand the callout.**
+**1. Open the cards in one sitting.**
 
-The `[!suggestions]` callout sits at the bottom of the note and is **collapsed by default** — this is deliberate, so you don't approve a wall of links at a glance. Click to expand it. It holds at most five forward candidates (this note → others) and five backward (others → this note), each with Approve / Reject affordances.
+`home.md` → **What needs me**, or `inbox/inbox.base`. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each candidate before deciding.**
 
-For each candidate, ask: *would I want this link to exist when I come back to either note?* A good link is one a future reading session would actually traverse. The agent ranked these by similarity and shared citations, but relevance is your call — a high-similarity pair can still be a link not worth making.
+For each proposed link, ask: *would I want this edge to exist when I come back to either note?* A good link is one a future reading or writing session would actually traverse. Read `argument_against` first — it's the information-bearing field; high similarity can still be a link not worth making.
 
-**3. Approve the ones that belong.**
+**3. Approve by writing the link yourself.**
 
-Approving writes the wikilink into the note body (and, for a backward suggestion, queues the reciprocal edit on the other note). Approve only what you'd have linked by hand.
+Accepting a proposal means *you* open the claim and add the entry to its `links:` map:
+
+```yaml
+links:
+  contradicts:
+    - "[[the-other-claim]]"
+```
+
+Then resolve the card to `current` → `archived` (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**). The agent proposed; your hand on the file is the approval.
 
 **4. Reject the rest — don't leave them pending.**
 
-Reject removes the candidate from the callout. Leaving candidates undecided defeats the mechanism: a stale half-reviewed callout is noise the next time you open the note. Clear the callout to empty in one pass.
+Resolve unconvincing cards straight to `archived`. Leaving cards undecided defeats the mechanism: the Inbox converges to empty, and a stale half-reviewed queue is noise.
 
 **5. Resist approve-all.**
 
-There is a `Memoria: approve all link suggestions` command, but use it only when you've already read the list and genuinely want every candidate. A reflexive approve-all is exactly the rubber-stamping the collapsed-by-default design exists to prevent — and the [fleet-health dashboard](../../explanation/dashboards/operational-health/fleet-health.md) tracks your accept rate as a trust-score signal (a rate near 100% reads as rubber-stamping; see the [reference cutoffs](../../reference/obsidian-callouts.md#drift-signals)).
+The fleet-health dashboard tracks accept/reject ratios as a trust-score signal — an accept rate near 100% reads as rubber-stamping, and a rate below ~20% means candidate scoring needs tuning ([Dashboards](../../reference/dashboards.md)). Both extremes are worth acting on.
 
 ## Verify
 
-- The `[!suggestions]` callout on the note is empty (every candidate approved or rejected)
-- Approved links appear as wikilinks in the note body
-- For approved backward suggestions, the reciprocal link exists on the other note
+- No link-lane card remains at `lifecycle: proposed`
+- Every approved proposal exists as a `links:` entry on the claim, in your hand
+- A `contradicts` approval now shows on `system/dashboards/contradictions.md`
 
 ## Related
 
 **How-to**
 
-- Manually type a claim relation (the deliberate, non-proposed path): [Link related claims](link-related-claims.md)
-- Where suggestions come from in the intake flow: [Capture and ingest a source](capture-and-ingest.md)
+- The deliberate, non-proposed path: [Link related claims](link-related-claims.md)
+- Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
 
 **Reference**
 
-- Callout field shapes, scoring weights, drift cutoffs: [Obsidian callouts](../../reference/obsidian-callouts.md)
+- The card shapes: [Note types](../../reference/note-types.md)
+- The accept-ratio signal: [Dashboards](../../reference/dashboards.md)
 
 **Explanation**
 
-- Why suggestions are collapsed and producer-owned: [Callouts](../../explanation/obsidian/callouts.md)
-- How the accept/reject ratio feeds the trust score: [fleet-health dashboard](../../explanation/dashboards/operational-health/fleet-health.md)
+- Why proposals carry arguments, not verdicts: [The honesty card](../../explanation/kanban-board/card-schema.md)

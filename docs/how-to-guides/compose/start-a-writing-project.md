@@ -4,97 +4,20 @@ parent: Compose
 nav_order: 1
 ---
 
+# Start a writing project [v0.1.2]
 
-# Start a writing project
+The full project workflow — `projects/` scaffolding, the project brief, the Project workspace, and the brief → relevance-scan → canvas → outline path — ships with the **v0.1.2 Project release** (the form → script automation is tracked in [#154](https://github.com/eranroseman/memoria-vault/issues/154)). There is no `Memoria: new project` command in v0.1.1, and `projects/` starts empty.
 
-Scaffold the workbench folder structure for a new paper, chapter, or long-form output. This is the setup step before running Assess, drafting, or exporting.
+What exists today is the part a project stands on, and it's where to spend the time meanwhile:
 
-## Prerequisites
+1. **Build the synthesis surface.** Distill claims into `notes/claims/` and gather the cluster under a hub in `notes/hubs/` — [Tutorial 05: Synthesize toward a writing project](../../tutorials/05-synthesize-toward-a-writing-project.md) walks the whole arc.
+2. **Check readiness.** Delegate a `map` task ([Assess your corpus](assess-your-corpus.md)) — a hub with several mutually linked claims is the tell that a cluster is dense enough to write from.
+3. **Sketch and draft.** Lay the argument out spatially ([Use canvas for argument mapping](use-canvas-for-argument-mapping.md)), delegate outline and section work to the Writer's `draft` lane ([Draft with the Writer](draft-with-writer.md)), and keep project scratch under a `projects/<slug>/` folder of your own making — that's the Writer's write scope, and nothing in v0.1.1 objects to you using it early.
 
-- You have a topic with at least 5 claim notes at `maturity: seedling` or higher
-- The Mapper and Writer profiles are installed
-
-## Fastest path: the `Memoria: new project` command
-
-`Cmd-P` (or `Ctrl-P`) → `Memoria: new project`. The QuickAdd macro prompts for the project title, research question, and output type, then does steps 1–4 for you: it creates `40-workbench/<slug>/` with the six canonical subfolders, writes `README.md` from the `project-note` template, and creates the Mapper scope card (which produces `01-map/corpus-map.md`). Skip to step 5 to review the corpus map.
-
-The manual steps below are the fallback if the command isn't wired in your vault.
-
-## Steps
-
-**1. Create the project folder in the workbench.**
-
-In Obsidian's file explorer, navigate to `40-workbench/` and create a new folder:
-
-```text
-40-workbench/<project-slug>/
-```
-
-Use a short, descriptive slug — `jitai-receptivity-review`, not `project1`. This folder name becomes the project identifier in Dataview queries and the Writer's context flags.
-
-**2. Create the required subfolders.**
-
-Inside `40-workbench/<project-slug>/`, create:
-
-```text
-01-map/
-02-framing/
-03-canvas/
-04-drafts/
-05-verification/
-06-code/
-```
-
-These are the canonical workbench subfolders the profiles write to (Mapper → `01-map/`, Writer → `02-framing/`·`03-canvas/`·`04-drafts/`, Verifier → `05-verification/`, Coder → `06-code/`). You can create them in Obsidian or at the shell:
-
-```powershell
-$proj = "vault\40-workbench\jitai-receptivity-review"
-@("01-map","02-framing","03-canvas","04-drafts","05-verification","06-code") |
-  ForEach-Object { New-Item -ItemType Directory "$proj\$_" -Force }
-```
-
-**3. Create the project note.**
-
-In `40-workbench/<project-slug>/`, create `README.md` from the `project-note` template:
-
-```yaml
----
-title: JITAI receptivity review
-type: project-note
-lifecycle: current
-project_phase: active
-start_date: 2026-05-31
-scope: ""
-research_question: ""
----
-```
-
-Add a brief scope statement: what question this project addresses and what the expected output is (paper, chapter, section, post). This `project-note` is what the Mapper reads to scope the corpus.
-
-**4. Run Assess to get a corpus map.**
-
-`Memoria: new project` already created this scope card for you. To re-run it on an existing project, open a note inside `40-workbench/<project>/` and run `Memoria: scope this project`. The CLI is the equivalent fallback (full syntax in [Hermes CLI](../../reference/hermes-cli.md)):
-
-```bash
-hermes -p memoria-mapper chat -s scope-project
-# then, in the session:
-/scope-project --project jitai-receptivity-review --output 40-workbench/jitai-receptivity-review/01-map/corpus-map.md
-```
-
-The Mapper searches the vault for claim notes and source notes relevant to the project slug and produces a `corpus-map.md` summarizing what you have and what's missing.
-
-**5. Review the corpus map and decide if you're ready to write.**
-
-Open `01-map/corpus-map.md`. If there are major gaps (a claim you need but don't have, a source that needs distillation), address those first before framing.
-
-## Verify
-
-- `40-workbench/<project-slug>/` exists with the six subfolders (`01-map` … `06-code`)
-- `README.md` with `type: project-note` frontmatter is present
-- `01-map/corpus-map.md` has been generated by the Mapper
+Nothing you do this way is throwaway: claims, hubs, and drafts are exactly the inputs the v0.1.2 workflow consumes.
 
 ## Related
 
-- Next step: [Draft with the Writer](draft-with-writer.md)
-- The rest of the Compose flow: [Assess your corpus](assess-your-corpus.md) → [Frame a project](frame-a-project.md) → [Draft with the Writer](draft-with-writer.md)
-- The workbench subfolder structure: [The vault](../../explanation/architecture/vault.md)
+- The synthesis layer a project stands on: [Write a claim note](../compile/write-a-claim-note.md) and [Build a hub](../curate/build-a-moc.md)
+- Readiness check: [Assess your corpus](assess-your-corpus.md)
+- Drafting today: [Draft with the Writer](draft-with-writer.md)

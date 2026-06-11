@@ -68,7 +68,7 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 
 ## Enable the local API (for the `pyzotero` MCP)
 
-The Librarian and Verifier resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 9; if it isn't already on, enable local API access under **Settings → Advanced**).
+The Librarian and Peer-reviewer resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 9; if it isn't already on, enable local API access under **Settings → Advanced**).
 
 - Zotero must be **running** for the MCP to reach it.
 - The MCP itself is installed during [Set up Hermes](../setup/set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
@@ -84,7 +84,7 @@ Download from the [MarkDB-Connect releases page](https://github.com/daeh/zotero-
 
 **8. Configure the note folder.**
 
-After install: Tools → MarkDB-Connect Settings → set the **note folder path** to your vault's `20-sources/01-papers/` absolute path (e.g., `C:\Users\{USERNAME}\memoria-vault\vault\20-sources\01-papers`).
+After install: Tools → MarkDB-Connect Settings → set the **note folder path** to your vault's `catalog/papers/` absolute path (e.g., `C:\Users\{USERNAME}\Memoria\catalog\papers`).
 
 MarkDB-Connect detects citekeys from the note filename by default, which matches Memoria's naming convention (`mamykina2010sense.md` → citekey `mamykina2010sense`).
 

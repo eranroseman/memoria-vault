@@ -11,7 +11,7 @@ The obsidian-homepage plugin opens `home.md` — the vault-root front door — o
 ## Prerequisites
 
 - The vault open in Obsidian
-- The **Human** workspace loaded (`Cmd/Ctrl-1`) — the homepage opens in the left pane by default
+- The **Home** workspace loaded — the homepage sits front and center in its main pane ([Workspaces](use-workspaces.md))
 
 ## Steps
 
@@ -26,20 +26,21 @@ To get back to a clean homepage view at any time, **right-click a tab header →
 
 The plugin pins the tab for you (configurable); you can also right-click the tab → **Pin**.
 
-**2. Navigate to a dashboard.**
+**2. Read the glance, then work the Inbox.**
 
-The homepage links to all dashboards without duplicating their queries. Click any link to open it:
+Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings — the v0.1.0 daily-health dashboard was absorbed here) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
 
-| Link | Opens |
+**3. Navigate to a dashboard.**
+
+The homepage links to all ten dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
+
+| Group | Links |
 | --- | --- |
-| **Daily Health** | System-health view — board queues, drift signals, cron status |
-| **Reading queue** | Papers classified but not yet discussed or distilled |
-| **Weekly ritual** | Friday vault-state audit |
-| **Board state** | Full Kanban board |
-| **Audit log** | Per-decision forensics from the policy MCP |
-| **Drift watch** | Linter findings and verdict band |
+| **Library — reading & synthesis** | Reading Pipeline · Discuss Queue · Open Questions · Contradictions |
+| **Maintenance — structural health** | Drift Watch · Loose Ends · Weekly Review |
+| **Agent ops** | Board State · Audit Log · Fleet Health |
 
-**3. Update your research focus.**
+**4. Update your research focus.**
 
 The Librarian reads `research-focus.md` at the start of every session to set discovery targets. Keep it current.
 
@@ -52,22 +53,23 @@ Click **Research focus** in the homepage → edit the file directly:
 
 Update this at least weekly during the Friday ritual.
 
-**4. Run a command from the homepage.**
+**5. Start work from the homepage.**
 
-The **Common operations** section lists the Memoria command-palette shortcuts. Use them directly from here — no need to have a note open first:
+The **Start here** section is the launchpad for a session — no need to have a note open first:
 
+- **Research focus** — open and refresh `research-focus.md`
+- **Talk to the co-PI** — `Agent Client: Open chat view` ([Agent-client pane](use-the-acp-pane.md))
 - `Cmd/Ctrl-P` → `Memoria: capture fleeting` — instant capture
-- `Cmd/Ctrl-P` → `Memoria: write claim note` — start a new claim from the template
 
 ## Verify
 
-- `Cmd/Ctrl-1` (Human workspace) shows the homepage in the left pane
-- Clicking **Daily Health** opens `00-meta/01-dashboards/daily-health.md`
+- Loading the **Home** workspace shows the homepage front and center, with the Status glance rendered (or its "feeds not wired yet" placeholder before the first agent run)
+- Clicking **Board State** opens `system/dashboards/board-state.md`
 - `research-focus.md` has at least one current priority filled in
 
 ## Related
 
 - Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards)
-- Workspace layout for the Human workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Workspace layout for the Home workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Updating research focus on schedule: [Run the weekly review](../curate/run-the-weekly-review.md)

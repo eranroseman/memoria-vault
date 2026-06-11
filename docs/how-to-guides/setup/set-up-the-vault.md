@@ -29,7 +29,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-Prefer to see it first? Clone and run from the **repo root** (the installers live there, not inside `vault/`):
+Prefer to see it first? Clone and run from the **repo root** (the installers live there, not inside `src/`):
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
@@ -37,7 +37,7 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer copies `vault/` to your chosen runtime folder (default `~/Memoria`, off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the seven profiles:
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `src/` (default `~/Memoria`, off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the five profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`):
 
 - Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`
 - Substitutes `{{VAULT_PATH}}` in `config.yaml` with the runtime vault's absolute path
@@ -64,7 +64,7 @@ obsidian-git needs a repo to commit into; the remote (your own, not the starter 
 hermes profile list
 ```
 
-All seven `memoria-*` profiles appear in the output. If a profile is missing, the script reported that its required files weren't present — check the [v0.1 release plan](../../releasing/v0.1/release-plan-v0.1.md) for what's currently wired.
+All five `memoria-*` profiles appear in the output — no retired v0.1.0 names (`mapper` / `socratic` / `verifier` / `coder` / `linter`), none missing. If a profile is missing, the script reported that its required files weren't present — re-run and read its output.
 
 Check that `{{VAULT_PATH}}` was substituted:
 
