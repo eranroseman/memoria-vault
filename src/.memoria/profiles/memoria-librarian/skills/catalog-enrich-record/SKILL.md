@@ -1,5 +1,5 @@
 ---
-name: obsidian-paper-note
+name: catalog-enrich-record
 description: "Ingest a paper from a Zotero/BibTeX citekey into the vault — call the ingest_pipeline MCP tool (the deterministic pipeline: Tier-0 capture + Tier-1 enrich/extract/link), then fill the two holes it leaves (a vocabulary-constrained classification proposal and a comparative [!brief]) and apply the gated writes."
 version: 2.0.0
 author: Memoria
@@ -9,9 +9,27 @@ metadata:
   hermes:
     tags: [Research, Zotero, Obsidian, Ingest, Literature]
     related_skills: [obsidian, qmd, paper-lookup]
+  memoria:
+    skill_id: "catalog:enrich-record"
+    profile: memoria-librarian
+    lane: catalog
+    mcp_tools:
+      - ingest.ingest_pipeline
+      - obsidian.get_file_contents
+      - obsidian.list_files
+      - obsidian.search
+      - obsidian.append_content
+      - obsidian.patch_content
+      - obsidian.put_content
+      - policy.check_permission
+      - policy.complete_write
+    write_scope: ["inbox/", "catalog/"]
+    outputs: [paper, dataset, repository, person, organization, venue]
 ---
 
-# obsidian-paper-note
+# catalog:enrich-record
+
+*(legacy name: `obsidian-paper-note`; load on disk as `catalog-enrich-record`.)*
 
 Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
 **deterministic and lives behind the `ingest_pipeline` MCP tool** (the

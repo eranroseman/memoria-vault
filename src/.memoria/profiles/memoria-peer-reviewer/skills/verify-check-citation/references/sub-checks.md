@@ -1,9 +1,14 @@
 # The four claim sub-checks in detail
 
-This is the per-check detail for the four non-retraction verification sub-checks owned by the
-`claim-checks` skill — citation, claim-trace, filing-time duplicate, and the retrospective
-duplicate sweep. The retraction sub-check lives in the `retraction-check` skill, and the
-completeness sub-check is a final gate described in the profile SOUL; neither is covered here.
+This is the per-check detail for the four non-retraction verification sub-checks that
+shipped as the legacy `claim-checks` skill. Under the `<task>:<verb>-<object>` registry
+(Appendix C) they split: **cite-check** is the `verify:check-citation` skill, **claim-trace**
+is the `verify:trace-claim` skill, and the two duplicate detectors (**similarity-check**,
+**find-duplicates**) are slated for the deterministic sweeps engine
+(`sweep:check-similarity` / `sweep:find-duplicates`) — until that engine lands, the
+Peer-reviewer may still run them ad hoc from this reference. The retraction sub-check is the
+sweeps engine's `sweep:check-retraction`, and the completeness sub-check is a final gate
+described in the profile SOUL; neither is covered here.
 
 Each check below may surface issues independently, and a single failure is enough to flag a
 card for revision. Across all four, the governing rule is mechanical-first, interpretive
