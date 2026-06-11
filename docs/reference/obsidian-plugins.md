@@ -90,9 +90,9 @@ Settings with a fixed required value. All others are personal preference. See [e
 | --- | --- | --- |
 | BibTeX file (`citationExportPath`) | `.memoria/memoria.bib` | Single source of bib data; Better BibTeX auto-exports here. |
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
-| Literature note folder (`literatureNoteFolder`) | `20-sources/01-papers` | Notes must land in the canonical papers folder. |
+| Literature note folder (`literatureNoteFolder`) | `catalog/papers` | Notes must land in the canonical papers home (ADR-47). |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
-| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `99-system/templates/paper-note.md` (the human-facing copy): both use `created`/`updated` timestamps and store `_proposed_classification`/`_enrichment` as **YAML frontmatter namespaces** (not HTML comments). They are not identical field-for-field (the citation copy carries Zotero `{{vars}}` and a few extra ingest fields); edit both together when the shared structure changes. |
+| Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `system/templates/paper.md` (the human-facing copy): both follow the `paper` schema in `.memoria/schemas/types/paper.yaml`. They are not identical field-for-field (the citation copy carries Zotero `{{vars}}`); edit both together when the shared structure changes. |
 
 ### obsidian-git
 
