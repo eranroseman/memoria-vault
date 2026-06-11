@@ -4,6 +4,13 @@ All notable changes to Memoria are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1](https://github.com/eranroseman/memoria-vault/compare/v0.2.0...v0.2.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **vault:** purge v0.1.0 remnants from shipped configs (A1-A4, A6, C8) ([#366](https://github.com/eranroseman/memoria-vault/issues/366)) ([3615436](https://github.com/eranroseman/memoria-vault/commit/36154366eb0b3e6c67c6854055aca81f6226ee02))
+
 ## [0.2.0](https://github.com/eranroseman/memoria-vault/compare/v0.1.0...v0.2.0) (2026-06-11)
 
 
