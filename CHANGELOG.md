@@ -4,6 +4,13 @@ All notable changes to Memoria are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0](https://github.com/eranroseman/memoria-vault/compare/v0.3.2...v0.4.0) (2026-06-11)
+
+
+### Features
+
+* **spell:** gate spell-check with a root cspell.json in pre-commit + CI ([#404](https://github.com/eranroseman/memoria-vault/issues/404)) ([574775d](https://github.com/eranroseman/memoria-vault/commit/574775dcb8c71f74d1e1c35f394c819c3c846114))
+
 ## [0.3.2](https://github.com/eranroseman/memoria-vault/compare/v0.3.1...v0.3.2) (2026-06-11)
 
 
