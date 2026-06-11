@@ -21,7 +21,7 @@ nav_order: 65
 The typed-relation base is adopted — [ADR-08](08-typed-relations-frontmatter.md)
 added `supports` and `contradicts` as first-class frontmatter, and the contradictions
 dashboard consumes them — and ADR-08 names this note as the home for the richer
-vocabulary and the structured paper-note aspects it leaves as future work. The
+vocabulary and the structured paper aspects it leaves as future work. The
 question is not whether these extensions are well-shaped but when they earn the typing
 and ingest discipline they each demand: a half-populated typed field returns
 incomplete answers and erodes trust, and aspect extraction adds an LLM call per paper.
@@ -43,8 +43,8 @@ Memoria keeps three retrieval/schema extensions **deferred**:
   was designed for ML/science workflows and may be wrong-shaped for knowledge work.
   `uses-method` is sequenced last, worthwhile only once method-notes are a populated,
   linked layer.
-- **MASSW-aligned paper-note aspects.** Add `_aspects.key_idea`, `_aspects.method`,
-  and `_aspects.outcome` to the paper-note template (adapted from MASSW, Zhang et al.
+- **MASSW-aligned paper aspects.** Add `_aspects.key_idea`, `_aspects.method`,
+  and `_aspects.outcome` to the paper template (adapted from MASSW, Zhang et al.
   2024) — agent-populated at ingest ([ADR-30](30-deterministic-ingest-pipeline.md)),
   human-correctable at review, Dataview-queryable. The other two MASSW fields are
   skipped: `context` overlaps `topic:` and the summary; `projected_impact` needs
@@ -52,7 +52,7 @@ Memoria keeps three retrieval/schema extensions **deferred**:
   a figure or table, Hermes's `vision_analyze` reads it directly, making the aspects
   figure-informed rather than abstract-only; this ADR is where that available-but-unwired
   extraction path is adopted into the ingest pipeline.
-- **Exploration-trace capture.** When a Mapper scope or gap report is produced, also
+- **Exploration-trace capture.** When the Librarian's map lane produces a scope or gap report, also
   capture the *rejected directions* and *dead ends* as a structured artifact beside
   the corpus map (never in canonical knowledge layers), preventing re-exploration of
   failed paths. Rejected directions are recorded at the project level only — a dead
@@ -70,7 +70,7 @@ coexist with the expanded `relations:` vocabulary.
   dashboard surface; inconsistent typing makes the field noisy and queries incomplete.
 - `_aspects` extraction adds one LLM call per paper at ingest; abstract-only aspects
   are lower quality than figure- or full-text-informed ones.
-- Exploration-trace capture adds an artifact-management obligation to Mapper's output
+- Exploration-trace capture adds an artifact-management obligation to the map lane's output
   contract and risks over-recording if every negative result is captured.
 - Recording these as the settled home keeps ADR-08's deferred future-work pointer
   resolvable and the ingest reference's `vision_analyze` note anchored.
@@ -91,3 +91,4 @@ Per-release context, not gates:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-08 (typed relations frontmatter)](08-typed-relations-frontmatter.md) (the base this extends and which names this note its home), [ADR-52 (links vs relationships)](52-links-vs-relationships.md) (the split this respects), [ADR-30 (ingest pipeline)](30-deterministic-ingest-pipeline.md) (where `_aspects` are populated)
+- **Tracking issue:** [#415](https://github.com/eranroseman/memoria-vault/issues/415) — revisit at each release cadence.

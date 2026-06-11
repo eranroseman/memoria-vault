@@ -35,18 +35,18 @@ GUI surface and is not duplicated here.
 Memoria keeps these four integrations **deferred** — shape settled, scheduling parked —
 and adopts none until its own trigger fires:
 
-- **Todoist gap-card mirroring.** When the Verifier creates a gap card in
-  `10-inbox/03-candidates/` (a failed claim-trace for Librarian to fill), mirror it
+- **Todoist gap-card mirroring.** When the Peer-reviewer creates a gap card in
+  `inbox/` (a failed claim-trace for Librarian to fill), mirror it
   as a Todoist task so it surfaces in the human's existing task surface. Adds an
   external dependency and a Todoist API credential in `.env`.
 - **Open-design deliverable-rendering agent.** An external rendering agent
   (open-design pattern) takes a Pandoc-exported Markdown deliverable, applies the
   vault's `.memoria/design-system.md`, and produces polished output (slide decks,
-  designed PDFs, web pages). Coder scaffolds the handoff; the agent renders; the human
-  reviews. The handoff contract remains open design.
+  designed PDFs, web pages). The Engineer scaffolds the handoff; the agent renders; the
+  human reviews. The handoff contract remains open design.
 - **Static-HTML admin reports.** Snapshot reports (board state, Linter verdict
   summary, metrics) rendered to static HTML by the Linter on a weekly schedule and
-  stored in `50-deliverables/04-releases/`, for retrospective review or sharing a
+  stored in `system/reports/`, for retrospective review or sharing a
   health snapshot without opening Obsidian.
 - **Literate code-note (weave + tangle).** A `code-note` interleaving prose and
   executable code in one file, with the Linter checking that code and prose
@@ -63,7 +63,7 @@ External access for any of these flows over the policy MCP per
 - Mirroring (Todoist) does not fix a review-capacity problem: if Todoist items go
   unworked, the vault's gap cards stagnate regardless.
 - The open-design handoff contract is unspecified; adopting it requires designing the
-  Coder→agent interface, not just wiring an existing one.
+  Engineer→agent interface, not just wiring an existing one.
 - Each adopted integration adds an external dependency, credential, or scheduled job
   to maintain — cost paid only once the trigger justifies it.
 
@@ -85,3 +85,4 @@ Per-release context, not gates:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-40 (admin/forensic GUI surface)](40-admin-gui-surface.md) (records the read-only Obsidian Inspector idea), [ADR-32 (external access over MCP)](32-external-access-over-mcp.md) (the gated path any external integration takes)
+- **Tracking issue:** [#408](https://github.com/eranroseman/memoria-vault/issues/408) — revisit at each release cadence.
