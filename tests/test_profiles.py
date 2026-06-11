@@ -92,3 +92,15 @@ def test_acp_pane_is_copi_only():
     agents = data["customAgents"]
     assert [a["id"] for a in agents] == ["memoria-copi"]
     assert data["defaultAgentId"] == "memoria-copi"
+
+
+def test_no_profile_has_direct_world_access():
+    """D40/ADR-46: agents reach the vault, engines, and APIs ONLY through MCP.
+    Every profile must disable the direct-capability toolsets — no exceptions."""
+    import yaml
+    forbidden = {"file", "terminal", "code_execution", "browser", "web", "computer_use"}
+    for cfg in sorted(PROFILES.glob("*/config.yaml")):
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+        disabled = set((data.get("agent") or {}).get("disabled_toolsets") or [])
+        missing = forbidden - disabled
+        assert not missing, f"{cfg.parent.name}: direct-access toolsets not disabled: {sorted(missing)}"

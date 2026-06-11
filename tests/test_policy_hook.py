@@ -19,14 +19,18 @@ def test_policy_hook():
         check("classify: prefixed write matched", classify("mcp__obsidian__put_content") == "write")
         check("classify: read tool -> None", classify("obsidian_get_file_contents") is None)
         check("classify: search -> None", classify("obsidian_simple_search") is None)
-        check("classify: terminal -> None (shell ungated)", classify("terminal") is None)
         check("classify: process -> None", classify("process") is None)
-        # Hermes `file` toolset writes (Coder/Linter) -- gated; reads are not.
-        check("classify: write_file -> write", classify("write_file") == "write")
-        check("classify: bare patch -> write", classify("patch") == "write")
-        check("classify: prefixed file write", classify("file__write_file") == "write")
-        check("classify: read_file -> None", classify("read_file") is None)
-        check("classify: search_files -> None", classify("search_files") is None)
+        # Direct-capability tools are not lane-gated -- they are hard-denied for
+        # every lane in evaluate_pre (D40: agents reach the vault only via MCP).
+        for direct in ("terminal", "run_command", "write_file", "patch",
+                       "file__write_file", "read_file", "search_files"):
+            check(f"classify: {direct} -> None (hard-denied upstream)",
+                  classify(direct) is None)
+            blocked = evaluate_pre({"tool_name": direct, "tool_input": {},
+                                    "session_id": "t_x", "extra": {"task_id": "t_x"}},
+                                   "memoria-engineer", Path("/nonexistent"))
+            check(f"evaluate_pre: {direct} hard-denied",
+                  blocked.get("decision") == "block" and "MCP" in blocked.get("reason", ""))
         check("extract_path: filepath", extract_path({"filepath": "notes/source/x.md"}) == "notes/source/x.md")
         check("extract_path: file_path", extract_path({"file_path": "notes/source/y.md"}) == "notes/source/y.md")
 
@@ -84,7 +88,10 @@ def test_policy_hook():
             evf = lambda tool, path: evaluate_pre(
                 {"tool_name": tool, "tool_input": {"file_path": path},
                  "extra": {"task_id": "T1"}}, "memoria-writer", vault)
-            check("file write_file allowed zone -> {}", evf("write_file", "inbox/f.md") == {})
+            # MCP-only sandbox (D40): file-toolset writes block EVERYWHERE -- even
+            # zones the lane could write through the obsidian MCP.
+            check("file write_file allowed zone -> block (MCP-only)",
+                  evf("write_file", "inbox/f.md").get("decision") == "block")
             r_fg = evf("write_file", "notes/claims/c.md")
             check("file write_file denied zone -> block", r_fg.get("decision") == "block")
             # to_vault_relative: absolute-under-vault relativized -> gated against lane globs
@@ -96,8 +103,8 @@ def test_policy_hook():
             # absolute path OUTSIDE the vault -> None -> not gated (proceeds)
             check("to_vault_relative: abs outside vault -> None",
                   to_vault_relative("/etc/passwd", vault) is None)
-            check("file write outside vault -> {} (gate governs vault only)",
-                  evf("write_file", "/tmp/external-repo/main.py") == {})
+            check("file write outside vault -> block (MCP-only, no out-of-vault shell either)",
+                  evf("write_file", "/tmp/external-repo/main.py").get("decision") == "block")
 
             # pre -> post reversibility roundtrip (paired before/after hash) ------
             (vault / "inbox").mkdir(parents=True, exist_ok=True)
