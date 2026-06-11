@@ -20,7 +20,9 @@ homes:
   gap: inbox
   flag: inbox
   alert: inbox
+  work-prompt: inbox
   pattern: system/patterns
+  eval-task: system/eval
 
 # review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
 gated_prefixes:
@@ -41,6 +43,7 @@ skeleton:
   - catalog/repositories
   - notes/fleeting
   - notes/fleeting/chats
+  - notes/fleeting/maps
   - notes/source
   - notes/claims
   - notes/hubs
@@ -50,4 +53,5 @@ skeleton:
   - system/logs
   - system/templates
   - system/patterns
+  - system/eval
   - system/dashboards

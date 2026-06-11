@@ -15,6 +15,7 @@ metadata:
     lane: map
     mcp_tools:
       - cluster.cluster_build_graph
+      - cluster.cluster_emit_canvas
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search

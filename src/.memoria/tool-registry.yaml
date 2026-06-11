@@ -33,6 +33,7 @@ groups:
   policy:      [policy.check_permission, policy.complete_write]
   tasks:       [tasks.delegate_route_task]
   cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
+  cluster_map:  [cluster.cluster_emit_canvas]   # writes the Canvas artifact (staging-only) — map lane, not the read-only front
   ingest_read: [ingest.ingest_pipeline]
   patterns:     [patterns.patterns_list, patterns.patterns_run]
   # Scholarly discovery via the paper_search MCP (openags/paper-search-mcp) — the
@@ -48,8 +49,8 @@ profiles:
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, ingest_read, patterns, discovery, zotero_read]
-    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
+    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
     allow: [vault_read, vault_write, skills, todo, policy]

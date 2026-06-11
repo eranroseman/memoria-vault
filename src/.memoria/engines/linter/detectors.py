@@ -48,6 +48,7 @@ TYPE_HOME = {
     "flag": "inbox/",
     "alert": "inbox/",
     "pattern": "system/patterns/",
+    "eval-task": "system/eval/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {
@@ -63,8 +64,9 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 def is_untyped_infra(rp: str) -> bool:
     """system/ holds infrastructure documents, not typed knowledge — only
-    system/patterns/ files carry a type schema (ADR-53)."""
-    return rp.startswith("system/") and not rp.startswith("system/patterns/")
+    system/patterns/ (ADR-53) and system/eval/ (ADR-11 gold tasks) files
+    carry a type schema."""
+    return rp.startswith("system/") and not rp.startswith(("system/patterns/", "system/eval/"))
 LEFTOVER_PATTERNS = [
     re.compile(p) for p in (
         r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
@@ -122,13 +124,18 @@ class Finding:
 # Helpers
 # --------------------------------------------------------------------------- #
 def iter_files(vault: Path):
-    """Yield every file under vault, skipping SKIP_DIRS."""
-    for p in vault.rglob("*"):
-        if p.is_dir():
-            continue
-        if any(part in SKIP_DIRS for part in p.relative_to(vault).parts):
-            continue
-        yield p
+    """Yield every file under vault, skipping SKIP_DIRS.
+
+    Prunes skipped directories DURING the walk (os.walk dirnames surgery)
+    rather than filtering rglob output afterwards: rglob still stats every
+    file inside .memoria/.venv and .git, which on a Windows-mounted vault
+    (WSL 9p) turns the daily lint cron into a minutes-long crawl."""
+    import os
+
+    for dirpath, dirnames, filenames in os.walk(vault):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for name in sorted(filenames):
+            yield Path(dirpath) / name
 
 
 def iter_notes(vault: Path):

@@ -1,0 +1,22 @@
+type: work-prompt
+category: inbox
+gated: false
+enums:
+  lifecycle: [proposed, current, archived]
+  loudness: [quiet, notice, alert, block]
+required:
+  type: literal:work-prompt
+  lifecycle: enum:lifecycle
+  title: str
+  action: str # what the PI should do — never a verdict (ADR-51)
+  what_happened: str # what finished/triggered the prompt
+required_any: # a prompt points at where to look
+  - target
+  - task_id
+optional:
+  target: str # output path(s) to review
+  task_id: str # the board card the prompt is about
+  lane: str # which lane finished
+  raised_by: str
+  loudness: enum:loudness
+  created: date

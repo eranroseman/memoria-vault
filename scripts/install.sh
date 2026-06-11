@@ -279,6 +279,7 @@ SKELETON_DIRS=(
   catalog/repositories
   notes/fleeting
   notes/fleeting/chats
+  notes/fleeting/maps
   notes/source
   notes/claims
   notes/hubs
@@ -291,6 +292,7 @@ SKELETON_DIRS=(
   system/metrics
   system/templates
   system/patterns
+  system/eval
   system/dashboards
 )
 
@@ -339,15 +341,7 @@ copy_vault() {
     || warn "golden copy not staged — run golden.py stage manually (lint:restore needs it)"
   ok "Golden copy staged (.memoria/golden/)"
 
-  # The commit gate (D50): if the vault is a git repo, wire the pre-commit hook.
-  if [ -d "$VAULT_PATH/.git" ]; then
-    run mkdir -p "$VAULT_PATH/.git/hooks"
-    run cp "$VAULT_PATH/.memoria/engines/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
-    run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
-    ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
-  else
-    say "  (vault is not a git repo yet — the pre-commit gate wires on the next refresh after git init)"
-  fi
+  wire_commit_gate
 
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
@@ -375,6 +369,7 @@ copy_vault() {
     say "  This folder is your vault — set up your own git here (obsidian-git needs a repo):"
     say "      cd \"$VAULT_PATH\""
     say "      git init && git add -A && git commit -m \"Initial Memoria vault\""
+    say "      (then re-run with --profiles-only to wire the pre-commit schema gate)"
     say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
   fi
 }
@@ -717,6 +712,7 @@ print_next_steps() {
     say ""
     say "  Tip: obsidian-git needs the vault to be a git repo (we don't auto-init — it's yours):"
     say "         cd \"$VAULT_PATH\" && git init && git add -A && git commit -m \"Initial Memoria vault\""
+    say "         (then: bash scripts/install.sh --profiles-only --vault \"$VAULT_PATH\" — wires the pre-commit schema gate)"
   fi
   say ""
   say "Re-deploy after editing the vault source:  bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
@@ -825,6 +821,21 @@ wire_lint_cron() {
   ok "Lint cron wired"
 }
 
+wire_commit_gate() {
+  # The commit gate (D50): if the vault is a git repo, wire the pre-commit hook.
+  # Called from BOTH install paths: a fresh install has no .git yet (the
+  # finish-setup tip says git init afterwards), so the maintenance path
+  # (--profiles-only) must wire it on the next run too.
+  if [ -d "$VAULT_PATH/.git" ]; then
+    run mkdir -p "$VAULT_PATH/.git/hooks"
+    run cp "$VAULT_PATH/.memoria/engines/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
+    run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
+    ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
+  else
+    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit gate)"
+  fi
+}
+
 wire_metrics_cron() {
   hdr "Metrics cron (fleet health)"
   if ! have hermes; then warn "Hermes not on PATH — skipping the metrics cron."; return 0; fi
@@ -850,6 +861,31 @@ wire_metrics_cron() {
   ok "Metrics cron wired"
 }
 
+wire_eval_cron() {
+  hdr "Eval cron (vault-eval, ADR-11)"
+  if ! have hermes; then warn "Hermes not on PATH — skipping the eval cron."; return 0; fi
+  local src="$VAULT_PATH/.memoria/scripts/eval-cron.sh"
+  local scripts_dir="$HERMES_HOME/scripts"
+  local dst="$scripts_dir/memoria-eval.sh"
+  if [ ! -f "$src" ]; then
+    warn "eval cron wrapper missing at $src — eval cron NOT wired."
+    return 0
+  fi
+  run mkdir -p "$scripts_dir"
+  local pybin="${VENV_PYTHON:-python}"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  run chmod +x "$dst"
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-eval"; then
+    say "  eval cron already present — wrapper refreshed, job left as-is"
+  else
+    run hermes cron create '0 7 1 */3 *' --script memoria-eval.sh --no-agent \
+      --name memoria-eval --deliver local \
+      || warn "could not create the eval cron — create it manually"
+  fi
+  say "  (quarterly: fans the system/eval/ gold set out as idempotent eval cards — diagnostic, never gating)"
+  ok "Eval cron wired"
+}
+
 # =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
 # =============================================================================
@@ -864,6 +900,8 @@ main() {
     wire_sweeps_cron
     wire_lint_cron
     wire_metrics_cron
+    wire_eval_cron
+    wire_commit_gate
     print_next_steps
     return
   fi
@@ -881,6 +919,7 @@ main() {
   wire_sweeps_cron
   wire_lint_cron
   wire_metrics_cron
+  wire_eval_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
     # Zotero setup moved to the tutorial (ADR-55) — it's the PI's bibliographic

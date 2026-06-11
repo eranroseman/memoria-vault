@@ -28,8 +28,9 @@ def _frontmatter(path: Path) -> dict:
 def test_one_template_per_type():
     types = schema.load_types()
     names = {p.stem for p in TEMPLATES.glob("*.md")}
-    # patterns are not template-created — the pattern files ARE the instances (ADR-53)
-    expected = set(types) - {"pattern"}
+    # patterns (ADR-53) and eval gold tasks (ADR-11) are not template-created —
+    # the files in system/patterns/ and system/eval/ ARE the instances
+    expected = set(types) - {"pattern", "eval-task"}
     assert names == expected, (
         f"templates {names ^ expected} out of sync with schemas")
 

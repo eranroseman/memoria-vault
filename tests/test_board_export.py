@@ -1,5 +1,11 @@
 """L1 component test for board_export — extracted from its former --self-test (ADR-44)."""
+import re
+from datetime import datetime, timedelta, timezone
+
+import yaml
+
 import board_export as _m
+import schema as _schema
 from _util import TestHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
@@ -114,3 +120,92 @@ def test_board_export():
 
         return t.summary()
     assert _run() == 0
+
+
+# --------------------------------------------------------------------------- #
+# Inbox review prompts — done-card → work-prompt unification (#341)
+# --------------------------------------------------------------------------- #
+def _card(task_id, status, *, title="Draft answer", assignee="memoria-writer",
+          updated=None, metadata=None):
+    c = {"task_id": task_id, "title": title, "status": status, "assignee": assignee,
+         "metadata": metadata or {"review_status": "unreviewed"}}
+    if updated:
+        c["updated_at"] = updated
+    return c
+
+
+def _prompt_files(vault):
+    return sorted((vault / "inbox").glob("work-prompt-*.md")) if (vault / "inbox").exists() else []
+
+
+def _frontmatter(path):
+    m = re.match(r"^---\n(.*?)\n---\n", path.read_text(encoding="utf-8"), re.S)
+    return yaml.safe_load(m.group(1))
+
+
+def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
+    run1 = [_card("t_1", "running",
+                  metadata={"expected_outputs": "projects/p1/draft.md"})]
+    assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run1) == 0
+    save_state_cache(tmp_path, run1)
+
+    run2 = [_card("t_1", "done", metadata={"expected_outputs": "projects/p1/draft.md"})]
+    assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 1
+    files = _prompt_files(tmp_path)
+    assert len(files) == 1
+    fm = _frontmatter(files[0])
+    assert _schema.validate_frontmatter(fm, _schema.load_types()["work-prompt"]) == []
+    assert fm["task_id"] == "t_1" and fm["lane"] == "memoria-writer"
+    assert fm["target"] == "projects/p1/draft.md"
+    assert fm["lifecycle"] == "proposed"
+    assert "agent_recommendation" not in fm  # ADR-51: never a verdict
+    body = files[0].read_text(encoding="utf-8")
+    assert "Draft answer" in body and "# Where to look" in body
+
+
+def test_rerun_emits_no_second_prompt(tmp_path):
+    run1 = [_card("t_1", "running")]
+    save_state_cache(tmp_path, run1)
+    run2 = [_card("t_1", "done")]
+    assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 1
+    save_state_cache(tmp_path, run2)
+    # the card stays done across the next cron runs — no new prompt, ever
+    for _ in range(3):
+        assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 0
+        save_state_cache(tmp_path, run2)
+    assert len(_prompt_files(tmp_path)) == 1
+    # belt-and-braces: even with a stale cache (re-transition), the stable
+    # filename means the same card id never duplicates an existing prompt
+    assert export_review_prompts(tmp_path, {"t_1": {"status": "running"}}, run2) == 0
+    assert len(_prompt_files(tmp_path)) == 1
+
+
+def test_non_done_transitions_emit_nothing(tmp_path):
+    run1 = [_card("t_1", "todo"), _card("t_2", "ready")]
+    save_state_cache(tmp_path, run1)
+    run2 = [_card("t_1", "ready"), _card("t_2", "blocked")]
+    assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 0
+    assert _prompt_files(tmp_path) == []
+
+
+def test_bootstrap_guard_skips_old_done_cards(tmp_path):
+    old = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    recent = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    first_run = [
+        _card("t_old", "done", updated=old),          # pre-feature backlog: silent
+        _card("t_recent", "done", updated=recent),    # done within 24h: prompt
+        _card("t_nostamp", "done"),                   # no timestamp: silent (safe)
+    ]
+    assert export_review_prompts(tmp_path, load_state_cache(tmp_path), first_run) == 1
+    files = _prompt_files(tmp_path)
+    assert len(files) == 1 and _frontmatter(files[0])["task_id"] == "t_recent"
+
+
+def test_run_export_reports_review_prompts(tmp_path):
+    cards = tmp_path / "cards.json"
+    cards.write_text(json.dumps([_card("t_1", "running")]), encoding="utf-8")
+    run_export(tmp_path, cards)
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cards.write_text(json.dumps([_card("t_1", "done", updated=now)]), encoding="utf-8")
+    assert run_export(tmp_path, cards)["review_prompts"] == 1
+    assert run_export(tmp_path, cards)["review_prompts"] == 0

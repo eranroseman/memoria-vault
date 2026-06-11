@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """inbox — the shared Inbox card writer (ADR-51).
 
-Engines and lanes never invent card formats: every `candidate`/`gap`/`flag`/`alert`
-goes through this one writer, so cards are always schema-shaped. Proposals carry the
-honesty body (argument for · against · what tipped it · certainty — never a verdict);
-verification cards lead with the finding.
+Engines and lanes never invent card formats: every `candidate`/`gap`/`flag`/`alert`/
+`work-prompt` goes through this one writer, so cards are always schema-shaped.
+Proposals carry the honesty body (argument for · against · what tipped it · certainty —
+never a verdict); verification cards lead with the finding; work prompts carry the
+action + what happened + where to look — also never a verdict.
 
 Usage: python3 inbox.py --self-test
 """
@@ -100,6 +101,52 @@ def write_finding(vault: Path, card_type: str, title: str, finding: str,
     return _write(vault, card_type, title, "\n".join(lines) + "\n" + body)
 
 
+def write_work_prompt(vault: Path, title: str, action: str, what_happened: str,
+                      raised_by: str, target: str = "", task_id: str = "",
+                      lane: str = "", loudness: str = "notice",
+                      dedupe_slug: str = "") -> Path | None:
+    """Write a `work-prompt` card (ADR-51 honesty rules: action + what happened +
+    where to look — never a verdict). A prompt must point somewhere: `target`
+    (output path) and/or `task_id` (board card). With `dedupe_slug` the filename
+    is stable (`work-prompt-<slug>.md`) and an already-present card is left
+    untouched — returns None instead of a path (idempotent emit)."""
+    if loudness not in LOUDNESS:
+        raise ValueError(f"loudness must be one of {LOUDNESS}")
+    if not (target or task_id):
+        raise ValueError("a work-prompt must point at a target or task_id")
+    today = datetime.date.today().isoformat()
+    lines = [
+        "---",
+        f"title: {_yaml_str(title)}",
+        "type: work-prompt",
+        "lifecycle: proposed",
+        f"action: {_yaml_str(action)}",
+        f"what_happened: {_yaml_str(what_happened)}",
+    ]
+    if target:
+        lines.append(f"target: {_yaml_str(target)}")
+    if task_id:
+        lines.append(f"task_id: {_yaml_str(task_id)}")
+    if lane:
+        lines.append(f"lane: {_yaml_str(lane)}")
+    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}",
+              f"created: {today}", "---", ""]
+    body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
+    where = " · ".join(filter(None, (target, task_id and f"board card `{task_id}`")))
+    if where:
+        body += f"\n# Where to look\n\n{where}\n"
+    content = "\n".join(lines) + "\n" + body
+    if dedupe_slug:
+        inbox = vault / "inbox"
+        inbox.mkdir(parents=True, exist_ok=True)
+        path = inbox / f"work-prompt-{_slug(dedupe_slug)}.md"
+        if path.exists():
+            return None
+        path.write_text(content, encoding="utf-8")
+        return path
+    return _write(vault, "work-prompt", title, content)
+
+
 def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
     inbox = vault / "inbox"
     inbox.mkdir(parents=True, exist_ok=True)
@@ -144,6 +191,20 @@ def _self_test() -> int:
             check("flag without target rejected", False)
         except ValueError:
             check("flag without target rejected", True)
+        wp = write_work_prompt(v, "Review: Draft answer", "Review, then accept or archive",
+                               "memoria-writer finished the draft", "board-export",
+                               task_id="t_b2", dedupe_slug="review-t-b2")
+        check("work-prompt written under inbox/", wp is not None and wp.parent.name == "inbox")
+        check("work-prompt carries no verdict",
+              "agent_recommendation" not in wp.read_text(encoding="utf-8"))
+        again = write_work_prompt(v, "Review: Draft answer", "a", "b", "board-export",
+                                  task_id="t_b2", dedupe_slug="review-t-b2")
+        check("dedupe_slug makes re-emit a no-op", again is None)
+        try:
+            write_work_prompt(v, "t", "a", "w", "board-export")
+            check("work-prompt without pointer rejected", False)
+        except ValueError:
+            check("work-prompt without pointer rejected", True)
     print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
     return 1 if failures else 0
 
