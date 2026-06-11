@@ -58,5 +58,4 @@ This is a deferral, not a gate — revisit when these hold, rather than on a fix
 - **Reinforced / assumed:** [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (Hermes is now native), [ADR-26 repo is the install unit](26-repo-as-install-unit.md) (`install.ps1` becomes a real installer).
 - **Affected decisions:** [ADR-31 native Obsidian MCP](31-native-obsidian-mcp.md) (bridge simplifies on one OS), [ADR-33 cluster MCP](33-cluster-mcp-bertopic.md) (the Windows wheel edge).
 - **Installer shape:** [Installer (bootstrap)](../reference/installer.md), [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) (the WSL2-only rule this would supersede).
-</content>
-</invoke>
+- **Tracking issue:** [#414](https://github.com/eranroseman/memoria-vault/issues/414) — revisit at each release cadence.

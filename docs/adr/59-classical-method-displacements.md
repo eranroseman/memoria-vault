@@ -55,3 +55,4 @@ Per-item conditions that raise priority at the cadence review:
 
 - **Related decisions / Depends on:** [ADR-09 contradictions dashboard](09-contradictions-dashboard.md) (owns the deferred NLI contradiction proposer); [ADR-30 deterministic ingest pipeline](30-deterministic-ingest-pipeline.md) (the deterministic discipline these displacements extend).
 - **Source discussion:** [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md).
+- **Tracking issue:** [#409](https://github.com/eranroseman/memoria-vault/issues/409) — revisit at each release cadence.

@@ -48,3 +48,4 @@ Per capability, a concrete signal — not "might be useful" — as context for t
 
 - **Related decisions / Depends on:** [ADR-23](23-scoped-memory-substrates.md) (the scoped memory substrates each capability rides on); [ADR-24](24-single-researcher-scope.md) (single-researcher scope) — this ADR extends ADR-24's bounds outward to the multi-vault, multi-project case while keeping the single-operator invariant.
 - **Deployment substrate:** [ADR-63 multi-machine deployment](63-multi-machine-deployment.md) — the sync topologies these cross-machine capabilities run on; the two are designed to move together.
+- **Tracking issue:** [#410](https://github.com/eranroseman/memoria-vault/issues/410) — revisit at each release cadence.
