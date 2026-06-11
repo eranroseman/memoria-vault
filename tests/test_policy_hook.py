@@ -128,5 +128,21 @@ def test_policy_hook():
             check("write_complete pairs before+after", bool(completes and completes[0]["before_hash"] and completes[0]["after_hash"] and completes[0]["before_hash"] != completes[0]["after_hash"]))
             check("post cleaned up the stash", not stash.is_file())
 
+            # B5b: stale .pending/ stash files (>24h, an unpaired pre with no post)
+            # are pruned opportunistically on the next pre_tool_call; fresh ones stay.
+            import os
+            import time as _time
+            pend_dir = vault / "system" / "logs" / ".pending"
+            pend_dir.mkdir(parents=True, exist_ok=True)
+            stale = pend_dir / "stale-call.json"
+            fresh = pend_dir / "fresh-call.json"
+            stale.write_text("{}", encoding="utf-8")
+            fresh.write_text("{}", encoding="utf-8")
+            old_ts = _time.time() - 25 * 3600
+            os.utime(stale, (old_ts, old_ts))
+            ev("obsidian_get_file_contents", "x.md")    # any pre pass prunes
+            check("stale pending stash pruned (>24h)", not stale.is_file())
+            check("fresh pending stash kept", fresh.is_file())
+
         return t.summary()
     assert _run() == 0

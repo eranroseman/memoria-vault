@@ -385,7 +385,7 @@ def _self_test() -> int:
             doc = json.loads((v / c["canvas_path"]).read_text(encoding="utf-8"))
             ck("canvas has nodes + edges", bool(doc["nodes"]) and bool(doc["edges"]))
             gated = emit_canvas(v, out="notes/claims/x.canvas", seed=7)
-            ck("gated target refused", gated.get("error") == "gated-target")
+            ck("out-of-staging target refused", gated.get("error") == "invalid-target")
         except ImportError:
             print("  ok (skipped networkx checks — not installed)")
         topics = model_topics(v)

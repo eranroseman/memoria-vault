@@ -22,6 +22,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import policy_mcp  # the gate's tested glob machinery (glob_to_regex / within_scope)
+
 # task lane -> the background agent that owns it (ADR-48 §4.1)
 LANE_PROFILE = {
     "catalog": "memoria-librarian",
@@ -41,12 +43,26 @@ def _lane_override(vault: Path, profile: str) -> dict:
     f = vault / ".memoria" / "lane-overrides" / f"{name}.yaml"
     if not f.is_file():
         return {}
-    return yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    try:
+        return yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError as exc:
+        # Fail-closed (an empty override means every delegated path exceeds the
+        # ceiling), but never silently: a corrupt lane file is config drift the
+        # operator must see, not a quiet hard-deny of a whole lane.
+        print(f"[tasks_mcp] WARNING: cannot parse lane-override {f}: {exc} — "
+              f"treating the lane as having no write scope (fail-closed)",
+              file=sys.stderr)
+        return {}
 
 
 def _within_scope(path: str, scopes: list[str]) -> bool:
-    p = path.lstrip("/")
-    return any(p.startswith(s) for s in scopes)
+    """True if `path` sits under any lane write_scope entry.
+
+    write_scope entries are PREFIX-GLOBS, not plain prefixes — the engineer's
+    lane carries `projects/*/code/`, which must admit `projects/x/code/main.py`.
+    Reuse policy_mcp.within_scope (a trailing-slash scope matches `scope + **`)
+    so the delegation ceiling and the write gate agree on semantics."""
+    return policy_mcp.within_scope(path.lstrip("/"), scopes)
 
 
 def validate(vault: Path, lane: str, allowed_paths: list[str]) -> list[str]:
@@ -148,7 +164,14 @@ def _self_test() -> int:
             "    - \"inbox/\"\n    - \"catalog/\"\n", encoding="utf-8")
         (lo / "copi.yaml").write_text(
             "profile: memoria-copi\nrouting:\n  write_scope: []\n", encoding="utf-8")
+        (lo / "engineer.yaml").write_text(
+            "profile: memoria-engineer\nrouting:\n  write_scope:\n"
+            "    - \"projects/*/code/\"\n", encoding="utf-8")
         ck("in-scope path passes", validate(v, "catalog", ["catalog/papers/"]) == [])
+        ck("glob scope admits a path under it",
+           validate(v, "code", ["projects/x/code/main.py"]) == [])
+        ck("glob scope rejects a widening path",
+           any("exceeds" in e for e in validate(v, "code", ["projects/x/"])))
         ck("narrowing passes", validate(v, "catalog", ["inbox/"]) == [])
         ck("widening rejected",
            any("exceeds" in e for e in validate(v, "catalog", ["notes/claims/"])))

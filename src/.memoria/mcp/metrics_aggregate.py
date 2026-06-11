@@ -147,7 +147,9 @@ def lint_verdict_note(v: dict, period: str, now: datetime) -> str:
         lines.append(f'{k}: "{val}"' if isinstance(val, str) else f"{k}: {val}")
     lines += ["---", "", f"# Lint verdict — {period}", "",
               f"**{v['verdict']}** · {v['total']} finding(s): {v['CRITICAL']} critical · "
-              f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.", ""]
+              f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.", "",
+              f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
+              f"same period overwrites this note.*", ""]
     return "\n".join(lines)
 
 
@@ -313,7 +315,9 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
               f"- deny_rate {m['deny_rate']} · success_rate {m['success_rate']} · retry_rate {m['retry_rate']}",
               f"- review: accepted {m['accepted']} / edited {m['edited']} / rejected {m['rejected']}{ratio}",
               f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['tokens_in']}/{m['tokens_out']}",
-              ""]
+              "",
+              f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
+              f"same period overwrites this note.*", ""]
     if m["band"] == "insufficient-data":
         lines += [f"> Low confidence: only {m['samples']} samples this period "
                   f"(<{LOW_CONFIDENCE_SAMPLES}). Score is indicative, not actionable.", ""]

@@ -518,10 +518,54 @@ def misplaced_note(vault: Path) -> list[Finding]:
     return out
 
 
+def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
+    """A mutating allow in the audit chain whose write never completed.
+
+    Every mutating allow / allow_with_log record carries a before_hash and is
+    paired by a `write_complete` record (same path + task_id) once the worker's
+    write lands (policy_hook post_tool_call -> complete_write). An unpaired
+    record older than `max_age_h` means the reversibility chain has a hole --
+    the write either failed silently or completed without its after_hash, so
+    the prior state can no longer be pinned. Report-only, like every detector."""
+    from datetime import datetime, timezone
+
+    log = vault / "system" / "logs" / "audit.jsonl"
+    if not log.is_file():
+        return []
+    mutating = {"write", "append", "move", "delete", "mkdir", "auto_fix"}
+    pending: dict[tuple[str, str], dict] = {}      # (path, task_id) -> pre-record
+    for line in read(log).splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        key = (e.get("path", ""), e.get("task_id", ""))
+        if e.get("decision") == "write_complete":
+            pending.pop(key, None)
+        elif (e.get("decision") in ("allow", "allow_with_log")
+                and e.get("action") in mutating and e.get("before_hash")):
+            pending[key] = e
+    now = datetime.now(timezone.utc)
+    out = []
+    for (path, task_id), e in sorted(pending.items()):
+        try:
+            ts = datetime.fromisoformat(str(e.get("timestamp", "")).replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        age_h = (now - ts).total_seconds() / 3600
+        if age_h > max_age_h:
+            out.append(Finding("audit-unpaired-writes", "MEDIUM", path,
+                               f"mutating allow ({e.get('action')}, task {task_id}) has no "
+                               f"paired write_complete after {age_h:.1f}h -- the audit "
+                               f"chain cannot pin this write's after-state"))
+    return out
+
+
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
     frontmatter_schema_check, frontmatter_link_check, broken_wikilinks,
     dashboard_field_drift, graph_analyze, fama_exposure, misplaced_note,
+    audit_unpaired_writes,
 ]
 
 

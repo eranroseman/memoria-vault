@@ -59,6 +59,23 @@ def gated_prefixes(folders: dict) -> list[str]:
     return list(folders.get("gated_prefixes", []))
 
 
+# The dependency-free fallback for the review-gated zones. policy_mcp and
+# patterns_mcp carry the same tuple hardcoded (they run standalone, without
+# this module or even PyYAML on the path); tests/test_schemas.py asserts all
+# three stay in sync with folders.yaml.
+FALLBACK_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
+
+
+def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
+    """The review-gated prefixes from folders.yaml, with the hardcoded fallback
+    when the schema home is unreadable — the one loader every in-repo consumer
+    of `gated_prefixes` should share."""
+    try:
+        return tuple(load_folders(schemas_dir)["gated_prefixes"]) or FALLBACK_GATED_PREFIXES
+    except Exception:
+        return FALLBACK_GATED_PREFIXES
+
+
 def lifecycle_for(schema: dict) -> list[str]:
     return list(schema.get("enums", {}).get("lifecycle", []))
 

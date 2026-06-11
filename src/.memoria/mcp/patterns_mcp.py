@@ -98,10 +98,19 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str,
         "input_ref": input_ref, "input_chars": len(input_text or ""),
         "output_target": target, "dry_run": dry_run,
     }
-    log = vault / PROVENANCE_RELPATH
-    log.parent.mkdir(parents=True, exist_ok=True)
-    with log.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record) + "\n")
+    provenance_logged = True
+    try:
+        log = vault / PROVENANCE_RELPATH
+        log.parent.mkdir(parents=True, exist_ok=True)
+        with log.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record) + "\n")
+    except Exception as exc:
+        # The run is still returned (the prompt is the product), but the caller —
+        # and the operator, via stderr — must know this run left no provenance.
+        provenance_logged = False
+        print(f"[patterns_mcp] WARNING: provenance write to {PROVENANCE_RELPATH} "
+              f"failed for run {run_id} ({pattern_id}): {type(exc).__name__}: {exc}",
+              file=sys.stderr)
     result = {
         "run_id": run_id, "pattern": pattern_id,
         "prompt": f"{preamble}\n\n---\n\n{prompt}".strip(),
@@ -110,6 +119,8 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str,
         "posture": fm.get("posture"),
         "model_hint": fm.get("model_hint") or None,
     }
+    if not provenance_logged:
+        result["provenance_logged"] = False
     if dry_run:
         result["note"] = ("output_target is missing or review-gated — the run is "
                           "dry-run only; fix the pattern file (the Linter flags it)")

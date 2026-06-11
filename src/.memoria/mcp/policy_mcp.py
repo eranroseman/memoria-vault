@@ -36,6 +36,7 @@ from pathlib import Path
 
 from _shared import (
     append_jsonl,
+    iter_jsonl,
     now_iso,
 )
 from _shared import (
@@ -296,9 +297,11 @@ def decide(
       6. delete                     -> deny unless explicit_authorization (then
                                        allow_with_log); review-gated -> dry_run.
       7. mkdir                      -> allow within write_scope, else deny.
-      8. write / append / move      -> deny.write wins; else allow.write -> base allow;
-                                       else default-deny. An otherwise-allowed mutating
-                                       action in a review-gated zone degrades to dry_run.
+      8. write / append / move      -> deny.write wins; else allow.write ->
+                                       allow_with_log (every mutating allow is
+                                       audited); else default-deny. An otherwise-
+                                       allowed mutating action in a review-gated
+                                       zone degrades to dry_run.
     """
     flags = flags or {}
     npath = normalize_path(path)
@@ -389,10 +392,11 @@ def decide(
     if is_review_gated(npath):
         return Decision("dry_run", "review_gated.dry_run",
                         "review-gated zone write requires approval -- surface as board comment")
-    # Operationally-significant allows are logged unconditionally.
-    if flags.get("explicit_authorization") or action == "move":
-        return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
-    return Decision("allow", f"{rule}.{action}.{_zone(npath)}", log_required=require_log)
+    # Every mutating allow is audited: a bare `allow` here used to skip the audit
+    # for lanes without require:audit_log, leaving writes with no before_hash to
+    # pair against write_complete -- so the audit chain had holes. allow_with_log
+    # closes them; read / report / mkdir semantics are unchanged.
+    return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
 
 
 def _zone(path: str) -> str:
@@ -566,7 +570,7 @@ class PolicyEngine:
             after_hash = sha256_file(self.vault / npath)
         except OSError as exc:
             return {"ok": False, "message": f"cannot hash '{npath}': {exc}"}
-        append_audit(self.vault, {
+        entry = {
             "timestamp": now_iso(),
             "profile": profile,
             "action": action,
@@ -575,7 +579,20 @@ class PolicyEngine:
             "decision": "write_complete",
             "before_hash": before_hash,
             "after_hash": after_hash,
-        })
+        }
+        # Validate the caller's before_hash against the pre-decision audit record
+        # for (path, task_id): the caller-supplied hash is not trusted silently --
+        # a mismatch is recorded in the completion record for the audit sweep.
+        expected = None
+        for e in iter_jsonl(self.vault / AUDIT_RELPATH):
+            if (e.get("path") == npath and e.get("task_id") == task_id
+                    and e.get("decision") in ("allow", "allow_with_log")
+                    and e.get("before_hash")):
+                expected = e["before_hash"]          # keep the latest pre-record
+        if expected is not None and expected != before_hash:
+            entry["hash_mismatch"] = True
+            entry["expected_before_hash"] = expected
+        append_audit(self.vault, entry)
         return {"ok": True, "after_hash": after_hash}
 
 
