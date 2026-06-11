@@ -13,4 +13,4 @@ scripts/install.ps1 @eranroseman
 src/.memoria/ @eranroseman
 
 # Signed-off architecture decisions
-project-files/decisions/ @eranroseman
+docs/adr/ @eranroseman

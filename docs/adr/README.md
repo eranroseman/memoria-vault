@@ -50,7 +50,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [18](18-rename-agent-verdict.md) | Rename `agent_verdict` → `agent_recommendation` | accepted |
 | [19](19-moc-threshold-alert.md) | Agent-proposed MOCs (threshold alert; Mapper stub deferred) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
-| [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced, with the Coder-lane exception | accepted |
+| [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired) | accepted |
 | [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | accepted |
 | [23](23-scoped-memory-substrates.md) | Memory is seven scoped substrates, not one store | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
@@ -65,14 +65,14 @@ condition. See [the template](_template.md) for the required fields per status.
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
 | [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | deferred |
 | [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | deferred |
-| [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded |
-| [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded |
-| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | superseded |
+| [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded → ADR-51, ADR-18 |
+| [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded → ADR-48, ADR-27, ADR-34 |
+| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | deferred |
 | [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
 | [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
-| [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded |
-| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred |
+| [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded → ADR-48, ADR-46 |
+| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (26 skills > 15, v0.1.1) |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [45](45-release-management-model.md) | Release management — gates as a tracking-issue checklist, release-please for versioning | accepted |
 | [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · co-PI · Tasks · MCP · Engines · Vault | accepted |

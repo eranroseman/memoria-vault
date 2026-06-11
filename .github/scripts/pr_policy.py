@@ -44,6 +44,7 @@ SENSITIVE_PREFIXES = (
     "src/.memoria/profiles/",
     "src/.memoria/mcp/",
     "src/.memoria/lane-overrides/",
+    "src/.memoria/plugins/",
     "docs/adr/",
 )
 

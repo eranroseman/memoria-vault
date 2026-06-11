@@ -3,7 +3,7 @@ topic: decisions
 id: 42
 title: Profile compilation from a shared base
 status: superseded
-folded_into: memoria-design-update  # how the renamed team-role profiles are defined (D8)
+superseded_by: [48]  # the shared AGENTS.md layer + unique SOUL/skills/config (D46) removes the drift problem the compiler addressed
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions
