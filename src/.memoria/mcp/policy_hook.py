@@ -58,6 +58,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 from _shared import safe_filename
@@ -162,11 +163,30 @@ def _pending_file(vault: Path, key: str) -> Path:
     return vault / "system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
 
 
+def _prune_stale_pending(vault: Path, max_age_s: float = 24 * 3600) -> None:
+    """Opportunistically drop .pending/ stash files older than 24h.
+
+    A stash with no matching post_tool_call (a crashed tool, a lost pair key)
+    would otherwise accumulate forever. Cheap (one glob) and best-effort: this
+    runs on the pre_tool_call hot path and must NEVER raise or block a write."""
+    try:
+        cutoff = time.time() - max_age_s
+        for f in (vault / "system" / "logs" / ".pending").glob("*.json"):
+            try:
+                if f.stat().st_mtime < cutoff:
+                    f.unlink()
+            except OSError:
+                continue
+    except Exception:
+        pass
+
+
 def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
     """pre_tool_call: gate the write. Returns {} (allow) or a block dict.
 
     Side effect on allow: stashes before_hash so the post_tool_call pass can
     complete the reversibility record. Pure enough to unit-test otherwise."""
+    _prune_stale_pending(vault)            # opportunistic; never raises
     tool_name = payload.get("tool_name", "")
     t = (tool_name or "").lower()
     if "obsidian" in t and any(d in t for d in DENY_OBSIDIAN):

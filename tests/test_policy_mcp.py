@@ -108,14 +108,16 @@ def test_policy_mcp():
         d = lambda p, a, pa, fl=None, sk=None: decide(p.profile, a, pa, p, flags=fl, skill_deny_write=sk).decision
 
         # ---- write decisions --------------------------------------------------- #
-        check("Engineer write to own code scope -> allow",
-              d(engineer, "write", "projects/x/code/main.py") == "allow")
+        # B5c: every mutating allow is audited — a write/append/move that passes
+        # the lane returns allow_with_log, never a bare (possibly unlogged) allow.
+        check("Engineer write to own code scope -> allow_with_log",
+              d(engineer, "write", "projects/x/code/main.py") == "allow_with_log")
         check("Engineer write to notes -> deny (lane deny)",
               d(engineer, "write", "notes/source/d.md") == "deny")
         check("Engineer write to unmapped path -> deny (default-deny)",
               d(engineer, "write", "99-nowhere/x.md") == "deny")
-        check("Writer write to project scratch -> allow",
-              d(writer, "write", "projects/x/draft.md") == "allow")
+        check("Writer write to project scratch -> allow_with_log",
+              d(writer, "write", "projects/x/draft.md") == "allow_with_log")
         check("Writer write to review-gated reference -> dry_run (degrade)",
               d(writer, "write", "notes/hubs/r.md") == "dry_run")
         check("Writer write to claims -> deny (lane deny beats degrade)",
@@ -156,26 +158,25 @@ def test_policy_mcp():
               co_deny == ["projects/*/drafts/**"])
         check("Writer+counter-outline: draft write now denied",
               d(writer, "write", "projects/x/drafts/d.md", None, co_deny) == "deny")
-        check("Writer+counter-outline: framing write still allowed",
-              d(writer, "write", "projects/x/framing/f.md", None, co_deny) == "allow")
+        check("Writer+counter-outline: framing write still allowed (with log)",
+              d(writer, "write", "projects/x/framing/f.md", None, co_deny) == "allow_with_log")
 
         # ---- L2 gate-contract: per-profile write-walls (hermes-cli §4/§5) ------- #
         # Lifted from the protocol's case IDs so the gate contract for librarian /
         # mapper / verifier is unit-tested here, not just observed once at runtime.
-        # (A plain allowed write returns "allow" and is *logged* via require:audit_log
-        # — the protocol's "allow_with_log row" prose means logged, not the
-        # allow_with_log decision, which is for review-gated reads / safe auto-fix.)
-        check("L1/L2 Librarian write to candidates + sources -> allow",
-              d(librarian, "write", "catalog/papers/smithA.md") == "allow"
-              and d(librarian, "write", "inbox/candidate-x.md") == "allow")
+        # (Since B5c, every allowed mutating write IS the allow_with_log decision —
+        # the audit chain has no unlogged-allow hole left.)
+        check("L1/L2 Librarian write to candidates + sources -> allow_with_log",
+              d(librarian, "write", "catalog/papers/smithA.md") == "allow_with_log"
+              and d(librarian, "write", "inbox/candidate-x.md") == "allow_with_log")
         check("X1 Librarian write to claims -> deny (write-wall)",
               d(librarian, "write", "notes/claims/c.md") == "deny")
         check("Librarian write to projects/system -> deny",
               d(librarian, "write", "projects/x/d.md") == "deny"
               and d(librarian, "write", "system/templates/claim.md") == "deny")
-        check("V1/V2 Peer-reviewer write to inbox cards -> allow",
-              d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "allow"
-              and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "allow")
+        check("V1/V2 Peer-reviewer write to inbox cards -> allow_with_log",
+              d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "allow_with_log"
+              and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "allow_with_log")
         check("V1 Peer-reviewer write to the draft under test -> deny (no self-edit)",
               d(peer_reviewer, "write", "projects/x/draft.md") == "deny")
         check("Peer-reviewer write to claims -> deny (write-wall)",
@@ -212,6 +213,24 @@ def test_policy_mcp():
                 lines = (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
                 check("audit has one line per decision", len(lines) == 2)
                 check("audit lines are valid JSON", all(json.loads(ln) for ln in lines))
+                # B5d: complete_write validates the caller's before_hash against the
+                # pre-decision audit record — a different hash is logged, not trusted.
+                done = engine.complete_write("memoria-coder", "write",
+                                             "40-workbench/x/06-code/main.py", "TASK-1",
+                                             "sha256:" + "f" * 64)
+                last = json.loads((vault / AUDIT_RELPATH).read_text(
+                    encoding="utf-8").strip().splitlines()[-1])
+                check("complete_write flags a before_hash mismatch",
+                      done["ok"] and last["decision"] == "write_complete"
+                      and last.get("hash_mismatch") is True
+                      and last.get("expected_before_hash") == EMPTY_SHA256)
+                done2 = engine.complete_write("memoria-coder", "write",
+                                              "40-workbench/x/06-code/main.py", "TASK-1",
+                                              EMPTY_SHA256)
+                last2 = json.loads((vault / AUDIT_RELPATH).read_text(
+                    encoding="utf-8").strip().splitlines()[-1])
+                check("complete_write with the matching before_hash is clean",
+                      done2["ok"] and "hash_mismatch" not in last2)
             else:
                 print("  SKIP  engine YAML-load checks (PyYAML not installed)")
             # task_id is mandatory

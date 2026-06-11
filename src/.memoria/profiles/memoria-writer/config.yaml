@@ -26,6 +26,17 @@ mcp_servers:
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
+  qmd:
+    # The shared qmd vector index (tobi/qmd) — local hybrid search over the vault
+    # corpus; the draft-* skills use it for claim-note similarity (e.g. the
+    # draft-bind-citation tiebreak). Stdio serve mode (`qmd mcp`): models load on
+    # the first search (~19s cold) and stay warm for the session. Read-only — qmd
+    # never writes the vault. Requires a one-time index:
+    # `qmd collection add <vault> --name vault && qmd embed`.
+    command: "qmd"
+    args: ["mcp"]
+    timeout: 30
+    connect_timeout: 45
 
 # Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian/policy via
 # MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only

@@ -64,6 +64,17 @@ mcp_servers:
     # no Zotero write-back. Install once: pip install "pyzotero[mcp]".
     command: "pyzotero-mcp"
     timeout: 30
+  qmd:
+    # The shared qmd vector index (tobi/qmd) — local hybrid search (BM25 + vector +
+    # rerank) over the vault corpus; the similarity primitive the catalog/link/map
+    # skills lean on for the comparative [!brief] and neighbour selection. Stdio
+    # serve mode (`qmd mcp`): models load on the first search (~19s cold) and stay
+    # warm for the session. Read-only — qmd never writes the vault. Requires a
+    # one-time index: `qmd collection add <vault> --name vault && qmd embed`.
+    command: "qmd"
+    args: ["mcp"]
+    timeout: 30
+    connect_timeout: 45
 
 # Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
 # ingest / paper_search / pyzotero via MCP). `web` is DISABLED: discovery -> paper_search

@@ -81,6 +81,31 @@ def test_detectors():
             # stray top-level folder -> misplaced-note LOW finding
             (v / "70-misc").mkdir(parents=True, exist_ok=True)
             (v / "70-misc/scratch.md").write_text("notes", encoding="utf-8")
+            # audit chain: an unpaired mutating allow older than 1h -> MEDIUM
+            # finding; a paired one and a fresh (<1h) unpaired one stay silent.
+            import json as _json
+            from datetime import datetime, timedelta, timezone
+            _ts = lambda hours: (datetime.now(timezone.utc) - timedelta(hours=hours)
+                                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
+            (v / "system/logs").mkdir(parents=True, exist_ok=True)
+            (v / "system/logs/audit.jsonl").write_text("\n".join(_json.dumps(r) for r in [
+                # unpaired, 2h old -> fires
+                {"timestamp": _ts(2), "profile": "memoria-writer", "action": "write",
+                 "path": "projects/x/lost.md", "task_id": "T-LOST",
+                 "decision": "allow_with_log", "before_hash": "sha256:" + "a" * 64},
+                # paired (same path+task_id completed) -> silent
+                {"timestamp": _ts(2), "profile": "memoria-writer", "action": "write",
+                 "path": "projects/x/ok.md", "task_id": "T-OK",
+                 "decision": "allow_with_log", "before_hash": "sha256:" + "b" * 64},
+                {"timestamp": _ts(2), "profile": "memoria-writer", "action": "write",
+                 "path": "projects/x/ok.md", "task_id": "T-OK",
+                 "decision": "write_complete", "before_hash": "sha256:" + "b" * 64,
+                 "after_hash": "sha256:" + "c" * 64},
+                # unpaired but fresh (10 min) -> still within the grace window
+                {"timestamp": _ts(0.17), "profile": "memoria-writer", "action": "write",
+                 "path": "projects/x/fresh.md", "task_id": "T-FRESH",
+                 "decision": "allow_with_log", "before_hash": "sha256:" + "d" * 64},
+            ]) + "\n", encoding="utf-8")
 
             f = run_all(v)
             by = lambda name: [x for x in f if x.detector == name]
@@ -105,6 +130,13 @@ def test_detectors():
             check("misplaced-note flags claim under 20-sources/", any("stray-claim.md" in x.path for x in by("misplaced-note")))
             check("misplaced-note ignores correctly-placed claim", not any("01-claims/good.md" in x.path for x in by("misplaced-note")))
             check("misplaced-note flags stray top-level folder", any(x.path == "70-misc" for x in by("misplaced-note")))
+            check("audit-unpaired-writes flags the stale unpaired allow",
+                  any(x.path == "projects/x/lost.md" and "T-LOST" in x.message
+                      for x in by("audit-unpaired-writes")))
+            check("audit-unpaired-writes ignores the paired write",
+                  not any("ok.md" in x.path for x in by("audit-unpaired-writes")))
+            check("audit-unpaired-writes ignores the fresh (<1h) unpaired write",
+                  not any("fresh.md" in x.path for x in by("audit-unpaired-writes")))
             check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
         return t.summary(label="detectors")

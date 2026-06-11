@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import sys
 import uuid
 from pathlib import Path
 
@@ -47,15 +48,27 @@ METHODOLOGY_FROM_PUBTYPE = {
 }
 
 
+_warned_calibration = False     # warn once per process, not per ingest
+
+
 def thresholds(vault: Path | None) -> tuple[float, float]:
-    """(confidence_floor, near_tie_margin) from calibration.yaml, with defaults."""
+    """(confidence_floor, near_tie_margin) from calibration.yaml, with defaults.
+
+    A parse/read failure degrades to the defaults — but loudly (one stderr
+    warning per process), so a miscalibrated vault is visible, not silent."""
+    global _warned_calibration
     try:
         import yaml
 
         f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
         c = yaml.safe_load(f.read_text(encoding="utf-8"))["classify"]
         return float(c["confidence_floor"]), float(c["near_tie_margin"])
-    except Exception:
+    except Exception as exc:
+        if not _warned_calibration:
+            _warned_calibration = True
+            print(f"[classify] WARNING: cannot read classify thresholds from "
+                  f"calibration.yaml ({type(exc).__name__}: {exc}) — using defaults "
+                  f"floor={DEFAULT_FLOOR}, margin={DEFAULT_MARGIN}", file=sys.stderr)
         return DEFAULT_FLOOR, DEFAULT_MARGIN
 
 

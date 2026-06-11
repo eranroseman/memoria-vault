@@ -33,6 +33,17 @@ mcp_servers:
     # terminal grant. Install once: pip install "pyzotero[mcp]" (or uv tool install).
     command: "pyzotero-mcp"
     timeout: 30
+  qmd:
+    # The shared qmd vector index (tobi/qmd) — local hybrid search over the vault
+    # corpus; the verify-* skills use it for claim↔source embedding similarity
+    # (cite-check, claim-trace). Stdio serve mode (`qmd mcp`): models load on the
+    # first search (~19s cold) and stay warm for the session. Read-only — qmd
+    # never writes the vault. Requires a one-time index:
+    # `qmd collection add <vault> --name vault && qmd embed`.
+    command: "qmd"
+    args: ["mcp"]
+    timeout: 30
+    connect_timeout: 45
   # academic (optional, not yet installed): hunter-heidenreich/academic-tools-mcp adds
   # CrossRef + OpenCitations reference resolution (get_paper_references,
   # search_crossref_by_title) for deeper cite-check; arXiv 2603.17339 `citecheck` is an

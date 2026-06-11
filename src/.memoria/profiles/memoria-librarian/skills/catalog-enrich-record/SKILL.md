@@ -115,9 +115,13 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    `[!brief] (updated YYYY-MM-DD)` block rather than rewriting. **Never overwrite
    human-set frontmatter.**
 
-6. **Log.** Append the capture record (citekey, path, sources, timestamp) to
-   `system/logs/capture-intake.jsonl` — the durability anchor the
-   log-reconciliation sweep reconciles against.
+6. **Verify the durability anchor.** The ingest MCP appends the capture record
+   (citekey, path, timestamp) to `system/logs/capture-intake.jsonl` itself
+   (`append_intake_anchor`, idempotent) when the pipeline runs — the anchor the
+   log-reconciliation sweep reconciles against. You **never write logs yourself**
+   (`system/` is lane-denied); just confirm the pipeline call returned a bundle
+   without an `error` key, which means the anchor was recorded engine-side. If
+   the bundle errored, surface that — do not try to log the capture by hand.
 
 ## Rules
 
@@ -139,8 +143,9 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 - The note exists at `catalog/papers/<citekey>.md` (or `02-items/<citekey>.md`
   for software/datasets) with `lifecycle: proposed` and `ingest_status: complete` —
   confirming the classification proposal landed and the gated writes applied.
-- A capture record (citekey, path, sources, timestamp) was appended to
-  `system/logs/capture-intake.jsonl` — the durability anchor the
+- A capture record (citekey, path, timestamp) exists in
+  `system/logs/capture-intake.jsonl` — appended engine-side by the ingest MCP
+  (`append_intake_anchor`), never by you — the durability anchor the
   log-reconciliation sweep reconciles against.
 - A `--dry-run` invocation reports the bundle + planned writes (and surfaces any
   `error` key) without writing anything to the vault.

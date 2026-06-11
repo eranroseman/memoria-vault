@@ -48,6 +48,17 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["-m", "paper_search_mcp.server"]
     timeout: 120
+  qmd:
+    # The shared qmd vector index (tobi/qmd) — local hybrid search (BM25 + vector +
+    # rerank) over the vault corpus; the ask-*/explore-* skills use it for semantic
+    # reads beside the obsidian MCP. Stdio serve mode (`qmd mcp`): models load on
+    # the first search (~19s cold) and stay warm for the session. Read-only — qmd
+    # never writes the vault. Requires a one-time index:
+    # `qmd collection add <vault> --name vault && qmd embed`.
+    command: "qmd"
+    args: ["mcp"]
+    timeout: 30
+    connect_timeout: 45
 
 # Capability allowlist (ADR-27): the co-PI keeps skills, todo, AND memory — it alone
 # carries the self-improving loop (memory · /goals · skills · /personality, D46).

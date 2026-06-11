@@ -74,6 +74,23 @@ def test_runner_degrades_gated_targets_to_dry_run(tmp_path):
     assert r["dry_run"] is True and "note" in r
 
 
+def test_runner_survives_provenance_write_failure(tmp_path, capsys):
+    """An unwritable provenance log degrades loudly: the run (the prompt) is still
+    returned, flagged provenance_logged: false, with a stderr warning."""
+    pd = tmp_path / "system/patterns"
+    pd.mkdir(parents=True)
+    (pd / "x.md").write_text(
+        "---\ntitle: X\ntype: pattern\nlifecycle: current\nposture: librarian\n"
+        "mode: library\naction: a\ninput: note\noutput_target: 'projects/'\n---\nP {{input}} Q\n",
+        encoding="utf-8")
+    # system/logs exists as a FILE -> the jsonl append cannot create the dir
+    (tmp_path / "system" / "logs").write_text("not a directory", encoding="utf-8")
+    r = patterns_mcp.run_pattern(tmp_path, "x", "BODY")
+    assert r["provenance_logged"] is False
+    assert "P BODY Q" in r["prompt"]          # the run itself still succeeds
+    assert "provenance" in capsys.readouterr().err
+
+
 def test_runner_refuses_non_current_and_unknown(tmp_path):
     (tmp_path / "system/patterns").mkdir(parents=True)
     assert patterns_mcp.run_pattern(tmp_path, "ghost", "x")["error"] == "unknown-pattern"

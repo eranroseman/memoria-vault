@@ -46,6 +46,7 @@ RW_CSV_URL = "https://gitlab.com/crossref/retraction-watch-data/-/raw/main/retra
 TIMEOUT = 12
 
 _RW_INDEX: dict[str, dict] | None = None  # module-level cache, keyed by normalized DOI
+_warned_no_csv = False                    # one stderr warning per process
 
 
 # --------------------------------------------------------------------------- #
@@ -248,6 +249,15 @@ def check_doi(doi: str, offline: bool = False) -> dict:
     errors["retraction_watch"] = None if sources["retraction_watch"] is not None else "csv-not-loaded"
 
     if offline:
+        # Offline mode has ONE source; without the CSV every verdict is UNKNOWN.
+        # Degrade as before, but loudly — the cron sweep must not look healthy.
+        global _warned_no_csv
+        if sources["retraction_watch"] is None and not _warned_no_csv:
+            _warned_no_csv = True
+            print(f"[retraction] WARNING: Retraction Watch CSV not found at "
+                  f"{rw_csv_path()} — offline mode has no data source; every DOI "
+                  f"reports status UNKNOWN. Run `retraction.py --refresh` to fetch it.",
+                  file=sys.stderr)
         return combine(doi, sources, errors)
 
     # 2. CrossRef (real-time delta)

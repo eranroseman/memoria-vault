@@ -18,6 +18,9 @@ def _vault(tmp_path: Path) -> Path:
     (lo / "writer.yaml").write_text(
         'profile: memoria-writer\nrouting:\n  write_scope:\n    - "projects/"\n',
         encoding="utf-8")
+    (lo / "engineer.yaml").write_text(
+        'profile: memoria-engineer\nrouting:\n  write_scope:\n'
+        '    - "projects/*/code/"\n', encoding="utf-8")
     return tmp_path
 
 
@@ -36,6 +39,31 @@ def test_narrowing_passes_widening_fails(tmp_path):
     assert tasks_mcp.validate(v, "draft", ["projects/x/"]) == []
     errs = tasks_mcp.validate(v, "catalog", ["notes/claims/"])
     assert errs and "exceeds" in errs[0]
+
+
+def test_glob_write_scope_admits_paths_under_it(tmp_path):
+    """write_scope entries are prefix-GLOBS (engineer: projects/*/code/) — a path
+    UNDER the scope is in-ceiling; plain prefix-matching wrongly rejected it."""
+    v = _vault(tmp_path)
+    assert tasks_mcp.validate(v, "code", ["projects/x/code/main.py"]) == []
+    assert tasks_mcp.validate(v, "code", ["projects/x/code/"]) == []
+
+
+def test_glob_write_scope_rejects_widening(tmp_path):
+    v = _vault(tmp_path)
+    errs = tasks_mcp.validate(v, "code", ["projects/x/"])
+    assert errs and "exceeds" in errs[0]
+    errs = tasks_mcp.validate(v, "code", ["projects/x/drafts/d.md"])
+    assert errs and "exceeds" in errs[0]
+
+
+def test_corrupt_lane_override_fails_closed_with_warning(tmp_path, capsys):
+    v = _vault(tmp_path)
+    lo = v / ".memoria" / "lane-overrides"
+    (lo / "librarian.yaml").write_text("routing: [unclosed\n", encoding="utf-8")
+    errs = tasks_mcp.validate(v, "catalog", ["catalog/papers/"])
+    assert errs and "exceeds" in errs[0]          # fail-closed: nothing delegable
+    assert "librarian.yaml" in capsys.readouterr().err
 
 
 def test_unknown_lane_rejected(tmp_path):
