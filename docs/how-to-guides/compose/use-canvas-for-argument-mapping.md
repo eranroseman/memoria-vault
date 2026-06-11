@@ -16,7 +16,7 @@ Open a canvas when you have 8–15 relevant claim notes on a topic and need to s
 
 **1. Create the canvas file.**
 
-Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the v0.1.2 Project release scaffolds it). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
+Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the v0.1.0-alpha.3 Project release scaffolds it). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
 
 **2. Collect the notes.**
 

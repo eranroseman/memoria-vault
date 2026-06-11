@@ -6,7 +6,7 @@ nav_order: 2
 
 # The status line
 
-> **Not built in v0.1.1 — deferred.** No producer renders the status line yet; nothing in the shipped vault emits the Dataview widget described below. The page stands as design intent for the surface, tracked in [#375](https://github.com/eranroseman/memoria-vault/issues/375).
+> **Not built in v0.1.0-alpha.2 — deferred.** No producer renders the status line yet; nothing in the shipped vault emits the Dataview widget described below. The page stands as design intent for the surface, tracked in [#375](https://github.com/eranroseman/memoria-vault/issues/375).
 
 The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows Linter findings and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.
 

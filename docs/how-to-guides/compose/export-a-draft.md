@@ -6,7 +6,7 @@ nav_order: 9
 
 # Export a draft
 
-Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission. Export is a terminal operation you run yourself — there is no export lane or palette command in v0.1.1.
+Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission. Export is a terminal operation you run yourself — there is no export lane or palette command in v0.1.0-alpha.2.
 
 ## Prerequisites
 

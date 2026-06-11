@@ -6,7 +6,7 @@ nav_order: 11
 
 # Advance a claim to evergreen
 
-Mark a claim as settled knowledge by advancing its `maturity` to `evergreen`. In v0.1.1 there is **no promotion move and no reference folder** — the v0.1.0 `reference` type was dropped because it double-encoded maturity ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). An evergreen claim *is* the settled unit; it stays in `notes/claims/` where it has always lived.
+Mark a claim as settled knowledge by advancing its `maturity` to `evergreen`. In v0.1.0-alpha.2 there is **no promotion move and no reference folder** — the v0.1.0-alpha.1 `reference` type was dropped because it double-encoded maturity ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). An evergreen claim *is* the settled unit; it stays in `notes/claims/` where it has always lived.
 
 `maturity` (`seedling → budding → evergreen`) is a claim **property describing development, never a gate** — it doesn't change what the claim may do, only how you read it.
 

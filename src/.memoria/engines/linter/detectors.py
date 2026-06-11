@@ -252,7 +252,7 @@ def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
 
 
 def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
-    """Flag unreviewed answer drafts older than `days` (folder retired in v0.1.1).
+    """Flag unreviewed answer drafts older than `days` (folder retired in v0.1.0-alpha.2).
 
     REPORT-ONLY by design: the human decides keep / promote / discard in the
     weekly review. Never auto-archive -- the most useful drafts are often the

@@ -6,7 +6,7 @@ nav_order: 7
 
 # Set up the messaging gateway [deferred]
 
-> **Status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component; the bot wiring and inbound capture path are not validated end-to-end in v0.1.1 (tracked in [#382](https://github.com/eranroseman/memoria-vault/issues/382)). Use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported path until this lands.
+> **Status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component; the bot wiring and inbound capture path are not validated end-to-end in v0.1.0-alpha.2 (tracked in [#382](https://github.com/eranroseman/memoria-vault/issues/382)). Use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported path until this lands.
 
 Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's fleeting queue.
 

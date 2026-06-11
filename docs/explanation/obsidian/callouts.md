@@ -7,7 +7,7 @@ nav_order: 3
 
 # Callouts
 
-> **Partially built in v0.1.1.** The `[!brief]` producer ships (the Librarian composes it during ingest). The `[!suggestions]` and `[!verification]` producers are **deferred** — the callout types are defined and styled, but no agent writes them yet; tracked in [#376](https://github.com/eranroseman/memoria-vault/issues/376). The design below is the intent all three are built against.
+> **Partially built in v0.1.0-alpha.2.** The `[!brief]` producer ships (the Librarian composes it during ingest). The `[!suggestions]` and `[!verification]` producers are **deferred** — the callout types are defined and styled, but no agent writes them yet; tracked in [#376](https://github.com/eranroseman/memoria-vault/issues/376). The design below is the intent all three are built against.
 
 Not every agent output belongs on a dashboard. Some context is only useful while looking at a specific note — the comparative read on a paper matters when you open it to read the source, not in a daily roll-up. Dashboards surface *decisions across notes*; callouts surface *context inside one note*.
 

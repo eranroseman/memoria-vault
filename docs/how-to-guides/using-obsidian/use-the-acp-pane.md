@@ -56,7 +56,7 @@ Exports are fleeting-grade raw material, and the system processes them instead o
 Two folders to **never** point `exportSettings.defaultFolder` at:
 
 - `inbox/` — reserved for agent-raised honesty cards (candidates, gaps, flags, alerts), not chat transcripts.
-- `projects/` — reserved and empty until v0.1.2.
+- `projects/` — reserved and empty until v0.1.0-alpha.3.
 
 Auto-export fires on chat **close**, not on new chat (`autoExportOnCloseChat: true`, `autoExportOnNewChat: false`) — you get one transcript per finished session, no empty stubs.
 

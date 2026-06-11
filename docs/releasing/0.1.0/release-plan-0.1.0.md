@@ -1,16 +1,16 @@
 ---
-release: 0.1.0
+release: 0.1.0-alpha.1
 status: released
 released: true
-title: Release plan — v0.1.0
-parent: v0.1
+title: Release plan — v0.1.0-alpha.1
+parent: 0.1.0
 grand_parent: Releasing
 nav_order: 7
 ---
 
-# Release plan — v0.1.0
+# Release plan — v0.1.0-alpha.1
 
-**Current status: released — v0.1.0 shipped 2026-06-09.** The `v0.1.0` tag and
+**Current status: released — v0.1.0-alpha.1 shipped 2026-06-09.** The `v0.1.0-alpha.1` tag and
 GitHub release exist; the candidate gates all passed. **All
 three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery —
 live reads/writes, Tier-4 HTTP 204, read-back OK), #51 (policy-gate capability
@@ -89,7 +89,7 @@ for the bar and its dependency-ordered critical path.
 
 ## 2. Definition of done — gates
 
-v0.1.0 ships when **both gate groups are green** — the infrastructure mandatory group (G1–G8)
+v0.1.0-alpha.1 ships when **both gate groups are green** — the infrastructure mandatory group (G1–G8)
 **and** the operability gates (G9–G11). The mandatory group proves the plumbing; the operability
 gates prove a workflow actually runs on it. **Green plumbing alone is not a release.**
 _(Proposed gates — confirm/adjust the thresholds.)_
@@ -103,11 +103,11 @@ _(Proposed gates — confirm/adjust the thresholds.)_
 | G1 | done | Installer runs end-to-end on a clean Ubuntu/WSL2 box; all 7 profiles register | Tier 0–3 | — |
 | G2 | awaiting-verify | Policy gate enforced live **in all run modes**: review-gated zones blocked, allowed pass, fail-closed. Now enforced by the `memoria-policy-gate` plugin (ADR-28), validated live in **`-z`, gateway (api_server), and cron** on installer-deployed lanes (librarian+writer): allowed pass, denied/`dry_run` blocked no-file, fail-closed on policy outage. Only the fresh-clone candidate re-run remains for the cut | Tier 4 | — |
 | G3 | done | An agent can read **and** write the vault through the obsidian bridge (gated-write enforcement is G2) | Tier 4 | [#39](https://github.com/eranroseman/memoria-vault/issues/39) |
-| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [GUI test plan — v0.1 (S5 + G4)](../../testing/plans/gui-test-plan.md) Part C. A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-run_v0.1.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
+| G4 | awaiting-verify | All **eleven** dashboards render on real data (Dataview queries resolve) — run [GUI test plan — v0.1 (S5 + G4)](../../testing/plans/gui-test-plan.md) Part C. A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-run_0.1.0.md) Part C ticks all eleven), but the run is **PARTIAL** — its Results table is not yet fully filled in, so this is not a clean pass; a complete re-run is still needed for the cut | Tier 5 | — |
 | G5 | awaiting-verify | Six-signal telemetry — **four signals working live; two gated on an upstream Hermes change**. The board-export cron is wired (installer `wire_telemetry_cron`, `--no-agent`, 1-min) and validated against real ingest-card activity: `board-state` (snapshots), `board-transitions` (status changes), audit deny-reasons (policy gate), and Linter FAMA all emit. `disposition` + `cost` **cannot emit on the current Hermes**: `board_export.py` reads them from the card `metadata` overlay (`review_status`/`cost`/`tokens`), which this Hermes version does not surface in its serialized card JSON (verified — a card driven to `review_status: approved` logged a status transition but no disposition row). The exporter is correct and ready to consume both the instant Hermes exposes the overlay; tracked as a known limitation (§6). Only the fresh-clone candidate re-run of the four working signals remains | Tier 4–5 + cron | — |
 | G6 | done | CI green on `main`: `docs-doctor`, `shellcheck`, `PSScriptAnalyzer`, `python-selftest`, `docs-links` | CI | — |
 | G7 | done | No open **P0** (release-blocking) issues (#39/#51/#58 closed; #59 resolved) | tracker | — |
-| G8 | todo | `CHANGELOG.md` `[0.1.0]` entry written at cut; version `0.1.0` consistent across the 7 `distribution.yaml` | manual | — |
+| G8 | todo | `CHANGELOG.md` `[0.1.0-alpha.1]` entry written at cut; version `0.1.0-alpha.1` consistent across the 7 `distribution.yaml` | manual | — |
 
 ### Operability gates (G9–G11) — the product (the real release blockers)
 
@@ -135,7 +135,7 @@ as stages here.
 | S2 | done | Installer dry-runs (`--dry-run`), `{{VAULT_PATH}}` substitution |
 | S3 | done | Real install into a throwaway vault; 7 profiles register; venv; idempotent re-run (re-confirmed from a fresh clone of the gate candidate — the `memoria-policy-gate` plugin deploys, substitutes `{{PROFILE}}`/`{{VAULT_PATH}}` per lane, and enables for all 7). **[#59](https://github.com/eranroseman/memoria-vault/issues/59) resolved:** the installer verifies the bundled official skills (present after the Hermes install) instead of hub-installing them — no 404s |
 | S4 | awaiting-verify | Live: model connectivity + REST bridge **passed** (#39); **policy-gate enforcement now fires** ([#58](https://github.com/eranroseman/memoria-vault/issues/58) resolved via ADR-27 + the ADR-28 plugin; validated live in **`-z`, gateway, and cron** on installer-deployed librarian + writer — allowed pass, denied blocked no-file, policy outage fails closed). Needs the fresh-clone candidate live re-run to record green for the cut |
-| S5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [GUI test plan — v0.1 (S5 + G4)](../../testing/plans/gui-test-plan.md) (runs on the Windows side). A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-run_v0.1.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
+| S5 | awaiting-verify | Obsidian + Zotero GUI: plugins load, dashboards render, Better BibTeX export — step-by-step in [GUI test plan — v0.1 (S5 + G4)](../../testing/plans/gui-test-plan.md) (runs on the Windows side). A GUI run **was recorded** ([GUI test plan — v0.1 (S5 + G4)](gui-test-run_0.1.0.md): the 8 plugins enabled, REST round-trip, dashboards, Zotero export, and ACP all ticked) — but it is **PARTIAL**: the Results table is not fully completed and A carries a caveat ("didn't verify the settings"), so it is not yet a clean pass; a complete re-run is needed for the cut |
 
 ## 4. Blockers
 
@@ -180,10 +180,10 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 
 1. **Every gate (§2 — mandatory G1–G8 *and* operability G9–G11) and stage (§3) `done`; no P0 issues open.** The mandatory gates are verification (G2/S4 fresh-clone live re-run; G4/G5/G8/S5 dashboards/telemetry/changelog/GUI). The operability gates require a real workflow proven end-to-end: **G9** deterministic spine, **G10** ingest value loop, **G11** review loop closes — a release on green mandatory gates alone ships zero proven research value.
 2. **Re-run Tier 0–5 from a fresh clone** on a clean Ubuntu/WSL2 box → all green; record results in §3. Follow the [release-candidate runbook](../../testing/plans/release-candidate-runbook.md) — the ordered S0–S5 + G9–G11 run sheet with exact commands and a per-gate sign-off table.
-3. **Confirm version `0.1.0`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
-4. **Cut the `[0.1.0]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0]` section and re-point the links.
+3. **Confirm version `0.1.0-alpha.1`** across the seven `distribution.yaml` (lockstep with the Memoria release version).
+4. **Cut the `[0.1.0-alpha.1]` section in `CHANGELOG.md`:** move the `[Unreleased]` items into a dated `[0.1.0-alpha.1]` section and re-point the links.
 5. **Flip `released: false` → `true`** in this file's frontmatter.
-6. **Tag `v0.1.0`** and create the GitHub release with the curated notes (§6 limitations included).
+6. **Tag `v0.1.0-alpha.1`** and create the GitHub release with the curated notes (§6 limitations included).
 7. **Close the `v0.1` milestone** once the candidate passes, rolling any unfinished issues to the next milestone.
 
 ## 8. Roadmap after this release
@@ -196,10 +196,10 @@ multi-device (Phase 4) and density-gated automation (Phase 3) are post-v0.1.
 | Phase 4 — Multi-device | When a 2nd device enters regular use | Extend to a second machine without fragmenting dispatch ownership. |
 
 Full phase steps, exit criteria, and the week-by-week ramp:
-[Release plan — v0.1.0 — appendix](release-plan-v0.1-appendix.md).
+[Release plan — v0.1.0-alpha.1 — appendix](release-plan-0.1.0-appendix.md).
 
 ## 9. Appendix
 
 Detailed phase steps, exit criteria, and migration detail live in
-[Release plan — v0.1.0 — appendix](release-plan-v0.1-appendix.md). This plan
+[Release plan — v0.1.0-alpha.1 — appendix](release-plan-0.1.0-appendix.md). This plan
 summarizes (§8) and links rather than absorbing them.

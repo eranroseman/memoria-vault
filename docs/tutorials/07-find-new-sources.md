@@ -74,7 +74,7 @@ As the corpus grows, comparison gets sharper: discovery surfaces less of what yo
 
 - A discovery run from a plain-language question — no search syntax, no terminal
 - A judged candidate queue: kept papers in the Catalog and reading queue, skips archived with a clear conscience
-- The complete v0.1.1 loop in hand: capture → catalog → read → distill → map → verify → discover → repeat
+- The complete v0.1.0-alpha.2 loop in hand: capture → catalog → read → distill → map → verify → discover → repeat
 
 ---
 

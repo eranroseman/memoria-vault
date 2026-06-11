@@ -322,7 +322,7 @@ copy_vault() {
     run rsync -a --exclude '.git' "$src"/ "$VAULT_PATH"/
     # Authored infra must MIRROR the repo on refresh: without --delete, renamed
     # or removed skills/engines linger in the vault and re-deploy alongside the
-    # new ones (observed live on the v0.1.1 skill renames). Scoped strictly to
+    # new ones (observed live on the v0.1.0-alpha.2 skill renames). Scoped strictly to
     # .memoria subtrees that hold authored code — never user notes; .env files
     # are per-machine and kept.
     local infra
@@ -602,7 +602,7 @@ install_profiles() {
   rm -rf "$staging"
 
   # Fresh-install discipline (ADR-55): prune installed memoria-* profiles that are
-  # no longer shipped (mapper/socratic/verifier/coder/linter from v0.1.0) so a
+  # no longer shipped (mapper/socratic/verifier/coder/linter from v0.1.0-alpha.1) so a
   # stale SOUL never answers the ACP pane.
   if [ "$DRY_RUN" -eq 0 ]; then
     local installed_list stale

@@ -13,7 +13,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
-> **Honest scoping:** the full project workflow — `projects/` folders, the Project workspace, briefs and outlines — ships with **v0.1.2**. The `projects/` folder in your vault is empty until then. What exists *today*, and what this tutorial teaches, is the part that matters most anyway: claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
+> **Honest scoping:** the full project workflow — `projects/` folders, the Project workspace, briefs and outlines — ships with **v0.1.0-alpha.3**. The `projects/` folder in your vault is empty until then. What exists *today*, and what this tutorial teaches, is the part that matters most anyway: claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
 
 ---
 
@@ -71,7 +71,7 @@ Read the coverage view and decide: is any cluster dense enough to write from (a 
 
 ---
 
-## Step 4 — A preview of v0.1.2
+## Step 4 — A preview of v0.1.0-alpha.3
 
 When the Project release lands, the path from here continues inside `projects/`:
 

@@ -50,7 +50,7 @@ The voice section — person, formality, terminology — might seem misplaced in
 
 ## Drift discipline
 
-> **Not built in v0.1.1 — deferred.** The Linter checks described in this section (stale-spec flagging, consumer-vs-palette divergence) and the lifecycle link coloring are not implemented yet; tracked in [#378](https://github.com/eranroseman/memoria-vault/issues/378). The spec file itself ships; its enforcement is the deferred part.
+> **Not built in v0.1.0-alpha.2 — deferred.** The Linter checks described in this section (stale-spec flagging, consumer-vs-palette divergence) and the lifecycle link coloring are not implemented yet; tracked in [#378](https://github.com/eranroseman/memoria-vault/issues/378). The spec file itself ships; its enforcement is the deferred part.
 
 The vault file is the live implementation; this page explains the philosophy. When the brand evolves, the vault file changes first — the docs follow. The Linter's structural-drift check flags the vault file if its `updated` date is older than any consumer that references styles declared there. If a CSS snippet references a color not in the palette, the Linter flags the consumer, not the palette.
 

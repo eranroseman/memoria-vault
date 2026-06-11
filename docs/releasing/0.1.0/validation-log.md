@@ -1,7 +1,7 @@
 ---
 topic: releases
 title: v0.1 validation log
-parent: v0.1
+parent: 0.1.0
 grand_parent: Releasing
 nav_order: 9
 ---
@@ -10,7 +10,7 @@ nav_order: 9
 
 The **evidence** behind v0.1 gate sign-off: what has actually been exercised, by
 what method, with what result. Gate/stage *readiness* status lives in
-[Release plan — v0.1.0](release-plan-v0.1.md) §2/§3; build *gaps* are
+[Release plan — v0.1.0-alpha.1](release-plan-0.1.0.md) §2/§3; build *gaps* are
 [GitHub issues](https://github.com/eranroseman/memoria-vault/issues). This log is the
 detail those point at. Distilled from the retired build ledger on retirement; the
 blow-by-blow remains in git history.
@@ -71,6 +71,6 @@ All "verified" entries are against a **live Hermes on WSL2** unless noted.
 ## Still unverified at large (→ gates / runs)
 
 - GUI / dashboards (11) / Zotero bridge / ACP pane: attended per release (S5, G4) — see
-  the [GUI run record](gui-test-run_v0.1.md).
+  the [GUI run record](gui-test-run_0.1.0.md).
 - Full clean-install candidate run from a fresh clone (G2 / S4) — see the
   [release-candidate runbook](../../testing/plans/release-candidate-runbook.md).

@@ -8,7 +8,7 @@ nav_order: 7
 
 Put a draft in front of the **Peer-reviewer** — the independent, adversarial `verify` lane — read the finding-first flag cards it raises, close the gaps, and loop until clean or the remaining gaps are consciously accepted. The Peer-reviewer's posture is *flag, don't fix*: the only thing it can write is Inbox cards; every edit is yours.
 
-> Per-commit project verification — drafts in `projects/` checked claim by claim on every commit — ships with the v0.1.2 Project release. In v0.1.1 you run verify passes deliberately, as below.
+> Per-commit project verification — drafts in `projects/` checked claim by claim on every commit — ships with the v0.1.0-alpha.3 Project release. In v0.1.0-alpha.2 you run verify passes deliberately, as below.
 
 ## Prerequisites
 

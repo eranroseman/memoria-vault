@@ -49,7 +49,7 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 | `Memoria: lint this note` | **Removed** | The Linter is an engine, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
 | `Memoria: verify this draft` | Replaced | `Memoria: verify a draft` (above), or ask the co-PI. |
 | `Memoria: frame this section` | Replaced | `Memoria: draft a section` (above), or ask the co-PI. |
-| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.2 Project release; meanwhile `Memoria: map the corpus` or the co-PI covers `map` lane work. |
+| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.0-alpha.3 Project release; meanwhile `Memoria: map the corpus` or the co-PI covers `map` lane work. |
 
 ---
 

@@ -155,7 +155,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
 - **Profiles:** `src/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
-- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](docs/releasing/v0.1/release-plan-v0.1.md) for current blockers and known limitations.
+- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](docs/releasing/0.1.0/release-plan-0.1.0.md) for current blockers and known limitations.
 
 ---
 

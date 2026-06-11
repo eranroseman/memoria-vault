@@ -8,7 +8,7 @@ nav_order: 3
 
 Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft:outline-argument`, `draft:score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)); the choice is yours.
 
-> The formal framing step — a project brief in `projects/` that the outline scores against — ships with the v0.1.2 Project release. The delegation below works today; keep the outputs in your own `projects/<slug>/` scratch folder.
+> The formal framing step — a project brief in `projects/` that the outline scores against — ships with the v0.1.0-alpha.3 Project release. The delegation below works today; keep the outputs in your own `projects/<slug>/` scratch folder.
 
 ## Prerequisites
 

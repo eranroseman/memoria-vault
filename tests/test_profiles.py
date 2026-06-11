@@ -27,7 +27,7 @@ def test_profile_structure_complete():
             assert (d / f).is_file(), f"{name} missing {f}"
         dist = yaml.safe_load((d / "distribution.yaml").read_text(encoding="utf-8"))
         assert dist["name"] == name
-        assert dist["version"] == "0.1.1"
+        assert dist["version"] == "0.1.0-alpha.2"
 
 
 def test_configs_parse_and_reference_real_servers():

@@ -10,11 +10,11 @@ permalink: /how-to-guides/compose/
 
 Day-to-day tasks for turning accumulated knowledge into written output. Performed inside Obsidian via the co-PI pane and the Inbox; export runs in the terminal.
 
-> The full project workflow (`projects/` scaffolding, briefs, the Project workspace) ships with v0.1.2 — see [Start a writing project](start-a-writing-project.md) for what to do meanwhile.
+> The full project workflow (`projects/` scaffolding, briefs, the Project workspace) ships with v0.1.0-alpha.3 — see [Start a writing project](start-a-writing-project.md) for what to do meanwhile.
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
-| [Start a writing project](start-a-writing-project.md) | v0.1.2 scope, and the v0.1.1 path meanwhile | — |
+| [Start a writing project](start-a-writing-project.md) | v0.1.0-alpha.3 scope, and the v0.1.0-alpha.2 path meanwhile | — |
 | [Assess your corpus](assess-your-corpus.md) | Delegate a `map` task: dense clusters, thin coverage, gap cards | Assess |
 | [Frame a project](frame-a-project.md) | Competing outlines from the `draft` lane; choose one framing | Frame |
 | [Use canvas for argument mapping](use-canvas-for-argument-mapping.md) | Arrange claims spatially to find structure before prose | Sketch |

@@ -6,7 +6,7 @@ nav_order: 4
 
 # The agent-client pane
 
-The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. In v0.1.1 the pane hosts **one agent — the co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). There is no profile picker to manage: the specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes**, not conversation partners, and the co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
+The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. In v0.1.0-alpha.2 the pane hosts **one agent — the co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). There is no profile picker to manage: the specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes**, not conversation partners, and the co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
 
 For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugins](../../reference/obsidian-plugins.md).
 
@@ -26,7 +26,7 @@ The consolidation dissolves the problem the picker existed to manage. With one a
 
 What the picker's separation protected now lives where it belongs — on the board. Each lane runs under its own scoped write ceiling, each delegation is ceiling-validated, and each result comes back through the review gate ([The control plane](../architecture/control-plane.md)). The boundary between specialists is physical (separate dispatched processes with separate permissions), not a UI affordance the human must operate correctly.
 
-> **Deferred — the assist surface.** A follow-up layer of quick verb-shaped entry points (Find / Search / Patterns / Ask / Draft / Explore, from the palette, the pane, or a selection) is designed but not built; tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380). In v0.1.1 the equivalents are the per-task palette commands ([Obsidian command palette](../../reference/obsidian-command-palette.md)) and asking the co-PI directly.
+> **Deferred — the assist surface.** A follow-up layer of quick verb-shaped entry points (Find / Search / Patterns / Ask / Draft / Explore, from the palette, the pane, or a selection) is designed but not built; tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380). In v0.1.0-alpha.2 the equivalents are the per-task palette commands ([Obsidian command palette](../../reference/obsidian-command-palette.md)) and asking the co-PI directly.
 
 ## Exploratory vs. durable work
 

@@ -25,7 +25,7 @@ Memoria runs **one conversational agent — the co-PI — and four background ag
 | **[The Peer-reviewer](peer-reviewer.md)** | skeptical, independent | verify | The formal review gate: judgment checks and the conceptual red-team. Flags, never fixes. |
 | **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit gate. Writes no code itself. |
 
-**v0.1.1 ships all five profiles**; the Writer, Peer-reviewer, and Engineer run today as background lanes, and their full Project-workspace workflows arrive with v0.1.2. Deterministic work — ingest, search, clustering, the verification sweeps, the Linter — is [Engines](../engines/README.md), not agents: no posture, no board lane.
+**v0.1.0-alpha.2 ships all five profiles**; the Writer, Peer-reviewer, and Engineer run today as background lanes, and their full Project-workspace workflows arrive with v0.1.0-alpha.3. Deterministic work — ingest, search, clustering, the verification sweeps, the Linter — is [Engines](../engines/README.md), not agents: no posture, no board lane.
 
 ## Shared layer, unique layer
 

@@ -51,7 +51,7 @@ Note the consumers: the ingest engine's automated classify stage rolls OpenAlex 
 
 ## Step 3 — Rename a term safely
 
-There is no automated migration command in v0.1.1 — a rename is a deliberate, git-disciplined pass:
+There is no automated migration command in v0.1.0-alpha.2 — a rename is a deliberate, git-disciplined pass:
 
 1. **Commit first** so the rename is one reviewable diff: `git add -A && git commit -m "pre-rename snapshot"`.
 2. **Find every occurrence:** Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/` in the terminal).

@@ -28,7 +28,7 @@ The plugin pins the tab for you (configurable); you can also right-click the tab
 
 **2. Read the glance, then work the Inbox.**
 
-Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings — the v0.1.0 daily-health dashboard was absorbed here) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
+Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings — the v0.1.0-alpha.1 daily-health dashboard was absorbed here) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
 
 **3. Navigate to a dashboard.**
 

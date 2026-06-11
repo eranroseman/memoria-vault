@@ -51,7 +51,7 @@ The installer is offered two ways, with **inspect-first as the documented primar
 
 Per Memoria's runtime model, **Hermes runs only on Linux/WSL2; Windows is the editing surface**. WSL2 is therefore a **hard prerequisite for the entire Windows install**, checked first:
 
-> **Reevaluation (2026-06):** the two rationales for this rule have since weakened — Hermes now supports **native Windows** (out of beta) and the Python analysis-stack wheels exist, so WSL2 is no longer *forced* by capability. Native Windows is the direction **after v0.1.2** (it also removes the WSL2↔Windows fragility); see [Native Windows vs WSL2 — platform reevaluation](../../adr/64-native-windows-support.md). **This rule remains in force for the v0.1.x releases.**
+> **Reevaluation (2026-06):** the two rationales for this rule have since weakened — Hermes now supports **native Windows** (out of beta) and the Python analysis-stack wheels exist, so WSL2 is no longer *forced* by capability. Native Windows is the direction **after v0.1.0-alpha.3** (it also removes the WSL2↔Windows fragility); see [Native Windows vs WSL2 — platform reevaluation](../../adr/64-native-windows-support.md). **This rule remains in force for the v0.1.x releases.**
 
 - **No WSL2 → the installer does nothing.** It explains that Memoria on Windows requires WSL2, links Microsoft's guide, and exits without installing anything (enabling WSL2 needs admin + a reboot, so the installer won't attempt it).
 - **WSL2 present → proceed.** The thin `scripts/install.ps1` ensures Obsidian on the Windows side, then hands the entire rest of the flow to `bash scripts/install.sh` inside WSL2.
@@ -83,7 +83,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Surface area** is still nontrivial (WSL2 orchestration, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **The golden-copy update path** (how a later release refreshes `.memoria/golden/` without clobbering user customizations) is the known open question, to resolve when v0.1.2 ships ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
+- **The golden-copy update path** (how a later release refreshes `.memoria/golden/` without clobbering user customizations) is the known open question, to resolve when v0.1.0-alpha.3 ships ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ## Related
 

@@ -11,7 +11,7 @@ topic: releases
 One folder per version, `releasing/vX.Y/`, holding the **prose** of that cut (scope,
 known limitations, cut procedure, roadmap). The reusable body is
 [Release plan — vX.Y.Z](release-plan-template.md); the current release is
-[the v0.1 release](v0.1/). The *live readiness state* lives outside the file — see below.
+[the v0.1 release](0.1.0/). The *live readiness state* lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 

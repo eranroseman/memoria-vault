@@ -6,7 +6,7 @@ nav_order: 1
 
 # Distribution model
 
-Memoria ships as a single repo (`memoria-vault`), version **0.1.1**. **The repo is the install unit** ([ADR-26](../../adr/26-repo-as-install-unit.md), as amended by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)) — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
+Memoria ships as a single repo (`memoria-vault`), version **0.1.0-alpha.2**. **The repo is the install unit** ([ADR-26](../../adr/26-repo-as-install-unit.md), as amended by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)) — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
 
 | Path | Contents | Audience |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ So the agents share the house rules but each brings its own stance and toolset. 
 
 ## Why the profile install is idempotent
 
-The bootstrap's profile-install step (also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates), **prunes** stale `memoria-*` profiles that are no longer shipped (the v0.1.0 seven-profile set), and leaves human-owned secrets (`.env`, any local overrides) untouched.
+The bootstrap's profile-install step (also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates), **prunes** stale `memoria-*` profiles that are no longer shipped (the v0.1.0-alpha.1 seven-profile set), and leaves human-owned secrets (`.env`, any local overrides) untouched.
 
 The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with their source. Without it, the profile directories under `~/.hermes/profiles/` would drift from the repo over time — a drift the Linter detects but the re-run fixes; making the re-run safe is what makes the fix actionable.
 

@@ -21,7 +21,7 @@ The top level is organized by **category** — one content kind per folder, no l
 │   papers · people · organizations · venues · datasets · repositories
 ├── notes/          ← NOTES: prose (Zettelkasten)
 │   fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
-├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.1)
+├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.0-alpha.2)
 ├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
 ├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
@@ -34,13 +34,13 @@ The top level is organized by **category** — one content kind per folder, no l
 
 - **Catalog** — entity records: paper, person, organization, venue, dataset, repository. Built by the ingest engine from metadata APIs; flat, Bases-queryable frontmatter; **not gated** — relationships are given facts (with one escape valve: low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
 - **Notes** — prose: fleeting, source, claim 🔒, hub 🔒, index. The claim is the unit of the PI's thinking; the hub (the renamed MOC) is its structure note.
-- **Projects** — report, sketch, composition, code — project-scoped work artifacts. Empty in v0.1.1; the Project workspace ships in v0.1.2.
+- **Projects** — report, sketch, composition, code — project-scoped work artifacts. Empty in v0.1.0-alpha.2; the Project workspace ships in v0.1.0-alpha.3.
 - **Inbox** — candidate, gap, flag, alert, and work-prompt cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). The kanban board and queue dashboards are *views* of this folder.
 - **System** — logs, templates, patterns, dashboards, board: visible, git-tracked infrastructure (hidden runtime stays in `.memoria/`).
 
 ## Gated zones
 
-The review-gated zones 🔒 — `notes/claims/` and `notes/hubs/` in v0.1.1 (project deliverables join in v0.1.2) — are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment.
+The review-gated zones 🔒 — `notes/claims/` and `notes/hubs/` in v0.1.0-alpha.2 (project deliverables join in v0.1.0-alpha.3) — are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment.
 
 ## Archived is a state, not a folder
 

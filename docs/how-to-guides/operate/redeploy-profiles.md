@@ -32,7 +32,7 @@ bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2 (whe
 
 - Stages each profile's files to a temp directory
 - Substitutes `{{PYTHON}}` (the vault venv interpreter) and `{{VAULT_PATH}}` in `config.yaml`
-- Calls `hermes profile install --force` for each of the five profiles, and prunes any retired v0.1.0 profile (`mapper` / `socratic` / `verifier` / `coder` / `linter`) still registered
+- Calls `hermes profile install --force` for each of the five profiles, and prunes any retired v0.1.0-alpha.1 profile (`mapper` / `socratic` / `verifier` / `coder` / `linter`) still registered
 - Seeds each profile's `.env` from `~/.hermes/.env` — never overwrites a value already set
 
 **2. Redeploy a single profile** (faster when only one changed):

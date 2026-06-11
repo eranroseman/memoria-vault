@@ -6,7 +6,7 @@ nav_order: 4
 
 # Classify a source
 
-In v0.1.1 most classification is **automated**: the ingest engine's classify stage reads the OpenAlex topics already in the enrichment payload and applies `research_area` (and a `methodology` facet where derivable) silently when the decision is clear — audited, never gated ([Ingest routing](../../reference/ingest.md)). What's left for you is the judgment the automation refuses to make:
+In v0.1.0-alpha.2 most classification is **automated**: the ingest engine's classify stage reads the OpenAlex topics already in the enrichment payload and applies `research_area` (and a `methodology` facet where derivable) silently when the decision is clear — audited, never gated ([Ingest routing](../../reference/ingest.md)). What's left for you is the judgment the automation refuses to make:
 
 - **Genuine ambiguity** — the engine left the field unset and raised one Inbox `flag` card with the top candidates and scores
 - **The Librarian's proposal** — the `_proposed_classification` block on the paper entity, promoted by you
