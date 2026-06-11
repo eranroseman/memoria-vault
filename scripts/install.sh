@@ -320,6 +320,16 @@ copy_vault() {
   # rsync preserves user notes/.env on refresh; fall back to cp on a clean target.
   if have rsync; then
     run rsync -a --exclude '.git' "$src"/ "$VAULT_PATH"/
+    # Authored infra must MIRROR the repo on refresh: without --delete, renamed
+    # or removed skills/engines linger in the vault and re-deploy alongside the
+    # new ones (observed live on the v0.1.1 skill renames). Scoped strictly to
+    # .memoria subtrees that hold authored code — never user notes; .env files
+    # are per-machine and kept.
+    local infra
+    for infra in profiles engines mcp schemas scripts plugins; do
+      [ -d "$src/.memoria/$infra" ] || continue
+      run rsync -a --delete --exclude '.env' "$src/.memoria/$infra"/ "$VAULT_PATH/.memoria/$infra"/
+    done
   else
     run_sh "cp -R \"$src\"/. \"$VAULT_PATH\"/"
   fi
