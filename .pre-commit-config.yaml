@@ -16,7 +16,7 @@ repos:
         args: [--branch, main]
       # Block 8: JSON syntax check (exclude vendored Obsidian plugin files)
       - id: check-json
-        exclude: vault/\.obsidian/plugins/
+        exclude: src/\.obsidian/plugins/
 
   # ---------------------------------------------------------------------------
   # ruff (Python linter)  —  Block 3 partial
@@ -34,7 +34,7 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
-        exclude: vault/\.obsidian/
+        exclude: src/\.obsidian/
 
   # ---------------------------------------------------------------------------
   # shellcheck  —  Block 2 partial
@@ -95,15 +95,15 @@ repos:
       - id: dashboard-schema-drift
         name: dashboard-schema-drift
         language: system
-        entry: python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault --gate dashboard-field-drift
-        files: ^vault/00-meta/01-dashboards/.*\.md$|^vault/99-system/templates/.*\.md$
+        entry: python src/.memoria/engines/linter/detectors.py --vault src --gate dashboard-field-drift
+        files: ^src/system/dashboards/.*\.md$|^src/system/templates/.*\.md$
         pass_filenames: false
 
       # Block 9: markdownlint structural rules
       - id: markdownlint-structural
         name: markdownlint-structural
         language: system
-        entry: npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-structural.json
+        entry: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json
         files: ^docs/.*\.md$
         pass_filenames: true
 
@@ -129,6 +129,6 @@ repos:
         language: system
         entry: bash scripts/harper-advisory.sh
         files: \.(md|txt|rst)$
-        exclude: vault/\.obsidian/
+        exclude: src/\.obsidian/
         pass_filenames: true
         verbose: true

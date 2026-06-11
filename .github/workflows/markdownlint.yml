@@ -8,7 +8,10 @@ name: markdownlint
 #   MD042  empty links            [text]()
 #   MD056  table column count      (a row with the wrong cell count drops data)
 #   MD058  blanks around tables    (a table glued to text fails to render)
-# Everything else (style) stays the editor's job (.markdownlint.jsonc), not CI's.
+# The shared `.markdownlint.json` holds exactly these five structural rules, so the
+# editor, pre-commit (Block 9), and CI all enforce an identical set. Style rules
+# (e.g. MD013 line-length) stay the editor's job — added editor-only via the
+# `markdownlint.config` key in .vscode/settings.json, never gating here.
 #
 # Runs unconditionally (no `paths:` filter) so it can back a required check —
 # same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
@@ -36,4 +39,4 @@ jobs:
         with:
           node-version: "20"
       - name: markdownlint structural rules over docs/
-        run: npx --yes markdownlint-cli@0.42.0 --config .github/markdownlint/docs-structural.json 'docs/**/*.md'
+        run: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json 'docs/**/*.md'

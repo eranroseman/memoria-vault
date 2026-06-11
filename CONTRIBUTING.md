@@ -65,7 +65,7 @@ The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becom
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
 - **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the other seven profiles.
 - **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
-- **Markdown:** the editor lints with the full `.markdownlint.jsonc` (style aids — code-fence languages, trailing whitespace, etc.). **CI enforces only** the structural subset in `.github/markdownlint/docs-structural.json` (5 rules that catch real rendering bugs on `docs/`, with no Obsidian false positives). So the editor intentionally flags more than CI gates — by design; only the structural rules block a PR.
+- **Markdown:** one shared config, `.markdownlint.json`, holds the structural rule set (5 rules that catch real rendering bugs on `docs/`, with no Obsidian false positives). The editor, pre-commit, and CI all enforce exactly that set. The editor additionally shows style-only hints (e.g. MD013 line-length) via the `markdownlint.config` key in `.vscode/settings.json` — those do **not** gate a PR, so the editor intentionally flags a little more than CI blocks.
 
 ## Submitting a pull request
 
