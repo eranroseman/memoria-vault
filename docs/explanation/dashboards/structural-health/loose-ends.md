@@ -7,30 +7,28 @@ grand_parent: Dashboards
 
 # `loose-ends` dashboard
 
-Catches leftover files with names that signal unfinished work: anything containing `TODO`, `tmp`, or `untitled`. Run it after ingest batches or whenever something feels incomplete. The dashboard flags; you decide the action per file — rename, finish, archive, or delete.
+Batches the lowest-stakes structural debt — the `flag` cards the Linter raised at **Notice** loudness, which never push to Home. Run it during the weekly review or whenever you want to clear cosmetic findings in one pass. The dashboard lists; you decide the action per card.
 
 ## What it shows
 
-A whole-vault scan for files whose names contain `TODO`, `tmp`, or `untitled`, sorted by most-recently-modified. Recent junk is more actionable (you remember the context); old junk that's lingered is typically archive-or-delete territory.
+The `flag` cards in `inbox/` still in `proposed` with `loudness = notice`, sorted oldest-first (`file.ctime ASC`) — each row carrying its `type`, `finding`, and `raised_by`. Older findings have lingered longest and lead the list. These are cosmetic and low-stakes integrity findings the Linter deliberately did not push to Home or block on; they wait here for the weekly batch.
 
-## Why these three keywords and not others
+## Why Notice loudness and not louder findings
 
-The three keywords (`TODO`, `tmp`, `untitled`) reliably signal files the human or an agent didn't finish naming. They don't appear in legitimate completed notes.
-
-`draft` is deliberately excluded even though it sounds similar. A draft is a first-class state of a project composition (in `projects/`). Matching filenames containing "draft" would flag real in-progress writing as junk.
+Loudness, not finding type, is what routes a card here. `alert`-level drift and `block`-level findings surface in `drift-watch` and push to Home — they need attention sooner. Loose-ends is reserved for the `notice` tail: real findings, but none worth interrupting the PI for. Batching them into the weekly pass keeps the daily glance quiet without losing the debt.
 
 ## What it is not
 
-**Not the Linter engine's `orphan-working-files` detector.** That detector catches transient automation artifacts (`.tmp.*`, `.bak`, editor backups) outside permitted zones. Loose-ends catches human-left junk by filename keyword. Different targets, different layer.
+**Not drift-watch.** Drift-watch shows the open `flag`/`alert` cards loud enough to act on now (`alert` also pushes to Home). Loose-ends shows only the `notice`-loudness `flag` tail. Same card queue, different loudness slice.
 
-**Not data-quality validation.** Empty frontmatter, missing wikilinks, and broken references surface in the Linter's findings. Loose-ends is narrower: files the human clearly forgot to finish.
+**Not data-quality validation itself.** The Linter detects the issues — empty frontmatter, weak naming, soft integrity smells — and writes the cards. Loose-ends is the *view* over the Notice-level subset, not the detector.
 
-## Works on day one
+## Works once the Linter has run
 
-Unlike most dashboards, loose-ends has no dependencies — no plugin, no log file, no schema. Any file in the vault with a matching filename appears immediately.
+Loose-ends reads the Inbox card queue, so it's empty until the Linter's first pass writes `notice`-level `flag` cards. After that, an empty dashboard means the Notice-level debt is clear — the cards converge to zero as the PI acts on or archives them.
 
 ## Related
 
 - [The weekly-review dashboard](weekly-review.md) — the Friday ritual that includes a loose-ends pass
-- [Engines](../../engines/README.md) — the Linter's `orphan-working-files` detector, the structural counterpart
-- Archiving surfaced sources: [Archive a source](../../../how-to-guides/compile/archive-a-source.md)
+- [drift-watch dashboard](drift-watch.md) — the louder `flag`/`alert` findings; loose-ends is the Notice-level tail
+- [The honesty card](../../kanban-board/card-schema.md) — the `flag` card format and loudness levels

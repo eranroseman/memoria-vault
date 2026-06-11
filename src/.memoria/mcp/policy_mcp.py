@@ -132,10 +132,10 @@ def glob_to_regex(pattern: str) -> str:
     - ``*``  matches within a single segment (never crosses ``/``)
     - ``?``  matches a single non-``/`` char
 
-    Verified against the real lane patterns: ``40-workbench/*/06-code/**`` matches
-    ``40-workbench/project-x/06-code/main.py`` but not ``.../04-drafts/d.md``;
-    ``**`` (Socratic deny-all) matches everything; an exact file path like
-    ``40-workbench/*/01-map/corpus-map.md`` matches only that file.
+    Verified against the real lane patterns: ``projects/*/code/**`` matches
+    ``projects/project-x/code/main.py`` but not ``projects/project-x/draft.md``;
+    ``**`` (co-PI deny-all) matches everything; an exact file path like
+    ``projects/acme/code/main.py`` matches only that file.
     """
     i, n, out = 0, len(pattern), ["^"]
     while i < n:

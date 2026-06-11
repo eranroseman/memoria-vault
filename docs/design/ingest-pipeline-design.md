@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Ingest pipeline — one pipeline, three tiers, two model holes
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 9
 ---
 
 # Ingest pipeline — one pipeline, three tiers, two model holes
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 ingest pipeline and is
+> kept for design rationale only. The current sources are
+> [ADR-30](../adr/30-deterministic-ingest-pipeline.md) and
+> [Ingest reference](../reference/ingest.md).
 
 A design capture of how a source becomes a vault note: the tiered deterministic
 pipeline, the capture-first durability anchor, ID-keyed entity dedup, and the two

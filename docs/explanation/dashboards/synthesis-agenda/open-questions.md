@@ -7,31 +7,31 @@ grand_parent: Dashboards
 
 # `open-questions` dashboard
 
-Turns the vault into a research agenda by collecting every note that contains an explicit `## Open questions` section. Open it when planning the next reading direction — what questions has past synthesis raised that still haven't been answered?
+Turns the vault into a research agenda by surfacing the **unconnected claims** — `current` claim notes that no hub holds and nothing links to yet. Open it when planning the next reading direction — which claims has past synthesis raised that still haven't been woven into the rest of the corpus?
 
 ## What it shows
 
-All claim notes and source notes that contain a `## Open questions` heading section, sorted by most-recently-modified. The dashboard doesn't extract the questions into a list — it shows which notes have them, so you navigate to the note and read the questions in context.
+Every `current` claim note in `notes/claims/` with zero inbound links (`length(file.inlinks) = 0`), sorted oldest-first. These are the synthesis backlog: claims that stand alone, waiting to be connected to a hub or to other claims. The dashboard doesn't propose the connections — it shows which claims are stranded, so you navigate to each and decide where it belongs.
 
-## Two source folders
+## One source folder
 
-The dashboard reads from `notes/claims/` and `notes/source/`. These are where durable questions accumulate naturally. Project pages might also have open-questions sections, but those tend to be operational ("what should we do next?") rather than research-direction questions ("what's still unknown in the field?").
+The dashboard reads from `notes/claims/` only. A claim with no inbound links is unconnected by definition; the sources that fed it are tracked separately by the reading-pipeline dashboard.
 
 ## What it is not
 
-**Not a synthesizer.** It collects existing sections; it doesn't propose new questions, cluster them, or rank them by importance.
+**Not a synthesizer.** It surfaces unconnected claims; it doesn't propose the links, cluster the claims, or rank them by importance.
 
-**Not a tracker.** There's no `resolved:` state. When a question gets answered, you manually remove or update the section. The dashboard reflects what's currently in the notes; it doesn't remember history.
+**Not a tracker.** There's no `resolved:` state. When a claim gains an inbound link — a hub picks it up, or another claim references it — it simply drops off the list. The dashboard reflects current link state; it doesn't remember history.
 
-**Not auto-resolving.** Nothing in the system reads these questions and attempts to answer them. The Librarian reads `research-focus.md` to guide discovery; open questions from the dashboard can inform what you write there.
+**Not auto-resolving.** Nothing in the system links these claims for you. The Librarian reads `research-focus.md` to guide discovery; the unconnected claims surfaced here can inform what you write there.
 
-## Why free-form section, not frontmatter
+## Why inbound-link count, not a prose section
 
-Questions are prose — often a paragraph with context and stakes. Constraining them to a flat `open_questions: []` YAML list would lose the framing that makes them worth revisiting. The cost is that the dashboard can't filter by question topic; it shows which notes have questions, not what the questions say.
+An unconnected claim is one nothing points to — a fact the corpus has captured but not yet integrated. Measuring it by inbound-link count (`file.inlinks`) catches that structurally, without depending on the PI to hand-author a "## Open questions" section. The cost is that it surfaces *which* claims are stranded, not a prose statement of what's unknown.
 
 ## Works on day one
 
-Any note with a `## Open questions` section appears immediately. No plugin, no log file, no schema required.
+Any `current` claim with no inbound links appears immediately. No plugin, no log file, no schema required.
 
 ## Related
 

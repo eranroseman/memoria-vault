@@ -54,12 +54,12 @@ bash scripts/install.sh --dry-run --vault "$RV"
 
 ```bash
 bash scripts/install.sh --vault "$RV"      # full install
-hermes profile list                         # expect all 7
+hermes profile list                         # expect all 5
 bash scripts/install.sh --vault "$RV"      # re-run: must be idempotent (no errors, no dupes)
 ```
 
-- [ ] **G1 / S3** — installer completes; **all 7 profiles register** (`librarian`, `mapper`, `socratic`, `writer`, `verifier`, `coder`, `linter`); the vault venv exists (`$RV/.memoria/.venv`); idempotent re-run is clean.
-- [ ] `memoria-policy-gate` plugin deployed + enabled for all 7 (substituted `{{PROFILE}}`/`{{VAULT_PATH}}` per lane).
+- [ ] **G1 / S3** — installer completes; **all 5 profiles register** (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`); the vault venv exists (`$RV/.memoria/.venv`); idempotent re-run is clean.
+- [ ] `memoria-policy-gate` plugin deployed + enabled for all 5 (substituted `{{PROFILE}}`/`{{VAULT_PATH}}` per lane).
 - [ ] Bundled official skills verified present (no hub-install 404s).
 - [ ] Telemetry + sweeps crons wired: `hermes cron list` shows `memoria-board-export` and `memoria-sweeps`.
 - [ ] **Ingest runtime deps:** `"$RV/.memoria/.venv/bin/python" -c "import pymupdf4llm"` succeeds (local-PDF extraction; from `requirements.txt`).
@@ -76,7 +76,7 @@ Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](he
 
 ## G9 — deterministic spine (zero-LLM card)  → records G9
 
-- [ ] A *dispatched, zero-LLM* card (Linter `health-report` or Verifier `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
+- [ ] A *dispatched, zero-LLM* card (Linter engine `health-report` or Peer-reviewer `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
 Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
 
@@ -85,18 +85,18 @@ Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
 **Ingest setup (once):**
 
 - [ ] Better BibTeX **postscript** applied so the export carries `zoteroselect` (gives `zotero_uri` with no Zotero API) — snippet in [Ingest routing](../../reference/ingest.md#frontmatter-written-at-ingest). Re-export the `.bib`.
-- [ ] A seeded `00-meta/vocabulary.md` is present (ships with the vault).
+- [ ] A seeded `system/vocabulary.md` is present (ships with the vault).
 
 **Run a real paper end-to-end** (Zotero capture → card, or a manual ingest card):
 
 - [ ] Dispatch ingests through the `ingest_pipeline` MCP tool → the Librarian fills the two holes (vocabulary-constrained `_proposed_classification`; comparative `[!brief]`) → gated write → `lifecycle: proposed`, `ingest_status: complete`.
-- [ ] Note is complete: identity + merged metadata (S2/OpenAlex/Crossref), stable IDs (`openalex_id`/`semantic_scholar_id`/`pmid`/`pmcid`), `zotero_uri` + `pdf_uri`, full-text extract under `90-assets/extracts/`, ID-keyed entity notes (`03-entities/<id>.md`), `[!brief]` leads the body.
+- [ ] Note is complete: identity + merged metadata (S2/OpenAlex/Crossref), stable IDs (`openalex_id`/`semantic_scholar_id`/`pmid`/`pmcid`), `zotero_uri` + `pdf_uri`, full-text extract under `.memoria/data/extracts/`, ID-keyed entity notes under `catalog/`, `[!brief]` leads the body.
 
 Detail: [Ingest-value-loop test plan (G10)](g10-ingest-plan.md).
 
 ## G11 — review loop closes  → records G11
 
-- [ ] Card reaches `done` with the review requested; a **human review** promotes `_proposed_classification` into the main `study_design`/`methods`/`topic` fields, removes the proposal block, and flips `lifecycle: proposed → current`. Observed end-to-end.
+- [ ] Card reaches `done` with the review requested; a **human review** promotes `_proposed_classification` into the main `research_area`/`methodology` fields, removes the proposal block, and flips `lifecycle: proposed → current`. Observed end-to-end.
 
 ## S5 — Obsidian + Zotero GUI  → records S5, G4
 
@@ -111,7 +111,7 @@ Run the [GUI test plan](gui-test-plan.md) on the Windows side and **fully comple
 
 ```bash
 hermes cron run memoria-board-export        # or: hermes cron tick
-ls -l "$RV/99-system/logs/"{board-state,board-transitions,audit,lint-findings}.jsonl
+ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings}.jsonl
 ```
 
 - [ ] `board-state`, `board-transitions`, `audit`, and `lint-findings` all gain rows from the live activity above.
@@ -125,7 +125,7 @@ ls -l "$RV/99-system/logs/"{board-state,board-transitions,audit,lint-findings}.j
 
 Only after every row above is green:
 
-- [ ] Confirm `version: vX.Y.0` across the seven `vault/.memoria/profiles/*/distribution.yaml`.
+- [ ] Confirm `version: vX.Y.0` across the five `src/.memoria/profiles/*/distribution.yaml`.
 - [ ] **Version + CHANGELOG + tag + GitHub Release** are owned by **release-please** — merge its open release PR; that cuts the tag, finalizes `CHANGELOG [vX.Y.0]`, and publishes the Release. Don't hand-tag or hand-edit the CHANGELOG. (See [Releases](../../releasing/README.md).)
 - [ ] Flip `released: false → true` / `status: draft → released` in that release's `release-plan-<v>.md` frontmatter.
 - [ ] Close the release's **"Release vX.Y" tracking issue** + the milestone, rolling any unfinished issues to the next milestone.
@@ -139,13 +139,13 @@ Copy into the release's `validation-log.md`. Record commit `__________` and date
 | S0 | static | ☐ | |
 | S1 | self-tests | ☐ | |
 | S2 | dry-run install | ☐ | |
-| S3 / G1 | real install, 7 profiles, idempotent | ☐ | |
+| S3 / G1 | real install, 5 profiles, idempotent | ☐ | |
 | S4 / G3 | model + REST bridge live | ☐ | |
 | G2 | gate enforced (`-z` / gateway / cron) | ☐ | |
 | G9 | deterministic spine card | ☐ | |
 | G10 | ingest value loop end-to-end | ☐ | |
 | G11 | review loop closes | ☐ | |
-| S5 / G4 | GUI + 11 dashboards render | ☐ | |
+| S5 / G4 | GUI + 10 dashboards render | ☐ | |
 | G5 | four telemetry signals emit | ☐ | disposition/cost = known limitation |
 | G6 | CI green on the commit | ☐ | |
 | G7 | no open P0 | ☐ | |

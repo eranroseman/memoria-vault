@@ -33,7 +33,7 @@ end (the boxes are clickable in Obsidian).
 
 ## 0. Preconditions
 
-- [ ] Installer has run; in WSL2 `hermes profile list` shows the **7** `memoria-*` profiles.
+- [ ] Installer has run; in WSL2 `hermes profile list` shows the **5** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
 - [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY` (Librarian; OpenAlex requires a key since 2026-02).
 - [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27124`).
@@ -46,7 +46,7 @@ end (the boxes are clickable in Obsidian).
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
-- ✓ Pass: file tree shows `00-meta/ 10-inbox/ 20-sources/ 30-synthesis/ 40-workbench/ 50-deliverables/ 90-assets/ 95-archive Home README`.
+- ✓ Pass: file tree shows `catalog/ notes/ projects/ inbox/ system/ home.md README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
 - [ V] **A1 Pass**
 
@@ -119,7 +119,7 @@ curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 **B4. Round-trip (write appears live).** In WSL2:
 
 ```
-hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/01-fleeting/gui-probe.md with body: gui round-trip. Use only the obsidian tool."
+hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fleeting/gui-probe.md with body: gui round-trip. Use only the obsidian tool."
 ```
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
@@ -128,40 +128,40 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create 10-inbox/
 
 ---
 
-## Part C — The eleven dashboards render (G4)
+## Part C — The ten dashboards render (G4)
 
-Open each file under `00-meta/01-dashboards/` (Reading view). For **every** ```dataview```
-block: it must render a table or placeholder, **never a query error**.
+Open each file under `system/dashboards/` (Reading view). For **every** ```dataview```
+block: it must render a table or placeholder, **never a query error**. (The former
+*Daily Health* dashboard is now the glance at the top of `home.md`, validated with the
+Home page — it is not a standalone dashboard file.)
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
-| 1 | `daily-health.md` (Daily Health) | board-state, lint-findings, fleet metrics, cron-history | all sections render; no query error |
-| 2 | `board-state.md` | `99-system/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
-| 3 | `reading-pipeline.md` | `20-sources/01-papers/` (`lifecycle`), claims (`maturity`) | resolves; **seed:** a paper note → it appears by lifecycle |
-| 4 | `discuss-queue.md` | papers `lifecycle: current`, no Socratic pass | resolves; empty OK |
-| 5 | `open-questions.md` | `## Open questions` sections in claims/papers | resolves; add a note with that section → it lists |
-| 6 | `contradictions.md` | claim `relations.contradicts` pairs | resolves; empty OK |
-| 7 | `drift-watch.md` | `99-system/logs/lint-findings.jsonl` | resolves; populates after a Linter run |
-| 8 | `loose-ends.md` | whole-vault filename scan (`TODO`/`tmp`/`untitled`) | resolves; create `untitled.md` → it lists; delete after |
-| 9 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
-| 10 | `fleet-health.md` | `99-system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
-| 11 | `audit-log.md` | `99-system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
+| 1 | `board-state.md` | `system/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
+| 2 | `reading-pipeline.md` | `catalog/papers/` (`lifecycle: proposed`), claims (`maturity`) | resolves; **seed:** a paper note → it appears by lifecycle |
+| 3 | `discuss-queue.md` | sources `lifecycle: provisional` | resolves; empty OK |
+| 4 | `open-questions.md` | claims with zero inbound links (`notes/claims/`) | resolves; add an unconnected claim → it lists |
+| 5 | `contradictions.md` | note `links.contradicts` pairs | resolves; empty OK |
+| 6 | `drift-watch.md` | `system/logs/lint-findings.jsonl` | resolves; populates after a Linter engine run |
+| 7 | `loose-ends.md` | `notice`-loudness `flag` cards (`lifecycle: proposed`) | resolves; create a notice flag card → it lists |
+| 8 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
+| 9 | `fleet-health.md` | `system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
+| 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
 Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
-- [ ] 1 · `daily-health.md`
-- [ ] 2 · `board-state.md`
-- [ ] 3 · `reading-pipeline.md`
-- [ ] 4 · `discuss-queue.md`
-- [ ] 5 · `open-questions.md`
-- [ ] 6 · `contradictions.md`
-- [ ] 7 · `drift-watch.md`
-- [ ] 8 · `loose-ends.md`
-- [ ] 9 · `weekly-review.md`
-- [ ] 10 · `fleet-health.md`
-- [ ] 11 · `audit-log.md`
+- [ ] 1 · `board-state.md`
+- [ ] 2 · `reading-pipeline.md`
+- [ ] 3 · `discuss-queue.md`
+- [ ] 4 · `open-questions.md`
+- [ ] 5 · `contradictions.md`
+- [ ] 6 · `drift-watch.md`
+- [ ] 7 · `loose-ends.md`
+- [ ] 8 · `weekly-review.md`
+- [ ] 9 · `fleet-health.md`
+- [ ] 10 · `audit-log.md`
 - [ ] **Part C / G4 Pass (all 10 resolve)**
 
 ---
@@ -197,7 +197,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 ## Part E — End-to-end GUI flows
 
-**E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-socratic` → ask a question.
+**E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-copi` → ask a question.
 
 - ✓ Pass: a model response renders in the pane (model connectivity through the GUI).
 - [ ] **E1 Pass**
@@ -205,17 +205,17 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 **E2. Write gate visible in the GUI.** In WSL2, drive a **denied** write:
 
 ```
-hermes -p memoria-librarian -z "Use the obsidian append tool to create 30-synthesis/gui-denied.md. Use only the obsidian tool."
+hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/claims/gui-denied.md. Use only the obsidian tool."
 ```
 
-Then open `00-meta/01-dashboards/audit-log.md`.
+Then open `system/dashboards/audit-log.md`.
 
 - ✓ Pass: **no `gui-denied.md` is created**, and a `deny` row for it appears in audit-log.
 - [ ] **E2 Pass**
 
 **E3. Board telemetry round-trip.** Create a card (`hermes kanban create …` or via the board), then `hermes cron tick`, then open `board-state.md`.
 
-- ✓ Pass: the card appears under *Active*; `99-system/board/<task_id>.md` exists.
+- ✓ Pass: the card appears under *Active*; `system/board/<task_id>.md` exists.
 - [ ] **E3 Pass**
 
 ---
@@ -226,7 +226,7 @@ Then open `00-meta/01-dashboards/audit-log.md`.
 | --- | --- | --- | --- |
 | A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 11 dashboards' Dataview blocks resolve | | |
+| C / G4 | All 10 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |

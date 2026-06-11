@@ -6,7 +6,7 @@ nav_order: 10
 
 # Create a code artifact
 
-Delegate analysis or figure code to the **Engineer** — the `code` lane. Code in Memoria is a research output with provenance: the Engineer coordinates (scaffolds the handoff to an external coding agent and owns the commit/revert gate in `projects/*/code/`); the *why* — what claim or figure the code serves — is yours to state.
+Delegate analysis or figure code to the **Engineer** — the `code` lane. Code in Memoria is a research output with provenance: the Engineer coordinates (scaffolds the handoff to an external coding agent and owns the provenance/review gate over `projects/*/code/`); the substantive coding — and the git commits that land it — happen in the external agent (which has shared filesystem access) and your hand. The *why* — what claim or figure the code serves — is yours to state.
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ The co-PI delegates a **`code`** task to the Engineer. (Palette twin: **Memoria:
 
 **2. Let the Engineer scaffold.**
 
-The Engineer prepares the handoff in `projects/<slug>/code/` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. It is the only lane with `terminal` + `file` capability, and the narrowest write scope to go with it.
+The Engineer prepares the handoff in `projects/<slug>/code/` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. Like every Memoria agent it is MCP-only — no `terminal`, no `file` toolset — so it writes the scaffold through the gated vault MCP, confined to the narrowest write scope of any lane (`projects/*/code/`).
 
 **3. State the purpose yourself.**
 
@@ -47,7 +47,7 @@ Apply the same gate as any research output: does the code do what the purpose sa
 
 **6. Record the runbook and commit.**
 
-Fill in dependencies, the exact command to reproduce the output, and where outputs land. Commit the note and implementation together (the Engineer's commit/revert gate covers `projects/*/code/`):
+Fill in dependencies, the exact command to reproduce the output, and where outputs land. Commit the note and implementation together — the per-task commit the Engineer's gate expects over `projects/*/code/`:
 
 ```bash
 git add "projects/<slug>/code/"

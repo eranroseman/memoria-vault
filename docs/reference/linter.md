@@ -19,6 +19,7 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed note outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
+| `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` after an hour — the reversibility chain has a hole and the write's after-state can no longer be pinned. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
 | `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |

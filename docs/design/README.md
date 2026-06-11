@@ -12,9 +12,10 @@ Durable design analysis that informs the [Decisions](../adr) — the background 
 needs to understand *why* an ADR landed where it did, kept out of the ADRs themselves so
 each decision stays tight. Three kinds of note live here:
 
-- **As-built design captures** — the design view of a subsystem that *is* already
-  implemented in `vault/`, reconstructed from the code and the ADRs. They describe
-  reality (What it is / How it works / Design rationale / Related):
+- **As-built design captures** — the design view of a subsystem reconstructed from the
+  code and the ADRs (the system ships from `src/` — [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+  They describe the **v0.1.0** system as built at the time; **several are now historical**
+  (`status: historical`) after the v0.1.1 redesign — see the banner at the top of each note:
   [Policy gate and permissions](policy-gate-and-permissions.md),
   [Session logging and audit](session-logging-and-audit.md),
   [Profiles and the SOUL model](profiles-and-soul-model.md),
@@ -31,6 +32,11 @@ each decision stays tight. Three kinds of note live here:
   load-bearing but which has no verified write-up yet; placeholders listing the claims to
   check: [Memory systems and benchmarks](memory-systems-and-benchmarks.md) and
   [AI-research systems survey](ai-research-systems-survey.md).
+
+Notes carry a `status`: `as-built` (current implementation), `historical` (described the
+v0.1.0 system, now superseded — kept for rationale), `exploration`, `deferred`, or `stub`.
+The redesign cluster (`memoria-design-update*`, `system-architecture`, `red-team-findings`)
+is largely **superseded by ADRs 46–57** and kept for history.
 
 Working material that isn't ready for readers (the redesign, research stubs, and the
 capability explorations behind `deferred` decisions) carries `nav_exclude: true` and is

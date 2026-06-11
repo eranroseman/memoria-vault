@@ -17,7 +17,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
 | [Note types](note-types.md) | The 18 note types: folder, template, lifecycle, promotion map |
-| [Wikilink and link conventions](linking.md) | Wikilink conventions, typed-relation vocabulary, MOC thresholds |
+| [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [Glossary](glossary.md) | Term definitions, alphabetical |
 
@@ -41,7 +41,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets |
 | [Memory substrates](memory.md) | Memory substrate table, audit log schema, log rotation spec |
-| [Telemetry & logs](telemetry.md) | Every operational log under `99-system/logs/`: exact JSONL schema, cadence, join keys |
+| [Telemetry & logs](telemetry.md) | Every operational log under `system/logs/`: exact JSONL schema, cadence, join keys |
 
 ## System and infrastructure
 

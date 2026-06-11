@@ -91,11 +91,11 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 
 **Steps.**
 
-1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)).
+1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [Wikilink and link conventions](../../reference/linking.md#hub-thresholds)).
 2. Activate ingest-to-triage lag metrics once board-state transition history accrues (triage completion is a Kanban board state, not a note field).
 3. Begin Canvas sessions for chapter planning.
 4. Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for active scoping work.
-5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [Wikilink and link conventions](../../reference/linking.md#moc-thresholds)).
+5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [Wikilink and link conventions](../../reference/linking.md#hub-thresholds)).
 6. Begin drafting from the reference layer.
 7. Migrate the existing corpus into the new structure (one folder at a time, with Linter dry-runs at each stage).
 8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check. Also wire `metrics_aggregate.py` on a weekly cadence — it needs real run volume before trust-score bands are meaningful, so Phase 3 is the right trigger for this one (unlike `board_export.py`, which runs from Phase 1).

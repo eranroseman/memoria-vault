@@ -34,7 +34,7 @@ A card in `done` state carries three simultaneous assessments that are kept sepa
 
 **Agent recommendation** (`agent_recommendation`) says: "The checking agent assessed the output as clean/issues-found/inconclusive."
 
-These three can disagree, and they frequently do. A worker finishes (`status: done`); the Verifier finds no issues (`agent_recommendation: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
+These three can disagree, and they frequently do. A worker finishes (`status: done`); the Peer-reviewer finds no issues (`agent_recommendation: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
 
 Keeping them separate makes each one useful. If `agent_recommendation` folded into `review_status`, you couldn't ask "how often does a clean agent verdict correlate with human approval?" If `status` and `review_status` were collapsed, "worker finished" and "human approved" would be the same event — which is exactly the collapse that makes the system unreliable.
 
@@ -45,7 +45,7 @@ Keeping them separate makes each one useful. If `agent_recommendation` folded in
 `review_status: requested` is a blocking state. In practice:
 
 - The dispatcher does not advance a `done` card further until the human changes `review_status`.
-- The policy MCP applies `dry_run` to any write targeting review-gated zones regardless of which profile is writing. Even if a worker tried to write directly to `30-synthesis/01-claims/` without the card going through review, the MCP would block it.
+- The policy MCP applies `dry_run` to any write targeting review-gated zones regardless of which profile is writing. Even if a worker tried to write directly to `notes/claims/` without the card going through review, the MCP would block it.
 - A WIP cap on the `done-awaiting-review` queue limits how many cards can accumulate. When the cap is hit, the dispatcher slows new work on that lane. The cap is back-pressure, not punishment — it keeps the board from racing ahead of the human's review capacity.
 
 The back-pressure mechanism is sometimes misread as a problem (the system slows down). It is the opposite: the cap prevents the worst failure mode (agents producing hundreds of done-awaiting-review cards that the human will never actually review, making the whole queue worthless as a signal).
@@ -70,7 +70,7 @@ This is different from a **retry**, which is automatic re-dispatch of the same c
 
 **Review does not mean approval of everything the agent produced.** A human can approve a card while noting that one citation needs to be checked later. Approval means "this is good enough to move forward"; it doesn't mean "every claim in this output is verified."
 
-**Review does not mean the Verifier checked it.** The Verifier's `agent_recommendation` is a recommendation that informs human review, not a replacement for it. The human might reject something the Verifier found clean, or approve something the Verifier flagged (after reading the flag and deciding it's not significant).
+**Review does not mean the Peer-reviewer checked it.** The Peer-reviewer's `agent_recommendation` is a recommendation that informs human review, not a replacement for it. The human might reject something the Peer-reviewer found clean, or approve something the Peer-reviewer flagged (after reading the flag and deciding it's not significant).
 
 **Review does not happen in the vault.** Review happens on the board card, not on the note itself. A note that has been produced by a reviewed and approved card is not individually marked "reviewed" — the review happened at the card level. This is why it's important to understand cards and notes as distinct things.
 

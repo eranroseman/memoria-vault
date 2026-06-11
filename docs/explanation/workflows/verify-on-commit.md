@@ -8,7 +8,7 @@ nav_order: 4
 
 > **Not built in v0.1.1 — deferred.** The post-commit trigger described here does not exist yet; committing a draft creates no verify card. Use `Memoria: verify a draft` from the palette (or ask the co-PI) to verify manually. Tracked in [#377](https://github.com/eranroseman/memoria-vault/issues/377). The page stands as design intent for the trigger.
 
-Committing a draft to `40-workbench/<project>/04-drafts/` automatically creates a verification card in the Verifier's lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.
+Committing a draft to `projects/<project>/` automatically creates a verification card in the Peer-reviewer's verify lane. This document explains why the trigger is automatic rather than manual, and what the design is trying to prevent.
 
 ## Why automation is the right fit here
 
@@ -18,19 +18,19 @@ The asymmetry is the point. The `[!verification]` callout appears in the draft a
 
 ## Why the trigger is a git hook, not a cron job
 
-The trigger fires on `post-commit` to `40-workbench/*/04-drafts/`, not on a schedule. A cron-based verification would verify drafts based on time, not on change — it might re-verify unchanged drafts and miss recently changed ones. The commit is the natural unit of change in the writing workflow; triggering on the commit ensures verification tracks actual edits.
+The trigger fires on `post-commit` to `projects/*/`, not on a schedule. A cron-based verification would verify drafts based on time, not on change — it might re-verify unchanged drafts and miss recently changed ones. The commit is the natural unit of change in the writing workflow; triggering on the commit ensures verification tracks actual edits.
 
-The hook calls the Hermes API to create the verify card — it does not invoke the Verifier directly. This keeps the trigger thin: it creates a card and returns. The Verifier claims the card through the normal dispatch mechanism, which means verification is audited, retryable, and visible in the board like any other task. A direct invocation from a hook would bypass all of that.
+The hook calls the Hermes API to create the verify card — it does not invoke the Peer-reviewer directly. This keeps the trigger thin: it creates a card and returns. The Peer-reviewer claims the card through the normal dispatch mechanism, which means verification is audited, retryable, and visible in the board like any other task. A direct invocation from a hook would bypass all of that.
 
 **Draft commits are deliberate, not timed.** This change-based triggering only holds if commits track edits rather than the clock. obsidian-git's `autoSaveInterval` (a ~30-minute scheduled commit; see [Obsidian plugins](../../reference/obsidian-plugins.md)) is configured as an offsite-backup safety net for the vault at large — it is **not** the verify trigger for drafts. Committing a draft you want verified is a deliberate act (`Cmd-P → Obsidian Git: Commit`), so "I committed this draft" means "verify it," and the `[!verification]` callout appears on that commit rather than on the next timer tick. If you rely on the auto-save timer for draft commits instead, verification still fires — but batched to the timer, up to ~30 minutes after your last edit, which dilutes the immediate feedback the workflow is designed around.
 
 ## What the automatic trigger is not
 
-The automatic card creation is not automatic verification completion. The card enters the Verifier's queue; the Verifier processes it within its normal dispatch window. The result is a recommendation (`verify-clean`, `verify-needs-revision`, `verify-needs-attention`), not an automatic gate. The human still reviews the verification report and decides whether to address gaps or proceed to export.
+The automatic card creation is not automatic verification completion. The card enters the Peer-reviewer's queue; the Peer-reviewer processes it within its normal dispatch window. The result is a recommendation (`agent_recommendation`: `clean`, `issues-found`, `inconclusive`), not an automatic gate. The human still reviews the verification report and decides whether to address gaps or proceed to export.
 
 This is consistent with the rest of the system's posture: agents produce recommendations; humans make decisions. The automation eliminates the "forget to trigger verification" failure mode without removing the "read and decide on the findings" step.
 
 ## Related
 
-- [The Verifier](../profiles/peer-reviewer.md) — what the Verifier checks and how
+- [The Peer-reviewer](../profiles/peer-reviewer.md) — what the Peer-reviewer checks and how
 - [Verify and revise a draft](../../how-to-guides/compose/verify-and-revise.md) — how to read the report and address gaps

@@ -9,7 +9,7 @@ nav_order: 12
 
 # Golden-path E2E test plan — v0.1 (L4)
 
-One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all seven profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI plan](hermes-cli-test-plan.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI plan, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../../adr/11-vault-eval-maintenance.md), L5).
+One source carried through the **whole lifecycle** — capture → ingest → classify → discuss → synthesize → map → draft → verify → export — across all five profiles, the Kanban board, and the review gate, as a single trace. Where the [Hermes CLI plan](hermes-cli-test-plan.md) tests each command in isolation, this asserts the **handoffs compose**: board memory travels lane-to-lane, the review gate holds at the synthesis/deliverable boundary, and an artifact actually reaches a deliverable. Like the CLI plan, it asserts *artifact shape and gate decisions, not prose quality* (quality is the [eval harness](../../adr/11-vault-eval-maintenance.md), L5).
 
 **Where to run.** The integrated stack: Obsidian open (REST bridge up) + Hermes in WSL2 + a **disposable** vault seeded with the CLI plan's fixtures (F1–F8). Run it after the CLI and GUI plans pass — this is the capstone.
 
@@ -28,36 +28,36 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 ## Part A — Capture → ingest → classify (Librarian)
 
 **A1. Ingest a real source.** `hermes -p memoria-librarian chat -s ingest smithA`
-- ✓ Pass: `20-sources/01-papers/smithA.md` (`type: paper-note`, `citekey`, `_proposed_classification`, `_enrichment`, `[!brief]`); Marker extract in `90-assets/extracts/`; `allow_with_log` row in `audit.jsonl`.
+- ✓ Pass: `catalog/papers/smithA.md` (`type: paper`, `citekey`, `_proposed_classification`, `_enrichment`, `[!brief]`); Marker extract in `.memoria/data/extracts/`; `allow_with_log` row in `audit.jsonl`.
 
-**A2. Human classifies.** Set `lifecycle: current` + a `study_design` from vocab on `smithA.md`.
+**A2. Human classifies.** Set `lifecycle: current` + a `methodology` from vocab on `smithA.md`.
 - ✓ Pass: it now surfaces in `reading-pipeline.md` (open the dashboard) — proves the source entered the human's pipeline.
 
 ---
 
-## Part B — Discuss (Socratic, read-only)
+## Part B — Discuss (co-PI questioning, read-only)
 
-**B1.** `hermes -p memoria-socratic chat -s socratic-processing 20-sources/01-papers/smithA.md`
-- ✓ Pass: questioning turns only; **zero** vault writes (no `memoria-socratic` `allow_with_log` row) — the write-wall holds mid-pipeline.
+**B1.** `hermes -p memoria-copi chat catalog/papers/smithA.md` (a co-PI questioning pass)
+- ✓ Pass: questioning turns only; **zero** vault writes (no `memoria-copi` `allow_with_log` row) — the write-wall holds mid-pipeline.
 
 ---
 
-## Part C — Synthesize (human claim) → map (Mapper)
+## Part C — Synthesize (human claim) → map (Librarian, map lane)
 
-**C1. Human writes a claim** in `30-synthesis/01-claims/` citing `smithA` (this is human territory — agents can't).
+**C1. Human writes a claim** in `notes/claims/` citing `smithA` (this is human territory — agents can't).
 - ✓ Pass: claim note created (human write, not gated as an agent).
 
-**C2. Map the corpus.** `hermes -p memoria-mapper chat -s scope-project --project test-proj --output 40-workbench/test-proj/01-map/corpus-map.md`
-- ✓ Pass: `corpus-map.md` under `01-map/`; audit row scoped to `01-map/`; **no** write outside it (Mapper write-wall).
+**C2. Map the corpus.** `hermes -p memoria-librarian chat -s scope-project --project test-proj --output projects/test-proj/01-map/corpus-map.md`
+- ✓ Pass: `corpus-map.md` under `01-map/`; audit row scoped to `01-map/`; **no** write outside it (map-lane write-wall).
 
 ---
 
-## Part D — Draft → verify (Writer → Verifier)
+## Part D — Draft → verify (Writer → Peer-reviewer)
 
 **D1. Draft.** `hermes -p memoria-writer chat -s draft "<question over the claim>"`
-- ✓ Pass: `answer-note` in `10-inbox/02-answers/`; its card → `done`, `review_status: requested`; audit row.
+- ✓ Pass: `answer-note` in `inbox/`; its card → `done` and queued for review (lifecycle stays `proposed`); audit row.
 
-**D2. Cite-check the draft.** `hermes -p memoria-verifier chat -s cite-check <draft path>` (draft cites `smithA` + a bogus key)
+**D2. Cite-check the draft.** `hermes -p memoria-peer-reviewer chat -s cite-check <draft path>` (draft cites `smithA` + a bogus key)
 - ✓ Pass: report flags the bogus cite, passes `smithA`; **dry-run** — draft byte-identical after (`git diff` empty).
 
 ---
@@ -65,10 +65,10 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 ## Part E — Review gate → promote → export
 
 **E1. Promotion is gated.** `hermes -p memoria-writer chat -s promote <claim>`
-- ✓ Pass: the write into `30-synthesis/02-reference/` logs as **`dry_run`** in `audit.jsonl` — *no real write* without human approval. (The gate's whole point.)
+- ✓ Pass: the write into `notes/claims/` logs as **`dry_run`** in `audit.jsonl` — *no real write* without human approval. (The gate's whole point.)
 
-**E2. Human approves, then export.** Approve the card (`review_status: approved`), then `hermes -p memoria-coder chat -s …` export to `50-deliverables/`.
-- ✓ Pass: after approval the gated write becomes `allow_with_log`; a deliverable lands in `50-deliverables/`. The chain reached the end.
+**E2. Human approves, then export.** Approve the card (advance its lifecycle to `current`), then `hermes -p memoria-engineer chat -s …` export to `projects/`.
+- ✓ Pass: after approval the gated write becomes `allow_with_log`; a deliverable lands in `projects/`. The chain reached the end.
 
 ---
 
@@ -88,8 +88,8 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 | Stage | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
 | A | ingest + classify → pipeline | | |
-| B | Socratic read-only mid-pipeline | | |
-| C | human claim + Mapper scope | | |
+| B | co-PI read-only mid-pipeline | | |
+| C | human claim + Librarian (map lane) scope | | |
 | D | draft + cite-check (dry-run) | | |
 | E | gate blocks promote → approve → export | | |
 | F | board / audit / gate / dashboards held | | |

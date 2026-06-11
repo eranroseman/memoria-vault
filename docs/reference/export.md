@@ -60,14 +60,16 @@ A citation passes through up to four states. Conversions are mostly one-way.
 
 ---
 
-## Deliverable target folders
+## Export target folder
 
-| Deliverable type | Folder |
+Drafts live in their project's scratch, and every export lands beside them under `exports/` — the project is self-contained ([ADR-47](../adr/47-type-first-category-folders.md)). There is no separate top-level deliverables tree.
+
+| Artifact | Folder |
 | --- | --- |
-| Manuscripts (papers, articles, preprints) | `50-deliverables/01-manuscripts/` |
-| Presentations (slides, talks, posters) | `50-deliverables/02-presentations/` |
-| Media (figures, infographics, web assets) | `50-deliverables/03-media/` |
-| Releases (datasets, models, code, supplementary) | `50-deliverables/04-releases/` |
+| Manuscripts (papers, articles, preprints) | `projects/<slug>/exports/` |
+| Presentations (slides, talks, posters) | `projects/<slug>/exports/` |
+| Media (figures, infographics, web assets) | `projects/<slug>/exports/` |
+| Releases (datasets, models, code, supplementary) | `projects/<slug>/exports/` |
 
 ---
 
@@ -78,7 +80,7 @@ pandoc projects/<project>/composition/<chapter>.md \
   --citeproc \
   --bibliography .memoria/memoria.bib \
   --csl .memoria/csl/apa.csl \
-  -o 50-deliverables/01-manuscripts/<chapter>.docx
+  -o projects/<project>/exports/<chapter>.docx
 ```
 
 CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placeholder; place your `.csl` files there before export.
@@ -87,7 +89,7 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 
 ## Export gate
 
-A `deliverable` note is `current` immediately on creation; it is never edited after creation (terminal). Promotion into `50-deliverables/` is a review-gated zone write — human-gated; agents can only write there in `dry_run` mode.
+An exported artifact is terminal — rendered once from its source composition and never edited in place. Re-export from the composition to update it. Agents propose; the export itself is a human-run step ([ADR-47](../adr/47-type-first-category-folders.md)).
 
 ---
 

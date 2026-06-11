@@ -64,7 +64,7 @@ triage ──► todo ──► ready ──► running ──► done ──►
 | `done` | Worker finished; the result surfaces as an Inbox card or a proposed note. The board export raises **one `work-prompt` review card** in `inbox/` on this transition (see below). | Worker |
 | `archived` | Terminal. | `hermes kanban archive` |
 
-Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (`clean` / `issues-found` / `inconclusive` — the soft verdict on verification cards, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
+Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (`inconclusive` / `issues-found` / `clean` — the soft verdict on verification cards, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
 
 **Rejection spawns a new card** (`supersedes: <original-id>`; the original archives as `superseded`), mirroring claim supersession — each card is one attempt, so the audit trail can't lie. Abandoned work archives as `discarded`.
 

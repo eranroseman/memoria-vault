@@ -33,7 +33,7 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 The five tooling modules each ship a synthetic-fixture `--self-test` (no vault needed). **All must report 0 failures.**
 
 **A1. Policy MCP.** `python vault/.memoria/mcp/policy_mcp.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s) [all suite].` (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all 7 lanes' allow/deny contract).
+- ✓ Pass: `OK: 0 failing check(s) [all suite].` (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all lanes' allow/deny contract).
 - ✗ Fails: a policy decision changed — diff against the lane-override rules and the review-gated-zone / auto-fix-class logic.
 
 **A2. Policy hook (the gate's pre/post).** `python vault/.memoria/mcp/policy_hook.py --self-test`
@@ -48,7 +48,7 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 - ✓ Pass: `OK: 0 failing check(s).` (includes the `lint-verdict` rollup)
 - ✗ Fails: trust-score math, ISO-week `period` handling, or the `lint-verdict` note changed.
 
-**A5. Linter detectors.** `python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --self-test`
+**A5. Linter detectors.** `python src/.memoria/engines/linter/detectors.py --self-test`
 - ✓ Pass: `N/N detector checks passed.` (each detector fires on a planted defect and ignores scaffolding/valid links).
 - ✗ Fails: a detector regressed — the line names which (`dashboard-field-drift`, `broken-wikilink`, `fama-exposure`, …).
 
@@ -82,18 +82,18 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 
 A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against a real vault tree (`vault/`, or the rebuilt test vault).
 
-**D1. dashboard-field-drift on the real vault.** `python vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py --vault vault`
+**D1. dashboard-field-drift on the real vault.** `python src/.memoria/engines/linter/detectors.py --vault vault`
 - ✓ Pass: no `dashboard-field-drift` findings — every field a dashboard queries **over a note folder** exists in some template.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 
-**D2. Dashboard ↔ writer-schema audit (non-note sources).** For every dashboard query over `99-system/board`, `99-system/metrics`, or a `99-system/logs/*.jsonl`, confirm each field it reads is produced by the writer. Derive the schemas from the code (don't trust prose):
+**D2. Dashboard ↔ writer-schema audit (non-note sources).** For every dashboard query over `system/board`, `system/metrics`, or a `system/logs/*.jsonl`, confirm each field it reads is produced by the writer. Derive the schemas from the code (don't trust prose):
 
 | Source | Schema is defined by | Fields |
 | --- | --- | --- |
-| `99-system/board/<id>.md` (card notes) | `board_export.py` → `card_markdown` `fm_keys` | `task_id, status, assignee, review_status, retry_count, reason, last_updated` (+ `type: board-card`) |
+| `system/board/<id>.md` (card notes) | `board_export.py` → `card_markdown` `fm_keys` | `task_id, status, assignee, review_status, retry_count, reason, last_updated` (+ `type: board-card`) |
 | `board-state.jsonl` | `board_export.py` snapshot dict | `timestamp, lanes{…}, totals{running,ready,blocked,review_queue}` — **counts only, no card identity** |
-| `99-system/metrics/lane-*.md` | `metrics_aggregate.py` → `lane_note` | `type:lane-metric, lane, period, trust_score, band, …, samples, success_rate` |
-| `99-system/metrics/lint-verdict-*.md` | `metrics_aggregate.py` → `lint_verdict_note` | `type:lint-verdict, period, verdict, finding_count, critical_count, high_count, medium_count, …` |
+| `system/metrics/lane-*.md` | `metrics_aggregate.py` → `lane_note` | `type:lane-metric, lane, period, trust_score, band, …, samples, success_rate` |
+| `system/metrics/lint-verdict-*.md` | `metrics_aggregate.py` → `lint_verdict_note` | `type:lint-verdict, period, verdict, finding_count, critical_count, high_count, medium_count, …` |
 | `lint-findings.jsonl` | `detectors.py` → `Finding` dataclass | `timestamp, detector, severity, path, message` |
 | `audit.jsonl` | `policy_mcp.py` audit writer | `timestamp, profile, action, path, task_id, decision, policy_rule, before_hash, after_hash` |
 
@@ -106,7 +106,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ## Part E — Quick syntax sanity (pre-commit)
 
-**E1. Python compiles.** `python -m py_compile vault/.memoria/mcp/*.py vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py`
+**E1. Python compiles.** `python -m py_compile vault/.memoria/mcp/*.py src/.memoria/engines/linter/detectors.py`
 - ✓ Pass: exit 0, no output.
 
 **E2. Shell parses.** `bash -n scripts/install.sh`

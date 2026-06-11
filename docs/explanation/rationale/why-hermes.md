@@ -17,17 +17,17 @@ If Memoria is *what you keep* — the vault, the knowledge, the schema — Herme
 Memoria needs an execution substrate with four properties, and Hermes ships all four:
 
 - **A persistent Kanban board** (`kanban.db`) — a durable state machine across sessions and retries. When a session closes, work state survives; the next worker picks the card up from its last known state. This is the [thin-control-over-thick-state](why-three-layers.md) requirement made concrete.
-- **Profiles with lanes** — each agent is a named profile (`SOUL.md` identity, `config.yaml` model routing, lane-override permissions) that claims cards on its lane. Memoria's seven specialists *are* Hermes profiles.
+- **Profiles with lanes** — each agent is a named profile (`SOUL.md` identity, `config.yaml` model routing, lane-override permissions) that claims cards on its lane. Memoria's five profiles *are* Hermes profiles.
 - **A dispatcher** — claims `ready` cards for matching profiles, runs them, advances state, retries on recoverable failure. Memoria adds routing *rules*, not a routing *agent* (there is no Orchestrator — see [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)).
 - **Native memory, MCP, and an API** — agent memory (`MEMORY.md`/`USER.md`), an MCP server interface (which Memoria's policy gate plugs into), and a network endpoint for programmatic triggers.
 
-Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy MCP that gates writes, the seven specialist `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points.
+Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy MCP that gates writes, the five profile `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points.
 
 ---
 
 ## Why not build our own runtime
 
-A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that makes [Coder a thin front for external coding agents](../profiles/engineer.md) rather than a reimplementation of them.
+A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that keeps the [Engineer](../profiles/engineer.md) MCP-only rather than a reimplementation of an external coding runtime.
 
 Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../kanban-board/card-schema.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
 
@@ -56,7 +56,7 @@ This is why the API server lives here, with Hermes, rather than in [Interaction 
 | Native memory tiers, MCP host, API server | Hermes |
 | Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
 | Write-gating policy MCP | Memoria (plugs into Hermes's MCP interface) |
-| The seven specialist `SOUL.md`s and lane-overrides | Memoria |
+| The five profile `SOUL.md`s and lane-overrides | Memoria |
 | The vault, schema, and note types | Memoria |
 
 The rule of thumb: **Hermes moves work; Memoria decides what work means and what may become canonical.**
@@ -67,7 +67,7 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 
 **Explanation**
 
-- What Hermes coordinates — the three layers: [Why the architecture is layered](why-three-layers.md)
+- What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-three-layers.md)
 - The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
 - The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../kanban-board/card-schema.md)
 - The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../architecture/human-channels.md)

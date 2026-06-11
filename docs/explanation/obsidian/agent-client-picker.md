@@ -6,7 +6,7 @@ nav_order: 4
 
 # The agent-client pane
 
-The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. In v0.1.1 the pane hosts **one agent — the co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). There is no profile picker to manage: the specialists (Librarian, Writer, Peer-reviewer) are **board lanes**, not conversation partners, and the co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
+The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. In v0.1.1 the pane hosts **one agent — the co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). There is no profile picker to manage: the specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes**, not conversation partners, and the co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
 
 For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugins](../../reference/obsidian-plugins.md).
 

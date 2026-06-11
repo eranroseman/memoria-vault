@@ -11,6 +11,10 @@ nav_exclude: true
 
 # Installation redesign — src/ + scaffold-and-populate + a restorable golden copy
 
+> **Decision made.** The src/ + scaffold-and-populate + golden-copy decision proposed
+> here is now owned by [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)
+> (accepted). This note is kept as the source analysis behind that decision.
+
 > **Status: exploration.** Rework the install model so the repo ships *source files*, not a
 > live vault, and so the system can **self-heal**. This is the **fresh-install delivery model
 > for the workspace releases** — foundational to **v0.1.1** onward (D52), not deferred.

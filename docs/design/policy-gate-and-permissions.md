@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Policy gate and permissions — the structural write boundary
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,12 @@ nav_order: 18
 ---
 
 # Policy gate and permissions — the structural write boundary
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 gate (seven lanes, the
+> old gated zones) and is kept for design rationale only. The current sources are
+> [ADR-47](../adr/47-type-first-category-folders.md),
+> [Policy MCP](../reference/policy-mcp.md), and
+> [Profile capabilities](../reference/profiles.md).
 
 A design capture of the write-permission system as it is actually built in v0.1.1 —
 the deterministic policy decision engine, the per-lane override files, the toolset

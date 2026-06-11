@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Profiles and the SOUL model — one co-PI, four lanes, no orchestrator
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 19
 ---
 
 # Profiles and the SOUL model — one co-PI, four lanes, no orchestrator
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 seven-profile fleet and
+> is kept for design rationale only. The current model is **five profiles** — see
+> [ADR-48](../adr/48-copi-and-agent-consolidation.md) and
+> [Profile capabilities](../reference/profiles.md).
 
 A design capture of the five agent profiles as they are actually configured in
 v0.1.1 — each one's mission, write scope, posture, model, and MCP wiring — and the

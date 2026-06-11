@@ -6,7 +6,7 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `99-system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement design note [Measurement, quality, and verification](../design/measurement-and-verification.md) (the "six-signal log").
+Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see the measurement design note [Measurement, quality, and verification](../design/measurement-and-verification.md) (the "six-signal log").
 
 ## Conventions (apply to every log)
 
@@ -25,10 +25,10 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
 | `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
-| `lint-findings.jsonl` | `memoria-linter` | per Linter run | one detector finding |
-| `sessions/<id>.jsonl` | `memoria-linter` | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
+| `lint-findings.jsonl` | `memoria-lint` cron | per Linter run | one detector finding |
+| `sessions/<id>.jsonl` | `memoria-lint` cron | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
 
-Derived, not raw: `99-system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
+Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
 
 > **Hermes dependency — `disposition.jsonl` and `cost.jsonl`.** `board_export.py` derives these two from the card `metadata` overlay (`review_status`, `cost`, `tokens`). The current Hermes does not surface that overlay in its serialized card JSON, so both files stay empty regardless of board activity — a card driven to `review_status: approved` logs a *status* transition but no disposition row. This is an upstream limitation, not a Memoria defect: the exporter is wired to emit both the moment Hermes exposes the overlay. The other signals (`board-state`, `board-transitions` status changes, `audit`, `lint-findings`) are unaffected.
 
@@ -41,10 +41,10 @@ The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy M
   "timestamp": "2026-05-31T14:23:01Z",
   "profile": "memoria-librarian",
   "action": "write",
-  "path": "20-sources/01-papers/smith-2024.md",
+  "path": "catalog/papers/smith-2024.md",
   "task_id": "TASK-2026-05-31-003",
   "decision": "allow_with_log",
-  "policy_rule": "librarian.write.sources",
+  "policy_rule": "librarian.write.catalog",
   "before_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
   "after_hash":  "sha256:a87ff679a2f3e71d9181a67b7542122c..."
 }
@@ -71,7 +71,7 @@ A queue-depth snapshot appended once per `board_export.py` run. Counts only — 
 
 ## board-transitions.jsonl
 
-The card-level state-change stream — the spine the other event logs hang off. Emitted by diffing the previous per-card state (held in `99-system/logs/.board-state-cache.json`, an internal dotfile, not a telemetry log) against the current board. **A card seen for the first time emits no transition** — it is seeded into the cache silently, so the log records only genuine movements, never the initial population.
+The card-level state-change stream — the spine the other event logs hang off. Emitted by diffing the previous per-card state (held in `system/logs/.board-state-cache.json`, an internal dotfile, not a telemetry log) against the current board. **A card seen for the first time emits no transition** — it is seeded into the cache silently, so the log records only genuine movements, never the initial population.
 
 ```json
 {"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "kind": "status", "from": "running", "to": "done"}
@@ -96,7 +96,7 @@ The **un-backfillable** signal: what the human actually did with a finished card
 | Field | Values |
 | --- | --- |
 | `disposition` | `accepted` \| `edited` \| `rejected` — the three-way human verdict |
-| `agent_recommendation` | what the agent proposed (`clean` / `issues-found` / `inconclusive`); pairs the agent's self-assessment against the human's call |
+| `agent_recommendation` | what the agent proposed (`inconclusive` / `issues-found` / `clean`); pairs the agent's self-assessment against the human's call |
 
 The terminal mapping is: `review_status: approved → accepted`, `rejected → rejected`. A card may override the default by setting `metadata.disposition` explicitly — this is the only way to record `edited` (accepted-after-changes), which the board's `review_status` cannot express on its own. **Without `edited` you cannot distinguish "accepted as written" from "accepted after I fixed it," which is the core acceptance-quality measure for the paper — hence un-backfillable.**
 
@@ -112,10 +112,10 @@ API spend and token counts, captured once, at the transition into `status: done`
 
 ## lint-findings.jsonl
 
-One row per detector finding from a `memoria-linter` run. The in-memory shape is the `Finding` dataclass in [`detectors.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault/.memoria/profiles/memoria-linter/skills/structural-detectors/scripts/detectors.py); serialized as:
+One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in [src/.memoria/engines/linter/detectors.py](../../src/.memoria/engines/linter/detectors.py); serialized as:
 
 ```json
-{"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "40-workbench/draft-x/01-notes/n.md", "message": "cites superseded claim [[oldclaim]]"}
+{"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "projects/draft-x/notes/n.md", "message": "cites superseded claim [[oldclaim]]"}
 ```
 
 | Field | Values |
@@ -130,7 +130,7 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 
 ## Derived: lane-metric notes
 
-`metrics_aggregate.py` reads the logs above weekly and writes one Markdown note per lane per period to `99-system/metrics/lane-<lane>-<period>.md`. These are *output*, but their frontmatter is a stable contract:
+`metrics_aggregate.py` reads the logs above weekly and writes one Markdown note per lane per period to `system/metrics/lane-<lane>-<period>.md`. These are *output*, but their frontmatter is a stable contract:
 
 | Field | Source | Meaning |
 | --- | --- | --- |
@@ -143,7 +143,7 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 
 ## Derived: lint-verdict notes
 
-`metrics_aggregate.py` also rolls the period's `lint-findings.jsonl` into one `99-system/metrics/lint-verdict-<period>.md` note (written only once the Linter has produced a findings log). It gives the drift dashboards a periodized verdict history that the timeless findings feed can't:
+`metrics_aggregate.py` also rolls the period's `lint-findings.jsonl` into one `system/metrics/lint-verdict-<period>.md` note (written only once the Linter has produced a findings log). It gives the drift dashboards a periodized verdict history that the timeless findings feed can't:
 
 | Field | Meaning |
 | --- | --- |

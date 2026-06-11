@@ -15,5 +15,5 @@ Dashboards that surface what to read, discuss, and reconcile — the queue of sy
 |---|---|
 | [Reading pipeline](reading-pipeline.md) | What's awaiting reading and distillation, and what claims came out of it? |
 | [Discuss queue](discuss-queue.md) | Which read sources are worth a pass with the co-PI before the claims firm up? |
-| [Open questions](open-questions.md) | What open questions has past synthesis raised? |
+| [Open questions](open-questions.md) | Which claims are still unconnected — the synthesis backlog? |
 | [Contradictions](contradictions.md) | Which claims disagree with each other? |

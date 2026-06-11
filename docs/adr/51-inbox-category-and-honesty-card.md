@@ -26,9 +26,10 @@ card's guardrail.
 
 ## Decision
 
-**`inbox/` is the agent→human message category.** Four card types — **candidate** (a
+**`inbox/` is the agent→human message category.** Four message card types — **candidate** (a
 *found* source proposed for intake), **gap** (a *missing*-source need), **flag** (a
-verification/integrity issue), **alert** (drift/retraction) — on the universal
+verification/integrity issue), **alert** (drift/retraction) — plus the aggregate
+**work-prompt** (below), for **five** Inbox card types in all — on the universal
 lifecycle chain (`proposed` = awaiting you; there is no `review-request` type). The
 kanban board and the queue dashboards are *views* of the Inbox (one Base grouped by
 type).

@@ -39,7 +39,7 @@ Memoria is a **bounded, stage-gated knowledge production system** for a single r
 
 **Not a Deep Research agent.** Deep Research tools (OpenAI DR, Gemini DR, Perplexity DR) are query-driven and ephemeral: they produce a comprehensive report per query and end. Memoria is corpus-curating and durable: the human builds a vault over months, and each session compounds with prior sessions. The two categories serve different needs.
 
-**Not a single-agent system.** "One model does everything" produces an agent with unclear responsibility, ambiguous permission boundaries, and no separation between discovery and synthesis. Memoria explicitly avoids this. Seven specialist profiles, each with narrow permissions and a clear exit condition, replace one generalist.
+**Not a single-agent system.** "One model does everything" produces an agent with unclear responsibility, ambiguous permission boundaries, and no separation between discovery and synthesis. Memoria explicitly avoids this. Five profiles — one conversational co-PI plus four background lanes, each with narrow permissions and a clear exit condition — replace one generalist.
 
 **Not a team tool in its current form.** The design assumes one human reviewer who owns judgment about what enters the canonical vault. Multi-user review semantics are not in scope.
 
@@ -82,7 +82,7 @@ Two 2026 perspectives anchor this positioning. [Feng and Liu 2026](../../referen
 **Explanation**
 
 - The intellectual roots of the design: [Intellectual foundations](intellectual-foundations.md)
-- The three-layer architecture: [Architecture](../architecture/README.md)
+- The seven-layer architecture: [Architecture](../architecture/README.md)
 - Why the human gate is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
 - Why L3 is the ceiling: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
 - The principles this framing produces: [Design principles](design-principles.md)

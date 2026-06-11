@@ -82,7 +82,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
 2. **Fill hole 1 — the classification proposal** (the only step that promotes
    `captured → proposed`). From the abstract / `_enrichment.tldr` / extract,
-   populate `_proposed_classification` (`study_design`, `methods`, `topic`).
+   populate `_proposed_classification` (`research_area`, `methodology`).
    Values **must come from `system/vocabulary.md`** — prefer a defined term;
    only when nothing fits, propose a new term and flag it (`provisional: true`)
    for later consolidation. Leave the human-owned main fields empty — the human

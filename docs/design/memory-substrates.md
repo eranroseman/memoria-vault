@@ -1,7 +1,7 @@
 ---
 topic: explorations
 title: Memory substrates — seven scoped stores, not one
-status: as-built
+status: historical
 created: 2026-06-09
 parent: Design notes
 grand_parent: Explanation
@@ -9,6 +9,11 @@ nav_order: 14
 ---
 
 # Memory substrates — seven scoped stores, not one
+
+> **Historical (v0.1.0).** This note describes the pre-v0.1.1 per-profile substrates
+> and is kept for design rationale only. Agent memory is co-PI-only now — see
+> [Memory](../reference/memory.md) and
+> [ADR-48](../adr/48-copi-and-agent-consolidation.md).
 
 A design capture of where Memoria's state actually lives in v0.1.1. "Memory" is not
 one store but seven, each with a distinct scope, lifespan, and owner — three provided
