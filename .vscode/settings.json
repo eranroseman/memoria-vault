@@ -33,11 +33,8 @@
       "tables": false
     }
   },
-  "harper.enabled": true,
-  "harper.diagnosticsOnChange": false,
-  "harper.enabledRules": {
-    "SpellCheck": false
-  },
+  "harper.linters.SpellCheck": false,
+  "harper.excludePatterns": ["**/*.py", "**/*.yml", "**/*.yaml", "**/*.sh"],
   "[markdown]": {
     "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
@@ -48,14 +45,7 @@
     "editor.formatOnSave": false
   },
   "[python]": {
-    "editor.formatOnSave": false,
-    "harper.enabled": false
-  },
-  "[yaml]": {
-    "harper.enabled": false
-  },
-  "[shellscript]": {
-    "harper.enabled": false
+    "editor.formatOnSave": false
   },
   "cSpell.ignorePaths": [
     "docs/reference/bibliography.md",
