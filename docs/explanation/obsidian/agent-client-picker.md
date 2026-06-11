@@ -6,7 +6,7 @@ nav_order: 4
 
 # The agent-client pane
 
-The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile, and a picker — driven by its `customAgents` array — for switching which profile is active. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, why switching profiles clears the conversation, and why Memoria labels its profiles by identity rather than by action.
+The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. In v0.1.1 the pane hosts **one agent — the co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). There is no profile picker to manage: the specialists (Librarian, Writer, Peer-reviewer) are **board lanes**, not conversation partners, and the co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
 
 For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugins](../../reference/obsidian-plugins.md).
 
@@ -16,45 +16,32 @@ For *how to operate* the pane — opening it, attaching a note as context, readi
 
 Most of Memoria's work flows through the board: a card is created, dispatched, completed, reviewed. The pane is the deliberate exception — the one surface for work that is *synchronous and exploratory* rather than queued and auditable. Thinking a paper through, asking what the corpus already holds, sketching a counter-outline: these are conversations, not tasks with a fixed output. Forcing them onto the board would produce cards that never cleanly close, because the "output" lives in the human's understanding, not in a file.
 
-So the pane and the board divide cleanly: **the board is for work that produces a reviewable artifact; the pane is for thinking that produces a clearer human.** Anything from a pane session that *should* become durable (a claim note, a draft) is written through the normal gated path afterward — the pane itself writes nothing canonical (Socratic writes nothing at all).
+So the pane and the board divide cleanly: **the board is for work that produces a reviewable artifact; the pane is for thinking that produces a clearer human.** Anything from a pane session that *should* become durable (a claim note, a draft) is written through the normal gated path afterward — by the PI directly, or as a card the co-PI delegates. The pane itself writes nothing canonical: the co-PI is structurally read-only ([The co-PI](../profiles/co-pi.md)).
 
-## Why the conversation clears on profile switch
+## Why one agent, not a picker
 
-Switching the picker to a different profile discards the current conversation, by design. Each profile is a distinct specialist with its own permission contract and its own frame; carrying a Mapper exchange into a Socratic session would blur whose questions are being asked and invite the human to run, say, a drafting operation inside what they think is a read-only corpus query. A cleared pane on switch makes the boundary between specialists physical rather than a matter of discipline — the same separation the three-dimension card schema enforces on the board, applied to the interactive surface. (The persistent exception is Socratic, which stays open across notes *within* a reading session precisely because sustained questioning is its whole purpose.)
+An earlier design put four ACP-suitable profiles behind a picker (Socratic, Mapper, Writer, Verifier) and cleared the conversation on every switch, so that one specialist's context couldn't bleed into another's permission contract. ADR-48 retired that design by consolidating the conversational roles into the co-PI: questioning is its own verb (the old Socratic role, folded in), and the Mapper/Writer/Verifier jobs became delegations to the map, draft, and verify lanes.
 
-## Profiles, not modes
+The consolidation dissolves the problem the picker existed to manage. With one agent in the pane there is no contract boundary to police mid-conversation — the co-PI holds a single, hard contract (read-only; every write leaves as a card), so no exchange can talk it into a write it isn't allowed. And because there is no switch, **the conversation persists**: the co-PI is the sole memory carrier among the agents ([The memory model](../architecture/memory-model.md)), and a continuous conversation is precisely what lets it compound into a genuine co-PI rather than a stateless assistant.
 
-The picker is a **profile switcher**, not a mode selector. Each entry is a distinct specialist with a fixed permission contract. Memoria labels its profiles by identity — Socratic, Mapper, Writer, Verifier — because they are different agents, not different modes of one agent.
+What the picker's separation protected now lives where it belongs — on the board. Each lane runs under its own scoped write ceiling, each delegation is ceiling-validated, and each result comes back through the review gate ([The control plane](../architecture/control-plane.md)). The boundary between specialists is physical (separate dispatched processes with separate permissions), not a UI affordance the human must operate correctly.
 
-An earlier design borrowed verb-label conventions (Ask / Map / Draft / Check) that name actions inside one assistant. Memoria's entries are separate agents — closer to role-named specialists like Architect and Orchestrator. The label names the contract-holder; the description carries the "what happens next."
+> **Deferred — the assist surface.** A follow-up layer of quick verb-shaped entry points (Find / Search / Patterns / Ask / Draft / Explore, from the palette, the pane, or a selection) is designed but not built; tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380). In v0.1.1 the equivalents are the per-task palette commands ([Obsidian command palette](../../reference/obsidian-command-palette.md)) and asking the co-PI directly.
 
----
+## Exploratory vs. durable work
 
-## The four ACP-suitable profiles
+The practical discipline the pane asks of the human survives from the original design unchanged:
 
-| Picker label | Profile | Invocation pattern | Why |
-| --- | --- | --- | --- |
-| **Socratic** — Think a source through in conversation before distilling it | `memoria-socratic` | Persistent pane (default) | Long conversations during processing. Architecturally write-denied — safe on any device. The standard ACP use case: open the pane in the Reading & Processing workspace, talk through a paper note via questioning. |
-| **Mapper** — Map a project's corpus: what's ready, thin, missing | `memoria-mapper` | Transient session | Quick corpus-retrieval queries via command palette. Session opens, returns results, closes. Not for persistent chat. |
-| **Writer** — Distill sources into claim notes; turn framings into drafts | `memoria-writer` | Transient session | Quick drafting assistance via command palette ("counter-outline this section"). Useful with discipline — interactive `chat` mode only. Session closes after response. |
-| **Verifier** — Trace a draft's claims back to their sources; flag the gaps | `memoria-verifier` | Transient session | Pre-filing similarity check ("show top-3 similar notes to this claim"). Returns ranked list, session closes. |
+- **Stay in the pane** while the work is exploratory — questioning a source, branching framings, asking what exists. The output is your sharpened thinking; nothing needs to be filed.
+- **Leave the pane** the moment the work should produce an artifact. Either write it yourself through the gated path (a claim note, a draft edit) or ask the co-PI to delegate it — "draft this section" becomes a card on the draft lane, with a reviewable output and an audit trail.
 
-Socratic is the **persistent** default because reading sessions demand sustained conversation. The other three are transient — they answer one question and close, which keeps context discipline and prevents the human from accidentally running drafting operations in a persistent Mapper session.
-
----
-
-## Why three profiles are absent from the picker
-
-**Librarian** — network-active; every `find`-style chat costs external API calls. Better dispatched via cards (queued, audited, retryable). Add only if the human specifically wants interactive discovery and accepts the cost.
-
-**Coder** — delegates substantive coding to an external coding agent. The Hermes-side Coder profile doesn't fit ACP chat — its work happens in the external agent's session, not in a conversational pane.
-
-**Linter** — background-only by design. No interactive use case.
+A pane session that keeps producing things you wish were files is the signal to switch modes: conversations are for converging on what to make, cards are for making it.
 
 ---
 
 ## Related
 
-- Socratic profile: [The Socratic](../profiles/co-pi.md)
-- Reading & Processing workspace (where the persistent ACP pane lives): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- The one agent in the pane: [The co-PI](../profiles/co-pi.md)
+- Operating the pane: [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md)
+- Where delegated work goes: [The control plane](../architecture/control-plane.md)
 - Plugin settings: [Obsidian plugins](../../reference/obsidian-plugins.md)

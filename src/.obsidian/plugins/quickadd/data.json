@@ -89,6 +89,139 @@
       }
     },
     {
+      "id": "1ddb2df1-3e07-40c7-8445-3d17486b6afa",
+      "name": "Memoria: catalog a source",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: catalog a source",
+        "id": "6c235240-b51f-4ad1-956e-4e6968b36a76",
+        "commands": [
+          {
+            "name": "catalog-source",
+            "type": "UserScript",
+            "id": "5b166943-f6c0-4623-a7c6-8cf202d67a38",
+            "path": "system/scripts/catalog-source.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "46f31a2a-cd67-4d0d-9239-8d0271baf636",
+      "name": "Memoria: extract claims",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: extract claims",
+        "id": "11579ee2-dd89-49aa-a1ac-f72cae0dca38",
+        "commands": [
+          {
+            "name": "extract-claims",
+            "type": "UserScript",
+            "id": "1f7d7032-441f-467f-890e-280d3a0f643f",
+            "path": "system/scripts/extract-claims.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "bf05fcc8-50e3-4597-9984-d7c7cc507b02",
+      "name": "Memoria: link a claim",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: link a claim",
+        "id": "3e744c71-6b29-495f-ba9c-138b4d068d75",
+        "commands": [
+          {
+            "name": "link-claim",
+            "type": "UserScript",
+            "id": "d849a1a8-8f5e-49d4-8adb-b4e426b1bf80",
+            "path": "system/scripts/link-claim.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "969fcafb-5b09-4d80-a1a5-1ab18a2e2e94",
+      "name": "Memoria: map the corpus",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: map the corpus",
+        "id": "795e0086-ce20-4379-b428-6de881f6fca8",
+        "commands": [
+          {
+            "name": "map-corpus",
+            "type": "UserScript",
+            "id": "5a42e4cd-fe97-4371-909c-24f64fcabeab",
+            "path": "system/scripts/map-corpus.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "b35010fb-9b8e-4911-bf7a-07aaa5f720e8",
+      "name": "Memoria: draft a section",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: draft a section",
+        "id": "a69b6eee-911f-4271-acc9-993ecba8ed20",
+        "commands": [
+          {
+            "name": "draft-section",
+            "type": "UserScript",
+            "id": "b1d59620-9634-4e80-bebb-ec1a202cd663",
+            "path": "system/scripts/draft-section.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "27940507-8f4d-4300-b223-7d33df3991cf",
+      "name": "Memoria: verify a draft",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: verify a draft",
+        "id": "26976e92-5644-4bea-b197-370bde06334c",
+        "commands": [
+          {
+            "name": "verify-draft",
+            "type": "UserScript",
+            "id": "91896b05-897f-4b40-97af-7e4460432b23",
+            "path": "system/scripts/verify-draft.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "b9cd4c71-5b8a-437d-8ea7-361c1245e961",
+      "name": "Memoria: run a pattern",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: run a pattern",
+        "id": "b34e5a56-a6d0-40c1-a9ad-977dbf8543bf",
+        "commands": [
+          {
+            "name": "run-pattern",
+            "type": "UserScript",
+            "id": "75c0ea08-6edc-48b0-866c-fcaca21f1805",
+            "path": "system/scripts/run-pattern.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "a7f04d28-31b5-49ce-bd62-0e95c8a7f413",
       "name": "Memoria: resolve inbox card",
       "type": "Macro",
