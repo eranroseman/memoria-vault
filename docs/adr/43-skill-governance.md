@@ -2,7 +2,7 @@
 topic: decisions
 id: 43
 title: Skill governance and lifecycle
-status: deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (26 skills > 15, v0.1.1)
+status: deferred  # NOT folded — ADR-53 governs patterns (data), not skills; deferred on its own trigger, which has now FIRED (25 skills > 15, v0.1.1)
 assumes: []
 date_proposed: 2026-05-31
 parent: Decisions
@@ -30,7 +30,7 @@ Standing up the governance layer requires authoring per-skill notes for every ex
 ## When this matters
 
 At least two of these are true:
-- > 15 active skills across the profiles *(v0.1.1: 26 skills across five profiles — the trigger has fired)*
+- > 15 active skills across the profiles *(v0.1.1: 25 skills across five profiles — the trigger has fired)*
 - ≥ 2 passthrough-to-dedicated graduations per quarter
 - Recurring confusion about which skills are active in which lane
 
