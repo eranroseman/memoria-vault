@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 
+# Claude Code local worktrees (per-branch checkouts; never part of the repo)
+.claude/worktrees/
+
 # Jekyll build artifacts (published via GitHub Pages from /docs)
 docs/_site/
 docs/.jekyll-cache/

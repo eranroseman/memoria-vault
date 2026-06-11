@@ -48,7 +48,14 @@
     "editor.formatOnSave": false
   },
   "[python]": {
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "harper.enabled": false
+  },
+  "[yaml]": {
+    "harper.enabled": false
+  },
+  "[shellscript]": {
+    "harper.enabled": false
   },
   "cSpell.ignorePaths": [
     "docs/reference/bibliography.md",
