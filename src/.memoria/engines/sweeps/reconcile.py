@@ -54,7 +54,7 @@ except ImportError:  # executed from elsewhere
 SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
 CHATS_FOLDER = "notes/fleeting/chats"  # ACP-pane export target (exportSettings.defaultFolder)
 LIBRARIAN = "memoria-librarian"
-SKILL = "obsidian-paper-note"
+SKILL = "catalog-enrich-record"  # on-disk form of catalog:enrich-record
 
 
 def read_log(log_path: Path) -> dict:

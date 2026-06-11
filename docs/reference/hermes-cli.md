@@ -19,21 +19,23 @@ Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-p
 
 ## Skill names: the `<task>:<verb>-<object>` convention
 
-Every skill follows **`<task>:<verb>-<object>`** (snake `<task>_<verb>_<object>` when serialized as an MCP tool): the task/lane is the prefix, the verb comes from a closed set, the object is the artifact — so a skill's name says which task delegates it. The v0.1.0 command names migrate to this scheme; **legacy names in parentheses**:
+Every skill follows **`<task>:<verb>-<object>`** (snake `<task>_<verb>_<object>` when serialized as an MCP tool; **hyphen-joined on disk and at the `-s` flag**, since directory and skill-load names cannot carry `:` — `catalog:enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`): the task/lane is the prefix, the verb comes from a closed set, the object is the artifact — so a skill's name says which task delegates it. The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches this table exactly (enforced by `tests/test_profiles.py`); **legacy v0.1.0 names in parentheses**:
 
-| Actor | Skills |
+| Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
-| **co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` |
-| **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (enrich) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-map) · `map:seed-canvas` (canvas-seed) |
+| **co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` (delegate-task) — plus `explain-the-system`, the co-PI's meta skill outside the lane registry (ADR-48) |
+| **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (obsidian-paper-note) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-mapping) · `map:seed-canvas` (canvas-seed) |
 | **Writer** (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
-| **Peer-reviewer** (verify) | `verify:check-citation` (cite-check) · `verify:trace-claim` (claim-trace) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
+| **Peer-reviewer** (verify) | `verify:check-citation` (cite-check, ex-claim-checks) · `verify:trace-claim` (claim-trace, ex-claim-checks) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
 | **Ingest** engine | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
 | **Search** engine | `search:query-vault` (query) · `search:find-similar` |
 | **Clustering** engine | `cluster:model-topics` · `cluster:build-graph` |
 | **Sweeps** engine | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
 | **Linter** engine | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
 
-Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands.
+Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Four map-lane entries from the design's full registry are **deferred, not shipped**: `map:score-writability` / `map:score-readiness` need the v0.1.2 project workflow, and `map:graph-claims` / `map:canvas-hub` belong to the graph-visualization exploration.
+
+Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the [tool registry](../../src/.memoria/tool-registry.yaml) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
 
 ---
 

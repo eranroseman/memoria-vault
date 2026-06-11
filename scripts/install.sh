@@ -654,7 +654,7 @@ install_skills() {
     warn "Hermes not on PATH — skipped kepano/qmd hub-skill installs."
   fi
 
-  say "  (obsidian-paper-note + retraction-check ship inside the vault profiles — nothing to fetch.)"
+  say "  (the memoria <task>:<verb>-<object> skills — catalog-enrich-record, verify-check-citation, … — ship inside the vault profiles; nothing to fetch.)"
   ok "Skills step complete"
 }
 

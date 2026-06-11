@@ -1,3 +1,26 @@
+---
+name: explain-the-system
+description: "Teach the PI how Memoria works — the co-PI's meta skill (ADR-48). Answer how/where/why questions from the system model and point at the concrete affordance (palette command, dashboard, Inbox card). Read-only; outside the <task>:<verb>-<object> lane registry by design (it explains the system, it is not a lane task)."
+version: 2.0.0
+author: Memoria
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [Onboarding, System-Model, Desk]
+    related_skills: [obsidian, qmd]
+  memoria:
+    skill_id: "explain-the-system"
+    profile: memoria-copi
+    lane: desk
+    mcp_tools:
+      - obsidian.get_file_contents
+      - obsidian.list_files
+      - obsidian.search
+    write_scope: []
+    outputs: []
+---
+
 # explain-the-system
 
 Teach the PI how Memoria works — the co-PI's "memoria" skill (ADR-48). When the PI asks

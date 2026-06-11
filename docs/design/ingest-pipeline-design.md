@@ -14,7 +14,7 @@ A design capture of how a source becomes a vault note: the tiered deterministic
 pipeline, the capture-first durability anchor, ID-keyed entity dedup, and the two
 points where the Librarian (an LLM) makes a judgment. Reconstructed from
 [`vault/.memoria/mcp/ingest_mcp.py`](../../src/.memoria/mcp/ingest_mcp.py) and
-the [`obsidian-paper-note`](../../src/.memoria/profiles/memoria-librarian/skills/obsidian-paper-note)
+the [`catalog:enrich-record`](../../src/.memoria/profiles/memoria-librarian/skills/catalog-enrich-record)
 skill. Implements [ADR-30](../adr/30-deterministic-ingest-pipeline.md),
 [ADR-05](../adr/05-zotero-as-bibliographic-backbone.md), and
 [ADR-06](../adr/06-citekey-naming-convention.md).

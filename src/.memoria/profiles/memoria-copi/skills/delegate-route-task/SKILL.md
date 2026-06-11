@@ -1,4 +1,30 @@
-# delegate-task
+---
+name: delegate-route-task
+description: "Route work from the conversation to the right background lane via the tasks MCP (delegate_route_task): pick the lane, compose the self-contained handoff payload (goal · context · allowed_paths · expected_outputs · review_checks), and tell the PI what was sent. The co-PI's only write path — and it writes a board card, never the vault."
+version: 2.0.0
+author: Memoria
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [Delegation, Kanban, Lanes]
+    related_skills: [obsidian, qmd]
+  memoria:
+    skill_id: "delegate:route-task"
+    profile: memoria-copi
+    lane: delegate
+    mcp_tools:
+      - tasks.delegate_route_task
+      - obsidian.get_file_contents
+      - obsidian.list_files
+      - obsidian.search
+    write_scope: []
+    outputs: []
+---
+
+# delegate:route-task
+
+*(legacy name: `delegate-task`; load on disk as `delegate-route-task`.)*
 
 Route work from the conversation to the right background lane (ADR-48) via the tasks
 MCP (`delegate_route_task`). You converse; the lanes work; results return as Inbox cards.

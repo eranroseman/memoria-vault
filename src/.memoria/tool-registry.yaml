@@ -36,6 +36,12 @@ groups:
   cluster_map:  [cluster.cluster_emit_canvas]   # writes the Canvas artifact (staging-only) — map lane, not the read-only front
   ingest_read: [ingest.ingest_pipeline]
   patterns:     [patterns.patterns_list, patterns.patterns_run]
+  # Scholarly discovery via the paper_search MCP (openags/paper-search-mcp) — the
+  # search_* tools only; download_*/read_paper stay denied (PDF retrieval is the
+  # ingest pipeline's job).
+  discovery:   [paper_search.search_arxiv, paper_search.search_pubmed, paper_search.search_biorxiv, paper_search.search_medrxiv, paper_search.search_google_scholar, paper_search.search_semantic]
+  # Read-only Zotero / Semantic Scholar citation context via the pyzotero MCP.
+  zotero_read: [pyzotero.get_references, pyzotero.get_citations, pyzotero.find_related, pyzotero.search_semantic_scholar]
 
 profiles:
   memoria-copi:
@@ -43,16 +49,16 @@ profiles:
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, cluster_map, ingest_read, patterns]
-    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (web toolset stays off; the group name covers MCP search tools); vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
+    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
     allow: [vault_read, vault_write, skills, todo, policy]
     notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No web — it composes from the vault, never researches."
 
   memoria-peer-reviewer:
-    allow: [web, vault_read, vault_write, skills, todo, policy]
-    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). web for cite checks (external_api_policy: explicit_only); vault_write lane-scoped to inbox/ cards only."
+    allow: [web, vault_read, vault_write, skills, todo, policy, zotero_read]
+    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); vault_write lane-scoped to inbox/ cards only."
 
   memoria-engineer:
     allow: [terminal, file, vault_read, vault_write, skills, todo, policy]
