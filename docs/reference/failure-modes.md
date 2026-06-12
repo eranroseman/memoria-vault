@@ -7,14 +7,14 @@ parent: Reference
 
 All known failure modes, sorted by severity. Each entry: symptom, severity, cause, and fix. For full symptom → diagnosis → fix recipes on the most common failures see [Troubleshooting](../how-to-guides/troubleshooting).
 
-**Severity scale** (matches the [Linter severity scale](linter.md#the-detectors)):
+**Severity scale.** These rows use the same `LOW`/`MEDIUM`/`HIGH`/`CRITICAL` scale defined by [Linter: detectors and auto-fix](linter.md#the-detectors); what this page adds is where each level escalates:
 
-| Severity | Meaning |
+| Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Vault integrity or security at risk. Blocks dispatch until acknowledged. Always pushes to Telegram. |
-| `HIGH` | Silent or active breakage — the system may look healthy while losing or degrading data. Surfaced on Home and in `drift-watch`. |
-| `MEDIUM` | Real drift; works now, will bite later. Surfaced in `weekly-review`. |
-| `LOW` | Cosmetic or recoverable in one command. Aggregated weekly. |
+| `CRITICAL` | Blocks dispatch until acknowledged; always pushes to Telegram. |
+| `HIGH` | Surfaced on Home and in `drift-watch`. |
+| `MEDIUM` | Surfaced in `weekly-review`. |
+| `LOW` | Aggregated weekly. |
 
 ---
 

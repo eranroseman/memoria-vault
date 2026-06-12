@@ -8,28 +8,9 @@ nav_order: 2
 
 "Memory" in Memoria is not one thing: it's seven distinct stores — **substrates** — each with its own scope, owner, and lifespan. Knowing which substrate a fact lives in is what keeps one lane's reasoning out of another's, and durable knowledge out of size-capped session stores. Confusing the scopes is the source of most "the agent forgot" and "the agent remembered something it shouldn't" problems.
 
-They're grouped below by how much **you** touch them — the ones you steer and read first, the ones the runtime manages on its own last.
+They fall into two groups by how much **you** touch them: the ones you steer and read (program, project, and audit memory — vault-backed), and the ones the runtime manages on its own (handoff memory on the board, plus the Hermes-native agent memory, session history, and working memory). The enumerated table — each substrate's exact scope, lifespan, backing, and the agent-memory token caps — lives in [Memory substrates](../../reference/memory.md); this page stays conceptual.
 
----
-
-## The ones you steer and read
-
-| Substrate | What it holds | Scope · lifespan | Backing |
-| --- | --- | --- | --- |
-| **Program memory** | Your program-wide steering — `research-focus` (discovery priorities) and `screening-protocol` (review mode). The main lever you have over what the system pursues. | whole research program · persistent | Memoria — vault files |
-| **Project memory** | One sub-project's cross-lane working state: open questions, decisions, framing. | one sub-project · archives with the project | Memoria — vault files |
-| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); the Policy MCP writes an entry at every gated write, and the Linter rotates the log weekly. | whole vault · append-only | Memoria — vault files |
-
-## The ones the runtime manages
-
-| Substrate | What it holds | Scope · lifespan | Backing |
-| --- | --- | --- | --- |
-| **Handoff memory** | What travels with a task card between lanes: goal, context, allowed paths, expected outputs. | one card · across lanes | Memoria — Kanban |
-| **Agent memory** (`MEMORY.md` + `USER.md`) | What the **co-PI** durably knows about its world — environment, conventions, learned preferences, plus your working style. Frozen snapshot at session start, under hard token caps (~800 / ~500). The co-PI is the **sole memory carrier**; the background lanes are stateless. | the co-PI · durable | Hermes |
-| **Session history** | Searchable record of the co-PI's past conversations. Recall only — carries no authority, never gates promotion. | the co-PI, all sessions · indefinite | Hermes |
-| **Working memory** | The current session's active reasoning — goal, recent tool results, in-flight thought. | one session · cleared on `/clear` | Hermes |
-
-`SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
+Two facts carry the conceptual weight. The **co-PI is the sole memory carrier** — its agent memory (`MEMORY.md` + `USER.md`) is a snapshot frozen at session start under hard token caps, and the background lanes are stateless. And `SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
 
 **Why the co-PI alone carries memory.** Concentrating every conversation in one agent is what lets Hermes' self-improving loop — **memory · /goals · skills** — compound into a genuine co-PI rather than fragmenting across lanes that never converse ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The background lanes (Librarian, Writer, Peer-reviewer, Engineer) are stateless propose-then-dispose executors: each run grounds on the card's handoff payload and the vault, never on remembered context.
 
@@ -47,7 +28,7 @@ The scoping isn't arbitrary — it follows from what each substrate holds, and t
 
 **Handoff memory** is per-card rather than per-agent because the handoff is the unit of cross-lane communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-lane handoffs reliable without agents sharing session state.
 
-**Agent memory** belongs to the co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
+**Agent memory** belongs to the co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` and `USER.md` are load-bearing: anything larger gets truncated (the exact caps are in [Memory substrates](../../reference/memory.md)). So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
 
 **Session history** is the cross-session recall channel but carries no authority. It's searchable history — useful for "did we discuss X before?" — but it never gates promotion and is never authoritative over the vault. A session-history result that contradicts a vault note loses; the vault is ground truth.
 

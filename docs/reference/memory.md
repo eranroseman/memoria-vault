@@ -18,7 +18,7 @@ Where each type of state lives across the Memoria + Hermes stack: substrate, pro
 | **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`research-focus.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
 | **Project memory** | Memoria — vault files | One project, across lanes | Project-bound; archives with the project | `projects/<project>/` | Open questions, decisions, framing for one project. |
 | **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, capture-intake anchors, pattern provenance, board projections, fleet metrics. |
-| **Handoff memory** (payload) | Memoria — Kanban | One card; travels across lanes | Card-bound | Card `metadata` | Goal, context, allowed paths, expected outputs, review checks. |
+| **Handoff memory** (payload) | Memoria — Kanban | One card; travels across lanes | Card-bound | Card `metadata` | The handoff payload — schema owned by the [Kanban board reference](kanban-board.md). |
 | **Agent memory** (`MEMORY.md` + `USER.md`) | Hermes native | **The co-PI only** | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-copi/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): the PI's working style. Disabled on the four specialist lanes. |
 | **Session history** | Hermes native | One profile, all past sessions | Indefinite | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations; costs no tokens until queried. |
 | **Working memory** | Hermes native | One session | Session-bound; cleared on `/clear` | In-context | Current goal, recent tool results, in-flight reasoning. |
@@ -58,21 +58,9 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 
 ---
 
-## Audit log event fields
+## Audit memory
 
-Every policy decision appended to `system/logs/audit.jsonl`:
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `timestamp` | ISO datetime | UTC, `…Z`. |
-| `profile` | string | `memoria-<name>` — which lane triggered the action. |
-| `action` | string | One of the eight: `read` / `write` / `append` / `move` / `delete` / `mkdir` / `auto_fix` / `report`. |
-| `path` | string | The vault-relative path targeted. |
-| `task_id` | string | The board card that triggered the action (required on every request). |
-| `decision` | enum | `allow` · `allow_with_log` · `deny` · `dry_run` · `write_complete` |
-| `policy_rule` | string | Which lane-override rule matched. |
-| `reason` | string | Optional prose from the request. |
-| `before_hash` / `after_hash` | SHA-256 | The reversibility pair; `after_hash` lands on the `write_complete` record. A create's `before_hash` is the empty-string SHA-256, never null. |
+The audit trail (`system/logs/audit.jsonl`) records every policy decision with its before/after hash pair. Its field schema, the eight guarded actions, the `decision` enum, and the per-write hash-pairing mechanism are owned by [Policy MCP](policy-mcp.md#audit-log-format).
 
 ---
 

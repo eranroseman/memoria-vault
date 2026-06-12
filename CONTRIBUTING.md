@@ -69,10 +69,7 @@ The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becom
 
 ## Submitting a pull request
 
-1. Fork the repo and create a branch off `main`.
-2. Make your changes and test them (`--dry-run` at minimum; a live run if you can).
-3. Run `bash -n scripts/install.sh` (syntax check) and `markdownlint '**/*.md'` if you touched docs.
-4. Open a PR against `main`. Fill out the PR template.
+Branch off `main`, test your change (`--dry-run` at minimum, plus `bash -n scripts/install.sh` and `markdownlint '**/*.md'` if you touched docs), then open a PR against `main` and fill out the template. The authoritative branch, PR, and merge-discipline rules live in [AGENTS.md](https://github.com/eranroseman/memoria-vault/blob/main/AGENTS.md); the human-facing checklists and recovery steps are in [Contributing workflow](docs/contributing/process.md).
 
 ## Commit style
 
@@ -96,7 +93,7 @@ profiles: extend Librarian skill for Zotero groups
 
 ### Breaking changes
 
-Mark a breaking change with `!` in the header or a `BREAKING CHANGE:` footer:
+Mark a breaking change with `!` in the header or a `BREAKING CHANGE:` footer, and state **what changed**, **who is affected**, **what action is required**, and **the replacement path**:
 
 ```text
 feat!: rename profile config field `enabled_agents` → `agents.enabled`
@@ -104,7 +101,7 @@ feat!: rename profile config field `enabled_agents` → `agents.enabled`
 BREAKING CHANGE: existing config.yaml files must rename the field before upgrading.
 ```
 
-State **what changed**, **who is affected**, **what action is required**, and **the replacement path**.
+What counts as a breaking change in Memoria, and how the commit types map to SemVer, is defined in [Contributing workflow](docs/contributing/process.md).
 
 ## Changelog
 

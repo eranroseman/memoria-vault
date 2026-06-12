@@ -29,15 +29,7 @@ From `home.md` → the audit-log dashboard. Its primary view is recent **denies 
 
 **2. Found a matching `deny` or `dry_run`? It was a policy decision.**
 
-Read the fields ([full schema](../../reference/memory.md#audit-log-event-fields)):
-
-| Field | What it tells you |
-| --- | --- |
-| `decision` | `deny` (forbidden) vs `dry_run` (held for review) |
-| `action` | which of the eight actions was attempted (`write`/`move`/`delete`/…) |
-| `path` | the target the action was refused on |
-| `policy_rule` | exactly which lane-override rule fired |
-| `reason` | the human-readable cause |
+Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema and the lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md#audit-log-format)):
 
 - **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `notes/claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
 - **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../compose/work-the-review-queue.md).
@@ -48,7 +40,7 @@ Hermes fails open on hook errors, so a broken hook or unregistered MCP can let a
 
 - Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
 - Run the self-tests: `python .memoria/mcp/policy_mcp.py --self-test` and `python .memoria/mcp/policy_hook.py --self-test`. A failure here means the gate isn't enforcing.
-- Did the Obsidian Local REST API native MCP (loopback HTTP, `OBSIDIAN_MCP_PORT`, default 27123) or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's insecure HTTP server is on and the port matches `OBSIDIAN_MCP_PORT`.
+- Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's insecure HTTP server is on and its port matches `OBSIDIAN_MCP_PORT` ([Set up Obsidian](../setup/set-up-obsidian.md)).
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.
 
@@ -70,6 +62,5 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 - Approving a held (`dry_run`) write: [Work the review queue](../compose/work-the-review-queue.md)
 - Other troubleshooting procedures: [Troubleshooting](README.md)
-- The event schema: [memory.md — Audit log event fields](../../reference/memory.md#audit-log-event-fields)
-- The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
+- The event schema, decision protocol, and action vocabulary: [Policy MCP](../../reference/policy-mcp.md#audit-log-format)
 - The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)

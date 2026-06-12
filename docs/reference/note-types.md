@@ -13,7 +13,7 @@ The 18 types group into four categories: **6 entities** (catalog), **5 notes**, 
 
 ## Catalog entities (6)
 
-Bibliographic / world records, keyed on stable IDs and carrying **given** `relationships` edges ([ADR-52](../adr/52-links-vs-relationships.md)). None is review-gated.
+Bibliographic / world records, keyed on stable IDs and carrying **given** `relationships` edges (the field contract is in [Frontmatter fields](frontmatter.md)). None is review-gated.
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ Bibliographic / world records, keyed on stable IDs and carrying **given** `relat
 
 ## Notes (5)
 
-The PI's knowledge, carrying **authored** `links:` edges. Two of the five live in review-gated zones — the policy MCP degrades every agent write there to `dry_run`.
+The PI's knowledge, carrying **authored** `links:` edges (the field contract is in [Frontmatter fields](frontmatter.md)). Two of the five live in review-gated zones — the policy MCP degrades every agent write there to `dry_run`.
 
 | Type | Folder | Gated | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- | --- |
@@ -38,7 +38,7 @@ The PI's knowledge, carrying **authored** `links:` edges. Two of the five live i
 | `hub` | `notes/hubs/` | **yes** | `current → archived` | `title`, `topic` | `members`, `links` |
 | `index` | `notes/index/` | no | `current → archived` | `title` | — |
 
-`maturity` (`seedling` → `budding` → `evergreen`) is a claim **property, never a gate** ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `hub` is the renamed MOC; the `reference` type was dropped in the same decision.
+`maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). `hub` is the renamed MOC; the `reference` type was dropped in the same decision ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
 
 ---
 
@@ -66,7 +66,7 @@ The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-
 | --- | --- | --- |
 | `work-prompt` | `title`, `action`, `what_happened`, and at least one of `target` / `task_id` (`required_any`) | Work waiting on the PI — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). Optional: `lane`. |
 
-All cards share the optional `raised_by` and `loudness` (`quiet` / `notice` / `alert` / `block`) fields. Engines and lanes never invent card formats — every card goes through the shared writer [src/.memoria/engines/lib/inbox.py](../../src/.memoria/engines/lib/inbox.py).
+All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Engines and lanes never invent card formats — every card goes through the shared writer [src/.memoria/engines/lib/inbox.py](../../src/.memoria/engines/lib/inbox.py).
 
 ---
 

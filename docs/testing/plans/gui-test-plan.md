@@ -10,7 +10,7 @@ nav_order: 15
 # GUI test plan — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI stage (**S5**) and the eleven Dataview dashboards
+shell: the Obsidian/Zotero GUI stage (**S5**) and the ten Dataview dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -36,7 +36,7 @@ end (the boxes are clickable in Obsidian).
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **5** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
 - [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY` (Librarian; OpenAlex requires a key since 2026-02).
-- [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27124`).
+- [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27123`).
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
 - [ ] The vault folder is **outside OneDrive**.
 
@@ -48,12 +48,12 @@ end (the boxes are clickable in Obsidian).
 
 - ✓ Pass: file tree shows `catalog/ notes/ projects/ inbox/ system/ home.md README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
-- [ V] **A1 Pass**
+- [ ] **A1 Pass**
 
 **A2. Leave Restricted mode.** Settings → *Community plugins* → turn **off** Restricted mode → **restart Obsidian**.
 
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
-- [V ] **A2 Pass**
+- [ ] **A2 Pass**
 
 **A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
@@ -64,7 +64,7 @@ end (the boxes are clickable in Obsidian).
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
-| `Local REST API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
+| `Local REST API with MCP` | Exposes the vault to Hermes (HTTP 27123) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
 
@@ -81,7 +81,7 @@ Tick each plugin that is enabled and validated:
 - [ ] `Local REST API with MCP`
 - [ ] `QuickAdd`
 - [ ] `Templater`
-- [V ] **A3 Pass (8/8)**
+- [ ] **A3 Pass (8/8)**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
@@ -95,26 +95,26 @@ Tick each plugin that is enabled and validated:
 
 ## Part B — Local REST API bridge (the write-gate's lifeline)
 
-**B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, insecure HTTP **off**.
+**B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows insecure HTTP on **27123**, loopback only.
 
-- [ V] **B1 Pass**
+- [ ] **B1 Pass**
 
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
 - ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
-- [V ] **B2 Pass**
+- [ ] **B2 Pass**
 
 **B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:
 
 ```
 export OBSIDIAN_API_KEY="$(grep -m1 '^OBSIDIAN_API_KEY=' ~/.hermes/profiles/memoria-librarian/.env | cut -d= -f2-)"
-curl -sk https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
+curl -s http://127.0.0.1:27123/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 ```
 
 - ✓ Pass: JSON with `"authenticated": true`.
 - ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
-- [ V] **B3 Pass**
+- [ ] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:
 
@@ -124,7 +124,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 - ✓ Pass: within a few seconds, `gui-probe.md` appears in Obsidian's file tree with the body. **Delete it after.**
 - ✗ Fails: no file but agent reported success → check the REST bridge (B3) and that Obsidian has the same vault open.
-- [ V] **B4 Pass**
+- [ ] **B4 Pass**
 
 ---
 
@@ -170,12 +170,12 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 **D1. Add-ons.** Zotero → Tools → Add-ons → install from file: **Better BibTeX** (required); **MarkDB-Connect** (recommended).
 
-- [ V] **D1 Pass**
+- [ ] **D1 Pass**
 
 **D2. Auto-export.** Right-click a collection → *Export Collection* → format **Better BibLaTeX** → check **Keep updated** → save target =
 `...\vault\.memoria\memoria.bib` (the absolute Windows path to the vault's bib).
 
-- [ V] **D2 Pass**
+- [ ] **D2 Pass**
 
 **D3. Add an item** with a PDF; confirm Better BibTeX assigns a **citekey**.
 
@@ -224,7 +224,7 @@ Then open `system/dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
+| A | 8/8 plugins enabled, no load errors | | |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
 | C / G4 | All 10 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |

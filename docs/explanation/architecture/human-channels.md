@@ -71,11 +71,7 @@ For Telegram configuration and the recommended per-profile toolset, see [Set up 
 
 ## Why the API server is for programs only
 
-The API server (port 8642) is where programs connect to Memoria — file-system watchers, Zotero hooks, mail filters, git post-commit hooks, calendar integrations, and cross-machine dispatch. Humans never touch it directly because the same operations available through the API are exposed through the command palette and CLI with better affordances for human use.
-
-The API server exists because programmatic integration needs a different interface than human operation. A file-system watcher that fires on PDF drops cannot use the command palette. A Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; the channels above are the interaction surfaces for humans.
-
-Security-wise, the API passes every write through the policy MCP — it does not grant elevated permissions. A program that calls the API has exactly the permissions of the profile it is acting as. See [Policy MCP](../../reference/policy-mcp.md) for the enforcement details.
+The API server (port 8642) is the one-row integration surface in the table above: programs connect through it (file-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch) while humans use the command palette and CLI instead. It is a different door, not a different key — every API write still passes through the policy MCP at the calling profile's permissions. The full rationale is in [Why Hermes](../rationale/why-hermes.md).
 
 ---
 

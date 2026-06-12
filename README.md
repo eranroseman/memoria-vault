@@ -27,15 +27,15 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 | **Peer-reviewer** | The independent verify gate — traces claims to sources, validates every `[@citekey]`, and red-teams arguments for soundness; flags, never fixes |
 | **Engineer** | Scaffolds handoffs to an external coding agent and owns the commit/revert gate |
 
-Five deterministic **engines** (ingest · search · clustering · verification sweeps · Linter) do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP.
+Deterministic **engines** do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP. The full roster: [Engines — the deterministic layer](docs/explanation/engines/README.md).
 
-Full design rationale for each agent: [`docs/explanation/profiles/`](docs/explanation/profiles)
+Canonical roster, postures, and write-scope ceilings for each agent: [Profile capabilities](docs/reference/profiles.md). Design rationale per agent: [`docs/explanation/profiles/`](docs/explanation/profiles).
 
 ---
 
 ## How it works
 
-The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes + the ACP extra, deploys the five `memoria-*` profiles, provisions skills, and prints where to put your API keys.
+The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes, deploys the five `memoria-*` profiles, and sets you up to add your API keys — see [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. A policy MCP layer intercepts every proposed write — you confirm or reject before anything lands in your vault.
 
@@ -63,9 +63,9 @@ irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/ins
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
-#   --dry-run   preview every command, change nothing
-#   --no-apps   skip the Obsidian/Zotero guidance (headless / VPS)
 ```
+
+For the full flag list (`--dry-run`, `--no-apps`, `--profiles-only`, and more), see [Installer (bootstrap)](docs/reference/installer.md).
 
 ### Requirements
 
@@ -77,9 +77,7 @@ bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 
 ## After install
 
-1. Open the runtime folder (default `~/Memoria`) in Obsidian → **Open folder as vault**, then turn off **Restricted mode** to activate the eight enabled bundled plugins (plus `obsidian-homepage`, which ships on disk but is recommended — enable it from Community Plugins if you want `home.md` to auto-open on startup).
-2. **Set up your own git** in the vault — the installer copies it but doesn't `git init` (it's your repo, your identity): `cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"`, then optionally add your own remote. obsidian-git needs a repo to commit into.
-3. Fill the per-profile `.env` secrets — see [Set up Hermes](docs/how-to-guides/setup/set-up-hermes.md).
+The installer prints a **Next steps** checklist: open the runtime folder in Obsidian (turn off **Restricted mode** so the bundled plugins load), make the vault your own git repo (the installer deliberately doesn't `git init` for you), and fill the per-profile API-key secrets. For the exact commands and key names, follow [Set up the vault](docs/how-to-guides/setup/set-up-the-vault.md) and [Set up Hermes](docs/how-to-guides/setup/set-up-hermes.md).
 
 ---
 
@@ -108,13 +106,7 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 ## Development
 
-After editing vault source, re-deploy without reinstalling:
-
-```bash
-bash scripts/install.sh --profiles-only                   # redeploy all five profiles
-bash scripts/install.sh --profiles-only --only memoria-librarian  # one profile
-.\scripts/install.ps1 -ProfilesOnly                       # Windows equivalent
-```
+After editing vault source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
 
 ## Citation
 

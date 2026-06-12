@@ -38,9 +38,9 @@ The alternative to a board is chat-based coordination: a human messages an agent
 
 A card is not just a task title. It carries:
 
-**Execution state** — `status` (the fixed Hermes enum: `triage` → `todo` → `ready` → `running` → `done` → `blocked` → `archived`). This answers "where is the work?" at any moment.
+**Execution state** — `status`, the fixed Hermes enum (the full sequence is in the [Kanban board reference](../../reference/kanban-board.md)). This answers "where is the work?" at any moment.
 
-**Review state** — `review_status` (a Memoria overlay: `unreviewed` (the default) → `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
+**Review state** — `review_status`, a Memoria overlay (enum in the [Kanban board reference](../../reference/kanban-board.md)). This answers "has the human accepted it as canonical?"
 
 **Agent recommendation** — `agent_recommendation` (optional, from the Peer-reviewer or an engine such as the Linter). This answers "what does the checking pass advise?" — separate from the human's decision.
 
@@ -48,7 +48,7 @@ A card is not just a task title. It carries:
 
 **History** — retry count, blocked reason, who worked on it. The card survives retries without losing its identity.
 
-The three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree. A card can be execution-`done`, review-`requested`, and `agent_recommendation: clean`. It can be execution-`done`, review-`rejected`, and `agent_recommendation: issues-found`. Keeping them distinct makes each state queryable and avoids conflation.
+These three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree; why that separation matters is treated in [Review as a first-class state](review-as-state.md).
 
 ---
 
@@ -84,11 +84,7 @@ A card may reference a note by path (its `metadata.promote_target` is a note pat
 
 ## Why no Orchestrator
 
-Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files. There is no reasoning agent that decides lane assignments.
-
-This is deliberate. An Orchestrator profile that reasons about routing would make routing decisions hard to audit. "Why did the Orchestrator assign this to the Writer instead of the Librarian's map lane?" requires re-reading the Orchestrator's reasoning. With lane-override rules, the same question has a deterministic answer: "because the card's `assignee` is `memoria-writer`."
-
-If routing rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. This is the design — silent reasoning about routing is exactly what the policy MCP and the lane-override system exist to prevent.
+Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files, not in a reasoning agent. If the rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. Why there is no routing agent — the auditability argument — is owned by [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).
 
 ---
 

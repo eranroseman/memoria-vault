@@ -64,7 +64,7 @@ Key patterns adopted by Memoria include the following:
 
 What the survey revealed about the field's dominant approach that Memoria declines:
 
-**Advisory-only LLM review** — most surveyed systems use LLM-based reviewers that advise but do not gate promotion. Memoria makes the human gate structural. The reasoning: a confidently-wrong LLM reviewer is precisely the failure mode that matters; routing the gate on reviewer confidence would wave through exactly the outputs the gate exists to catch.
+**Advisory-only LLM review** — most surveyed systems use LLM-based reviewers that advise but do not gate promotion. Memoria makes the human gate structural instead; the confident-wrong argument for that choice is in [Why the review gate is structural](../rationale/why-human-gate.md).
 
 **Scalar-metric keep/revert** — every autonomous research system optimizes one number. None of those numbers is plausible for "is this synthesis a faithful, well-cited, non-redundant addition to a research vault."
 

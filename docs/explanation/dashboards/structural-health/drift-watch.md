@@ -13,13 +13,11 @@ Surfaces active and imminent drift — the Linter's and the verification sweeps'
 
 The dashboard (`system/dashboards/drift-watch.md`) lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the dashboard is a filtered view of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing engines are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit gate) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
 
-Loudness is the headline: `alert`-level findings also push to Home's "what needs me"; `block`-level findings stop the gated action until acknowledged. Everything below that waits here and in the weekly review.
+Loudness is the headline: `alert`-level findings also push to Home's "what needs me", and `block`-level findings stop the gated action until acknowledged. Everything below that waits here and in the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
 
 ## What it is not
 
-**Not audit-log.** The audit log records per-write policy decisions. Drift-watch shows open structural findings. Different cadence, different layer.
-
-**Not fleet-health.** Fleet-health is operational (cost, latency, success rate). Drift-watch is structural (the substrate's integrity). They are complementary: open findings are the structural headline; the trust score is the operational headline.
+**Not audit-log or fleet-health.** Drift-watch is the *structural* view — open integrity findings, headlined by the verdict band; audit-log is per-write forensics and fleet-health is the operational aggregate. For the full three-way distinction, see [Operational health](../operational-health/README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
 **Not for content hygiene.** Stale literature and unfinished-looking filenames surface in weekly-review and loose-ends, not here. Drift-watch is reserved for what the engines can *detect mechanically* — the "silent" failures the human wouldn't notice by reading content.
 
@@ -31,7 +29,7 @@ The Friday weekly review includes a drift-watch pass because a week of ordinary 
 
 ## Before it has real data
 
-Until the daily lint cron and the sweeps have run, this dashboard is empty — which on a fresh vault means "nothing checked yet," not "all clear." After the first pass, empty means clean: the queue of open findings converges to zero as the PI acts on or archives the cards.
+Until the daily lint cron and the sweeps have run, this dashboard is empty — which on a fresh vault means "nothing checked yet," not "all clear." After the first pass, empty means clean: the queue of open findings converges to zero as the PI acts on or archives the cards. (Why an empty dashboard is the healthy state at all is the cross-cutting [empty-is-success principle](../README.md#why-the-dashboards-are-designed-the-way-they-are).)
 
 ## Related
 

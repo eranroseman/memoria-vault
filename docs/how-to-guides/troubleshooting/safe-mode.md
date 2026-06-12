@@ -24,15 +24,7 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 
 **If enrichment APIs are unreachable** — ingest still creates the Catalog entity from the `.bib` metadata; the per-field provenance records what's missing. The enrichment fills in on a later re-ingest once connectivity is restored — a thin entity is better than a deferred ingest.
 
-**If `.bib` is not synced** — push it manually first:
-
-```bash
-git add .memoria/memoria.bib
-git commit -m "manual: bib update"
-git push
-```
-
-Then ingest.
+**If `.bib` is not synced** — push it manually first, then ingest: [Fix a stale .bib](../zotero/fix-stale-bib.md).
 
 **Never run automatically:** a schema migration. Schema changes require human review of every proposed field change ([Run a schema migration](../operate/run-a-schema-migration.md)).
 

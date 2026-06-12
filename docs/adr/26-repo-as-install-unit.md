@@ -14,6 +14,8 @@ nav_order: 26
 
 # ADR-26: The repo is the install unit; profiles are hand-authored and idempotently deployed
 
+> **Amended (2026-06-10).** Two specifics below are now stale: (1) the repo ships **`src/`**, not `vault/`, as the source-of-truth tree the installer scaffolds and populates — see [ADR-55](55-src-scaffold-populate-golden-copy.md); read "`vault/`" throughout as "`src/`". (2) The profile compiler this ADR calls "deferred ([ADR-42](42-profile-compilation.md))" is now superseded by the co-PI/agent consolidation in [ADR-48](48-copi-and-agent-consolidation.md); the seven-profile premise no longer holds. The core decision (the repo is the install unit; idempotent profile deploy) stands.
+
 ## Context
 
 How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [Distribution model](../explanation/deployment/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.

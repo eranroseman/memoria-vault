@@ -29,11 +29,7 @@ You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
 ## Step 2 — Read the flag cards
 
-Findings land in the Inbox as **`flag` cards**. Unlike a candidate's honesty body, a flag is **finding-first** — here the verdict is the point ([The honesty card](../explanation/kanban-board/card-schema.md)):
-
-- **`finding`** — what the check found, leading the card
-- **`agent_recommendation`** — `clean` / `inconclusive` / `issues-found`
-- **`target` / `citekey`** — what's being flagged
+Findings land in the Inbox as **`flag` cards**. Unlike a candidate's honesty body, a flag is **finding-first** — the `finding` leads, carries an `agent_recommendation`, and names its `target`; here the verdict is the point. Why a verification card leads with the finding: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
 
 A `clean` flag closes nothing by itself and an `issues-found` flag changes nothing by itself — you act, the agent flags. Typical actions:
 

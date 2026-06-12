@@ -64,7 +64,7 @@ obsidian-git needs a repo to commit into; the remote (your own, not the starter 
 hermes profile list
 ```
 
-All five `memoria-*` profiles appear in the output — no retired v0.1.0-alpha.1 names (`mapper` / `socratic` / `verifier` / `coder` / `linter`), none missing. If a profile is missing, the script reported that its required files weren't present — re-run and read its output.
+All five `memoria-*` profiles appear in the output — no retired names ([Installer (bootstrap)](../../reference/installer.md) lists them), none missing. If a profile is missing, the script reported that its required files weren't present — re-run and read its output.
 
 Check that `{{VAULT_PATH}}` was substituted:
 

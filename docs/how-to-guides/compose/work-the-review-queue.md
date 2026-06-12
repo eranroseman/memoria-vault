@@ -37,7 +37,7 @@ The board caps `done` cards awaiting you at 5 — when the queue fills, the disp
 
 **6. Watch your own accept rate.**
 
-The fleet-health dashboard tracks accept/reject ratios per proposing lane: near-100% acceptance reads as rubber-stamping; below ~20% means candidate scoring needs tuning. Both are signals to act on.
+The fleet-health dashboard tracks accept/reject ratios per proposing lane — very high acceptance reads as rubber-stamping, very low means candidate scoring needs tuning ([Dashboards](../../reference/dashboards.md)). Both are signals to act on.
 
 ## Verify
 

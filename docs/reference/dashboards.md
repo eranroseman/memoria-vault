@@ -45,13 +45,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and workspa
 
 ## Verdict band (drift-watch)
 
-Rollup of the Linter engine's detectors:
-
-| Band | Condition | Effect |
-| --- | --- | --- |
-| `PASS` | Only LOW findings (or none) | — |
-| `REVIEW` | Any HIGH or MEDIUM finding, no CRITICAL | Advisory |
-| `FAIL` | Any CRITICAL finding | Scheduled work pauses until resolved |
+The drift-watch dashboard rolls the Linter engine's detector findings up into a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
 ## Trust score (fleet-health)
 

@@ -22,9 +22,9 @@ Without this, each consumer accumulates its own hardcoded values. A heading size
 
 ## Why single accent, not a color-per-callout
 
-The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only. The reasoning is the same as the [Visual-style discipline](visual-discipline.md) page: color distinction is an urgency signal. When every category has a distinct color, the urgency signal collapses — the eye learns to treat all colors as equally important, which means it treats them all as equally ignorable. A single accent with distinct icons preserves the signal-to-noise ratio: color means "this is a callout"; the icon means "this is the kind."
+The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only, for the attentional reason owned by [Visual-style discipline](visual-discipline.md) — a color-per-callout collapses the urgency signal into noise.
 
-This rule applies to all surfaces the design system governs. In Pandoc exports, in HTML preview, in slides: one accent.
+What the design system adds is *scope*: this single-accent rule applies to every surface the design system governs, not just Obsidian callouts. In Pandoc exports, in HTML preview, in slides: one accent.
 
 ---
 

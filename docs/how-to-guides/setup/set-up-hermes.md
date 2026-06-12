@@ -22,7 +22,7 @@ Fill the API secrets, propagate them into the five profiles, and verify that Her
 ```env
 KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
 OBSIDIAN_API_KEY=<64-char hex apiKey from the Local REST API plugin>
-OBSIDIAN_MCP_PORT=27123               # the plugin's insecure HTTP port serving the native MCP; change only if you moved it or run a 2nd vault
+OBSIDIAN_MCP_PORT=27123               # must equal the Local REST API insecure HTTP port ([Set up Obsidian](set-up-obsidian.md))
 OPENALEX_API_KEY=...                  # openalex.org/settings/api — required since 2026-02 (sent as ?api_key=)
 S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
 NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
@@ -33,7 +33,7 @@ NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the
 
 **2. Propagate the keys into every profile.**
 
-Hermes profile runs read **only the profile's own `.env`** — there is no global fallback. The installer seeds each key a profile declares in its `.env.EXAMPLE` from the global file, without overwriting anything already set:
+Hermes profile runs read **only the profile's own `.env`** — there is no global fallback. The installer seeds each profile's `.env` from the global file ([Installer (bootstrap)](../../reference/installer.md) for the seed semantics):
 
 ```bash
 bash scripts/install.sh --profiles-only --vault <vault>
@@ -82,19 +82,7 @@ In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-re
 
 **8. Route the auxiliary models to cheap flash tiers (cost efficiency).**
 
-Auxiliary slots default to the profile's main model, so a co-PI's title/compression calls would otherwise burn **Opus**. Add this block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes:
-
-```yaml
-auxiliary:
-  title_generation: { provider: kilocode, model: z-ai/glm-4.7-flash }
-  approval:         { provider: kilocode, model: z-ai/glm-4.7-flash }
-  mcp:              { provider: kilocode, model: z-ai/glm-4.7-flash }
-  skills_hub:       { provider: kilocode, model: z-ai/glm-4.7-flash }
-  compression:      { provider: kilocode, model: deepseek/deepseek-v4-flash }
-  # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
-```
-
-Why this split (GLM for light slots, DeepSeek for compression), why globally, and the cost traps to avoid: [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
+Auxiliary slots default to the profile's main model, so a co-PI's title/compression calls would otherwise burn **Opus**. Add the `auxiliary:` block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes. The exact block, the GLM/DeepSeek split, why it goes globally, and the cost traps to avoid are in [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
 
 ## Verify
 

@@ -9,11 +9,7 @@ How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md
 
 ## Branch discipline
 
-- **One scope per branch.** Claim it via the issue before starting — two branches must never implement the same ADR or rewrite the same files.
-- **Keep it small.** ≤1 day or ≤10 commits. Split and land if it grows beyond that.
-- **Stay current.** `git fetch origin && git rebase origin/main` daily and before every PR.
-- **Structural changes first.** Folder moves, deletions, schema bumps get their own tiny PR, merged and announced — every active branch rebases the same day.
-- **Isolation & a clean tree are mechanics — see AGENTS.md §1–4** (authoritative; not restated here): own worktree per session, branch before any change, never share a checkout, and commit or stash before any `reset --hard`/`switch`.
+The branch, isolation, and merge-discipline rules are authoritative in **AGENTS.md** ("Merge discipline", §§1–4) and not restated here: one scope per branch, keep it small (≤1 day or ≤10 commits), rebase onto `origin/main` daily and before every PR, land structural changes in their own tiny PR first, and work each session in its own worktree with a clean tree before any `reset --hard`/`switch`. The checklists below turn those rules into a working routine.
 
 ## Issue and board flow
 
@@ -71,12 +67,7 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 - Cut a release at the end of a meaningful milestone, not on a calendar cadence. Milestones are releases (AGENTS.md "Work routing").
 - A **breaking change** in Memoria is: renaming a profile `config.yaml` field, restructuring the vault folder layout, removing a profile capability or skill, or changing ADR-frontmatter required fields.
 
-**How a release runs** (the `/release` skill scaffolds it):
-
-- **Scope** is the GitHub milestone `vX.Y` — the issues it must ship.
-- **Readiness** lives in one **"Release vX.Y" tracking issue** — a gate checklist whose progress bar *is* the status. Don't track gate state in the plan file.
-- **Prose** (what/why, gate rationale) lives in `docs/releasing/<v>/`; `status-doctor` (a required check) guards it against stale links and path drift.
-- **Version + CHANGELOG + the GitHub Release** are owned by **release-please** (manifest mode) — opened automatically from Conventional Commits on `main`; merging its PR cuts the tag. Don't hand-edit `CHANGELOG.md` or tag by hand. See [Releasing](../releasing/README.md).
+**How a release runs:** scope is the GitHub milestone, readiness is the "Release vX.Y" tracking issue, prose lives in `docs/releasing/<v>/`, and version/CHANGELOG/Release are owned by release-please — the `/release` skill scaffolds it. That model is defined in AGENTS.md ("Release plans") and [Releasing](../releasing/README.md); don't restate the split here.
 
 ## Checklists
 

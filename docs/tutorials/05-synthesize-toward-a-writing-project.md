@@ -36,7 +36,7 @@ links:
 
 - **Title:** the claim itself, one falsifiable sentence, in your words — not a paper's title.
 - **Body:** the claim, the evidence (every line traces to a citekey in `sources` — the provenance guardrail), and connections in prose.
-- **`maturity: seedling`** — maturity (`seedling → budding → evergreen`) tracks *development*, not trust: a seedling is a young claim, not a doubted one ([Note types](../reference/note-types.md)).
+- **`maturity: seedling`** — maturity tracks *development*, not trust: a seedling is a young claim, not a doubted one. The full maturity ladder (a property, never a gate) is in [Frontmatter fields](../reference/frontmatter.md).
 
 If two of your claims relate, say so in `links:` — `supports` or `contradicts`. The contradictions are the valuable ones.
 

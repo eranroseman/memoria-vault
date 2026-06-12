@@ -26,7 +26,7 @@ The weekly-review dashboard is the Friday-ritual entry point. It gathers the wee
 
 **Top-to-bottom ordering follows the workflow logic.** Inbox review unblocks downstream synthesis, so it comes first. Promotion comes before metrics because the metrics reflect promotion behavior — reviewing metrics before doing the promotions would show stale numbers. The sequence is not aesthetic; it is causal.
 
-**Empty sections are the goal, not a bug.** A healthy week leaves most sections empty. The discipline is recognizing empty as success rather than a sign that the dashboard isn't working.
+**Empty sections are the goal, not a bug.** A healthy week leaves most sections empty — recognizing that as success rather than a broken dashboard is the cross-cutting [empty-is-success principle](../README.md#why-the-dashboards-are-designed-the-way-they-are), applied here per section.
 
 **The orphan check has a coverage angle.** Beyond the raw orphan count (notes with zero inbound links), the check surfaces qualifying notes that should connect to current work but don't. This catches missing coverage, not just disconnected notes — the difference between a note that genuinely stands alone and a note that should be connected but hasn't been.
 

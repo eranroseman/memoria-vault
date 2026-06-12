@@ -37,7 +37,7 @@ Phrase it as a research question, not keywords. Seed it however helps: "papers t
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body ([The honesty card](../explanation/kanban-board/card-schema.md)):
+**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body — an argument, not a verdict. A real one reads like:
 
 ```yaml
 action: "Catalog this paper and queue it for reading"
@@ -47,7 +47,7 @@ what_tipped_it: "It's the only experimental test of the assumption in your corpu
 certainty: likely
 ```
 
-There is no verdict field — the card existing *is* the recommendation, so the verdict would be noise. Read `argument_against` and `certainty` first; they're what make this a real decision instead of a rubber stamp. Then, as one batch sitting (Tutorial 04's discipline):
+Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md); the exact field set: [Frontmatter fields](../reference/frontmatter.md). There is no verdict field — the card existing *is* the recommendation, so the verdict would be noise. Read `argument_against` and `certainty` first; they're what make this a real decision instead of a rubber stamp. Then, as one batch sitting (Tutorial 04's discipline):
 
 - **Keep:** the ingest engine builds the Catalog entity and the paper joins your reading queue — the Tutorial 03 flow from here.
 - **Skip:** set the card to `lifecycle: archived`. Skipping generously offered candidates is the system working, not failing.

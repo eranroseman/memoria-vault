@@ -6,7 +6,7 @@ nav_order: 6
 
 # Discuss a paper
 
-Think a source through with the co-PI before writing a claim. The co-PI is the one conversational agent — a reflective thinking-partner that questions and pushes back; it is **hard read-only**, so the thinking and the eventual claim note are yours.
+Think a source through with the co-PI before writing a claim. The co-PI is the one conversational agent — a reflective thinking-partner that questions and pushes back; it is read-only ([The co-PI](../../explanation/profiles/co-pi.md)), so the thinking and the eventual claim note are yours.
 
 ## Prerequisites
 

@@ -6,9 +6,7 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Ten dashboards in `system/dashboards/`, plus the homepage's above-the-fold glance (the v0.1.0-alpha.1 daily-health dashboard was absorbed into `home.md` — there is no `daily-health.md`). Each dashboard answers one question about the vault; a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first.
-
-For what each dashboard shows in detail, see [Dashboards](../../reference/dashboards.md).
+Each dashboard in `system/dashboards/` answers one question about the vault, and a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
 ## Where the dashboards open
 

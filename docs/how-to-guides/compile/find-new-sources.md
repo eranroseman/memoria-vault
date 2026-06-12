@@ -31,12 +31,12 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 
 **3. Judge the candidates as one batch.**
 
-**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body — `action`, `argument_for`, `argument_against`, `what_tipped_it`, `certainty`, and never a verdict. Read `argument_against` and `certainty` first. Then, in one sitting:
+**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Read `argument_against` first — it's the information-bearing field. Then, in one sitting:
 
 - **Keep:** resolve the card to `current` — the paper enters the Tutorial 03 flow (Catalog entity, reading queue, source note).
 - **Skip:** resolve straight to `archived`. Skipping generously offered candidates is the system working, not failing.
 
-`Cmd/Ctrl-P` → **Memoria: resolve inbox card** flips the active card in place. Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+Resolving a card flips it in place ([Work the review queue](../compose/work-the-review-queue.md)). Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **4. Feed it from gaps.**
 

@@ -27,11 +27,13 @@ Memoria runs **one conversational agent — the co-PI — and four background ag
 
 **v0.1.0-alpha.2 ships all five profiles**; the Writer, Peer-reviewer, and Engineer run today as background lanes, and their full Project-workspace workflows arrive with v0.1.0-alpha.3. Deterministic work — ingest, search, clustering, the verification sweeps, the Linter — is [Engines](../engines/README.md), not agents: no posture, no board lane.
 
+The tables above orient by posture; the canonical lane→profile map, write-scope ceilings, and bundled-skills counts live in [Profile capabilities](../../reference/profiles.md).
+
 ## Shared layer, unique layer
 
-Each agent is a **shared** layer plus a **unique** layer. The shared layer is the vault's **AGENTS.md** — the one "how we work in this vault" instruction set every agent reads. The unique-per-agent layer is **SOUL.md** (its posture — the system prompt), **skills/** (per lane), **config.yaml** (model + tools), and **mcp.json** (connections). So the agents share the house rules but each brings its own stance and toolset.
+Each agent is a **shared** layer (the vault's `AGENTS.md` house rules, one copy for all) plus a **unique** layer (its own posture, skills, model, and connections). How those layers are packaged and shipped is owned by [Distribution model](../deployment/distribution-model.md); what matters here is the consequence — the agents share the house rules but each brings its own stance and toolset.
 
-Two affordances are co-PI-only: the Hermes self-improving loop (**memory · /goals · skills**) and **`/personality`** (interactive persona tuning). The specialists' postures are fixed by design — stable traits, not per-run knobs — and the lanes stay stateless propose-then-dispose executors.
+The co-PI is the sole memory carrier, and two affordances are co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The co-PI](co-pi.md)). The specialists' postures are fixed by design — stable traits, not per-run knobs — and the lanes stay stateless propose-then-dispose executors.
 
 ## The bounded rule
 

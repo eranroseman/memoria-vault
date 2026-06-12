@@ -49,13 +49,7 @@ Full flag and step reference: [Installer (bootstrap)](../reference/installer.md)
 
 ## Step 2 — Add your API keys
 
-Open `~/.hermes/.env` and fill in:
-
-```bash
-KILOCODE_API_KEY=...      # model access
-OBSIDIAN_API_KEY=...      # from the Local REST API plugin (Step 3 below)
-OPENALEX_API_KEY=...      # openalex.org/settings/api — required for discovery
-```
+Open `~/.hermes/.env` and fill in your keys — model access, the Obsidian Local REST API key (Step 3 below), and the discovery key. The canonical key names and where each comes from are in [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
 
 Then propagate them into every profile (profile runs read only their own `.env` — there is no global fallback):
 
@@ -72,11 +66,7 @@ Re-run that command any time you add or rotate a key.
 1. Open Obsidian → **Open folder as vault** → choose the folder the installer reported (default `~/Memoria`).
 2. Turn off Restricted mode when prompted (**Settings → Community plugins**) so the bundled plugins load — they ship pre-installed and pre-configured.
 3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in `~/.hermes/.env` (then re-run the `--profiles-only` command from Step 2).
-4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you:
-
-```bash
-cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
-```
+4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
 `home.md` opens as the front door: the **What needs me** Inbox view, the dashboard index, and your research focus.
 

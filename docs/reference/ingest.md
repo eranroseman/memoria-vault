@@ -28,7 +28,7 @@ The bundle arrives **with two holes** the Librarian fills: `_proposed_classifica
 The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relationships.md)):
 
 - **Entities** — find-or-create records in `catalog/` (`paper`, `person`, `organization`, `venue`, `dataset`, `repository`), keyed on the stable ID so same-named entities never merge. Entities without a stable ID are recorded by name only, never node-created.
-- **Relationships** — the **given** edges on those entities (`cited_by`, `authored_by`, `published_in`, …), applied bidirectionally by the worker. Authored `links:` on notes are the PI's, never the engine's.
+- **Relationships** — the engine writes only the **given** `relationships` edges on those entities (`cited_by`, `authored_by`, `published_in`, …), applied bidirectionally by the worker; it never writes the PI's authored `links:`. The field contract behind the given-vs-authored split is in [Frontmatter fields](frontmatter.md).
 
 ---
 

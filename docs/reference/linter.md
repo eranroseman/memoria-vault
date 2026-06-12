@@ -19,7 +19,7 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed note outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
-| `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` after an hour — the reversibility chain has a hole and the write's after-state can no longer be pinned. |
+| `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
 | `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |
@@ -65,7 +65,7 @@ The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script mem
 
 ## Auto-fix classes
 
-Auto-fix remains class-gated at the policy layer ([Policy MCP](policy-mcp.md)): `safe-and-unambiguous` and `authorized-targeted` may proceed (logged, within the lane's write scope), `schema-content` always degrades to `dry_run`, and `review-gated-edit` is always denied. The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
 
 ---
 

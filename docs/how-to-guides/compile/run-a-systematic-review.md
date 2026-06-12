@@ -60,7 +60,7 @@ Complete the protocol's flow table: identified → duplicates removed → screen
 
 **7. Capture the included sources.**
 
-Add each included paper to Zotero (Better BibTeX pins the citekey), then capture it: select the item and run `Cmd/Ctrl-P` → **Memoria: capture from Zotero selection**, one per paper. The ingest engine builds the Catalog entity and raises the candidate card ([Capture and ingest a source](capture-and-ingest.md)) — for a protocol-screened paper, the keep decision is already made, so resolve each card to `current` and move on.
+Add each included paper to Zotero, then capture it one per paper through the standard intake path ([Capture and ingest a source](capture-and-ingest.md)). The ingest engine builds the Catalog entity and raises the candidate card — for a protocol-screened paper, the keep decision is already made, so resolve each card to `current` and move on.
 
 ## Verify
 

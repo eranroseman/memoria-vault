@@ -28,17 +28,11 @@ The plugin pins the tab for you (configurable); you can also right-click the tab
 
 **2. Read the glance, then work the Inbox.**
 
-Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings — the v0.1.0-alpha.1 daily-health dashboard was absorbed here) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
+Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
 
 **3. Navigate to a dashboard.**
 
-The homepage links to all ten dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
-
-| Group | Links |
-| --- | --- |
-| **Library — reading & synthesis** | Reading Pipeline · Discuss Queue · Open Questions · Contradictions |
-| **Maintenance — structural health** | Drift Watch · Loose Ends · Weekly Review |
-| **Agent ops** | Board State · Audit Log · Fleet Health |
+The homepage links to every dashboard without duplicating their queries, in three groups by how you use them — **Library** (reading & synthesis), **Maintenance** (structural health), and **Agent ops**. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
 
 **4. Update your research focus.**
 

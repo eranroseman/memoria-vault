@@ -36,10 +36,7 @@ The Librarian claims the card and drives the deterministic ingest engine over th
 
 **4. Judge the candidate card.**
 
-Open `home.md` → **What needs me** (or the card in `inbox/`). Read `argument_against` and `certainty` first, then decide:
-
-- **Keep:** set the card's `lifecycle` to `current`, act on it (read the paper, write your source note), then `archived`. The in-place flip is one palette command: **Memoria: resolve inbox card**.
-- **Skip:** set it straight to `archived`. The Catalog entry stays as a record; nothing else happens.
+Open `home.md` → **What needs me** (or the card in `inbox/`). Read `argument_against` first — it's the information-bearing field ([Frontmatter fields](../../reference/frontmatter.md)). Then keep it (resolve to `current`, act on it, then `archived`) or skip it (resolve straight to `archived` — the Catalog entry stays as a record). Resolving a card is one palette command: [Work the review queue](../compose/work-the-review-queue.md).
 
 **5. Write your source note.**
 
