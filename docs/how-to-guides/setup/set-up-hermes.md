@@ -60,7 +60,7 @@ pip install "pyzotero[mcp]"           # Librarian + Peer-reviewer: read-only Zot
 
 **5. Seed the retraction dataset.**
 
-The Peer-reviewer's retraction check indexes a local Retraction Watch CSV; a monthly cron wrapper (`memoria-refresh-rw.sh`) keeps it fresh thereafter. Seed it now:
+The Peer-reviewer's retraction check indexes a local Retraction Watch CSV; a monthly cron wrapper (`refresh-retraction-watch.sh`) keeps it fresh thereafter. Seed it now:
 
 ```bash
 .memoria/.venv/bin/python .memoria/engines/sweeps/retraction.py --refresh

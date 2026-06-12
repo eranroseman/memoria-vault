@@ -10,13 +10,15 @@ def test_reconcile_intake():
             v = Path(td)
             papers = v / "catalog/papers"
             papers.mkdir(parents=True)
-            # one captured/tier0 note (a retry target) + one already-enriched + one proposed
+            # one tier0 note (a retry target) + one already-enriched + one complete;
+            # paper entities are lifecycle: current from creation (ADR-50) — the
+            # retry sweep keys on ingest_status, not lifecycle.
             (papers / "stuck2024A.md").write_text(
-                "---\ncitekey: stuck2024A\nlifecycle: captured\ningest_status: tier0\n---\n")
+                "---\ncitekey: stuck2024A\nlifecycle: current\ningest_status: tier0\n---\n")
             (papers / "done2024B.md").write_text(
-                "---\ncitekey: done2024B\nlifecycle: captured\ningest_status: enriched\n---\n")
+                "---\ncitekey: done2024B\nlifecycle: current\ningest_status: enriched\n---\n")
             (papers / "live2024C.md").write_text(
-                "---\ncitekey: live2024C\nlifecycle: proposed\ningest_status: complete\n---\n")
+                "---\ncitekey: live2024C\nlifecycle: current\ningest_status: complete\n---\n")
             # capture log: A + B present on disk, ghost2024Z never landed
             log = v / "capture-intake.jsonl"
             log.write_text(

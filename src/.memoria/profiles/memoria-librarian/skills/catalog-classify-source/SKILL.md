@@ -1,6 +1,6 @@
 ---
 name: catalog-classify-source
-description: "Fill or refresh the vocabulary-constrained classification proposal on a captured source — read the note (or the ingest bundle's draft), pick research_area / methodology values from system/vocabulary.md, and write them into the note's _proposed_classification block. Proposal only (D16/D21): classification is audited metadata, never a gate; the human promotes at triage. Use when a note sits at captured/needs-human without a classification, or a re-classification is requested."
+description: "Fill or refresh the vocabulary-constrained classification proposal on a captured source — read the note (or the ingest bundle's draft), pick research_area / methodology values from system/vocabulary.md, and write them into the note's _proposed_classification block. Proposal only (D16/D21): classification is audited metadata, never a gate; the human promotes at triage. Use when a note sits at `ingest_status: tier0` without a classification, or a re-classification is requested."
 version: 1.0.0
 author: Memoria
 license: MIT

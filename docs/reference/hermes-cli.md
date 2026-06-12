@@ -96,7 +96,7 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 
 | Command | What it does |
 | --- | --- |
-| `hermes cron list` | List scheduled tasks with next-run times (you should see `memoria-board-export`, `memoria-sweeps`, `memoria-lint`). |
+| `hermes cron list` | List scheduled tasks with next-run times (you should see the five `memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`, `memoria-eval` crons). |
 | `hermes cron create '<spec>' --script <name>.sh --no-agent --name <name> --deliver local` | The shape the installer uses for the deterministic crons. |
 | `hermes cron run <task-name>` | Run a scheduled task immediately. |
 | `hermes cron enable <task-name>` / `disable <task-name>` | Toggle a task without removing it. |

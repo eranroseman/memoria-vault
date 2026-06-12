@@ -13,6 +13,8 @@ nav_exclude: true
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
 
+> *Terminology note (v0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). This ADR remains deferred; the decision is unchanged.*
+
 ## What
 
 A similarity check at the *moment a synthesis note is created*: before a `claim-note` or `reference-note` is filed into `30-synthesis/`, run a `qmd` hybrid search against existing synthesis notes and, if the top match exceeds a threshold, flag the note and present the neighbours to the human to confirm / merge / override. Borrowed from Karpathy's overnight-loop pattern (gate every addition against existing state), adapted from "revert if loss didn't improve" to "don't file if it duplicates."

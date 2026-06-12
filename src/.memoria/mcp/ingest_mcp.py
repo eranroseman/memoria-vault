@@ -73,7 +73,7 @@ def build_server(vault: Path):
     @server.tool()
     def ingest_pipeline(citekey: str, enrich: bool = True, pdf_path: str = "") -> dict:
         """Run the deterministic ingest pipeline for a citekey and return the draft
-        bundle: the assembled paper/item note (lifecycle: captured), merged
+        bundle: the assembled paper/item note (lifecycle: current, ingest_status: tier0), merged
         metadata + _enrichment, the extract status, the link plan, and
         holes=[_proposed_classification, brief] for the agent to fill. Writes no
         vault notes; it does persist the un-gated derived artifacts (the full-text

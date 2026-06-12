@@ -97,7 +97,7 @@ Patterns evaluated and explicitly refused. Each refusal is a specific judgment, 
 
 ## Net effect
 
-The design shift versus a generic "agent-assisted knowledge base" is from agent-assisted to **bounded, stage-gated knowledge production**:
+The design shift versus a generic "agent-assisted knowledge base" is from agent-assisted to **bounded, phase-gated knowledge production**:
 
 - The agent becomes better at bookkeeping, retrieval, and drafting.
 - The human remains the gatekeeper for meaning, promotion, and final structure.

@@ -14,6 +14,8 @@ nav_order: 30
 
 # ADR-30: Tiered ingest pipeline
 
+> *Terminology note (v0.1.0-alpha.2): `captured` is now the `ingest_status: tier0` floor, **not** a lifecycle value — paper entities are `lifecycle: current` from creation ([ADR-50](50-universal-lifecycle-and-maturity.md); `paper` enum `current → retracted → archived`), and the retry sweep keys on `ingest_status`. The lifecycle chain is `proposed → provisional → current → retracted → archived` (`dormant` retired). Numbered folders (`20-sources/`, `99-system/`) are now type-first ([ADR-47](47-type-first-category-folders.md)): `catalog/`, `system/`. The pipeline decision below is unchanged.*
+
 > **Implemented and validated live (#100–#116).** The deterministic spine ships as
 > six scripts (`ingest_paper` / `resolve_merge` / `extract` / `link` / `pipeline` /
 > `sweeps`) plus the seeded `00-meta/vocabulary.md`, the `captured` + `ingest_status`

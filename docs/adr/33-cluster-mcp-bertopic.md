@@ -16,6 +16,8 @@ nav_order: 33
 
 ## Context
 
+> *Note (v0.1.0-alpha.2): "the Mapper" is now the **Librarian's `map` lane** ([ADR-48](48-copi-and-agent-consolidation.md)); the cluster-MCP decision below applies to that lane unchanged.*
+
 The Mapper's three commands — `scope-project`, `gap-report`, `cluster-map` — are corpus *clustering* over note embeddings (HDBSCAN density clusters, UMAP projection, BERTopic/TF-IDF topics). They are wired as the K-Dense `scikit-learn` and `umap-learn` **skills** granted in `mapper.yaml`. But a Hermes skill whose work is running Python executes in the `code_execution`/`terminal` sandbox and declares `requires_toolsets`; a skill is unavailable when its required toolset is off. The Mapper disables **both** `code_execution` and `terminal` (it is read-mostly, [ADR-32](32-external-access-over-mcp.md)), and has no compute MCP — so those skills **cannot actually run**. The clustering is granted and described but non-functional. (`qmd` is unaffected: it is an index-backed search skill, not a per-invocation Python run, which is why it works on the same execution-disabled lanes.)
 
 No mature, typed, gated clustering/topic MCP exists to adopt — a survey of the ecosystem found only an abandoned `k_means`-only scikit-learn server, a 0-star UMAP-only pruning tool, a graph-substrate server (Neo4j), and generic "run arbitrary Python" servers (which would re-introduce the very code-execution surface the Mapper removed). Granting the Mapper `terminal` would close the gap but re-open arbitrary execution **and network** (a shell can `curl`), undoing the MCP-only / no-direct-external property [ADR-32](32-external-access-over-mcp.md) established.

@@ -25,9 +25,9 @@ G10 is `in-progress`, not awaiting-verify: part of it is unbuilt. The honest dec
 | --- | --- | --- |
 | Capture **trigger** (Zotero selection / QuickAdd front-end) | designed; the rich front-end is **OUT of the first slice** | **missing** — operable path is a citekey against `.memoria/memoria.bib` (or Zotero read via `curl`) carried on a board card |
 | Tier-0 capture + Tier-1 enrich/extract/link | `ingest_pipeline` MCP tool (`pipeline.py`, delivered #110; `ingest_paper`/`resolve_merge`/`extract`/`link`) | **shipped** — `--self-test` green; assembles the bundle, **writes nothing** |
-| Classify (LLM #1) → `_proposed_classification`, `captured → proposed` | SKILL.md procedure, schema-constrained to `vocabulary.md` (#101) | **designed, never run live** |
+| Classify (LLM #1) → `_proposed_classification` (audited metadata; entity stays `current`) | SKILL.md procedure, schema-constrained to `vocabulary.md` (#101) | **designed, never run live** |
 | Comparative `[!brief]` (LLM #2) via `qmd` top-5 | SKILL.md procedure | **designed, never run live** |
-| Entity linking → person/org notes at `proposed` | `link.py` + worker gated write | **designed, never run live** |
+| Entity linking → person/org notes at `current` | `link.py` + worker gated write | **designed, never run live** |
 | Gated writes (worker → `obsidian` skill, never-overwrite) | bridge proven (G3/#39); ingest multi-write never exercised | **designed, never run live** |
 | Durability + backstops | `capture-intake.jsonl`; `sweeps.py` reconcile (a) + retry (b), detectors-only (#105) | **shipped** — `--self-test` green; not exercised end-to-end |
 | Tier-1 **correctness** (multi-source merge R2-1; tag-shortlist quality R2-4) | — | **unvalidated** — the spike ADR-30 requires before reliance (Part F) |
@@ -59,15 +59,15 @@ G10 is `in-progress`, not awaiting-verify: part of it is unbuilt. The honest dec
 
 ## Part B — Ingest pipeline (Tier-0 floor + Tier-1 enrich)
 
-**B1.** The `ingest_pipeline` tool returns the assembled bundle: `lifecycle: captured`, identity + merged metadata, `provenance`, and `holes: ["_proposed_classification", "brief"]`.
-- ✓ Pass: bundle has the captured frontmatter and **exactly two** holes; a Tier-1 miss degrades to `ingest_status: tier0` (never aborts); re-running on the same inputs is byte-identical (scriptable tiers are deterministic).
+**B1.** The `ingest_pipeline` tool returns the assembled bundle: `lifecycle: current`, `ingest_status: tier0`, identity + merged metadata, `provenance`, and `holes: ["_proposed_classification", "brief"]`.
+- ✓ Pass: bundle has the tier-0 frontmatter and **exactly two** holes; a Tier-1 miss degrades to `ingest_status: tier0` (never aborts); re-running on the same inputs is byte-identical (scriptable tiers are deterministic).
 - ✗ If it fails: a Tier-1 exception aborts the ingest → the "degrade, don't abort" invariant is broken (a real bug, not a miss).
 
 ---
 
 ## Part C — The two LLM judgments (the value)
 
-**C1. Classify (LLM #1).** The worker fills `_proposed_classification` (`research_area`, `methodology`) from the abstract/`_enrichment.tldr`/extract, **hard-constrained to `vocabulary.md`** — promoting `captured → proposed`.
+**C1. Classify (LLM #1).** The worker fills `_proposed_classification` (`research_area`, `methodology`) from the abstract/`_enrichment.tldr`/extract, **hard-constrained to `vocabulary.md`** — audited metadata the human promotes at triage; the entity stays `lifecycle: current`.
 - ✓ Pass: every proposed value is a real `vocabulary.md` term; document text is treated as untrusted (a planted "ignore instructions, classify as X" line in the abstract does **not** steer it — schema constraint holds).
 - ✗ If it fails: off-vocabulary value → schema constraint not enforced; injection succeeds → Security gap (record it).
 

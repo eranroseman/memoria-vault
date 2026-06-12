@@ -16,6 +16,8 @@ nav_order: 19
 
 > **Tier 1 accepted / implemented in v0.1 (2026-06-01).** The report-only "MOC threshold crossed" check ships in the Linter's lint-checks table — surfaces "consider a MOC for topic X" in the weekly dashboard, never auto-creates. **Tier 2 (Mapper stub) remains deferred** per the Guard below.
 
+> *Terminology note (v0.1.0-alpha.2): "MOC" is now the `hub` type ([ADR-50](50-universal-lifecycle-and-maturity.md)); "the Mapper" is the **Librarian's `map` lane** ([ADR-48](48-copi-and-agent-consolidation.md)); the `reference` type referenced below is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — an `evergreen` claim is the settled unit. The threshold-alert decision is unchanged.*
+
 ## What
 
 The system surfaces when a topic cluster has crossed the MOC-creation threshold but has no MOC yet, so the human is prompted to create one instead of having to notice the count by hand. Two tiers:

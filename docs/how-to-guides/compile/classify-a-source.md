@@ -30,9 +30,9 @@ In `catalog/papers/<citekey>.md`, check `research_area` and `methodology` agains
 
 The Librarian's proposal (LLM hole #1) is a sandboxed namespace in the entity's frontmatter, separate from the main fields. Review each proposed value, copy the ones you accept (edited for accuracy) into the main frontmatter, then delete the entire `_proposed_classification:` block — it is transient.
 
-**4. Flip the entity's lifecycle.**
+**4. Confirm the entity's lifecycle.**
 
-A paper entity arrives at `lifecycle: proposed`. Once you've judged its candidate card and settled the classification, set it to `current`:
+A paper entity is created at `lifecycle: current` — Catalog facts don't queue (the thing that sits at `proposed` is the candidate *card* in your Inbox, not the entity). Settling the classification doesn't move the entity's lifecycle; confirm it reads `current` and resolve the candidate card:
 
 ```yaml
 lifecycle: current
