@@ -25,7 +25,7 @@ Sit down once and sweep the queue — high-cardinality decisions belong in one w
 
 **3. Act, then resolve.**
 
-Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card** sets your verdict (`current` = accepted, `retracted` = rejected, or straight to `archived`) and stamps `resolved:`. The Inbox converges to empty; empty is success.
+Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card** sets your verdict (`current` = accepted, `retracted` = rejected, or straight to `archived`) and stamps `resolved:`. You don't archive by hand: the archival sweep flips resolved cards to `lifecycle: archived` once the stamp is older than `inbox.archive_after_days` (default 30, set in calibration.yaml), so the verdict stays visible while fresh and the Inbox converges to empty; empty is success.
 
 **4. Reject cleanly.**
 

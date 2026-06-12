@@ -4,6 +4,9 @@
 #   (b) retry     — `captured` notes stuck at ingest_status: tier0
 #   (c) stamp     — bare ACP chat exports in notes/fleeting/chats/ get fleeting
 #                   frontmatter (origin: chat) so they enter fleeting triage (#185)
+#   (d) archive   — resolved inbox cards (lifecycle current/retracted with a
+#                   `resolved:` stamp) older than inbox.archive_after_days flip
+#                   to lifecycle: archived, so the inbox converges to empty (#338)
 # (a) and (b) are detectors that enqueue an *idempotent* re-ingest card
 # (hermes kanban create --idempotency-key reingest:<citekey>); the board provides
 # serialization, dedup, and the failure circuit-breaker (the needs-human floor).
@@ -17,3 +20,5 @@
 # {{VAULT_PATH}} when it copies this to ~/.hermes/scripts/memoria-sweeps.sh.
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
 "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/reconcile.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+# shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/archive_inbox.py" --vault "{{VAULT_PATH}}" >/dev/null || true

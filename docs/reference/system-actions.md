@@ -43,6 +43,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Reconcile | sweeps engine (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
 | Retry tier-0 | sweeps engine (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
 | Stamp chats | sweeps engine (`reconcile.py`) | Prepends fleeting frontmatter to bare ACP chat exports in `notes/fleeting/chats/`. |
+| Archive inbox | sweeps engine (`archive_inbox.py`) | Flips resolved inbox cards (`resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
 | Eval dispatch | sweeps engine (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
 | Eval score | sweeps engine (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | sweeps engine (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
@@ -80,7 +81,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Cadence | Script | What it runs |
 | --- | --- | --- |
 | Every 60 s | `board-export-cron.sh` | Board export + telemetry append. |
-| Every 15 min | `sweeps-cron.sh` | Reconcile, retry, and stamp-chats sweeps. |
+| Every 15 min | `sweeps-cron.sh` | Reconcile, retry, stamp-chats, and inbox-archival sweeps. |
 | Daily 06:00 | `lint-cron.sh` | Detectors, golden check, session digests. |
 | Weekly | `metrics-cron.sh` | Per-lane metrics aggregation. |
 | Weekly | `refresh-retraction-watch.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/`. |
