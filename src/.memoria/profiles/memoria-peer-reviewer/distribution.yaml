@@ -24,10 +24,6 @@ env_requires:
     description: "Port of the Local REST API plugin's insecure HTTP server, where its native MCP is served (http://127.0.0.1:<port>/mcp). Must match insecurePort in the plugin's data.json (default 27123). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
     required: false
     default: "27123"
-  - name: OPENALEX_API_KEY
-    description: "OpenAlex API key (?api_key= query param) — cross-checks during cite-check / retraction-check. As of 2026-02 OpenAlex requires a key; the former polite-pool email (OPENALEX_EMAIL) is discontinued."
-    required: false
-    default: ""
   - name: NCBI_EMAIL
     description: "Contact email used as the Crossref `mailto` (polite pool) when cite-check / retraction-check query api.crossref.org. Crossref and Open Retractions need no API key."
     required: false
