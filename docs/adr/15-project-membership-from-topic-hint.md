@@ -14,7 +14,7 @@ nav_order: 15
 
 # ADR-15: project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed
 
-> **Implementation status (0.1.0-alpha.1): not yet built.** The per-project topic hint ships only as `.memoria/project-hints.yaml.example`; nothing consumes it. The classify step proposes `research_area`/`methodology` but never scores `primary_topics` overlap or proposes a `projects` value. Tracked in [#425](https://github.com/eranroseman/memoria-vault/issues/425).
+> **Implementation status: built** ([#425](https://github.com/eranroseman/memoria-vault/issues/425)). The classify stage (`classify.py`, wired in `pipeline.py`) loads the optional `.memoria/project-hints.yaml` and scores each project's `primary_topics` against the paper's OpenAlex topic signals (topic names + subfields, kebab-case normalized; a hint matches a signal when equal or when all the hint's tokens appear in it). The ADR left the proposal rule open, so the implementation picked a conservative one: **every project with ≥ 1 overlapping hint topic is proposed, ranked by overlap count** — safe because it is a proposal the human confirms at triage, never an auto-apply. The proposal lands in `_proposed_classification.projects`; each decision (proposed or no-match) appends one `stage: project_hints` line to `system/logs/classify.jsonl` with the candidates and overlap counts (ADR-51 honesty — counts, not confidence). An absent hints file is a silent no-op (fully manual); a malformed one warns once on stderr and degrades to manual.
 
 ## Context
 

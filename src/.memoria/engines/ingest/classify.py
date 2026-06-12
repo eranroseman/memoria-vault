@@ -23,16 +23,24 @@ correctable (same provenance pattern as `system/logs/patterns.jsonl`).
 
 This module writes only the audit log; notes and cards stay with the gated
 writing layer, exactly like the rest of the ingest engine.
+
+ADR-15 addition: when an optional `.memoria/project-hints.yaml` exists, the
+classify step also PROPOSES project membership by simple topic overlap — the
+proposal lands in `_proposed_classification.projects` for human confirmation
+at triage, never in the `projects` frontmatter field. Absent file = fully
+manual project tagging (silent no-op). Same audit trail.
 """
 from __future__ import annotations
 
 import datetime
 import json
+import re
 import sys
 import uuid
 from pathlib import Path
 
 AUDIT_RELPATH = "system/logs/classify.jsonl"
+HINTS_RELPATH = ".memoria/project-hints.yaml"
 DEFAULT_FLOOR = 0.60
 DEFAULT_MARGIN = 0.15
 
@@ -49,6 +57,7 @@ METHODOLOGY_FROM_PUBTYPE = {
 
 
 _warned_calibration = False     # warn once per process, not per ingest
+_warned_hints = False           # ditto, for a malformed project-hints.yaml
 
 
 def thresholds(vault: Path | None) -> tuple[float, float]:
@@ -155,6 +164,125 @@ def append_audit(vault: Path, citekey: str, decision: dict,
         "reason": decision["reason"],
         "confidence_floor": floor, "near_tie_margin": margin,
         "source": "openalex.topics",
+    }
+    log = Path(vault) / AUDIT_RELPATH
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
+# --------------------------------------------------------------------------- #
+# project membership proposal (ADR-15)
+# --------------------------------------------------------------------------- #
+# A lightweight, optional `.memoria/project-hints.yaml` (one `primary_topics`
+# list per project) lets the classify step PROPOSE a `projects` value by simple
+# topic overlap. The proposal lands in `_proposed_classification` for the human
+# to confirm at triage — it is never applied to the `projects` frontmatter
+# field. Absent hints file = project membership is fully manual (silent no-op).
+
+
+def load_project_hints(vault: Path | None) -> list[dict]:
+    """The project list from .memoria/project-hints.yaml ([] if unusable).
+
+    An ABSENT file is the documented opt-out (ADR-15) — silent, no warning.
+    A present-but-malformed file degrades to [] loudly (one stderr warning per
+    process, the thresholds() pattern), so a broken config is visible."""
+    global _warned_hints
+    if vault is None:
+        return []
+    f = Path(vault) / HINTS_RELPATH
+    if not f.is_file():
+        return []
+    try:
+        import yaml
+
+        data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        out = []
+        for p in data["projects"]:
+            pid = str(p["id"]).strip()
+            topics = [str(t).strip() for t in p["primary_topics"] if str(t).strip()]
+            if pid and topics:
+                out.append({"id": pid, "primary_topics": topics})
+        return out
+    except Exception as exc:
+        if not _warned_hints:
+            _warned_hints = True
+            print(f"[classify] WARNING: cannot read project hints from "
+                  f"{HINTS_RELPATH} ({type(exc).__name__}: {exc}) — project "
+                  f"membership stays manual for this run", file=sys.stderr)
+        return []
+
+
+def _norm_topic(term: str) -> str:
+    """Kebab-case normalization: 'mHealth Apps' -> 'mhealth-apps'."""
+    return re.sub(r"[^a-z0-9]+", "-", str(term).lower()).strip("-")
+
+
+def paper_topic_terms(merged: dict) -> list[str]:
+    """The paper's normalized topic signals: OpenAlex topic names + subfields."""
+    seen: list[str] = []
+    for t in merged.get("topics_scored") or []:
+        for raw in (t.get("name"), t.get("subfield")):
+            n = _norm_topic(raw or "")
+            if n and n not in seen:
+                seen.append(n)
+    return seen
+
+
+def _hint_matches(hint: str, terms: list[str]) -> bool:
+    """A hint topic matches a paper term when the normalized forms are equal or
+    the hint's tokens all appear in the term ('mhealth' ~ 'mhealth-apps')."""
+    toks = set(hint.split("-"))
+    return any(hint == term or toks <= set(term.split("-")) for term in terms)
+
+
+def propose_projects(merged: dict, hints: list[dict]) -> dict:
+    """The ADR-15 project-membership proposal for one merged record. Pure.
+
+    Simple overlap: a project's score is how many of its `primary_topics`
+    match the paper's topic signals. Every project with >= 1 overlap is
+    proposed, ranked by overlap (then id) — a conservative rule, safe because
+    this is a proposal the human confirms at triage, never an auto-apply.
+
+    status: proposed (>=1 overlap) | no_match (hints + topics, zero overlap)
+            | no_data (no topic signals — a no-op, not audited)."""
+    terms = paper_topic_terms(merged)
+    if not terms:
+        return {"projects": [], "candidates": [], "status": "no_data",
+                "reason": "no scored topics in the enrichment payload"}
+    cands = []
+    for p in hints:
+        matched = [t for t in p["primary_topics"]
+                   if _hint_matches(_norm_topic(t), terms)]
+        if matched:
+            cands.append({"id": p["id"], "score": len(matched),
+                          "matched": matched})
+    cands.sort(key=lambda c: (-c["score"], c["id"]))
+    if not cands:
+        return {"projects": [], "candidates": [], "status": "no_match",
+                "reason": "no project's primary_topics overlap the paper's "
+                          "topic signals"}
+    return {"projects": [c["id"] for c in cands], "candidates": cands,
+            "status": "proposed",
+            "reason": "topic overlap: " + "; ".join(
+                f"{c['id']} ({c['score']} hint topic(s) matched)"
+                for c in cands)}
+
+
+def append_project_audit(vault: Path, citekey: str, decision: dict) -> dict:
+    """One JSONL audit line per project-membership proposal (proposed or
+    no_match) in system/logs/classify.jsonl — same trail as append_audit().
+    Honesty rules (ADR-51): candidates carry overlap counts, never confidence."""
+    record = {
+        "timestamp": datetime.datetime.now(datetime.timezone.utc)
+                       .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_id": str(uuid.uuid4())[:8], "stage": "project_hints",
+        "citekey": citekey, "decision": decision["status"],
+        "projects_proposed": decision["projects"],
+        "candidates": decision["candidates"],
+        "reason": decision["reason"],
+        "source": "project-hints.yaml x openalex.topics",
     }
     log = Path(vault) / AUDIT_RELPATH
     log.parent.mkdir(parents=True, exist_ok=True)
