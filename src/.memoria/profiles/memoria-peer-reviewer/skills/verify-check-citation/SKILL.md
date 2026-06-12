@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Verification, Citations, Claims]
-    related_skills: [qmd, pyzotero, obsidian]
+    related_skills: [qmd, obsidian]
   memoria:
     skill_id: "verify:check-citation"
     profile: memoria-peer-reviewer
