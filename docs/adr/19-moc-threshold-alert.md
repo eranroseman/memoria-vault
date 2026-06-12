@@ -14,7 +14,7 @@ nav_order: 19
 
 # ADR-19: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
 
-> **Tier 1 accepted / implemented in v0.1 (2026-06-01).** The report-only "MOC threshold crossed" check ships in the Linter's lint-checks table — surfaces "consider a MOC for topic X" in the weekly dashboard, never auto-creates. **Tier 2 (Mapper stub) remains deferred** per the Guard below.
+> **Tier 1 accepted, not yet built (status note, 0.1.0-alpha.1).** The report-only "hub threshold crossed" check — surface "consider a hub for topic X" in the weekly dashboard, never auto-create — is the accepted design but is **not implemented**: the Linter's `graph_analyze()` currently leaves hub / cluster / link-density signals out as "descriptive rather than actionable," so no threshold alert fires. Tracked in [#426](https://github.com/eranroseman/memoria-vault/issues/426). **Tier 2 (Mapper stub) remains deferred** per the Guard below.
 
 > *Terminology note (v0.1.0-alpha.2): "MOC" is now the `hub` type ([ADR-50](50-universal-lifecycle-and-maturity.md)); "the Mapper" is the **Librarian's `map` lane** ([ADR-48](48-copi-and-agent-consolidation.md)); the `reference` type referenced below is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — an `evergreen` claim is the settled unit. The threshold-alert decision is unchanged.*
 
