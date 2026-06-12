@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (8)
+## Required Obsidian plugins (9)
 
-Memoria breaks without these. The starter vault **ships all eight bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all nine bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -23,6 +23,7 @@ Memoria breaks without these. The starter vault **ships all eight bundled and co
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
+| buttons | `buttons` | Renders the command buttons on the `home.md` control panel ([ADR-68](../adr/68-workspaces-desk-library-studio.md)). **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
 ---
 

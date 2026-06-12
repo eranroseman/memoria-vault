@@ -13,7 +13,7 @@ Surfaces active and imminent drift — the Linter's and the verification sweeps'
 
 The dashboard (`system/dashboards/drift-watch.md`) lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the dashboard is a filtered view of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing engines are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit gate) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
 
-Loudness is the headline: `alert`-level findings also push to Home's "what needs me", and `block`-level findings stop the gated action until acknowledged. Everything below that waits here and in the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
+Loudness is the headline: `alert`-level findings also push to the Inbox's "Needs me" queue (the Desk workspace), and `block`-level findings stop the gated action until acknowledged. Everything below that waits here and in the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
 
 ## What it is not
 

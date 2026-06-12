@@ -10,12 +10,13 @@ Each dashboard in `system/dashboards/` answers one question about the vault, and
 
 ## Where the dashboards open
 
-The two shipped workspaces pre-load the highest-frequency views ([Workspaces](use-workspaces.md)):
+The three shipped workspaces pre-load the highest-frequency views ([Workspaces](use-workspaces.md)):
 
 | Workspace | Pre-loaded |
 | --- | --- |
-| **Home** (default) | `home.md` (status glance + the Inbox queue) in the main pane, Board State on the right |
-| **Library** | Reading Pipeline + Discuss Queue + `catalog.base` as left-pane tabs |
+| **Desk** (default) | Board State in the main pane; `inbox.base`, Drift Watch, Weekly Review as left tabs |
+| **Library** | Reading Pipeline in the main pane; `catalog.base`, Discuss Queue, Open Questions, Contradictions as left tabs |
+| **Studio** | `research-focus.md` in the main pane; `claims.base`, `patterns.base` as left tabs |
 
 Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
@@ -25,43 +26,43 @@ Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` 
 
 ### "What needs attention right now?"
 
-**The homepage glance + What needs me** — load the Home workspace.
+**The homepage status strip, then the Desk workspace** — the board and the Inbox queue side by side.
 
 Glance at the start of every session. Empty means nothing urgent; under 30 seconds to read.
 
 ### "What work is in flight? What's stuck?"
 
-**Board State** — Home workspace, right pane.
+**Board State** — Desk workspace, main pane.
 
 A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
 ### "What should I read and distill next?"
 
-**Reading Pipeline** — Library workspace, left pane.
+**Reading Pipeline** — Library workspace, main pane.
 
 Oldest-first — clear the oldest items first. See [Classify a source](../compile/classify-a-source.md).
 
 ### "Which papers are worth a discussion pass?"
 
-**Discuss Queue** — Library workspace, left pane.
+**Discuss Queue** — Library workspace, left tab.
 
 Open a paper from this queue, then open the Agent Client pane — the active note auto-attaches. See [Discuss a paper](../compile/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 
-**Open Questions** — open manually.
+**Open Questions** — Library workspace, left tab.
 
 Review during the weekly review or when starting a new topic cluster — connect each unconnected claim to a hub or to related claims.
 
 ### "Are any of my claims contradicted by other claims?"
 
-**Contradictions** — open manually.
+**Contradictions** — Library workspace, left tab.
 
 Check before advancing a claim to `evergreen` or submitting a draft — unresolved contradictions mean the argument isn't settled.
 
 ### "Something seems wrong but I can't see why"
 
-**Drift Watch** — open manually.
+**Drift Watch** — Desk workspace, left tab.
 
 Open when agents behave unexpectedly or queries return wrong results. A FAIL verdict pauses scheduled work until resolved ([Run the Linter](../operate/run-the-linter.md)).
 
@@ -79,7 +80,7 @@ Open when a write didn't happen as expected ([Diagnose a denied or blocked write
 
 ### "What do I need to do this week?"
 
-**Weekly Review** — open on Fridays.
+**Weekly Review** — Desk workspace, left tab; open on Fridays.
 
 The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks through it step by step.
 

@@ -1,63 +1,16 @@
 {
   "workspaces": {
-    "Home": {
+    "Desk": {
       "main": {
-        "id": "home-main-root",
+        "id": "desk-main-root",
         "type": "split",
         "children": [
           {
-            "id": "home-main-tabs",
+            "id": "desk-main-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "home-main-home",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "home.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical"
-      },
-      "left": {
-        "id": "home-left-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "home-left-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "home-left-files",
-                "type": "leaf",
-                "state": {
-                  "type": "file-explorer",
-                  "state": {}
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "right": {
-        "id": "home-right-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "home-right-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "home-right-board",
+                "id": "desk-main-board",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
@@ -71,10 +24,88 @@
             ]
           }
         ],
+        "direction": "vertical"
+      },
+      "left": {
+        "id": "desk-left-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "desk-left-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "desk-left-inbox",
+                "type": "leaf",
+                "state": {
+                  "type": "bases",
+                  "state": {
+                    "file": "inbox/inbox.base"
+                  }
+                }
+              },
+              {
+                "id": "desk-left-drift",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/drift-watch.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "desk-left-weekly",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/weekly-review.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "desk-left-files",
+                "type": "leaf",
+                "state": {
+                  "type": "file-explorer",
+                  "state": {}
+                }
+              }
+            ],
+            "currentTab": 0
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "right": {
+        "id": "desk-right-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "desk-right-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "desk-right-copi",
+                "type": "leaf",
+                "state": {
+                  "type": "agent-client-chat-view",
+                  "state": {}
+                }
+              }
+            ]
+          }
+        ],
         "direction": "horizontal",
         "width": 360
       },
-      "active": "home-main-home",
+      "active": "desk-main-board",
       "lastOpenFiles": []
     },
     "Library": {
@@ -87,11 +118,15 @@
             "type": "tabs",
             "children": [
               {
-                "id": "library-main-empty",
+                "id": "library-main-reading",
                 "type": "leaf",
                 "state": {
-                  "type": "empty",
-                  "state": {}
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/reading-pipeline.md",
+                    "mode": "preview",
+                    "source": false
+                  }
                 }
               }
             ]
@@ -108,14 +143,12 @@
             "type": "tabs",
             "children": [
               {
-                "id": "library-left-reading",
+                "id": "library-left-catalog",
                 "type": "leaf",
                 "state": {
-                  "type": "markdown",
+                  "type": "bases",
                   "state": {
-                    "file": "system/dashboards/reading-pipeline.md",
-                    "mode": "preview",
-                    "source": false
+                    "file": "catalog/catalog.base"
                   }
                 }
               },
@@ -132,15 +165,35 @@
                 }
               },
               {
-                "id": "library-left-catalog",
+                "id": "library-left-questions",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "catalog/catalog.base",
+                    "file": "system/dashboards/open-questions.md",
                     "mode": "preview",
                     "source": false
                   }
+                }
+              },
+              {
+                "id": "library-left-contradictions",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "system/dashboards/contradictions.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
+                "id": "library-left-files",
+                "type": "leaf",
+                "state": {
+                  "type": "file-explorer",
+                  "state": {}
                 }
               }
             ],
@@ -159,7 +212,109 @@
             "type": "tabs",
             "children": [
               {
-                "id": "library-right-backlink",
+                "id": "library-right-copi",
+                "type": "leaf",
+                "state": {
+                  "type": "agent-client-chat-view",
+                  "state": {}
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "horizontal",
+        "width": 360
+      },
+      "active": "library-main-reading",
+      "lastOpenFiles": []
+    },
+    "Studio": {
+      "main": {
+        "id": "studio-main-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "studio-main-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "studio-main-focus",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "research-focus.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "direction": "vertical"
+      },
+      "left": {
+        "id": "studio-left-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "studio-left-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "studio-left-claims",
+                "type": "leaf",
+                "state": {
+                  "type": "bases",
+                  "state": {
+                    "file": "system/dashboards/claims.base"
+                  }
+                }
+              },
+              {
+                "id": "studio-left-patterns",
+                "type": "leaf",
+                "state": {
+                  "type": "bases",
+                  "state": {
+                    "file": "system/patterns/patterns.base"
+                  }
+                }
+              },
+              {
+                "id": "studio-left-files",
+                "type": "leaf",
+                "state": {
+                  "type": "file-explorer",
+                  "state": {}
+                }
+              }
+            ],
+            "currentTab": 0
+          }
+        ],
+        "direction": "horizontal",
+        "width": 320
+      },
+      "right": {
+        "id": "studio-right-root",
+        "type": "split",
+        "children": [
+          {
+            "id": "studio-right-tabs",
+            "type": "tabs",
+            "children": [
+              {
+                "id": "studio-right-copi",
+                "type": "leaf",
+                "state": {
+                  "type": "agent-client-chat-view",
+                  "state": {}
+                }
+              },
+              {
+                "id": "studio-right-backlink",
                 "type": "leaf",
                 "state": {
                   "type": "backlink",
@@ -169,15 +324,16 @@
                   }
                 }
               }
-            ]
+            ],
+            "currentTab": 0
           }
         ],
         "direction": "horizontal",
-        "width": 320
+        "width": 360
       },
-      "active": "library-main-empty",
+      "active": "studio-main-focus",
       "lastOpenFiles": []
     }
   },
-  "active": "Home"
+  "active": "Desk"
 }

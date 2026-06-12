@@ -7,7 +7,7 @@ grand_parent: Dashboards
 
 # The Daily Health dashboard
 
-> **Absorbed into Home.** Daily Health no longer exists as a standalone dashboard file — the design update folded it into **`home.md`**, the front door. Its job (the morning "is anything red?" glance) is now the homepage's above-fold **status glance** plus the Inbox's "what needs me?" view, so the daily ritual happens on the surface Obsidian already opens. This page records the design rationale, which survives the move unchanged.
+> **Absorbed into Home.** Daily Health no longer exists as a standalone dashboard file — the design update folded it into **`home.md`**, the front door. Its job (the morning "is anything red?" glance) is now the homepage's one-line **status strip**, with the Inbox's "what needs me?" view one click away in the Desk workspace ([ADR-68](../../../adr/68-workspaces-desk-library-studio.md)), so the daily ritual starts on the surface Obsidian already opens. This page records the design rationale, which survives the move unchanged.
 
 The daily health view is the always-on system glance. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
@@ -15,7 +15,7 @@ The daily health view is the always-on system glance. The budget is 30 seconds �
 
 ## What it shows
 
-Home's status glance is a one-line rollup read from the telemetry feeds in `system/logs/`: pending reviews and blocked cards (from the board-state snapshot) and HIGH/CRITICAL lint findings. Below it, the **"Needs me"** view of the Inbox board lists the cards in `proposed` — the things actually waiting on a decision. Each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
+Home's status strip is a one-line rollup read from the telemetry feeds in `system/logs/`: pending reviews and blocked cards (from the board-state snapshot) and HIGH/CRITICAL lint findings. In the Desk workspace, the **"Needs me"** view of the Inbox board lists the cards in `proposed` — the things actually waiting on a decision. Each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ---
 

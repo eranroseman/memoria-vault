@@ -9,7 +9,7 @@ permalink: /explanation/dashboards/daily-glance/
 
 # Daily glance
 
-What you check at the start of a session to answer "is anything wrong, and what needs me today?" Since the design update, the daily glance *is* the front door: `home.md` opens with the status glance and the Inbox's "Needs me" view, so there is nothing separate to remember to open.
+What you check at the start of a session to answer "is anything wrong, and what needs me today?" Since the design update, the daily glance *is* the front door: `home.md` opens with the one-line status strip, and one click (the **Desk** button) lands on the board and the Inbox's "Needs me" tab ([ADR-68](../../../adr/68-workspaces-desk-library-studio.md)) — nothing separate to remember to open.
 
 | Surface | Question it answers |
 |---|---|

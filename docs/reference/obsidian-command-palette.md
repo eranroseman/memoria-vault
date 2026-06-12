@@ -23,6 +23,20 @@ Template-based note creation (fleeting, claim, hub, …) starts from the templat
 
 ---
 
+## Workspace commands
+
+One command per shipped workspace layout ([ADR-68](../adr/68-workspaces-desk-library-studio.md)) — the same commands back the workspace buttons on `home.md`:
+
+| Command | Output | Implementation |
+| --- | --- | --- |
+| `Memoria: workspace Desk` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → [src/system/scripts/load-workspace.js](../../src/system/scripts/load-workspace.js) (pure Obsidian API — no shelling) |
+| `Memoria: workspace Library` | Loads the **Library** layout (reading & synthesis). | Same script, per-macro setting `Workspace: Library` |
+| `Memoria: workspace Studio` | Loads the **Studio** layout (drafting). | Same script, per-macro setting `Workspace: Studio` |
+
+Pane-by-pane contents of each layout: [Obsidian workspaces](obsidian-workspaces.md).
+
+---
+
 ## Per-task lane commands
 
 One command per lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). All six lane tasks are reachable here without the co-PI.

@@ -36,7 +36,7 @@ The Librarian claims the card and drives the deterministic ingest engine over th
 
 **4. Judge the candidate card.**
 
-Open `home.md` → **What needs me** (or the card in `inbox/`). Read `argument_against` first — it's the information-bearing field ([Frontmatter fields](../../reference/frontmatter.md)). Then keep it (resolve to `current`, act on it, then `archived`) or skip it (resolve straight to `archived` — the Catalog entry stays as a record). Resolving a card is one palette command: [Work the review queue](../compose/work-the-review-queue.md).
+Open the Desk workspace's Inbox tab — the **Needs me** view of `inbox.base` (or the card in `inbox/`). Read `argument_against` first — it's the information-bearing field ([Frontmatter fields](../../reference/frontmatter.md)). Then keep it (resolve to `current`, act on it, then `archived`) or skip it (resolve straight to `archived` — the Catalog entry stays as a record). Resolving a card is one palette command: [Work the review queue](../compose/work-the-review-queue.md).
 
 **5. Write your source note.**
 

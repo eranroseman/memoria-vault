@@ -49,7 +49,7 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | --- | --- |
 | [Vault homepage](using-obsidian/use-the-vault-homepage.md) | Open the front door, work the Inbox, update research focus |
 | [Navigate the dashboards](using-obsidian/navigate-the-dashboards.md) | Which dashboard to open for each situation, and which workspace carries it |
-| [Workspaces](using-obsidian/use-workspaces.md) | Load and switch between the two shipped pane layouts, Home and Library |
+| [Workspaces](using-obsidian/use-workspaces.md) | Load and switch between the three shipped pane layouts — Desk, Library, and Studio |
 | [Agent-client pane](using-obsidian/use-the-acp-pane.md) | Open the co-PI pane, attach context, read responses, clear sessions |
 | [Command palette](using-obsidian/obsidian-command-palette.md) | The shipped `Memoria:` capture and per-task commands, invoking by type, assigning hotkeys |
 

@@ -370,3 +370,5 @@ zoteroselect
 ZotLit
 rerank
 miscalibrated
+shabegom
+unshippable

@@ -10,7 +10,7 @@ Clear the decisions waiting on you. In v0.1.0-alpha.2 the review surface is the 
 
 ## Prerequisites
 
-- Cards in the Inbox at `lifecycle: proposed` (`home.md` → **What needs me**, or `inbox/inbox.base`)
+- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab)
 
 ## Steps
 
@@ -43,7 +43,7 @@ The fleet-health dashboard tracks accept/reject ratios per proposing lane — ve
 
 - No card sits at `lifecycle: proposed` longer than your review cadence (the weekly review is the backstop)
 - Every accepted proposal resulted in a change made by your hand; rejected cards left nothing behind
-- `home.md`'s **What needs me** view is empty at the end of the pass
+- the Inbox's **Needs me** view is empty at the end of the pass
 
 ## Related
 

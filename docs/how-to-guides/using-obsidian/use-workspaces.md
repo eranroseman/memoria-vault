@@ -6,7 +6,7 @@ nav_order: 2
 
 # Workspaces
 
-Switch between Memoria's two shipped pane layouts — **Home** and **Library** — without rebuilding your panes by hand.
+Switch between Memoria's three shipped pane layouts — **Desk**, **Library**, and **Studio** — without rebuilding your panes by hand.
 
 ## Prerequisites
 
@@ -18,17 +18,19 @@ The **Workspaces** core plugin ships pre-enabled in the vault (`.obsidian/core-p
 
 **1. Load a workspace by name.**
 
-Both layouts ship pre-configured in the vault's `.obsidian/workspaces.json` (pane-by-pane contents: [Obsidian workspaces](../../reference/obsidian-workspaces.md)):
+All three layouts ship pre-configured in the vault's `.obsidian/workspaces.json` (pane-by-pane contents: [Obsidian workspaces](../../reference/obsidian-workspaces.md)). The fastest path is one palette command per workspace — `Cmd/Ctrl-P` →
 
-- Click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**)
-- Load **Home** — `home.md` front and center: the above-the-fold inbox and the daily glance
-- Load **Library** — the reading-and-processing layout: catalog and notes side by side
+- `Memoria: workspace Desk` — the "what needs me?" look: the board front and center, the Inbox queue on the left
+- `Memoria: workspace Library` — reading and synthesis: the reading pipeline front and center, catalog and discussion queues on the left
+- `Memoria: workspace Studio` — drafting: your research focus front and center, claims and patterns on the left
 
-Switch when your cognitive mode changes — not per task within a mode. A **Project** workspace arrives with the v0.1.0-alpha.3 Project release.
+The same three commands back the workspace buttons on `home.md` ([Vault homepage](use-the-vault-homepage.md)). The core plugin's own UI works too: click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**) and load by name.
+
+Switch when your cognitive mode changes — not per task within a mode. In every workspace the co-PI chat pane is pinned on the right, so the conversation travels with you.
 
 **2. (Optional) Bind hotkeys.**
 
-No workspace hotkeys ship by default. For one-key switching: Settings → Hotkeys → search `Load workspace` → assign e.g. `Ctrl-1` to **Home** and `Ctrl-2` to **Library**.
+No workspace hotkeys ship by default. For one-key switching: Settings → Hotkeys → search `Memoria: workspace` → assign e.g. `Ctrl-1` to **Desk**, `Ctrl-2` to **Library**, `Ctrl-3` to **Studio**.
 
 **3. Save changes to a workspace** (when you've rearranged panes).
 
@@ -36,13 +38,13 @@ No workspace hotkeys ship by default. For one-key switching: Settings → Hotkey
 
 ## Verify
 
-- Loading **Home** then **Library** swaps to a distinct pane layout without reloading Obsidian
-- The ACP pane (the co-PI) keeps its session across workspace switches
+- Loading **Desk**, then **Library**, then **Studio** swaps to three distinct pane layouts without reloading Obsidian
+- The ACP pane (the co-PI) is present on the right in all three, and keeps its session across switches
 
 ## Related
 
 - Workspace layout reference (what each pane shows): [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- The homepage the Home layout centers on: [Vault homepage](use-the-vault-homepage.md)
+- The control panel with the workspace buttons: [Vault homepage](use-the-vault-homepage.md)
 - Opening the co-PI pane: [Agent-client pane](use-the-acp-pane.md)
 - Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
 - Why few workspaces, not many: [Visual-style discipline](../../explanation/obsidian/visual-discipline.md)

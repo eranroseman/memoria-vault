@@ -6,64 +6,51 @@ nav_order: 1
 
 # Vault homepage
 
-The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../adr/13-homepage-front-door.md)). It's a launchpad: a one-line status glance, then links to every dashboard, the in-vault troubleshooting note, common operations, and the full website docs (all other reference now lives on the website). Navigate from it to the right dashboard or tool, and keep your research focus current.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../adr/13-homepage-front-door.md)). Since [ADR-68](../../adr/68-workspaces-desk-library-studio.md) it is a four-block **control panel**: a one-line status strip, an action row of command buttons, a workspace row, and the collapsed drill-down index. Glance, act, navigate — it owns no logic and duplicates no dashboard.
 
 ## Prerequisites
 
 - The vault open in Obsidian
-- The **Home** workspace loaded — the homepage sits front and center in its main pane ([Workspaces](use-workspaces.md))
 
 ## Steps
 
 **1. Open the homepage.**
 
-The obsidian-homepage plugin opens `home.md` automatically on launch (in Reading view, Dataview refreshed). If it isn't visible:
+The obsidian-homepage plugin opens `home.md` automatically on launch (in Reading view, Dataview refreshed). It is pinned in no workspace — it appears on launch and on demand:
 
 - `Cmd/Ctrl-P` → **Homepage: Open homepage**, or click the home ribbon icon
 - Or open `home.md` from the vault root in the file explorer
 
 To get back to a clean homepage view at any time, **right-click a tab header → Close all** — it closes every open tab and re-launches the homepage.
 
-The plugin pins the tab for you (configurable); you can also right-click the tab → **Pin**.
+**2. Read the status strip.**
 
-**2. Read the glance, then work the Inbox.**
+One line: reviews pending · blocked cards · HIGH/CRITICAL lint findings, with **board** and **findings** links for drill-down. Before the first agent run it shows the "feeds not wired yet" placeholder. Empty means nothing urgent; under ten seconds to read.
 
-Above the fold the homepage carries the **Status glance** (reviews pending · blocked cards · HIGH/CRITICAL lint findings) and **What needs me** — the Inbox cards in `proposed`, embedded from `inbox.base`. That queue converges to empty; everything below is on-demand detail.
+**3. Act from the action row.**
 
-**3. Navigate to a dashboard.**
+Six command buttons (Buttons plugin, command-type only — [Obsidian plugins](../../reference/obsidian-plugins.md)): **Capture fleeting**, **Capture from Zotero**, **Capture URL**, **Delegate a task**, **Resolve card**, and **Talk to co-PI**. Each dispatches the matching palette command — the buttons are shortcuts, not a second mechanism.
 
-The homepage links to every dashboard without duplicating their queries, in three groups by how you use them — **Library** (reading & synthesis), **Maintenance** (structural health), and **Agent ops**. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
+**4. Switch workspaces from the workspace row.**
 
-**4. Update your research focus.**
+Three buttons — **Desk** · **Library** · **Studio** — load the matching layout ([Workspaces](use-workspaces.md)). Work happens in the workspaces; the homepage is the hallway between them.
 
-The Librarian reads `research-focus.md` at the start of every session to set discovery targets. Keep it current.
+**5. Drill down from the index.**
 
-Click **Research focus** in the homepage → edit the file directly:
+Three collapsed callouts group every dashboard by how you use it — **Library** (reading & synthesis), **Maintenance** (structural health), and **Agent ops** — plus links to your research focus and the in-vault troubleshooting note. For the full dashboard roster see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
 
-- **Current priorities** — up to 3–5 active research questions
-- **Open questions** — specific unresolved questions to surface sources for
-- **Synthesis gaps** — topics where your claim notes feel thin
-- **Papers to prioritize** — specific papers to front-queue
-
-Update this at least weekly during the Friday ritual.
-
-**5. Start work from the homepage.**
-
-The **Start here** section is the launchpad for a session — no need to have a note open first:
-
-- **Research focus** — open and refresh `research-focus.md`
-- **Talk to the co-PI** — `Agent Client: Open chat view` ([Agent-client pane](use-the-acp-pane.md))
-- `Cmd/Ctrl-P` → `Memoria: capture fleeting` — instant capture
+Keep `research-focus.md` current — the Librarian reads it at the start of every session to set discovery targets. Update it at least weekly during the Friday ritual.
 
 ## Verify
 
-- Loading the **Home** workspace shows the homepage front and center, with the Status glance rendered (or its "feeds not wired yet" placeholder before the first agent run)
-- Clicking **Board State** opens `system/dashboards/board-state.md`
-- `research-focus.md` has at least one current priority filled in
+- Launching Obsidian opens `home.md` with the status strip rendered (or its "feeds not wired yet" placeholder before the first agent run)
+- Clicking the **Desk** button loads the Desk workspace with the board front and center
+- Clicking **Capture fleeting** opens the QuickAdd capture prompt
 
 ## Related
 
 - Why the homepage is a consumer, not a producer: [Home — the vault front door](../../explanation/obsidian/home.md)
+- The control-panel redesign decision: [ADR-68](../../adr/68-workspaces-desk-library-studio.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards)
-- Workspace layout for the Home workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- The workspaces the buttons load: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Updating research focus on schedule: [Run the weekly review](../curate/run-the-weekly-review.md)

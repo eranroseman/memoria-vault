@@ -151,6 +151,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Delegate a task | Prompts for a lane and goal — the palette twin of the co-PI's routing skill. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to the chosen verdict and stamps `resolved:`. |
+| Workspace Desk / Library / Studio | Loads the named workspace layout via the core Workspaces plugin (`load-workspace.js`, [ADR-68](../adr/68-workspaces-desk-library-studio.md)); also wired to the workspace buttons on `home.md`. |
 
 ### Review decisions
 
