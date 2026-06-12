@@ -30,7 +30,7 @@ env_requires:
     required: false
     default: ""
   - name: NCBI_API_KEY
-    description: "NCBI E-utilities key (ncbi.nlm.nih.gov/account/settings), sent as &api_key= for PubMed/PMC rate-limit raises (10 req/s vs 3 without). Currently UNREAD — nothing in the ingest engine sends it yet; kept so the .env seeding survives when E-utilities keying lands. NOTE: the var is NCBI_API_KEY, not PUBMED_API_KEY."
+    description: "NCBI E-utilities key (ncbi.nlm.nih.gov/account/settings), sent as &api_key= by the extract step's PMC E-utilities call for rate-limit raises (10 req/s vs 3 without). NOTE: the var is NCBI_API_KEY, not PUBMED_API_KEY."
     required: false
     default: ""
   - name: NCBI_EMAIL
