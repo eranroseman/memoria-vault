@@ -14,20 +14,13 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones you steer and read
 
-| Substrate | What it holds | Scope · lifespan | Backing |
-| --- | --- | --- | --- |
-| **Program memory** | Your program-wide steering — `research-focus` (discovery priorities) and `screening-protocol` (review mode). The main lever you have over what the system pursues. | whole research program · persistent | Memoria — vault files |
-| **Project memory** | One sub-project's cross-lane working state: open questions, decisions, framing. | one sub-project · archives with the project | Memoria — vault files |
-| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); the Policy MCP writes an entry at every gated write; the log is append-only forever — never rotated ([ADR-25](../../adr/25-session-logging-two-logs.md)). | whole vault · append-only | Memoria — vault files |
+**Program memory** (your standing steering — `research-focus` discovery priorities + `screening-protocol` review mode), **project memory** (one sub-project's cross-lane working state — open questions, decisions, framing), and **audit memory** (the tamper-evident record of every gated write, append-only forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
 
 ## The ones the runtime manages
 
-| Substrate | What it holds | Scope · lifespan | Backing |
-| --- | --- | --- | --- |
-| **Handoff memory** | What travels with a task card between lanes: goal, context, allowed paths, expected outputs. | one card · across lanes | Memoria — Kanban |
-| **Agent memory** (`MEMORY.md` + `USER.md`) | What the **co-PI** durably knows about its world — environment, conventions, learned preferences, plus your working style. Frozen snapshot at session start, under hard token caps (~800 / ~500). The co-PI is the **sole memory carrier**; the background lanes are stateless. | the co-PI · durable | Hermes |
-| **Session history** | Searchable record of the co-PI's past conversations. Recall only — carries no authority, never gates promotion. | the co-PI, all sessions · indefinite | Hermes |
-| **Working memory** | The current session's active reasoning — goal, recent tool results, in-flight thought. | one session · cleared on `/clear` | Hermes |
+**Handoff memory** (what travels with a card between lanes), **agent memory** (the co-PI's `MEMORY.md` + `USER.md`, the **sole memory carrier** — the background lanes are stateless), **session history**, and **working memory** (the live session's reasoning).
+
+What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory.md); the rest of this page explains *why* each has the scope it does.
 
 `SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
 
