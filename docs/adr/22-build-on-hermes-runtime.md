@@ -16,6 +16,8 @@ nav_order: 22
 
 ## Context
 
+> *Note (v0.1.0-alpha.2): the "seven specialist `SOUL.md`s" below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** profiles; likewise the ADR-01 three-layer framing in Related was superseded by the seven-layer model ([ADR-46](46-seven-layer-architecture.md)). The build-on-Hermes decision itself is unchanged.*
+
 Memoria's entire execution layer — the Kanban board, the worker profiles, the dispatcher, the programmatic API — is supplied by an external runtime, [Hermes Agent](https://hermes-agent.nousresearch.com/) (Nous Research). This is a foundational, hard-to-reverse dependency: it determines what the board *is*, how profiles claim work, and where integrations connect. The choice was explained at length in [Why Hermes](../explanation/rationale/why-hermes.md) but never recorded as a decision, so the alternatives that were weighed — and the precise Memoria/Hermes boundary — had no fixed anchor. An ADR matters here specifically to preserve *what was rejected and why*, which is the part most likely to be re-litigated when a shinier runtime appears.
 
 ## Decision

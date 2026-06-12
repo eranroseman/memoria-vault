@@ -68,6 +68,7 @@ From each profile's `config.yaml` (`mcp_servers` — the only place Hermes loads
 | `patterns` (the pattern runner) | ✓ | ✓ | — | — | — |
 | `paper_search` (scholarly discovery, 20+ databases) | ✓ | ✓ | — | — | — |
 | `pyzotero` (read-only Zotero 7 local API) | — | ✓ | — | ✓ | — |
+| `qmd` (local hybrid search over the vault corpus, read-only) | ✓ | ✓ | ✓ | ✓ | — |
 
 The `web` toolset is disabled on every lane — all external lookups go through MCP servers (gated, audited, deterministic). The write gate itself is the `memoria-policy-gate` Hermes plugin, enabled per profile and fail-closed; see [Policy MCP](policy-mcp.md).
 

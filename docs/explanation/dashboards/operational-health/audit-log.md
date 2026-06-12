@@ -15,6 +15,8 @@ The dashboard reads directly from `system/logs/audit.jsonl` — the append-only 
 
 A second view lists **writes to review-gated zones** (`notes/claims/`, `notes/hubs/`) for periodic audit. Even when these writes were allowed, they warrant occasional review because they represent changes to canonical content.
 
+Further views round out the forensic picture: **per-profile activity over the last 24 hours** (who wrote what, at a glance), **hash drift / tamper detection** (vault-hash mismatches between consecutive entries), **anomalies** (malformed or out-of-order entries in the stream itself), and a **log size** check (when to rotate).
+
 ## What it is not
 
 **Not fleet-health or drift-watch.** The audit log is the raw event stream — one JSON object per write decision; the other two aggregate. For where each sits, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
@@ -27,7 +29,7 @@ Memoria ingests untrusted PDFs — a potential indirect prompt injection surface
 
 ## Log size
 
-The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only and unbounded in 0.1.0-alpha.1 — rotation (archiving older weeks to `system/logs/archive/`) is a deferred convention, not yet implemented. The event-field schema is reference detail — see [Policy MCP](../../../reference/policy-mcp.md).
+The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only **forever** — never rotated ([ADR-25](../../../adr/25-session-logging-two-logs.md)); the Linter's `audit-log-size` advisory surfaces growth past 50 MB. The audit log's substrate is reference detail — see [Memory substrates](../../../reference/memory.md); the event-field schema lives in [Policy MCP](../../../reference/policy-mcp.md).
 
 ## Related
 

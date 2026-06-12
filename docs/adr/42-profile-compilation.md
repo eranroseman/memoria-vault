@@ -25,7 +25,7 @@ The compiler outputs the seven SOUL.md files into the starter vault; no hand-aut
 
 ## Why
 
-The current approach copies shared content (e.g., the audit-log behavior specification) into seven separate SOUL.md files that must be kept in lockstep by hand. When shared behavior changes, seven files need updating — and the Linter's `profile-install-drift` check catches only the *deployment* copy drifting from the *source* copy, not the seven *sources* drifting from each other.
+The current approach copies shared content (e.g., the audit-log behavior specification) into seven separate SOUL.md files that must be kept in lockstep by hand. When shared behavior changes, seven files need updating — and the retired `profile-install-drift` idea ([ADR-67](67-drift-procedures-keep-or-retire.md)) only ever addressed the *deployment* copy drifting from the *source* copy, not the seven *sources* drifting from each other.
 
 ## Trade-offs
 
@@ -38,12 +38,12 @@ Inter-profile drift (the seven SOUL.md files disagreeing on shared behavior) bec
 
 ## Alternatives considered
 
-**Keep hand-authoring (the current state).** The standing answer: at seven-profile scale the shared content is small enough to keep in lockstep by hand, and the Linter's `profile-install-drift` check guards the source→deployment copy. Held until inter-profile drift is a felt, recurring bug.
+**Keep hand-authoring (the current state).** The standing answer: at seven-profile scale the shared content is small enough to keep in lockstep by hand, and the idempotent installer re-run keeps the source→deployment copy synchronized (the `profile-install-drift` check is retired, [ADR-67](67-drift-procedures-keep-or-retire.md)). Held until inter-profile drift is a felt, recurring bug.
 
 **A lighter include/partial mechanism instead of a full compiler.** A possible middle path (shared blocks pulled in by reference rather than generated). Defer the build-step-vs-include choice until a concrete first drift incident shows which shape the shared content actually wants.
 
 ## Related
 
 - **Decision:** [ADR-26 repo-as-install-unit](26-repo-as-install-unit.md) — records hand-authored profiles as the current state and this proposal as the deferred compiler.
-- **Linter detector:** `profile-install-drift` (catches source-vs-deployed drift, not source-vs-source).
+- **Linter detector:** `profile-install-drift` — retired ([ADR-67](67-drift-procedures-keep-or-retire.md)); the idempotent installer re-run owns source-vs-deployed sync (and never addressed source-vs-source).
 - **Files:** the seven `.memoria/profiles/memoria-<name>/SOUL.md`.

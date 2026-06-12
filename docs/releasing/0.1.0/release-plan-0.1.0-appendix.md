@@ -101,7 +101,7 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 6. Begin drafting from the reference layer.
 7. Migrate the existing corpus into the new structure (one folder at a time, with Linter dry-runs at each stage).
 8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check. Also wire `metrics_aggregate.py` on a weekly cadence — it needs real run volume before trust-score bands are meaningful, so Phase 3 is the right trigger for this one (unlike `board_export.py`, which runs from Phase 1).
-9. Activate the **skill-lifecycle dashboard** once skill-governance is stood up (`99-system/skills/` is a placeholder until this phase).
+9. ~~Activate the **skill-lifecycle dashboard** once skill-governance is stood up.~~ Done early — the dashboard shipped when ADR-43's threshold fired at 25 skills, dashboard-only (no `system/skills/` governance notes; the planned placeholder was retired — see [ADR-43](../../adr/43-skill-governance.md)).
 10. Set up Pandoc export pipeline for `40-workbench/*/04-drafts/`.
 11. Configure session logging to write to `99-system/logs/` and commit weekly.
 12. **Retain the raw audit log and board history indefinitely.** Do not rotate or prune `99-system/logs/audit.jsonl` or session `state.db`. Fleet observability and static reports are pure backfill from these logs — they have no value if the logs are gone.

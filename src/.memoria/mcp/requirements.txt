@@ -18,5 +18,5 @@ PyYAML>=6.0.3
 # (pymupdf4llm realigned its versioning to track PyMuPDF: 0.3.x -> 1.27.x.x.)
 pymupdf4llm>=1.27.2.3
 
-# NOTE: tasks_mcp.py is not yet authored (it fronts the Hermes Kanban, which is
-# Phase-4 / deferred). When it lands, add its dependencies here.
+# tasks_mcp.py (fronts the Hermes Kanban) needs no extra dependencies: it uses
+# mcp + PyYAML above and shells out to the hermes CLI.

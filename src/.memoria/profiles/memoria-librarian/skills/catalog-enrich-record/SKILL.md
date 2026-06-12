@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Research, Zotero, Obsidian, Ingest, Literature]
-    related_skills: [obsidian, qmd, paper-lookup]
+    related_skills: [obsidian, qmd]
   memoria:
     skill_id: "catalog:enrich-record"
     profile: memoria-librarian
@@ -105,7 +105,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    entity's display name**) at `lifecycle: proposed`. Entities under
    `recorded_by_name` are recorded by name only, never node-created. Apply each
    `cites` edge **bidirectionally** (`this.cites += X`, `X.cited_by += this`).
-   Link the note to relevant synthesis notes / MOCs where applicable.
+   Link the note to relevant synthesis notes / hubs where applicable.
 
 5. **Write — gated.** Through the `obsidian` skill, write
    `catalog/papers/<citekey>.md` (or `02-items/` for software/datasets per

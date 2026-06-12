@@ -1,5 +1,4 @@
 ---
-title: "{{VALUE:dataset name}}"
 type: dataset
 lifecycle: current
 name: "{{VALUE:dataset name}}"

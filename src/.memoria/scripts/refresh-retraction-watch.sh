@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Retraction Watch dataset refresh cron. Downloads the Crossref-owned Retraction
 # Watch CSV (gitlab.com/crossref/retraction-watch-data, CC) to
-# .memoria/data/retraction_watch.csv — the authoritative source the verify MCP's
-# retraction_check(doi) indexes by OriginalPaperDOI.
+# .memoria/data/retraction_watch.csv — the authoritative source the retraction
+# sweep engine (engines/sweeps/retraction.py) indexes by OriginalPaperDOI.
 #
 # Deterministic, read-only fetch — no LLM, no vault writes. Monthly is plenty (the
 # dataset changes slowly; CrossRef update-to covers the real-time delta between

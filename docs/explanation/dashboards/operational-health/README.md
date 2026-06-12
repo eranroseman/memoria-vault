@@ -15,6 +15,8 @@ Dashboards that track how the agent fleet is performing and what it decided.
 |---|---|
 | [Fleet health](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
 | [Audit log](audit-log.md) | What did the policy MCP decide, and why? |
+| [Eval trend](eval-trend.md) | Is the deployed system still finding, extracting, linking, and verifying correctly on this vault? |
+| [Skill lifecycle](skill-lifecycle.md) | Which skills are active in which lane? Do lane policy and shipped skills agree? |
 
 ## Audit-log vs fleet-health vs drift-watch
 

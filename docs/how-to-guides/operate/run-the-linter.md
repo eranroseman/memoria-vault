@@ -44,7 +44,7 @@ The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDI
 python3 .memoria/engines/linter/golden.py --vault . check
 ```
 
-Reports any system file (templates, dashboards, patterns, scripts, `home.md`, `system/vocabulary.md`, `AGENTS.md`) that drifted from the installer-staged golden copy. To repair:
+Reports any system file (templates, dashboards, patterns, eval tasks, scripts, `home.md`, `system/vocabulary.md`, `AGENTS.md`) that drifted from the installer-staged golden copy. To repair:
 
 ```bash
 python3 .memoria/engines/linter/golden.py --vault . restore          # propose-only: lists what it would restore

@@ -51,7 +51,7 @@ To test a single permission decision without any agent at all, use the policy MC
 ## Watching what a session did
 
 - `system/logs/audit.jsonl` — every gated action the session attempted
-- `system/logs/sessions/` — session transcripts
+- `system/logs/sessions/` — per-session digests the Linter writes from the audit log
 - `hermes kanban list` — cards a co-PI session delegated to the board
 
 ## Related

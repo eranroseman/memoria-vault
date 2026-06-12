@@ -173,7 +173,7 @@ Auditing uses **per-write SHA-256 hash pairing, not a cross-entry chain**: each 
 | Class | Disposition | Examples |
 | --- | --- | --- |
 | `safe-and-unambiguous` | `allow_with_log` within the lane's write scope | Trailing whitespace, missing `created` with one obvious value |
-| `authorized-targeted` | `allow_with_log`, `task_id`-bound | Log rotation, findings-file truncation |
+| `authorized-targeted` | `allow_with_log`, `task_id`-bound | Findings-file truncation, golden-copy restore |
 | `schema-content` | `dry_run` always | Field rename, enum change — needs `lint:migrate-schema` |
 | `review-gated-edit` | `deny` always | Any write to a gated zone |
 
@@ -216,6 +216,8 @@ routing:
 
 `policy.deny` wins over `policy.allow`; an unmatched path is default-denied. The co-PI's override is the limiting case: `allow.write: []` plus `deny.write: "**"` — the structural guarantee behind "read directly, delegate writes". The full scope table is in [Profile capabilities](profiles.md).
 
+One consequence worth naming: every shipped lane denies writes under `system/**` (the co-PI under `**`), and no lane's `allow.write`, `routing.write_scope`, or auto-fix scope reaches into `system/` — so no profile can mutate `system/templates/` (or any other system file) through the gate, for any action: write, append, move, delete (even with `explicit_authorization`, the scope check denies), mkdir, auto_fix. Accidental *human* overwrites of system files are the golden copy's job — drift detection plus `lint:restore`, see [Linter: detectors and auto-fix](linter.md#the-golden-copy).
+
 Globs use doublestar semantics: `**` crosses path segments, `*` stays within one, `?` matches one non-`/` character.
 
 ---
@@ -234,6 +236,6 @@ It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin
 ## Related
 
 - The lane ceilings in table form: [Profile capabilities](profiles.md)
-- Audit-log substrate and rotation: [Memory substrates](memory.md)
+- Audit-log substrate and retention: [Memory substrates](memory.md)
 - The ceiling check on delegation payloads: [Kanban board reference](kanban-board.md)
 - The gated folder map's single source: [Note types](note-types.md)

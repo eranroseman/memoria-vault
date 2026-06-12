@@ -42,9 +42,9 @@ projects:
 - `description` — a one-line scope, free text. For your reference; not scored.
 - `primary_topics` — the topic terms papers in this project tend to carry.
 
-**3. Draw `primary_topics` from your actual `topic` vocabulary.**
+**3. Draw `primary_topics` from the topic signals papers actually carry.**
 
-At classify time the Librarian scores a paper's proposed `topic` values against each project's `primary_topics` by **simple overlap**. So the terms here must match the ones you actually use in the `topic` field — a `primary_topics` entry that never appears as a real `topic` contributes nothing. Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
+At classify time the ingest engine scores each project's `primary_topics` against the paper's **enrichment topic signals** — the OpenAlex topic names and subfields already in the merged payload — by **simple overlap**. Matching is forgiving about form but not about words: both sides are normalized to kebab-case (`mHealth Apps` → `mhealth-apps`), and a hint matches a signal when it is equal to it or all of its tokens appear in it (`mhealth` matches `mhealth-apps`; `jitai` does **not** match `just-in-time-adaptive-interventions`). So prefer terms that appear verbatim in the OpenAlex topics your papers resolve to — a `primary_topics` entry that never shows up in those signals contributes nothing. Every project with at least one overlapping hint topic is proposed, ranked by overlap count. Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
 
 **4. Keep it a hint, not a matrix.**
 

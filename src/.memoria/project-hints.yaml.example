@@ -3,10 +3,13 @@
 # Copy this file to `.memoria/project-hints.yaml` and edit it for your own projects.
 # Absent file = project membership is fully manual (no agent proposal). See ADR-15.
 #
-# How it's used: at classify time the Librarian scores a paper's proposed `topic` values
-# against each project's `primary_topics` (simple overlap) and proposes the best-matching
-# project(s) in the note's `_proposed_classification` block. The human confirms or corrects
-# the `projects` value at triage, exactly like every other proposed field.
+# How it's used: at classify time the ingest engine scores each project's `primary_topics`
+# against the paper's enrichment topic signals (the OpenAlex topic names and subfields,
+# kebab-case normalized; `mhealth` matches `mhealth-apps`) by simple overlap, and proposes
+# every project with at least one match — ranked by overlap — in the note's
+# `_proposed_classification` block. The human confirms or corrects the `projects` value at
+# triage, exactly like every other proposed field. The decision is audited in
+# system/logs/classify.jsonl.
 #
 # A hint is a HINT, not a controlled vocabulary — edit `primary_topics` freely. Do NOT add
 # `expected_study_designs` / `expected_methods` matrices here (ADR-15 rejected them as

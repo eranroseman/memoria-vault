@@ -1,5 +1,4 @@
 ---
-title: "{{VALUE:venue name}}"
 type: venue
 lifecycle: current
 name: "{{VALUE:venue name}}"

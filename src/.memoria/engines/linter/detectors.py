@@ -8,10 +8,12 @@ deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path>     # run against a vault, print findings
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --json
 
-Detectors needing external context (profile-install-drift, skeleton-drift,
-command-vocab-drift, plugin-config-drift, vault-hash-drift) are intentionally
-out of scope here -- they require ~/.hermes, the docs/ tree, or git/audit-log
-state and belong in the runtime Linter that has them.
+Of the formerly out-of-scope drift procedures (ADR-67): skeleton-drift and
+vault-hash-drift turned out to need only the vault tree and live here now;
+plugin-config-drift is covered by the golden copy (golden.py); and
+profile-install-drift / command-vocab-drift are retired -- the first needs
+~/.hermes deploy state the vault-side Linter doesn't have (the idempotent
+installer re-run is the fix), the second is a repo CI concern.
 """
 from __future__ import annotations
 
@@ -428,8 +430,8 @@ def graph_analyze(vault: Path) -> list[Finding]:
 
     Pure-stdlib graph metrics over the wikilink graph -- in-degree is simple dict
     arithmetic, so no networkx is needed (keeping detectors.py dependency-free).
-    Reports claim / reference notes with no incoming wikilinks (excluding MOCs):
-    they are unreachable in the graph until something links to them. A self-link
+    Reports claim / hub notes with no incoming wikilinks: they are
+    unreachable in the graph until something links to them. A self-link
     counts as an inlink -- a minor false-negative accepted for v0.1.
 
     Hubs, clusters, and link-density are descriptive rather than actionable, so
@@ -449,8 +451,6 @@ def graph_analyze(vault: Path) -> list[Finding]:
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):
-            continue
-        if parse_frontmatter(read(p)).get("type") == "moc":
             continue
         if indeg.get(p.stem, 0) == 0:
             out.append(Finding("graph-analyze", "LOW", rp,
@@ -561,11 +561,161 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     return out
 
 
+def vault_hash_drift(vault: Path) -> list[Finding]:
+    """A file's on-disk state no longer matches its last audited write.
+
+    Walks `system/logs/audit.jsonl` (append-only forever, ADR-25 -- so one walk
+    covers the full history; there are no rotated files to stitch) and keeps the
+    *latest* `write_complete` record per path (last write wins). Each recorded
+    `after_hash` is then compared to the current on-disk SHA-256, using the same
+    ``sha256:<64-hex>`` convention as policy_mcp.sha256_file: a missing file
+    hashes as the empty byte string. That convention makes deletes fall out
+    naturally -- a completed delete records the empty hash as its after_hash,
+    and an absent file hashes to the same value, so a deleted-and-still-absent
+    path matches and is skipped. (A zero-byte file is indistinguishable from an
+    absent one -- both hash empty -- an accepted blind spot of the convention.)
+
+    Any mismatch is CRITICAL: the file was edited outside the audited write
+    path, so the audit trail no longer pins its state. A legitimate human edit
+    in Obsidian surfaces here too, by design -- the finding tells the PI the
+    trail lost its pin, not that the edit was malicious. Malformed log lines
+    are skipped, mirroring audit_unpaired_writes."""
+    import hashlib
+
+    empty = "sha256:" + hashlib.sha256(b"").hexdigest()
+    log = vault / "system" / "logs" / "audit.jsonl"
+    if not log.is_file():
+        return []
+    latest: dict[str, dict] = {}                   # path -> last write_complete
+    for line in read(log).splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(e, dict) or e.get("decision") != "write_complete":
+            continue
+        path, after = e.get("path"), e.get("after_hash")
+        if isinstance(path, str) and path and isinstance(after, str) and after:
+            latest[path] = e
+    out = []
+    for path, e in sorted(latest.items()):
+        f = vault / path
+        try:
+            current = ("sha256:" + hashlib.sha256(f.read_bytes()).hexdigest()
+                       if f.exists() else empty)
+        except OSError as exc:
+            out.append(Finding("vault-hash-drift", "CRITICAL", path,
+                               f"cannot hash audited file: {exc}"))
+            continue
+        if current != e["after_hash"]:
+            state = "missing" if current == empty else "edited"
+            out.append(Finding("vault-hash-drift", "CRITICAL", path,
+                               f"on-disk state ({state}) no longer matches the last "
+                               f"audited after_hash ({e.get('action')}, task "
+                               f"{e.get('task_id')}, {e.get('timestamp')}) -- "
+                               f"out-of-band change; the audit trail no longer "
+                               f"pins this file's state"))
+    return out
+
+
+def audit_log_size(vault: Path, max_mb: float = 50.0) -> list[Finding]:
+    """Advisory size check on the append-only-forever audit log (ADR-25).
+
+    audit.jsonl is never rotated -- rotation would complicate the per-write
+    pairing reads (audit_unpaired_writes), the hash-drift walk (vault_hash_drift),
+    and the session digests for no benefit at single-researcher write volume.
+    Unbounded growth is surfaced here instead of staying silent: a LOW advisory
+    fires once the log exceeds a generous 50 MB threshold."""
+    log = vault / "system" / "logs" / "audit.jsonl"
+    if not log.is_file():
+        return []
+    size_mb = log.stat().st_size / (1024 * 1024)
+    if size_mb <= max_mb:
+        return []
+    return [Finding("audit-log-size", "LOW", "system/logs/audit.jsonl",
+                    f"audit log is {size_mb:.0f} MB (advisory threshold {max_mb:.0f} MB) "
+                    f"-- append-only forever by design (ADR-25), so growth is "
+                    f"surfaced here, never rotated away")]
+
+
+def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
+    """A topic crossed the hub-creation threshold with no hub (ADR-19 Tier 1).
+
+    Report-only: counts papers + claims per topic term -- a claim's `topics`
+    list and a paper's `research_area` list (the paper-side topic facet the
+    classify stage fills; papers carry no `topics` field) -- and flags any term
+    with >= `threshold` notes (the lower edge of linking.md's >=15-20 band) that
+    no existing hub already covers. A topic is covered when a `hub` (or legacy
+    `moc`) note's `topic` or `title` matches it, case-insensitively. Never
+    auto-creates -- the finding suggests the PI consider a hub."""
+    counts: dict[str, int] = {}
+    label: dict[str, str] = {}                     # lowercased term -> display form
+    hubbed: set[str] = set()
+    for p in iter_notes(vault):
+        rp = relpath(vault, p)
+        if rp.startswith(SCAFFOLD_PREFIXES):
+            continue
+        fm = parse_frontmatter(read(p))
+        if fm.get("type") in ("hub", "moc"):
+            for v in (fm.get("topic"), fm.get("title")):
+                if isinstance(v, str) and v.strip():
+                    hubbed.add(v.strip().lower())
+            continue
+        if not rp.startswith(("catalog/papers/", "notes/claims/")):
+            continue
+        terms: list[str] = []
+        for field in ("topics", "research_area"):
+            v = fm.get(field)
+            if isinstance(v, list):
+                terms += [t for t in v if isinstance(t, str)]
+            elif isinstance(v, str):
+                terms.append(v)
+        for t in {t.strip() for t in terms if t.strip()}:
+            key = t.lower()
+            counts[key] = counts.get(key, 0) + 1
+            label.setdefault(key, t)
+    out = []
+    for key in sorted(counts):
+        if counts[key] >= threshold and key not in hubbed:
+            out.append(Finding("hub-threshold", "LOW", "notes/hubs/",
+                               f"topic '{label[key]}' has {counts[key]} notes "
+                               f"(papers + claims, threshold {threshold}) and no hub "
+                               f"-- consider creating one (ADR-19 Tier 1)"))
+    return out
+
+
+def skeleton_drift(vault: Path) -> list[Finding]:
+    """A folder from the installer skeleton is missing from the vault.
+
+    Verifies the `skeleton` list of `.memoria/schemas/folders.yaml` (the one
+    schema home, ADR-47/ADR-55) exists as directories in the vault. The fix is
+    mechanical -- re-run the idempotent installer (mkdir -p) or create the dir --
+    so the finding is MEDIUM, not CRITICAL. Needs the schema home + PyYAML;
+    without them (the dependency-free fallback path) the check is skipped.
+
+    Only meaningful for an *installed* vault: the repo's src/ tree deliberately
+    ships no empty dirs (ADR-55 dropped the .gitkeep placeholders), so the check
+    keys on the golden manifest the installer stages -- absent manifest, no
+    skeleton was ever scaffolded, and the check is skipped."""
+    if _FOLDERS is None:
+        return []
+    if not (vault / ".memoria" / "golden" / "manifest.json").is_file():
+        return []
+    out = []
+    for d in _FOLDERS.get("skeleton") or []:
+        if not (vault / d).is_dir():
+            out.append(Finding("skeleton-drift", "MEDIUM", d,
+                               "skeleton folder missing -- re-run the installer "
+                               "(idempotent) or create the directory"))
+    return out
+
+
 DETECTORS = [
     orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
     frontmatter_schema_check, frontmatter_link_check, broken_wikilinks,
     dashboard_field_drift, graph_analyze, fama_exposure, misplaced_note,
-    audit_unpaired_writes,
+    audit_unpaired_writes, vault_hash_drift, audit_log_size, hub_threshold,
+    skeleton_drift,
 ]
 
 

@@ -1,4 +1,6 @@
 """L1 component test for policy_mcp — extracted from its former --self-test (ADR-44)."""
+import pytest
+
 import policy_mcp as _m
 from _util import TestHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
@@ -239,3 +241,38 @@ def test_policy_mcp():
 
         return t.summary(label="all" if yaml is not None else "core")
     assert _run() == 0
+
+
+# Loaded from the real shipped lane-override YAMLs, not in-test mirrors, so a
+# lane edit that opens a hole in the template wall fails this test directly.
+SHIPPED_PROFILES = ("memoria-copi", "memoria-engineer", "memoria-librarian",
+                    "memoria-peer-reviewer", "memoria-writer")
+
+
+def test_shipped_lanes_deny_template_mutations():
+    """#179: every shipped lane ceiling denies every mutating action under
+    system/templates/. Agents are blocked here (deny.write `system/**`, co-PI
+    `**`); accidental *human* overwrites are the golden copy's job
+    (tests/test_golden_restore.py)."""
+    if _m.yaml is None:
+        pytest.skip("PyYAML not installed")
+    src = Path(__file__).resolve().parent.parent / "src"
+    path = "system/templates/claim.md"
+    for profile in SHIPPED_PROFILES:
+        lane = load_lane(src, profile)
+        for action in ("write", "append", "move"):
+            dec = decide(profile, action, path, lane)
+            assert dec.decision == "deny", (profile, action, dec)
+        # delete: even with explicit authorization, templates sit outside every
+        # lane's allow.write, so the scope check denies.
+        dec = decide(profile, "delete", path, lane,
+                     flags={"explicit_authorization": True})
+        assert dec.decision == "deny", (profile, "delete", dec)
+        # mkdir under templates: outside every routing.write_scope.
+        dec = decide(profile, "mkdir", "system/templates/sub", lane)
+        assert dec.decision == "deny", (profile, "mkdir", dec)
+        # auto_fix: even the two always-eligible classes are scoped to the
+        # lane's allow.write, which never reaches system/templates/.
+        for cls in ("safe-and-unambiguous", "authorized-targeted"):
+            dec = decide(profile, "auto_fix", path, lane, flags={"class": cls})
+            assert dec.decision == "deny", (profile, "auto_fix", cls, dec)
