@@ -70,7 +70,7 @@ Each subsystem is a chain; the note gets the data if *any* source has it, degrad
 
 **Classification proposal (LLM call #1) — promotes `captured → proposed`.** Map the shortlist to `_proposed_classification`, **hard-schema-constrained** to the vocabulary. Extracted document text is **untrusted input** (delimited, instructions stripped, schema-constrained) — see Security.
 
-**Linking (ID-keyed, idempotent).** Find-or-create `venue-note` (ISSN), `person-note` (ORCID), `organization-note` (ROR), keyed on stable IDs. **No-ID entities are recorded by name in the paper-note, never node-created, never name-merged** (venues/orgs as well as authors). Cites/cited-by by local **DOI-match** of the merged reference union against the vault; annotate edges with `isInfluential` / `intents` / `contexts` where S2 supplied them.
+**Linking (ID-keyed, idempotent).** Find-or-create `venue-note` (ISSN), `person-note` (ORCID), `organization-note` (ROR), keyed on stable IDs. **No-ID entities are recorded by name in the paper-note, never node-created, never name-merged** (venues/orgs as well as authors). Cites/cited-by via local **DOI-match** of the merged reference union against the vault; annotate edges with `isInfluential` / `intents` / `contexts` where S2 supplied them.
 
 ### Tier 2 — Optional (best-effort; absent-able)
 
