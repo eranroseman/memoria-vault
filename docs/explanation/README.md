@@ -1,6 +1,6 @@
 ---
 title: Explanation
-nav_order: 4
+nav_order: 5
 has_children: true
 permalink: /explanation/
 ---
@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR — see [Decisions](../adr); deferred and forward-looking decisions are ADRs too (`status: deferred`). The release plan lives in [Releasing](../releasing/).
+The *why* behind a specific choice lives in an ADR — see [Decisions](../adr); deferred and forward-looking decisions are ADRs too (`status: deferred`). The release plan lives in the repo's [Releasing](https://github.com/eranroseman/memoria-vault/tree/main/docs/releasing) docs.

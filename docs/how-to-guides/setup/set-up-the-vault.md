@@ -79,4 +79,4 @@ The `policy` server path should show an absolute vault path, not the `{{VAULT_PA
 - Next step: [Set up Obsidian](set-up-obsidian.md)
 - Profile secrets: [Set up Hermes](set-up-hermes.md)
 - Re-running after a git pull: [Redeploy profiles](../operate/redeploy-profiles.md)
-- Build status: [v0.1 release plan](../../releasing/0.1.0/release-plan-0.1.0.md)
+- Build status: [v0.1 release plan](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0/release-plan-0.1.0.md)

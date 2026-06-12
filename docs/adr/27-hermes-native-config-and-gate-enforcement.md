@@ -218,7 +218,7 @@ Installer (`scripts/install.sh`) and profile sources (`vault/.memoria/profiles/*
    non-terminal lanes have no `code_execution`/`file`/`terminal`.
 6. Then correct `#39`/`#58`, `policy-mcp.md`, and the ledger.
 
-Sequencing lives in [Release plan — v0.1.0-alpha.1](../releasing/0.1.0/release-plan-0.1.0.md); this ADR records the
+Sequencing lives in [Release plan — v0.1.0-alpha.1](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0/release-plan-0.1.0.md); this ADR records the
 choices, not the schedule.
 
 ## Alternatives considered

@@ -20,7 +20,7 @@ nav_order: 29
 
 ## Context
 
-Memoria has three good test plans — [headless](../testing/plans/headless-test-plan.md) (static + schema), [hermes-cli](../testing/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](../testing/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+Memoria has three good test plans — [headless](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/headless-test-plan.md) (static + schema), [hermes-cli](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
 
 ## Decision
 
@@ -34,18 +34,18 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 | **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | headless §A | every commit (CI) |
 | **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
 | **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
-| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](../testing/plans/e2e-golden-path-plan.md) | per release |
+| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/e2e-golden-path-plan.md) | per release |
 | **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-maintenance.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](../testing/plans/installer-test-plan.md) (+ others as built) | on relevant change |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/installer-test-plan.md) (+ others as built) | on relevant change |
 
 **Disciplines**
 
-1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](../testing/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
+1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
 3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
 4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
 
-All plans live in [Testing](../testing/), built from `test-plan-template.md`.
+All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing), built from `test-plan-template.md`.
 
 ## Why
 

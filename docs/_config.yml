@@ -35,3 +35,11 @@ favicon_ico: "/favicon.ico"
 # Plugins whitelisted on GitHub Pages
 plugins:
   - jekyll-seo-tag
+
+# Repo-internal documentation, kept in docs/ for relative linking but NOT
+# published to the site. The public site is the four Diátaxis quadrants
+# (tutorials/ how-to-guides/ reference/ explanation/) plus the ADRs.
+exclude:
+  - contributing/
+  - releasing/
+  - testing/
