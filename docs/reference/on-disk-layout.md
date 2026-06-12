@@ -30,7 +30,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 └── system/                  infrastructure (untyped, except patterns/)
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
-    ├── dashboards/            10 dashboards + claims/sources/fleeting .base files
+    ├── dashboards/            11 dashboards + claims/sources/fleeting .base files
     ├── patterns/              the pattern library (+ patterns.base, _preamble.md)
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── board/                 board-export card projections

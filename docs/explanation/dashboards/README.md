@@ -15,7 +15,7 @@ The **Inbox** is the *action queue* — discrete things that need you now (it fe
 | [Daily glance](daily-glance/README.md)             | Home's status glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
-| [Operational health](operational-health/README.md) | Fleet health, Audit log                                         | When checking how the agent fleet is performing   |
+| [Operational health](operational-health/README.md) | Fleet health, Audit log, Skill lifecycle                        | When checking how the agent fleet is performing   |
 
 Two of the old standalone dashboards changed shape in the design update: **Daily Health was absorbed into `home.md`** (the front door's above-fold glance — it no longer exists as a separate file), and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter engine's** structural debt — kept separate, not collapsed.
 

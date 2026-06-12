@@ -72,7 +72,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
 | [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded → ADR-48 |
-| [43](43-skill-governance.md) | Skill governance and lifecycle | deferred |
+| [43](43-skill-governance.md) | Skill governance and lifecycle | accepted |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [45](45-release-management-model.md) | Release management — gates as a tracking-issue checklist, release-please for versioning | accepted |
 | [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · co-PI · Tasks · MCP · Engines · Vault | accepted |
