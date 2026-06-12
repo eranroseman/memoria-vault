@@ -368,3 +368,4 @@ Zotero
 zotero
 zoteroselect
 ZotLit
+rerank
