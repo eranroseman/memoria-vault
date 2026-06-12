@@ -74,9 +74,9 @@ Memoria's linting is the Linter **engine** — deterministic Python with a daily
 - Status bar shows "Local REST API: started"
 - Settings → Local REST API shows a 64-char hex `apiKey`
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
-- `Cmd/Ctrl-P` → **Workspaces: Load workspace** offers **Home** and **Library**
+- `Cmd/Ctrl-P` → `Memoria: workspace` lists **Desk**, **Library**, and **Studio**
 
-Once Hermes is set up, the working loop is: open the co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace to work the reading pipeline.
+Once Hermes is set up, the working loop is: open the co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace (`Memoria: workspace Library`) to work the reading pipeline.
 
 ## Related
 

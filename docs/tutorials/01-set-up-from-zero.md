@@ -62,7 +62,7 @@ Re-run that command any time you add or rotate a key.
 3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in `~/.hermes/.env` (then re-run the `--profiles-only` command from Step 2).
 4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
-`home.md` opens as the front door: the **What needs me** Inbox view, the dashboard index, and your research focus.
+`home.md` opens as the front door — the control panel: the one-line status strip, the action and workspace buttons, and the dashboard index. The Inbox queue itself lives in the **Desk** workspace's first left tab.
 
 ---
 
@@ -81,7 +81,7 @@ Say hello and ask it something — "explain how this vault is organized" is a go
 
 ## Step 5 — Switch to the Library workspace
 
-Two saved layouts ship with the vault: **Home** (the launchpad) and **Library** (the reading layout). Switch via the command palette: **Workspaces: Load workspace** → `Library`. See [Obsidian workspaces](../reference/obsidian-workspaces.md).
+Three saved layouts ship with the vault: **Desk** (the "what needs me?" look), **Library** (reading & synthesis), and **Studio** (drafting). Switch via the command palette: `Memoria: workspace Library` (one command per workspace). See [Obsidian workspaces](../reference/obsidian-workspaces.md).
 
 The Library workspace opens the reading pipeline, the discuss queue, and the Catalog view — empty for now. They fill as you work through the next tutorials.
 

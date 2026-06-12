@@ -97,6 +97,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | deferred |
 | [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |
+| [68](68-workspaces-desk-library-studio.md) | Workspaces v2 — Desk / Library / Studio, home.md as control panel | accepted |
 
 <!-- ADR-INDEX:END -->
 

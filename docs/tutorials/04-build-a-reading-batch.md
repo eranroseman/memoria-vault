@@ -29,7 +29,7 @@ The co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll nev
 
 ## Step 2 — Judge the candidates as a batch
 
-Candidate cards accumulate in the Inbox (`home.md` → **What needs me**), each with the honesty body from Tutorial 03. Sit down once and judge them together:
+Candidate cards accumulate in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), each with the honesty body from Tutorial 03. Sit down once and judge them together:
 
 - Read each card's `argument_against` and `certainty` first.
 - **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.

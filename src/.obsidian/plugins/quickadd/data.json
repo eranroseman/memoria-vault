@@ -270,6 +270,69 @@
       "fileExistsBehavior": {
         "kind": "prompt"
       }
+    },
+    {
+      "id": "71138de4-6029-416b-8559-fb61fde5efb1",
+      "name": "Memoria: workspace Desk",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: workspace Desk",
+        "id": "f3200efc-acc2-4514-a8fb-2aff1e07c632",
+        "commands": [
+          {
+            "name": "load-workspace",
+            "type": "UserScript",
+            "id": "1dd1f1d4-3fda-4f1b-8811-898abdf28d6c",
+            "path": "system/scripts/load-workspace.js",
+            "settings": {
+              "Workspace": "Desk"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "5f43d3c5-544c-4a38-ba5b-be3891254236",
+      "name": "Memoria: workspace Library",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: workspace Library",
+        "id": "cb8c6830-284e-4b32-8e5f-41f8b5dddb7e",
+        "commands": [
+          {
+            "name": "load-workspace",
+            "type": "UserScript",
+            "id": "269b00ad-d63c-416c-9893-ec8c80f23893",
+            "path": "system/scripts/load-workspace.js",
+            "settings": {
+              "Workspace": "Library"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "4a9ffb2d-0cec-4436-9b39-a41384da9670",
+      "name": "Memoria: workspace Studio",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: workspace Studio",
+        "id": "a99116b8-77e8-4137-a003-663c078c1649",
+        "commands": [
+          {
+            "name": "load-workspace",
+            "type": "UserScript",
+            "id": "fd120069-4c46-45da-a8a2-c2856121e0b9",
+            "path": "system/scripts/load-workspace.js",
+            "settings": {
+              "Workspace": "Studio"
+            }
+          }
+        ]
+      }
     }
   ],
   "inputPrompt": "single-line",

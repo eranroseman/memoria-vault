@@ -6,13 +6,13 @@ nav_order: 1
 
 # Home — the vault front door
 
-`home.md` at the vault root is the note Memoria opens on launch (via the obsidian-homepage plugin). It is a **launchpad**, not a dashboard: it surfaces the dashboards rather than computing anything itself.
+`home.md` at the vault root is the note Memoria opens on launch (via the obsidian-homepage plugin). It is a **control panel**, not a dashboard: it surfaces status, actions, and the dashboards rather than computing anything itself ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)).
 
 ---
 
 ## What it shows
 
-A small set of jumping-off points: the above-fold **status glance** (the absorbed Daily Health — the morning "is anything red?" rollup), the Inbox's "what needs me?" view, links to the dashboards, the quick-capture commands, and the human's research focus. Whatever live data appears is *embedded* from a dashboard, not computed here.
+Four blocks, in order ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)): a one-line **status strip** (the absorbed Daily Health — reviews pending, blocked cards, HIGH/CRITICAL findings, read from the agent-written status feeds); an **action row** of command buttons (capture, delegate, resolve, talk to the co-PI); a **workspace row** (Desk · Library · Studio); and the collapsed **drill-down index** of dashboards plus the research focus and troubleshooting links. The buttons dispatch existing palette commands — Home adds no mechanism of its own — and the "what needs me?" queue itself lives in the Desk workspace's Inbox tab, not on Home.
 
 ---
 

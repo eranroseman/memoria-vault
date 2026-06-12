@@ -31,7 +31,7 @@ The co-PI delegates a **`catalog`** task; the Librarian searches, compares hits 
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body — an argument, not a verdict. A real one reads like:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), one per proposed source, each carrying the honesty body — an argument, not a verdict. A real one reads like:
 
 ```yaml
 action: "Catalog this paper and queue it for reading"

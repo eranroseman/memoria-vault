@@ -20,7 +20,7 @@ Because `notes/claims/` is review-gated, the link lane can't touch your `links:`
 
 **1. Open the cards in one sitting.**
 
-`home.md` → **What needs me**, or `inbox/inbox.base`. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+The **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each candidate before deciding.**
 

@@ -1,13 +1,11 @@
 ---
 created: 2026-06-02
-updated: 2026-06-10
+updated: 2026-06-12
 cssclasses:
   - dashboard
 ---
 
 # Memoria
-
-The front door — opened on launch by the [obsidian-homepage](https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins) plugin. Consumer-only: it embeds views and owns no logic, so it can't drift or error. Above the fold: **what needs me?** Below: the detail dashboards, on demand.
 
 > [!info] Status glance
 > ```dataviewjs
@@ -25,26 +23,67 @@ The front door — opened on launch by the [obsidian-homepage](https://eranrosem
 >   const blocked  = latest?.totals?.blocked ?? 0;
 >   const findings = (lint ?? []).filter(e => e.severity === "HIGH" || e.severity === "CRITICAL").length;
 >   const clear    = reviews === 0 && blocked === 0 && findings === 0;
->   const stamp    = latest?.timestamp ? ` · as of ${latest.timestamp.slice(11, 16)} UTC` : "";
->   dv.paragraph(`${clear ? "✅ All clear — " : "⚠ "}${reviews} review(s) pending · ${blocked} blocked · ${findings} HIGH/CRITICAL finding(s)${stamp}`);
+>   dv.paragraph(`${clear ? "✅ " : "⚠ "}${reviews} review(s) pending · ${blocked} blocked · ${findings} HIGH/CRITICAL finding(s) — [[board-state|board]] · [[drift-watch|findings]]`);
 > }
 > ```
 
-## What needs me
+## Act
 
-The Inbox — cards in `proposed` are waiting on your decision; the queue converges to
-empty. Full board: [[board-state|Board State]].
+```button
+name Capture fleeting
+type command
+action QuickAdd: Memoria: capture fleeting
+```
 
-![[inbox.base#Needs me]]
+```button
+name Capture from Zotero
+type command
+action QuickAdd: Memoria: capture from Zotero selection
+```
 
-## Start here
+```button
+name Capture URL
+type command
+action QuickAdd: Memoria: capture source from URL
+```
 
-- [[research-focus|Research focus]] — your current priorities; read and refresh at
-  session start (the Librarian reads it too).
-- **Talk to the co-PI** — open the ACP pane (`Agent Client: Open chat view`). One
-  conversation partner: it questions, explains the system, and delegates tasks to the
-  background lanes for you.
-- **Capture / create** — `Cmd/Ctrl-P → Memoria:` `capture fleeting`
+```button
+name Delegate a task
+type command
+action QuickAdd: Memoria: delegate a task
+```
+
+```button
+name Resolve card
+type command
+action QuickAdd: Memoria: resolve inbox card
+```
+
+```button
+name Talk to co-PI
+type command
+action Agent Client: Open chat view
+```
+
+## Workspaces
+
+```button
+name Desk
+type command
+action QuickAdd: Memoria: workspace Desk
+```
+
+```button
+name Library
+type command
+action QuickAdd: Memoria: workspace Library
+```
+
+```button
+name Studio
+type command
+action QuickAdd: Memoria: workspace Studio
+```
 
 ## Dashboards
 
@@ -66,12 +105,4 @@ empty. Full board: [[board-state|Board State]].
 > - [[eval-trend|Eval Trend]] — quarterly vault-eval capability scores
 > - [[skill-lifecycle|Skill Lifecycle]] — which skills are active in which lane
 
-## Reference
-
-- [[troubleshooting|Troubleshooting]] — verify the system, fall back, recover (the one
-  help note kept in-vault, for when you're offline/broken)
-- Everything else is on the website: [schema / frontmatter](https://eranroseman.github.io/memoria-vault/reference/frontmatter) · [profiles & roles](https://eranroseman.github.io/memoria-vault/explanation/profiles/) · [who-writes-where](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) · [Architecture](https://eranroseman.github.io/memoria-vault/explanation/architecture/) · [Setup](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/)
-
-## Full documentation
-
-→ <https://eranroseman.github.io/memoria-vault/> — tutorials, how-to guides, reference, and architecture explanation.
+[[research-focus|Research focus]] — your current priorities · [[troubleshooting|Troubleshooting]] — verify, fall back, recover

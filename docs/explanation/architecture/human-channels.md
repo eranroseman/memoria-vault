@@ -6,7 +6,7 @@ nav_order: 4
 
 # Interaction channels
 
-Memoria's primary UI is Obsidian — and within it, the **Inbox** is the one place agents speak to the PI: candidate, gap, flag, alert, and work-prompt cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)) feeding Home's "what needs me?" surface. Beyond Obsidian are two secondary channels for reaching the system when it isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
+Memoria's primary UI is Obsidian — and within it, the **Inbox** is the one place agents speak to the PI: candidate, gap, flag, alert, and work-prompt cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)) feeding the Inbox's "Needs me" queue — the Desk workspace's first tab, one click from Home ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)). Beyond Obsidian are two secondary channels for reaching the system when it isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
 
 The organizing principle: **each channel owns one mode.** Using one for another's job produces slow erosion — daily operations done via CLI compound into friction that eventually stops the behavior; push notifications wired for the wrong events train the human to ignore them all.
 
@@ -48,7 +48,7 @@ Every agent and engine finding carries one of four loudness levels, and the leve
 | --- | --- |
 | **Quiet** | logged only; aggregated in the weekly review; no interruption |
 | **Notice** | appears in the relevant dashboard + weekly review; no push |
-| **Alert** | appears in Home's "what needs me" + Daily Health; pushed; does **not** block |
+| **Alert** | appears in the Inbox's "Needs me" queue + Home's status strip; pushed; does **not** block |
 | **Block** | blocks the action (dispatch / promotion) until acknowledged; pushed |
 
 The test for push vs dashboard: *does it change what the PI does in the next 30 minutes?* Only Alert and Block ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.

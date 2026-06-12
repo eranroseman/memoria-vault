@@ -12,7 +12,7 @@ The **Inbox** is the *action queue* — discrete things that need you now (it fe
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance/README.md)             | Home's status glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
+| [Daily glance](daily-glance/README.md)             | Home's status strip (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill lifecycle            | When checking how the agent fleet is performing   |

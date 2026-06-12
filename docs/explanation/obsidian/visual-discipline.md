@@ -32,7 +32,7 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 ## Why three workspaces, not more
 
-The three-workspace design (**Home**, **Library**, and **Project**) maps workspaces to **cognitive modes**, not to projects: Home is the "what needs me?" look, Library is reading and processing, Project is drafting. (Home and Library ship today; the Project workspace arrives with the v0.1.0-alpha.3 Project release.) A fourth workspace is a signal that either a new cognitive mode has been identified — in which case the workspace system needs rethinking — or that a project has been mistaken for a mode. Projects change constantly; cognitive modes are stable. A workspace per project would create as many workspaces as there are active projects, defeating the purpose of workspaces as a *stable navigational layer*.
+The three-workspace design (**Desk**, **Library**, and **Studio** — [ADR-68](../../adr/68-workspaces-desk-library-studio.md)) maps workspaces to **cognitive modes**, not to projects: Desk is the "what needs me?" look, Library is reading and synthesis, Studio is drafting. A fourth workspace is a signal that either a new cognitive mode has been identified — in which case the workspace system needs rethinking — or that a project has been mistaken for a mode. Projects change constantly; cognitive modes are stable. A workspace per project would create as many workspaces as there are active projects, defeating the purpose of workspaces as a *stable navigational layer*.
 
 The full workspace layout (names, hotkeys, what each pane holds) is reference material: [Obsidian workspaces](../../reference/obsidian-workspaces.md).
 

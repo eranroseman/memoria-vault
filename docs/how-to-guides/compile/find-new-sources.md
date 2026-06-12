@@ -31,7 +31,7 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 
 **3. Judge the candidates as one batch.**
 
-**`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Read `argument_against` first — it's the information-bearing field. Then, in one sitting:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, the Desk workspace's first left tab), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Read `argument_against` first — it's the information-bearing field. Then, in one sitting:
 
 - **Keep:** resolve the card to `current` — the paper enters the Tutorial 03 flow (Catalog entity, reading queue, source note).
 - **Skip:** resolve straight to `archived`. Skipping generously offered candidates is the system working, not failing.

@@ -19,7 +19,7 @@ The picker offers exactly one agent: the **co-PI** (`memoria-copi`) — the only
 
 ## Opening the pane
 
-`Cmd/Ctrl+P` → **Agent Client: Open chat view**, or click the Hermes icon in the left ribbon. The pane keeps its session across workspace switches ([Workspaces](use-workspaces.md)).
+The pane is pinned in the right sidebar of every shipped workspace — Desk, Library, and Studio ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) — so loading any layout brings the co-PI with it, and it keeps its session across workspace switches ([Workspaces](use-workspaces.md)). To open it manually: `Cmd/Ctrl+P` → **Agent Client: Open chat view**, the **Talk to co-PI** button on `home.md`, or the Hermes icon in the left ribbon.
 
 ## Attaching a note as context
 
