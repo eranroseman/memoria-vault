@@ -90,6 +90,18 @@ def test_lane_scripts_match_lane_profile_and_skills():
         f"lane scripts cover {sorted(seen_lanes)}, expected every non-code lane")
 
 
+def test_zotero_capture_writes_intake_log_where_readers_look():
+    """capture-from-zotero.js must append its durability anchor to the same
+    capture-intake.jsonl path the readers use (ingest_mcp INTAKE_LOG and the
+    reconcile sweep) — a stale path silently drops the anchor (#427)."""
+    ingest = (SRC / ".memoria" / "mcp" / "ingest_mcp.py").read_text(encoding="utf-8")
+    intake_log = re.search(r'INTAKE_LOG\s*=\s*"([^"]+)"', ingest).group(1)
+    script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
+    log = _const(script, "LOG")
+    assert log == intake_log, (
+        f"capture-from-zotero.js writes {log!r} but ingest_mcp.py reads {intake_log!r}")
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]

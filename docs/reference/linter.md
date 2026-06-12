@@ -20,6 +20,10 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed note outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` after an hour — the reversibility chain has a hole and the write's after-state can no longer be pinned. |
+| `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
+| `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `src/` ships no empty dirs. |
+| `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
+| `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
 | `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |
@@ -48,6 +52,8 @@ The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md) D50): t
 
 [src/.memoria/engines/linter/golden.py](../../src/.memoria/engines/linter/golden.py) turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
+This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
+
 | Command | Effect |
 | --- | --- |
 | `golden.py --vault V stage` | Stage/refresh the golden copy from the live system files (installer runs this). |
@@ -55,11 +61,23 @@ The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md) D50): t
 | `golden.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
 | `golden.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
 
+The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` snippet. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
+
+---
+
+## Per-session digests
+
+[src/.memoria/engines/linter/session_summary.py](../../src/.memoria/engines/linter/session_summary.py) writes the second of [ADR-25](../adr/25-session-logging-two-logs.md)'s two logs: a **deterministic digest** of each session's audit activity (the Linter is zero-LLM — no narrative). It groups `audit.jsonl` entries by `task_id` and writes one `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` per finished session (named from the session's first timestamp; a deterministic `-2` suffix disambiguates a shared start minute): a header record (task, profiles, start/end, counts by action and decision) plus one record per touched path (actions, final decision, final `after_hash`). Idempotent — an already-digested `task_id` is never rewritten — and sessions active within the last **24 h** (`--quiet-hours`) are left for a later run so in-flight work isn't summarized early.
+
+```bash
+python3 .memoria/engines/linter/session_summary.py --vault <vault> [--quiet-hours H]
+```
+
 ---
 
 ## The daily cron
 
-The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors and `golden.py check` over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
+The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden.py check`, and the per-session digests over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
 
 ---
 

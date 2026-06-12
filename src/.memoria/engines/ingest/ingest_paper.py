@@ -196,7 +196,10 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "updated": now,
         "enriched_date": "",
         "schema_version": SCHEMA_VERSION,
-        "_proposed_classification": {"research_area": [], "methodology": []},
+        # `projects` is filled by the deterministic ADR-15 hint overlap when
+        # .memoria/project-hints.yaml exists; the other two are LLM hole #1.
+        "_proposed_classification": {"research_area": [], "methodology": [],
+                                     "projects": []},
     }
     body_lines = [f"# {fm['title'] or citekey}", ""]
     if fm["venue"]:

@@ -5,7 +5,7 @@ parent: Reference
 
 # Dashboards
 
-The ten dashboards shipped in `system/dashboards/` ([src/system/dashboards/](../../src/system/dashboards)) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
+The eleven dashboards shipped in `system/dashboards/` ([src/system/dashboards/](../../src/system/dashboards)) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
 
 Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
@@ -25,6 +25,7 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
 | Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |
 | Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
+| Agent-ops | Skill lifecycle | `skill-lifecycle.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
 ---
 

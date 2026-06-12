@@ -70,7 +70,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 ## Part D — Complete (card → done, no review)
 
-**D1.** The card advances `running → done`. *(A per-session narrative summary in `system/logs/sessions/` is deferred — not written in 0.1.0-alpha.1; see [ADR-25](../../adr/25-session-logging-two-logs.md).)*
+**D1.** The card advances `running → done`. *(The per-session digest in `system/logs/sessions/` lands later — the Linter's daily cron digests a session after a 24 h quiet window; see [ADR-25](../../adr/25-session-logging-two-logs.md).)*
 - ✓ Pass: `hermes kanban list --json` shows the card `done`; **no** review step was required (logs zone is not review-gated); `board-transitions.jsonl` records the `running → done` move once `board_export` ticks.
 - ✗ If it fails: card stuck `running` → the agent didn't signal completion (orchestration gap). Card asks for review → a mis-scoped write zone leaked into a gated path.
 

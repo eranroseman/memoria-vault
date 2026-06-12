@@ -48,7 +48,7 @@ l0() {
   run bash scripts/check-vault-links.sh
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P/engines/lib/schema.py" "$P/engines/lib/inbox.py" "$P/engines/linter/detectors.py" "$P/engines/linter/golden.py" "$P/engines/linter/precommit_check.py" "$P"/engines/ingest/*.py "$P"/engines/sweeps/*.py
+  run python3 -m py_compile "$P"/mcp/*.py "$P/engines/lib/schema.py" "$P/engines/lib/inbox.py" "$P/engines/linter/detectors.py" "$P/engines/linter/golden.py" "$P/engines/linter/session_summary.py" "$P/engines/linter/precommit_check.py" "$P"/engines/ingest/*.py "$P"/engines/sweeps/*.py
   run bash -n scripts/install.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh src/.memoria/engines/linter/pre-commit "$P"/scripts/*.sh
