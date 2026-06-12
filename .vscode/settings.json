@@ -33,9 +33,17 @@
       "tables": false
     }
   },
+  "harper.diagnosticSeverity": "hint",
   "harper.linters.SpellCheck": false,
   "harper.linters.UseTitleCase": false,
   "harper.linters.SplitWords": false,
+  "harper.linters.RoadMap": false,
+  "harper.linters.AnA": false,
+  "harper.linters.ToTwoToo": false,
+  "harper.linters.There": false,
+  "harper.linters.PronounKnew": false,
+  "harper.linters.PronounVerbAgreement": false,
+  "harper.linters.OkToOkay": false,
   "harper.excludePatterns": ["**/*.py", "**/*.yml", "**/*.yaml", "**/*.sh"],
   "[markdown]": {
     "editor.formatOnSave": false,
