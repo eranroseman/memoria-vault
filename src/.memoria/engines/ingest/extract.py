@@ -64,12 +64,15 @@ def _get(url: str, timeout: int = 25) -> str | None:
         return None
 
 
-def from_pmc(pmcid: str, email: str = "") -> str | None:
+def from_pmc(pmcid: str, email: str = "", api_key: str = "") -> str | None:
     """PMCID -> JATS XML -> body text (open-access subset only)."""
     pid = pmcid.upper().replace("PMC", "")
     if not pid.isdigit():
         return None
-    q = urllib.parse.urlencode({"db": "pmc", "id": pid, "rettype": "xml", "email": email})
+    params = {"db": "pmc", "id": pid, "rettype": "xml", "email": email}
+    if api_key:   # NCBI key raises the E-utilities limit from 3 to 10 req/s
+        params["api_key"] = api_key
+    q = urllib.parse.urlencode(params)
     xml = _get(f"{PMC_EFETCH}?{q}")
     if not xml:
         return None
@@ -132,11 +135,11 @@ def from_pdf(path: Path) -> tuple[str | None, str]:
     return None, f"pdf-error:rc{proc.returncode}"
 
 
-def extract(ids: dict, pdf_path: str | None = None, email: str = "") -> dict:
+def extract(ids: dict, pdf_path: str | None = None, email: str = "", api_key: str = "") -> dict:
     """Try the tiers in order; return the first usable extract + provenance."""
     # 1. PMC (pre-extracted)
     if ids.get("pmcid"):
-        t = from_pmc(ids["pmcid"], email)
+        t = from_pmc(ids["pmcid"], email, api_key)
         if t:
             c = coherence(t, pages=max(1, len(t) // 3000))
             if c["ok"]:
@@ -160,8 +163,9 @@ def main() -> int:
     ap.add_argument("--pmcid", default="")
     ap.add_argument("--pdf")
     ap.add_argument("--email", default="")
+    ap.add_argument("--api-key", default="", help="NCBI E-utilities key (10 req/s vs 3)")
     a = ap.parse_args()
-    r = extract({"pmcid": a.pmcid}, a.pdf, a.email)
+    r = extract({"pmcid": a.pmcid}, a.pdf, a.email, a.api_key)
     r_preview = {**r, "text": (r["text"][:300] + "...") if len(r.get("text", "")) > 300 else r.get("text", "")}
     print(json.dumps(r_preview, ensure_ascii=False, indent=2))
     return 0

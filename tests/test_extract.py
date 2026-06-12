@@ -1,5 +1,6 @@
 """L1 component test for extract — extracted from its former --self-test (ADR-44)."""
 import extract as _m
+
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -33,3 +34,22 @@ def test_extract():
         print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: extract.py self-test")
         return 1 if bad else 0
     assert _run() == 0
+
+
+def test_pmc_api_key_param():
+    """NCBI api_key is sent iff provided (10 req/s vs 3 — E-utilities keying)."""
+    captured = {}
+
+    def _fake_get(url, *a, **k):
+        captured["url"] = url
+        return None
+
+    orig = _m._get
+    _m._get = _fake_get
+    try:
+        _m.from_pmc("PMC123", email="a@b.c", api_key="K")
+        assert "api_key=K" in captured["url"]
+        _m.from_pmc("PMC123", email="a@b.c")
+        assert "api_key" not in captured["url"]
+    finally:
+        _m._get = orig

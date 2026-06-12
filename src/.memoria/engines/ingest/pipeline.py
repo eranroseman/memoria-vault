@@ -188,7 +188,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     # extract (full text) — use the enrichment-resolved PMCID/PMID when the bib lacked them
     ex_ids = {**ids, "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
               "pmid": ids.get("pmid") or m.get("pmid", "")}
-    ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"))
+    ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"), _env("NCBI_API_KEY"))
     # carry the text so the caller can persist it (the extract store is outside the agent's
     # write lane, so the ingest tool writes the extract file, not the worker)
     bundle["extract"] = {"source": ex["source"], "chars": ex["chars"],

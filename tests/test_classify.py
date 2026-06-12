@@ -44,7 +44,7 @@ def _run_pipeline(monkeypatch, vault, merged):
         "citekey": ck, "ids": {}, "merged": merged,
         "parts": {"s2": {"found": True}, "openalex": {"found": True},
                   "crossref": {"found": False}}})
-    monkeypatch.setattr(pipeline.extract, "extract", lambda ids, pdf, email: {
+    monkeypatch.setattr(pipeline.extract, "extract", lambda ids, pdf, email, api_key="": {
         "source": "none", "chars": 0, "degraded": True, "text": ""})
     return pipeline.run("x2024Test", BIB, vault, enrich=True)
 
