@@ -96,16 +96,9 @@ Re-run the sync periodically (or after ingesting a batch) to keep the tags curre
 
 ## API keys for enrichment (optional but recommended)
 
-Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited:
+Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited. Register a free key for each service now; you'll add them to the Librarian's `.env` in [Set up Hermes](../setup/set-up-hermes.md).
 
-| Service | Where to register | Rate without key | Rate with free key |
-| --- | --- | --- | --- |
-| OpenAlex | openalex.org/settings/api | Fails (required since Feb 2026) | 10 req/sec |
-| Semantic Scholar | semanticscholar.org/product/api | 1 req/sec | 10 req/sec |
-| PubMed | ncbi.nlm.nih.gov/account/ | 3 req/sec | 10 req/sec |
-| GitHub | github.com/settings/tokens (`public_repo` scope) | 60 req/hr | 5,000 req/hr |
-
-Register these now; you'll add them to the Librarian's `.env` in [Set up Hermes](../setup/set-up-hermes.md).
+For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 
 ## Related
 

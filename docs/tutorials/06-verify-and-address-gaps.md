@@ -39,9 +39,7 @@ A `clean` flag closes nothing by itself and an `issues-found` flag changes nothi
 
 Set each handled flag to `lifecycle: archived`. The Inbox converges to empty.
 
----
-
-> **The check you never run — the retraction sweep:** one verification runs without you asking. The installer wires a cron that refreshes the Retraction Watch dataset monthly and sweeps your Catalog DOIs against it (plus Crossref and Open Retractions); a hit raises a finding-first **`alert`** card in the Inbox ([Ingest routing](../reference/ingest.md)). Flag-don't-fix applies here too — the sweep never flips a note; you decide what a retraction means for the claims that cite it. Nothing to do but know it's running, so you're never the last to learn a source you cite was retracted.
+(One verification runs without you asking: a monthly cron sweeps your Catalog DOIs for retractions and raises an `alert` card on a hit — [Ingest routing](../reference/ingest.md).)
 
 ---
 
@@ -51,7 +49,7 @@ Now return to the **`gap` cards** — from Tutorial 05's map task, or raised by 
 
 > "That gap on `<sub-topic>` is real — find sources to fill it."
 
-The co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, the next map or verify pass finds the next gap. This is **the compounding loop**: mapping finds holes → discovery fills them → verification keeps the filling honest. Each turn makes the next one better targeted — the system gets more useful as the corpus grows, not noisier.
+The co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next map or verify pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
 
 Skip the gaps you don't buy — archive them with a clear conscience. The honesty body exists so you can disagree.
 

@@ -44,7 +44,7 @@ projects:
 
 **3. Draw `primary_topics` from the topic signals papers actually carry.**
 
-At classify time the ingest engine scores each project's `primary_topics` against the paper's **enrichment topic signals** — the OpenAlex topic names and subfields already in the merged payload — by **simple overlap**. Matching is forgiving about form but not about words: both sides are normalized to kebab-case (`mHealth Apps` → `mhealth-apps`), and a hint matches a signal when it is equal to it or all of its tokens appear in it (`mhealth` matches `mhealth-apps`; `jitai` does **not** match `just-in-time-adaptive-interventions`). So prefer terms that appear verbatim in the OpenAlex topics your papers resolve to — a `primary_topics` entry that never shows up in those signals contributes nothing. Every project with at least one overlapping hint topic is proposed, ranked by overlap count. Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
+Prefer terms that appear verbatim in the OpenAlex topics your papers resolve to (use `mhealth`, not `just-in-time-adaptive-interventions`) — at classify time hints are matched against those signals by simple overlap, so a term that never shows up in them contributes nothing ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)). Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
 
 **4. Keep it a hint, not a matrix.**
 

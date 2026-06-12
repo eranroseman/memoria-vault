@@ -55,11 +55,7 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 
 ## The co-PI delegation path
 
-When you don't already know the lane — or the work spans several tasks — the conversational path is:
-
-1. Open the Agent Client pane (the co-PI; the active note auto-attaches).
-2. Say what you want ("verify this draft", "scope a project on X").
-3. The co-PI calls `delegate_route_task` — the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox.
+For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the co-PI, with the active note auto-attached): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
 
 ---
 

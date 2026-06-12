@@ -80,15 +80,7 @@ The dry-run output should show paths inside `my-second-vault/`, not your primary
 
 ## What collides when two vaults run at once
 
-The steps above isolate the three resources two vaults would otherwise contend for; this is what each fix protects against. (For why coexistence works this way, see the [Distribution model](../../explanation/deployment/distribution-model.md).)
-
-| Resource | What collides if shared | Isolation |
-|---|---|---|
-| **Obsidian REST API port** | Both Local REST API plugins bind the same insecure HTTP port; the second to start can't bind, so its `OBSIDIAN_MCP_PORT` serves nothing (or points Hermes at the wrong vault). | A distinct `insecurePort` per vault (step 5), with each vault's profiles' `OBSIDIAN_MCP_PORT` matching. |
-| **Hermes profiles** | Profiles substitute one `VAULT_PATH` at install; a shared `HERMES_HOME` points `memoria-*` at whichever vault was installed last, so the other vault's agents read and write the wrong tree. | Unique aliases (`project2-*`, step 2) **or** a separate `HERMES_HOME` per vault (the isolation tip in step 5). |
-| **Kanban queue** | The board/queue (`hermes kanban`) is Hermes runtime state under `HERMES_HOME`, **not** a file in the vault — so a shared `HERMES_HOME` is one shared queue: cards from both vaults intermix and cron fires against the wrong vault. | A separate `HERMES_HOME` per vault gives each its own independent queue. |
-
-For full isolation, use a distinct REST port **and** a separate `HERMES_HOME` per vault.
+The steps above isolate the three resources two vaults would otherwise contend for — the Obsidian REST API port (step 5), the Hermes profiles (step 2 aliases or a separate `HERMES_HOME`), and the Kanban queue (a separate `HERMES_HOME`). For what each fix protects against and why coexistence works this way, see [Distribution model → Running more than one vault](../../explanation/deployment/distribution-model.md#running-more-than-one-vault).
 
 ## Related
 

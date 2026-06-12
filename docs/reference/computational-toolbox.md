@@ -126,7 +126,7 @@ Training characteristics:
 
 **For:** ordering the triage queue by predicted keep-worthiness, trained on the human's own past keep/discard decisions.
 
-**Proposed use:** tournament ranking for triage — the reproducible, auditable alternative to LLM pairwise ranking.
+**Proposed use:** tournament ranking for triage, an alternative to LLM pairwise ranking.
 
 **Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-focus.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
 

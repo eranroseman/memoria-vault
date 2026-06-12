@@ -9,29 +9,17 @@ parent: Tutorials
 
 **Time:** 30–45 minutes (includes reading the paper or its abstract).
 
-**You will use:** the Obsidian command palette, the Inbox, and optionally Zotero.
+**You will use:** the Obsidian command palette and the Inbox.
 
 **Prerequisite:** [Tutorial 02: Your first note](02-your-first-note.md) complete.
 
 ---
 
-## Step 0 — Set up Zotero (optional, but recommended)
-
-Zotero is Memoria's recommended bibliographic backbone — stable citekeys and a `.bib` file the ingest engine reads. You can skip this and capture from a URL instead (Step 1); come back when you adopt Zotero.
-
-1. Install [Zotero](https://www.zotero.org/) and the [Better BibTeX](https://retorque.re/zotero-better-bibtex/) add-on.
-2. **Citekeys are pinned automatically** by Better BibTeX — a generated key never regenerates, so vault wikilinks stay stable with no manual step.
-3. Export your library to the vault: right-click the library → **Export Library** → format **Better BibLaTeX** → check **Keep updated** → save to `<your-vault>/.memoria/memoria.bib`.
-
-That's the whole integration: Better BibTeX keeps `memoria.bib` current, and Memoria reads it. Details and connector options: [Zotero plugins](../reference/zotero-plugins.md) and [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md).
-
----
-
 ## Step 1 — Capture the paper
 
-Pick a paper you actually want to read. Select the item in Zotero, then in Obsidian press `Cmd/Ctrl+P` → **Memoria: capture from Zotero selection**. That puts a capture card on the Librarian's `catalog` lane.
+Pick a paper you actually want to read, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl+P` → **Memoria: capture source from URL** → paste the URL (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey). That puts a capture card on the Librarian's `catalog` lane.
 
-> **No Zotero item?** **Memoria: capture source from URL** ingests from a paper's URL instead (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey), and telling the co-PI "bring in this paper: `<DOI>`" delegates the same card. See [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
+> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route, and telling the co-PI "bring in this paper: `<DOI>`", feeds the same `catalog` lane. See [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
 
 ---
 

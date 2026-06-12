@@ -13,7 +13,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
-> **Honest scoping:** the full project workflow (`projects/` folders, briefs, outlines) ships with **v0.1.0-alpha.3**; this tutorial teaches what exists today and matters most anyway — claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
+This tutorial builds your durable synthesis layer — claims and hubs — plus the `map` lane that tells you whether the corpus is ready to write from. (A preview of what's coming next is at the end.)
 
 ---
 
@@ -71,15 +71,13 @@ Read the coverage view and decide: is any cluster dense enough to write from (a 
 
 ---
 
-> **What's next when alpha.3 lands:** the path from here continues inside `projects/` — a **brief** (what you're writing and for whom), a **relevance scan** (the map lane scoping your corpus against it), a **canvas** for argument-mapping the claims you just wrote, and **outlines** drafted by the Writer. Nothing you did here is throwaway — claims and hubs are exactly the inputs that workflow consumes. Until then, draft in any editor you like, from your hub.
-
----
-
 ## What you have
 
 - 2–3 claim notes in `notes/claims/` — falsifiable, sourced, `maturity: seedling`
 - A hub in `notes/hubs/` gathering the cluster
 - A corpus/coverage read from the `map` lane, and gap cards marking the thin spots
+
+> **Coming in v0.1.0-alpha.3:** the project workflow inside `projects/` — a brief, a relevance scan, a canvas for argument-mapping, and outlines drafted by the Writer. The claims and hubs you just built are exactly its inputs; until then, draft from your hub in any editor.
 
 ---
 

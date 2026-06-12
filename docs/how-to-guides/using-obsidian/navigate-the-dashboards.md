@@ -89,24 +89,6 @@ The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks thro
 
 More than five items is a cleanup signal.
 
----
-
-## Quick reference
-
-| Dashboard | When to open | Where |
-| --- | --- | --- |
-| Homepage glance | Start of session | Home workspace |
-| Board State | Check for stuck cards | Home workspace, right pane |
-| Reading Pipeline | Classify backlog | Library workspace, left pane |
-| Discuss Queue | Reading session | Library workspace, left pane |
-| Open Questions | Weekly review / new topic | Manual |
-| Contradictions | Before evergreen or a draft | Manual |
-| Drift Watch | When something seems off | Manual |
-| Loose Ends | Weekly review or lint pass | Manual |
-| Weekly Review | Fridays | Manual |
-| Audit Log | After unexpected write failure | Manual |
-| Fleet Health | Monthly check | Manual |
-
 ## Related
 
 - Weekly review procedure: [Run the weekly review](../curate/run-the-weekly-review.md)
