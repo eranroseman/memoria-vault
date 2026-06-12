@@ -26,7 +26,7 @@ def test_ingest_mcp():
 
         checks = [
             ("scripts dir importable", SCRIPTS_DIR.is_dir()),
-            ("pipeline runs Tier-0", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
+            ("pipeline runs Tier-0", b["lifecycle"] == "current" and b["ingest_status"] == "tier0"),
             ("bundle declares the two holes", b["holes"] == ["_proposed_classification", "brief"]),
             ("identity assembled", b["frontmatter"]["title"] == "A Test"),
             ("intake anchor appended once + idempotent", anchor_ok),

@@ -12,8 +12,8 @@ Two distinct backstops, distinct sources:
 
   (a) reconcile  — reconcile capture-intake.jsonl against created notes; re-drive
                    any capture whose Tier-0 stub never landed (a failed first write).
-  (b) retry      — scan the vault for `captured` notes still at `ingest_status:
-                   tier0` (Tier-1 never completed) and re-drive their enrichment.
+  (b) retry      — scan the vault for notes still at `ingest_status: tier0`
+                   (Tier-1 never completed) and re-drive their enrichment.
 
 A third pass rides the same cron but is NOT a re-ingest detector:
 
@@ -86,7 +86,11 @@ def note_for(citekey: str, vault: Path) -> Path | None:
 
 
 def scan_captured(vault: Path) -> list:
-    """Notes still parked at the Tier-0 floor: lifecycle==captured & ingest_status==tier0."""
+    """Notes still parked at the Tier-0 floor: ingest_status==tier0 (Tier-1 never completed).
+
+    The entity itself is ``lifecycle: current`` from creation (ADR-50); ``ingest_status``
+    is the tier discriminator, so the retry sweep keys on it alone.
+    """
     out = []
     for folder in SOURCE_FOLDERS:
         d = vault / folder
@@ -94,7 +98,7 @@ def scan_captured(vault: Path) -> list:
             continue
         for md in sorted(d.glob("*.md")):
             fm = read_frontmatter(md)
-            if fm.get("lifecycle") == "captured" and fm.get("ingest_status") == "tier0":
+            if fm.get("ingest_status") == "tier0":
                 out.append({"citekey": fm.get("citekey") or md.stem, "path": str(md)})
     return out
 

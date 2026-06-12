@@ -13,7 +13,7 @@ def test_pipeline():
         b = run("x2024Test", fixture, enrich=False)
         fm = b["frontmatter"]
         checks = [
-            ("tier0 captured", b["lifecycle"] == "captured" and b["ingest_status"] == "tier0"),
+            ("tier0 floor", b["lifecycle"] == "current" and b["ingest_status"] == "tier0"),
             ("routes to paper", b["note_type"] == "paper"),
             ("two holes declared", b["holes"] == ["_proposed_classification", "brief"]),
             ("frontmatter has identity", fm["title"] == "A Test" and fm["doi"] == "10.1/x"),

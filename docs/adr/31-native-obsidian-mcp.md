@@ -45,7 +45,7 @@ The native server exposes 16 tools with **different names** (`vault_write`/`appe
 
 - **Sandbox + production coexist** on different ports; the uvx dependency is gone.
 - **Validated live:** read + a full ingest end-to-end through the native MCP (note written via `vault_write`/`append`, gated); `policy_hook --self-test` covers native tool names + the hard-denies.
-- **Setup cost:** enable the plugin's HTTP server on `OBSIDIAN_MCP_PORT` (a documented step). **All seven profiles** are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
+- **Setup cost:** enable the plugin's HTTP server on `OBSIDIAN_MCP_PORT` (a documented step). **All profiles** *(v0.1.0-alpha.2: the fleet is the five profiles of [ADR-48](48-copi-and-agent-consolidation.md); originally seven)* are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
 - **Residual:** loopback HTTP is unencrypted; the self-signed-HTTPS path reopens once Hermes supports CA/insecure URL MCP.
 
 - **Related:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate this preserves).

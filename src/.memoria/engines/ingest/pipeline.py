@@ -95,7 +95,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
         fm["pdf_uri"] = f"zotero://open-pdf/library/items/{zkey}"
     bundle = {
         "citekey": citekey, "note_type": note["note_type"], "path": note["path"],
-        "lifecycle": "captured", "ingest_status": "tier0",
+        "lifecycle": "current", "ingest_status": "tier0",
         "frontmatter": fm, "body_abstract": "", "extract": None, "link_plan": None,
         "holes": ["_proposed_classification", "brief"],
         "provenance": {}, "degraded": [],
@@ -132,8 +132,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
             fm[fld] = m[mkey]
     fm["enriched_date"] = date.today().isoformat()
     fm["ingest_status"] = "enriched"
-    bundle["ingest_status"] = "enriched"
-    bundle["lifecycle"] = "captured"   # still captured until classify (LLM #1) lands -> proposed
+    bundle["ingest_status"] = "enriched"   # tier moves tier0 -> enriched; lifecycle stays current (ADR-50)
 
     # D51 / ADR-56: below the calibration floor, cross-source identity disagreement
     # becomes a near-tie flag instead of a silent best-source-wins merge. The bundle

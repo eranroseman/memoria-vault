@@ -13,21 +13,23 @@ nav_order: 1
 
 Humans are excellent at recognizing what matters and forming original arguments. They are poor at consistently updating summaries, patching broken links, filing useful answers, and running structural health checks. Those tasks are mechanical, repetitive, and easy to defer — and because they're deferred, knowledge bases stagnate. Notes pile up without synthesis; citations go unverified; gaps go unnoticed.
 
-The AI agent is suited for exactly those bookkeeping tasks. Memoria's design follows from this: make the agent narrower and more reliable, and let the human do the irreducibly judgment-laden work. This is not a claim about agent capability — it's a claim about which tasks should be delegated.
+The AI agent is suited for exactly those bookkeeping tasks. Memoria's design follows from this: make the agent narrower and more reliable, and let the human do the irreducibly judgment-laden work. This is not a claim about agent capability — it's a claim about which tasks should be delegated. **Memoria gives the bookkeeping to the agent and keeps judgment human.**
 
 ---
 
 ## What Memoria is
 
-Memoria is a **bounded, stage-gated knowledge production system** for a single researcher. Specifically:
+Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking and writing** — a durable research vault that compounds across months and years.
 
-**Bounded** means it operates within explicit limits on autonomy. The agent does not decide what is worth keeping; the human does. The agent does not promote claims to canonical knowledge; the human reviews and approves first. These limits are structural — enforced by the system's architecture, not by prompt instructions.
+**Personal** — thinking is private and separate from communication; notes stay unfiltered, preserving raw reasoning before audience-aware editing sanitizes it. The design assumes one human who owns judgment: review decisions, synthesis choices, and scope priorities all belong to that researcher. This is not a team tool.
 
-**Stage-gated** means work passes through defined stages with explicit outputs at each boundary. A source doesn't become a claim until it's been classified, discussed, and synthesized. A draft doesn't become a deliverable until it's been verified and approved. Each stage has a clear entry condition and a clear exit condition.
+**Opinionated** — it enforces specific workflows and eliminates setup paralysis. The vault structure, the note types, and the review gates are not configurable surfaces to tune; they are the design.
 
-**Knowledge production** means the system is designed to *produce* knowledge, not just store it. The vault grows more useful over time: new sources connect to existing claims, synthesis sharpens as more evidence accumulates, and structural maintenance keeps the graph coherent. This is the difference between a research vault and a notes pile.
+**Phase-gated** — work passes through defined phases with explicit outputs, and nothing becomes a claim or deliverable without human review. A source doesn't become a claim until it's been classified, discussed, and synthesized; a draft doesn't become a deliverable until it's been verified and approved. Each phase has a clear entry condition and a clear exit condition.
 
-**Single researcher** means the design assumes one human who owns judgment. Review decisions, synthesis choices, and scope priorities all belong to that human. This is not a team tool.
+**Bounded** — agent autonomy is structurally constrained. The agent does not decide what is worth keeping and does not promote claims to canonical knowledge; the PI decides what is worth keeping and what becomes canonical. These limits are structural — enforced by the system's architecture, not by prompt instructions.
+
+It is **knowledge production**, not just storage: the vault grows more useful over time as new sources connect to existing claims, synthesis sharpens as evidence accumulates, and structural maintenance keeps the graph coherent. That is the difference between a research vault and a notes pile.
 
 ---
 

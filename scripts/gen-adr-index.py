@@ -46,9 +46,14 @@ def parse_adr(text: str) -> dict[str, object]:
         elif key == "title":
             out["title"] = val.strip('"').strip("'")
         elif key == "status":
-            out["status"] = val
+            # drop any trailing YAML inline comment (e.g. "deferred  # NOT folded …")
+            out["status"] = val.split("#", 1)[0].strip()
         elif key == "superseded_by":
-            out["superseded_by"] = [int(n) for n in re.findall(r"\d+", val)]
+            # parse only the IDs inside the [...] list — never digits in a trailing
+            # "# … (D18) …" comment, which would invent phantom supersessors
+            bracket = re.search(r"\[([^\]]*)\]", val)
+            ids = bracket.group(1) if bracket else val.split("#", 1)[0]
+            out["superseded_by"] = [int(n) for n in re.findall(r"\d+", ids)]
     return out
 
 

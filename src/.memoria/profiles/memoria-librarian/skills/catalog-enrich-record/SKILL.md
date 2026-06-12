@@ -72,7 +72,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
    (Set `enrich=false` for `--skip-enrichment`; pass `pdf_path="<path>"` if you
    hold the local Zotero PDF.) It returns a JSON **bundle**: the assembled
-   `frontmatter` (`lifecycle: captured`, identity, merged metadata,
+   `frontmatter` (`lifecycle: current`, `ingest_status: tier0`, identity, merged metadata,
    `_enrichment`), the `extract` status, the `link_plan` (entities + cites),
    `provenance`, and `holes: ["_proposed_classification", "brief"]`. The tool
    **reads + computes only — it writes nothing** — and never aborts the ingest: a
@@ -80,8 +80,9 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    fail. If the bundle has an `error` key (`citekey-not-found` / `bib-not-found`),
    stop and surface it.
 
-2. **Fill hole 1 — the classification proposal** (the only step that promotes
-   `captured → proposed`). From the abstract / `_enrichment.tldr` / extract,
+2. **Fill hole 1 — the classification proposal** (audited metadata only — the
+   entity stays `lifecycle: current`; the human promotes the proposal at classify).
+   From the abstract / `_enrichment.tldr` / extract,
    populate `_proposed_classification` (`research_area`, `methodology`).
    Values **must come from `system/vocabulary.md`** — prefer a defined term;
    only when nothing fits, propose a new term and flag it (`provisional: true`)

@@ -64,7 +64,7 @@ The synthesis gate remains structurally untouched. The policy MCP's review-gated
 
 ## What this implies in practice
 
-The design produces a bounded, stage-gated, human-in-the-loop operating cadence:
+The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
 - Agents propose, classify, draft, and verify — but do not canonize.
 - Scheduled and overnight operations write to `inbox/` only. Promotion is always synchronous with human attention.

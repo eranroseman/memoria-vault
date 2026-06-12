@@ -82,8 +82,8 @@ appendix), not v0.1 scope.
 **Operability bar (what "shippable" means).** The bundle above is what *installs*;
 it is not what makes v0.1 *usable*. v0.1 is shippable when **one agent workflow runs
 end-to-end — through a real trigger, gated, audited, queued for human review — on the
-hand-usable vault scaffold.** Not seven polished agents; one *operable, verified loop*
-plus the scaffold underneath it. The seven profiles are *configured*; one workflow must
+hand-usable vault scaffold.** Not five polished agents; one *operable, verified loop*
+plus the scaffold underneath it. The five profiles are *configured*; one workflow must
 be *operable*. See the [release readiness review](release-readiness-review-2026-06-03.md)
 for the bar and its dependency-ordered critical path.
 

@@ -16,6 +16,8 @@ nav_order: 32
 
 ## Context
 
+> *Note (v0.1.0-alpha.2): the profile names below predate [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the seven specialists to five — Mapper → Librarian (`map` lane), Socratic → co-PI, Verifier → Peer-reviewer, Coder → Engineer, Linter → an engine. The MCP-only decision (no direct `web`/`terminal`; deterministic tools self-hosted) is unchanged and applies to the current fleet.*
+
 A fleet-wide audit of the seven profiles found the capability surface inconsistent. Some profiles ran deterministic engines as loose scripts via the `terminal` toolset (the Linter's `detectors.py`); some made scholarly-API calls directly via the `web` toolset (the Librarian's `paper-lookup`/`enrich`, the Verifier's retraction lookups); capabilities were a mix of authored skills, K-Dense web-fetch skills, and raw HTTP. This matters because the policy gate ([ADR-28](28-write-gate-as-plugin.md)) and Hermes' determinism guarantees only apply to **MCP tools** (`mcp_<server>_<tool>`): a call made through `web` or `terminal` is neither gated nor audited, and when the *model* constructs an HTTP call or runs a check each turn, the result is no longer deterministic or reproducible in CI. The audit also surfaced a stale claim — that the Librarian wrote back to Zotero — when Memoria uses Zotero's read-only local API, so the "direct API access is required" assumption was partly false.
 
 ## Decision

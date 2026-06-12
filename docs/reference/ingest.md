@@ -96,7 +96,7 @@ Deterministic, read-only retraction-by-DOI from three sources, most authoritativ
 
 | Field | Value |
 | --- | --- |
-| `type` / `lifecycle` | `paper` / per the universal chain — `proposed` until the PI classifies. |
+| `type` / `lifecycle` | `paper` / `current` from creation — Catalog facts don't queue; the pending classification lives in `_proposed_classification` + an Inbox card, not in the lifecycle. |
 | `citekey`, `title`, `doi`, `authors`, `year`, `venue`, `url` | From the merged record, with per-field provenance. |
 | `relationships` | The given edges from the link plan. |
 | `research_area`, `methodology` | Applied by the automated classify stage when the decision is clear; left unset (plus one Inbox flag) on genuine ambiguity. |

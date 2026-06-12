@@ -43,7 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 bash install.sh --no-apps --vault ~/Memoria
 ```
 
-`--no-apps` skips the Obsidian guidance. The installer provisions Hermes (+ the ACP extra and the `qmd` hub skill), scaffolds and populates the runtime vault, deploys the five profiles, and wires the four maintenance crons (`memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`).
+`--no-apps` skips the Obsidian guidance. The installer provisions Hermes (+ the ACP extra and the `qmd` hub skill), scaffolds and populates the runtime vault, deploys the five profiles, and wires the five maintenance crons (`memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`, `memoria-eval`) plus the monthly Retraction Watch refresh wrapper.
 
 **4. Configure the VPS profiles — remove the Obsidian MCP server.**
 
@@ -105,7 +105,7 @@ ssh user@your-vps-ip hermes -p memoria-copi acp
 ```bash
 # on VPS
 hermes profile list                 # five memoria-* profiles
-hermes cron list                    # the four crons with next-run times
+hermes cron list                    # the five crons with next-run times
 hermes -p memoria-copi chat         # ask: "explain how this vault is organized"
 cd ~/Memoria && qmd embed           # build the search index
 ```
@@ -114,7 +114,7 @@ Then capture a source from desktop Obsidian (`Cmd/Ctrl-P` → **Memoria: capture
 
 ## Verify
 
-- `hermes cron list` on the VPS shows the four maintenance crons; the desktop's are disabled
+- `hermes cron list` on the VPS shows the five maintenance crons; the desktop's are disabled
 - Syncthing web UI shows both devices connected and the vault folder in sync
 - A test capture from the desktop produces `catalog/papers/<citekey>.md` and an Inbox candidate card, synced back within seconds
 - `system/logs/audit.jsonl` shows the VPS-side gated writes

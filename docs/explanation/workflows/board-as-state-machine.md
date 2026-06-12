@@ -38,7 +38,7 @@ The alternative to a board is chat-based coordination: a human messages an agent
 
 A card is not just a task title. It carries:
 
-**Execution state** — `status` (the fixed Hermes enum: `triage` → `todo` → `ready` → `running` → `done` → `archived`). This answers "where is the work?" at any moment.
+**Execution state** — `status` (the fixed Hermes enum: `triage` → `todo` → `ready` → `running` → `done` → `blocked` → `archived`). This answers "where is the work?" at any moment.
 
 **Review state** — `review_status` (a Memoria overlay: `unreviewed` (the default) → `requested` → `approved` / `rejected`). This answers "has the human accepted it as canonical?"
 
