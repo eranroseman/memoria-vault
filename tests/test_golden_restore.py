@@ -51,6 +51,16 @@ def test_restore_apply_round_trips(tmp_path):
     assert golden.check(tmp_path) == {}
 
 
+def test_deleted_template_is_restorable(tmp_path):
+    """#179: a template removed from the vault comes back from the golden copy."""
+    _seed(tmp_path)
+    golden.stage(tmp_path)
+    (tmp_path / "system/templates/claim.md").unlink()
+    assert golden.check(tmp_path) == {"system/templates/claim.md": "missing"}
+    golden.restore(tmp_path, apply=True)
+    assert (tmp_path / "system/templates/claim.md").read_text(encoding="utf-8") == "CANON"
+
+
 def test_restore_scoped_to_named_paths(tmp_path):
     _seed(tmp_path)
     golden.stage(tmp_path)
