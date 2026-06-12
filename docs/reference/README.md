@@ -32,7 +32,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
 | [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
-| [Dashboards](dashboards.md) | The eleven dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
+| [Dashboards](dashboards.md) | The twelve dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
 
 ## Pipelines and I/O
 
@@ -40,7 +40,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets |
-| [Memory substrates](memory.md) | Memory substrate table, audit log schema, log rotation spec |
+| [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention (append-only forever) |
 | [Telemetry & logs](telemetry.md) | Every operational log under `system/logs/`: exact JSONL schema, cadence, join keys |
 
 ## System and infrastructure

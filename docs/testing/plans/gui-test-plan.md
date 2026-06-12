@@ -128,7 +128,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 ---
 
-## Part C — The eleven dashboards render (G4)
+## Part C — The twelve dashboards render (G4)
 
 Open each file under `system/dashboards/` (Reading view). For **every** ```dataview```
 block: it must render a table or placeholder, **never a query error**. (The former
@@ -228,7 +228,7 @@ Then open `system/dashboards/audit-log.md`.
 | --- | --- | --- | --- |
 | A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 11 dashboards' Dataview blocks resolve | | |
+| C / G4 | All 12 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |

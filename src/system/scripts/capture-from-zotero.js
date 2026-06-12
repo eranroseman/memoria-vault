@@ -70,7 +70,7 @@ module.exports = async (params) => {
   //     BEFORE the gated write, so a failure downstream loses nothing (the
   //     reconcile sweep re-drives any logged citekey with no note on disk).
   const app = params.app || globalThis.app;
-  const LOG = "99-system/logs/capture-intake.jsonl";
+  const LOG = "system/logs/capture-intake.jsonl";
   try {
     const rec = JSON.stringify({
       ts: new Date().toISOString(),

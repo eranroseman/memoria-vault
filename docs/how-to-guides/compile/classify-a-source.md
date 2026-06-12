@@ -28,7 +28,7 @@ In `catalog/papers/<citekey>.md`, check `research_area` and `methodology` agains
 
 **3. Promote the `_proposed_classification` block.**
 
-The Librarian's proposal (LLM hole #1) is a sandboxed namespace in the entity's frontmatter, separate from the main fields. Review each proposed value, copy the ones you accept (edited for accuracy) into the main frontmatter, then delete the entire `_proposed_classification:` block — it is transient.
+The Librarian's proposal (LLM hole #1; the `projects` sub-key comes deterministically from your optional [project hints](../setup/configure-project-hints.md)) is a sandboxed namespace in the entity's frontmatter, separate from the main fields. Review each proposed value, copy the ones you accept (edited for accuracy) into the main frontmatter, then delete the entire `_proposed_classification:` block — it is transient.
 
 **4. Confirm the entity's lifecycle.**
 

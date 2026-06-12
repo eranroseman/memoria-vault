@@ -64,6 +64,7 @@ empty. Full board: [[board-state|Board State]].
 > - [[audit-log|Audit Log]] — the provenance trail
 > - [[fleet-health|Fleet Health]] — agent operational rollup
 > - [[eval-trend|Eval Trend]] — quarterly vault-eval capability scores
+> - [[skill-lifecycle|Skill Lifecycle]] — which skills are active in which lane
 
 ## Reference
 

@@ -17,11 +17,11 @@ The ingest engine ([src/.memoria/engines/ingest/](../../src/.memoria/engines/ing
 | --- | --- | --- |
 | Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
 | Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref, merged per-field best-source-wins **with provenance**; references = the union across sources, deduped by DOI. |
-| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity (D21 / [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). No extra network call; without enrichment it is a no-op. |
+| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity (D21 / [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). Also proposes project membership from the optional `.memoria/project-hints.yaml` ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). No extra network call; without enrichment it is a no-op. |
 | Tier-1 extract | `extract.py` | Full text, pre-extracted-first: PMC JATS → local Zotero PDF via pymupdf4llm. A deterministic coherence check (chars/page, replacement-char ratio, word ratio) gatekeeps so only good text reaches the model; non-English text is flagged, never auto-failed. |
 | Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
 
-The bundle arrives **with two holes** the Librarian fills: `_proposed_classification` (LLM #1) and the `[!brief]` comparative read (LLM #2). `ingest_pipeline(citekey, enrich=True, pdf_path="")` is the MCP tool; without `enrich` only Tier-0 runs.
+The bundle arrives **with two holes** the Librarian fills: `_proposed_classification` (LLM #1 — its `projects` sub-key is pre-filled deterministically from the optional project hints, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) and the `[!brief]` comparative read (LLM #2). `ingest_pipeline(citekey, enrich=True, pdf_path="")` is the MCP tool; without `enrich` only Tier-0 runs.
 
 ### Catalog outputs
 
@@ -57,6 +57,10 @@ The thresholds live beside the entity-resolution floor in [src/.memoria/schemas/
 
 Every applied or flagged decision appends **one JSONL audit line** to `system/logs/classify.jsonl` (timestamp, run id, citekey, decision, the candidates with scores, the reason, and the thresholds in force) — the audit trail that makes the automation correctable: the PI edits the frontmatter, never approves a card.
 
+### Project membership proposal ([ADR-15](../adr/15-project-membership-from-topic-hint.md))
+
+When an optional `.memoria/project-hints.yaml` exists ([Configure project hints](../how-to-guides/setup/configure-project-hints.md)), the classify stage also **proposes** project membership by simple overlap: each project's `primary_topics` is scored against the paper's OpenAlex topic names and subfields (both kebab-case normalized; a hint matches a signal when equal to it or when all the hint's tokens appear in it). Every project with at least one overlapping hint topic is proposed, ranked by overlap count, into `_proposed_classification.projects` — confirmed or corrected by the PI at triage, **never** applied to the `projects` field. Each decision (proposed or no-match) appends one `stage: project_hints` line to the same `system/logs/classify.jsonl`, carrying the candidates with their matched topics and overlap counts ([ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty — counts, not confidence). An absent hints file means fully manual project tagging (a silent no-op); a malformed one warns once on stderr and degrades to manual.
+
 ---
 
 ## Derived artifacts
@@ -67,7 +71,7 @@ The ingest MCP persists the un-gated derived artifacts the agent can't:
 | --- | --- | --- |
 | Full-text extract | `.memoria/data/extracts/<citekey>.md` | Outside the Librarian's write lane; the paper note's `extract_path` points here (the `extract-path-broken` detector checks it). |
 | Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** the gated note write — the durability anchor. |
-| Classify audit | `system/logs/classify.jsonl` | One append-only line per classify decision (applied or flagged) — see Automated classification above. |
+| Classify audit | `system/logs/classify.jsonl` | One append-only line per classify decision (applied or flagged) and per project-membership proposal (`stage: project_hints`, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) — see Automated classification above. |
 
 ---
 
@@ -101,7 +105,7 @@ Deterministic, read-only retraction-by-DOI from three sources, most authoritativ
 | `relationships` | The given edges from the link plan. |
 | `research_area`, `methodology` | Applied by the automated classify stage when the decision is clear; left unset (plus one Inbox flag) on genuine ambiguity. |
 | `extract_path`, `pdf_uri` | The extract store path and the Zotero PDF URI. |
-| `_proposed_classification` | The Librarian's proposal (LLM hole #1), promoted by the PI at classify. |
+| `_proposed_classification` | The Librarian's proposal (LLM hole #1), promoted by the PI at classify; its `projects` sub-key is the deterministic [ADR-15](../adr/15-project-membership-from-topic-hint.md) hint-overlap proposal. |
 
 ---
 

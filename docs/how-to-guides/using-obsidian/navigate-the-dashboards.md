@@ -6,7 +6,7 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Eleven dashboards in `system/dashboards/`, plus the homepage's above-the-fold glance (the v0.1.0-alpha.1 daily-health dashboard was absorbed into `home.md` — there is no `daily-health.md`). Each dashboard answers one question about the vault; a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first.
+Twelve dashboards in `system/dashboards/`, plus the homepage's above-the-fold glance (the v0.1.0-alpha.1 daily-health dashboard was absorbed into `home.md` — there is no `daily-health.md`). Each dashboard answers one question about the vault; a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first.
 
 For what each dashboard shows in detail, see [Dashboards](../../reference/dashboards.md).
 
@@ -85,6 +85,12 @@ Check after the quarterly vault-eval run scores (or an on-demand scoring pass). 
 
 Open when a write didn't happen as expected ([Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)), or after a lane-override change to confirm the new policy behaves as intended.
 
+### "Which skills are active in which lane?"
+
+**Skill Lifecycle** — open manually.
+
+Open after adding or moving a skill, or after editing a lane override — the consistency-check table flags any disagreement between lane policy and the shipped skills.
+
 ### "What do I need to do this week?"
 
 **Weekly Review** — open on Fridays.
@@ -115,6 +121,7 @@ More than five items is a cleanup signal.
 | Audit Log | After unexpected write failure | Manual |
 | Fleet Health | Monthly check | Manual |
 | Eval Trend | After the quarterly eval scores | Manual |
+| Skill Lifecycle | After a skill or lane-override change | Manual |
 
 ## Related
 

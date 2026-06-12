@@ -28,7 +28,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
 | 11 | Profile mgmt, skills, cron | L2 | hermes-cli §4.9–4.11 | manual | ✅ |
 | 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](plans/gui-test-plan.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
-| 13 | 11 dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
+| 13 | 12 dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
 | 14 | 8 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |

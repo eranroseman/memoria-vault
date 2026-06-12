@@ -18,7 +18,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 | --- | --- | --- | --- |
 | **Program memory** | Your program-wide steering — `research-focus` (discovery priorities) and `screening-protocol` (review mode). The main lever you have over what the system pursues. | whole research program · persistent | Memoria — vault files |
 | **Project memory** | One sub-project's cross-lane working state: open questions, decisions, framing. | one sub-project · archives with the project | Memoria — vault files |
-| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); the Policy MCP writes an entry at every gated write, and the Linter rotates the log weekly. | whole vault · append-only | Memoria — vault files |
+| **Audit memory** | The tamper-evident record of every gated write — what happened, when, by whom. You read it (dashboards); the Policy MCP writes an entry at every gated write; the log is append-only forever — never rotated ([ADR-25](../../adr/25-session-logging-two-logs.md)). | whole vault · append-only | Memoria — vault files |
 
 ## The ones the runtime manages
 

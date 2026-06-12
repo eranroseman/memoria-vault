@@ -32,7 +32,7 @@ Above the fold the homepage carries the **Status glance** (reviews pending · bl
 
 **3. Navigate to a dashboard.**
 
-The homepage links to all eleven dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
+The homepage links to all twelve dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
 
 | Group | Links |
 | --- | --- |

@@ -166,6 +166,19 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     if vault is not None and cls["status"] != "no_data":
         classify.append_audit(vault, citekey, cls, c_floor, c_margin)
 
+    # ADR-15: project membership is PROPOSED from .memoria/project-hints.yaml
+    # (simple overlap of each project's primary_topics against the paper's
+    # OpenAlex topic signals) — never applied. The proposal lands in
+    # `_proposed_classification.projects` for the human to confirm at triage;
+    # an absent hints file means fully manual project tagging (silent no-op).
+    hints = classify.load_project_hints(vault)
+    if hints:
+        pp = classify.propose_projects(m, hints)
+        fm["_proposed_classification"]["projects"] = pp["projects"]
+        bundle["project_proposal"] = pp
+        if vault is not None and pp["status"] != "no_data":
+            classify.append_project_audit(vault, citekey, pp)
+
     # local Zotero PDF from the bib `file` field — feed extraction (pdf_uri set in Tier 0)
     if not pdf_path:
         wsl_pdf, _ = _bib_local_pdf(citekey, bib_text)
