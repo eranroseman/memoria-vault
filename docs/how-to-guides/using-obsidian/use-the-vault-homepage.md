@@ -32,13 +32,13 @@ Above the fold the homepage carries the **Status glance** (reviews pending · bl
 
 **3. Navigate to a dashboard.**
 
-The homepage links to all ten dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
+The homepage links to all twelve dashboards without duplicating their queries, grouped the way you use them ([Dashboards](../../reference/dashboards.md)):
 
 | Group | Links |
 | --- | --- |
 | **Library — reading & synthesis** | Reading Pipeline · Discuss Queue · Open Questions · Contradictions |
 | **Maintenance — structural health** | Drift Watch · Loose Ends · Weekly Review |
-| **Agent ops** | Board State · Audit Log · Fleet Health |
+| **Agent ops** | Board State · Audit Log · Fleet Health · Eval Trend |
 
 **4. Update your research focus.**
 

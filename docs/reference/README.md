@@ -32,7 +32,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
 | [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
-| [Dashboards](dashboards.md) | The ten dashboards: source file, sort order, verdict band, trust score, queue counters |
+| [Dashboards](dashboards.md) | The twelve dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
 
 ## Pipelines and I/O
 

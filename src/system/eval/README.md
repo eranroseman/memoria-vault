@@ -20,6 +20,15 @@ machinery, not a benchmark and not a gate.
 - **Execution.** Eval-context work is **non-committing**: the card body instructs
   the lane to write only to scratch and report results back on the card — a run
   never mutates the vault.
+- **Scoring.** Each card ends its report with a machine-readable result block
+  (the card body shows the exact JSON template). The deterministic scorer —
+  `python .memoria/engines/sweeps/eval_score.py --vault <vault>` — reads those
+  blocks off the board (`hermes kanban list --json`) and computes recall@k,
+  support-rate, and the FAMA check against vault state, appending one line per
+  run to `system/metrics/eval/runs.jsonl`. A task whose card reported no result
+  block stays **unscored** — never a faked score. The quarterly cron scores the
+  *previous* quarter before dispatching the new one; the `eval-trend` dashboard
+  renders the trend.
 - **Verdict.** Diagnostic, never gating. A dip informs the PI; it does not pause
   scheduled work. The dispatch record lands in `last-run.md` here.
 
