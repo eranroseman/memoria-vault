@@ -55,6 +55,28 @@ EVAL_PREAMBLE = (
     "reported plainly is a useful data point; a polished non-answer is not."
 )
 
+# the machine-readable result drop the scorer (eval_score.py) reads off the card
+RESULT_BLOCK_TEMPLATE = """\
+**Machine-readable result (required).** End your report with exactly one fenced
+`json` block in this shape so the deterministic scorer can score this run —
+fill the fields your workflow produces and omit the rest:
+
+```json
+{{
+  "vault_eval": "result",
+  "task": "{task_id}",
+  "quarter": "{quarter}",
+  "retrieved": ["<citekey>", "..."],
+  "cited": ["<citekey>", "..."],
+  "claims": ["<claim-note-stem>", "..."],
+  "self_score": 0.0
+}}
+```
+
+`retrieved` = your ranked results, best first (find tasks); `cited` = every
+citekey you offered as evidence; `claims` = every claim note you used or
+produced (`[]` if none); `self_score` = your honest rubric verdict above."""
+
 _FM = re.compile(r"^---\n(.*?)\n---\n?", re.S)
 
 
@@ -105,6 +127,7 @@ def load_gold_tasks(vault: Path) -> list[dict]:
             "title": str(fm.get("title") or p.stem),
             "workflow": str(fm.get("workflow") or ""),
             "lane": lane,
+            "references": [str(c) for c in (fm.get("references") or [])],
             "body": _FM.sub("", text, count=1).strip(),
             "path": p,
         })
@@ -114,7 +137,8 @@ def load_gold_tasks(vault: Path) -> list[dict]:
 def card_for(task: dict, quarter: str) -> dict:
     """The card payload for one gold task in one quarter (pure; easy to test)."""
     goal = f"vault-eval {quarter}: {task['title']} [{task['workflow']}]"
-    body = f"{EVAL_PREAMBLE}\n\n---\n\n{task['body']}"
+    result_block = RESULT_BLOCK_TEMPLATE.format(task_id=task["id"], quarter=quarter)
+    body = f"{EVAL_PREAMBLE}\n\n{result_block}\n\n---\n\n{task['body']}"
     return {
         "goal": goal,
         "assignee": LANE_PROFILE[task["lane"]],

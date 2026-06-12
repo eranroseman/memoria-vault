@@ -128,7 +128,7 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 ---
 
-## Part C — The ten dashboards render (G4)
+## Part C — The eleven dashboards render (G4)
 
 Open each file under `system/dashboards/` (Reading view). For **every** ```dataview```
 block: it must render a table or placeholder, **never a query error**. (The former
@@ -147,6 +147,7 @@ Home page — it is not a standalone dashboard file.)
 | 8 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
 | 9 | `fleet-health.md` | `system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
 | 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
+| 11 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
@@ -162,7 +163,8 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [ ] 8 · `weekly-review.md`
 - [ ] 9 · `fleet-health.md`
 - [ ] 10 · `audit-log.md`
-- [ ] **Part C / G4 Pass (all 10 resolve)**
+- [ ] 11 · `eval-trend.md`
+- [ ] **Part C / G4 Pass (all 11 resolve)**
 
 ---
 
@@ -226,7 +228,7 @@ Then open `system/dashboards/audit-log.md`.
 | --- | --- | --- | --- |
 | A | 8/8 plugins enabled, no load errors |Pass |I didn't verified the settings |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 10 dashboards' Dataview blocks resolve | | |
+| C / G4 | All 11 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |

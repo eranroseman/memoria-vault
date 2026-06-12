@@ -96,6 +96,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 | `system/metrics/lint-verdict-*.md` | `metrics_aggregate.py` → `lint_verdict_note` | `type:lint-verdict, period, verdict, finding_count, critical_count, high_count, medium_count, …` |
 | `lint-findings.jsonl` | `detectors.py` → `Finding` dataclass | `timestamp, detector, severity, path, message` |
 | `audit.jsonl` | `policy_mcp.py` audit writer | `timestamp, profile, action, path, task_id, decision, policy_rule, before_hash, after_hash` |
+| `system/metrics/eval/runs.jsonl` | `eval_score.py` → `score_run` | `timestamp, quarter, k, tasks[{task,workflow,lane,status,metrics{recall_at_k,support_rate,fama_clean,fama_exposed},self_score}], aggregate{<metric>{mean,n}, tasks_total, tasks_scored, tasks_reported, tasks_unscored}` |
 
 - ✓ Pass: every DQL column / `WHERE` / `SORT` field and every `dataviewjs` `e.<field>` / `dv.pages(...).<field>` resolves to a field above. **And** every `.jsonl` feed is read with `dataviewjs` + `dv.io.load(...)` — never a DQL `FROM "…/x.jsonl"` (DQL queries note folders, not jsonl).
 - ✗ Fails: a field or mechanism mismatch → fix the dashboard query; or, where the data already exists in the writer's projection, serialize it from the writer. Canonical schemas: [Telemetry & logs](../../reference/telemetry.md).

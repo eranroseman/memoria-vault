@@ -63,6 +63,7 @@ empty. Full board: [[board-state|Board State]].
 > - [[board-state|Board State]] — the Inbox board + live worker cards
 > - [[audit-log|Audit Log]] — the provenance trail
 > - [[fleet-health|Fleet Health]] — agent operational rollup
+> - [[eval-trend|Eval Trend]] — quarterly vault-eval capability scores
 
 ## Reference
 

@@ -50,9 +50,45 @@ python .memoria/engines/sweeps/eval_dispatch.py --vault <vault>            # dis
 python .memoria/engines/sweeps/eval_dispatch.py --vault <vault> --dry-run  # print, create nothing
 ```
 
+## Scoring
+
+[src/.memoria/engines/sweeps/eval_score.py](../../src/.memoria/engines/sweeps/eval_score.py) — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
+
+**The result contract.** A lane never writes the vault; it ends its card report with one fenced `json` block (the card body shows the exact template, pre-filled with the task id and quarter):
+
+```json
+{
+  "vault_eval": "result",
+  "task": "<gold-task id>",
+  "quarter": "<e.g. 2026-Q2>",
+  "retrieved": ["<citekey>", "..."],
+  "cited": ["<citekey>", "..."],
+  "claims": ["<claim-note-stem>", "..."],
+  "self_score": 1.0
+}
+```
+
+`retrieved` (ranked results, best first), `cited` (citekeys offered as evidence), and `claims` (claim notes used or produced; `[]` = none) are each optional — a lane reports the fields its workflow produces. The scorer reads the cards via `hermes kanban list --json` (`--from-json <file>` offline, the `board_export.py` pattern) and computes per task only what the result makes computable — **no fake scores**; a task with no result block is reported `unscored`, and a result with no computable field is `reported`.
+
+| Metric | 0–1, higher is better | Computed when |
+| --- | --- | --- |
+| `recall_at_k` | Fraction of the task's gold citekeys (frontmatter `references`) in the top-*k* of `retrieved` (default k=3, the rubrics' "top 3" window; `--k`). | `retrieved` reported and the task has `references`. |
+| `support_rate` | Fraction of `cited` citekeys resolving to a real catalog record (note stem or `citekey:` frontmatter under `catalog/`). | `cited` reported, non-empty. |
+| `fama_clean` | 1.0 if no note in `claims` is a superseded/archived claim, else 0.0 — the FAMA check, same classification as the Linter's `fama-exposure` detector (a test guards the parity); offenders are named in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
+
+The lane's rubric `self_score` is recorded per task for comparison but never aggregated — only the machine metrics trend.
+
+**The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
+
+```sh
+python .memoria/engines/sweeps/eval_score.py --vault <vault>                       # score the current quarter
+python .memoria/engines/sweeps/eval_score.py --vault <vault> --quarter previous    # what the cron runs
+python .memoria/engines/sweeps/eval_score.py --vault <vault> --quarter 2026-Q2 --dry-run
+```
+
 ## Cadence
 
-The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of every third month) from the wrapper [src/.memoria/scripts/eval-cron.sh](../../src/.memoria/scripts/eval-cron.sh), following the same pattern as the lint and metrics crons — see [Installer (bootstrap)](installer.md). On-demand runs are the same command by hand.
+The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of every third month) from the wrapper [src/.memoria/scripts/eval-cron.sh](../../src/.memoria/scripts/eval-cron.sh), following the same pattern as the lint and metrics crons — see [Installer (bootstrap)](installer.md). The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
 
 ---
 
@@ -61,4 +97,5 @@ The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of 
 - The decision: [ADR-11](../adr/11-vault-eval-maintenance.md)
 - The lanes the cards route to: [Profile capabilities](profiles.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
+- The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - The other scheduled jobs: [Installer (bootstrap)](installer.md)
