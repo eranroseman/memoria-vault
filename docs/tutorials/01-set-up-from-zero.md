@@ -25,7 +25,7 @@ You do **not** need Zotero for setup. It is an optional bibliographic backbone, 
 
 ## Step 1 — Run the installer
 
-The recommended invocation is inspect-first:
+Download the installer, read it, then run it:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -33,17 +33,11 @@ less install.sh        # read what it will do
 bash install.sh
 ```
 
-Or the convenience one-liner:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
-```
-
-The installer confirms every external step before running it (`--dry-run` previews everything and changes nothing). On screen you'll watch it check prerequisites, then **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree). It deploys the **five profiles** (`memoria-copi` plus the four background lanes) and wires the maintenance crons. Decline the optional clustering stack (~2 GB) when prompted — graph tools still work, and you can add it later with `--profiles-only`.
+The installer confirms every external step before running it. On screen you'll watch it check prerequisites, then **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree). It deploys the **five profiles** (`memoria-copi` plus the four background lanes) and wires the maintenance crons. When it asks about the optional clustering stack (~2 GB), decline it — graph tools still work, and you can add it later.
 
 When it finishes it prints a **Next steps** checklist. The rest of this tutorial walks that checklist.
 
-Full flag and step reference: [Installer (bootstrap)](../reference/installer.md).
+Full flag and step reference (the convenience one-liner, `--dry-run`, and adding clustering later): [Installer (bootstrap)](../reference/installer.md).
 
 ---
 

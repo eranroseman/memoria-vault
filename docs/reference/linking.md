@@ -23,11 +23,11 @@ Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub cr
 
 ## Linking conventions
 
-- Links are made for usefulness, not completeness.
+- A link records a useful relationship, not exhaustive coverage.
 - A `claim` traces to at least one `paper` citekey.
 - A `paper` eventually connects to at least one relevant `hub`.
-- Concept links carry relationships that would matter in a later reading or writing session.
-- One strong hub link is preferred over many weak generic links.
+- A concept link carries a relationship that would matter in a later reading or writing session.
+- A note's hub placement is a single strong link, not many weak generic ones.
 - Provenance runs one way: claims point to evidence, not the reverse.
 - An agent-proposed cross-link is not canonical until reviewed.
 - A complete note is one that has received a hub link or relevant concept links — an orphan is incomplete.

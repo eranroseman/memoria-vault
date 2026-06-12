@@ -9,17 +9,7 @@ nav_order: 2
 
 Start a terminal session with a Memoria profile — the co-PI without Obsidian, or a background lane for debugging. (This is the `hermes … chat` CLI — not the in-Obsidian Agent Client pane, which speaks ACP to the same profiles.)
 
-## When to use the CLI vs. Obsidian
-
-Day to day you talk to the co-PI in the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Reach for a CLI chat session when:
-
-- **Obsidian isn't running** (a server, SSH, or you just prefer the terminal)
-- **Debugging a lane profile** — exercising the Librarian or Peer-reviewer directly, outside the board dispatch
-- **Verifying a configuration change** — confirming a redeployed profile loads its MCP servers and skills
-
-Maintenance work that used to be a chat session is an **engine** now, not an agent: lint is `python3 .memoria/engines/linter/detectors.py --vault .` ([Run the Linter](../operate/run-the-linter.md)), and the retraction sweep is `retraction.py` ([Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
-
-## Start a session
+Reach for a CLI chat session when Obsidian isn't running, when debugging a lane profile directly outside board dispatch, or to verify a redeployed profile loads its MCP servers and skills. Otherwise, use the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Note that lint and the retraction sweep are now **engines**, not chat sessions ([Run the Linter](../operate/run-the-linter.md), [Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
 
 ```bash
 hermes -p <profile-alias> chat
@@ -42,11 +32,9 @@ The co-PI is the only profile designed for conversation — it reads the vault, 
 
 Type `exit` or Ctrl-C to end a session cleanly.
 
-## Dry-run is the gate's job
+## Chatting safely
 
-No special flag is needed to chat safely — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../compose/work-the-review-queue.md)).
-
-To test a single permission decision without any agent at all, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configuration.md#verify-a-configuration-change)).
+No special flag is needed — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../compose/work-the-review-queue.md)). To test a single permission decision without any agent, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configuration.md#verify-a-configuration-change)).
 
 ## Watching what a session did
 

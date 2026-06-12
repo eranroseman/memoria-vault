@@ -7,7 +7,7 @@ nav_order: 5
 
 # Rebuild the search index
 
-Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vector search, installed as a Hermes hub skill by the installer) is the **shared** similarity index: the co-PI's vault search runs on it, the Librarian's comparative `[!brief]` and `map-cluster-corpus` candidate pulls use it, and the Peer-reviewer's verify checks (`verify-trace-claim`, `verify-card-gap`) score against it — one mechanism, per-lane thresholds.
+Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vector search) is the shared similarity index behind the co-PI's vault search, the Librarian's comparative pulls, and the Peer-reviewer's verify checks ([External integrations](../../reference/integrations.md)).
 
 ## When to rebuild
 
@@ -18,7 +18,7 @@ Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vect
 
 ## When a re-embed is (and isn't) the fix
 
-A full `qmd embed` re-embeds *every* note — it's the right tool only for genuine index staleness. Before spending the time, rule out cheaper causes:
+A full `qmd embed` re-embeds *every* note. Before spending the time, rule out cheaper causes:
 
 | Symptom | Likely cause | What to do |
 | --- | --- | --- |
@@ -26,8 +26,6 @@ A full `qmd embed` re-embeds *every* note — it's the right tool only for genui
 | Search misses many notes or returns empty | Stale or missing index | Full `qmd embed` (this guide) |
 | Found by keyword but not by meaning | Vectors stale / embedding model changed | Full `qmd embed` — re-embedding is the only fix when the vectors are stale |
 | Found by `qmd search` but the co-PI doesn't cite it | Not an index problem — a retrieval/prompt issue | Push the co-PI ("which note says that?"), not the index |
-
-A full re-embed is genuinely *required* only when the embedding model or config changed, the index is corrupt or missing, or a large batch (20+) landed.
 
 ## Steps
 

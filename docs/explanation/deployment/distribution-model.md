@@ -47,6 +47,20 @@ The idempotency matters because it is the mechanism that keeps deployed profiles
 
 ---
 
+## Running more than one vault
+
+Nothing in the distribution model is single-vault by design — you can fork the starter vault for a second project and run both at once. Coexistence works because three resources two vaults would otherwise contend for can each be isolated:
+
+| Resource | What collides if shared | Isolation |
+|---|---|---|
+| **Obsidian REST API port** | Both Local REST API plugins bind the same insecure HTTP port; the second to start can't bind, so its `OBSIDIAN_MCP_PORT` serves nothing (or points Hermes at the wrong vault). | A distinct `insecurePort` per vault, with each vault's profiles' `OBSIDIAN_MCP_PORT` matching. |
+| **Hermes profiles** | Profiles substitute one `VAULT_PATH` at install; a shared `HERMES_HOME` points `memoria-*` at whichever vault was installed last, so the other vault's agents read and write the wrong tree. | Unique per-vault aliases (`project2-*`) **or** a separate `HERMES_HOME` per vault. |
+| **Kanban queue** | The board/queue (`hermes kanban`) is Hermes runtime state under `HERMES_HOME`, **not** a file in the vault — so a shared `HERMES_HOME` is one shared queue: cards from both vaults intermix and cron fires against the wrong vault. | A separate `HERMES_HOME` per vault gives each its own independent queue. |
+
+For full isolation, use a distinct REST port **and** a separate `HERMES_HOME` per vault. The step-by-step procedure is in [Add a second vault](../../how-to-guides/setup/add-a-second-vault.md).
+
+---
+
 ## Related
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)

@@ -23,7 +23,7 @@ Open the co-PI pane and name a topic — the same area as your Tutorial 03 paper
 
 The co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
 
-You can also seed the batch yourself: capture papers you already know via **Memoria: capture from Zotero selection** or **Memoria: capture source from URL**, exactly as in Tutorial 03. Both routes feed the same queue.
+(You can also seed the batch yourself by capturing papers you already know, exactly as in [Tutorial 03](03-bring-in-a-paper.md) — the same queue either way.)
 
 ---
 
@@ -34,9 +34,9 @@ Candidate cards accumulate in the Inbox (`home.md` → **What needs me**), each 
 - Read each card's `argument_against` and `certainty` first.
 - **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.
 
-Working the whole queue in one sitting keeps your judgment sharp, where a drip-feed trains you to wave things through — that's the batch discipline ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
+Working the whole queue in one sitting keeps your judgment sharp, where a drip-feed trains you to wave things through (why batch over drip-feed: [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
 
-For each kept paper, the Catalog entity already exists. Create its source note stub in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`) — or ask the co-PI to have stubs prepared for the keeps.
+For each kept paper, the Catalog entity already exists. Create its source note stub in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`).
 
 ---
 

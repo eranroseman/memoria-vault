@@ -13,11 +13,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — a few Catalog entries and source notes give discovery something to compare against.
 
----
-
-## Why this tutorial
-
-Tutorials 03 and 04 brought in papers *you already knew about*. This is the other direction: the system surfaces papers you haven't met, grounded in what your vault already holds. You ran one targeted form of this in Tutorial 06 when a gap card became a discovery task; here you drive it directly.
+Tutorials 03 and 04 brought in papers you already knew about; this is the other direction — the system surfaces papers you haven't met, grounded in what your vault already holds.
 
 ---
 
@@ -29,9 +25,7 @@ Open the co-PI pane and name the need in your own words:
 
 Phrase it as a research question, not keywords. Seed it however helps: "papers that build on `<citekey>`", "recent work that disagrees with my receptivity claims", "the foundational papers I skipped."
 
----
-
-> **Behind the pane:** the co-PI delegates a **`catalog`** task; the Librarian searches across 20+ databases, compares hits against your Catalog so nothing you hold is resurfaced, and reserves at least 20% of intake for serendipitous sources so discovery stays *faithful and generous* rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
+The co-PI delegates a **`catalog`** task; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
 
 ---
 
@@ -52,15 +46,7 @@ Why a card argues instead of ruling: [The honesty card](../explanation/kanban-bo
 - **Keep:** the ingest engine builds the Catalog entity and the paper joins your reading queue — the Tutorial 03 flow from here.
 - **Skip:** set the card to `lifecycle: archived`. Skipping generously offered candidates is the system working, not failing.
 
----
-
----
-
-## Making it a habit
-
-Discovery isn't a one-off run; it's the intake side of the loop you closed in Tutorial 06. Run it **when synthesis stalls** — a hub that won't grow, a claim with one lonely source — and **from gaps**, since every `gap` card you agree with is a pre-written discovery prompt. Keep your **research focus** current (`research-focus.md` at the vault root); the Librarian reads it to aim discovery.
-
-As the corpus grows, comparison gets sharper: discovery surfaces less of what you have and more of what you lack.
+Run discovery again whenever synthesis stalls — a hub that won't grow, a claim with one lonely source — and from any `gap` card you agree with. For the habit and keeping your research focus current, see [Find new sources](../how-to-guides/compile/find-new-sources.md).
 
 ---
 
