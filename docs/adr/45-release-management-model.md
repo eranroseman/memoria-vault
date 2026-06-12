@@ -45,7 +45,7 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
 - The in-flight **v0.1** plan keeps its §2/§3 tables as the at-cut record (with a pointer
   to its tracking issue); **v0.2+** uses the checklist model from the start.
 
-The live process this produced is documented in [Releasing](../releasing/README.md) and
+The live process this produced is documented in [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md) and
 scaffolded by the `/release` skill.
 
 ## Consequences
@@ -56,7 +56,7 @@ scaffolded by the `/release` skill.
 - release-please is opinionated and now owns versioning/notes; merging its "Release vX.Y"
   PR cuts the tag. (Operational caveat: its PR needs Actions PR-review permission / a
   scoped `RELEASE_PLEASE_TOKEN` — tracked separately.)
-- The release **cut** now includes an ADR retire-sweep (see [Releasing](../releasing/README.md)).
+- The release **cut** now includes an ADR retire-sweep (see [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)).
 
 ## Alternatives considered
 
@@ -81,5 +81,5 @@ this decision is only about *where release state and versioning live*.
 
 ## Related
 
-- **Live process:** [Releasing](../releasing/README.md); the `/release` skill scaffolds it.
+- **Live process:** [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md); the `/release` skill scaffolds it.
 - **Gate/stage model:** [ADR-29](29-testing-framework.md) (the layers/matrix the gates map to).

@@ -44,7 +44,7 @@ At least two of these are true:
 ## Related
 
 - **Runtime mechanism:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **Placeholder:** `system/skills/` ships empty until this is stood up (see [On-disk layout](../reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([Release plan — v0.1.0-alpha.1 — appendix](../releasing/0.1.0/release-plan-0.1.0-appendix.md)).
+- **Placeholder:** `system/skills/` ships empty until this is stood up (see [On-disk layout](../reference/on-disk-layout.md)); the `skill-lifecycle` dashboard activates in the same phase ([Release plan — v0.1.0-alpha.1 — appendix](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0/release-plan-0.1.0-appendix.md)).
 
 ## Dependencies
 
