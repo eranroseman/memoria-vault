@@ -54,7 +54,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | accepted |
 | [23](23-scoped-memory-substrates.md) | Memory is seven scoped substrates, not one store | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
-| [25](25-session-logging-two-logs.md) | Two separate session logs — hash-chained audit vs. narrative summaries | accepted |
+| [25](25-session-logging-two-logs.md) | Two separate session logs — hash-paired audit vs. narrative summaries | deferred |
 | [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles are hand-authored and idempotently deployed | accepted |
 | [27](27-hermes-native-config-and-gate-enforcement.md) | Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the only write path | accepted → ADR-28 |
 | [28](28-write-gate-as-plugin.md) | The vault write gate is a Hermes Python plugin, not a shell hook | accepted |

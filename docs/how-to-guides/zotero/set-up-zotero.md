@@ -78,17 +78,17 @@ The Librarian and Peer-reviewer resolve citekeys and item metadata through the r
 
 MarkDB-Connect is a Zotero plugin (not an Obsidian plugin). It scans your vault, finds notes that contain a citekey, and tags the corresponding Zotero item — so you can see at a glance which items have notes and jump from Zotero directly to the vault note.
 
-**7. Install MarkDB-Connect in Zotero.**
+**a. Install MarkDB-Connect in Zotero.**
 
 Download from the [MarkDB-Connect releases page](https://github.com/daeh/zotero-markdb-connect/releases) (`.xpi` file) → Zotero → Tools → Add-ons → gear icon → Install Add-on From File.
 
-**8. Configure the note folder.**
+**b. Configure the note folder.**
 
 After install: Tools → MarkDB-Connect Settings → set the **note folder path** to your vault's `catalog/papers/` absolute path (e.g., `C:\Users\{USERNAME}\Memoria\catalog\papers`).
 
 MarkDB-Connect detects citekeys from the note filename by default, which matches Memoria's naming convention (`mamykina2010sense.md` → citekey `mamykina2010sense`).
 
-**9. Run the initial sync.**
+**c. Run the initial sync.**
 
 Tools → MarkDB-Connect Sync Tags. Zotero items with matching vault notes get an `ObsCite` tag (shown as a colored dot in the library). Right-click any tagged item → Open in Obsidian to jump to the note.
 

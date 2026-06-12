@@ -75,12 +75,12 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 **Implementation:** `scikit-learn` for tabular and TF-IDF features; fine-tuned DistilBERT for deeper text. Trained on the human's past classification decisions — the human-confirmed `lifecycle: current` notes are the training set.
 
-Training guidance:
+Training characteristics:
 
 - Multi-label (one-vs-rest) for `research_area`, `methodology`, and `topics` — all list-valued.
-- Retrain monthly or when the human-override rate on proposed labels exceeds 25%.
-- Filter training data to `lifecycle: current` only — `proposed` notes are not yet ground truth.
-- Starts useful at ~200–500 classified notes; well-calibrated at ~1,000.
+- Retrain cadence: monthly, or when the human-override rate on proposed labels exceeds 25%.
+- Training set: `lifecycle: current` notes only — `proposed` notes are not yet ground truth.
+- Useful at ~200–500 classified notes; well-calibrated at ~1,000.
 
 **Cost:** training is occasional and offline; inference is sub-millisecond. Determinism: total once trained.
 
@@ -130,7 +130,7 @@ Training guidance:
 
 **Implementation:** LightGBM (`LambdaRank` / `rank:ndcg`) over features per candidate: embedding similarity to `research-focus.md`, citation-graph proximity to existing vault papers, recency, venue, Scite supporting count. Labels are the human's historical keep/discard. Retrain on a schedule as the decision history grows.
 
-**Cold-start:** needs ~hundreds of past triage decisions before it beats existing scalar ordering. Use the scalar ordering or LLM tournament until then.
+**Cold-start:** needs ~hundreds of past triage decisions before it beats existing scalar ordering. Below that threshold, the scalar ordering or LLM tournament is the active ranker.
 
 **Cost:** training occasional and offline; inference sub-millisecond. Determinism: total once trained.
 

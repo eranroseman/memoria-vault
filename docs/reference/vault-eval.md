@@ -5,7 +5,7 @@ parent: Reference
 
 # Vault eval
 
-`vault-eval` ([ADR-11](../adr/11-vault-eval-maintenance.md)) is Memoria's system-level evaluation: a small, hand-curated **gold set** per workflow that measures whether the *deployed system* finds, extracts, links, and verifies correctly *on this vault* — as opposed to off-the-shelf benchmarks that score a model on a foreign corpus. It is a **diagnostic maintenance capability built from existing machinery** — board dispatch, the lane → profile map, the Linter's schema and broken-link checks, the golden copy — not a parallel subsystem. The verdict is **diagnostic, never gating**: a dip informs the PI; it does not pause scheduled work.
+`vault-eval` ([ADR-11](../adr/11-vault-eval-maintenance.md)) is Memoria's system-level evaluation: a small, hand-curated **gold set** per workflow that measures whether the *deployed system* finds, extracts, links, and verifies correctly *on this vault*. Scope: it reuses existing machinery (board dispatch, the lane → profile map, the Linter's schema and broken-link checks, the golden copy), and its verdict is diagnostic, not gating — a dip informs the PI but does not pause scheduled work. The rationale for both choices is in [ADR-11](../adr/11-vault-eval-maintenance.md).
 
 ---
 

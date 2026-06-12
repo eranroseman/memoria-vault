@@ -21,17 +21,17 @@ Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC cr
 
 ---
 
-## Linking rules
+## Linking conventions
 
-- Link for usefulness, not completeness.
-- Every `claim` must trace to at least one `paper` citekey.
-- Every `paper` should eventually connect to at least one relevant `hub`.
-- Use concept links only when the relationship would matter in a later reading or writing session.
-- Prefer one strong hub link over many weak generic links.
-- Provenance direction: claims point to evidence; do not link the other way.
-- Never treat an agent-proposed cross-link as canonical until reviewed.
-- An orphan note must receive a hub link or relevant concept links before it is considered complete.
-- Do not link a `paper` to a `claim` as if they were peers; the claim stands on its own and the paper is its support.
+- Links are made for usefulness, not completeness.
+- A `claim` traces to at least one `paper` citekey.
+- A `paper` eventually connects to at least one relevant `hub`.
+- Concept links carry relationships that would matter in a later reading or writing session.
+- One strong hub link is preferred over many weak generic links.
+- Provenance runs one way: claims point to evidence, not the reverse.
+- An agent-proposed cross-link is not canonical until reviewed.
+- A complete note is one that has received a hub link or relevant concept links — an orphan is incomplete.
+- A `paper` and a `claim` are not peers: the claim stands on its own and the paper is its support.
 
 ---
 
@@ -116,18 +116,18 @@ project
 | ≥ 15–20 notes (papers + claims combined) on a topic | Create a top-level hub for the topic. |
 | > 20 claims + > 10 papers on a branch | Build a child hub for that branch. |
 
-Do not create a hub before these thresholds. Below the threshold, live with the lack of a hub — the friction is lower than the cost of maintaining a premature hub.
+Below these thresholds a topic carries no hub — the friction of the missing hub is lower than the cost of maintaining a premature one.
 
 ---
 
 ## Vocabulary discipline
 
-The `research_area`, `methodology`, and `topics` fields are open — Memoria does not enforce a controlled vocabulary. Guidelines:
+The `research_area`, `methodology`, and `topics` fields are open — Memoria does not enforce a controlled vocabulary. The conventions around them:
 
-- Keep the active `topics` list to **~30 terms** per corpus. A smaller vocabulary produces more consistent classification.
-- Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) belongs in `_enrichment` (auto-populated from APIs), not in the hand-curated `topics` field.
-- Define your vocabulary in a hub note (e.g., `notes/hubs/vocabulary.md`) and review it annually.
-- When renaming a topic term, use Obsidian tag-wrangler or a Linter `schema-migrate` dry-run — never search-replace across notes manually.
+- The active `topics` list runs to **~30 terms** per corpus; a smaller vocabulary produces more consistent classification.
+- Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) lives in `_enrichment` (auto-populated from APIs), not in the hand-curated `topics` field.
+- The vocabulary is defined in a hub note (e.g., `notes/hubs/vocabulary.md`) and reviewed annually.
+- A topic-term rename goes through Obsidian tag-wrangler or a Linter `schema-migrate` dry-run, not a manual search-replace across notes.
 
 ---
 
@@ -143,7 +143,7 @@ The `research_area`, `methodology`, and `topics` fields are open — Memoria doe
 | `venue` | Slug of the venue name | `chi-conference` |
 | All others | Descriptive kebab-case | `ema-best-practices` |
 
-Slugs are permanent — renaming a note breaks all wikilinks pointing to the old slug. Rename sparingly and run the Linter's `graph-analyze` check after any rename.
+Slugs are permanent — renaming a note breaks all wikilinks pointing to the old slug, so renames are rare and the Linter's `graph-analyze` check catches the breakage afterward.
 
 ---
 

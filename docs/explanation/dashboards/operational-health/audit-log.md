@@ -21,15 +21,15 @@ A second view lists **writes to review-gated zones** (`notes/claims/`, `notes/hu
 
 **Not fleet-health.** Fleet-health aggregates audit log entries into rolled-up trend metrics. The audit log is the raw event stream — one JSON object per write decision.
 
-**Not editable.** The log is append-only by design. Each entry carries `before_hash` and `after_hash` SHA-256s; the Linter's `vault-hash-drift` detector catches files modified outside this trail. Editing the audit log would break the chain.
+**Not editable.** The log is append-only by design. Each mutating entry carries `before_hash` and `after_hash` SHA-256s and is paired with a `write_complete` record; the Linter's `audit-unpaired-writes` detector flags a write whose pairing never completed, and this view flags a path whose recorded `after_hash` no longer matches the file. Editing the audit log would break that reversibility.
 
 ## Why a spike in denies is a security signal
 
 Memoria ingests untrusted PDFs — a potential indirect prompt injection surface. A sudden rise in policy MCP denials can indicate an injection attempt coaxing an agent toward unauthorized writes, not just operator error. The audit log is the primary place this signal appears; open it after any unexpected agent behavior.
 
-## Log rotation
+## Log size
 
-The Linter rotates `audit.jsonl` weekly to `system/logs/archive/audit-YYYY-WW.jsonl`. The dashboard queries the current week's file. Archive files accumulate in `system/logs/archive/` and are not queried by default.
+The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only and unbounded in 0.1.0-alpha.1 — rotation (archiving older weeks to `system/logs/archive/`) is a deferred convention, not yet implemented. The audit log's substrate (and the event-field schema) is reference detail — see [Memory substrates](../../../reference/memory.md).
 
 ## Related
 

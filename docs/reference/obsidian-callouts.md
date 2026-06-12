@@ -31,11 +31,15 @@ Three inline callout types written by agent profiles into vault notes. Defined v
 
 ---
 
-## Design rules
+## Behavior
 
-- **`[!suggestions]` collapsed by default; `[!brief]` and `[!verification]` expanded.** Volume-prone callouts collapse; one-shot context callouts expand.
-- **Never overwrite human edits.** If a human has edited a `[!brief]`, the next ingest run appends a new `[!brief] (updated YYYY-MM-DD)` block below it — it does not rewrite the existing one.
-- **All callout writes are policy-MCP gated.** When the Librarian attaches a `[!brief]` during ingest, the write is logged with SHA-256 hashes and is reversible from the audit log.
+| Property | Value |
+| --- | --- |
+| Default collapse state | `[!suggestions]` collapsed; `[!brief]` and `[!verification]` expanded |
+| Re-run on edited callout | Appends a new `(updated YYYY-MM-DD)` block below the existing one; never rewrites it |
+| Write path | Policy-MCP gated — logged with SHA-256 hashes, reversible from the audit log |
+
+For why each behaves this way, see [Callouts](../explanation/obsidian/callouts.md).
 
 ---
 
@@ -57,8 +61,12 @@ The audit trail for each callout is the deterministic step's output (which candi
 
 The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over time:
 
-- **Accept rate > ~90%** → the human is rubber-stamping; candidate scoring is too permissive — tune down the similarity threshold or the weighting.
-- **Accept rate < ~20%** → the candidate scoring needs tuning; candidates are not relevant enough.
+| Accept rate | Indicates |
+| --- | --- |
+| > ~90% | Rubber-stamping — candidate scoring is too permissive |
+| < ~20% | Candidates not relevant enough — scoring needs tuning |
+
+How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
 
 ---
 

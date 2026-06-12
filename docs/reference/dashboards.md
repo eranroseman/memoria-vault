@@ -26,8 +26,6 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |
 | Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 
-Synthesis vs structural, split by actor: open-questions + contradictions are the _PI's_ unfinished thinking; loose-ends + drift-watch are the _Linter engine's_ structural debt — kept separate, not collapsed.
-
 ---
 
 ## The Bases views
@@ -61,12 +59,14 @@ A 0–100 composite per lane, computed by [src/.memoria/mcp/metrics_aggregate.py
 
 ---
 
-## Design rules (apply to all dashboards)
+## Design conventions (apply to all dashboards)
 
-- **One decision per dashboard.** Mixed queries produce lists the human can't batch-act on.
-- **Empty is success.** Always-busy tables train the eye to ignore them.
-- **Sort by decision type.** Queues oldest-first; logs newest-first.
-- **Graceful degradation.** A missing log or plugin shows an explanatory placeholder, never an error.
+- **One decision per dashboard** — each surfaces a single decision type.
+- **Empty is success** — a healthy vault shows near-empty tables.
+- **Sort by decision type** — queues oldest-first; logs newest-first.
+- **Graceful degradation** — a missing log or plugin shows an explanatory placeholder, never an error.
+
+The reasoning behind these conventions (and the synthesis-vs-structural actor split) is in [Dashboards](../explanation/dashboards/README.md).
 
 ---
 

@@ -39,14 +39,7 @@ Or the convenience one-liner:
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 ```
 
-The installer confirms every external step before running it (`--dry-run` previews everything and changes nothing). It will:
-
-1. Check prerequisites (`git`, `pandoc`).
-2. Fetch the repo and **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree).
-3. Install Hermes with the ACP extra.
-4. Deploy the **five profiles**: `memoria-copi` (the co-PI you'll talk to) plus the four background lanes — `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`.
-5. Offer the optional clustering stack (~2 GB; skip it for now — graph tools still work, and you can add it later with `--profiles-only`).
-6. Guide you through Obsidian if it isn't installed, and wire the maintenance crons.
+The installer confirms every external step before running it (`--dry-run` previews everything and changes nothing). On screen you'll watch it check prerequisites, then **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree). It deploys the **five profiles** (`memoria-copi` plus the four background lanes) and wires the maintenance crons. Decline the optional clustering stack (~2 GB) when prompted — graph tools still work, and you can add it later with `--profiles-only`.
 
 When it finishes it prints a **Next steps** checklist. The rest of this tutorial walks that checklist.
 

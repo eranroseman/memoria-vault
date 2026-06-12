@@ -70,7 +70,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 ## Part D — Complete (card → done, no review)
 
-**D1.** The card advances `running → done`; a session-log summary is written to `system/logs/`.
+**D1.** The card advances `running → done`. *(A per-session narrative summary in `system/logs/sessions/` is deferred — not written in 0.1.0-alpha.1; see [ADR-25](../../adr/25-session-logging-two-logs.md).)*
 - ✓ Pass: `hermes kanban list --json` shows the card `done`; **no** review step was required (logs zone is not review-gated); `board-transitions.jsonl` records the `running → done` move once `board_export` ticks.
 - ✗ If it fails: card stuck `running` → the agent didn't signal completion (orchestration gap). Card asks for review → a mis-scoped write zone leaked into a gated path.
 
@@ -82,7 +82,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 | --- | --- | --- |
 | E1 | **Dispatch, not invocation** | the card moved `ready → running` via the dispatcher, not a manual `chat` call |
 | E2 | **Determinism** | a second run on unchanged state produces a byte-identical report (zero-LLM holds) |
-| E3 | **Audit chain unbroken** | the write's `audit.jsonl` row has an `after_hash` matching the file; `lint`'s `vault-hash-drift` is clean afterward |
+| E3 | **Audit pairing intact** | the write's `audit.jsonl` row has an `after_hash` matching the file; `lint`'s `audit-unpaired-writes` is clean afterward |
 | E4 | **Gate held, no fail-open** | the only decision logged is `allow_with_log`; a simulated policy outage during the write would `deny` (fail-closed) |
 | E5 | **No human in the loop** | the card reached `done` with no review step — the spine completes autonomously for a non-gated zone |
 

@@ -16,7 +16,7 @@ Memoria is built on four converging ideas and informed by a broad survey of cont
 
 In standard retrieval-augmented generation, every question triggers a fresh search over raw documents. Useful synthesis is never stored; nothing compounds. The LLM-wiki pattern inverts this: the agent builds durable pages, and each new source improves those pages rather than sitting in isolation. The agent is a **compiler**, not just a retriever.
 
-Memoria takes this insight seriously. The vault is the compiled artifact. Ingest doesn't just add documents — it integrates sources into an existing graph of notes. A new paper note connects to existing claims through typed wikilinks. The Librarian profile's job is essentially compilation.
+Memoria takes this insight seriously. The vault is the compiled artifact. Ingest doesn't just add documents — it integrates sources into an existing graph of notes. A new source note connects to existing claims through typed wikilinks. The Librarian profile's job is essentially compilation.
 
 What Memoria doesn't take from this pattern: Karpathy's framing implies an agent that autonomously decides what to synthesize and what to keep. Memoria refuses that — the human decides what enters the canonical graph. The compiler role belongs to the agent; the editorial role belongs to the human.
 
@@ -32,7 +32,7 @@ What Memoria doesn't take from this pattern: Karpathy's framing implies an agent
 
 **Type distinction** — Luhmann distinguished _fleeting notes_ (raw capture), _literature notes_ (what a source says), and _permanent notes_ (the human's own durable claim). Each type has a different epistemic status and a different lifespan. Memoria preserves this three-way distinction under different names: `fleeting`, `source` (what the source says), and `claim` (what the human thinks). The rename reflects a software context; the distinction is unchanged.
 
-Zettelkasten's weakness in modern workflows is that it is entirely human-maintained — the linking discipline breaks down under load. Memoria delegates the maintenance work to the agent. Classifying notes, detecting orphans, suggesting cross-links, enforcing schema — these are the tasks the Librarian and Linter handle. The _intellectual_ work of the Zettelkasten (writing claim notes, forming arguments, building MOCs) remains human.
+Zettelkasten's weakness in modern workflows is that it is entirely human-maintained — the linking discipline breaks down under load. Memoria delegates the maintenance work to the agent. Classifying notes, detecting orphans, suggesting cross-links, enforcing schema — these are the tasks the Librarian and Linter handle. The _intellectual_ work of the Zettelkasten (writing claim notes, forming arguments, building hubs) remains human.
 
 ---
 
@@ -42,7 +42,7 @@ Zettelkasten's weakness in modern workflows is that it is entirely human-maintai
 
 What Bush identified is that memory is associative, not taxonomic. A subject-area folder structure doesn't model how thinking actually works. What makes a knowledge base useful is not whether items are correctly classified, but whether the associations between them are preserved.
 
-Memoria's vault is the Memex made operational: the graph of wikilinks, typed relations, entity links, and MOCs is the associative layer. The folders are a secondary organizational scheme; the graph is the primary one. A claim note that has no incoming links hasn't made it into the knowledge graph — it may as well not exist.
+Memoria's vault is the Memex made operational: the graph of wikilinks, typed relations, entity links, and hubs is the associative layer. The folders are a secondary organizational scheme; the graph is the primary one. A claim note that has no incoming links hasn't made it into the knowledge graph — it may as well not exist.
 
 ---
 
@@ -78,7 +78,7 @@ Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Bush
 
 - The wiki is the compiled artifact (Karpathy).
 - The note types preserve atomicity and lifespan distinction (Zettelkasten).
-- The associative graph (wikilinks, MOCs, entity links) preserves trails (Memex).
+- The associative graph (wikilinks, hubs, entity links) preserves trails (Memex).
 - The stage-gated pipeline and explicit agent roles come from the field survey.
 - The AI agent provides the maintenance discipline that all three earlier traditions required from the human.
 

@@ -82,7 +82,7 @@ In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-re
 
 **8. Route the auxiliary models to cheap flash tiers (cost efficiency).**
 
-Hermes runs cheap, high-frequency bookkeeping tasks (title generation, context compression, command approval, MCP routing, skills-hub search) through *auxiliary* model slots that default to the profile's main model — so a co-PI compression call would otherwise burn **Opus**. These are set **globally** (not per-profile — Hermes replaces a config section wholesale). Use a split: GLM 4.7 Flash for the light slots (cheapest input), DeepSeek V4 Flash for compression (its 1M context safely holds the conversation being summarized). Add this block to your **global** `~/.hermes/config.yaml`:
+Auxiliary slots default to the profile's main model, so a co-PI's title/compression calls would otherwise burn **Opus**. Add this block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes:
 
 ```yaml
 auxiliary:
@@ -94,7 +94,7 @@ auxiliary:
   # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
 ```
 
-Restart Hermes after editing the global config. Full rationale (split reasoning, the GLM-context caveat, the GLM-5-turbo cost trap): [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
+Why this split (GLM for light slots, DeepSeek for compression), why globally, and the cost traps to avoid: [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
 
 ## Verify
 

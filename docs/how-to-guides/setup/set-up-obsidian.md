@@ -65,7 +65,7 @@ Settings → Local REST API → copy the `apiKey` value. It goes into `OBSIDIAN_
 
 **7. Do not install the frontend Obsidian Linter.**
 
-Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it (see [ADR-12](../../adr/12-obsidian-linter-reference-only.md)). It is a second frontmatter authority: it reformats and reorders frontmatter on save, which collides continuously with the agent-owned `_proposed_classification` / `_enrichment` namespaces the Librarian writes on every ingest, and its writes bypass the policy MCP audit trail. Folder exclusions don't rescue it — `projects/` drafts are both human-edited and agent-written, so no exclusion list is safe.
+Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it. It is a second frontmatter authority that collides with the agent-owned namespaces and bypasses the policy-MCP audit trail; the full rationale is in [ADR-12](../../adr/12-obsidian-linter-reference-only.md).
 
 Memoria's linting is the Linter **engine** — deterministic Python with a daily cron and a pre-commit gate ([Linter: detectors and auto-fix](../../reference/linter.md)); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 
@@ -75,6 +75,8 @@ Memoria's linting is the Linter **engine** — deterministic Python with a daily
 - Settings → Local REST API shows a 64-char hex `apiKey`
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - `Cmd/Ctrl-P` → **Workspaces: Load workspace** offers **Home** and **Library**
+
+Once Hermes is set up, the working loop is: open the co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace to work the reading pipeline.
 
 ## Related
 

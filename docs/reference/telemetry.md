@@ -26,7 +26,8 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
 | `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
 | `lint-findings.jsonl` | `memoria-lint` cron | per Linter run | one detector finding |
-| `sessions/<id>.jsonl` | `memoria-lint` cron | per Linter session | a human-readable per-session summary (one file per session, never rotated) |
+
+> **Not built in 0.1.0-alpha.1 — per-session summaries (`sessions/<id>.jsonl`).** A human-readable narrative log (one file per session) is *designed* but has no writer in 0.1.0-alpha.1 — nothing produces `system/logs/sessions/`. The decision and its deferred status are recorded in [ADR-25 (two session logs)](../adr/25-session-logging-two-logs.md); the shipped record of session activity is `audit.jsonl` (below).
 
 Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below.
 

@@ -214,7 +214,7 @@ findings land in the logs below.
 | S3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
 | S4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
 | S5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
-| T6 | `session-log` | — | `session-log` | a per-session summary at `system/logs/sessions/<id>.jsonl` |
+| T6 | `session-log` *(deferred)* | — | `session-log` | a per-session summary at `system/logs/sessions/<id>.jsonl` — **deferred: no `session-log` command or writer ships in 0.1.0-alpha.1 ([ADR-25](../../adr/25-session-logging-two-logs.md)); skip until built** |
 | T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
 | T8 | **Linter scope** | — | (during S1) | only `system/logs/**` writes occur for the Linter engine; cosmetic/log auto-fixes only |
 
@@ -272,7 +272,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X1 | **Deny path** — force a Librarian write to `notes/claims/` | `decision: deny` row for `memoria-librarian` in `audit.jsonl`; no file written |
 | X2 | **co-PI write-wall** — any co-PI write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
 | X3 | **Review-gate degradation** — Writer/agent write to `notes/claims/` or `notes/hubs/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
-| X4 | **Audit chain integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash`; the chain is unbroken (`lint`'s `vault-hash-drift` reports clean) |
+| X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
 | X5 | **Dry-run safety** — all Peer-reviewer/Linter-engine default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
 | X7 | **Model in effect** — `profile show` for all 5 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |

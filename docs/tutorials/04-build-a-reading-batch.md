@@ -34,7 +34,7 @@ Candidate cards accumulate in the Inbox (`home.md` → **What needs me**), each 
 - Read each card's `argument_against` and `certainty` first.
 - **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.
 
-This is the batch discipline ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): high-cardinality decisions belong in **one worklist worked in one sitting**, never N cards trickling at you. A queue you clear in a pass keeps your judgment sharp; a drip-feed trains you to wave things through.
+Working the whole queue in one sitting keeps your judgment sharp, where a drip-feed trains you to wave things through — that's the batch discipline ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
 
 For each kept paper, the Catalog entity already exists. Create its source note stub in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`) — or ask the co-PI to have stubs prepared for the keeps.
 
@@ -53,15 +53,13 @@ The Library workspace (Tutorial 01) opens the reading pipeline in its left tabs 
 
 ## Step 4 — Work the queue
 
-For each source, the Tutorial 03 loop: read (the extract lives at `.memoria/data/extracts/<citekey>.md`), then fill the source note — **In my words**, **Worth distilling**, **Tensions**.
-
-Batch habits that pay off:
-
-- **Read in one topic, not round-robin.** By the third paper you'll notice agreements and tensions the first two hid — note them in each source's **Tensions** section.
-- **Keep vocabulary consistent.** If you tag one source `research_area: receptivity-detection`, don't tag the next `opportune-moments` for the same concept ([Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)).
-- **Advance the lifecycle as you go.** A source you've read and distilled from moves off `proposed` — and off the "To read & distill" view. The queue converging to empty is the success signal.
+For each source, the Tutorial 03 loop: read (the extract lives at `.memoria/data/extracts/<citekey>.md`), then fill the source note — **In my words**, **Worth distilling**, **Tensions**. As you finish each, advance its `lifecycle` off `proposed` so it drops off the "To read & distill" view — the queue converging to empty is the success signal.
 
 Don't try to finish the batch in one session. The queue is durable; that's what it's for.
+
+---
+
+> **Batch habits that pay off:** read in one topic rather than round-robin — by the third paper you'll notice agreements and tensions the first two hid, so capture them in each source's **Tensions** section. Keep your vocabulary consistent across the batch, too: don't tag one source `receptivity-detection` and the next `opportune-moments` for the same concept ([Vocabulary discipline](../explanation/knowledge/vocabulary-discipline.md)).
 
 ---
 

@@ -34,6 +34,8 @@
     }
   },
   "harper.linters.SpellCheck": false,
+  "harper.linters.UseTitleCase": false,
+  "harper.linters.SplitWords": false,
   "harper.excludePatterns": ["**/*.py", "**/*.yml", "**/*.yaml", "**/*.sh"],
   "[markdown]": {
     "editor.formatOnSave": false,

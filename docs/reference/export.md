@@ -31,7 +31,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
 | **D — Google Docs** | (manual) | Real-time co-authoring only | No Pandoc route; insert citations manually via Zotero Connector |
 
-**Rule:** Decide the final editor before drafting. Switching from Obsidian → Google Docs late means re-inserting every citation by hand.
+The final editor is effectively fixed at drafting time: switching from Obsidian → Google Docs late means re-inserting every citation by hand.
 
 ---
 
@@ -89,7 +89,7 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 
 ## Export gate
 
-An exported artifact is terminal — rendered once from its source composition and never edited in place. Re-export from the composition to update it. Agents propose; the export itself is a human-run step ([ADR-47](../adr/47-type-first-category-folders.md)).
+An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([ADR-47](../adr/47-type-first-category-folders.md)).
 
 ---
 

@@ -14,6 +14,8 @@ A research librarian does both intake and literature search, so the old Mapper's
 
 ## The four lanes
 
+The table below is an orienting illustration of what each lane does and the signal it raises; [Profile capabilities](../../reference/profiles.md) owns the canonical lane definitions (task-lane ids, write scopes, MCP servers).
+
 | Lane | Work | Inbox signal |
 | --- | --- | --- |
 | **catalog** | find sources, propose intake, the comparative `[!brief]`, draft classifications | `candidate` |

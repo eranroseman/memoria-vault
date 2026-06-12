@@ -18,7 +18,7 @@ nav_order: 12
 
 ## Context
 
-The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdown formatter — superficially aligned with Memoria's "bookkeeping, not intelligence" thesis, and previously carried in the `recommended/` plugin set with a carefully de-fanged config (agent/canonical folders excluded, frontmatter timestamp/insert/remove rules off, schema-aligned key sort, no HTML-comment rules). The question is whether a vault that already runs the **Memoria Linter** (deterministic structural validation under the Policy MCP, with an audit trail) and **markdownlint** (Markdown hygiene) should also ship a third formatter. Two prior commitments frame it: the Policy MCP makes every canonical write audited and hash-chained, and frontmatter has a single declared authority ([Frontmatter fields](../reference/frontmatter.md)).
+The Obsidian Linter (platers/obsidian-linter) is a deterministic, on-save Markdown formatter — superficially aligned with Memoria's "bookkeeping, not intelligence" thesis, and previously carried in the `recommended/` plugin set with a carefully de-fanged config (agent/canonical folders excluded, frontmatter timestamp/insert/remove rules off, schema-aligned key sort, no HTML-comment rules). The question is whether a vault that already runs the **Memoria Linter** (deterministic structural validation under the Policy MCP, with an audit trail) and **markdownlint** (Markdown hygiene) should also ship a third formatter. Two prior commitments frame it: the Policy MCP makes every canonical write audited and hash-paired (a `before_hash`/`after_hash` per write), and frontmatter has a single declared authority ([Frontmatter fields](../reference/frontmatter.md)).
 
 ## Decision
 
