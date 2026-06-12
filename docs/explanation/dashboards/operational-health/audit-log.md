@@ -29,7 +29,7 @@ Memoria ingests untrusted PDFs — a potential indirect prompt injection surface
 
 ## Log size
 
-The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only and unbounded in 0.1.0-alpha.1 — rotation (archiving older weeks to `system/logs/archive/`) is a deferred convention, not yet implemented. The audit log's substrate (and the event-field schema) is reference detail — see [Memory substrates](../../../reference/memory.md).
+The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only **forever** — never rotated ([ADR-25](../../../adr/25-session-logging-two-logs.md)); the Linter's `audit-log-size` advisory surfaces growth past 50 MB. The audit log's substrate (and the event-field schema) is reference detail — see [Memory substrates](../../../reference/memory.md).
 
 ## Related
 

@@ -88,6 +88,12 @@ def test_detectors():
             _ts = lambda hours: (datetime.now(timezone.utc) - timedelta(hours=hours)
                                  ).strftime("%Y-%m-%dT%H:%M:%SZ")
             (v / "system/logs").mkdir(parents=True, exist_ok=True)
+            # the completed write's file exists with its audited content, so
+            # vault-hash-drift stays silent over this fixture (tested separately)
+            import hashlib as _hashlib
+            (v / "projects/x").mkdir(parents=True, exist_ok=True)
+            (v / "projects/x/ok.md").write_text("ok body", encoding="utf-8")
+            _ok_hash = "sha256:" + _hashlib.sha256(b"ok body").hexdigest()
             (v / "system/logs/audit.jsonl").write_text("\n".join(_json.dumps(r) for r in [
                 # unpaired, 2h old -> fires
                 {"timestamp": _ts(2), "profile": "memoria-writer", "action": "write",
@@ -100,7 +106,7 @@ def test_detectors():
                 {"timestamp": _ts(2), "profile": "memoria-writer", "action": "write",
                  "path": "projects/x/ok.md", "task_id": "T-OK",
                  "decision": "write_complete", "before_hash": "sha256:" + "b" * 64,
-                 "after_hash": "sha256:" + "c" * 64},
+                 "after_hash": _ok_hash},
                 # unpaired but fresh (10 min) -> still within the grace window
                 {"timestamp": _ts(0.17), "profile": "memoria-writer", "action": "write",
                  "path": "projects/x/fresh.md", "task_id": "T-FRESH",
@@ -141,3 +147,134 @@ def test_detectors():
 
         return t.summary(label="detectors")
     assert _run() == 0
+
+
+# --------------------------------------------------------------------------- #
+# vault-hash-drift (#392), audit-log-size (#393), hub-threshold (#426),
+# skeleton-drift (#394)
+# --------------------------------------------------------------------------- #
+import hashlib
+import json as _json
+from pathlib import Path as _Path
+
+_EMPTY = "sha256:" + hashlib.sha256(b"").hexdigest()
+
+
+def _sha(b: bytes) -> str:
+    return "sha256:" + hashlib.sha256(b).hexdigest()
+
+
+def _wc(path, after, action="write", task="T1", ts="2026-01-01T10:00:00Z"):
+    return {"timestamp": ts, "profile": "memoria-writer", "action": action,
+            "path": path, "task_id": task, "decision": "write_complete",
+            "before_hash": _EMPTY, "after_hash": after}
+
+
+def _write_audit(v: _Path, records, extra_lines=()):
+    (v / "system/logs").mkdir(parents=True, exist_ok=True)
+    lines = [_json.dumps(r) for r in records] + list(extra_lines)
+    (v / "system/logs/audit.jsonl").write_text("\n".join(lines) + "\n",
+                                               encoding="utf-8")
+
+
+def test_vault_hash_drift(tmp_path):
+    v = tmp_path
+    (v / "projects").mkdir()
+    # match: on-disk bytes == latest after_hash -> silent
+    (v / "projects/clean.md").write_bytes(b"CLEAN")
+    # mismatch: edited out-of-band after the audited write -> CRITICAL
+    (v / "projects/tampered.md").write_bytes(b"TAMPERED")
+    # completed delete, file absent -> silent (empty-hash convention)
+    # out-of-band delete: audited content but file missing -> CRITICAL
+    # never-audited file on disk -> ignored
+    (v / "projects/unaudited.md").write_bytes(b"whatever")
+    _write_audit(v, [
+        # last write wins: a stale earlier hash for clean.md must not fire
+        _wc("projects/clean.md", _sha(b"OLD"), ts="2026-01-01T09:00:00Z"),
+        _wc("projects/clean.md", _sha(b"CLEAN"), ts="2026-01-01T10:00:00Z"),
+        _wc("projects/tampered.md", _sha(b"ORIGINAL")),
+        _wc("projects/deleted.md", _EMPTY, action="delete"),
+        _wc("projects/vanished.md", _sha(b"WAS HERE")),
+    ], extra_lines=["{not json", ""])           # malformed lines are skipped
+    f = _m.vault_hash_drift(v)
+    by_path = {x.path: x for x in f}
+    assert all(x.severity == "CRITICAL" for x in f)
+    assert "projects/clean.md" not in by_path
+    assert "projects/deleted.md" not in by_path
+    assert "projects/unaudited.md" not in by_path
+    assert "edited" in by_path["projects/tampered.md"].message
+    assert "missing" in by_path["projects/vanished.md"].message
+    assert set(by_path) == {"projects/tampered.md", "projects/vanished.md"}
+
+
+def test_vault_hash_drift_no_log(tmp_path):
+    assert _m.vault_hash_drift(tmp_path) == []
+
+
+def test_audit_log_size(tmp_path):
+    v = tmp_path
+    _write_audit(v, [_wc("projects/a.md", _EMPTY)])
+    assert _m.audit_log_size(v) == []                       # tiny log: silent
+    f = _m.audit_log_size(v, max_mb=0.000001)               # over threshold
+    assert len(f) == 1 and f[0].severity == "LOW"
+    assert f[0].detector == "audit-log-size"
+
+
+def _claim(v, name, topics):
+    (v / "notes/claims").mkdir(parents=True, exist_ok=True)
+    (v / f"notes/claims/{name}.md").write_text(
+        "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n"
+        f"title: {name}\nsources: ['@x2024']\ntopics: {topics}\n---\nBody.\n",
+        encoding="utf-8")
+
+
+def test_hub_threshold(tmp_path):
+    v = tmp_path
+    for i in range(2):
+        _claim(v, f"sleep-{i}", "[Sleep]")
+    (v / "catalog/papers").mkdir(parents=True, exist_ok=True)
+    (v / "catalog/papers/p1.md").write_text(
+        "---\ntype: paper\nlifecycle: current\ncitekey: a2020\ntitle: P1\n"
+        "research_area: [sleep]\n---\n", encoding="utf-8")
+    # below threshold -> no finding
+    assert _m.hub_threshold(v, threshold=4) == []
+    # above threshold (3 notes, papers + claims, case-insensitive) -> finding
+    f = _m.hub_threshold(v, threshold=3)
+    assert len(f) == 1 and f[0].severity == "LOW" and "sleep" in f[0].message.lower()
+    # an existing hub for the topic suppresses the alert
+    (v / "notes/hubs").mkdir(parents=True, exist_ok=True)
+    (v / "notes/hubs/sleep.md").write_text(
+        "---\ntype: hub\nlifecycle: current\ntitle: Sleep\ntopic: sleep\n---\n",
+        encoding="utf-8")
+    assert _m.hub_threshold(v, threshold=3) == []
+
+
+def test_hub_threshold_default_threshold_is_15(tmp_path):
+    v = tmp_path
+    for i in range(14):
+        _claim(v, f"t-{i}", "[memory]")
+    assert _m.hub_threshold(v) == []
+    _claim(v, "t-14", "[memory]")
+    f = _m.hub_threshold(v)
+    assert len(f) == 1 and "15 notes" in f[0].message
+
+
+def test_skeleton_drift(tmp_path):
+    assert _m._FOLDERS is not None, "schema home must load in CI (PyYAML present)"
+    skeleton = _m._FOLDERS["skeleton"]
+    v = tmp_path
+    for d in skeleton:
+        (v / d).mkdir(parents=True, exist_ok=True)
+    (v / ".memoria/golden").mkdir(parents=True)        # installed-vault marker
+    (v / ".memoria/golden/manifest.json").write_text("{}", encoding="utf-8")
+    assert _m.skeleton_drift(v) == []
+    # remove one skeleton dir -> MEDIUM finding for exactly that path
+    (v / "system/logs/sessions").rmdir()
+    f = _m.skeleton_drift(v)
+    assert [x.path for x in f] == ["system/logs/sessions"]
+    assert f[0].severity == "MEDIUM" and f[0].detector == "skeleton-drift"
+
+
+def test_skeleton_drift_skips_uninstalled_trees(tmp_path):
+    """No golden manifest = never scaffolded (e.g. the repo's src/) -> silent."""
+    assert _m.skeleton_drift(tmp_path) == []

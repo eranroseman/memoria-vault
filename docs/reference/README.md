@@ -40,7 +40,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets |
-| [Memory substrates](memory.md) | Memory substrate table, audit log schema, log rotation spec |
+| [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention (append-only forever) |
 | [Telemetry & logs](telemetry.md) | Every operational log under `system/logs/`: exact JSONL schema, cadence, join keys |
 
 ## System and infrastructure

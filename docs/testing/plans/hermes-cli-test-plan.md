@@ -214,7 +214,7 @@ findings land in the logs below.
 | S3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
 | S4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
 | S5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
-| T6 | `session-log` *(deferred)* | — | `session-log` | a per-session summary at `system/logs/sessions/<id>.jsonl` — **deferred: no `session-log` command or writer ships in 0.1.0-alpha.1 ([ADR-25](../../adr/25-session-logging-two-logs.md)); skip until built** |
+| T6 | `session-log` *(deferred)* | — | `session-log` | a per-session digest at `system/logs/sessions/<timestamp>.jsonl` — written by the Linter's `session_summary.py` on the daily lint cron, not by a `session-log` CLI command ([ADR-25](../../adr/25-session-logging-two-logs.md)); sessions are digested after a 24 h quiet window |
 | T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
 | T8 | **Linter scope** | — | (during S1) | only `system/logs/**` writes occur for the Linter engine; cosmetic/log auto-fixes only |
 
