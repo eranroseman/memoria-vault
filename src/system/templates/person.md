@@ -1,5 +1,4 @@
 ---
-title: "{{VALUE:person name}}"
 type: person
 lifecycle: current
 name: "{{VALUE:person name}}"

@@ -16,13 +16,15 @@ nav_order: 7
 
 ## Context
 
+> *Note (v0.1.0-alpha.2): "Coder" below is the profile's original name — [ADR-48](48-copi-and-agent-consolidation.md) renamed it the **Engineer** (`memoria-engineer`, lane-override `engineer.yaml`). The delegate-don't-implement decision is unchanged.*
+
 Does the Coder profile delegate substantive coding work to an external coding agent (Kilocode, Aider, Claude Code, Codex), or implement coding capabilities itself?
 
 ## Decision
 
 **Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The full setup pattern lives in [create a code artifact](../how-to-guides/compose/create-a-code-artifact.md).
 
-> **Current vs. planned agents.** The shipped Coder lane wires **`codex` and `claude-code`** as the current external coding agents (`opencode` also available) — the real Hermes `autonomous-ai-agents` skill IDs in [Coder SOUL](../../src/.memoria/profiles/memoria-engineer/SOUL.md) and `lane-overrides/coder.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Coder's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
+> **Current vs. planned agents.** The shipped Engineer lane wires **`codex` and `claude-code`** as the current external coding agents — the agent IDs referenced in `memoria-engineer/distribution.yaml` (env keys per agent), with the lane scoped by `lane-overrides/engineer.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Engineer's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
 
 ## Consequences
 

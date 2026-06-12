@@ -61,7 +61,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | Subset | Types |
 | --- | --- |
 | full chain | `source` |
-| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern` |
+| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern`, `eval-task` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
 | `current → archived` | `person`, `organization`, `venue`, `repository`, `hub`, `index` |

@@ -55,7 +55,7 @@ Rollup of the Linter engine's detectors:
 
 ## Trust score (fleet-health)
 
-A 0–100 composite per lane, computed by [src/.memoria/mcp/metrics_aggregate.py](../../src/.memoria/mcp/metrics_aggregate.py) into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
+A 0–100 composite per lane, computed by [src/.memoria/mcp/metrics_aggregate.py](../../src/.memoria/mcp/metrics_aggregate.py) into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. The shipped `fleet-health.md` dashboard is currently a prose placeholder (no embedded query) — it reads the `system/metrics/` notes the weekly cron writes. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
 
 ---
 

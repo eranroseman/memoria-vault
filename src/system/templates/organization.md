@@ -1,5 +1,4 @@
 ---
-title: "{{VALUE:organization name}}"
 type: organization
 lifecycle: current
 name: "{{VALUE:organization name}}"

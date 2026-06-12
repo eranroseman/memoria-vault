@@ -5,7 +5,7 @@ parent: Reference
 
 # Wikilink and link conventions
 
-Wikilink conventions, typed-relation vocabulary, cross-link topology, and MOC creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([Note body structure](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([Lifecycle, not topic — and state, not folders](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
+Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([Note body structure](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([Lifecycle, not topic — and state, not folders](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
 
 ---
 
