@@ -53,7 +53,7 @@ These are the candidate-specific fields; every note also carries the global requ
 
 ## Consequences
 
-- A single Dataview query in the [The weekly-review dashboard](../explanation/dashboards/structural-health/weekly-review.md) covers all candidate sources.
+- A single Dataview query in [The weekly-review dashboard](../explanation/dashboards/structural-health/weekly-review.md) covers all candidate sources.
 - Triage dashboards work uniformly regardless of where a candidate came from.
 - **No captured source is silently lost.** Ingestion failures surface as triage-able dead-letter notes instead of `blocked` board cards, decoupling capture reliability from ingest reliability.
 - Tiny schema cost; high payoff for any later screening work.
