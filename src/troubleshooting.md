@@ -19,7 +19,7 @@ Quick checks that the system itself is up (run from a terminal):
 | Cron scheduler | [[board-state\|Board State]] § Live worker cards | the four standard tasks show recent runs |
 | Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
 
-Profiles: `memoria-{librarian, mapper, socratic, writer, verifier, coder, linter}`.
+Profiles: `memoria-{copi, librarian, writer, peer-reviewer, engineer}`.
 
 Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/curate/return-to-work).
 
@@ -46,7 +46,7 @@ The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/mem
 
 **Review ([policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** the runtime gate is bypassed — **treat every write as if it could land somewhere it shouldn't.** Edit carefully, `git commit` often; replay the audit log when the MCP returns.
 
-**Export (Verifier/Writer down):** verify citekeys resolve manually, then run Pandoc directly — skip cite-check / similarity-check, rely on human review (Pandoc/CSL details: [export reference](https://eranroseman.github.io/memoria-vault/reference/export)):
+**Export (Peer-reviewer/Writer down):** verify citekeys resolve manually, then run Pandoc directly — skip cite-check / similarity-check, rely on human review (Pandoc/CSL details: [export reference](https://eranroseman.github.io/memoria-vault/reference/export)):
 
 ```bash
 pandoc draft.md --bibliography .memoria/memoria.bib --csl .memoria/csl/apa.csl -o output.docx

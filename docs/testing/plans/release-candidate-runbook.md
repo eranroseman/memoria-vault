@@ -39,7 +39,7 @@ bash scripts/test.sh all          # l1 (all --self-test suites) + l0 (static)
 ```
 
 - [ ] **S0** static (parse, LF endings, profile files present) — PASS.
-- [ ] **S1** every Python `--self-test` green: `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `verify_mcp`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
+- [ ] **S1** every Python `--self-test` green: `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `retraction`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
 - [ ] Confirm CI is green on the same commit (the required checks gate — G6): `gh pr checks` / the Actions tab.
 
 ## S2 — installer dry-run  → records S2

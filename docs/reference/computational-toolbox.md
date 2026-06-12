@@ -88,7 +88,7 @@ Training characteristics:
 
 ### Graph algorithms (BFS, PageRank, shortest path)
 
-**For:** orphan detection, MOC hub identification, dependency walks, link density measurement.
+**For:** orphan detection, hub identification, dependency walks, link density measurement.
 
 **Used by:** Linter `graph-analyze`, future propagation-debt enumeration.
 

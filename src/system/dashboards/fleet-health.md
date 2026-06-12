@@ -6,7 +6,7 @@ Per-lane operational health for the agent fleet — a 0–100 trust score plus t
 
 Bands: **90+** healthy (no action) · **70–89** watch (something slipping) · **<70** act (pause that lane's scheduled work until resolved).
 
-Aggregated from: audit deny rate, drift incidents (schema / plugin-config / vault-hash), retry rate, accept/reject ratio on agent proposals, and per-lane API cost trend. Source: `system/metrics/lane-*-<week>.md`, written weekly by the `memoria-metrics` cron (Mondays 06:30).
+Aggregated from: audit deny rate, structural-drift incidents (schema / plugin-config / vault-hash), secret-field access attempts, retry rate, success rate, and accept/reject ratio on agent proposals; the per-lane API cost trend is reported alongside (not a trust-score input). Source: `system/metrics/lane-*-<week>.md`, written weekly by the `memoria-metrics` cron (Mondays 06:30).
 
 ## Related
 

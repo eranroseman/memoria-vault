@@ -35,7 +35,7 @@ version: 1
 groups:
   vault_read:  [obsidian.get_file_contents, obsidian.list_files, obsidian.search]
   vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.delete_file]
-  web:         [web_search, web_extract]          # "search_web" + "fetch_url"
+  web:         [web_search, web_extract]          # "search_web" + "fetch_url" — defined for completeness, NEVER granted (see header)
   policy:      [policy.check_permission, policy.complete_write]
   tasks:       [tasks.delegate_route_task]
   cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
@@ -59,7 +59,7 @@ profiles:
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [web, vault_read, vault_write, skills, todo, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
+    allow: [vault_read, vault_write, skills, todo, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
     notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
@@ -67,7 +67,7 @@ profiles:
     notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No web — it composes from the vault, never researches."
 
   memoria-peer-reviewer:
-    allow: [web, vault_read, vault_write, skills, todo, policy, zotero_read, qmd_read]
+    allow: [vault_read, vault_write, skills, todo, policy, zotero_read, qmd_read]
     notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); vault_write lane-scoped to inbox/ cards only."
 
   memoria-engineer:

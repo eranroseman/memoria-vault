@@ -430,8 +430,8 @@ def graph_analyze(vault: Path) -> list[Finding]:
 
     Pure-stdlib graph metrics over the wikilink graph -- in-degree is simple dict
     arithmetic, so no networkx is needed (keeping detectors.py dependency-free).
-    Reports claim / reference notes with no incoming wikilinks (excluding MOCs):
-    they are unreachable in the graph until something links to them. A self-link
+    Reports claim / hub notes with no incoming wikilinks: they are
+    unreachable in the graph until something links to them. A self-link
     counts as an inlink -- a minor false-negative accepted for v0.1.
 
     Hubs, clusters, and link-density are descriptive rather than actionable, so
@@ -451,8 +451,6 @@ def graph_analyze(vault: Path) -> list[Finding]:
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):
-            continue
-        if parse_frontmatter(read(p)).get("type") == "moc":
             continue
         if indeg.get(p.stem, 0) == 0:
             out.append(Finding("graph-analyze", "LOW", rp,

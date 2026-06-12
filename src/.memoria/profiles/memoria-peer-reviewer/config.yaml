@@ -51,11 +51,13 @@ mcp_servers:
   # installing it and confirming its run command.
 
 # Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
-# verify / pyzotero via MCP). `web` is DISABLED: every external lookup (retraction,
-# Zotero, Semantic Scholar citation context) now goes through the verify + pyzotero MCP
-# servers — gated, audited, deterministic — so the agent makes no direct API calls and
-# the only vault-write path is the gated obsidian MCP. disabled_toolsets = every Hermes
-# toolset NOT in the keep-set. Update if Hermes adds toolsets.
+# pyzotero via MCP). `web` is DISABLED: every external lookup (Zotero, Semantic
+# Scholar citation context) goes through the pyzotero MCP — gated, audited,
+# deterministic — so the agent makes no direct API calls and the only vault-write
+# path is the gated obsidian MCP. Retraction checks are NOT an agent capability:
+# they run as the cron-only sweep engine engines/sweeps/retraction.py (ADR-46/D41).
+# disabled_toolsets = every Hermes toolset NOT in the keep-set. Update if Hermes
+# adds toolsets.
 agent:
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 

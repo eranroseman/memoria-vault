@@ -49,7 +49,7 @@ All five are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappe
 
 | Cron | Schedule | Runs | Effect |
 | --- | --- | --- | --- |
-| `memoria-board-export` | `* * * * *` | `board_export.py` (+ metrics) | Projects the live kanban board into `system/board/` and appends the six-signal telemetry. |
+| `memoria-board-export` | `* * * * *` | `board_export.py` | Projects the live kanban board into `system/board/` and appends its telemetry logs (metrics aggregation is the separate weekly `memoria-metrics` job). |
 | `memoria-sweeps` | `*/15 * * * *` | `engines/sweeps/reconcile.py` | Recovers stalled captures: enqueues idempotent re-ingest cards (see [Ingest routing](ingest.md)). |
 | `memoria-lint` | `0 6 * * *` | `engines/linter/detectors.py` + `golden.py check` | The daily monitor: structural detectors + golden-copy drift (see [Linter: detectors and auto-fix](linter.md)). |
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
