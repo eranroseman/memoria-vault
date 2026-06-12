@@ -52,6 +52,14 @@ shipped shape (`src/`, not a live vault) and the new restore capability.
   customizations) is the known open question to resolve when v0.1.0-alpha.3 ships.
 - The installer gets simpler to reason about: scaffold and populate are idempotent,
   separately testable steps.
+- Together with the lane ceilings this closes the template-protection question
+  (#179) as **both**: agents cannot overwrite `system/templates/` because every
+  shipped lane-override denies `system/**` (the co-PI denies `**`) and no lane's
+  `allow.write` / `write_scope` / auto-fix scope reaches into `system/`, enforced
+  by the write gate ([ADR-28](28-write-gate-as-plugin.md)); an accidental *human*
+  overwrite (or deletion) is detected as golden-copy drift and restored via
+  `lint:restore`. Both halves are test-pinned (`tests/test_policy_mcp.py`,
+  `tests/test_golden_restore.py`).
 
 ## Alternatives considered
 

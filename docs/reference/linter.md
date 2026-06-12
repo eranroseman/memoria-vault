@@ -50,7 +50,9 @@ The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md) D50): t
 
 ## The golden copy
 
-[src/.memoria/engines/linter/golden.py](../../src/.memoria/engines/linter/golden.py) turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+[src/.memoria/engines/linter/golden.py](../../src/.memoria/engines/linter/golden.py) turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+
+This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
 | Command | Effect |
 | --- | --- |
