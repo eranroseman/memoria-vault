@@ -59,14 +59,7 @@ The audit trail for each callout is the deterministic step's output (which candi
 
 ## Drift signals
 
-The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over time:
-
-| Accept rate | Indicates |
-| --- | --- |
-| > ~90% | Rubber-stamping — candidate scoring is too permissive |
-| < ~20% | Candidates not relevant enough — scoring needs tuning |
-
-How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
+The fleet-health dashboard tracks `[!suggestions]` accept/reject ratios over time; the ratio extremes that flag rubber-stamping versus over-strict scoring are defined with the trust score in [Dashboards](dashboards.md#trust-score-fleet-health). How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
 
 ---
 

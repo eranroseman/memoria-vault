@@ -8,7 +8,7 @@ nav_order: 7
 
 Put a draft in front of the **Peer-reviewer** — the independent, adversarial `verify` lane — read the finding-first flag cards it raises, close the gaps, and loop until clean or the remaining gaps are consciously accepted. The Peer-reviewer's posture is *flag, don't fix*: the only thing it can write is Inbox cards; every edit is yours.
 
-> Per-commit project verification — drafts in `projects/` checked claim by claim on every commit — ships with the v0.1.0-alpha.3 Project release. In v0.1.0-alpha.2 you run verify passes deliberately, as below.
+> Per-commit project verification arrives until the alpha.3 Project release ([Start a writing project](start-a-writing-project.md)); in v0.1.0-alpha.2 you run verify passes deliberately, as below.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ In the co-PI pane:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 
-The co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify a draft** — defaults to the active note when it's under `projects/`.) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
+The co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify a draft** — defaults to the active note when it's under `projects/`; see [Command palette](../../reference/obsidian-command-palette.md).) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
 
 **2. Read the flag cards.**
 

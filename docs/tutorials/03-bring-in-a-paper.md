@@ -50,15 +50,9 @@ Open `catalog/papers/<citekey>.md` and look at the `relationships` block — tha
 
 Capture doesn't end with a silent import: a **`candidate` card** lands in your Inbox proposing the keep. Open `home.md` — the card is in the **What needs me** view — or open the file in `inbox/`.
 
-The card carries the honesty body — an argument, never a verdict ([The honesty card](../explanation/kanban-board/card-schema.md)):
+The card carries the honesty body — an argument, never a verdict: an `action`, the case for and against, what tipped it, and a certainty level. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
 
-- **`action`** — what you'd be accepting if you act
-- **`argument_for`** — the case for keeping it
-- **`argument_against`** — the agent's strongest honest self-rebuttal
-- **`what_tipped_it`** — the single deciding reason
-- **`certainty`** — `confident` / `likely` / `unsure`
-
-Read the *against* case first — it's the information-bearing field. Then decide: keep it (set `lifecycle: proposed` to `current`) or skip it (set it straight to `archived` — the Catalog entry stays as a record). For this tutorial, keep it; you'll archive the card in Step 5 once you've acted on it.
+Read the `argument_against` case first — it's the information-bearing field. Then decide: keep it (set `lifecycle: proposed` to `current`) or skip it (set it straight to `archived` — the Catalog entry stays as a record). For this tutorial, keep it; you'll archive the card in Step 5 once you've acted on it.
 
 ---
 
@@ -82,7 +76,7 @@ source_type: paper
 ```
 
 - **`entity`** — the wikilink back to the Catalog entity from Step 2. Every source note is *about* exactly one Catalog entry.
-- **`lifecycle: proposed`** — a source note starts proposed and advances as your distillation matures (the full chain runs `proposed → provisional → current → retracted → archived`; see [Note types](../reference/note-types.md)).
+- **`lifecycle: proposed`** — a source note starts proposed and advances as your distillation matures along the lifecycle chain (full chain and per-type subsets: [Frontmatter fields](../reference/frontmatter.md); the note types themselves: [Note types](../reference/note-types.md)).
 
 Fill the three body sections the template gives you:
 

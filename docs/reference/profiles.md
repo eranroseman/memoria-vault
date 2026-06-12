@@ -76,17 +76,17 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 
 ## Bundled skills
 
-**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`, named by the `<task>-<verb>-<object>` convention:
+**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. A skill's name uses the `<task>:<verb>-<object>` convention with a colon (e.g. `catalog:enrich-record`, `delegate:route-task`); on disk the colon becomes a hyphen (`skills/catalog-enrich-record/`).
 
-| Profile | Skills | Count |
-| --- | --- | --- |
-| `memoria-copi` | `ask-question-source`, `ask-read-lens`, `delegate-route-task`, `explain-the-system`, `explore-branch-framings` | 5 |
-| `memoria-librarian` | `catalog-classify-source`, `catalog-enrich-record`, `catalog-find-source`, `catalog-rank-candidate`, `extract-flag-distill`, `extract-stub-claim`, `link-suggest-claim`, `link-surface-tension`, `map-cluster-corpus`, `map-report-coverage`, `map-scope-project`, `map-seed-canvas` | 12 |
-| `memoria-writer` | `draft-bind-citation`, `draft-outline-argument`, `draft-score-outline`, `draft-write-section` | 4 |
-| `memoria-peer-reviewer` | `verify-card-gap`, `verify-check-citation`, `verify-propose-fix`, `verify-trace-claim` | 4 |
-| `memoria-engineer` | _none bundled — the code lane scaffolds an external-agent handoff_ | 0 |
+| Profile | Bundled-skill count |
+| --- | --- |
+| `memoria-copi` | 5 |
+| `memoria-librarian` | 12 |
+| `memoria-writer` | 4 |
+| `memoria-peer-reviewer` | 4 |
+| `memoria-engineer` | 0 — the code lane scaffolds an external-agent handoff |
 
-See [Hermes CLI](hermes-cli.md) for the full skill map (including any legacy-name aliases).
+For the full per-skill map (names, lanes, and legacy-name aliases) see the [Hermes CLI](hermes-cli.md) reference.
 
 ---
 

@@ -21,11 +21,11 @@ In the co-PI pane, name the section, the framing, and the working set:
 
 > "Draft the introduction for `<deliverable>` from `projects/<slug>/chosen-framing.md`, using my claims on `<topic>`. Cite citekeys in-text."
 
-The co-PI calls `delegate_route_task` — the handoff (goal, context, `allowed_paths`, expected outputs, review checks) is validated against the Writer's lane ceiling, and the card lands on the board. (Palette twin: **Memoria: draft a section** — prompts for the goal or outline ref.)
+The co-PI delegates via `delegate_route_task` ([Hermes CLI](../../reference/hermes-cli.md)); the handoff is validated against the Writer's lane ceiling and the card lands on the board. (Palette twin: **Memoria: draft a section** — prompts for the goal or outline ref; see [Command palette](../../reference/obsidian-command-palette.md).)
 
 **2. Know what the lane can and can't do.**
 
-The Writer writes **only** under `projects/` — claims, hubs, catalog, and inbox are denied. Its external-API policy is `blocked`: it composes from the vault, never researches, so it can't cite a source you don't hold. One `running` card at a time; drafts in flight stay bounded — that protects synthesis quality, not throughput.
+The Writer writes **only** under `projects/` — claims, hubs, catalog, and inbox are denied. Its external-API policy is `blocked`: it composes from the vault, never researches, so it can't cite a source you don't hold. One `running` card at a time keeps drafts in flight bounded ([Kanban board reference](../../reference/kanban-board.md)).
 
 **3. Pick up the result.**
 

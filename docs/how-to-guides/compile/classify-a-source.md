@@ -20,7 +20,7 @@ Settle the `research_area` (and `methodology`) the ingest engine couldn't decide
 
 **1. Handle any classify `flag` card first.**
 
-If ingest hit genuine ambiguity, a flag card titled along the lines of "Ambiguous research area for `<citekey>`" sits in your Inbox. It carries the `finding` and the scored candidates — never a verdict. Pick the right value, write it into the paper entity's frontmatter yourself, then resolve the card (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**).
+If ingest hit genuine ambiguity, a flag card titled along the lines of "Ambiguous research area for `<citekey>`" sits in your Inbox. It carries the `finding` and the scored candidates — never a verdict. Pick the right value, write it into the paper entity's frontmatter yourself, then resolve the card ([Work the review queue](../compose/work-the-review-queue.md)).
 
 **2. Open the paper entity and review what the automation applied.**
 

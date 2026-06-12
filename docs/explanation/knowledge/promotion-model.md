@@ -22,17 +22,7 @@ What is deliberately *not* gated: the Catalog. Entity records are clean mechanic
 
 ## The honesty card: what an approval gate hands you
 
-Every approval gate has the same failure mode: **automation bias**. Hand a human a confident verdict and their scrutiny drops — and for a proposal, the verdict is a *given* anyway (the agent surfaced the item because it recommends it). So a card that says "ACCEPT? ✓" is theater.
-
-The fix is the **honesty card** ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). A proposal in the Inbox carries:
-
-- **Action** — what you would be accepting
-- **Argument for**
-- **Argument against** — the agent's strongest self-rebuttal
-- **What tipped it** — the deciding reason
-- **Certainty** — three levels, action-labelled
-
-…and **no verdict line**. The against-case and the certainty are the information-bearing fields: they make the PI judge the *argument*, not a foregone conclusion. Verification and adjudication items are different — there the verdict is not a given, so a `flag` leads with the **finding** and carries `agent_recommendation` (`clean` / `issues-found` / `inconclusive`). Either way, the rule from the design guardrails holds: *an Inbox item a human can clear without reading is a design smell.*
+The gate hands the PI a proposal, not a verdict. A proposal card carries an honest argument (with the agent's strongest self-rebuttal) and no verdict line; a verification card leads with the finding instead. Why that shape defeats automation bias — and the per-card field breakdown — is developed in [The honesty card](../kanban-board/card-schema.md) (fields in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields)). The rule it serves: *an Inbox item a human can clear without reading is a design smell.*
 
 ---
 
@@ -59,17 +49,11 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 
 ---
 
-## Rejection spawns a new card
-
-When the PI rejects a proposal, the card is not reopened and reworked — it is archived, and rework begins on a **new card** that records what it supersedes. This mirrors claim supersession: each card is one attempt with one stated outcome, so the audit trail cannot lie about how many tries something took.
-
----
-
 ## Why this feels slow
 
 The human gate is the system's bottleneck by design. Agents can catalog, extract, and draft faster than the PI can review; the proposal queue grows unless the PI keeps pace. A system that could populate `notes/claims/` without the PI's attention would be a system where the PI no longer owns their own knowledge base.
 
-The right response to a full queue is not to automate review but to let the **WIP limits** bite: the review queue is capped, each lane runs one card at a time, and when the cap is hit, new work stops being dispatched. Back-pressure makes the bottleneck visible instead of letting "reviewed" silently degrade into "rubber-stamped." The gate is also instrumented — time-on-gate and accept-rate feed the fleet-health dashboard — so a gate that has stopped being a real decision shows up in the data.
+The right response to a full queue is not to automate review but to let the WIP limits and back-pressure bite — the board mechanism that makes the bottleneck visible instead of letting "reviewed" silently degrade into "rubber-stamped." That mechanism, and the rule that a rejected proposal spawns a fresh card rather than reopening the old one, are explained in [Board states and the review gate](../kanban-board/states.md). The gate is also instrumented — time-on-gate and accept-rate feed the fleet-health dashboard — so a gate that has stopped being a real decision shows up in the data.
 
 ---
 

@@ -32,7 +32,7 @@ The `## Claim` section states the single durable idea. Atomicity is the constrai
 
 The `## Evidence and argument` section is what distinguishes a claim from an assertion. A claim with no evidence is an opinion. A claim with citekeys pointing to supporting sources is an argument that can be verified, updated, and superseded as evidence accumulates.
 
-The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. Authored links (`supports`, `contradicts`, hub membership) are what make the vault a graph rather than a collection ([ADR-52](../../adr/52-links-vs-relationships.md)). A note that supports, contradicts, or extends another note has been integrated; one without links has not.
+The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. The `links:` here are *authored* connections (as distinct from the *given* `relationships` on entities — that distinction is explained in [Note types and epistemic roles](note-types.md)), and they are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without links has not.
 
 This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Links section makes that discipline structural rather than aspirational (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
@@ -54,7 +54,7 @@ A source note records what a source says, from an external perspective. A claim 
 
 Mixing these produces notes that serve neither purpose well. A source note that contains the PI's claims makes citation tracing ambiguous — did the citekey in a draft point to what the source says, or to what the PI concluded? A claim that summarizes a paper rather than asserting the PI's own position is not a claim; it is a misplaced source note.
 
-The separation is what allows agent permissions to be cleanly scoped: agents can build entity records and propose source-note material, because recording what a source says is bookkeeping. They cannot write `notes/claims/` or `notes/hubs/`, because asserting the PI's synthesis is not.
+The separation is what allows agent permissions to be cleanly scoped — recording what a source says is delegable bookkeeping, while asserting the PI's synthesis is not, which is why `notes/claims/` and `notes/hubs/` are gated. That bookkeeping-vs-synthesis boundary is developed in [Note types and epistemic roles](note-types.md).
 
 ---
 

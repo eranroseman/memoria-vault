@@ -16,16 +16,9 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-The install model is [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md): the repo ships **`src/` — source files, never a live vault** — and the installer derives a running vault from it:
+The install model is [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md): the repo ships **`src/` — source files, never a live vault** — and the installer derives a running vault from it. The shape of the flow is **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it with system files from `src/`, then **stage the golden copy** (a hashed `<vault>/.memoria/golden/` baseline that turns the Linter from a detector into a repairer via `lint:restore`). From there it wires the pre-commit gate, installs Hermes and the five profiles (pruning stale `memoria-*` profiles), offers the optional cluster stack, installs Obsidian if absent, and wires the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
 
-1. **Scaffold.** Create the vault's folder tree. The skeleton is checked against the machine-read folder map (`.memoria/schemas/folders.yaml` — the same single source the Linter and the policy gate key off), and empty content dirs are recreated explicitly rather than shipped as placeholder files.
-2. **Populate.** Copy the system files from `src/` (templates, profiles, schemas, dashboards, patterns, Obsidian config). On a refresh, author-owned files are overwritten and the user's notes and `.env` are kept — populate is idempotent.
-3. **Stage the golden copy.** Every system file is copied to `<vault>/.memoria/golden/` with a hash manifest. This is what turns the Linter from a *detector* into a *repairer*: on drift or corruption it restores from the golden copy (`lint:restore`, propose-only by default) without re-running the installer.
-4. **Wire the pre-commit gate.** If the vault is a git repo, the Linter's `schema-check` hook is installed — it *gates at commit, monitors between* (D50).
-5. **Install Hermes**, then the **five profiles** (co-PI, Librarian, Writer, Peer-reviewer, Engineer), **pruning** any stale `memoria-*` profiles from earlier releases (fresh-install discipline — releases replace, never migrate in place).
-6. **Optional cluster stack.** The clustering engine's topic modeling needs a heavy dependency set (~2 GB); it is an explicit opt-in prompt, and everything else works without it.
-7. **Install Obsidian** if absent — and *only* Obsidian. **Zotero left the installer**: it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
-8. **Wire the crons** — the board-export telemetry tick, the re-ingest sweeps, and the **daily lint** run (detectors + golden-copy drift), then print the few finish-setup steps that genuinely can't be automated (secrets, enabling plugins).
+The design choices worth calling out here are why the flow is shaped this way. Scaffold-and-populate keeps the source/runtime separation [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) demands. The golden copy is what makes the deployed vault self-healing without re-running the installer. Profile pruning enforces fresh-install discipline — releases replace, never migrate in place. And Zotero deliberately *left* the installer: it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 
 ## Goals and non-goals
 

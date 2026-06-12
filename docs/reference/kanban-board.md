@@ -11,14 +11,7 @@ Lookup tables for the Hermes Kanban board — the control plane for every unit o
 
 ## Lanes = the four background agents
 
-A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-agent-consolidation.md)):
-
-| Assignee (lane id) | Task lanes it serves |
-| --- | --- |
-| `memoria-librarian` | `catalog` · `extract` · `link` · `map` |
-| `memoria-writer` | `draft` |
-| `memoria-peer-reviewer` | `verify` |
-| `memoria-engineer` | `code` |
+A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. The lane → profile map (which task lanes each assignee serves) is owned by [Profile capabilities](profiles.md).
 
 ---
 
@@ -46,7 +39,7 @@ Forward-looking and self-contained — the receiver needs nothing beyond it:
 
 ## Execution lifecycle — the hidden mechanic
 
-Cards carry the Hermes-native `status` enum. This chain is the **hidden execution mechanic**: the PI-facing state of any piece of work is the note's `lifecycle` (`proposed → provisional → current → retracted → archived`, [ADR-50](../adr/50-universal-lifecycle-and-maturity.md)), surfaced through the Inbox — not the board column. Never use one in place of the other.
+Cards carry the Hermes-native `status` enum. This chain is the **hidden execution mechanic**: the PI-facing state of any piece of work is the note's `lifecycle` (the universal chain, owned by [Frontmatter fields](frontmatter.md)), surfaced through the Inbox — not the board column. Never use one in place of the other.
 
 ```text
 triage ──► todo ──► ready ──► running ──► done ──► archived
@@ -64,7 +57,7 @@ triage ──► todo ──► ready ──► running ──► done ──►
 | `done` | Worker finished; the result surfaces as an Inbox card or a proposed note. The board export raises **one `work-prompt` review card** in `inbox/` on this transition (see below). | Worker |
 | `archived` | Terminal. | `hermes kanban archive` |
 
-Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (`inconclusive` / `issues-found` / `clean` — the soft verdict on verification cards, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
+Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (the soft verdict on verification cards — its values are in the [Glossary](glossary.md) Verdicts table, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
 
 **Rejection spawns a new card** (`supersedes: <original-id>`; the original archives as `superseded`), mirroring claim supersession — each card is one attempt, so the audit trail can't lie. Abandoned work archives as `discarded`.
 

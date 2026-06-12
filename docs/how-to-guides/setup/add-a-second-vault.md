@@ -50,9 +50,9 @@ Obsidian supports multiple vaults. File → Open Another Vault → Open folder a
 
 **5. Give the second vault its own MCP port and copy its key.**
 
-Each vault's Obsidian instance runs its own Local REST API plugin, and two instances can't share the insecure HTTP port. In the second vault's `data.json`, set a distinct `insecurePort` (e.g. `27125`), keep `enableInsecureServer: true`, and restart Obsidian. Then, in each second-vault profile's `.env`:
+Each vault's Obsidian instance runs its own Local REST API plugin, and two instances can't share the one insecure HTTP port ([Set up Obsidian](set-up-obsidian.md) covers the port itself). In the second vault's `data.json`, set a distinct `insecurePort` (e.g. `27125`), keep `enableInsecureServer: true`, and restart Obsidian. Then, in each second-vault profile's `.env`:
 
-- `OBSIDIAN_MCP_PORT` = that port (e.g. `27125`), so the native MCP url targets the right instance ([ADR-31](../../adr/31-native-obsidian-mcp.md)).
+- `OBSIDIAN_MCP_PORT` = that port (e.g. `27125`), so the native MCP targets the right instance.
 - `OBSIDIAN_API_KEY` = the second instance's `apiKey` (Settings → Local REST API).
 
 > **Tip — full isolation.** To keep the two vaults' profiles, skills, and `.env`s completely separate, install the second vault under its own Hermes home: `HERMES_HOME=~/.hermes-project2 bash scripts/install.sh --vault ~/my-second-vault`. Each `HERMES_HOME` then owns an independent set of `memoria-*` profiles, sidestepping the alias dance above. (The HTTPS port 27124 is still single-instance — run the two Obsidian windows on distinct `insecurePort`s as above.)

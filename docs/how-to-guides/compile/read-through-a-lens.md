@@ -40,7 +40,7 @@ Switching lenses mid-session muddies whose questions are being asked. For a diff
 
 **4. Read actively — the lens shapes questions, not answers.**
 
-The co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault — its write scope is empty. The entire product is the conversation (which exports to `notes/fleeting/chats/` on close).
+The co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault ([The co-PI](../../explanation/profiles/co-pi.md)). The entire product is the conversation (which exports to `notes/fleeting/chats/` on close).
 
 **5. Capture what the lens surfaced — yourself.**
 

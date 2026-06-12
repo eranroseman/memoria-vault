@@ -35,21 +35,7 @@ Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* 
 
 ## audit.jsonl
 
-The write-gate's decision trail. Schema and SHA-256 rules are owned by [Policy MCP](policy-mcp.md#audit-log-format); reproduced here for completeness:
-
-```json
-{
-  "timestamp": "2026-05-31T14:23:01Z",
-  "profile": "memoria-librarian",
-  "action": "write",
-  "path": "catalog/papers/smith-2024.md",
-  "task_id": "TASK-2026-05-31-003",
-  "decision": "allow_with_log",
-  "policy_rule": "librarian.write.catalog",
-  "before_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb924...",
-  "after_hash":  "sha256:a87ff679a2f3e71d9181a67b7542122c..."
-}
-```
+The write-gate's decision trail. Its full schema — the field table, the JSON example, the `decision` enum, and the per-write SHA-256 hash-pairing rules — is owned by [Policy MCP](policy-mcp.md#audit-log-format).
 
 Every gated decision is logged when the lane requires `audit_log` (all shipped Memoria lanes do), and `allow_with_log` / `deny` / `dry_run` are logged unconditionally. So for the shipped lanes every decision — `allow`, `allow_with_log`, `deny`, and `dry_run` — appends a row. Only a plain `allow` on a lane that does *not* require `audit_log` would write nothing.
 

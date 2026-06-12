@@ -39,7 +39,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
-The five vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `system`) are the legal top-level set — the Linter flags any stray root folder. Gated prefixes (`notes/claims/`, `notes/hubs/`) and the transient prefix (`inbox/`) are declared in `folders.yaml`, not hardcoded.
+The five vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Note types](note-types.md).
 
 ---
 
@@ -92,16 +92,7 @@ Shipped in [src/.obsidian/](../../src/.obsidian): `app.json`, `appearance.json`,
 
 ### The Bases views
 
-Obsidian Bases (`.base` files) are the read-only database views over the typed notes ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)):
-
-| File | View over |
-| --- | --- |
-| `catalog/catalog.base` | The Catalog — entity records by type. |
-| `inbox/inbox.base` | The Inbox board — cards grouped by type; "Needs me" = `proposed`. |
-| `system/dashboards/claims.base` | Claims by maturity. |
-| `system/dashboards/sources.base` | Source notes by lifecycle. |
-| `system/dashboards/fleeting.base` | Fleeting notes awaiting promotion. |
-| `system/patterns/patterns.base` | The pattern library by mode/lifecycle. |
+The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, the `claims`/`sources`/`fleeting` bases in `system/dashboards/`, and `system/patterns/patterns.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
 
 ---
 

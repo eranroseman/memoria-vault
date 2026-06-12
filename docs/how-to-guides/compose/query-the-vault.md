@@ -40,7 +40,7 @@ The active note auto-attaches; attach others via the paperclip when the question
 
 **2. Interrogate the answer.**
 
-The co-PI reads the vault directly (hybrid keyword + vector search over `qmd`, plus the typed graph). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
+The co-PI reads the vault directly and never writes (hybrid keyword + vector search over `qmd`, plus the typed graph — [The co-PI](../../explanation/profiles/co-pi.md)). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
 
 **3. Keep what's worth keeping — yourself.**
 

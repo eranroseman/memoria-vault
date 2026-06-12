@@ -46,12 +46,7 @@ Type `exit` or Ctrl-C to end a session cleanly.
 
 No special flag is needed to chat safely — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../compose/work-the-review-queue.md)).
 
-To test a single permission decision without any agent at all, use the policy MCP's one-shot mode:
-
-```bash
-.memoria/.venv/bin/python .memoria/mcp/policy_mcp.py --vault <vault> \
-  --decide '{"profile":"memoria-writer","action":"write","path":"projects/x/draft.md","task_id":"T1"}'
-```
+To test a single permission decision without any agent at all, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configuration.md#verify-a-configuration-change)).
 
 ## Watching what a session did
 

@@ -19,11 +19,9 @@ Further views round out the forensic picture: **per-profile activity over the la
 
 ## What it is not
 
-**Not drift-watch.** The audit log records per-write decisions (policy MCP outcome per attempted write). Drift-watch records per-lint-pass structural findings. Different cadence, different abstraction layer.
+**Not fleet-health or drift-watch.** The audit log is the raw event stream — one JSON object per write decision; the other two aggregate. For where each sits, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
-**Not fleet-health.** Fleet-health aggregates audit log entries into rolled-up trend metrics. The audit log is the raw event stream — one JSON object per write decision.
-
-**Not editable.** The log is append-only by design. Each mutating entry carries `before_hash` and `after_hash` SHA-256s and is paired with a `write_complete` record; the Linter's `audit-unpaired-writes` detector flags a write whose pairing never completed, and this view flags a path whose recorded `after_hash` no longer matches the file. Editing the audit log would break that reversibility.
+**Not editable.** The log is append-only by design: each mutating write is recorded with a hash pair so the action stays reversible, and editing the log would break that. This view flags a path whose recorded after-hash no longer matches the file; the Linter's `audit-unpaired-writes` detector flags a write whose pairing never completed. The hash-pairing mechanism and the full entry schema are owned by [Policy MCP](../../../reference/policy-mcp.md).
 
 ## Why a spike in denies is a security signal
 
@@ -31,7 +29,7 @@ Memoria ingests untrusted PDFs — a potential indirect prompt injection surface
 
 ## Log size
 
-The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only **forever** — never rotated ([ADR-25](../../../adr/25-session-logging-two-logs.md)); the Linter's `audit-log-size` advisory surfaces growth past 50 MB. The audit log's substrate (and the event-field schema) is reference detail — see [Memory substrates](../../../reference/memory.md).
+The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent denies), so the surface stays bounded even though the log itself is append-only **forever** — never rotated ([ADR-25](../../../adr/25-session-logging-two-logs.md)); the Linter's `audit-log-size` advisory surfaces growth past 50 MB. The audit log's substrate is reference detail — see [Memory substrates](../../../reference/memory.md); the event-field schema lives in [Policy MCP](../../../reference/policy-mcp.md).
 
 ## Related
 

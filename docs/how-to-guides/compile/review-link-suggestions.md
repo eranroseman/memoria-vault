@@ -10,7 +10,7 @@ Work through the link proposals the Librarian's **`link` lane** raises — candi
 
 This is different from [Link related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` link you've decided on; this one is for *triaging the agent's proposals*.
 
-Because `notes/claims/` is review-gated, the link lane can't touch your `links:` maps — its findings land as Inbox cards instead: a suggested connection as a **`gap`** proposal carrying the honesty body (`argument_for`, `argument_against`, `what_tipped_it`, `certainty` — never a verdict), a surfaced tension leading with the `finding`.
+Because `notes/claims/` is review-gated, the link lane can't touch your `links:` maps — its findings land as Inbox cards instead: a suggested connection as a **`gap`** proposal carrying the honesty body — never a verdict ([Frontmatter fields](../../reference/frontmatter.md)) — a surfaced tension leading with the `finding`.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ links:
     - "[[the-other-claim]]"
 ```
 
-Then resolve the card to `current` → `archived` (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**). The agent proposed; your hand on the file is the approval.
+Then resolve the card to `current` → `archived` ([Work the review queue](../compose/work-the-review-queue.md)). The agent proposed; your hand on the file is the approval.
 
 **4. Reject the rest — don't leave them pending.**
 
@@ -44,7 +44,7 @@ Resolve unconvincing cards straight to `archived`. Leaving cards undecided defea
 
 **5. Resist approve-all.**
 
-The fleet-health dashboard tracks accept/reject ratios as a trust-score signal — an accept rate near 100% reads as rubber-stamping, and a rate below ~20% means candidate scoring needs tuning ([Dashboards](../../reference/dashboards.md)). Both extremes are worth acting on.
+The fleet-health dashboard tracks your accept/reject ratio as a trust-score signal — both a too-high rate (rubber-stamping) and a too-low one (scoring needs tuning) are worth acting on ([Dashboards](../../reference/dashboards.md)).
 
 ## Verify
 

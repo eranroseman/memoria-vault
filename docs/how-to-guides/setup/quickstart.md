@@ -29,7 +29,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer provisions Hermes, scaffolds and populates your runtime vault (default `~/Memoria`, off OneDrive), deploys the **five profiles** (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`), and wires the maintenance crons.
+The installer provisions Hermes, scaffolds your runtime vault (default `~/Memoria`), deploys the **five profiles** (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`), and wires the maintenance crons — full walkthrough in [Set up the vault](set-up-the-vault.md).
 
 **2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. The required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
@@ -47,11 +47,13 @@ Propagate them into every profile (profile runs read only their own `.env`):
 bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-**4. Make the vault a git repo.** obsidian-git and the pre-commit schema gate need one, and the installer deliberately doesn't `git init` for you:
+**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git and the pre-commit schema gate need a repo:
 
 ```bash
 cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
 ```
+
+The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
 **5. Bring in your first source.** In Obsidian: `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste a paper's URL (one with a resolvable DOI) — or open the Agent Client pane and tell the co-PI "bring in this paper: `<DOI>`". The Librarian's lane does the rest and raises a candidate card in your Inbox.
 

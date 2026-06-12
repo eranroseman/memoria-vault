@@ -43,7 +43,7 @@ A **`claim`** is one durable assertion in the PI's own words, linked to the sour
 
 Claims live in `notes/claims/` — a **review-gated zone** (🔒): agents draft claim *stubs* into staging, but the canonical claim is human-made. The discipline is atomicity — one claim per note, Luhmann's one-idea-per-slip rule — because wikilinks citing a multi-claim note are ambiguous, and a multi-claim note cannot be cleanly superseded when evidence changes. The test: if the title contains an "and" doing real conceptual work, it is two notes.
 
-Claims carry `maturity` (`seedling → budding → evergreen`) — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
+Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). The values and the "signal, not a gate" rule are owned by [Why promotion is gated](promotion-model.md); the field is defined in [Frontmatter fields](../../reference/frontmatter.md).
 
 ### Hubs: authored navigation
 
@@ -75,7 +75,7 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 
 **Agent permissions.** The boundary follows the epistemic roles: agents (and the ingest engine) build entity records and propose source-note material, but `notes/claims/` and `notes/hubs/` are gated — recording what a source says is bookkeeping; asserting the PI's synthesis is not delegable.
 
-**Lifecycle subsets.** Every type uses a subset of the one chain (`proposed → provisional → current → retracted → archived`), declared in its schema file under `.memoria/schemas/types/`. The subset encodes the epistemic shape: entities are born `current` (facts don't await approval); source notes start `proposed` (awaiting reading); claims exist only once the PI makes them `current`.
+**Lifecycle subsets.** Every type uses a subset of the one universal lifecycle chain, declared in its schema file under `.memoria/schemas/types/`; the chain and its values are defined in [Frontmatter fields](../../reference/frontmatter.md). The subset encodes the epistemic shape: entities are born `current` (facts don't await approval); source notes start `proposed` (awaiting reading); claims exist only once the PI makes them `current`.
 
 ---
 

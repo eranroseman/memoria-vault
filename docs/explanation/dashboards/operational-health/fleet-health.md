@@ -13,28 +13,20 @@ Tracks whether the Hermes agent fleet is performing well over time. This dashboa
 
 Operational health per lane over time: cost per task, success rate, retry frequency, latency, and the headline **trust score** (0–100). The trust score is the number to read first; the rest are the signals it rolls up.
 
-The trust score for each lane is a composite of several signals: audit deny rate, structural drift incidents, secret-field access attempts, retry rate, success rate, and — for lanes that raise proposal cards — the PI's accept/reject ratios and time-on-gate on those proposals (the gate's attention instrumentation, D49).
-
-The score is designed so that no single signal dominates, which means a lane can have a perfect citation-check record but a low trust score if its proposal accept rate signals rubber-stamping. Conversely, a high accept rate combined with a low success rate would still produce a low score. The composite is what makes the number a summary of overall lane health rather than a measure of any one metric.
-
-The accept-ratio signal is worth understanding in both directions. A very high accept rate (above ~90%) indicates the human is approving proposals without reading them — the honesty card's against-case has stopped being read, and the signal has become noise. A very low accept rate (below ~20%) indicates the lane is producing poor proposals that need tuning. Both extremes down-weight the lane score, because both represent a failure of the proposal mechanism to do useful work.
-
-For the exact band thresholds and the score formula, see [Glossary](../../../reference/glossary.md).
+The point of a composite is that no single signal dominates: a lane can have a perfect citation-check record yet a low score if its proposal accept rate signals rubber-stamping, and a high accept rate paired with a low success rate still scores low. That is what makes the number a summary of overall lane health rather than a measure of any one metric. The inputs, the band thresholds, and the accept-ratio extremes (both too-high and too-low down-weight the lane) are specified in the [Dashboards](../../../reference/dashboards.md#trust-score-fleet-health) reference.
 
 ## What it is not
 
-**Not audit-log.** Fleet-health aggregates across many completed writes into trends. The audit log is per-decision forensics.
-
 **Not board-state.** Board-state shows what work is currently in flight. Fleet-health shows the quality and cost of completed work over time.
 
-**Not drift-watch.** Fleet-health is operational (cost, latency, success rates). Drift-watch is structural (Linter structural-detector findings). They are complementary: trust score is the operational headline; verdict band is the structural headline. Both are reproduced from logs without LLM judgment.
+**Not audit-log or drift-watch.** Fleet-health aggregates completed work into operational trends (trust score is its headline); audit-log is per-decision forensics, and drift-watch is the structural sibling (verdict band is its headline). For the full three-way distinction, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
 ## When it shows real data
 
-The dashboard and its metrics aggregator ship in `src/` and deploy with the vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. The dashboard degrades gracefully: it shows explanatory text rather than empty or misleading small-sample tables.
+The dashboard and its metrics aggregator ship in `src/` and deploy with the vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. Its dashboard-specific empty state: rather than a misleading small-sample table, it shows explanatory text until there is enough volume to trust the numbers (the general [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
 
 ## Related
 
 - [audit-log dashboard](audit-log.md) — per-decision forensics that feed the deny-rate input
 - [drift-watch dashboard](../structural-health/drift-watch.md) — structural complement; verdict band is the structural sibling of trust score
-- [Glossary](../../../reference/glossary.md) — trust score formula and band definitions
+- [Dashboards](../../../reference/dashboards.md#trust-score-fleet-health) — trust score formula, inputs, and band definitions

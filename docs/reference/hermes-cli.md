@@ -13,13 +13,17 @@ Command structure: `hermes <command> [subcommand] [args]` — runs from any dire
 
 ## The profile set
 
-Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)). The v0.1.0-alpha.1 profiles `memoria-mapper` / `-socratic` / `-verifier` / `-coder` / `-linter` are retired; the installer prunes them.
+Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)). The v0.1.0-alpha.1 profiles are retired and pruned on upgrade — see the retired-names list in the [Installer (bootstrap)](installer.md).
 
 ---
 
 ## Skill names: the `<task>:<verb>-<object>` convention
 
-Every skill follows **`<task>:<verb>-<object>`** (snake `<task>_<verb>_<object>` when serialized as an MCP tool; **hyphen-joined on disk and at the `-s` flag**, since directory and skill-load names cannot carry `:` — `catalog:enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`): the task/lane is the prefix, the verb comes from a closed set, the object is the artifact — so a skill's name says which task delegates it. The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches this table exactly (enforced by `tests/test_profiles.py`); **legacy v0.1.0-alpha.1 names in parentheses**:
+A skill's **name** uses a colon: **`<task>:<verb>-<object>`** — the task/lane is the prefix, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog:enrich-record`, `link:suggest-claim`, `delegate:route-task`).
+
+The **on-disk directory replaces the colon with a hyphen**, because directory and skill-load names cannot carry `:`. So `catalog:enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record` (the `-s` flag also takes the hyphen form). When serialized as an MCP tool the separators all collapse to underscores: `catalog_enrich_record`.
+
+The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`); **legacy v0.1.0-alpha.1 names in parentheses**:
 
 | Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
@@ -97,7 +101,7 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 
 | Command | What it does |
 | --- | --- |
-| `hermes cron list` | List scheduled tasks with next-run times (you should see the five `memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`, `memoria-eval` crons). |
+| `hermes cron list` | List scheduled tasks with next-run times (you should see the five crons the installer wires — see [Installer (bootstrap)](installer.md)). |
 | `hermes cron create '<spec>' --script <name>.sh --no-agent --name <name> --deliver local` | The shape the installer uses for the deterministic crons. |
 | `hermes cron run <task-name>` | Run a scheduled task immediately. |
 | `hermes cron enable <task-name>` / `disable <task-name>` | Toggle a task without removing it. |

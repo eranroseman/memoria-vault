@@ -21,7 +21,7 @@ The PI works in two modes — **Library** (take knowledge in) and **Project** (p
 |         | **draft**   | generate proposed prose with bound citations            | —               |
 |         | **verify**  | check citations, trace claims, red-team the argument    | `flag`          |
 
-The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. catalog, extract, link, and map are four lanes of the one Librarian posture; draft is the Writer; verify is the Peer-reviewer. All six are reachable from either mode via the command palette.
+The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. The four Library tasks belong to the Librarian posture, draft to the Writer, and verify to the Peer-reviewer; the authoritative task-lane → profile map lives in [Profile capabilities](../../reference/profiles.md). All six are reachable from either mode via the command palette.
 
 A new source typically arrives as a `candidate` card, is kept at triage, and becomes a Catalog entity plus a `proposed` source note. The PI reads it, distills claims in their own words, and confirms the links that connect them into the graph. Those claims mature and cross-link; once enough accumulate, a project maps the corpus, drafts, verifies, and ships.
 

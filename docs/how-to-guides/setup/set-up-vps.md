@@ -43,7 +43,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 bash install.sh --no-apps --vault ~/Memoria
 ```
 
-`--no-apps` skips the Obsidian guidance. The installer provisions Hermes (+ the ACP extra and the `qmd` hub skill), scaffolds and populates the runtime vault, deploys the five profiles, and wires the five maintenance crons (`memoria-board-export`, `memoria-sweeps`, `memoria-lint`, `memoria-metrics`, `memoria-eval`) plus the monthly Retraction Watch refresh wrapper.
+`--no-apps` skips the Obsidian guidance. Otherwise, the installer does its usual work — provision Hermes, scaffold the vault, deploy the five profiles, wire the maintenance crons ([Installer (bootstrap)](../../reference/installer.md)) — plus the monthly Retraction Watch refresh wrapper.
 
 **4. Configure the VPS profiles — remove the Obsidian MCP server.**
 

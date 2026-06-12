@@ -16,7 +16,7 @@ Open a canvas when you have 8–15 relevant claim notes on a topic and need to s
 
 **1. Create the canvas file.**
 
-Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the v0.1.0-alpha.3 Project release scaffolds it). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
+Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the alpha.3 Project release scaffolds it — [Start a writing project](start-a-writing-project.md)). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
 
 **2. Collect the notes.**
 
@@ -36,13 +36,13 @@ Once the arrangement is stable, write the outline from the canvas groupings: eac
 
 **6. Draft.**
 
-Open the canvas in a split pane and draft section by section — yourself, or by delegating sections to the `draft` lane ([Draft with the Writer](draft-with-writer.md)). Every substantive claim in the prose should correspond to a claim note on the canvas; never improvise claims in the draft.
+Open the canvas in a split pane and draft section by section — yourself, or by delegating sections to the `draft` lane ([Draft with the Writer](draft-with-writer.md)). Keep prose claims tied to claim notes on the canvas, never improvised — see [Draft with the Writer](draft-with-writer.md).
 
 ## Conventions
 
 - One canvas per argument cluster or chapter section, not one per paper.
 - Canvases are sketches, not knowledge — the claims are the durable units; delete or shelve the canvas when the section is done.
-- Never embed a canvas in a draft note — the canvas format does not export through Pandoc.
+- Never embed a canvas in a draft note — the canvas format does not export through Pandoc ([Export a draft](export-a-draft.md)).
 
 ## Verify
 

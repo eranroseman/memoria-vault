@@ -6,9 +6,7 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Twelve dashboards in `system/dashboards/`, plus the homepage's above-the-fold glance (the v0.1.0-alpha.1 daily-health dashboard was absorbed into `home.md` — there is no `daily-health.md`). Each dashboard answers one question about the vault; a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first.
-
-For what each dashboard shows in detail, see [Dashboards](../../reference/dashboards.md).
+Each dashboard in `system/dashboards/` answers one question about the vault, and a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
 ## Where the dashboards open
 
@@ -73,23 +71,11 @@ Open when agents behave unexpectedly or queries return wrong results. A FAIL ver
 
 Check monthly or when a lane seems slow or degraded. Not for daily use — meaningful only after a week or more of accumulated data.
 
-### "Did the agents' capabilities slip this quarter?"
-
-**Eval Trend** — open manually.
-
-Check after the quarterly vault-eval run scores (or an on-demand scoring pass). Diagnostic, never gating — a dip is a conversation, not a halt.
-
 ### "What did the policy MCP allow or deny?"
 
 **Audit Log** — open manually.
 
 Open when a write didn't happen as expected ([Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)), or after a lane-override change to confirm the new policy behaves as intended.
-
-### "Which skills are active in which lane?"
-
-**Skill Lifecycle** — open manually.
-
-Open after adding or moving a skill, or after editing a lane override — the consistency-check table flags any disagreement between lane policy and the shipped skills.
 
 ### "What do I need to do this week?"
 
@@ -120,8 +106,6 @@ More than five items is a cleanup signal.
 | Weekly Review | Fridays | Manual |
 | Audit Log | After unexpected write failure | Manual |
 | Fleet Health | Monthly check | Manual |
-| Eval Trend | After the quarterly eval scores | Manual |
-| Skill Lifecycle | After a skill or lane-override change | Manual |
 
 ## Related
 

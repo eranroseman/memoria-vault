@@ -31,11 +31,11 @@ Home's status glance is a one-line rollup read from the telemetry feeds in `syst
 
 ## Why it's designed this way
 
-**Absorption beats a second front door.** A standalone Daily Health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. `home.md` is consumer-only: it embeds views and degrades to empty, so the glance is always exactly as fresh as its feeds.
+**Absorption beats a second front door.** A standalone Daily Health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the front door is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
 
-**Graded loudness decides what reaches it.** Only `alert`-level findings surface in the above-fold glance (pushed, never blocking); `notice` stays in the relevant dashboard and the weekly review; `quiet` is logged only. The test: does it change what the PI does in the next 30 minutes?
+**Graded loudness decides what reaches it.** Only `alert`-level findings surface in the above-fold glance (pushed, never blocking); quieter findings stay in the relevant dashboard or are logged only. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 
-**Graceful degradation.** When a feed has no data yet — a fresh vault with no agent runs — the glance states what would populate it. Empty means "nothing to report," not "something is broken."
+**Graceful degradation.** When a feed has no data yet — a fresh vault with no agent runs — the glance states what would populate it: empty means "nothing to report," not "something is broken" (the cross-cutting [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
 
 **30 seconds is a constraint, not an aspiration.** A daily ritual that consistently takes more than 30 seconds stops being daily. A healthy vault produces an all-clear line and an empty "Needs me" view, and the human closes it immediately. Length is a signal: a long glance means something needs attention, not that the ritual needs more time allocated.
 

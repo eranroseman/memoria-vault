@@ -9,6 +9,8 @@ nav_order: 6
 
 # Release plan — v0.1.0-alpha.1 — appendix
 
+> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+
 The detail behind [Release plan — v0.1.0-alpha.1](release-plan-0.1.0.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
 
 ## Phases — full roadmap

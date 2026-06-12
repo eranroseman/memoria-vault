@@ -12,7 +12,7 @@ The Kanban board is Memoria's **control plane** — the trigger-and-lanes end of
 
 **Lanes are the four background agents** — Librarian, Writer, Peer-reviewer, Engineer (`assignee = memoria-<name>`). There is **no co-PI lane**: the co-PI converses at the desk (the ACP pane) and *delegates* to the board, never works on it. And there are **no engine lanes**: ingest, search, clustering, sweeps, and the Linter are deterministic engines that run on cron/CI, off the board.
 
-The board's central design move is to keep its dimensions separate. The Hermes-native execution `status` (`triage → … → done`) is the **hidden mechanic** the PI never sees; the card state the PI *does* see is the universal **lifecycle chain** — a card in `proposed` is a card awaiting you. A soft `agent_recommendation` rides alongside as a third, orthogonal dimension, so "a worker finished" never silently becomes "a human approved." A card is *work* (transient, archived when done); a vault note is *knowledge* (durable). **Rejection spawns a new card** rather than reopening the old one, so the audit trail can't lie.
+The board's central design move is to keep three dimensions separate — the hidden execution `status`, the PI-facing lifecycle state, and a soft `agent_recommendation` — so "a worker finished" never silently becomes "a human approved." Why they stay separate, and why a rejected card spawns a fresh one rather than reopening, is developed in [Board states and the review gate](states.md); the enums and lane assignments are in the [Kanban board reference](../../reference/kanban-board.md). A card is *work* (transient, archived when done); a vault note is *knowledge* (durable).
 
 ## Documents in this section
 

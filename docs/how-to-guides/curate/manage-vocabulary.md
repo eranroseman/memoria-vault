@@ -51,20 +51,10 @@ Note the consumers: the ingest engine's automated classify stage rolls OpenAlex 
 
 ## Step 3 — Rename a term safely
 
-There is no automated migration command in v0.1.0-alpha.2 — a rename is a deliberate, git-disciplined pass:
+Renaming a vocabulary value across the corpus is the same git-disciplined manual pass as any field migration (commit → enumerate → edit → lint → commit): [Run a schema migration](../operate/run-a-schema-migration.md) is the full procedure. The two vocabulary-specific points:
 
-1. **Commit first** so the rename is one reviewable diff: `git add -A && git commit -m "pre-rename snapshot"`.
-2. **Find every occurrence:** Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/` in the terminal).
-3. **Edit each frontmatter occurrence** to the new term. For a large corpus, a scripted `sed` pass over the matched files is fine — you reviewed the file list in step 2.
-4. **Update `system/vocabulary.md`.**
-5. **Validate:** run the Linter's detectors and review the diff before committing:
-
-```bash
-python3 .memoria/engines/linter/detectors.py --vault . 
-git diff --stat && git add -A && git commit -m "vocab: rename old-term → new-term"
-```
-
-The pre-commit gate re-validates every staged typed note against its schema, so a botched edit blocks the commit instead of landing.
+- **Also update `system/vocabulary.md`** in the same pass — the controlled list and the notes must move together.
+- **Your selector is a frontmatter value**, so enumerate with Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/`) before editing.
 
 ## Step 4 — Annual vocabulary review
 

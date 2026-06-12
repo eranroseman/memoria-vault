@@ -10,6 +10,8 @@ nav_order: 7
 
 # Release plan — v0.1.0-alpha.1
 
+> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+
 **Current status: released — v0.1.0-alpha.1 shipped 2026-06-09.** The `v0.1.0-alpha.1` tag and
 GitHub release exist; the candidate gates all passed. **All
 three earlier P0 blockers are now closed:** #39 (obsidian bridge key delivery —

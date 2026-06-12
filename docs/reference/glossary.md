@@ -15,7 +15,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
 
-**Engine** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane: the five engines are **ingest**, **search**, **clustering**, **sweeps**, and the **Linter** ([ADR-46](../adr/46-seven-layer-architecture.md)). Engines compute and propose; agents judge; the PI decides.
+**Engine** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Engines compute and propose; agents judge; the PI decides. The five engines are listed in [Engines — the deterministic layer](../explanation/engines/README.md).
 
 **Hermes** — the Nous Research agent runtime Memoria runs on: Kanban, profile management, MCP server connections, skills, cron, and the gateway process.
 
@@ -39,7 +39,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Dispatcher** — the Hermes component that polls the board every 60 seconds and claims `ready` cards for matching-lane profiles. Makes no quality or approval decisions.
 
-**Handoff payload** — the self-contained block that provisions the next worker: `goal`, `context`, `allowed_paths`, `expected_outputs`, `review_checks`.
+**Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
 **Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The co-PI has no lane; engines run off the board.
 
@@ -51,15 +51,15 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Golden copy** — the canonical, hash-manifested copy of every system file at `.memoria/golden/`, staged by the installer ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The Linter checks drift against it and can restore from it (propose-only by default).
 
-**Honesty card** — an Inbox proposal (`candidate` / `gap`) carrying the honesty body: `argument_for`, `argument_against`, `what_tipped_it`, `certainty` — and **never a verdict** ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). Verification cards (`flag` / `alert`) are the complement: they lead with the `finding` and carry `agent_recommendation`.
+**Honesty card** — an Inbox proposal (`candidate` / `gap`) carrying the honesty body and **never a verdict** ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)); verification cards (`flag` / `alert`) are the complement, leading with the `finding`. The honesty-card and verification-card field contracts are specified in [Frontmatter fields](frontmatter.md).
 
 **Hub** — a structure note in `notes/hubs/` aggregating a topic's members and links; the renamed MOC ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). Review-gated.
 
-**Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (`proposed → provisional → current → retracted → archived`; each type uses a subset) — the PI-facing state of any item. `maturity` (`seedling → budding → evergreen`) is a claim **property** describing how settled it is — never a gate.
+**Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (the PI-facing state of any item); `maturity` is a claim **property** describing how settled it is — never a gate. Both chains and their values are specified in [Frontmatter fields](frontmatter.md).
 
-**Links vs relationships** — the two kinds of connection ([ADR-52](../adr/52-links-vs-relationships.md)): `links:` are **authored** edges on notes (the PI's thinking — supports, contradicts, …); `relationships` are **given** edges on catalog entities (facts from the record — cited_by, authored_by, …), written by the ingest engine.
+**Links vs relationships** — the two kinds of connection ([ADR-52](../adr/52-links-vs-relationships.md)): `links:` are **authored** edges on notes (the PI's thinking); `relationships` are **given** edges on catalog entities (facts from the record), written by the ingest engine. The field contract is specified in [Frontmatter fields](frontmatter.md).
 
-**Note type** — one of the 18 types defined in `.memoria/schemas/types/`: 6 catalog entities, 5 notes, 5 inbox cards, the pattern, and the eval task. See [Note types](note-types.md).
+**Note type** — one of the 18 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
 
 **Pattern** — a curated prompt-transformation stored as data in `system/patterns/` ([ADR-53](../adr/53-pattern-library.md)), typed and lifecycle-gated, executed only through the patterns MCP runner (one audited chokepoint; gated output targets degrade to dry-run).
 
@@ -84,10 +84,10 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 | Name | Values | Set by | Scope |
 | --- | --- | --- | --- |
 | `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / engines | the soft verdict on a verification card — advisory only |
-| verdict band | `PASS` / `REVIEW` / `FAIL` | Linter engine | structural rollup over the detectors |
+| verdict band | `PASS` / `REVIEW` / `FAIL` | Linter engine | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](linter.md) |
 | `certainty` | `confident` / `likely` / `unsure` | proposing agent | the calibrated confidence on an honesty card |
 
-**Trust score** — a 0–100 per-lane operational health aggregate on the fleet-health dashboard (deny rate, retry rate, success rate, drift incidents, secret-access attempts, accept/reject ratios). Bands: 90+ healthy · 70–89 watch · < 70 act.
+**Trust score** — a 0–100 per-lane operational-health aggregate on the fleet-health dashboard; its inputs and bands are specified in [Dashboards](dashboards.md).
 
 ---
 

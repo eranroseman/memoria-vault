@@ -26,23 +26,9 @@ Most knowledge systems respond by letting notes exist in multiple places (aliase
 
 v0.1.0-alpha.1 encoded lifecycle stage in numbered folders (`10-inbox/ → 20-sources/ → 30-synthesis/ → 50-deliverables/`), and promotion meant moving the file forward. The design update found the flaw: numbered folders imply a **pipeline**, and the knowledge is a **network**. A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
 
-So the vault's top level is now organized by **category** ([ADR-47](../../adr/47-type-first-category-folders.md)):
+So the vault's top level is now organized by **category** ([ADR-47](../../adr/47-type-first-category-folders.md)): one folder per category (`catalog/`, `notes/` with its prose subfolders, `projects/`, `inbox/`, `system/`), never mixing two categories, with no lifecycle numbers and no archive folder. The full tree is catalogued in [On-disk layout](../../reference/on-disk-layout.md).
 
-```text
-catalog/      structured entity records (papers, people, organizations, venues, datasets, repositories)
-notes/        prose (Zettelkasten) — fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
-projects/     work artifacts, project-scoped
-inbox/        agent→human messages (the board and queue dashboards are views of it)
-system/       visible infrastructure — logs · templates · patterns · dashboards
-```
-
-One folder never mixes two categories, there are no lifecycle numbers, and there is no archive folder. Direction lives in the `lifecycle` frontmatter property — one chain for everything ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)):
-
-```text
-proposed → provisional → current → retracted → archived
-```
-
-Each type uses a subset of the chain (the per-type subsets live in `.memoria/schemas/types/`). A source note awaiting reading is `proposed`; a claim the PI stands behind is `current`; a claim invalidated by new evidence is `retracted`, with lineage links to its successor.
+Direction lives instead in the `lifecycle` frontmatter property — one chain for everything, each type using a subset of it ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)); the chain and its per-type subsets are defined in [Frontmatter fields](../../reference/frontmatter.md). A source note awaiting reading is `proposed`; a claim the PI stands behind is `current`; a claim invalidated by new evidence is `retracted`, with lineage links to its successor.
 
 ---
 

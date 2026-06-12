@@ -42,16 +42,7 @@ A `work-prompt` is the third shape: not a proposal to judge and not a finding to
 
 ## Graded loudness
 
-Every card can carry a `loudness` level, and each level has a defined outcome — the difference between an ambient signal and an interruption is a design decision, not a worker's mood:
-
-| Level    | Outcome                                                                  |
-| -------- | ------------------------------------------------------------------------ |
-| `quiet`  | logged only; aggregated in the weekly review; no interruption            |
-| `notice` | appears in the relevant dashboard + weekly review; no push               |
-| `alert`  | appears in Home's "what needs me"; pushed; does **not** block            |
-| `block`  | blocks the action (dispatch / promotion) until acknowledged; pushed      |
-
-The test for push vs dashboard: *does it change what the PI does in the next 30 minutes?*
+Every card can carry a `loudness` level, and each level has a defined outcome — the difference between an ambient signal and an interruption is a design decision, not a worker's mood. The four levels and the 30-minute test that picks a card's surface (*does it change what the PI does in the next 30 minutes?*) are owned by [Interaction channels](../architecture/human-channels.md).
 
 ---
 

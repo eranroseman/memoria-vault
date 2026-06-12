@@ -9,6 +9,8 @@ nav_order: 4
 
 # GUI test plan — v0.1 (Obsidian + Zotero)
 
+> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
 shell: the Obsidian/Zotero GUI stage (**S5**) and the eleven Dataview dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy

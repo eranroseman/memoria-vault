@@ -20,11 +20,7 @@ Hermes runs every card through its native execution `status`: `triage → todo �
 
 ## The lifecycle chain is what the PI sees
 
-The human-facing card state is the same universal chain every note uses ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)):
-
-```text
-proposed → current → archived
-```
+The human-facing card state is a subset of the same universal lifecycle chain every note uses — defined in [Frontmatter fields](../../reference/frontmatter.md) ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). For a card the path the PI walks is just `proposed → current → archived`.
 
 A card in **`proposed` is awaiting you** — that is the whole convention. You act on it → `current`; closed → `archived`. There is no separate `review-request` card type and no second state vocabulary to learn: "what needs me?" is one query (`lifecycle: proposed`, scoped to `inbox/`), the same query the Home surface embeds. Because Inbox cards and vault notes share the vocabulary, queries scope by category folder, so card-state and note-state never collide.
 
