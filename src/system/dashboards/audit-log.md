@@ -144,6 +144,6 @@ dv.table(
 );
 ```
 
-## Rotation
+## Log size
 
-`audit.jsonl` is append-only; the Linter rotates it weekly to `system/logs/archive/audit-YYYY-WW.jsonl`. The dashboard reads the current week only; archives stay greppable.
+`audit.jsonl` is append-only and unbounded; each view above caps its own row count, so the dashboard stays bounded as the log grows. Rotation (archiving older weeks to `system/logs/archive/`) is a deferred convention, not yet implemented.

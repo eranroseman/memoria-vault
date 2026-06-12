@@ -64,7 +64,7 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 - You can name the cause: a logged `deny`/`dry_run` (policy) vs no entry (wiring/plugin).
 - For a policy denial, you've read `policy_rule` and `reason`.
-- The `before_hash` / `after_hash` chain is intact (the Linter's `vault-hash-drift` isn't firing) — confirming the log itself wasn't tampered with.
+- Each write's `before_hash` / `after_hash` pairing is intact (the Linter's `audit-unpaired-writes` isn't firing) — confirming the write completed and wasn't tampered with.
 
 ## Related
 

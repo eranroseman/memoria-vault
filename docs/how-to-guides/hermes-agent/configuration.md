@@ -51,7 +51,7 @@ Save and re-deploy: `bash scripts/install.sh --profiles-only --vault <vault>`.
 
 Hermes runs several cheap, high-frequency tasks through *auxiliary* model slots — title generation, context compression, command approval, MCP tool routing, skills-hub search. Each defaults to `provider: auto`, meaning it **reuses the profile's main model**. For Memoria that's wasteful: a co-PI or Peer-reviewer compression/title call would burn **Opus**.
 
-Set these once in your **global** `~/.hermes/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Use a **split**: the trivial, input-heavy slots go to **GLM 4.7 Flash** ($0.07/$0.40 per 1M — cheapest input), and `compression` goes to **DeepSeek V4 Flash** because its summary model must hold at least the main model's context window (DeepSeek's **1M** context gives headroom; GLM's 202K barely clears Claude's ~200K):
+Set these once in your **global** `~/.hermes/config.yaml` — *not* in a profile's `config.yaml`. Hermes replaces a config section wholesale, so a per-profile `auxiliary:` block would clobber the global one. Use a **split**: the trivial, input-heavy slots go to **GLM 4.7 Flash** ($0.07/$0.40 per 1M — cheapest input), and `compression` goes to **DeepSeek V4 Flash** because the summary model must hold at least the main model's context window (DeepSeek's **1M** context clears Claude's ~200K with headroom; GLM's 202K is too tight):
 
 ```yaml
 auxiliary:
@@ -69,39 +69,12 @@ This keeps the expensive tiers (Sonnet/Opus) for actual agent work and routes th
 
 ## Change write permissions (lane overrides)
 
-Lane overrides are the per-profile write ceilings the policy MCP enforces. They live at `<vault>/.memoria/lane-overrides/<name>.yaml` (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`), not inside the profile directory. The shipped Librarian lane, for example:
+Lane overrides are the per-profile write ceilings the policy MCP enforces. They live at `<vault>/.memoria/lane-overrides/<name>.yaml` (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`), not inside the profile directory. To change a profile's write scope, edit its file and re-deploy — the full file shape (`policy.allow`/`deny`, `require`, `routing`) and the decision protocol are in [Policy MCP](../../reference/policy-mcp.md).
 
-```yaml
-profile: memoria-librarian
-policy:
-  allow:
-    write:
-      - "inbox/**"
-      - "catalog/**"
-      - "notes/fleeting/**"
-      - "notes/source/**"
-  deny:
-    write:
-      - "notes/claims/**"
-      - "notes/hubs/**"
-      - "notes/index/**"
-      - "projects/**"
-      - "system/**"
-  require:
-    - audit_log
-    - timeout_required
-    - source_tracking
-routing:
-  invocation: dispatched
-  external_api_policy: explicit_only
-  write_scope:
-    - "inbox/"
-    - "catalog/"
-    - "notes/fleeting/"
-    - "notes/source/"
-```
+Two things that bite when editing a lane:
 
-A board card's `allowed_paths` may *narrow* a lane's scope but never widen it (lane = ceiling, payload = floor). You do **not** declare review-gating per lane: writes to the gated prefixes (`notes/claims/`, `notes/hubs/` — declared in `.memoria/schemas/folders.yaml`) automatically degrade to `dry_run` at the gate. `audit_log` is a token in the `require:` list (the log path is fixed at `system/logs/audit.jsonl`), not a key. Full shape and decision protocol: [Policy MCP](../../reference/policy-mcp.md).
+- A board card's `allowed_paths` may *narrow* a lane's scope but never widen it (lane = ceiling, payload = floor).
+- You do **not** declare review-gating per lane: writes to the gated prefixes (`notes/claims/`, `notes/hubs/` — declared in `.memoria/schemas/folders.yaml`) automatically degrade to `dry_run` at the gate.
 
 After editing, re-deploy (`bash scripts/install.sh --profiles-only --vault <vault>`) — the installer picks up lane-override changes on every run.
 

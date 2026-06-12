@@ -1,12 +1,12 @@
 ---
-title: Engines
+title: Engines — the deterministic layer
 parent: Explanation
 nav_order: 88
 has_children: false
 permalink: /explanation/engines/
 ---
 
-# Engines
+# Engines — the deterministic layer
 
 Engines are Memoria's deterministic apps — pure mechanism, no posture, no LLM judgment, never on the board ([ADR-46](../../adr/46-seven-layer-architecture.md)). You *run* an engine; you *delegate* to an agent. Five engines keep the substrate sound while the agents do the bookkeeping and the PI does the thinking.
 

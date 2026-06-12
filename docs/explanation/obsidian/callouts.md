@@ -17,11 +17,13 @@ For the exact scoring weights, similarity thresholds, field shapes, and drift-si
 
 ## The three callouts and what they represent
 
-**`[!brief]`** appears at the top of every paper-note in `catalog/papers/`. The Librarian composes it during ingest, before you've read the paper. It tells you: which of your existing notes this paper overlaps with, where it might contradict what you already know, and what new constructs it introduces. The brief primes your attention so you read actively rather than passively.
+**`[!brief]`** is the comparative read the Librarian composes during ingest, before you've read the paper. It tells you: which of your existing notes this paper overlaps with, where it might contradict what you already know, and what new constructs it introduces. The brief primes your attention so you read actively rather than passively.
 
-**`[!suggestions]`** appears at the bottom of any note the Librarian has run link suggestions against. It contains a bounded set of candidate links — capped at five forward (this note → existing notes) and five backward (existing notes that should point here) — with Approve and Reject affordances. It's collapsed by default to prevent rubber-stamping: if you see a wall of suggestions, you tend to approve all of them without reading. The fleet-health dashboard tracks your accept/reject ratios over time, because a too-high acceptance rate means rubber-stamping and a too-low one means the candidate scoring needs tuning (the exact cutoffs are in the [reference](../../reference/obsidian-callouts.md#drift-signals)).
+**`[!suggestions]`** is the Librarian's bounded set of candidate links — with Approve and Reject affordances. It's collapsed by default to prevent rubber-stamping: if you see a wall of suggestions, you tend to approve all of them without reading. The fleet-health dashboard tracks your accept/reject ratios over time, because a too-high acceptance rate means rubber-stamping and a too-low one means the candidate scoring needs tuning.
 
-**`[!verification]`** appears at the top of any draft in `projects/*/`. The Peer-reviewer produces it when the verify lane runs over a draft. It shows the result of tracing every substantive claim in the draft back to a claim note in `notes/claims/` — a green check for traced claims, a red flag for untraced ones, and a link to the full per-claim report.
+**`[!verification]`** is the Peer-reviewer's claim-trace over a draft. It shows the result of tracing every substantive claim in the draft back to a claim note — a check for traced claims, a flag for untraced ones, and a link to the full per-claim report.
+
+The placement, cap values, collapse states, and drift-signal cutoffs are in the [reference](../../reference/obsidian-callouts.md).
 
 ## Why callouts rather than dashboards
 

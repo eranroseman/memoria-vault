@@ -15,9 +15,7 @@ Talk to the co-PI from inside Obsidian without switching to a terminal. This gui
 
 ## One agent in the picker — by design
 
-The picker offers exactly one agent: the **co-PI** (`memoria-copi`, ADR-48). It is the only profile you converse with — it questions your reading Socratically, explains how the system works, and **delegates** every write-task to the background lanes (Librarian, Writer, Peer-reviewer, Engineer) as ceiling-validated board cards via `delegate_route_task`. The lanes run on Kanban dispatch and never appear in this pane; their results resurface as cards in your Inbox. For the design rationale, see [The agent-client pane](../../explanation/obsidian/agent-client-picker.md).
-
-The co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
+The picker offers exactly one agent: the **co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-picker.md). The co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 

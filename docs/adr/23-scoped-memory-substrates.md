@@ -45,7 +45,7 @@ A **substrate** is one of these seven categories; its **backing** is the store b
 - "Where does X live?" becomes answerable by lifespan and scope, which is what makes cross-profile handoffs reliable: the Writer inherits the Librarian's *handoff payload* (handoff memory), never its session context.
 - Agent memory's token caps are load-bearing, not advisory — in-flight task state must use handoff memory; cross-project standing steering uses program memory; one project's working state uses project memory.
 - The vault is ground truth: a session-history result that contradicts a vault note loses.
-- Audit memory's append-only constraint is enforced — the Linter's `vault-hash-drift` detector flags files modified outside the trail ([ADR-25](25-session-logging-two-logs.md)); audit capture must start from day one because cost and human-loop trends cannot be reconstructed retroactively.
+- Audit memory's append-only constraint is enforced — every write is hash-paired (`before_hash`/`after_hash`), and the Linter's `audit-unpaired-writes` detector flags a write whose pairing never completed ([ADR-25](25-session-logging-two-logs.md)); audit capture must start from day one because cost and human-loop trends cannot be reconstructed retroactively.
 - Adding an eighth place to "remember" something must map onto one of these seven (or be reclassified as configuration); an eighth substrate is a schema change that would supersede this ADR.
 
 ## Alternatives considered

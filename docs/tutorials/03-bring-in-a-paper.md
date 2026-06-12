@@ -29,12 +29,9 @@ That's the whole integration: Better BibTeX keeps `memoria.bib` current, and Mem
 
 ## Step 1 — Capture the paper
 
-Pick a paper you actually want to read. Then either:
+Pick a paper you actually want to read. Select the item in Zotero, then in Obsidian press `Cmd/Ctrl+P` → **Memoria: capture from Zotero selection**. That puts a capture card on the Librarian's `catalog` lane.
 
-- **From Zotero:** select the item in Zotero, and in Obsidian press `Cmd/Ctrl+P` → **Memoria: capture from Zotero selection**.
-- **From a URL:** press `Cmd/Ctrl+P` → **Memoria: capture source from URL** and paste the paper's URL. A URL with a resolvable DOI ingests; a bare or proxied URL asks you for the DOI or citekey.
-
-Either route puts a capture card on the Librarian's `catalog` lane. (Third option, no palette at all: tell the co-PI "bring in this paper: `<DOI>`" and it delegates the same card.)
+> **No Zotero item?** **Memoria: capture source from URL** ingests from a paper's URL instead (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey), and telling the co-PI "bring in this paper: `<DOI>`" delegates the same card. See [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
 
 ---
 
@@ -61,12 +58,7 @@ The card carries the honesty body — an argument, never a verdict ([The honesty
 - **`what_tipped_it`** — the single deciding reason
 - **`certainty`** — `confident` / `likely` / `unsure`
 
-Read the *against* case first — it's the information-bearing field. Then decide:
-
-- **Keep:** set the card's `lifecycle: proposed` to `current` (then `archived` once you've acted on it below).
-- **Skip:** set it straight to `archived`. The Catalog entry stays as a record; nothing else happens.
-
-For this tutorial, keep it.
+Read the *against* case first — it's the information-bearing field. Then decide: keep it (set `lifecycle: proposed` to `current`) or skip it (set it straight to `archived` — the Catalog entry stays as a record). For this tutorial, keep it; you'll archive the card in Step 5 once you've acted on it.
 
 ---
 

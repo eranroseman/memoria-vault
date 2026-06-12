@@ -6,7 +6,7 @@ nav_order: 3
 
 # Build a hub
 
-Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point. The hub is the renamed MOC ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs live in a **review-gated zone**: agents only propose; you author.
+Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs are review-gated: agents only propose; you author (the hub is the renamed MOC, [ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
 
 ## When to create a hub
 

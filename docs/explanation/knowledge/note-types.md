@@ -23,16 +23,7 @@ The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliograp
 
 ## The six entity types
 
-All in `catalog/`, all engine-built, all Base-backed:
-
-| Entity         | What it records                            |
-| -------------- | ------------------------------------------ |
-| `paper`        | citekey, DOI, title, authors, year, venue, relationships |
-| `person`       | name, ORCID, affiliations                  |
-| `organization` | name, type, location                       |
-| `venue`        | name, type, ISSN                           |
-| `dataset`      | name, DOI, URL, license                    |
-| `repository`   | name, URL, language, license               |
+All in `catalog/`, all engine-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Note types](../../reference/note-types.md#catalog-entities-6).
 
 An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/source/` that points back at the entity.
 
@@ -72,15 +63,7 @@ v0.1.0-alpha.1 had a `reference` note type for "settled" synthesis pages. It was
 
 ## The five card types
 
-The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge:
-
-| Card        | What it carries                       | Raised by                |
-| ----------- | ------------------------------------- | ------------------------ |
-| `candidate` | a *found* source proposed for intake  | Librarian (catalog)      |
-| `gap`       | a *missing*-source need               | Librarian / Peer-reviewer |
-| `flag`      | a verification or integrity issue     | Peer-reviewer / Linter   |
-| `alert`     | a drift or retraction notice          | Linter / sweeps          |
-| `work-prompt` | work waiting on the PI — e.g. a done board card to review | board export / engines |
+The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge, and they sort into three shapes by epistemic role: **proposals** to judge (`candidate`, `gap`), **verification cards** to adjudicate (`flag`, `alert`), and a **work prompt** for work waiting on the PI (`work-prompt`). The exhaustive list — required fields, who raises each — lives in [Note types](../../reference/note-types.md#inbox-cards-5).
 
 A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/card-schema.md).
 

@@ -45,15 +45,11 @@ Set each handled flag to `lifecycle: archived`. The Inbox converges to empty.
 
 ---
 
-## Step 3 — The check you never run: the retraction sweep
-
-One verification runs without you asking: the **retraction sweep**, wired by the installer as a cron. It refreshes the Retraction Watch dataset monthly and sweeps your Catalog DOIs against it (plus Crossref and Open Retractions); a hit raises a finding-first **`alert`** card in the Inbox ([Ingest routing](../reference/ingest.md)). Flag-don't-fix applies here too — the sweep never flips a note; you decide what a retraction means for the claims that cite it.
-
-Nothing to do in this step but know it's running — and never be the last to learn a source you cite was retracted.
+> **The check you never run — the retraction sweep:** one verification runs without you asking. The installer wires a cron that refreshes the Retraction Watch dataset monthly and sweeps your Catalog DOIs against it (plus Crossref and Open Retractions); a hit raises a finding-first **`alert`** card in the Inbox ([Ingest routing](../reference/ingest.md)). Flag-don't-fix applies here too — the sweep never flips a note; you decide what a retraction means for the claims that cite it. Nothing to do but know it's running, so you're never the last to learn a source you cite was retracted.
 
 ---
 
-## Step 4 — Close the loop: gaps re-trigger discovery
+## Step 3 — Close the loop: gaps re-trigger discovery
 
 Now return to the **`gap` cards** — from Tutorial 05's map task, or raised by a verify pass that found a claim resting on thin evidence. A gap is a proposal ("your corpus is missing X") with the full honesty body. For each gap you agree with, hand it straight back:
 

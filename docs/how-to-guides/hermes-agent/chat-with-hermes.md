@@ -11,9 +11,9 @@ Start a terminal session with a Memoria profile — the co-PI without Obsidian, 
 
 ## When to use the CLI vs. Obsidian
 
-Day to day you talk to **one** agent — the co-PI — in the Agent Client pane, and it delegates board cards to the background lanes ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Use a CLI chat session instead when:
+Day to day you talk to the co-PI in the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Reach for a CLI chat session when:
 
-- **Obsidian isn't running** (a server, SSH, or you just prefer the terminal) — a co-PI desk session works the same from the CLI
+- **Obsidian isn't running** (a server, SSH, or you just prefer the terminal)
 - **Debugging a lane profile** — exercising the Librarian or Peer-reviewer directly, outside the board dispatch
 - **Verifying a configuration change** — confirming a redeployed profile loads its MCP servers and skills
 
@@ -44,11 +44,7 @@ Type `exit` or Ctrl-C to end a session cleanly.
 
 ## Dry-run is the gate's job
 
-You don't need a special flag to test safely:
-
-- The **co-PI can write nothing** — its lane denies every path, so a desk session can never damage the vault.
-- Any lane write to a review-gated prefix (`notes/claims/`, `notes/hubs/`) **degrades to `dry_run`** at the policy gate and lands in the review queue instead of on disk ([Work the review queue](../compose/work-the-review-queue.md)).
-- Every decision — allowed, denied, or held — is one line in `system/logs/audit.jsonl`.
+No special flag is needed to chat safely — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../compose/work-the-review-queue.md)).
 
 To test a single permission decision without any agent at all, use the policy MCP's one-shot mode:
 

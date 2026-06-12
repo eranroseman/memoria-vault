@@ -13,7 +13,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
-> **Honest scoping:** the full project workflow — `projects/` folders, the Project workspace, briefs and outlines — ships with **v0.1.0-alpha.3**. The `projects/` folder in your vault is empty until then. What exists *today*, and what this tutorial teaches, is the part that matters most anyway: claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
+> **Honest scoping:** the full project workflow (`projects/` folders, briefs, outlines) ships with **v0.1.0-alpha.3**; this tutorial teaches what exists today and matters most anyway — claims and hubs, your durable synthesis layer, plus the `map` lane that tells you whether the corpus is ready to write from.
 
 ---
 
@@ -36,11 +36,11 @@ links:
 
 - **Title:** the claim itself, one falsifiable sentence, in your words — not a paper's title.
 - **Body:** the claim, the evidence (every line traces to a citekey in `sources` — the provenance guardrail), and connections in prose.
-- **`maturity: seedling`** — maturity (`seedling → budding → evergreen`) tracks *development*, never trust. A seedling isn't a doubted claim; it's a young one ([Note types](../reference/note-types.md)).
+- **`maturity: seedling`** — maturity (`seedling → budding → evergreen`) tracks *development*, not trust: a seedling is a young claim, not a doubted one ([Note types](../reference/note-types.md)).
 
 If two of your claims relate, say so in `links:` — `supports` or `contradicts`. The contradictions are the valuable ones.
 
-`notes/claims/` is a **review-gated zone**: agents can only *propose* writes there ([Why promotion is gated](../explanation/knowledge/promotion-model.md)). You write claims directly — they're yours.
+`notes/claims/` is a **review-gated zone** — agents can only *propose* writes there, so you author claims directly ([Why promotion is gated](../explanation/knowledge/promotion-model.md)).
 
 ---
 
@@ -71,16 +71,7 @@ Read the coverage view and decide: is any cluster dense enough to write from (a 
 
 ---
 
-## Step 4 — A preview of v0.1.0-alpha.3
-
-When the Project release lands, the path from here continues inside `projects/`:
-
-1. **Brief** — you state what you're writing and for whom.
-2. **Relevance scan** — the map lane scopes your corpus against the brief.
-3. **Canvas** — argument mapping on the claims you just wrote.
-4. **Outline** — competing framings to choose between, drafted by the Writer.
-
-Nothing you did in this tutorial is throwaway — claims and hubs are exactly the inputs that workflow consumes. Until then, draft in any editor you like, from your hub.
+> **What's next when alpha.3 lands:** the path from here continues inside `projects/` — a **brief** (what you're writing and for whom), a **relevance scan** (the map lane scoping your corpus against it), a **canvas** for argument-mapping the claims you just wrote, and **outlines** drafted by the Writer. Nothing you did here is throwaway — claims and hubs are exactly the inputs that workflow consumes. Until then, draft in any editor you like, from your hub.
 
 ---
 

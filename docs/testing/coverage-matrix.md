@@ -24,7 +24,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 6 | 5 profiles — every documented CLI command | L2 | [hermes-cli](plans/hermes-cli-test-plan.md) §4 | manual | ✅ |
 | 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all lanes' write-walls self-tested, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
-| 9 | Audit chain — `before_hash`/`after_hash`, `vault-hash-drift` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
+| 9 | Audit pairing — `before_hash`/`after_hash`, `audit-unpaired-writes` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
 | 11 | Profile mgmt, skills, cron | L2 | hermes-cli §4.9–4.11 | manual | ✅ |
 | 12 | 16 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](plans/gui-test-plan.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |

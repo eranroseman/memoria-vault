@@ -10,9 +10,7 @@ Work through the link proposals the Librarian's **`link` lane** raises — candi
 
 This is different from [Link related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` link you've decided on; this one is for *triaging the agent's proposals*.
 
-## Why proposals arrive as Inbox cards
-
-`notes/claims/` is a review-gated zone — every agent write there degrades to `dry_run`, so the link lane **cannot** edit your `links:` maps even if it wanted to. Its findings land as Inbox cards instead: a suggested connection arrives as a **`gap`** proposal carrying the honesty body (`argument_for`, `argument_against`, `what_tipped_it`, `certainty` — never a verdict); a surfaced tension between claims leads with the `finding`.
+Because `notes/claims/` is review-gated, the link lane can't touch your `links:` maps — its findings land as Inbox cards instead: a suggested connection as a **`gap`** proposal carrying the honesty body (`argument_for`, `argument_against`, `what_tipped_it`, `certainty` — never a verdict), a surfaced tension leading with the `finding`.
 
 ## Prerequisites
 

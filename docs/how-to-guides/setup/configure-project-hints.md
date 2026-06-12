@@ -9,7 +9,7 @@ nav_order: 6
 
 `project-hints.yaml` gives the Librarian a lightweight per-project topic list so it can **propose** which project a newly ingested paper belongs to — you confirm or correct that at triage, exactly like every other proposed field. It is **optional**: with no file, project membership is tagged fully by hand. This guide creates it from the shipped example and tunes it.
 
-It is deliberately *not* a scoring matrix — there are no weights and no expected-method/design fields. That richer config was considered and rejected as drift-prone ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)); a hint is just a topic list.
+A hint is just a topic list — no weights, no expected-method/design fields. Don't turn it into a scoring matrix ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)).
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ At classify time the Librarian scores a paper's proposed `topic` values against 
 
 **4. Keep it a hint, not a matrix.**
 
-Do **not** add `expected_study_designs` or `expected_methods` blocks — they were rejected as drift-prone config (ADR-15); study design and method are proposed independently. There are no weights to tune; overlap is the whole mechanism.
+Do **not** add `expected_study_designs` or `expected_methods` blocks ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)) — study design and method are proposed independently. There are no weights to tune; overlap is the whole mechanism.
 
 **5. Re-tune when classification mis-routes.**
 

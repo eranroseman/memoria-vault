@@ -5,7 +5,7 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under [src/.memoria/engines/linter/](../../src/.memoria/engines/linter). Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. It is a _monitor, not a guarantor_: live in-app edits land immediately and are only caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
+The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under [src/.memoria/engines/linter/](../../src/.memoria/engines/linter). Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
 
 ---
 
@@ -28,7 +28,7 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 | `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
 | `stale-answer-drafts` | LOW | Unreviewed answer drafts older than 90 days (folder retired in v0.1.0-alpha.2; the check remains for migrated vaults). |
 
-Run it directly:
+CLI entry point:
 
 ```bash
 python3 .memoria/engines/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift]

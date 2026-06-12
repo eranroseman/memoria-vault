@@ -77,7 +77,7 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 | # | Cross-cutting check | ✓ Pass |
 | --- | --- | --- |
 | F1 | **Board carried the work** | each stage's card moved lane-to-lane; transitions in `board-transitions.jsonl`; `board-state.md` reflects it |
-| F2 | **Audit chain unbroken** | every `allow_with_log` row has `before_hash`/`after_hash`; `lint`'s `vault-hash-drift` clean |
+| F2 | **Audit pairing intact** | every `allow_with_log` row has `before_hash`/`after_hash`; `lint`'s `audit-unpaired-writes` clean |
 | F3 | **Gate held at the boundary** | the only `dry_run`→`allow_with_log` transitions are the human-approved promotions (E1→E2); no agent wrote canon unapproved |
 | F4 | **Dashboards reflect reality** | `daily-health`, `audit-log`, `reading-pipeline` all show the run's activity |
 

@@ -12,7 +12,7 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 | Severity | Meaning |
 | --- | --- |
 | `CRITICAL` | Vault integrity or security at risk. Blocks dispatch until acknowledged. Always pushes to Telegram. |
-| `HIGH` | Silent or active breakage — the system may look healthy while losing or degrading data. Surfaced in Daily Health and `drift-watch`. |
+| `HIGH` | Silent or active breakage — the system may look healthy while losing or degrading data. Surfaced on Home and in `drift-watch`. |
 | `MEDIUM` | Real drift; works now, will bite later. Surfaced in `weekly-review`. |
 | `LOW` | Cosmetic or recoverable in one command. Aggregated weekly. |
 

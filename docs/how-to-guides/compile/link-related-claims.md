@@ -6,9 +6,9 @@ nav_order: 9
 
 # Link related claims
 
-Once you have more than a handful of claim notes, the useful signal is not just *that* two claims relate but *how*. The `links:` map on a claim records `supports` / `contradicts` as machine-queryable, **authored** edges — yours, never an agent's ([ADR-52](../../adr/52-links-vs-relationships.md)) — and a `contradicts` link is the data the contradictions dashboard reads. This guide adds a typed link between two claims that **already exist**; to set one while writing a claim, see [Write a claim note](write-a-claim-note.md).
+Add a typed `supports` / `contradicts` link between two claims that **already exist**; to set one while writing a claim, see [Write a claim note](write-a-claim-note.md).
 
-Don't confuse `links:` with `relationships`: `links:` are authored edges on notes (your thinking); `relationships` are given edges on Catalog entities (facts from the record, written by the ingest engine).
+> **`links:` vs `relationships`.** `links:` are authored edges on notes (your thinking); `relationships` are given edges on Catalog entities (facts from the record, written by the ingest engine) ([ADR-52](../../adr/52-links-vs-relationships.md)).
 
 ## Prerequisites
 

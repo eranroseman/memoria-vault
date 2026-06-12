@@ -40,9 +40,19 @@ Click anywhere in the Kanban counts to open `board-state.md` for the full view.
 
 A Dataview inline query in a pinned note. The query reads from a periodically-refreshed `board-state.jsonl` snapshot `board_export.py` writes, or polls the Hermes API (port 8642). No standard implementation is shipped — human setups vary.
 
-## Design rules
+## Constraints
 
-- **Show state, not decisions.** A count is ambient. A list of items to triage belongs in a dashboard.
-- **Glance-readable in under one second.** Icons + counts only; no prose.
-- **No animation or transitions.** Ambient means peripheral; blinking or popping up breaks that.
-- **Two producers maximum.** Linter + Kanban is the working set. A third ambient producer makes the line unreadable.
+| Constraint | Value |
+| --- | --- |
+| Content | State only (counts), never decisions or triage lists — those escalate to a dashboard |
+| Rendering | Icons + counts only, no prose; glance-readable in under one second |
+| Motion | No animation or transitions (ambient means peripheral) |
+| Producers | Two maximum — Linter + Kanban |
+
+Why the line is shaped this way is explained in [The status line](../explanation/obsidian/the-status-line.md).
+
+## Related
+
+- Why an ambient line rather than a dashboard: [The status line](../explanation/obsidian/the-status-line.md)
+- The restraint principle it embodies: [Visual-style discipline](../explanation/obsidian/visual-discipline.md)
+- Where the Kanban counts expand: [Dashboards](dashboards.md)

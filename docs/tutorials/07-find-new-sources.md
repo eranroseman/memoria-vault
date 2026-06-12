@@ -31,15 +31,11 @@ Phrase it as a research question, not keywords. Seed it however helps: "papers t
 
 ---
 
-## Step 2 — What happens behind the pane
-
-The co-PI delegates a **`catalog`** task to the Librarian. The Librarian searches through the **`paper_search`** MCP — scholarly discovery across 20+ databases — and compares hits against your Catalog, so papers you already hold are not resurfaced ([The Librarian](../explanation/profiles/librarian.md)).
-
-Its posture is *faithful and generous*: include liberally, represent accurately, and let your gate filter. The cost of an over-inclusive candidate is one decision of yours; the cost of a missed source is invisible. One principle keeps the generosity from becoming an echo chamber: the **diversity reserve** — at least 20% of intake is reserved for serendipitous sources the ranker didn't choose, so the corpus never becomes a monoculture of what you already believe.
+> **Behind the pane:** the co-PI delegates a **`catalog`** task; the Librarian searches across 20+ databases, compares hits against your Catalog so nothing you hold is resurfaced, and reserves at least 20% of intake for serendipitous sources so discovery stays *faithful and generous* rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
 
 ---
 
-## Step 3 — Judge the candidates
+## Step 2 — Judge the candidates
 
 **`candidate` cards** land in the Inbox (`home.md` → **What needs me**), one per proposed source, each carrying the honesty body ([The honesty card](../explanation/kanban-board/card-schema.md)):
 
@@ -58,13 +54,11 @@ There is no verdict field — the card existing *is* the recommendation, so the 
 
 ---
 
-## Step 4 — Make it a habit
+---
 
-Discovery isn't a one-off run; it's the intake side of the loop you closed in Tutorial 06:
+## Making it a habit
 
-- Run it **when synthesis stalls** — a hub that won't grow, a claim with one lonely source.
-- Run it **from gaps** — every `gap` card you agree with is a pre-written discovery prompt.
-- Keep your **research focus** current (`research-focus.md` at the vault root) — the Librarian reads it to aim discovery.
+Discovery isn't a one-off run; it's the intake side of the loop you closed in Tutorial 06. Run it **when synthesis stalls** — a hub that won't grow, a claim with one lonely source — and **from gaps**, since every `gap` card you agree with is a pre-written discovery prompt. Keep your **research focus** current (`research-focus.md` at the vault root); the Librarian reads it to aim discovery.
 
 As the corpus grows, comparison gets sharper: discovery surfaces less of what you have and more of what you lack.
 

@@ -80,7 +80,7 @@ The dry-run output should show paths inside `my-second-vault/`, not your primary
 
 ## What collides when two vaults run at once
 
-Two vaults run fully in parallel — *if* you isolate the three things they'd otherwise contend for. The steps above already apply each fix; this is what they protect against.
+The steps above isolate the three resources two vaults would otherwise contend for; this is what each fix protects against. (For why coexistence works this way, see the [Distribution model](../../explanation/deployment/distribution-model.md).)
 
 | Resource | What collides if shared | Isolation |
 |---|---|---|
@@ -88,7 +88,7 @@ Two vaults run fully in parallel — *if* you isolate the three things they'd ot
 | **Hermes profiles** | Profiles substitute one `VAULT_PATH` at install; a shared `HERMES_HOME` points `memoria-*` at whichever vault was installed last, so the other vault's agents read and write the wrong tree. | Unique aliases (`project2-*`, step 2) **or** a separate `HERMES_HOME` per vault (the isolation tip in step 5). |
 | **Kanban queue** | The board/queue (`hermes kanban`) is Hermes runtime state under `HERMES_HOME`, **not** a file in the vault — so a shared `HERMES_HOME` is one shared queue: cards from both vaults intermix and cron fires against the wrong vault. | A separate `HERMES_HOME` per vault gives each its own independent queue. |
 
-**Safe configuration:** a distinct REST port **and** a separate `HERMES_HOME` per vault → no cross-talk. Sharing the port collides the REST bridge; sharing `HERMES_HOME` collides both the profiles and the kanban queue. This is the sandbox-beside-production coexistence ADR-31 was designed for — the production vault stays untouched while a test vault runs.
+For full isolation, use a distinct REST port **and** a separate `HERMES_HOME` per vault.
 
 ## Related
 
