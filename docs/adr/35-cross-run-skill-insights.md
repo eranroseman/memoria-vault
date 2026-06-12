@@ -39,4 +39,5 @@ A concrete cross-project pattern recurs often enough to be worth capturing — i
 
 ## Related
 
+- **Tracking issue:** [#371](https://github.com/eranroseman/memoria-vault/issues/371) — revisit each release cadence.
 - **Files:** none currently.

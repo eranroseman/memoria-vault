@@ -14,6 +14,8 @@ nav_order: 11
 
 # ADR-11: vault-eval as a maintenance capability
 
+> **Implementation status (0.1.0-alpha.1): partial.** The gold set, the lane dispatcher (`engines/sweeps/eval_dispatch.py`), the non-committing scratch contract, and the quarterly cron ship. The decided **Linter scoring + observability** half — a deterministic scorer, a `system/metrics/eval/` log, and a trend dashboard — is not yet built (the run currently asks the agent to self-score on the card). Tracked in [#424](https://github.com/eranroseman/memoria-vault/issues/424).
+
 ## Context
 
 `vault-eval` (an eval-harness scaffold) is Memoria's system-level evaluation — a small hand-curated gold set per workflow that measures whether the *deployed system* finds, verifies, answers, and remembers correctly *on this vault*, as opposed to off-the-shelf benchmarks that score a model on a foreign corpus (see [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)). To be useful it must run against the live profiles and live with the vault, not persist as an external script. The question is how to host it without standing up a parallel subsystem; it splits into three sub-decisions — who owns it, whether it gates, and where the gold set lives.

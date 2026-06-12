@@ -14,6 +14,8 @@ nav_order: 15
 
 # ADR-15: project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed
 
+> **Implementation status (0.1.0-alpha.1): not yet built.** The per-project topic hint ships only as `.memoria/project-hints.yaml.example`; nothing consumes it. The classify step proposes `research_area`/`methodology` but never scores `primary_topics` overlap or proposes a `projects` value. Tracked in [#425](https://github.com/eranroseman/memoria-vault/issues/425).
+
 ## Context
 
 The predecessor vault defined **corpus profiles** — one per research project, each declaring

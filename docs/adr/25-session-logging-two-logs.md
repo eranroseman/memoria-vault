@@ -47,6 +47,7 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 
 ## Related
 
+- **Tracking issue:** [#391](https://github.com/eranroseman/memoria-vault/issues/391) — revisit each release cadence.
 - **Supporting rationale:** [Session logging](../explanation/architecture/session-logging.md) (the two-log table and the not-pre-created rationale).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-23 memory substrates](23-scoped-memory-substrates.md) (audit memory is the append-only substrate); [ADR-24 single-researcher scope](24-single-researcher-scope.md) (multi-machine, single-user safety).
 - **Profiles affected:** the [Linter](../explanation/engines/README.md) (reads `99-system/logs/`; runs the `audit-unpaired-writes` integrity check; would write the session summaries once that deferred log is built).
