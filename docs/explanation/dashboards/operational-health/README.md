@@ -15,3 +15,4 @@ Dashboards that track how the agent fleet is performing and what it decided.
 |---|---|
 | [Fleet health](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
 | [Audit log](audit-log.md) | What did the policy MCP decide, and why? |
+| [Skill lifecycle](skill-lifecycle.md) | Which skills are active in which lane? Do lane policy and shipped skills agree? |
