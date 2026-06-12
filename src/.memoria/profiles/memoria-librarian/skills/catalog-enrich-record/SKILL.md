@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Research, Zotero, Obsidian, Ingest, Literature]
-    related_skills: [obsidian, qmd, paper-lookup]
+    related_skills: [obsidian, qmd]
   memoria:
     skill_id: "catalog:enrich-record"
     profile: memoria-librarian

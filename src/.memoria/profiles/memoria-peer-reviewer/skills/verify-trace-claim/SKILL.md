@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [Verification, Claims, Provenance]
-    related_skills: [qmd, pyzotero, obsidian]
+    related_skills: [qmd, obsidian]
   memoria:
     skill_id: "verify:trace-claim"
     profile: memoria-peer-reviewer
