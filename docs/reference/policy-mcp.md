@@ -153,7 +153,7 @@ Every decision is appended to **`system/logs/audit.jsonl`** (append-only JSONL â
 | Class | Disposition | Examples |
 | --- | --- | --- |
 | `safe-and-unambiguous` | `allow_with_log` within the lane's write scope | Trailing whitespace, missing `created` with one obvious value |
-| `authorized-targeted` | `allow_with_log`, `task_id`-bound | Log rotation, findings-file truncation |
+| `authorized-targeted` | `allow_with_log`, `task_id`-bound | Findings-file truncation, golden-copy restore |
 | `schema-content` | `dry_run` always | Field rename, enum change â€” needs `lint:migrate-schema` |
 | `review-gated-edit` | `deny` always | Any write to a gated zone |
 
@@ -214,6 +214,6 @@ It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin
 ## Related
 
 - The lane ceilings in table form: [Profile capabilities](profiles.md)
-- Audit-log substrate and rotation: [Memory substrates](memory.md)
+- Audit-log substrate and retention: [Memory substrates](memory.md)
 - The ceiling check on delegation payloads: [Kanban board reference](kanban-board.md)
 - The gated folder map's single source: [Note types](note-types.md)
