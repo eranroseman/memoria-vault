@@ -50,7 +50,10 @@ skeleton:
   - notes/index
   - projects
   - inbox
+  - system/board
   - system/logs
+  - system/logs/sessions
+  - system/metrics
   - system/templates
   - system/patterns
   - system/eval
