@@ -94,4 +94,4 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 | E | gate blocks promote → approve → export | | |
 | F | board / audit / gate / dashboards held | | |
 
-**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record in [Release plan — v0.1.0-alpha.1](../../releasing/0.1.0/release-plan-0.1.0.md).
+**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record in [Release plan — v0.1.0-alpha.1](../../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md).

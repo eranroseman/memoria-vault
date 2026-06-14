@@ -12,7 +12,7 @@ Reusable, version-agnostic test **plans** (procedures) — not the executable te
 (that's `tests/` at the repo root), and not filled-in run results. A *plan* is the steps
 to validate something; a *run* is a plan executed with results recorded. **Plans live
 here; runs live with their release** in `releasing/vX.Y/`, named `<plan>-run_vX.Y.md`
-(e.g. `gui-test-run_0.1.0.md`) so a run is never mistaken for the reusable plan it
+(e.g. `gui-test-run_0.1.0-alpha.1.md`) so a run is never mistaken for the reusable plan it
 instantiates.
 
 ## Layout

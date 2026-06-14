@@ -10,8 +10,10 @@ topic: releases
 
 One folder per version, `releasing/vX.Y/`, holding the **prose** of that cut (scope,
 known limitations, cut procedure, roadmap). The reusable body is
-[Release plan — vX.Y.Z](release-plan-template.md); the current release is
-[the v0.1 release](0.1.0/). The *live readiness state* lives outside the file — see below.
+[Release plan — vX.Y.Z](release-plan-template.md); the current checkpoint is
+[v0.1.0-alpha.2](0.1.0-alpha.2/) (in draft), and the prior one is
+[v0.1.0-alpha.1](0.1.0-alpha.1/) — alpha checkpoints are internal milestones, not formal
+releases. The *live readiness state* lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 

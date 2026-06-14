@@ -2,7 +2,7 @@
 release: 0.1.0-alpha.1
 status: draft
 title: Release plan — v0.1.0-alpha.1 — appendix
-parent: 0.1.0
+parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 6
 ---
@@ -11,11 +11,11 @@ nav_order: 6
 
 > **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
 
-The detail behind [Release plan — v0.1.0-alpha.1](release-plan-0.1.0.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
+The detail behind [Release plan — v0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
 
 ## Phases — full roadmap
 
-The week-by-week ramp from [Memoria v0.1](release-plan-0.1.0.md) to production corpus use, plus the four implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
+The week-by-week ramp from [Memoria v0.1](release-plan-0.1.0-alpha.1.md) to production corpus use, plus the four implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
 
 Four phases from initial setup through production corpus use and beyond. Phase 1 installs every Memoria v0.1 component; Phase 2 seeds and validates the corpus; Phase 3 activates density-gated features and automates the edges; Phase 4 extends to a second device when one enters regular use. The direction throughout: **the system is complete from day 1; corpus density drives what you activate, not what you install.**
 

@@ -111,7 +111,7 @@ Rules:
 - **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
 - **Deferred is revisited, not gated.** A `deferred` ADR records `assumes:` (the decisions/mechanisms it rests on) so a change that invalidates it is detectable; it is re-judged each release cycle, never held on a static trigger.
-- **Sequencing is not decided here.** *When* a decision ships lives in the [release plan](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0/release-plan-0.1.0.md), which changes independently of these decisions. Link to it rather than restating phase order, so a re-plan does not strand stale dates here.
+- **Sequencing is not decided here.** *When* a decision ships lives in the [release plan](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md), which changes independently of these decisions. Link to it rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR
 
