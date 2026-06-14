@@ -6,11 +6,11 @@ required_checks:
   - shellcheck (scripts/install.sh)
   - PSScriptAnalyzer (scripts/install.ps1)
   - python-selftest
-  - cspell (docs/ + src/ + root markdown)
+  - cspell
 workflow_jobs:
   pr-policy: .github/workflows/pr-review-gate.yml
   lint: .github/workflows/lint.yml
   shellcheck (scripts/install.sh): .github/workflows/lint-installers.yml
   PSScriptAnalyzer (scripts/install.ps1): .github/workflows/lint-installers.yml
   python-selftest: .github/workflows/python-selftest.yml
-  cspell (docs/ + src/ + root markdown): .github/workflows/cspell.yml
+  cspell: .github/workflows/cspell.yml

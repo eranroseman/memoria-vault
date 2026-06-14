@@ -47,7 +47,7 @@ dependencies remain in `src/.memoria/mcp/requirements.txt`.
 | `.github/scripts/pr_policy.py` | `python -m pytest tests/test_pr_policy.py` |
 | `.github/workflows/**` | actionlint when available; run tests for invoked local scripts; inspect permissions and triggers |
 | `.github/ruleset-contract.yaml` or `scripts/ruleset-doctor.py` | `python scripts/ruleset-doctor.py`; `python -m pytest tests/test_ruleset_doctor.py` |
-| `.pre-commit-config.yaml`, `.github/workflows/cspell.yml`, or `project-words.txt` | Run the repo cspell scope: `cspell lint --no-progress --no-must-find-files .agents/**/*.md docs/**/*.md src/**/*.md *.md` |
+| `.pre-commit-config.yaml`, `.github/workflows/cspell.yml`, or `project-words.txt` | Run the gate as the workflow does (scope and exclusions live in `cspell.json`): `npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files --gitignore "**/*.md"` |
 | `requirements-dev.txt`, `scripts/dev-setup.sh`, or Python dependency workflow installs | Install from `requirements-dev.txt` in a disposable venv when practical; run affected lint/test workflows locally |
 | `docs/**` | `python scripts/docs-doctor.py docs`; `bash scripts/check-vault-links.sh`; `python scripts/status-doctor.py` for contributing/testing/releasing |
 | `.agents/**`, `.codex/**`, `.kilo/**`, `AGENTS.md` | `python scripts/agents-doctor.py`; Markdown lint when available |
