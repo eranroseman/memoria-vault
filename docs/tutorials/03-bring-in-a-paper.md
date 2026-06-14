@@ -28,7 +28,7 @@ Pick a paper you actually want to read, and copy its URL (the publisher page, or
 Within a couple of minutes the deterministic ingest engine, driven by the Librarian, has:
 
 - Created the **Catalog entity**: `catalog/papers/<citekey>.md` with `type: paper`, merged metadata (title, DOI, authors, year, venue — per-field provenance from Semantic Scholar, OpenAlex, and Crossref), and **`relationships`** edges — `authored_by`, `published_in`, `cites` — linking it to person, venue, and paper entities it finds or creates alongside.
-- Extracted the full text to `.memoria/data/extracts/<citekey>.md` where one is available.
+- Recorded the source in the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the engine keeps its private extract path in that entity's metadata.
 
 Open `catalog/papers/<citekey>.md` and look at the `relationships` block — that's the knowledge graph's *given* edges, built by the engine. Your own `links:` come later, on notes you author. Full pipeline reference: [Ingest routing](../reference/ingest.md).
 
@@ -46,7 +46,7 @@ Read the `argument_against` case first — it's the information-bearing field. T
 
 ## Step 4 — Read the paper
 
-Read the paper, or at minimum the abstract and conclusions. The extract at `.memoria/data/extracts/<citekey>.md` is a Markdown version of the full text, comfortable to read in a split pane.
+Read the paper, or at minimum the abstract and conclusions. Keep `catalog/papers/<citekey>.md` open in a split pane for the merged metadata, identifiers, and relationships while you read from the paper/PDF.
 
 As you read, watch for one or two things worth keeping — not a summary of everything.
 

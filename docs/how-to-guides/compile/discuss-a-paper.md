@@ -21,7 +21,7 @@ Open `system/dashboards/discuss-queue.md` — source notes at `lifecycle: provis
 
 **2. Orient yourself first.**
 
-Re-read your **In my words** and **Worth distilling** sections, and skim the extract at `.memoria/data/extracts/<citekey>.md` if you need the full text. Bring a position, not a blank page.
+Re-read your **In my words** and **Worth distilling** sections, and keep `catalog/papers/<citekey>.md` open for the source metadata while you consult the paper/PDF if you need the full text. Bring a position, not a blank page.
 
 **3. Open the Co-PI pane.**
 
