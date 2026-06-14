@@ -39,7 +39,7 @@ Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field
 Hermes fails open on hook errors, so a broken hook or unregistered MCP can let an attempt pass without ever logging a decision. Check, in order:
 
 - Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
-- Run the self-tests: `python .memoria/mcp/policy_mcp.py --self-test` and `python .memoria/mcp/policy_hook.py --self-test`. A failure here means the gate isn't enforcing.
+- Run the self-tests: `python3 .memoria/mcp/policy_mcp.py --self-test` and `python3 .memoria/mcp/policy_hook.py --self-test`. A failure here means the gate isn't enforcing.
 - Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's insecure HTTP server is on and its port matches `OBSIDIAN_MCP_PORT` ([Set up Obsidian](../setup/set-up-obsidian.md)).
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.

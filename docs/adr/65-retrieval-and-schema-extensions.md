@@ -6,7 +6,7 @@ status: deferred
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
-assumes: [08, 52, 30]
+assumes: [8, 52, 30]
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -62,7 +62,7 @@ Memoria keeps three retrieval/schema extensions **deferred**:
 These build on the typed-link base of [ADR-08](08-typed-relations-frontmatter.md) and
 respect the links-vs-relationships split of
 [ADR-52](52-links-vs-relationships.md): untyped wikilinks remain first-class and
-coexist with the expanded `relations:` vocabulary.
+coexist with the expanded `links:` vocabulary.
 
 ## Consequences
 

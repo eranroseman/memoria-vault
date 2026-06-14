@@ -108,8 +108,8 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    Link the note to relevant synthesis notes / hubs where applicable.
 
 5. **Write — gated.** Through the `obsidian` skill, write
-   `catalog/papers/<citekey>.md` (or `02-items/` for software/datasets per
-   the bundle's `note_type`), body led by the `[!brief]`. Set `lifecycle: proposed`
+   `catalog/papers/<citekey>.md` (or `catalog/repositories/` for software and
+   `catalog/datasets/` for datasets, per the bundle's `note_type`), body led by the `[!brief]`. Set `lifecycle: proposed`
    and `ingest_status: complete` now that the classification landed.
    **Never overwrite an existing note** — if one exists, append a `## New import`
    section; if a human edited an existing `[!brief]`, append a
@@ -141,8 +141,8 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
 ## Verification
 
-- The note exists at `catalog/papers/<citekey>.md` (or `02-items/<citekey>.md`
-  for software/datasets) with `lifecycle: proposed` and `ingest_status: complete` —
+- The note exists at `catalog/papers/<citekey>.md` (or `catalog/repositories/<citekey>.md`
+  for software / `catalog/datasets/<citekey>.md` for datasets) with `lifecycle: proposed` and `ingest_status: complete` —
   confirming the classification proposal landed and the gated writes applied.
 - A capture record (citekey, path, timestamp) exists in
   `system/logs/capture-intake.jsonl` — appended engine-side by the ingest MCP

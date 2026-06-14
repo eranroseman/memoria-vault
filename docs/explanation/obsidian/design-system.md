@@ -20,11 +20,11 @@ Without this, each consumer accumulates its own hardcoded values. A heading size
 
 ---
 
-## Why single accent, not a color-per-callout
+## Why a fixed three-color palette
 
-The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share one accent color, differentiated by icon only, for the attentional reason owned by [Visual-style discipline](visual-discipline.md) — a color-per-callout collapses the urgency signal into noise.
+The three Memoria callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) each carry a fixed, stable hue reinforced by a distinct icon, for the attentional reason owned by [Visual-style discipline](visual-discipline.md) — a bounded color-per-type is a code the eye learns, while *arbitrary* or per-note color is what collapses the signal into noise.
 
-What the design system adds is *scope*: this single-accent rule applies to every surface the design system governs, not just Obsidian callouts. In Pandoc exports, in HTML preview, in slides: one accent.
+What the design system adds is *scope*: this fixed-palette rule applies to every surface the design system governs, not just Obsidian callouts. In Pandoc exports, in HTML preview, in slides: the same fixed, bounded palette.
 
 ---
 
@@ -61,6 +61,6 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 ## Related
 
 - The visual-style discipline this system enables: [Visual-style discipline](visual-discipline.md)
-- The callout types and their single-accent rule: [Callouts](callouts.md)
+- The callout types and their fixed three-color palette: [Callouts](callouts.md)
 - Obsidian plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Vault implementation file: `.memoria/design-system.md`

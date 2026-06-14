@@ -14,7 +14,7 @@ The governing idea: **the architecture is invisible during normal use, and legib
 
 ## Why typography choices are load-bearing
 
-The three callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) share a single accent color, differentiated by *icon* rather than color. The reason is attentional: rainbow callouts train the eye to ignore all of them. Color distinction signals urgency; when every category has its own color, the urgency signal collapses into visual noise. (What each callout means: [Callouts](callouts.md).)
+The three callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) use a **fixed three-color palette** — one stable hue per type, each reinforced by a distinct *icon*. The reason is attentional: a fixed, bounded color-per-type becomes a code the eye learns to read at a glance. The discipline is that the set stays small and fixed — three colors, one per callout type; what collapses the signal into visual noise is *arbitrary* or per-note color, not a bounded semantic palette. (What each callout means: [Callouts](callouts.md).)
 
 Heading hierarchy is enforced by the Linter not as an aesthetic preference but because Dataview queries that filter on heading content break when the hierarchy is inconsistent — an H4 with no H3 parent is a structural problem that produces empty or wrong dashboard views, not a cosmetic one.
 
@@ -47,6 +47,6 @@ Three months in, the mouse hand barely moves and there is no conscious tracking 
 ## Related
 
 - The ambient indicator this discipline allows: [The status line](the-status-line.md)
-- The callout types and their single-accent-color rule: [Callouts](callouts.md)
+- The callout types and their fixed three-color palette: [Callouts](callouts.md)
 - The front door, which participates in the same restraint: [Home — the vault front door](home.md)
 - Workspace layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

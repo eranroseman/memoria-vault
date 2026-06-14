@@ -6,6 +6,8 @@ nav_order: 8
 ---
 # Memoria v0.1 — release readiness review
 
+> **Point-in-time record (2026-06-03).** A readiness snapshot taken before the v0.1.0-alpha.2 consolidation; terminology and paths here (seven profiles, numbered folders such as `10-inbox/02-answers/`) reflect that point and are **not current**. The current model is five profiles and type-first folders — see current docs for present-day naming.
+
 **Date:** 2026-06-03
 **Question it answers:** "Can we ship?" — as a checklist with a critical path, not a gut call.
 **Basis:** `implementation-status.md` ledger + live findings from this session (gate enforcement, command-surface status, session-skill plumbing, ACP/pane behavior).

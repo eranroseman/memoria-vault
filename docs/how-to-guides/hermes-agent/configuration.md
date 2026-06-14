@@ -104,7 +104,7 @@ Confirms the deployed profile reflects your vault source changes (`SOUL.md`, MCP
 For lane-override changes, check `system/logs/audit.jsonl` after the next write operation to confirm the new policy is enforced — or test a single decision one-shot:
 
 ```bash
-.memoria/.venv/bin/python .memoria/mcp/policy_mcp.py --vault <vault> \
+python3 .memoria/mcp/policy_mcp.py --vault <vault> \
   --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'
 ```
 

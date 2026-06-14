@@ -11,7 +11,7 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 
 | Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Blocks dispatch until acknowledged; always pushes to Telegram. |
+| `CRITICAL` | Blocks dispatch until acknowledged; surfaced on Home (out-of-band messaging push arrives with the messaging gateway, [Set up messaging](../how-to-guides/setup/set-up-messaging.md)). |
 | `HIGH` | Surfaced on Home and in `drift-watch`. |
 | `MEDIUM` | Surfaced in `weekly-review`. |
 | `LOW` | Aggregated weekly. |
@@ -30,12 +30,12 @@ Sorted by severity, then topic.
 | Dataview queries returning nothing | HIGH | `methodology` or `topics` field value doesn't match the schema vocabulary exactly — looks like "nothing to do" | Check values in notes match [Frontmatter fields](frontmatter.md) vocabulary exactly. |
 | `qmd` search index stale — `draft` finds no notes | HIGH | Index not rebuilt after notes changed (silent) | `cd {vault-path} && qmd embed` — full rebuild (1–5 min for 500+ notes, 10–15 min for 2000+). |
 | `audit.jsonl` growing without bound | LOW | Expected: the log is append-only forever, never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) | The Linter's `audit-log-size` detector raises an advisory past 50 MB; archive a vault backup if disk pressure ever matters. |
-| Broken frontmatter YAML | MEDIUM | YAML parse error: unclosed string, list indentation error, missing closing `---` | Open in an editor outside Obsidian (Obsidian masks raw YAML). Fix manually. Run `hermes -p memoria-linter chat -s lint` to verify. |
+| Broken frontmatter YAML | MEDIUM | YAML parse error: unclosed string, list indentation error, missing closing `---` | Open in an editor outside Obsidian (Obsidian masks raw YAML). Fix manually. Verify with `python3 .memoria/engines/linter/detectors.py --vault .` (the Linter is an engine, not an agent — there is no `memoria-linter` profile). |
 | Obsidian agent-client can't connect | MEDIUM | ACP server not running or tunnel down | `systemctl --user status hermes-acp` and `hermes-tunnel`. |
 | `_proposed_classification` not appearing | MEDIUM | `classify` skill not installed or not in Librarian lane's allow list | `hermes skills install classify`; check `.memoria/lane-overrides/librarian.yaml`. |
 | Syncthing + `.bib` race condition | MEDIUM | VPS reads `.bib` while Syncthing is mid-transfer | Use Git pull for `.bib` distribution on `always-on` deployment — not Syncthing. |
 | VPS tunnel drops on WSL2 restart | MEDIUM | systemd user service not auto-starting | `systemctl --user enable hermes-tunnel`. |
-| Schema version mismatch in Dataview | MEDIUM | Notes on old schema version | `hermes -p memoria-linter chat -s schema-migrate` → `--dry-run` first, review diff, then run on a single folder first. |
+| Schema version mismatch in Dataview | MEDIUM | Notes on old schema version | Run a manual, git-disciplined migration — there is no automated migrate command in v0.1.0-alpha.2. Follow [Run a schema migration](../how-to-guides/operate/run-a-schema-migration.md) and validate with `python3 .memoria/engines/linter/detectors.py --vault .`. |
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host or stale `.env` (`always-on` only) | Check `journalctl --user -u hermes-overnight`. |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
 | Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md). |

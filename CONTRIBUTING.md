@@ -63,7 +63,7 @@ The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becom
 
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
-- **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `AGENTS.md` / `skills/` structure used by the existing five profiles.
+- **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `config.yaml` / `distribution.yaml` / `skills/` structure used by the existing five profiles (the shared `AGENTS.md` layer is vault-level, not per-profile).
 - **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
 - **Markdown:** one shared config, `.markdownlint.json`, holds the structural rule set (5 rules that catch real rendering bugs on `docs/`, with no Obsidian false positives). The editor, pre-commit, and CI all enforce exactly that set. The editor additionally shows style-only hints (e.g. MD013 line-length) via the `markdownlint.config` key in `.vscode/settings.json` — those do **not** gate a PR, so the editor intentionally flags a little more than CI blocks.
 

@@ -23,7 +23,7 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 
 - [ ] At the repo root, on the branch under test.
 - [ ] Python 3.11+ on `PATH`.
-- [ ] `python -m pip install -r vault/.memoria/mcp/requirements.txt` (mcp, PyYAML). `policy_mcp` degrades gracefully without PyYAML, but install it for the full suite.
+- [ ] `python -m pip install -r src/.memoria/mcp/requirements.txt` (mcp, PyYAML). `policy_mcp` degrades gracefully without PyYAML, but install it for the full suite.
 - [ ] (Part C only) `shellcheck` on `PATH`; PowerShell with `Install-Module PSScriptAnalyzer -Scope CurrentUser`.
 
 ---
@@ -32,19 +32,19 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 
 The five tooling modules each ship a synthetic-fixture `--self-test` (no vault needed). **All must report 0 failures.**
 
-**A1. Policy MCP.** `python vault/.memoria/mcp/policy_mcp.py --self-test`
+**A1. Policy MCP.** `python src/.memoria/mcp/policy_mcp.py --self-test`
 - ✓ Pass: `OK: 0 failing check(s) [all suite].` (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all lanes' allow/deny contract).
 - ✗ Fails: a policy decision changed — diff against the lane-override rules and the review-gated-zone / auto-fix-class logic.
 
-**A2. Policy hook (the gate's pre/post).** `python vault/.memoria/mcp/policy_hook.py --self-test`
+**A2. Policy hook (the gate's pre/post).** `python src/.memoria/mcp/policy_hook.py --self-test`
 - ✓ Pass: `OK: 0 failing check(s).` (32 checks)
 - ✗ Fails: the obsidian-tool→policy-action mapping or the fail-closed behavior regressed.
 
-**A3. Board export.** `python vault/.memoria/mcp/board_export.py --self-test`
+**A3. Board export.** `python src/.memoria/mcp/board_export.py --self-test`
 - ✓ Pass: `OK: 0 failing check(s).` (26 checks)
 - ✗ Fails: the card-markdown schema (`card_markdown` `fm_keys`) or the jsonl snapshot/transition/disposition/cost logic changed.
 
-**A4. Metrics aggregate.** `python vault/.memoria/mcp/metrics_aggregate.py --self-test`
+**A4. Metrics aggregate.** `python src/.memoria/mcp/metrics_aggregate.py --self-test`
 - ✓ Pass: `OK: 0 failing check(s).` (includes the `lint-verdict` rollup)
 - ✗ Fails: trust-score math, ISO-week `period` handling, or the `lint-verdict` note changed.
 
@@ -68,7 +68,7 @@ The five tooling modules each ship a synthetic-fixture `--self-test` (no vault n
 
 ## Part C — Installer lint (mirrors `lint-installers` CI — both are required checks)
 
-**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh vault/.memoria/scripts/*.sh`
+**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh src/.memoria/scripts/*.sh`
 - ✓ Pass: no output, exit 0.
 - ✗ Fails: `SCxxxx` at a `file:line` — fix it, or scope a `# shellcheck disable=SCxxxx`. (The cron *template* `board-export-cron.sh` carries `{{PYTHON}}` placeholders that read as a brace command → `SC2288` is disabled on that line by design.)
 
@@ -107,7 +107,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ## Part E — Quick syntax sanity (pre-commit)
 
-**E1. Python compiles.** `python -m py_compile vault/.memoria/mcp/*.py src/.memoria/engines/linter/detectors.py`
+**E1. Python compiles.** `python -m py_compile src/.memoria/mcp/*.py src/.memoria/engines/linter/detectors.py`
 - ✓ Pass: exit 0, no output.
 
 **E2. Shell parses.** `bash -n scripts/install.sh`
