@@ -265,7 +265,7 @@ design-notes folder. A forward-looking or not-yet-built decision is a
 *When this matters* sections carry the analysis and the revisit triggers.
 `docs/` describes only the current system; the decision history lives in the ADRs
 (and the full git history). Transient scratch that never graduates to a decision
-stays in the gitignored `_reports/` / `_notes/`.
+stays in the gitignored `_notes/`.
 
 ### Release plans (`docs/releasing/`)
 
@@ -282,13 +282,13 @@ One file per version, copied from `docs/releasing/release-plan-template.md` — 
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) |
 | Release readiness (gates/stages) | the **"Release vX.Y" tracking issue** — a gate checklist (progress bar), *not* the plan §2/§3 |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: deferred` for forward-looking) |
-| Transient scratch / personal notes | `_reports/` / `_notes/` (gitignored) |
+| Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub project board: "Memoria backlog" — Inbox → Scheduled → In progress → In review → Done.
 - Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **transient** scratch/personal notes go in `_reports/` or `_notes/` (gitignored) — never `docs/` or the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **transient** scratch/personal notes go in `_notes/` (gitignored) — never `docs/` or the repo root.
 
 ---
 

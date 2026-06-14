@@ -90,7 +90,7 @@ The suite is mid-migration: ~85% follow `test_<behavior>` (exemplary — they re
 
 ### 1.7 Repo top-level
 
-The `_notes/ _papers/ _reports/` underscore convention ("local scratch, not shipped") is consistent but **undocumented** — add a one-line gloss in README/AGENTS.md. `src/` is the shipped vault skeleton (not generic source) — a one-line clarification helps newcomers.
+The `_notes/ _papers/` underscore convention ("local scratch, not shipped") is consistent but **undocumented** — add a one-line gloss in README/AGENTS.md. `src/` is the shipped vault skeleton (not generic source) — a one-line clarification helps newcomers.
 
 ---
 
@@ -144,7 +144,7 @@ Highest-impact:
 **Now (cheap, no decision needed) — [FIX]:**
 
 1. D-1…D-4 defects (reconcile docstring, `TestHarness` rename, retraction-cron name, Zone.Identifier cruft).
-2. Document the `_notes/_papers/_reports` convention; one-line `src/` clarification.
+2. Document the `_notes/_papers` convention; one-line `src/` clarification.
 3. co-PI skill renames; QuickAdd article/verb normalization; `notes/source→sources`, `notes/index→indexes`.
 4. Lift the easy Diátaxis strays: split sweeps out of `reference/ingest.md`; move the field tables out of `kanban-board/card-schema.md` and the five-engine table out of `explanation/engines/README.md`.
 

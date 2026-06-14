@@ -31,7 +31,6 @@ TRUSTED_AUTHORS = {
 SAFE_PREFIXES = (
     "docs/",
     "_notes/",
-    "_reports/",
 )
 SAFE_SUFFIXES = (".md", ".txt")
 
