@@ -5,7 +5,7 @@
       "value": "home",
       "kind": "File",
       "openOnStartup": true,
-      "openMode": "Replace last note",
+      "openMode": "Replace all open notes",
       "manualOpenMode": "Keep open notes",
       "view": "Reading view",
       "revertView": true,

@@ -15,6 +15,7 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent.parent / "src"
 WORKSPACES = SRC / ".obsidian" / "workspaces.json"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
+HOMEPAGE = SRC / ".obsidian" / "plugins" / "homepage" / "data.json"
 HOME = SRC / "home.md"
 LOADER = SRC / "system" / "scripts" / "load-workspace.js"
 
@@ -40,6 +41,16 @@ def test_three_workspaces_ship_and_desk_is_active():
     data = _data()
     assert sorted(data["workspaces"]) == sorted(WORKSPACE_NAMES)
     assert data["active"] == "Desk"
+
+
+def test_homepage_replaces_saved_layout_on_startup():
+    homepage = json.loads(HOMEPAGE.read_text(encoding="utf-8"))
+    main = homepage["homepages"]["Main Homepage"]
+    assert main["kind"] == "File"
+    assert main["value"] == "home"
+    assert main["openOnStartup"] is True
+    assert main["openMode"] == "Replace all open notes"
+    assert main["view"] == "Reading view"
 
 
 def test_every_pinned_file_exists_under_src():
