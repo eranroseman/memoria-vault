@@ -2,7 +2,7 @@
  * QuickAdd user script — "Memoria: capture from Zotero selection".
  *
  * Reads the item currently selected in Zotero (Better BibTeX CAYW) and creates
- * an `intake:source` card on the Librarian lane (`hermes kanban create`). The
+ * an `intake:source` card on the Librarian lane (Hermes kanban). The
  * gateway's embedded dispatcher then ingests the citekey into catalog/papers/.
  *
  * Both the Zotero read and the card-create go through `bash -lc` (wrapped in
@@ -99,8 +99,14 @@ module.exports = async (params) => {
 
   new Notice(`Capturing ${citekey}…`, 3000);
   try {
+    const card = await writeCandidateCard(params, citekey, title);
+    new Notice("Needs me card created: " + card, 5000);
+  } catch (e) {
+    new Notice(("Inbox card write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
+  }
+  try {
     await run(
-      "hermes kanban create " + shq(cardTitle) +
+      hermesCommand() + " kanban create " + shq(cardTitle) +
       " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
       " --body " + shq(body)
     );
@@ -113,4 +119,95 @@ module.exports = async (params) => {
 // POSIX single-quote escape.
 function shq(s) {
   return "'" + String(s).replace(/'/g, "'\\''") + "'";
+}
+
+function hermesCommand() {
+  return [
+    'HERMES="$(command -v hermes || true)"',
+    '[ -n "$HERMES" ] || [ ! -x "$HOME/.local/bin/hermes" ] || HERMES="$HOME/.local/bin/hermes"',
+    '[ -n "$HERMES" ] || [ ! -x "$HOME/.hermes/bin/hermes" ] || HERMES="$HOME/.hermes/bin/hermes"',
+    '[ -n "$HERMES" ] || { echo "Hermes not found on PATH; install Hermes or add it to the WSL login-shell PATH." >&2; exit 127; }',
+    '"$HERMES"',
+  ].join("; ");
+}
+
+async function writeCandidateCard(params, citekey, sourceTitle) {
+  const app = params.app || globalThis.app;
+  if (!app?.vault?.adapter) throw new Error("Obsidian vault adapter unavailable");
+  const adapter = app.vault.adapter;
+  const title = "Review Zotero capture: " + citekey;
+  const action = "Accept Zotero item " + citekey + " into the catalog intake queue";
+  const argumentFor = "The PI explicitly selected this Zotero item for possible intake.";
+  const argumentAgainst = "The bibliographic record has not been enriched yet, so relevance and metadata quality are still unknown.";
+  const whatTippedIt = "A deliberate Zotero selection is enough to queue a lightweight keep/skip decision while the Librarian resolves metadata.";
+  const path = await uniquePath(adapter, "inbox/candidate-zotero-" + slug(citekey) + ".md");
+  const today = new Date().toISOString().slice(0, 10);
+  const frontmatter = [
+    "---",
+    "title: " + yamlString(title),
+    "type: candidate",
+    "lifecycle: proposed",
+    "action: " + yamlString(action),
+    "argument_for: " + yamlString(argumentFor),
+    "argument_against: " + yamlString(argumentAgainst),
+    "what_tipped_it: " + yamlString(whatTippedIt),
+    "certainty: unsure",
+    "citekey: " + yamlString(citekey),
+    "raised_by: quickadd",
+    "loudness: notice",
+    "created: " + today,
+    "---",
+    "",
+  ].join("\n");
+  const body = [
+    "# Action",
+    "",
+    action,
+    "",
+    sourceTitle ? "Source title: " + sourceTitle : "",
+    "",
+    "# For",
+    "",
+    argumentFor,
+    "",
+    "# Against",
+    "",
+    argumentAgainst,
+    "",
+    "# What tipped it",
+    "",
+    whatTippedIt,
+    "",
+  ].filter((line, idx, lines) => line || lines[idx - 1]).join("\n");
+  await adapter.write(path, frontmatter + body);
+  return path;
+}
+
+async function uniquePath(adapter, firstPath) {
+  const dot = firstPath.lastIndexOf(".");
+  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
+  const ext = dot === -1 ? "" : firstPath.slice(dot);
+  let path = firstPath;
+  for (let i = 2; await exists(adapter, path); i += 1) {
+    path = base + "-" + i + ext;
+  }
+  return path;
+}
+
+async function exists(adapter, path) {
+  if (typeof adapter.exists === "function") return adapter.exists(path);
+  try {
+    await adapter.read(path);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function slug(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "source";
+}
+
+function yamlString(s) {
+  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }

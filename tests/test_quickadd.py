@@ -102,6 +102,28 @@ def test_zotero_capture_writes_intake_log_where_readers_look():
         f"capture-from-zotero.js writes {log!r} but ingest_mcp.py reads {intake_log!r}")
 
 
+def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
+    script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
+    assert "writeCandidateCard(params, citekey, title)" in script
+    assert '"inbox/candidate-zotero-" + slug(citekey) + ".md"' in script
+    for field in (
+        "type: candidate",
+        "lifecycle: proposed",
+        "argument_for:",
+        "argument_against:",
+        "what_tipped_it:",
+        "certainty: unsure",
+        "citekey:",
+        "raised_by: quickadd",
+    ):
+        assert field in script
+    assert "function hermesCommand()" in script
+    assert 'command -v hermes' in script
+    assert '$HOME/.local/bin/hermes' in script
+    assert "Hermes not found on PATH" in script
+    assert 'hermes kanban create' not in script
+
+
 def test_url_capture_writes_visible_candidate_card():
     """URL capture must create a visible Inbox candidate, not only a Hermes task.
 
