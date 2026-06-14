@@ -89,38 +89,7 @@ Two related fields: a `source` note's required `entity` field is a wikilink to t
 
 ## The honesty-card fields
 
-Inbox cards split into three shapes ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)):
-
-**Proposals** (`candidate`, `gap`) carry the honesty body — arguments, never a verdict:
-
-| Field | Kind | Meaning |
-| --- | --- | --- |
-| `action` | `str` | What the PI would be accepting. |
-| `argument_for` | `str` | The agent's case for it. |
-| `argument_against` | `str` | The agent's honest self-rebuttal. |
-| `what_tipped_it` | `str` | Why the agent raised it anyway. |
-| `certainty` | `enum` | `confident` / `likely` / `unsure` — 3-level, calibrated. |
-
-**Verification cards** (`flag`, `alert`) lead with the finding:
-
-| Field | Kind | Meaning |
-| --- | --- | --- |
-| `finding` | `str` | The finding itself, first — verification verdicts are not a given. |
-| `agent_recommendation` | `enum` | `inconclusive` / `issues-found` / `clean` — the verdict _is_ the payload. Required on `flag`, optional on `alert`. |
-| `target` / `citekey` | `str` | What the card points at (`required_any` on `flag`). |
-
-**Work prompts** (`work-prompt`) carry the action — like proposals, never a verdict:
-
-| Field | Kind | Meaning |
-| --- | --- | --- |
-| `action` | `str` | What the PI should do (e.g. review the finished work, then accept or archive). |
-| `what_happened` | `str` | What finished/triggered the prompt — e.g. which lane completed which card. |
-| `target` / `task_id` | `str` | Where to look: the output path(s) and/or the board card (`required_any`). |
-| `lane` | `str` | Which lane finished (optional). |
-
-All cards share `raised_by` (`str`) and `loudness` (`enum`: `quiet` / `notice` / `alert` / `block`).
-
-`agent_recommendation` never appears on a proposal or a work prompt — that separation (no verdict on proposals) is enforced by the shared card writer `src/.memoria/engines/lib/inbox.py`.
+Inbox cards split into proposals (`candidate`, `gap`), verification cards (`flag`, `alert`), and work prompts (`work-prompt`) ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). Their field-level contract lives in [Inbox card fields](inbox-card-fields.md).
 
 ---
 

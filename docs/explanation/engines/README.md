@@ -8,21 +8,15 @@ permalink: /explanation/engines/
 
 # Engines — the deterministic layer
 
-Engines are Memoria's deterministic apps — pure mechanism, no posture, no LLM judgment, never on the board ([ADR-46](../../adr/46-seven-layer-architecture.md)). You *run* an engine; you *delegate* to an agent. Five engines keep the substrate sound while the agents do the bookkeeping and the PI does the thinking.
+Engines are Memoria's deterministic mechanisms — pure mechanism, no posture, no LLM judgment, never on the board ([ADR-46](../../adr/46-seven-layer-architecture.md)). You *run* an engine; you *delegate* to an agent. Five engines keep the substrate sound while the agents do the bookkeeping and the PI does the thinking.
 
 ## The invocation rule
 
-*The path follows the caller* (D41): **agents reach engines only through MCP** — that is the policy boundary, no exceptions — while **trusted callers (cron, CI, and the PI) invoke engines directly.** So an agent-reachable *processing* engine carries an MCP-tool facade *and* a direct entry, while a *maintenance* engine run only by cron/CI needs no facade at all — it runs directly and posts its findings to the Inbox.
+*The path follows the caller*: **agents reach engines only through MCP** — that is the policy boundary, no exceptions — while **trusted callers (cron, CI, and the PI) invoke engines directly.** So an agent-reachable *processing* engine carries an MCP-tool facade *and* a direct entry, while a *maintenance* engine run only by cron/CI needs no facade at all — it runs directly and posts its findings to the Inbox.
 
 ## The five engines
 
-| Engine | What it does | Invocation |
-| --- | --- | --- |
-| **Ingest** | fetches metadata, extracts text, builds entity `relationships`, creates Catalog records | MCP facade + direct |
-| **Search** | deterministic retrieval over the vault (qmd + the obsidian MCP) | MCP facade + direct |
-| **Clustering** | typed link-structure graphs (NetworkX) + topic models (BERTopic) + the claim-debate Canvas | MCP facade + direct |
-| **Verification sweeps** | retraction lookups, near-duplicate and broken-citation detection | cron-only — no MCP facade |
-| **Linter** | schema validation, link/relationship resolvability, graph health, audit-chain checks, per-session digests | cron + CI gate — no MCP facade |
+The entry-point table is reference material; see [Engines](../../reference/engines.md). What matters here is the design split: processing engines expose MCP facades when agents need them, while maintenance engines stay direct because cron, CI, or the PI are the callers.
 
 **Ingest** (`src/.memoria/engines/ingest/pipeline.py`) is the mechanical core of cataloging; the Librarian agent fills only the two LLM holes (the comparative brief and the classification proposal). **Classification is automated, not gated** ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)): the classify stage maps the OpenAlex topics already in the enrichment payload to `research_area` (and a `methodology` facet from the publication types), applies a clear winner silently, audits every decision to `system/logs/classify.jsonl`, and raises an Inbox `flag` only on genuine ambiguity — near-tie or below the calibration floor — leaving the field unset for the PI. Its one gate is on **extraction uncertainty** ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)): clean extractions write to the Catalog ungated, but below a confidence floor an entity-resolution, dedup, or license call emits a near-tie Inbox `flag` — the two candidates side by side — instead of merging silently. Both sets of thresholds live in `src/.memoria/schemas/calibration.yaml` with the other calibrated thresholds.
 

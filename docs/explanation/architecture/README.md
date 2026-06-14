@@ -8,7 +8,7 @@ permalink: /explanation/architecture/
 
 # Architecture
 
-Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md)): the **PI** (the human — Principal Investigator), the **Interface** (the Obsidian UI), the **Co-PI** (the one conversational agent), **Tasks** (the kanban board and its background lanes), **MCP** (the policy boundary), the **Engines** (deterministic apps), and the **Vault** (the files — the knowledge itself). One flow rule governs the stack: **decisions flow down, information flows up.**
+Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md)): the **PI** (the human — Principal Investigator), the **Interface** (the Obsidian UI), the **Co-PI** (the one conversational agent), **Tasks** (the kanban board and its background lanes), **MCP** (the policy boundary), the **Engines** (deterministic mechanisms), and the **Vault** (the files — the knowledge itself). One flow rule governs the stack: **decisions flow down, information flows up.**
 
 ```text
 L1  PI          the human — the only actor who promotes to canonical
@@ -16,7 +16,7 @@ L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Project Worksp
 L3  Co-PI       the permanent conversational agent (ACP pane); read-only, delegates writes
 L4  Tasks       ephemeral agent lanes + the kanban board + cards
 L5  MCP         the policy boundary — agents reach engines and the Vault only through it
-L6  Engines     deterministic apps: ingest · search · clustering · sweeps · Linter
+L6  Engines     deterministic mechanisms: ingest · search · clustering · sweeps · Linter
 L7  Vault       the files & folders — durable knowledge
 ```
 

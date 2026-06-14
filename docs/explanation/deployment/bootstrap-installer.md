@@ -34,7 +34,7 @@ The design choices worth calling out here are why the flow is shaped this way. S
 - macOS, and Linux distros other than Ubuntu/Debian.
 - Writing the user's API keys for them.
 - Auto-enabling WSL2 (needs a reboot/admin; the installer links Microsoft's guide instead).
-- In-place migration between releases — rejected by D52; releases are delivered fresh-install.
+- In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
 
 ## Entry point and safety model
 
