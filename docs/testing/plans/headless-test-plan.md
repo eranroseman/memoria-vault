@@ -28,29 +28,29 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 
 ---
 
-## Part A — Python self-tests (mirrors the `python-selftest` CI job)
+## Part A — Component tests (mirrors the `python-selftest` CI job)
 
-The five tooling modules each ship a synthetic-fixture `--self-test` (no vault needed). **All must report 0 failures.**
+The component tests live in the repo-side `tests/` pytest tree ([Tests in the pytest tree](../../adr/44-tests-in-pytest-tree.md)) — synthetic fixtures, no vault needed. Run them all with `scripts/test.sh l1` (= `python3 -m pytest tests/ -q`); **all must pass.** To bisect a failure, run a single module:
 
-**A1. Policy MCP.** `python src/.memoria/mcp/policy_mcp.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s) [all suite].` (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all lanes' allow/deny contract).
+**A1. Policy MCP.** `python3 -m pytest tests/test_policy_mcp.py -q`
+- ✓ Pass: all pass (covers the glob matcher, the auto-fix classes, and every profile's write-wall — all lanes' allow/deny contract).
 - ✗ Fails: a policy decision changed — diff against the lane-override rules and the review-gated-zone / auto-fix-class logic.
 
-**A2. Policy hook (the gate's pre/post).** `python src/.memoria/mcp/policy_hook.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s).` (32 checks)
+**A2. Policy hook (the gate's pre/post).** `python3 -m pytest tests/test_policy_hook.py -q`
+- ✓ Pass: all pass.
 - ✗ Fails: the obsidian-tool→policy-action mapping or the fail-closed behavior regressed.
 
-**A3. Board export.** `python src/.memoria/mcp/board_export.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s).` (26 checks)
+**A3. Board export.** `python3 -m pytest tests/test_board_export.py -q`
+- ✓ Pass: all pass.
 - ✗ Fails: the card-markdown schema (`card_markdown` `fm_keys`) or the jsonl snapshot/transition/disposition/cost logic changed.
 
-**A4. Metrics aggregate.** `python src/.memoria/mcp/metrics_aggregate.py --self-test`
-- ✓ Pass: `OK: 0 failing check(s).` (includes the `lint-verdict` rollup)
+**A4. Metrics aggregate.** `python3 -m pytest tests/test_metrics_aggregate.py -q`
+- ✓ Pass: all pass (includes the `lint-verdict` rollup).
 - ✗ Fails: trust-score math, ISO-week `period` handling, or the `lint-verdict` note changed.
 
-**A5. Linter detectors.** `python src/.memoria/engines/linter/detectors.py --self-test`
-- ✓ Pass: `N/N detector checks passed.` (each detector fires on a planted defect and ignores scaffolding/valid links).
-- ✗ Fails: a detector regressed — the line names which (`dashboard-field-drift`, `broken-wikilink`, `fama-exposure`, …).
+**A5. Linter detectors.** `python3 -m pytest tests/test_detectors.py -q`
+- ✓ Pass: all pass (each detector fires on a planted defect and ignores scaffolding/valid links).
+- ✗ Fails: a detector regressed — the test names which (`dashboard-field-drift`, `broken-wikilink`, `fama-exposure`, …).
 
 ---
 
@@ -135,11 +135,11 @@ Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs Po
 
 | Part | Check | Pass? |
 | --- | --- | --- |
-| A1 | `policy_mcp --self-test` (34) | ☐ |
-| A2 | `policy_hook --self-test` (32) | ☐ |
-| A3 | `board_export --self-test` (26) | ☐ |
-| A4 | `metrics_aggregate --self-test` (+ lint-verdict) | ☐ |
-| A5 | `detectors --self-test` (15/15) | ☐ |
+| A1 | `pytest tests/test_policy_mcp.py` | ☐ |
+| A2 | `pytest tests/test_policy_hook.py` | ☐ |
+| A3 | `pytest tests/test_board_export.py` | ☐ |
+| A4 | `pytest tests/test_metrics_aggregate.py` | ☐ |
+| A5 | `pytest tests/test_detectors.py` | ☐ |
 | B1 | `docs-doctor` | ☐ |
 | B2 | `check-vault-links` | ☐ |
 | C1 | shellcheck (installers) | ☐ |

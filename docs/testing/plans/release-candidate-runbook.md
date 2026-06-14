@@ -35,11 +35,11 @@ adds the exact commands plus the ingest/runtime setup.
 ## S0–S1 — static + self-tests  → records G6 (partial), S0, S1
 
 ```bash
-bash scripts/test.sh all          # l1 (all --self-test suites) + l0 (static)
+bash scripts/test.sh all          # l1 (component tests, pytest) + l0 (static)
 ```
 
 - [ ] **S0** static (parse, LF endings, profile files present) — PASS.
-- [ ] **S1** every Python `--self-test` green: `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `retraction`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
+- [ ] **S1** the component test suite green (`scripts/test.sh l1` → `pytest tests/`): `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `retraction`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
 - [ ] Confirm CI is green on the same commit (the required checks gate — G6): `gh pr checks` / the Actions tab.
 
 ## S2 — installer dry-run  → records S2
