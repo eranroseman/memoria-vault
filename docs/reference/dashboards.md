@@ -15,8 +15,8 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Home | Board state | `board-state.md` | The Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`) plus live worker cards from `system/board/`. |
-| Library | Reading pipeline | `reading-pipeline.md` | Sources at `lifecycle: proposed` awaiting reading & distillation + claims by maturity. |
+| Home | Board state | `board-state.md` | The action-first Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
+| Library | Reading pipeline | `reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
 | Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
 | Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
@@ -39,7 +39,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and workspa
 | Base | Lives at | View over |
 | --- | --- | --- |
 | `catalog.base` | `catalog/` | The Catalog — entity records by type (papers, people, organizations, venues, datasets, repositories), `lifecycle != archived`. |
-| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; converges to empty. |
+| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; `action`/`finding` columns expose the next thing to decide; converges to empty. |
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |

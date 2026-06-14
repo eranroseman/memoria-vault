@@ -146,7 +146,7 @@ Home page — it is not a standalone dashboard file.)
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
 | 1 | `board-state.md` | `system/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
-| 2 | `reading-pipeline.md` | `catalog/papers/` (`lifecycle: proposed`), claims (`maturity`) | resolves; **seed:** a paper note → it appears by lifecycle |
+| 2 | `reading-pipeline.md` | `system/dashboards/sources.base` + `system/dashboards/claims.base` | both embedded Bases views render; **seed:** a proposed source note → it appears in *To read & distill* |
 | 3 | `discuss-queue.md` | sources `lifecycle: provisional` | resolves; empty OK |
 | 4 | `open-questions.md` | claims with zero inbound links (`notes/claims/`) | resolves; add an unconnected claim → it lists |
 | 5 | `contradictions.md` | note `links.contradicts` pairs | resolves; empty OK |

@@ -20,6 +20,8 @@ views:
       direction: ASC
     order:
       - file.name
+      - action
+      - finding
       - type
       - certainty
       - loudness
@@ -35,6 +37,8 @@ views:
       direction: ASC
     order:
       - file.name
+      - action
+      - finding
       - type
       - lifecycle
       - raised_by
