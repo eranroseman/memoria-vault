@@ -50,7 +50,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 **B1.** The claimed Linter-engine run produces the report — `detectors.py --vault <path>` → `run_all()` + `verdict()`, via the profile's terminal capability (it is the shipped detector engine, not a coined skill).
 - ✓ Pass: a findings set + a single verdict band (`PASS`/`REVIEW`/`FAIL`) is produced; running it twice on unchanged vault state yields a byte-identical report (determinism).
-- ✗ If it fails: a stack trace or a non-deterministic diff → a detector bug, not a spine problem (run `detectors.py --self-test` to bisect).
+- ✗ If it fails: a stack trace or a non-deterministic diff → a detector bug, not a spine problem (run `python3 -m pytest tests/test_detectors.py` to bisect).
 
 ---
 
