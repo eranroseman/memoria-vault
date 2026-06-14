@@ -26,7 +26,7 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 - `Memoria: write claim note` — claim note in `notes/claims/` from `system/templates/claim.md` (review-gated home: only you create here)
 - `Memoria: capture source from URL` — a capture card on the Librarian lane from a pasted URL
 - `Memoria: capture from Zotero selection` — the same capture card, citekey pre-filled from the current Zotero selection
-- `Memoria: resolve inbox card` — flips the active Inbox note's `lifecycle` to your verdict in place
+- `Memoria: resolve inbox card` — flips the active Inbox note's `lifecycle` to a schema-valid outcome in place
 
 **Per-task lane commands** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) — one command per lane task, each prompting only for what the task needs and creating a correctly-addressed board card:
 

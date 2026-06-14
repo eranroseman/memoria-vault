@@ -124,6 +124,14 @@ def test_url_capture_writes_visible_candidate_card():
         assert field in script
 
 
+def test_resolve_inbox_card_uses_schema_valid_lifecycles():
+    script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
+    assert '"retracted"' not in script
+    assert '"current (accept)": "current"' in script
+    assert '"archived (reject)": "archived"' in script
+    assert '"archived (done / no action)": "archived"' in script
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]

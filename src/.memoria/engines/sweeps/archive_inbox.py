@@ -3,10 +3,11 @@
 
 The resolve affordance (QuickAdd "Memoria: resolve inbox card",
 src/system/scripts/resolve-inbox-card.js) flips a card's frontmatter
-``lifecycle:`` to the chosen verdict and stamps ``resolved:`` — the card stays
-in ``inbox/`` so the verdict remains visible while it is fresh. This sweep is
-the second half of the drain: a card whose lifecycle is a *resolved-but-not-
-archived* value (``current`` / ``retracted``) AND whose ``resolved:`` stamp is
+``lifecycle:`` to a schema-valid inbox outcome and stamps ``resolved:``. Accepted
+cards stay in ``inbox/`` as ``current`` so the verdict remains visible while it is
+fresh; rejected/no-action cards go straight to ``archived``. This sweep is the
+second half of the drain: a card whose lifecycle is a *resolved-but-not-archived*
+value (``current``) AND whose ``resolved:`` stamp is
 older than N days flips to ``lifecycle: archived``, leaving every active view
 (``transient_prefixes`` — items converge to ``archived``). The inbox therefore
 demonstrably converges to empty once cards are handled.
@@ -45,7 +46,7 @@ from pathlib import Path
 
 INBOX_FOLDER = "inbox"
 # lifecycle values written by the resolve affordance that still await archival.
-RESOLVED_LIFECYCLES = ("current", "retracted")
+RESOLVED_LIFECYCLES = ("current",)
 DEFAULT_ARCHIVE_AFTER_DAYS = 30
 
 _warned_calibration = False  # one stderr warning per process (classify.py pattern)
