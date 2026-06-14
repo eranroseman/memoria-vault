@@ -122,12 +122,12 @@ Below these thresholds a topic carries no hub — the friction of the missing hu
 
 ## Vocabulary discipline
 
-The `research_area`, `methodology`, and `topics` fields are open — Memoria does not enforce a controlled vocabulary. The conventions around them:
+The `research_area`, `methodology`, and `topics` fields use the controlled lists in [Vocabulary](vocabulary.md), whose runtime home is `system/vocabulary.md`.
 
-- The active `topics` list runs to **~30 terms** per corpus; a smaller vocabulary produces more consistent classification.
-- Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) lives in `_enrichment` (auto-populated from APIs), not in the hand-curated `topics` field.
-- The vocabulary is defined in a hub note (e.g., `notes/hubs/vocabulary.md`) and reviewed annually.
-- A topic-term rename goes through Obsidian tag-wrangler or a Linter `schema-migrate` dry-run, not a manual search-replace across notes.
+- The active `research_area` list stays near **~30 terms** per corpus; a smaller vocabulary produces more consistent classification.
+- Claim `topics` draw from the same `research_area` list so claims and sources stay queryable together.
+- Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) lives in `_enrichment` (auto-populated from APIs), not in the hand-curated classification fields.
+- A topic-term rename goes through [Manage your topic vocabulary](../how-to-guides/curate/manage-vocabulary.md), not a manual search-replace across notes.
 
 ---
 

@@ -17,6 +17,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
 | [Note types](note-types.md) | The 18 note types: folder, template, lifecycle, promotion map |
+| [Vocabulary](vocabulary.md) | Controlled values for `research_area`, `methodology`, and claim `topics` |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [Glossary](glossary.md) | Term definitions, alphabetical |
@@ -50,6 +51,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [External integrations](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
 | [On-disk layout](on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions |
+| [System artifacts](system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views |
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables |
 | [Failure modes](failure-modes.md) | All failure modes by severity: symptom, cause, fix |
 | [Bibliography](bibliography.md) | Works cited across the docs, in ACM author-date style; in-text citations link here |

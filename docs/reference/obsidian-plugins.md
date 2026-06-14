@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (11)
+## Required Obsidian plugins (12)
 
-Memoria breaks without these. The starter vault **ships all eleven bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all twelve bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -21,6 +21,7 @@ Memoria breaks without these. The starter vault **ships all eleven bundled and c
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
 | cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, resolution, and workspace switching do not require a palette round trip. |
+| modalforms | `modalforms` | Provides structured in-Obsidian forms for capture flows, including controlled `research_area` and `methodology` fields sourced from `system/vocabulary.md`. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
@@ -146,6 +147,14 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and open Desk/Library/Studio workspace. | The always-visible ribbon carries the commands needed for the alpha.3 capture → triage → navigate loop. |
 | `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
+
+### modalforms
+
+| Setting | Required value | Constraint |
+| --- | --- | --- |
+| `formDefinitions[].name` | `memoria-source-capture` | Structured source capture form for PI-entered source metadata. |
+| `research_area` / `methodology` fields | Fixed multiselect options matching `system/vocabulary.md`. | `system/vocabulary.md` is the source of truth; `tests/test_modalforms.py` fails if the committed form options drift. |
+| `globalNamespace` | `MF` | Keeps the plugin API available at the default namespace used by Modal Forms examples. |
 
 ### callout-manager
 
