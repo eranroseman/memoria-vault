@@ -115,6 +115,13 @@ confirm() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+python_install_guidance() {
+  say "Python 3 is required for Memoria's deterministic tools and MCP servers."
+  say "Ubuntu/WSL fix:"
+  say "    sudo apt-get update && sudo apt-get install -y python3 python3-venv"
+  say "Then re-run this installer."
+}
+
 # Remove the temp/staging clone on exit (only the one we created — never the
 # user's own clone when run inspect-first). The runtime vault is the copy.
 # NB: must return 0 — this is the EXIT trap, and its status becomes the script's
@@ -206,10 +213,13 @@ ensure_prereqs() {
   if [ -z "$missing" ]; then ok "git, pandoc, and venv support present"; return; fi
 
   warn "Missing:$missing"
-  if [ "$DRY_RUN" -eq 1 ]; then warn "(dry-run) would install:$missing"; return; fi
+  case " $missing " in
+    *" python3 "*|*" python3-venv "*) python_install_guidance ;;
+  esac
   if have apt-get; then
     say "The recommended install (needs root):"
     say "    sudo apt-get update && sudo apt-get install -y$missing"
+    if [ "$DRY_RUN" -eq 1 ]; then warn "(dry-run) would run the install command above"; return; fi
     if confirm "Run it now?"; then
       run_sh "sudo apt-get update"
       run_sh "sudo apt-get install -y$missing"
@@ -217,7 +227,7 @@ ensure_prereqs() {
       die "Install$missing and re-run (Memoria needs them)."
     fi
   else
-    die "No apt-get found. This installer supports Ubuntu/Debian (or WSL2). Install$missing manually."
+    die "No apt-get found. This installer supports Ubuntu/Debian (or WSL2). Install$missing manually; if Python is missing, install Python 3.11+ plus venv support first."
   fi
 }
 
@@ -392,6 +402,7 @@ install_mcp_deps() {
   fi
   if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
   if [ -z "$PYTHON" ]; then
+    python_install_guidance
     die "No Python found. Install python3 (for Ubuntu/WSL: sudo apt-get install -y python3 python3-venv), then re-run the installer."
   fi
 

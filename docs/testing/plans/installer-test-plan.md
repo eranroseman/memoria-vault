@@ -28,12 +28,19 @@ The clean-install end-to-end the other plans *assume has already happened*: `scr
 
 ## Part A — `install.sh` clean run (S0–S1)
 
+**A0. Missing Python fails with a fix path.** On a disposable Ubuntu/WSL2 image without Python 3, run:
+```
+bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
+```
+- ✓ Pass: the prereq gate stops before profile/runtime work, says Python 3 is required for Memoria's deterministic tools and MCP servers, and prints `sudo apt-get update && sudo apt-get install -y python3 python3-venv`.
+- ✗ Fails: a generic "not found" message or a later MCP/profile failure leaves the user without an actionable fix.
+
 **A1. Run the profiles install into a throwaway vault.**
 ```
 bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 ```
 - ✓ Pass: exit 0; the run stages each of the 5 profiles and calls `hermes profile install … --force`; closing summary lists 5 deployed.
-- ✗ Fails: read the first error; a missing prereq aborts early (Hermes/Python check) — re-run with the matching `--skip-*` only to isolate.
+- ✗ Fails: read the first error; a missing prereq aborts early with the exact package or app to install.
 
 **A2. Vault deployed.** `ls ~/Memoria-test`
 - ✓ Pass: the vault skeleton present — `catalog/ notes/ projects/ inbox/ system/ home.md research-focus.md troubleshooting.md .obsidian/ .memoria/`.
@@ -82,7 +89,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | --- | --- | --- |
 | E1 | `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` | only redeploys profiles (no app/vault bootstrap); `profile show` reflects source changes |
 | E2 | `bash scripts/install.sh --only memoria-engineer --vault ~/Memoria-test` | only `memoria-engineer` re-staged; others untouched |
-| E3 | `bash scripts/install.sh --skip-hermes-check --skip-python-check --vault ~/Memoria-test` | prereq gates bypassed; run proceeds |
+| E3 | `bash scripts/install.sh --dry-run --yes --no-apps --vault ~/Memoria-test` | prints the plan and every command it would run without changing the target |
 
 ---
 
