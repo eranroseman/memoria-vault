@@ -36,7 +36,7 @@ Candidate cards accumulate in the Inbox (the **Needs me** view of `inbox.base`, 
 
 Working the whole queue in one sitting keeps your judgment sharp, where a drip-feed trains you to wave things through (why batch over drip-feed: [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
 
-For each kept paper, the Catalog entity already exists. Create its source note stub in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`).
+For each kept paper, the Catalog entity and proposed source note stub already exist. The stub lives in `notes/source/` (frontmatter + empty sections, `lifecycle: proposed`) and waits for your reading.
 
 ---
 
@@ -66,7 +66,7 @@ Don't try to finish the batch in one session. The queue is durable; that's what 
 ## What you have
 
 - ~5 Catalog entities and kept candidates, judged in one sitting
-- Source notes in `notes/source/`, filling in your own words as you read
+- Source note stubs in `notes/source/`, filled in your own words as you read
 - A reading queue in `sources.base` / the reading-pipeline dashboard that you work down as a batch
 - A growing sense of where your sources agree and where they fight — fuel for the next tutorial
 

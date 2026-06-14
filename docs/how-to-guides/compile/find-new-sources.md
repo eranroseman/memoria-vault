@@ -33,7 +33,7 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 
 **`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, the Desk workspace's first left tab), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Read `argument_against` first — it's the information-bearing field. Then, in one sitting:
 
-- **Keep:** resolve the card to `current` — the paper enters the Tutorial 03 flow (Catalog entity, reading queue, source note).
+- **Keep:** resolve the card to `current` — the paper enters the Tutorial 03 flow (Catalog entity, reading queue, proposed source note).
 - **Skip:** resolve straight to `archived`. Skipping generously offered candidates is the system working, not failing.
 
 Resolving a card flips it in place ([Work the review queue](../compose/work-the-review-queue.md)). Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
@@ -45,7 +45,7 @@ Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-w
 ## Verify
 
 - Candidate cards from the run are all resolved — none left at `lifecycle: proposed`
-- Kept papers have Catalog entities in `catalog/papers/` and appear in the reading queue (`system/dashboards/sources.base`, once you stub their source notes)
+- Kept papers have Catalog entities in `catalog/papers/` and appear in the reading queue (`system/dashboards/sources.base`) through their proposed source-note stubs
 
 ## Related
 

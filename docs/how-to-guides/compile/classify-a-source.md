@@ -40,7 +40,7 @@ lifecycle: current
 
 **5. Carry the vocabulary into your source note.**
 
-When you write the source note in `notes/source/`, reuse the same `research_area` / `methodology` terms — vocabulary drift between catalog and notes is what makes queries lie ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
+When you fill the source note in `notes/source/`, reuse the same `research_area` / `methodology` terms — vocabulary drift between catalog and notes is what makes queries lie ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
 ## Verify
 

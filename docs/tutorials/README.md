@@ -17,7 +17,7 @@ You converse with **one** agent throughout: the Co-PI, in the Agent Client pane.
 | --- | --- | --- | --- |
 | [01](01-set-up-from-zero.md) | Set up from zero | Run the one-line installer, add your API keys, open the vault, meet the Co-PI | A working vault: five profiles installed, the Co-PI pane answering, the Library workspace open |
 | [02](02-your-first-note.md) | Your first note | Capture a fleeting note from the palette, read its frontmatter, distill or archive it | One processed fleeting note and the distill-or-archive habit |
-| [03](03-bring-in-a-paper.md) | Bring in a paper | Optionally wire up Zotero, capture a paper, judge its candidate card, write a source note | A Catalog entity, a kept candidate, and a source note in your own words |
+| [03](03-bring-in-a-paper.md) | Bring in a paper | Optionally wire up Zotero, capture a paper, judge its candidate card, fill a source note | A Catalog entity, a kept candidate, and a source note in your own words |
 | [04](04-build-a-reading-batch.md) | Build a reading batch | Ask the Co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |
 | [05](05-synthesize-toward-a-writing-project.md) | Synthesize toward a writing project | Distill claims, gather them under a hub, delegate a `map` task for coverage | Your synthesis surface: claims, a hub, and a corpus map — *updated with a v0.1.0-alpha.3 project-workflow preview* |
 | [06](06-verify-and-address-gaps.md) | Verify and address gaps | Delegate a `verify` task, read the finding-first cards, let gaps re-trigger discovery | A checked corpus and your first turn of the compounding loop — *project-level verification expands in v0.1.0-alpha.3* |

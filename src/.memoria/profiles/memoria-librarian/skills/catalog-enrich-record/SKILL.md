@@ -23,8 +23,8 @@ metadata:
       - obsidian.put_content
       - policy.check_permission
       - policy.complete_write
-    write_scope: ["inbox/", "catalog/"]
-    outputs: [paper, dataset, repository, person, organization, venue]
+    write_scope: ["inbox/", "catalog/", "notes/source/"]
+    outputs: [paper, dataset, repository, person, organization, venue, source]
 ---
 
 # catalog:enrich-record
@@ -37,7 +37,8 @@ Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
 it, and you cannot run it as a script (`code_execution` is disabled for this
 profile). The tool returns a *draft bundle* with exactly **two holes** that only
 a model can fill: the classification proposal and the comparative `[!brief]`.
-Your job is to call the tool, fill those two holes, and perform the gated writes.
+Your job is to call the tool, fill those two holes, and perform the gated writes,
+including the proposed source-note stub the PI will fill while reading.
 
 This is ADR-30 (deterministic ingest pipeline). The contract: **every write
 gated and audited; nothing captured is ever lost; robust by redundancy.**
@@ -107,7 +108,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    `cites` edge **bidirectionally** (`this.cites += X`, `X.cited_by += this`).
    Link the note to relevant synthesis notes / hubs where applicable.
 
-5. **Write — gated.** Through the `obsidian` skill, write
+5. **Write the Catalog entity — gated.** Through the `obsidian` skill, write
    `catalog/papers/<citekey>.md` (or `catalog/repositories/` for software and
    `catalog/datasets/` for datasets, per the bundle's `note_type`), body led by the `[!brief]`. Set `lifecycle: proposed`
    and `ingest_status: complete` now that the classification landed.
@@ -116,7 +117,18 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    `[!brief] (updated YYYY-MM-DD)` block rather than rewriting. **Never overwrite
    human-set frontmatter.**
 
-6. **Verify the durability anchor.** The ingest MCP appends the capture record
+6. **Write the proposed source note — gated.** For paper-like sources, create
+   `notes/source/<citekey>.md` if it does not already exist. It is the PI's reading
+   record, not an agent summary: set `type: source`, `lifecycle: proposed`,
+   `source_type: paper`, and `entity: "[[catalog/papers/<citekey>]]"`; copy the
+   final title into `title`, and carry over the controlled `research_area` /
+   `methodology` values only when the Catalog entity has confident values. Use
+   the starter sections from `system/templates/source.md` for **In my words**,
+   **Worth distilling**, and **Tensions**; do not generate reading prose. If the
+   note exists, do not overwrite it; leave a short Inbox note or completion note
+   telling the PI where the existing reading record is.
+
+7. **Verify the durability anchor.** The ingest MCP appends the capture record
    (citekey, path, timestamp) to `system/logs/capture-intake.jsonl` itself
    (`append_intake_anchor`, idempotent) when the pipeline runs — the anchor the
    log-reconciliation sweep reconciles against. You **never write logs yourself**
@@ -144,6 +156,9 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 - The note exists at `catalog/papers/<citekey>.md` (or `catalog/repositories/<citekey>.md`
   for software / `catalog/datasets/<citekey>.md` for datasets) with `lifecycle: proposed` and `ingest_status: complete` —
   confirming the classification proposal landed and the gated writes applied.
+- For paper-like sources, a proposed source note exists at `notes/source/<citekey>.md`
+  and links back to the Catalog entity; it contains empty reading sections for the
+  PI to fill, not generated reading prose.
 - A capture record (citekey, path, timestamp) exists in
   `system/logs/capture-intake.jsonl` — appended engine-side by the ingest MCP
   (`append_intake_anchor`), never by you — the durability anchor the

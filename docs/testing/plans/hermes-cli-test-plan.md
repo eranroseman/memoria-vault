@@ -149,7 +149,7 @@ If S1–S5 pass, proceed to the full matrix.
 | L1 | `find` | F2 | `find "<topic>"` | ≥1 candidate card in `inbox/` with `type: candidate`, `source: find`; `allow_with_log` write row |
 | L2 | `ingest` | F1 (`smithA`) | `ingest smithA` | `catalog/papers/smithA.md` with `type: paper`, `citekey`, `_proposed_classification`, `_enrichment`, top-of-body `[!brief]` callout; Marker extract in `.memoria/data/extracts/smithA.md`; audit write row |
 | L3 | `ingest` (no PDF) | F1 (`jonesB`) | `ingest jonesB` | note created; `extract_path` blank (not aborted); ingest still completes |
-| L4 | `obsidian-paper-note` | F1 (`smithA`, delete the L2 note first) | `obsidian-paper-note smithA` | same as L2 — full pipeline incl. `[!brief]` (this is the skill `ingest` wraps) |
+| L4 | `catalog-enrich-record` | F1 (`smithA`, delete the L2 note first) | `catalog-enrich-record smithA` | same as L2 — full pipeline incl. `[!brief]` (this is the skill `ingest` wraps) |
 | L5 | `enrich` | F7 | `enrich <citekey>` | `_enrichment` refreshed, top-level `enriched_date` = today; audit write row; main human fields untouched |
 | L6 | `classify` | a paper entry (`type: paper`) with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [Frontmatter fields](../../reference/frontmatter.md)); human fields still empty |
 | L7 | `query` | F3 | `query "<claim topic>"` | ranked matches returned; **read-only** — no write row in `audit.jsonl` |
@@ -249,7 +249,7 @@ findings land in the logs below.
 | ID | Run | Pass criteria |
 |---|---|---|
 | SK1 | `hermes skills list` | available skills listed |
-| SK2 | `hermes profile show memoria-librarian \| grep -i skill` | the Librarian's loaded skills incl. `obsidian-paper-note`, `qmd` |
+| SK2 | `hermes profile show memoria-librarian \| grep -i skill` | the Librarian's loaded skills incl. `catalog-enrich-record`, `qmd` |
 | SK3 | `hermes skills install <skill>` (a test skill) | skill installs and then appears in `skills list` |
 
 ### 4.11 Scheduled tasks (cron)
