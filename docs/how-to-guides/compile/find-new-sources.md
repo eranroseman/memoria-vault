@@ -23,7 +23,7 @@ Open the Agent Client pane and name the need as a research question, not keyword
 
 Seed it however helps: "papers that build on `<citekey>`" (forward citations), "the foundational papers `<citekey>` builds on" (backward), "recent work that disagrees with my receptivity claims."
 
-The Co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_task`. If you already know the lane, the palette twin is `Cmd/Ctrl-P` → **Memoria: delegate a task** → `catalog`.
+The Co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_task`. If you already know the lane, the palette twin is `Cmd/Ctrl-P` → **Memoria: delegate task** → `catalog`.
 
 **2. Let the Librarian search.**
 

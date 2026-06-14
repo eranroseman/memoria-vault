@@ -10,7 +10,7 @@ permalink: /how-to-guides/compose/
 
 Day-to-day tasks for turning accumulated knowledge into written output. Performed inside Obsidian via the Co-PI pane and the Inbox; export runs in the terminal.
 
-> The full project workflow ships until the alpha.3 Project release — see [Start a writing project](start-a-writing-project.md) for what to do meanwhile.
+> The full project workflow ships after alpha.3 with the deferred Project workflow — see [Start a writing project](start-a-writing-project.md) for what to do meanwhile.
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |

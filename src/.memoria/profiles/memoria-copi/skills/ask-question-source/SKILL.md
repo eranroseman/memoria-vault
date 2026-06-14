@@ -1,6 +1,6 @@
 ---
 name: ask-question-source
-description: "Interrogate a specific source at the desk: answer the PI's questions about a paper/dataset/repository strictly from what the vault holds on it — the catalog note, [!brief], _enrichment, extract text, derived claim notes — with every answer pointing at its evidence. Read-only; anything the conversation decides to change is delegated via delegate:route-task. Use when the PI asks 'what does <source> actually say about…'."
+description: "Interrogate a specific source at the desk: answer the PI's questions about a paper/dataset/repository strictly from what the vault holds on it — the catalog note, [!brief], _enrichment, extract text, derived claim notes — with every answer pointing at its evidence. Read-only; anything the conversation decides to change is delegated via route-task. Use when the PI asks 'what does <source> actually say about…'."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -53,7 +53,7 @@ knowledge dressed up as the paper.
    say exactly that. Offer your general-knowledge reading only when asked, explicitly
    labeled as *not from the source*.
 4. **Delegate any follow-up writes.** "Add that as a stub" / "re-ingest with the PDF"
-   → `delegate:route-task` (extract / catalog lane). You are hard read-only
+   → `route-task` (extract / catalog lane). You are hard read-only
    (`write_scope: []`); never route around it.
 
 ## Output contract

@@ -6,7 +6,7 @@ nav_order: 4
 
 # The Peer-reviewer
 
-The Peer-reviewer runs the **verify** lane — the formal, independent review gate before anything ships, the academic peer-review pass. Its posture is **skeptical, and deliberately independent**: flag, don't fix. It runs the *judgment* checks — citekey resolution, claim→source tracing, near-duplicate adjudication — and the conceptual red-team, reading a draft *for soundness, not just facts*. Its findings land as Inbox `gap` and `flag` cards; it writes nowhere else. It ships fully with the v0.1.0-alpha.3 Project release.
+The Peer-reviewer runs the **verify** lane — the formal, independent review gate before anything ships, the academic peer-review pass. Its posture is **skeptical, and deliberately independent**: flag, don't fix. It runs the *judgment* checks — citekey resolution, claim→source tracing, near-duplicate adjudication — and the conceptual red-team, reading a draft *for soundness, not just facts*. Its findings land as Inbox `gap` and `flag` cards; it writes nowhere else. It ships fully with the deferred Project workflow.
 
 It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the *judgment* half became this agent; the *deterministic* half — retraction lookups, duplicate and broken-citation sweeps — became the verification-sweep engines, scheduled on cron, no posture, no lane ([Engines](../engines/README.md)).
 

@@ -34,6 +34,36 @@ def _choices():
     return json.loads(DATA.read_text(encoding="utf-8"))["choices"]
 
 
+def test_command_labels_are_direct_and_article_free():
+    expected = {
+        "Memoria: capture fleeting",
+        "Memoria: capture from Zotero selection",
+        "Memoria: capture source from URL",
+        "Memoria: delegate task",
+        "Memoria: catalog source",
+        "Memoria: extract claims",
+        "Memoria: link claim",
+        "Memoria: map corpus",
+        "Memoria: draft section",
+        "Memoria: verify draft",
+        "Memoria: run pattern",
+        "Memoria: resolve inbox card",
+        "Memoria: write claim note",
+        "Memoria: open Desk workspace",
+        "Memoria: open Library workspace",
+        "Memoria: open Studio workspace",
+    }
+    commands = {c["name"] for c in _choices() if c.get("command")}
+    assert commands == expected
+    for choice in _choices():
+        if choice["type"] == "Macro":
+            assert choice["macro"]["name"] == choice["name"]
+    banned = re.compile(
+        r"^Memoria: (?:delegate a task|catalog a source|link a claim|map the corpus|"
+        r"draft a section|verify a draft|run a pattern|workspace )")
+    assert not any(banned.match(name) for name in commands)
+
+
 def test_macro_choices_reference_existing_scripts():
     macros = [c for c in _choices() if c["type"] == "Macro"]
     assert macros, "no Macro choices found in quickadd data.json"

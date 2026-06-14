@@ -36,9 +36,9 @@ Three QuickAdd choices give one-click switching (also wired to the workspace but
 
 | Palette entry | Loads |
 | --- | --- |
-| `QuickAdd: Memoria: workspace Desk` | Desk |
-| `QuickAdd: Memoria: workspace Library` | Library |
-| `QuickAdd: Memoria: workspace Studio` | Studio |
+| `QuickAdd: Memoria: open Desk workspace` | Desk |
+| `QuickAdd: Memoria: open Library workspace` | Library |
+| `QuickAdd: Memoria: open Studio workspace` | Studio |
 
 All three run `system/scripts/load-workspace.js`, which loads the named layout through the core Workspaces plugin (the plugin has no per-workspace commands of its own).
 

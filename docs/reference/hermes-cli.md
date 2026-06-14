@@ -17,9 +17,9 @@ Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-p
 
 ---
 
-## Skill names: the `<task>:<verb>-<object>` convention
+## Skill names
 
-A skill's **name** uses a colon: **`<task>:<verb>-<object>`** — the task/lane is the prefix, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog:enrich-record`, `link:suggest-claim`, `delegate:route-task`).
+Lane skills use the **`<task>:<verb>-<object>`** convention — the task/lane is the prefix, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog:enrich-record`, `link:suggest-claim`). Co-PI desk skills that are not lane work use direct load names (`explore-framings`, `route-task`, `explain-system`) so the conversational surface and on-disk names match.
 
 The **on-disk directory replaces the colon with a hyphen**, because directory and skill-load names cannot carry `:`. So `catalog:enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record` (the `-s` flag also takes the hyphen form). When serialized as an MCP tool the separators all collapse to underscores: `catalog_enrich_record`.
 
@@ -27,7 +27,7 @@ The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the
 
 | Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
-| **Co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` (delegate-task) — plus `explain-the-system`, the Co-PI's meta skill outside the lane registry (ADR-48) |
+| **Co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore-framings` · `route-task` (delegate-task) · `explain-system` |
 | **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (obsidian-paper-note) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-mapping) · `map:seed-canvas` (canvas-seed) |
 | **Writer** (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
 | **Peer-reviewer** (verify) | `verify:check-citation` (cite-check, ex-claim-checks) · `verify:trace-claim` (claim-trace, ex-claim-checks) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |

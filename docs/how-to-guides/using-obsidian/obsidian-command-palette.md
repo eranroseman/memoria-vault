@@ -30,17 +30,17 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 
 **Per-task lane commands** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) — one command per lane task, each prompting only for what the task needs and creating a correctly-addressed board card:
 
-- `Memoria: catalog a source` · `Memoria: extract claims` · `Memoria: link a claim` · `Memoria: map the corpus` — the Librarian's four tasks
-- `Memoria: draft a section` — the Writer's `draft` lane
-- `Memoria: verify a draft` — the Peer-reviewer's `verify` lane
-- `Memoria: run a pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along
-- `Memoria: delegate a task` — the generic fallback: pick any lane (including `code`) and type a free-form goal
+- `Memoria: catalog source` · `Memoria: extract claims` · `Memoria: link claim` · `Memoria: map corpus` — the Librarian's four tasks
+- `Memoria: draft section` — the Writer's `draft` lane
+- `Memoria: verify draft` — the Peer-reviewer's `verify` lane
+- `Memoria: run pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along
+- `Memoria: delegate task` — the generic fallback: pick any lane (including `code`) and type a free-form goal
 
 The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file.
 
 **2. Or skip the palette and ask the Co-PI.**
 
-The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane and task; use the Co-PI when you don't, or when the work spans several tasks. Two things have no command at all by design: linting needs no invocation — the Linter is an engine on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the v0.1.0-alpha.3 Project release. The assist surface (find/search/ask from the palette) is tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380).
+The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane and task; use the Co-PI when you don't, or when the work spans several tasks. Two things have no command at all by design: linting needs no invocation — the Linter is an engine on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the deferred Project workflow after alpha.3. The assist surface (find/search/ask from the palette) is tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380).
 
 **3. Use the palette by type, not by scroll.**
 
@@ -55,7 +55,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 - `Cmd-P` → `M` returns the `Memoria:` commands in both groups
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
 - `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding
-- A task command (e.g. `Memoria: map the corpus`) lands a card on the board: `hermes kanban list` shows it addressed to the right lane
+- A task command (e.g. `Memoria: map corpus`) lands a card on the board: `hermes kanban list` shows it addressed to the right lane
 
 ## Related
 

@@ -1,5 +1,5 @@
 ---
-name: explore-branch-framings
+name: explore-framings
 description: "Branch a question into genuinely rival framings at the desk: take the question the PI is circling, develop 2–4 distinct ways to frame it (each with what it presupposes, what evidence the vault holds for it, and what it would take to kill it), and keep them alive side by side instead of converging early. Read-only sparring-partner work; chosen directions become delegated tasks. Use when the PI is shaping a question, not answering one."
 version: 1.0.0
 author: Memoria
@@ -10,7 +10,7 @@ metadata:
     tags: [Desk, Framing, Exploration, Socratic]
     related_skills: [obsidian, qmd]
   memoria:
-    skill_id: "explore:branch-framings"
+    skill_id: "explore-framings"
     profile: memoria-copi
     lane: explore
     mcp_tools:
@@ -22,9 +22,9 @@ metadata:
     outputs: []
 ---
 
-# explore:branch-framings
+# explore-framings
 
-*(load on disk as `explore-branch-framings`.)*
+*(load on disk as `explore-framings`.)*
 
 Resist premature convergence. When the PI is still *shaping* a question, the failure
 mode is locking onto the first framing and back-filling evidence. This skill branches:
@@ -55,7 +55,7 @@ the PI chooses. Sparring partner, not oracle (the old socratic posture, ADR-48).
    different emphases — that is where the PI's choice actually bites.
 4. **Hold the door open.** Recommend only if asked; even then, the recommendation
    carries its argument-against. The chosen branch's next step goes out via
-   `delegate:route-task`; if the PI wants the branches kept, suggest delegating a
+   `route-task`; if the PI wants the branches kept, suggest delegating a
    fleeting-note capture — you write nothing yourself.
 
 ## Output contract

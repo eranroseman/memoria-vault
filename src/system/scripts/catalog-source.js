@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: catalog a source".
+ * QuickAdd user script — "Memoria: catalog source".
  *
  * Direct palette access to the catalog lane (#203): prompts for a citekey or
  * URL (plus an optional goal) and creates a correctly-addressed card on the

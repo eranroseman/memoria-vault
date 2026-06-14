@@ -17,7 +17,7 @@ nav_order: 3
 
 ## Context
 
-Canonical zones (*v0.1.0-alpha.2: `notes/claims/` and `notes/hubs/`, per [ADR-47](47-type-first-category-folders.md); the deliverable zone returns with the v0.1.0-alpha.3 Project release. Originally `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`*) must only receive content that a human has reviewed and approved. The question is whether this guarantee lives in prompt instructions, agent conventions, or infrastructure.
+Canonical zones (*v0.1.0-alpha.2: `notes/claims/` and `notes/hubs/`, per [ADR-47](47-type-first-category-folders.md); the deliverable zone returns with the deferred Project workflow. Originally `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`*) must only receive content that a human has reviewed and approved. The question is whether this guarantee lives in prompt instructions, agent conventions, or infrastructure.
 
 ## Decision
 

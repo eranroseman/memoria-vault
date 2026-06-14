@@ -72,7 +72,7 @@ Two mechanisms support the panel:
   to notes outside the policy gate and are banned.
 - The core Workspaces plugin has no per-workspace load commands, so a QuickAdd user
   script (`system/scripts/load-workspace.js`) loads a named workspace via the
-  internal-plugin API, and three macro choices ("Memoria: workspace Desk / Library /
+  internal-plugin API, and three macro choices ("Memoria: open Desk workspace / Library /
   Studio") pass the target name via QuickAdd's per-command settings — giving one
   one-click palette command (and button) per workspace.
 

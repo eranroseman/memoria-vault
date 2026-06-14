@@ -50,7 +50,7 @@ action QuickAdd: Memoria: capture source from URL
 ```button
 name Delegate a task
 type command
-action QuickAdd: Memoria: delegate a task
+action QuickAdd: Memoria: delegate task
 ```
 
 ```button
@@ -70,19 +70,19 @@ action Agent Client: Open chat view
 ```button
 name Desk
 type command
-action QuickAdd: Memoria: workspace Desk
+action QuickAdd: Memoria: open Desk workspace
 ```
 
 ```button
 name Library
 type command
-action QuickAdd: Memoria: workspace Library
+action QuickAdd: Memoria: open Library workspace
 ```
 
 ```button
 name Studio
 type command
-action QuickAdd: Memoria: workspace Studio
+action QuickAdd: Memoria: open Studio workspace
 ```
 
 ## Dashboards

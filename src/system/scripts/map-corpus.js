@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: map the corpus".
+ * QuickAdd user script — "Memoria: map corpus".
  *
  * Direct palette access to the map lane (#203): prompts for an optional scope
  * (a folder or hub note — Enter maps the whole corpus) and creates a

@@ -132,9 +132,9 @@ These are the repo source wrappers under `.memoria/scripts/`. The installer copi
 | --- | --- |
 | ask-question-source | Answers questions about a source from vault holdings, read-only. |
 | ask-read-lens | Re-reads a source through a named lens (frame / checklist / hypothesis), read-only. |
-| explore-branch-framings | Branches a question into rival framings — the sparring partner. |
-| delegate-route-task | Routes work to the right lane via the tasks MCP with a composed handoff payload. |
-| explain-the-system | Teaches how Memoria works, pointing at concrete affordances. |
+| explore-framings | Branches a question into rival framings — the sparring partner. |
+| route-task | Routes work to the right lane via the tasks MCP with a composed handoff payload. |
+| explain-system | Teaches how Memoria works, pointing at concrete affordances. |
 
 ## PI actions
 

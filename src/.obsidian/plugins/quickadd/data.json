@@ -71,11 +71,11 @@
     },
     {
       "id": "9d3f2b71-4e8a-4c5d-9b06-2f7c81d4a350",
-      "name": "Memoria: delegate a task",
+      "name": "Memoria: delegate task",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: delegate a task",
+        "name": "Memoria: delegate task",
         "id": "b41c7e92-6a0d-4f38-8e15-c93da70b62f1",
         "commands": [
           {
@@ -90,11 +90,11 @@
     },
     {
       "id": "1ddb2df1-3e07-40c7-8445-3d17486b6afa",
-      "name": "Memoria: catalog a source",
+      "name": "Memoria: catalog source",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: catalog a source",
+        "name": "Memoria: catalog source",
         "id": "6c235240-b51f-4ad1-956e-4e6968b36a76",
         "commands": [
           {
@@ -128,11 +128,11 @@
     },
     {
       "id": "bf05fcc8-50e3-4597-9984-d7c7cc507b02",
-      "name": "Memoria: link a claim",
+      "name": "Memoria: link claim",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: link a claim",
+        "name": "Memoria: link claim",
         "id": "3e744c71-6b29-495f-ba9c-138b4d068d75",
         "commands": [
           {
@@ -147,11 +147,11 @@
     },
     {
       "id": "969fcafb-5b09-4d80-a1a5-1ab18a2e2e94",
-      "name": "Memoria: map the corpus",
+      "name": "Memoria: map corpus",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: map the corpus",
+        "name": "Memoria: map corpus",
         "id": "795e0086-ce20-4379-b428-6de881f6fca8",
         "commands": [
           {
@@ -166,11 +166,11 @@
     },
     {
       "id": "b35010fb-9b8e-4911-bf7a-07aaa5f720e8",
-      "name": "Memoria: draft a section",
+      "name": "Memoria: draft section",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: draft a section",
+        "name": "Memoria: draft section",
         "id": "a69b6eee-911f-4271-acc9-993ecba8ed20",
         "commands": [
           {
@@ -185,11 +185,11 @@
     },
     {
       "id": "27940507-8f4d-4300-b223-7d33df3991cf",
-      "name": "Memoria: verify a draft",
+      "name": "Memoria: verify draft",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: verify a draft",
+        "name": "Memoria: verify draft",
         "id": "26976e92-5644-4bea-b197-370bde06334c",
         "commands": [
           {
@@ -204,11 +204,11 @@
     },
     {
       "id": "b9cd4c71-5b8a-437d-8ea7-361c1245e961",
-      "name": "Memoria: run a pattern",
+      "name": "Memoria: run pattern",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: run a pattern",
+        "name": "Memoria: run pattern",
         "id": "b34e5a56-a6d0-40c1-a9ad-977dbf8543bf",
         "commands": [
           {
@@ -273,11 +273,11 @@
     },
     {
       "id": "71138de4-6029-416b-8559-fb61fde5efb1",
-      "name": "Memoria: workspace Desk",
+      "name": "Memoria: open Desk workspace",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: workspace Desk",
+        "name": "Memoria: open Desk workspace",
         "id": "f3200efc-acc2-4514-a8fb-2aff1e07c632",
         "commands": [
           {
@@ -294,11 +294,11 @@
     },
     {
       "id": "5f43d3c5-544c-4a38-ba5b-be3891254236",
-      "name": "Memoria: workspace Library",
+      "name": "Memoria: open Library workspace",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: workspace Library",
+        "name": "Memoria: open Library workspace",
         "id": "cb8c6830-284e-4b32-8e5f-41f8b5dddb7e",
         "commands": [
           {
@@ -315,11 +315,11 @@
     },
     {
       "id": "4a9ffb2d-0cec-4436-9b39-a41384da9670",
-      "name": "Memoria: workspace Studio",
+      "name": "Memoria: open Studio workspace",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: workspace Studio",
+        "name": "Memoria: open Studio workspace",
         "id": "a99116b8-77e8-4137-a003-663c078c1649",
         "commands": [
           {

@@ -55,7 +55,7 @@ highlights, what it occludes, and where it strains.
 4. **Close the loop honestly**: one paragraph stepping *out* of the lens — what the
    lens-reading adds beyond the plain reading, if anything.
 5. **Delegate** anything the reading should become (a stub, a tension card, a draft
-   note) via `delegate:route-task` — this skill writes nothing.
+   note) via `route-task` — this skill writes nothing.
 
 ## Output contract
 
@@ -70,4 +70,4 @@ or ask for a rival lens on the same material.
 - What the lens occludes is mandatory output, not a footnote; a lens-reading that
   only adds insight and costs nothing is being oversold.
 - Strain points are reported even when they undercut the lens the PI likes.
-- One lens at a time; comparing lenses is `explore:branch-framings`' job.
+- One lens at a time; comparing lenses is `explore-framings`' job.

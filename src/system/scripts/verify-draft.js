@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: verify a draft".
+ * QuickAdd user script — "Memoria: verify draft".
  *
  * Direct palette access to the verify lane (#203): defaults to the active
  * note when it is a draft (under projects/), otherwise prompts for the draft

@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: delegate a task".
+ * QuickAdd user script — "Memoria: delegate task".
  *
  * Prompts for a lane and a goal, then creates a card on that lane's agent
  * (`hermes kanban create`) — the palette twin of the Co-PI's

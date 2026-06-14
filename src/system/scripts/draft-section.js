@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: draft a section".
+ * QuickAdd user script — "Memoria: draft section".
  *
  * Direct palette access to the draft lane (#203): prompts for the goal (what
  * to draft, or an outline ref) and creates a correctly-addressed card on the

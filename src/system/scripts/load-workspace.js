@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: workspace Desk / Library / Studio".
+ * QuickAdd user script — "Memoria: open Desk workspace / Library / Studio".
  *
  * Loads a named workspace layout via the core Workspaces plugin, which has
  * no per-workspace palette commands of its own. One script serves all three

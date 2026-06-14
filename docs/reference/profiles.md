@@ -76,7 +76,7 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 
 ## Bundled skills
 
-**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. A skill's name uses the `<task>:<verb>-<object>` convention with a colon (e.g. `catalog:enrich-record`, `delegate:route-task`); on disk the colon becomes a hyphen (`skills/catalog-enrich-record/`).
+**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. Lane skills use the `<task>:<verb>-<object>` convention with a colon (e.g. `catalog:enrich-record`); on disk the colon becomes a hyphen (`skills/catalog-enrich-record/`). Co-PI desk skills that are not lane work use direct load names such as `route-task` and `explain-system`.
 
 | Profile | Bundled-skill count |
 | --- | --- |

@@ -29,9 +29,9 @@ One command per shipped workspace layout ([ADR-68](../adr/68-workspaces-desk-lib
 
 | Command | Output | Implementation |
 | --- | --- | --- |
-| `Memoria: workspace Desk` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → `src/system/scripts/load-workspace.js` (pure Obsidian API — no shelling) |
-| `Memoria: workspace Library` | Loads the **Library** layout (reading & synthesis). | Same script, per-macro setting `Workspace: Library` |
-| `Memoria: workspace Studio` | Loads the **Studio** layout (drafting). | Same script, per-macro setting `Workspace: Studio` |
+| `Memoria: open Desk workspace` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → `src/system/scripts/load-workspace.js` (pure Obsidian API — no shelling) |
+| `Memoria: open Library workspace` | Loads the **Library** layout (reading & synthesis). | Same script, per-macro setting `Workspace: Library` |
+| `Memoria: open Studio workspace` | Loads the **Studio** layout (drafting). | Same script, per-macro setting `Workspace: Studio` |
 
 Pane-by-pane contents of each layout: [Obsidian workspaces](obsidian-workspaces.md).
 
@@ -43,16 +43,16 @@ One command per lane task, each prompting only for what that task needs and crea
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |
-| `Memoria: catalog a source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → `src/system/scripts/catalog-source.js` |
+| `Memoria: catalog source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → `src/system/scripts/catalog-source.js` |
 | `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/source/`, otherwise prompts for a path or citekey. | QuickAdd Macro → `src/system/scripts/extract-claims.js` |
-| `Memoria: link a claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `src/system/scripts/link-claim.js` |
-| `Memoria: map the corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `src/system/scripts/map-corpus.js` |
-| `Memoria: draft a section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `src/system/scripts/draft-section.js` |
-| `Memoria: verify a draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `src/system/scripts/verify-draft.js` |
-| `Memoria: delegate a task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `src/system/scripts/delegate-task.js` |
-| `Memoria: run a pattern` | Librarian card invoking `patterns_run` (ADR-53) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → `src/system/scripts/run-pattern.js` |
+| `Memoria: link claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `src/system/scripts/link-claim.js` |
+| `Memoria: map corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `src/system/scripts/map-corpus.js` |
+| `Memoria: draft section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `src/system/scripts/draft-section.js` |
+| `Memoria: verify draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `src/system/scripts/verify-draft.js` |
+| `Memoria: delegate task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `src/system/scripts/delegate-task.js` |
+| `Memoria: run pattern` | Librarian card invoking `patterns_run` (ADR-53) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → `src/system/scripts/run-pattern.js` |
 
-The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py` (the `code` lane has no single-task command — use `Memoria: delegate a task`).
+The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py` (the `code` lane has no single-task command — use `Memoria: delegate task`).
 
 ---
 
@@ -61,9 +61,9 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 | Command | Status | Where the job went |
 | --- | --- | --- |
 | `Memoria: lint this note` | **Removed** | The Linter is an engine, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
-| `Memoria: verify this draft` | Replaced | `Memoria: verify a draft` (above), or ask the Co-PI. |
-| `Memoria: frame this section` | Replaced | `Memoria: draft a section` (above), or ask the Co-PI. |
-| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.0-alpha.3 Project release; meanwhile `Memoria: map the corpus` or the Co-PI covers `map` lane work. |
+| `Memoria: verify this draft` | Replaced | `Memoria: verify draft` (above), or ask the Co-PI. |
+| `Memoria: frame this section` | Replaced | `Memoria: draft section` (above), or ask the Co-PI. |
+| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return after alpha.3 with the deferred Project workflow; meanwhile `Memoria: map corpus` or the Co-PI covers `map` lane work. |
 
 ---
 
