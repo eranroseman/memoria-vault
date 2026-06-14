@@ -47,7 +47,13 @@ and adopts none until its own trigger fires:
 - **Static-HTML admin reports.** Snapshot reports (board state, Linter verdict
   summary, metrics) rendered to static HTML by the Linter on a weekly schedule and
   stored in `system/reports/`, for retrospective review or sharing a
-  health snapshot without opening Obsidian.
+  health snapshot without opening Obsidian. The leading candidate renderer is
+  [Quartz](https://github.com/jackyzha0/quartz) — a static-site generator
+  purpose-built for Obsidian/Roam vaults (full-text search, graph, backlinks) — which
+  is also the natural downstream renderer for the open-design deliverable flow above
+  (publishing `50-deliverables/` or a garden view) rather than a competing system.
+  Surfaced by the [#194](https://github.com/eranroseman/memoria-vault/issues/194)
+  comparative survey.
 - **Literate code-note (weave + tangle).** A `code-note` interleaving prose and
   executable code in one file, with the Linter checking that code and prose
   description haven't drifted — a drift-detected research notebook for computational

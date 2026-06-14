@@ -151,6 +151,7 @@ kanban
 Karpathy
 keyphrase
 keyspace
+Khoj
 KiloCode
 Kincaid
 Kingma
