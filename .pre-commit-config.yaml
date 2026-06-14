@@ -110,12 +110,15 @@ repos:
         exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
 
-      # Block 9b: cspell spell-check (docs/ + src/ + root markdown)
+      # Block 9b: cspell spell-check (all tracked markdown)
+      # Triggers on any changed .md; scope/exclusions are owned by cspell.json
+      # (files + ignorePaths + enableGlobDot), so there is no file list to mirror
+      # against .github/workflows/cspell.yml.
       - id: cspell
         name: cspell
         language: system
         entry: npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files
-        files: ^docs/.*\.md$|^src/.*\.md$|^[^/]+\.md$
+        files: \.md$
         pass_filenames: true
 
       # Block 10: ADR index current
