@@ -13,10 +13,8 @@ def load_script(rel: str):
     return mod
 
 
-class TestHarness:
+class CheckHarness:
     """Minimal pass/fail harness for the extracted L1 tests (ADR-44; formerly _shared.py)."""
-
-    __test__ = False  # tell pytest this is not a test class
 
     def __init__(self) -> None:
         self.failures = 0

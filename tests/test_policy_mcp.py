@@ -2,7 +2,7 @@
 import pytest
 
 import policy_mcp as _m
-from _util import TestHarness
+from _util import CheckHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -10,7 +10,7 @@ def test_policy_mcp():
     def _run():
         import tempfile
 
-        t = TestHarness()
+        t = CheckHarness()
         check = t.check
 
         # ---- glob matcher ------------------------------------------------------ #

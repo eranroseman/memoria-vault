@@ -6,7 +6,7 @@ import yaml
 
 import board_export as _m
 import schema as _schema
-from _util import TestHarness
+from _util import CheckHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -14,7 +14,7 @@ def test_board_export():
     def _run():
         import tempfile
 
-        t = TestHarness()
+        t = CheckHarness()
         check = t.check
 
         sample = [

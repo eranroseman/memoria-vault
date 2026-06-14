@@ -73,7 +73,7 @@ repos:
       - id: pytest
         name: pytest
         language: system
-        entry: python -m pytest tests/ -q
+        entry: env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/ -q
         files: \.py$
         pass_filenames: false
 

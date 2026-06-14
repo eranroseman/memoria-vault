@@ -1,6 +1,6 @@
 """L1 component test for policy_hook — extracted from its former --self-test (ADR-44)."""
 import policy_hook as _m
-from _util import TestHarness
+from _util import CheckHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -9,7 +9,7 @@ def test_policy_hook():
         __file__ = _m.__file__
         import tempfile
 
-        t = TestHarness()
+        t = CheckHarness()
         check = t.check
 
         # classify / extract_path -------------------------------------------------
