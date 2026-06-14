@@ -241,6 +241,25 @@
       }
     },
     {
+      "id": "d93115ab-346a-4f65-b107-4af5b9a6f8e1",
+      "name": "Memoria: create linked claim note",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: create linked claim note",
+        "id": "f874d7b7-9b5a-4eb0-9d78-16a4e1f0fd96",
+        "commands": [
+          {
+            "name": "create-linked-claim",
+            "type": "UserScript",
+            "id": "ba39ed7f-a9a3-45c8-86f6-5db4b3124f35",
+            "path": "system/scripts/create-linked-claim.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
       "name": "Memoria: write claim note",
       "type": "Template",

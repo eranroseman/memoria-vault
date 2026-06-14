@@ -18,9 +18,11 @@ Distill a source into a single, durable claim in `notes/claims/`. One claim per 
 
 Ask the Co-PI: "Do I already hold a claim like *\<one-sentence statement\>*?" — it searches the vault read-only and answers in the pane. For a systematic pass over a whole folder, delegate a `verify` task instead (the Peer-reviewer's duplicate hunt returns flag cards). If a close match exists, extend that note rather than creating a twin.
 
-**2. Create the note from the template.**
+**2. Create the note.**
 
-`Cmd/Ctrl-P` → **Memoria: write claim note** — a new note in `notes/claims/` from `system/templates/claim.md`, with the frontmatter pre-populated:
+From a source note, click **Create linked claim** under **Worth distilling**. It creates a new note in `notes/claims/`, adds the source citekey to `sources`, links the claim back into the source note, and opens the claim for editing.
+
+For a standalone claim, use `Cmd/Ctrl-P` → **Memoria: write claim note** — a new note in `notes/claims/` from `system/templates/claim.md`, with the frontmatter pre-populated:
 
 ```yaml
 type: claim
@@ -45,9 +47,9 @@ The filename *is* the claim: `receptivity-decreases-under-high-cognitive-load.md
 
 Do not quote the paper directly — distillation, not transcription.
 
-**5. Fill `sources`.**
+**5. Check `sources`.**
 
-List the citekey(s) of the supporting paper(s):
+The linked-claim button fills the active source's citekey for you. For standalone claim notes, list the citekey(s) of the supporting paper(s):
 
 ```yaml
 sources: ["mamykina2010sense"]

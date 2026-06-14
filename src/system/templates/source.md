@@ -16,6 +16,12 @@ Your-words summary of the source — what it claims, on what evidence (the liter
 
 # Worth distilling
 
+```button
+name Create linked claim
+type command
+action QuickAdd: Memoria: create linked claim note
+```
+
 Candidate claims to extract — each becomes an atomic claim note when you distill.
 
 # Tensions

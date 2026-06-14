@@ -77,3 +77,9 @@ def test_verification_cards_lead_with_finding():
     for name in ("flag", "alert"):
         body = (TEMPLATES / f"{name}.md").read_text(encoding="utf-8")
         assert "# Finding" in body, f"{name}.md missing # Finding"
+
+
+def test_source_template_exposes_linked_claim_button():
+    body = (TEMPLATES / "source.md").read_text(encoding="utf-8")
+    assert "action QuickAdd: Memoria: create linked claim note" in body
+    assert body.index("```button") > body.index("# Worth distilling")
