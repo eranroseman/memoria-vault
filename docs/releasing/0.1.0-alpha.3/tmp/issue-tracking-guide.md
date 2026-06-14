@@ -35,7 +35,7 @@ Set these on every issue from the Project (board or table view). Issue creation 
 | **Done** | merged/closed |
 | **Deferred** | parked — not this phase (alpha.4+, deferred ADRs, future transports). Revisit each release cycle, don't delete. |
 
-*(Optional additions if you want them: `Needs scoping` for vague issues, `Blocked` for waiting-on-another. Add via Project settings → Status field. Don't edit the field via API — it can wipe existing values.)*
+**Five states, in this order** (option order = board column order): the first four are the active lifecycle — read left→right as progress, so keep them contiguous — and **Deferred** sits last as the off-flow parking lot. Net: *left = active* (Backlog → In progress → In review), *right = inactive* (Done, Deferred). `Needs scoping` and `Blocked` were deliberately **not** kept — each overlapped Backlog / In progress and earned no distinct action; capture those with a note or Priority instead. If you ever re-add a status, do it in the **UI** — editing the field's options via API can wipe existing item values.
 
 ### Area — which subsystem (one, sometimes more)
 | Value | Covers |
@@ -69,6 +69,20 @@ Set these on every issue from the Project (board or table view). Issue creation 
 | **High** | blockers — e.g. defects that break a tutorial / the core loop. Keep this set small so it stays meaningful. |
 | **Normal** | the default for real work |
 | **Low** | nice-to-have, parked, or research |
+
+### Field colors
+
+GitHub's single-select palette is 8 colors: Gray, Blue, Green, Yellow, Orange, Red, Pink, Purple. Principle: **semantic** fields encode meaning (Status = flow, Priority = heat); **categorical** fields use distinct hues that are just tags. Reserve **Red = severity/breakage**, **Green = good/done**, **Gray = neutral/inactive**. Cross-field hue reuse is fine — each field is its own column.
+
+| Field | Option → color |
+|---|---|
+| **Status** | Backlog `Gray` · In progress `Blue` · In review `Orange` · Done `Green` · Deferred `Purple` |
+| **Priority** | High `Red` · Normal `Yellow` · Low `Gray` |
+| **Type** | Bug `Red` · Feature `Green` · Refactor `Purple` · Docs `Blue` · Research `Yellow` · Decision `Orange` |
+| **Sub-issues progress** | `Purple` bar — *Segmented bar*, *Show numerical value* on. A partial warm bar (red/orange/yellow) misreads as a warning; purple/blue/green read as neutral progress. |
+| **Area** | **auto-color** (Area is filter/group-driven, and 9 areas > 8 colors). Optional themed set: capture `Green` · ingest `Blue` · knowledge `Purple` · obsidian-ui `Pink` · docs-site `Gray` · operations `Orange` · agents `Yellow` · installer + integrations share one hue. |
+
+Set colors in **Project settings → ‹field› → option color picker**.
 
 ---
 
