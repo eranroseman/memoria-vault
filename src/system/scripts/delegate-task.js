@@ -20,6 +20,18 @@ const LANES = {
   code: "memoria-engineer",
 };
 
+// Lane → PI-facing picker label. Keep profile ids internal; the picker should
+// describe the work, not expose implementation names.
+const LANE_LABELS = {
+  catalog: "Catalog sources",
+  extract: "Extract claims",
+  link: "Link claims",
+  map: "Map the corpus",
+  draft: "Draft prose",
+  verify: "Verify work",
+  code: "Coordinate code handoff",
+};
+
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
@@ -37,7 +49,7 @@ module.exports = async (params) => {
 
   const laneNames = Object.keys(LANES);
   const lane = await params.quickAddApi.suggester(
-    laneNames.map((l) => l + " → " + LANES[l]),
+    laneNames.map((l) => LANE_LABELS[l]),
     laneNames
   );
   if (!lane) {
@@ -45,7 +57,7 @@ module.exports = async (params) => {
     return;
   }
 
-  const goal = (await params.quickAddApi.inputPrompt("Goal for the " + lane + " lane:"))?.trim();
+  const goal = (await params.quickAddApi.inputPrompt("Goal for " + LANE_LABELS[lane] + ":"))?.trim();
   if (!goal) {
     new Notice("No goal entered.", 4000);
     return;
@@ -66,7 +78,7 @@ module.exports = async (params) => {
       " --idempotency-key " + shq(idemKey) +
       " --body " + shq(body)
     );
-    new Notice("✓ Delegated → card created on the " + lane + " lane (" + assignee + ").", 6000);
+    new Notice("✓ Delegated → " + LANE_LABELS[lane] + " card created.", 6000);
   } catch (e) {
     new Notice(("Delegation failed: " + e.message).slice(0, 250), 10000);
   }

@@ -132,6 +132,23 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     assert '"archived (done / no action)": "archived"' in script
 
 
+def test_delegate_task_picker_uses_work_labels_not_profile_ids():
+    script = (SCRIPTS / "delegate-task.js").read_text(encoding="utf-8")
+    assert "const LANE_LABELS" in script
+    for label in (
+        "Catalog sources",
+        "Extract claims",
+        "Link claims",
+        "Map the corpus",
+        "Draft prose",
+        "Verify work",
+        "Coordinate code handoff",
+    ):
+        assert label in script
+    assert 'laneNames.map((l) => LANE_LABELS[l])' in script
+    assert 'l + " → " + LANES[l]' not in script
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]
