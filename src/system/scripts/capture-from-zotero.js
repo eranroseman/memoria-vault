@@ -94,7 +94,8 @@ module.exports = async (params) => {
     "Ingest the source with citekey `" + citekey + "`" +
     (title ? " (title: " + title + ")" : "") +
     " using the catalog-enrich-record skill: run `/catalog-enrich-record --source " + citekey + "`. " +
-    "Create the paper entity under catalog/papers/, enrich it, propose the classification, " +
+    "Create the paper entity under catalog/papers/, create the proposed source-note stub " +
+    "under notes/source/ for the PI to fill, enrich it, propose the classification, " +
     "then kanban_complete with review_status: requested.";
 
   new Notice(`Capturing ${citekey}…`, 3000);

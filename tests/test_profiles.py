@@ -84,6 +84,18 @@ def test_peer_reviewer_writes_only_inbox():
     assert lane["routing"]["write_scope"] == ["inbox/"]
 
 
+def _skill_frontmatter(profile: str, skill: str) -> dict:
+    text = (PROFILES / profile / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
+    return yaml.safe_load(text.split("---", 2)[1])
+
+
+def test_catalog_enrich_record_creates_proposed_source_notes():
+    fm = _skill_frontmatter("memoria-librarian", "catalog-enrich-record")
+    memoria = fm["metadata"]["memoria"]
+    assert "notes/source/" in memoria["write_scope"]
+    assert "source" in memoria["outputs"]
+
+
 def test_acp_pane_is_copi_only():
     import json
 

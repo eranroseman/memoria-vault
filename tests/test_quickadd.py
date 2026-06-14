@@ -176,6 +176,13 @@ def test_url_capture_writes_visible_candidate_card():
         assert field in script
 
 
+def test_capture_and_catalog_cards_request_source_note_stub():
+    for fname in ("capture-from-url.js", "capture-from-zotero.js", "catalog-source.js"):
+        script = (SCRIPTS / fname).read_text(encoding="utf-8")
+        assert "proposed source-note stub" in script
+        assert "notes/source/ for the PI to fill" in script
+
+
 def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
     assert '"retracted"' not in script

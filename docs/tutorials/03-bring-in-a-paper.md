@@ -5,7 +5,7 @@ parent: Tutorials
 
 # Tutorial 03: Bring in a paper
 
-**You will end with:** one paper entity in `catalog/papers/`, one candidate card judged in the Inbox, and one source note in `notes/source/` written in your own words.
+**You will end with:** one paper entity in `catalog/papers/`, one candidate card judged in the Inbox, and one proposed source note in `notes/source/` filled in your own words.
 
 **Time:** 30–45 minutes (includes reading the paper or its abstract).
 
@@ -54,7 +54,7 @@ As you read, watch for one or two things worth keeping — not a summary of ever
 
 ## Step 5 — Write the source note
 
-The source note is *your* reading record — the literature note, in your words, never the agent's. Create a new note in `notes/source/` from `system/templates/source.md` (or copy its shape):
+The source note is *your* reading record — the literature note, in your words, never the agent's. The Librarian creates a proposed stub in `notes/source/` during ingest so the reading queue can see it; open that stub and fill its sections:
 
 ```yaml
 type: source
@@ -72,7 +72,7 @@ Fill the three body sections the template gives you:
 2. **Worth distilling** — candidate claims you might extract later (Tutorial 05 turns these into claim notes).
 3. **Tensions** — where it disagrees with anything your vault already holds.
 
-Save. Then archive the candidate card from Step 3 — its job is done.
+Save. Then resolve the candidate card from Step 3 — its job is done.
 
 ---
 
@@ -80,7 +80,7 @@ Save. Then archive the candidate card from Step 3 — its job is done.
 
 - `catalog/papers/<citekey>.md` — the paper entity, with `relationships` edges into the Catalog
 - A judged candidate card — you read an honest argument and made the call
-- `notes/source/` — one source note in your own words, linked to its entity
+- `notes/source/` — one source note stub filled in your own words, linked to its entity
 
 The paper is a vault citizen; the source note is your intellectual claim on it.
 

@@ -13,7 +13,7 @@ Three inline callout types written by agent profiles into vault notes. Defined v
 
 | Callout | Location | Producer | Purpose |
 | --- | --- | --- | --- |
-| `[!brief]` | Top of every source note in `notes/source/` | Librarian (composed during ingest by `obsidian-paper-note`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
+| `[!brief]` | Top of every source note in `notes/source/` | Librarian (composed during ingest by `catalog-enrich-record`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
 | `[!suggestions]` | End of any note Librarian has run link suggestions against | Librarian (after `enrich` or weekly link pass) | Bounded candidate links (5 forward + 5 backward, hard cap) with Approve / Reject affordances |
 | `[!verification]` | Top of any draft in `projects/<project>/composition/` | Peer-reviewer (auto-fired on draft `git commit`) | Per-claim trace back to claim notes; failed traces flagged with a link to the verification report |
 
