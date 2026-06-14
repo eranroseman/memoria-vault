@@ -5,7 +5,7 @@ parent: Reference
 
 # Profile capabilities
 
-The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): posture, board lanes, write scopes, MCP servers, and bundled skills. Every value on this page is read from the shipped sources — the profile packages under [src/.memoria/profiles/](../../src/.memoria/profiles), the lane ceilings under [src/.memoria/lane-overrides/](../../src/.memoria/lane-overrides), and the per-profile tool allowlist in [src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml).
+The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): posture, board lanes, write scopes, MCP servers, and bundled skills. Every value on this page is read from the shipped sources — the profile packages under `src/.memoria/profiles`, the lane ceilings under `src/.memoria/lane-overrides`, and the per-profile tool allowlist in `src/.memoria/tool-registry.yaml`.
 
 ---
 
@@ -25,7 +25,7 @@ One conversational agent (the co-PI) plus four background agents, each defined b
 
 ## Board lanes
 
-A lane _is_ an `assignee` value on the Hermes board. The task-lane → profile map is enforced by the tasks MCP ([src/.memoria/mcp/tasks_mcp.py](../../src/.memoria/mcp/tasks_mcp.py)):
+A lane _is_ an `assignee` value on the Hermes board. The task-lane → profile map is enforced by the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`):
 
 | Task lane | Profile |
 | --- | --- |
@@ -92,7 +92,7 @@ For the full per-skill map (names, lanes, and legacy-name aliases) see the [Herm
 
 ## Capability allowlist
 
-[src/.memoria/tool-registry.yaml](../../src/.memoria/tool-registry.yaml) is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
+`src/.memoria/tool-registry.yaml` is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
 - **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, engines, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0-alpha.1 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).

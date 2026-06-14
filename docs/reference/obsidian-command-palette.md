@@ -15,9 +15,9 @@ The `Memoria:` command-palette surface — the in-Obsidian commands, registered 
 | --- | --- | --- |
 | `Memoria: capture fleeting` | A new fleeting note in `notes/fleeting/` from the fleeting template (`lifecycle: proposed`, `origin: human`). | QuickAdd Template → `system/templates/fleeting.md` |
 | `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
-| `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → [src/system/scripts/capture-from-url.js](../../src/system/scripts/capture-from-url.js) → `hermes kanban create` |
-| `Memoria: capture from Zotero selection` | A capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → [src/system/scripts/capture-from-zotero.js](../../src/system/scripts/capture-from-zotero.js) (Better BibTeX CAYW) → `hermes kanban create` |
-| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your verdict (current = accept, retracted = reject, or archived) and `resolved:` stamped with today's date. | QuickAdd Macro → [src/system/scripts/resolve-inbox-card.js](../../src/system/scripts/resolve-inbox-card.js) (pure Obsidian API — no shelling) |
+| `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
+| `Memoria: capture from Zotero selection` | A capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX CAYW) → `hermes kanban create` |
+| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your verdict (current = accept, retracted = reject, or archived) and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
 
 Template-based note creation (fleeting, claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md).
 
@@ -29,7 +29,7 @@ One command per shipped workspace layout ([ADR-68](../adr/68-workspaces-desk-lib
 
 | Command | Output | Implementation |
 | --- | --- | --- |
-| `Memoria: workspace Desk` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → [src/system/scripts/load-workspace.js](../../src/system/scripts/load-workspace.js) (pure Obsidian API — no shelling) |
+| `Memoria: workspace Desk` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → `src/system/scripts/load-workspace.js` (pure Obsidian API — no shelling) |
 | `Memoria: workspace Library` | Loads the **Library** layout (reading & synthesis). | Same script, per-macro setting `Workspace: Library` |
 | `Memoria: workspace Studio` | Loads the **Studio** layout (drafting). | Same script, per-macro setting `Workspace: Studio` |
 
@@ -43,14 +43,14 @@ One command per lane task, each prompting only for what that task needs and crea
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |
-| `Memoria: catalog a source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → [src/system/scripts/catalog-source.js](../../src/system/scripts/catalog-source.js) |
-| `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/source/`, otherwise prompts for a path or citekey. | QuickAdd Macro → [src/system/scripts/extract-claims.js](../../src/system/scripts/extract-claims.js) |
-| `Memoria: link a claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → [src/system/scripts/link-claim.js](../../src/system/scripts/link-claim.js) |
-| `Memoria: map the corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → [src/system/scripts/map-corpus.js](../../src/system/scripts/map-corpus.js) |
-| `Memoria: draft a section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → [src/system/scripts/draft-section.js](../../src/system/scripts/draft-section.js) |
-| `Memoria: verify a draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → [src/system/scripts/verify-draft.js](../../src/system/scripts/verify-draft.js) |
-| `Memoria: delegate a task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → [src/system/scripts/delegate-task.js](../../src/system/scripts/delegate-task.js) |
-| `Memoria: run a pattern` | Librarian card invoking `patterns_run` (ADR-53) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → [src/system/scripts/run-pattern.js](../../src/system/scripts/run-pattern.js) |
+| `Memoria: catalog a source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → `src/system/scripts/catalog-source.js` |
+| `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/source/`, otherwise prompts for a path or citekey. | QuickAdd Macro → `src/system/scripts/extract-claims.js` |
+| `Memoria: link a claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `src/system/scripts/link-claim.js` |
+| `Memoria: map the corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `src/system/scripts/map-corpus.js` |
+| `Memoria: draft a section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `src/system/scripts/draft-section.js` |
+| `Memoria: verify a draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `src/system/scripts/verify-draft.js` |
+| `Memoria: delegate a task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `src/system/scripts/delegate-task.js` |
+| `Memoria: run a pattern` | Librarian card invoking `patterns_run` (ADR-53) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → `src/system/scripts/run-pattern.js` |
 
 The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py` (the `code` lane has no single-task command — use `Memoria: delegate a task`).
 

@@ -78,8 +78,17 @@ def test_delegate_blocks_ceiling_violations_before_card_creation(tmp_path):
     assert out["created"] is False and out["error"] == "ceiling-violation"
 
 
-def test_card_creation_degrades_with_fallback_hint(tmp_path):
+def test_card_creation_degrades_with_fallback_hint(tmp_path, monkeypatch):
     v = _vault(tmp_path)
+    monkeypatch.setattr(
+        tasks_mcp,
+        "create_card",
+        lambda lane, goal, body, idempotency_key="": {
+            "created": False,
+            "error": "hermes-cli-not-found",
+            "fallback": "manual",
+        },
+    )
     out = tasks_mcp.delegate(v, "catalog", "Ingest @smith2024",
                              allowed_paths=["catalog/"],
                              idempotency_key="reingest:smith2024")

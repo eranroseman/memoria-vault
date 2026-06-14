@@ -1,6 +1,12 @@
 # Python bytecode (docs-doctor + profile scripts)
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.tox/
+.nox/
+.venv/
 
 # Claude Code local worktrees (per-branch checkouts; never part of the repo)
 .claude/worktrees/
@@ -28,4 +34,3 @@ desktop.ini
 /_notes/
 /_papers/
 TODO*
-

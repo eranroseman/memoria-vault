@@ -5,14 +5,15 @@ Emits two GitHub Actions outputs:
   reason   = human-readable string
 
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
-paths (docs/, markdown) get decision=auto_approve, which
+prose paths (docs/ or _notes/, .md/.txt only) get decision=auto_approve, which
 causes the workflow to enable auto-merge. Safe PRs can be any size — a single
 docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
 docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
 
 Block: any PR touching sensitive paths (.github/, src/.memoria/, scripts/, or
 ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
-human review.
+human review. Agent instruction surfaces are also sensitive: they can change
+what future automation is allowed or encouraged to do.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -27,7 +28,7 @@ TRUSTED_AUTHORS = {
     "dependabot[bot]",
 }
 
-# A path is safe if it matches any prefix or suffix below.
+# A path is safe only when it is prose under an explicitly safe prefix.
 SAFE_PREFIXES = (
     "docs/",
     "_notes/",
@@ -39,21 +40,28 @@ SAFE_SUFFIXES = (".md", ".txt")
 # though it lives under the otherwise-safe docs/ tree — is_sensitive wins over is_safe.
 SENSITIVE_PREFIXES = (
     ".github/",
+    ".agents/",
+    ".claude/",
+    ".codex/",
+    ".kilo/",
     "scripts/",
     "src/.memoria/",
     "docs/adr/",
 )
+SENSITIVE_PATHS = {
+    "AGENTS.md",
+}
 
 
 def is_safe(path: str) -> bool:
     return (
         any(path.startswith(p) for p in SAFE_PREFIXES)
-        or any(path.endswith(s) for s in SAFE_SUFFIXES)
+        and any(path.endswith(s) for s in SAFE_SUFFIXES)
     )
 
 
 def is_sensitive(path: str) -> bool:
-    return any(path.startswith(p) for p in SENSITIVE_PREFIXES)
+    return path in SENSITIVE_PATHS or any(path.startswith(p) for p in SENSITIVE_PREFIXES)
 
 
 def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[str, str]:

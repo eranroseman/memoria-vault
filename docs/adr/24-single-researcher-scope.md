@@ -5,6 +5,7 @@ title: Single-researcher scope — multi-user semantics are out of scope
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

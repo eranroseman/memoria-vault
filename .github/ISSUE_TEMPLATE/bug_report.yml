@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a broken or unexpected behavior in Memoria
-labels: ["bug", "needs-triage"]
+labels: ["bug"]
 assignees: []
 body:
   - type: markdown
@@ -16,9 +16,9 @@ body:
       description: Which part of Memoria is affected?
       options:
         - Install script (scripts/install.sh / scripts/install.ps1)
-        - Profile (specify below)
+        - Profile or agent guidance (specify below)
         - Vault structure / templates
-        - Hermes integration (AGENTS.md / SOUL.md)
+        - Hermes integration (AGENTS.md / SOUL.md / .agents)
         - Obsidian plugin / local REST API
         - Documentation
         - Other
@@ -29,15 +29,15 @@ body:
     id: profile
     attributes:
       label: Profile (if applicable)
-      description: "Which profile? e.g. librarian, mapper, socratic, writer, verifier, coder, linter"
-      placeholder: librarian
+      description: "Which profile? e.g. memoria-copi, memoria-librarian, memoria-writer, memoria-peer-reviewer, memoria-engineer"
+      placeholder: memoria-librarian
 
   - type: textarea
     id: description
     attributes:
       label: What happened?
       description: A clear description of the bug.
-      placeholder: When I run scripts/install.sh, the researcher profile is not copied to ~/.hermes/profiles/.
+      placeholder: When I run scripts/install.sh, the memoria-librarian profile is not copied to ~/.hermes/profiles/.
     validations:
       required: true
 
@@ -45,7 +45,7 @@ body:
     id: expected
     attributes:
       label: What did you expect?
-      placeholder: The profile directory should appear at ~/.hermes/profiles/researcher/.
+      placeholder: The profile directory should appear at ~/.hermes/profiles/memoria-librarian/.
     validations:
       required: true
 

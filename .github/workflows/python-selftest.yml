@@ -6,8 +6,8 @@ name: python-selftest
 # table forever — silent, so CI must catch it).
 #
 # policy_mcp degrades without PyYAML, but policy_hook's test writes a lane YAML and
-# needs it to load — so we install requirements.txt (mcp + PyYAML) before pytest
-# rather than rely on stdlib-only behavior.
+# needs it to load — so we install runtime requirements (mcp + PyYAML) plus the
+# repo-side dev test tooling rather than rely on stdlib-only behavior.
 #
 # This backs a REQUIRED status check, so — like docs-doctor and lint-installers —
 # it must report on EVERY PR (no `paths:` filter), or path-unrelated PRs would
@@ -35,12 +35,14 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: src/.memoria/mcp/requirements.txt
-      - name: Install runtime deps + pytest
-        # runtime deps (mcp + PyYAML) so the modules import; pytest runs the L1 tree.
+          cache-dependency-path: |
+            requirements-dev.txt
+            src/.memoria/mcp/requirements.txt
+      - name: Install runtime + dev test deps
+        # runtime deps so the modules import; dev deps provide pytest and shared tooling.
         run: |
+          python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -r src/.memoria/mcp/requirements.txt
-          python -m pip install --quiet pytest
       - name: Run L1 component tests (pytest)
         # ADR-44: the former per-module --self-test suites now live in tests/.
         run: python -m pytest tests/ -q

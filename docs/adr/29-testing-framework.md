@@ -5,6 +5,7 @@ title: A layered testing framework, not a pile of plans
 status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

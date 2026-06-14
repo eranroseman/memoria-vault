@@ -22,8 +22,9 @@ def test_pr_policy():
         )
         check("is_safe: explanation prose prefix", is_safe("docs/explanation/architecture/human-channels.md"))
         check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
-        check("is_safe: .md suffix (arbitrary path)", is_safe("README.md"))
-        check("is_safe: .txt suffix", is_safe("CHANGELOG.txt"))
+        check("is_safe: README root markdown NOT safe", not is_safe("README.md"))
+        check("is_safe: arbitrary .txt NOT safe", not is_safe("CHANGELOG.txt"))
+        check("is_safe: non-prose under docs/ NOT safe", not is_safe("docs/_data/nav.yml"))
         check("is_safe: .py file NOT safe", not is_safe("scripts/install.py"))
         check("is_safe: .yml NOT safe (outside safe prefix)", not is_safe(".github/workflows/ci.yml"))
         check("is_safe: vault code NOT safe", not is_safe("src/.memoria/mcp/policy_mcp.py"))
@@ -32,6 +33,11 @@ def test_pr_policy():
         check("is_sensitive: workflow", is_sensitive(".github/workflows/ci.yml"))
         check("is_sensitive: .github/scripts/", is_sensitive(".github/scripts/pr_policy.py"))
         check("is_sensitive: all .github/", is_sensitive(".github/CODEOWNERS"))
+        check("is_sensitive: AGENTS.md", is_sensitive("AGENTS.md"))
+        check("is_sensitive: .agents/", is_sensitive(".agents/skills/schema-change/SKILL.md"))
+        check("is_sensitive: .claude/", is_sensitive(".claude/skills/release/SKILL.md"))
+        check("is_sensitive: .codex/", is_sensitive(".codex/agents-doctor.md"))
+        check("is_sensitive: .kilo/", is_sensitive(".kilo/config.md"))
         check("is_sensitive: scripts/", is_sensitive("scripts/install.sh"))
         check("is_sensitive: vault profiles", is_sensitive("src/.memoria/profiles/memoria-linter/detectors.py"))
         check("is_sensitive: vault mcp", is_sensitive("src/.memoria/mcp/policy_mcp.py"))
@@ -79,14 +85,20 @@ def test_pr_policy():
         d, r = decide(["docs/reference/glossary.md", "src/.obsidian/app.json"], "eranroseman", False)
         check("decide: mixed (non-sensitive, non-all-safe) -> needs_human", d == "needs_human")
 
-        # --- edge: .md file in sensitive prefix is both safe and sensitive ---
-        check("is_safe: .md in scripts/ IS safe (suffix match)",
-              is_safe("scripts/README.md"))
+        # --- edge: .md file in sensitive prefix is sensitive, not safe ---
+        check("is_safe: .md in scripts/ NOT safe",
+              not is_safe("scripts/README.md"))
         check("is_sensitive: .md in scripts/ IS sensitive (prefix match)",
               is_sensitive("scripts/README.md"))
         d, r = decide(["scripts/README.md"], "eranroseman", False)
         check("decide: sensitive .md by trusted -> needs_human (sensitive wins)",
               d == "needs_human")
+
+        d, r = decide(["README.md"], "eranroseman", False)
+        check("decide: root markdown by trusted -> needs_human", d == "needs_human")
+
+        d, r = decide(["AGENTS.md"], "random-user", False)
+        check("decide: AGENTS.md by untrusted -> block", d == "block")
 
         print(f"\n{'FAILED' if failures else 'OK'}: {failures} failing check(s) — pr_policy self-test")
         return failures

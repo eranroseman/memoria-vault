@@ -5,6 +5,7 @@ title: The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

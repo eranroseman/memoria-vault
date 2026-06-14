@@ -23,6 +23,7 @@ The full **non-GUI** verification of the Memoria vault: every deterministic chec
 
 - [ ] At the repo root, on the branch under test.
 - [ ] Python 3.11+ on `PATH`.
+- [ ] `python -m pip install -r requirements-dev.txt` (pytest + local static-check tooling).
 - [ ] `python -m pip install -r src/.memoria/mcp/requirements.txt` (mcp, PyYAML). `policy_mcp` degrades gracefully without PyYAML, but install it for the full suite.
 - [ ] (Part C only) `shellcheck` on `PATH`; PowerShell with `Install-Module PSScriptAnalyzer -Scope CurrentUser`.
 
@@ -68,7 +69,7 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 ## Part C — Installer lint (mirrors `lint-installers` CI — both are required checks)
 
-**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh src/.memoria/scripts/*.sh`
+**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/engines/linter/pre-commit src/.memoria/scripts/*.sh`
 - ✓ Pass: no output, exit 0.
 - ✗ Fails: `SCxxxx` at a `file:line` — fix it, or scope a `# shellcheck disable=SCxxxx`. (The cron *template* `board-export-cron.sh` carries `{{PYTHON}}` placeholders that read as a brace command → `SC2288` is disabled on that line by design.)
 
@@ -80,9 +81,9 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 ## Part D — Schema-correctness (beyond CI — catches the silent dashboard/telemetry drift class)
 
-A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against a real vault tree (`vault/`, or the rebuilt test vault).
+A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against the repo source tree (`src/`) and, when validating an installed candidate, the rebuilt test vault.
 
-**D1. dashboard-field-drift on the real vault.** `python src/.memoria/engines/linter/detectors.py --vault vault`
+**D1. dashboard-field-drift on the repo source.** `python src/.memoria/engines/linter/detectors.py --vault src --gate dashboard-field-drift`
 - ✓ Pass: no `dashboard-field-drift` findings — every field a dashboard queries **over a note folder** exists in some template.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 
@@ -121,11 +122,11 @@ The maintained runner for this gate (don't copy-paste a loop that drifts). From 
 
 ```bash
 scripts/test.sh        # everything (default)
-scripts/test.sh l1     # Part A only — the five component self-tests
+scripts/test.sh l1     # Part A only — the pytest component suite
 scripts/test.sh l0     # Parts B + C + E, plus the D1 informational run
 ```
 
-It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../adr/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (component self-tests), **L0** = Parts B/C/E (static + schema). The runner also runs Part **D1** (`detectors --vault`) as an **informational, non-gating** footer — review its findings by eye; a nonzero count never reddens the verdict here (vault-content quality is L5, not L0).
+It exits nonzero if any **gated** check fails, so it doubles as a pre-push hook, and it mirrors the CI jobs — green here means green in CI. In [ADR-29](../../adr/29-testing-framework.md) terms these are the bottom two layers: **L1** = Part A (pytest component suite), **L0** = Parts B/C/E plus D1 (static + schema + dashboard-field drift). Broader vault-content findings remain L5 and are not part of this local gate.
 
 Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs PowerShell, and shellcheck (C1) is skipped with a notice when absent (CI still enforces both); the Part **D2** schema audit carries judgment — run it separately.
 

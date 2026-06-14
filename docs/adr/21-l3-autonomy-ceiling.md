@@ -5,6 +5,7 @@ title: L3 autonomy ceiling, structurally enforced (the Coder-lane exception is r
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

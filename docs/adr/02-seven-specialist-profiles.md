@@ -5,6 +5,7 @@ title: Seven specialist profiles over one generalist agent
 status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
+assumes: []
 supersedes: []
 superseded_by: [48]
 parent: Decisions

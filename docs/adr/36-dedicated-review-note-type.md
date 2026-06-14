@@ -6,6 +6,8 @@ status: superseded
 superseded_by: [51]  # the Inbox category + universal lifecycle (D18) — a card in `proposed` IS the review surface; durable review provenance = disposition.jsonl + the audit chain
 assumes: []
 date_proposed: 2026-05-15
+date_resolved: 2026-06-10
+supersedes: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 36

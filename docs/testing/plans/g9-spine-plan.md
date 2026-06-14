@@ -99,4 +99,4 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 | D | card → done, no review needed | | |
 | E | dispatch / determinism / audit / gate / autonomy | | |
 
-**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record in [Release plan — v0.1.0-alpha.1](../../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md) (gate G9).
+**G9 green** when one card traverses A-min → D with the gate logging `allow_with_log`, an `audit.jsonl` row whose `after_hash` matches the saved report, and the card ending `done` — and all E invariants hold. A-cron green adds the scheduler + cron→card proof. Record the result in the G9 sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.

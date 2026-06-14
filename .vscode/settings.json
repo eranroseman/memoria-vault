@@ -16,6 +16,7 @@
   "shellcheck.customArgs": ["--severity=warning"],
   "powershell.scriptAnalysis.enable": true,
   "powershell.scriptAnalysis.settingsPath": "scripts/PSScriptAnalyzerSettings.psd1",
+  "ruff.nativeServer": "on",
   "linter.linters": {
     "yamllint": {
       "enabled": true

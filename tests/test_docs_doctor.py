@@ -266,7 +266,15 @@ def test_docs_doctor():
             check("check_thin_folders: single-file folder flagged as advisory",
                   any("thin/" in w for w in warns))
 
-        # --- check_site_local_links (advisory) ---
+            (root / "releasing").mkdir()
+            (root / "releasing" / "README.md").write_text("# Releasing\n")
+            (root / "releasing" / "plan.md").write_text("# Plan\n")
+            warns_excl: list[str] = []
+            check_thin_folders(root, warns_excl)
+            check("check_thin_folders: site-excluded folder not flagged",
+                  not any("releasing/" in w for w in warns_excl))
+
+        # --- check_site_local_links ---
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             root = repo / "docs"
@@ -275,13 +283,13 @@ def test_docs_doctor():
             (repo / "src" / "file.py").write_text("x = 1\n")
             (root / "reference" / "sibling.md").write_text("# Sibling\n")
 
-            # published page linking into src/ -> advisory warning
+            # published page linking into src/ -> blocking error
             pub = root / "reference" / "x.md"
             pub.write_text("[code](../../src/file.py)\n[doc](sibling.md)\n")
-            warns: list[str] = []
-            check_site_local_links(pub, root, warns)
-            check("check_site_local_links: published page linking to src/ flagged",
-                  len(warns) == 1 and "leaves the published site" in warns[0])
+            errs: list[str] = []
+            check_site_local_links(pub, root, errs)
+            check("check_site_local_links: published page linking to src/ blocked",
+                  len(errs) == 1 and "leaves the published site" in errs[0])
 
             # link to a sibling doc page stays inside the site -> not flagged
             warns_doc: list[str] = []

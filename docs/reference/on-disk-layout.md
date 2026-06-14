@@ -5,7 +5,7 @@ parent: Reference
 
 # On-disk layout
 
-Where every file lives. The repo ships the vault under **`src/`**; the installer scaffolds the folder skeleton in your chosen runtime vault (default `~/Memoria`) and populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Repo and deployed vault have the same internal shape; the deployed vault additionally grows the runtime-only artifacts listed at the end. The tree itself is fixed by [ADR-47](../adr/47-type-first-category-folders.md): five type-first category folders, with the type → folder map living in [src/.memoria/schemas/folders.yaml](../../src/.memoria/schemas/folders.yaml).
+Where every file lives. The repo ships the vault under **`src/`**; the installer scaffolds the folder skeleton in your chosen runtime vault (default `~/Memoria`) and populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Repo and deployed vault have the same internal shape; the deployed vault additionally grows the runtime-only artifacts listed at the end. The tree itself is fixed by [ADR-47](../adr/47-type-first-category-folders.md): five type-first category folders, with the type → folder map living in `src/.memoria/schemas/folders.yaml`.
 
 ---
 
@@ -45,7 +45,7 @@ The five vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `system
 
 ## `.memoria/` — the runtime tooling layer
 
-Hidden from Obsidian; everything agents and engines need, shipped in [src/.memoria/](../../src/.memoria):
+Hidden from Obsidian; everything agents and engines need, shipped in `src/.memoria`:
 
 ```text
 .memoria/
@@ -88,7 +88,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in [src/.obsidian/](../../src/.obsidian): `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, agent-client, Local REST API). [src/.obsidian/workspaces.json](../../src/.obsidian/workspaces.json) ships the three saved layouts — **Desk**, **Library**, and **Studio** (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, agent-client, Local REST API). `src/.obsidian/workspaces.json` ships the three saved layouts — **Desk**, **Library**, and **Studio** (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 

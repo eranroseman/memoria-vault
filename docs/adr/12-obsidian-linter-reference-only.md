@@ -5,6 +5,7 @@ title: obsidian-linter is reference-only, not a control-plane formatter
 status: accepted
 date_proposed: 2026-05-29
 date_resolved: 2026-05-29
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

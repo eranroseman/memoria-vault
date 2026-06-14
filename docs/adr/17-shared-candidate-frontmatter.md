@@ -5,6 +5,7 @@ title: Shared candidate frontmatter format
 status: accepted
 date_proposed: 2026-05-15
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

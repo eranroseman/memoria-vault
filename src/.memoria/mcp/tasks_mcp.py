@@ -87,7 +87,13 @@ def validate(vault: Path, lane: str, allowed_paths: list[str]) -> list[str]:
     return errors
 
 
-def create_card(lane: str, goal: str, body: str, idempotency_key: str = "") -> dict:
+def create_card(
+    lane: str,
+    goal: str,
+    body: str,
+    idempotency_key: str = "",
+    runner=subprocess.run,
+) -> dict:
     """Shell out to `hermes kanban create` (the proven path; board stays Hermes-native)."""
     cmd = ["hermes", "kanban", "create", goal,
            "--assignee", LANE_PROFILE[lane],
@@ -95,7 +101,7 @@ def create_card(lane: str, goal: str, body: str, idempotency_key: str = "") -> d
     if idempotency_key:
         cmd += ["--idempotency-key", idempotency_key]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=True)
+        r = runner(cmd, capture_output=True, text=True, timeout=30, check=True)
         obj = json.loads(r.stdout or "{}")
         return {"created": True, "card_id": str(obj.get("id") or obj.get("task_id") or "queued"),
                 "lane": lane, "assignee": LANE_PROFILE[lane]}
@@ -182,10 +188,12 @@ def _self_test() -> int:
         ck("unknown lane rejected", validate(v, "publish", []) != [])
         out = delegate(v, "catalog", "g", allowed_paths=["notes/claims/"])
         ck("delegate refuses ceiling violations", out["error"] == "ceiling-violation")
+        def missing_hermes(*args, **kwargs):
+            raise FileNotFoundError("hermes")
+
+        card = create_card("catalog", "g", "b", runner=missing_hermes)
         ck("missing hermes degrades with a fallback hint",
-           create_card("catalog", "g", "b").get("error") in
-           ("hermes-cli-not-found", "kanban-create-exit-1", "kanban-create-exit-2",
-            "kanban-create-timeout") or create_card("catalog", "g", "b").get("created"))
+           card.get("error") == "hermes-cli-not-found" and "fallback" in card)
     print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
     return 1 if failures else 0
 

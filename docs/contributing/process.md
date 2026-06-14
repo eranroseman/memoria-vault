@@ -5,58 +5,47 @@ nav_order: 1
 ---
 # Contributing workflow
 
-How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md** (§§1–3, "PR flow", "Merge discipline"); this file is the human-facing complement with checklists and recovery.
+How work moves from a branch onto `main`. Rules are authoritative in **AGENTS.md** ("Session isolation", "Branch first", "Stage by explicit path", "PR flow", "Merge discipline"); this file is the human-facing complement with checklists and recovery.
 
 ## Branch discipline
 
-The branch, isolation, and merge-discipline rules are authoritative in **AGENTS.md** ("Merge discipline", §§1–4) and not restated here: one scope per branch, keep it small (≤1 day or ≤10 commits), rebase onto `origin/main` daily and before every PR, land structural changes in their own tiny PR first, and work each session in its own worktree with a clean tree before any `reset --hard`/`switch`. The checklists below turn those rules into a working routine.
+The branch, isolation, and merge-discipline rules are authoritative in **AGENTS.md** ("Session isolation", "Branch first", "Stage by explicit path", "Clean tree before you switch or reset", "Merge discipline") and not restated here: one scope per branch, keep it small (≤1 day or ≤10 commits), rebase onto `origin/main` daily and before every PR, land structural changes in their own tiny PR first, and work each session in its own worktree with a clean tree before any `reset --hard`/`switch`. The checklists below turn those rules into a working routine.
 
-## Issue and board flow
+## Issue and Project flow
 
-Every actionable item is a GitHub issue. The board is **"Memoria backlog"** at <https://github.com/users/eranroseman/projects/1>.
+Every actionable item is a GitHub issue in
+[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1). The full
+field model is in [Issue tracking](issue-tracking.md); this page only summarizes
+the working loop.
 
-| Column | State |
-|---|---|
-| Inbox | Filed, unscheduled |
-| Scheduled | Assigned to a milestone |
-| In progress | Branch open |
-| In review | PR open |
-| Done | Merged / closed |
-
-Pick an issue → move to **In progress**, open a branch. Open the PR with `Closes #N` → **In review**. Squash-merge → issue auto-closes → **Done**.
+Pick an issue with Status `Backlog`, move it to `In progress`, and open a branch.
+Open the PR with `Closes #N` so the linked issue moves to `In review`. Squash-merge
+when checks pass, then close the issue as `Done` once acceptance criteria are met.
 
 ### Board automation
 
-The board's **Status** field is kept in sync by the Project's built-in workflows
-(Project → ⚙ Settings → Workflows) — don't hand-move cards for these transitions:
+The Project's **Status** field is kept in sync by built-in workflows
+(Project → Settings → Workflows) for the common transitions:
 
 | Automation (enabled) | Effect |
 |---|---|
 | Auto-add to project / Auto-add sub-issues | Every new repo issue (and sub-issue) lands on the board |
-| Item added to project | New item → **Inbox** |
+| Item added to project | New item → **Backlog** |
 | Pull request linked to issue | Issue with an open linked PR → **In review** |
 | Item closed / Pull request merged | → **Done** |
 | Auto-close issue | Setting Status **Done** closes the issue |
 
-Only two steps are manual: **Inbox → Scheduled** (assigning a milestone *is* the
-scheduling act — see AGENTS.md "Work routing") and **Scheduled → In progress**
-(when you open the branch). Everything downstream of opening a PR is automatic.
+Scheduling is the milestone, not a Status value. No milestone means unscheduled
+backlog; a milestone means the issue is scoped to that release phase.
 
 ## Issue triage
 
-Triage keeps the backlog actionable. The label set is defined in AGENTS.md ("Work routing").
+Triage keeps the backlog actionable. The Project fields are defined in
+[Issue tracking](issue-tracking.md).
 
-- **New issue** (within ~48h): add a category label, set a priority, and assign a milestone only if it's scheduled (no milestone = unscheduled backlog).
-- **Weekly:** groom the Inbox — move ready, milestoned items to Scheduled; re-prioritize.
+- **New issue** (within ~48h): set Type, Area, Priority, and Status `Backlog`; assign a milestone only if scheduled.
+- **Weekly:** groom Backlog — fill missing fields, split oversized work, and re-prioritize.
 - **Monthly:** sweep stale issues (no activity in 30+ days) — close or refresh.
-
-Priority labels:
-
-| Label | Criteria |
-|---|---|
-| `P0` | Blocks a core workflow or risks data loss |
-| `P1` | Significantly degrades a workflow; no workaround |
-| `P2` | Minor inconvenience or future improvement |
 
 Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` label. Won't-fix → close with `wontfix` and a brief reason (keeps the decision on record).
 
@@ -67,7 +56,10 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 - Cut a release at the end of a meaningful milestone, not on a calendar cadence. Milestones are releases (AGENTS.md "Work routing").
 - A **breaking change** in Memoria is: renaming a profile `config.yaml` field, restructuring the vault folder layout, removing a profile capability or skill, or changing ADR-frontmatter required fields.
 
-**How a release runs:** scope is the GitHub milestone, readiness is the "Release vX.Y" tracking issue, prose lives in `docs/releasing/<v>/`, and version/CHANGELOG/Release are owned by release-please — the `/release` skill scaffolds it. That model is defined in AGENTS.md ("Release plans") and [Releasing](../releasing/README.md); don't restate the split here.
+**How a release runs:** scope is the GitHub milestone and Project view, readiness is
+the parent "Release vX.Y" issue plus gate/stage sub-issues, prose lives in
+`docs/releasing/<version>/`, and version/CHANGELOG/Release are owned by release-please.
+That model is defined in AGENTS.md ("Release plans") and [Releasing](../releasing/README.md).
 
 ## Checklists
 
@@ -85,6 +77,7 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 - [ ] `git push -u origin <branch>` → `gh pr create --base main`
 - [ ] required checks green (AGENTS.md "Required CI checks")
 - [ ] `gh pr merge --squash --delete-branch`
+- [ ] local `main` tree is clean and your work is merged upstream
 - [ ] `git checkout main && git fetch origin && git reset --hard origin/main`
 
 ## Divergence recovery

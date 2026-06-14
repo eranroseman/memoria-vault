@@ -5,7 +5,7 @@ parent: Reference
 
 # Dashboards
 
-The twelve dashboards shipped in `system/dashboards/` ([src/system/dashboards/](../../src/system/dashboards)) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
+The twelve dashboards shipped in `system/dashboards/` (`src/system/dashboards`) and the Bases views behind them. Dashboards are browsable **health views** — where things stand; the Inbox is the **action queue** — discrete things that need you now. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows them near-empty.
 
 Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
@@ -53,11 +53,11 @@ The drift-watch dashboard rolls the Linter engine's detector findings up into a 
 
 ## Trust score (fleet-health)
 
-A 0–100 composite per lane, computed by [src/.memoria/mcp/metrics_aggregate.py](../../src/.memoria/mcp/metrics_aggregate.py) into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. The shipped `fleet-health.md` dashboard is currently a prose placeholder (no embedded query) — it reads the `system/metrics/` notes the weekly cron writes. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
+A 0–100 composite per lane, computed by `src/.memoria/mcp/metrics_aggregate.py` into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. The shipped `fleet-health.md` dashboard is currently a prose placeholder (no embedded query) — it reads the `system/metrics/` notes the weekly cron writes. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
 
 ## Eval metrics (eval-trend)
 
-Per-quarter capability scores, computed by the deterministic scorer [src/.memoria/engines/sweeps/eval_score.py](../../src/.memoria/engines/sweeps/eval_score.py) into `system/metrics/eval/runs.jsonl` ([ADR-11](../adr/11-vault-eval-maintenance.md)). Each metric is 0–1, higher is better: **recall@k** (gold citekeys in the top-k retrieved), **support-rate** (cited evidence resolving to real catalog records), **FAMA-clean** (no superseded/archived claim reused). A gold task whose card reported no machine-readable result shows as **unscored** — never a faked score. Diagnostic, not gating: a dip informs the PI; it does not pause scheduled work. Full contract: [Vault eval](vault-eval.md).
+Per-quarter capability scores, computed by the deterministic scorer `src/.memoria/engines/sweeps/eval_score.py` into `system/metrics/eval/runs.jsonl` ([ADR-11](../adr/11-vault-eval-maintenance.md)). Each metric is 0–1, higher is better: **recall@k** (gold citekeys in the top-k retrieved), **support-rate** (cited evidence resolving to real catalog records), **FAMA-clean** (no superseded/archived claim reused). A gold task whose card reported no machine-readable result shows as **unscored** — never a faked score. Diagnostic, not gating: a dip informs the PI; it does not pause scheduled work. Full contract: [Vault eval](vault-eval.md).
 
 ---
 

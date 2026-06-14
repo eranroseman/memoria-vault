@@ -5,6 +5,7 @@ title: Typed relations frontmatter
 status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-05-29
+assumes: []
 supersedes: []
 superseded_by: [52]
 parent: Decisions

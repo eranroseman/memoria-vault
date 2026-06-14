@@ -5,6 +5,7 @@ title: The repo is the install unit; profiles are hand-authored and idempotently
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

@@ -5,6 +5,9 @@ title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: deferred
 assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against — its original trigger (live qmd index + dense synthesis corpus) still governs
 date_proposed: 2026-05-30
+date_resolved:
+supersedes: []
+superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 38

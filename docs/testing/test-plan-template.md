@@ -99,5 +99,7 @@ results table at the end.
 | B | {{what B proves}} | | |
 | {{…}} | {{…}} | | |
 
-**{{Gate/stage}} green** when {{the explicit condition across the Parts}}. Record the
-outcome in the {{relevant rows}} of [Release plan — v0.1.0-alpha.1](../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md).
+**{{Gate/stage}} green** when {{the explicit condition across the Parts}}. Record
+the outcome in the relevant gate/stage sub-issue under the current release parent
+issue. If the run itself is worth preserving beyond the issue/Actions trail, copy
+the Results table into that release folder's `validation-log.md`.

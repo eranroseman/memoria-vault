@@ -5,7 +5,7 @@ parent: Reference
 
 # Note types
 
-The 18 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under [src/.memoria/schemas/types/](../../src/.memoria/schemas/types), and the type → folder map lives in [src/.memoria/schemas/folders.yaml](../../src/.memoria/schemas/folders.yaml) ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 18 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
 The 18 types group into four categories: **6 entities** (catalog), **5 notes**, **5 cards** (inbox), and **2 system types** (the pattern and the eval task).
 
@@ -66,7 +66,7 @@ The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-
 | --- | --- | --- |
 | `work-prompt` | `title`, `action`, `what_happened`, and at least one of `target` / `task_id` (`required_any`) | Work waiting on the PI — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). Optional: `lane`. |
 
-All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Engines and lanes never invent card formats — every card goes through the shared writer [src/.memoria/engines/lib/inbox.py](../../src/.memoria/engines/lib/inbox.py).
+All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Engines and lanes never invent card formats — every card goes through the shared writer `src/.memoria/engines/lib/inbox.py`.
 
 ---
 
@@ -95,7 +95,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 
 ## Templates
 
-Human-facing starter notes for 16 of the 18 types ship in [src/system/templates/](../../src/system/templates) (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+Human-facing starter notes for 16 of the 18 types ship in `src/system/templates` (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
 
 ---
 

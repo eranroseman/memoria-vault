@@ -71,7 +71,7 @@ Adopting **Operations → Processing · Integrity · Cleanup · Telemetry** (com
 
 `scripts/*.py` are **kebab-case** (`docs-doctor.py`, `gen-adr-index.py`, `status-doctor.py`, `check-test-refs.py`) — non-importable and against PEP 8, which is *why* `tests/_util.py` carries a `load_script()` hack. Everything else is correct (Python snake_case; shell + docs + JS kebab-case).
 
-**Fix:** rename the four to snake_case and retire `load_script()`. **Caution:** `docs-doctor.py` is referenced by pre-commit, CI (`lint.yml`), `test.sh`, and the docs-review skill — sweep all references together, don't rename piecemeal.
+**Fix:** rename the four to snake_case and retire `load_script()`. **Caution:** `docs-doctor.py` is referenced by pre-commit, CI (`lint.yml`), `test.sh`, and the docs-review playbook — sweep all references together, don't rename piecemeal.
 
 ### 1.5 Obsidian-side & skills
 

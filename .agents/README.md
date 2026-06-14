@@ -20,6 +20,7 @@ copying their implementation details.
 |---|---|
 | [Code review](playbooks/code-review.md) | Review a patch for defects, regressions, complexity, and missing tests |
 | [Documentation review](playbooks/docs-review.md) | Check Diátaxis placement, links, indexing, and terminology |
+| [Release](playbooks/release.md) | Start, manage, or cut a release using the GitHub-first release model |
 | [Security review](playbooks/security-review.md) | Review trust boundaries, secrets, input handling, and write authority |
 | [Verify a change](playbooks/verify-change.md) | Demonstrate that changed behavior works and relevant regressions are covered |
 

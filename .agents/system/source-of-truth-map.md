@@ -5,7 +5,7 @@ or explain the contract, but they must not silently redefine it.
 
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
-| Repository agent policy | `AGENTS.md` | `.agents/`, `.claude/skills/`, contributor docs |
+| Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
 | Vault note types and fields | `src/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
 | Type homes, gated zones, skeleton | `src/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
 | Calibrated thresholds | `src/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
@@ -23,10 +23,13 @@ or explain the contract, but they must not silently redefine it.
 | Runtime vault image | `src/` | `scripts/install.sh`, golden-copy staging |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset-doctor.py`, and `AGENTS.md` |
+| Contributor Python tooling | `requirements-dev.txt` | Dev setup, lint workflows, python-selftest, Dependabot |
+| GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/github-doctor.py`, issue tracking docs |
 | Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
 | PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
-| Release scope | GitHub milestone | Release plan prose and tracking issue |
-| Release readiness | `Release vX.Y` tracking issue | Release plan and release skill |
+| Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |
+| Release readiness | `Release vX.Y` parent issue + gate/stage sub-issues | Release plan and release playbook |
+| Release design scratch | `docs/releasing/<version>/tmp/` while in progress | Status doctor and release playbook |
 | Release prose | `docs/releasing/<version>/release-plan-*.md` | Release index and status doctor |
 | Product decisions | `docs/adr/` | Current docs and implementation |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |

@@ -5,13 +5,13 @@ parent: Reference
 
 # Ingest routing
 
-The ingest engine ([src/.memoria/engines/ingest/](../../src/.memoria/engines/ingest)): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP ([src/.memoria/mcp/ingest_mcp.py](../../src/.memoria/mcp/ingest_mcp.py)) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
+The ingest engine (`src/.memoria/engines/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
 
 ---
 
 ## The pipeline
 
-[src/.memoria/engines/ingest/pipeline.py](../../src/.memoria/engines/ingest/pipeline.py) chains four deterministic stages into a single **draft bundle**:
+`src/.memoria/engines/ingest/pipeline.py` chains four deterministic stages into a single **draft bundle**:
 
 | Stage | Module | Does |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relatio
 
 ## The uncertainty floor (D51 / ADR-56)
 
-The engine never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across the sources that resolved) in `[0,1]`; the floor comes from [src/.memoria/schemas/calibration.yaml](../../src/.memoria/schemas/calibration.yaml) (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
+The engine never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across the sources that resolved) in `[0,1]`; the floor comes from `src/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
 
 Below the floor, the bundle carries a `flag_needed` block instead of a silent best-source-wins merge: the Librarian raises a **near-tie `flag` card** in the Inbox ("Identity disagreement on `<citekey>`", with the agreement score and the disagreements), and the PI decides. One source found = trusted (1.0) — the floor measures _disagreement_, not coverage.
 
@@ -48,7 +48,7 @@ classify is **not a gate** ([ADR-54](../adr/54-two-decision-kinds-batch-worklist
 - **Genuine ambiguity** — below the floor or within the margin → the field **stays unset** and ingest raises **one** Inbox `flag` card: what was ambiguous and the top candidates with scores, never a verdict (the [ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty rules).
 - **No data** (enrichment off, or no topics resolved) → a no-op.
 
-The thresholds live beside the entity-resolution floor in [src/.memoria/schemas/calibration.yaml](../../src/.memoria/schemas/calibration.yaml), under the same drift-bound discipline:
+The thresholds live beside the entity-resolution floor in `src/.memoria/schemas/calibration.yaml`, under the same drift-bound discipline:
 
 | Knob | Default | Means |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ The ingest MCP persists the un-gated derived artifacts the agent can't:
 
 ## The sweeps
 
-Two engines under [src/.memoria/engines/sweeps/](../../src/.memoria/engines/sweeps); neither writes the vault.
+Two engines under `src/.memoria/engines/sweeps`; neither writes the vault.
 
 ### Re-ingest backstops — `reconcile.py`
 
