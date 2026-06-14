@@ -1,17 +1,17 @@
 /*
  * QuickAdd user script — "Memoria: resolve inbox card".
  *
- * Resolves the ACTIVE inbox card in place: prompts for a verdict, flips the
- * frontmatter `lifecycle:` to the chosen value and stamps `resolved:` with
+ * Resolves the ACTIVE inbox card in place: prompts for an outcome, flips the
+ * frontmatter `lifecycle:` to a schema-valid inbox value and stamps `resolved:` with
  * today's date. Pure Obsidian app API (processFrontMatter) — no shelling, so
  * it works identically on every platform.
  */
 
-// Verdict label → lifecycle value written to the card.
+// Outcome label → lifecycle value written to the card.
 const VERDICTS = {
   "current (accept)": "current",
-  "retracted (reject)": "retracted",
-  "archived": "archived",
+  "archived (reject)": "archived",
+  "archived (done / no action)": "archived",
 };
 
 module.exports = async (params) => {

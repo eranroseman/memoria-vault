@@ -43,7 +43,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Reconcile | sweeps engine (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
 | Retry tier-0 | sweeps engine (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
 | Stamp chats | sweeps engine (`reconcile.py`) | Prepends fleeting frontmatter to bare ACP chat exports in `notes/fleeting/chats/`. |
-| Archive inbox | sweeps engine (`archive_inbox.py`) | Flips resolved inbox cards (`resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
+| Archive inbox | sweeps engine (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
 | Eval dispatch | sweeps engine (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
 | Eval score | sweeps engine (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | sweeps engine (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
@@ -84,7 +84,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Every 15 min | `sweeps-cron.sh` | Reconcile, retry, stamp-chats, and inbox-archival sweeps. |
 | Daily 06:00 | `lint-cron.sh` | Detectors, golden check, session digests. |
 | Weekly | `metrics-cron.sh` | Per-lane metrics aggregation. |
-| Monthly | `refresh-retraction-watch.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/` (`0 3 1 * *`), then runs a sweep. |
+| Monthly | `retraction-refresh-cron.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/` (`0 3 1 * *`), then runs a sweep. |
 | Quarterly | `eval-cron.sh` | Scores the previous quarter's eval run, then dispatches the new one. |
 
 These are the repo source wrappers under `.memoria/scripts/`. The installer copies each `<job>-cron.sh` to `~/.hermes/scripts/` renamed **`memoria-<job>.sh`** — that `memoria-*` form is the cron-job name `hermes cron list` shows.
@@ -152,7 +152,7 @@ These are the repo source wrappers under `.memoria/scripts/`. The installer copi
 | Verify a draft | Sends the active (or chosen) draft to the verify lane. |
 | Delegate a task | Prompts for a lane and goal — the palette twin of the co-PI's routing skill. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
-| Resolve inbox card | Flips the active inbox card's `lifecycle` to the chosen verdict and stamps `resolved:`. |
+| Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
 | Workspace Desk / Library / Studio | Loads the named workspace layout via the core Workspaces plugin (`load-workspace.js`, [ADR-68](../adr/68-workspaces-desk-library-studio.md)); also wired to the workspace buttons on `home.md`. |
 
 ### Review decisions

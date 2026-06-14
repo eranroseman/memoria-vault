@@ -2,16 +2,15 @@
 topic: decisions
 id: 69
 title: Operations — name the deterministic layer and its four categories
-status: proposed
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-14
 assumes: [46]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 69
-nav_exclude: true
 ---
 
 # ADR-69: Operations — name the deterministic layer and its four categories
@@ -87,14 +86,14 @@ matters*), not piecemeal.
 
 ## When this matters
 
-*(Proposed — execution scheduled, not gated.)* The **vocabulary decision** is wanted
-now so alpha.3 UI work builds on settled terms (the navigation, dashboards, and docs
-all reference these categories). The **code/tree rename** serves engineering clarity,
-not the alpha.3 "UI build", and carries real risk — so it is scheduled as a **dedicated
-refactor pass, sequenced _after_ the docs→source link convention lands** (the alpha.3
-research notes, `open-issues-research` Issue 3c) so links aren't pinned to paths about
-to move. Re-judge priority each release cycle. Cheap, non-structural parts (delete "app"
-from prose; define "CI invocation") can land in alpha.3 ahead of the rename.
+The **vocabulary decision** is accepted for alpha.3 so UI work builds on settled terms
+(the navigation, dashboards, and docs all reference these categories). The **code/tree
+rename** serves engineering clarity, not the alpha.3 "UI build", and carries real risk
+— so it is scheduled as a **dedicated refactor pass, sequenced _after_ the docs→source
+link convention lands** (the alpha.3 research notes, `open-issues-research` Issue 3c)
+so links aren't pinned to paths about to move. Re-judge priority each release cycle.
+Cheap, non-structural parts (delete "app" from prose; define "CI invocation") can land
+in alpha.3 ahead of the rename.
 
 ## Alternatives considered
 

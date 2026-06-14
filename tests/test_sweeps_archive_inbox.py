@@ -1,6 +1,6 @@
 """L1 component tests for the inbox archival sweep (#338).
 
-A resolved inbox card (lifecycle current/retracted + `resolved:` stamp) older
+A resolved inbox card (lifecycle current + `resolved:` stamp) older
 than N days flips to lifecycle: archived in place; everything else is left
 alone — so the inbox demonstrably converges to empty when cards are handled.
 """
@@ -35,11 +35,11 @@ def test_old_resolved_card_archived(tmp_path):
     assert text.endswith("Body stays.\n")
 
 
-def test_retracted_verdict_also_archives(tmp_path):
+def test_invalid_retracted_lifecycle_is_not_archived(tmp_path):
     _card(tmp_path, "cand-r.md",
           f"---\ntype: candidate\nlifecycle: retracted\nresolved: {_days_ago(31)}\n---\n")
     out = m.sweep(tmp_path, days=30)
-    assert out["archived"] == ["inbox/cand-r.md"]
+    assert out["archived"] == [] and out["skipped_unresolved"] == 1
 
 
 def test_fresh_resolved_card_untouched(tmp_path):

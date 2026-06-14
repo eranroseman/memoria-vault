@@ -2,16 +2,15 @@
 topic: decisions
 id: 71
 title: Structured capture — forms at entry, the Linter as authority, one schema per type
-status: proposed
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-14
 assumes: [49, 30]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 71
-nav_exclude: true
 ---
 
 # ADR-71: Structured capture — forms at entry, the Linter as authority, one schema per type

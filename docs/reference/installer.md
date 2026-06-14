@@ -55,7 +55,7 @@ All five are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappe
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
 | `memoria-eval` | `0 7 1 */3 *` | `engines/sweeps/eval_score.py` + `eval_dispatch.py` | Quarterly vault-eval: scores the previous quarter's run into `system/metrics/eval/runs.jsonl`, then fans the `system/eval/` gold set out as one idempotent eval card per task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |
 
-A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/scripts/refresh-retraction-watch.sh` — `retraction.py --refresh` + `--sweep`).
+A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/scripts/retraction-refresh-cron.sh` — `retraction.py --refresh` + `--sweep`).
 
 ---
 

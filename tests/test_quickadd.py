@@ -102,6 +102,53 @@ def test_zotero_capture_writes_intake_log_where_readers_look():
         f"capture-from-zotero.js writes {log!r} but ingest_mcp.py reads {intake_log!r}")
 
 
+def test_url_capture_writes_visible_candidate_card():
+    """URL capture must create a visible Inbox candidate, not only a Hermes task.
+
+    The Desk workspace's Needs me view is backed by inbox/inbox.base, so a URL
+    capture that only creates a board card is invisible in Obsidian until another
+    actor runs. Keep the QuickAdd script wired to a schema-shaped candidate card.
+    """
+    script = (SCRIPTS / "capture-from-url.js").read_text(encoding="utf-8")
+    assert "writeCandidateCard(params, url)" in script
+    assert '"inbox/" + stem + ".md"' in script
+    for field in (
+        "type: candidate",
+        "lifecycle: proposed",
+        "argument_for:",
+        "argument_against:",
+        "what_tipped_it:",
+        "certainty: unsure",
+        "raised_by: quickadd",
+    ):
+        assert field in script
+
+
+def test_resolve_inbox_card_uses_schema_valid_lifecycles():
+    script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
+    assert '"retracted"' not in script
+    assert '"current (accept)": "current"' in script
+    assert '"archived (reject)": "archived"' in script
+    assert '"archived (done / no action)": "archived"' in script
+
+
+def test_delegate_task_picker_uses_work_labels_not_profile_ids():
+    script = (SCRIPTS / "delegate-task.js").read_text(encoding="utf-8")
+    assert "const LANE_LABELS" in script
+    for label in (
+        "Catalog sources",
+        "Extract claims",
+        "Link claims",
+        "Map the corpus",
+        "Draft prose",
+        "Verify work",
+        "Coordinate code handoff",
+    ):
+        assert label in script
+    assert 'laneNames.map((l) => LANE_LABELS[l])' in script
+    assert 'l + " → " + LANES[l]' not in script
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]

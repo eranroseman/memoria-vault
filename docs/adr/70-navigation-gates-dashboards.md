@@ -2,16 +2,15 @@
 topic: decisions
 id: 70
 title: Navigation — intent-named gates, ambient maintenance, JTBD dashboards
-status: proposed
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-14
 assumes: [68, 69]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 70
-nav_exclude: true
 ---
 
 # ADR-70: Navigation — intent-named gates, ambient maintenance, JTBD dashboards

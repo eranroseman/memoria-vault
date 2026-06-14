@@ -20,6 +20,14 @@ process prose; this playbook is the portable agent procedure for applying it.
 
 Do not create a second markdown state table for gate or stage progress.
 
+> **Token prerequisite.** release-please authenticates with the fine-grained
+> `RELEASE_PLEASE_TOKEN` secret, **not** the default `GITHUB_TOKEN` (whose PRs do not
+> trigger the required checks, so a release PR can never go green). Scopes, rationale, and
+> the rotate-before-expiry rule live in the workflow comments
+> ([`.github/workflows/release-please.yml`](../../.github/workflows/release-please.yml)) and
+> [ADR-45](../../docs/adr/45-release-management-model.md) — releases break *silently* if the
+> PAT lapses.
+
 ## 2. Start a release
 
 1. Create `docs/releasing/<version>/README.md` as a thin index.
