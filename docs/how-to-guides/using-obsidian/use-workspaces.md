@@ -20,9 +20,9 @@ The **Workspaces** core plugin ships pre-enabled in the vault (`.obsidian/core-p
 
 All three layouts ship pre-configured in the vault's `.obsidian/workspaces.json` (pane-by-pane contents: [Obsidian workspaces](../../reference/obsidian-workspaces.md)). The fastest path is one palette command per workspace — `Cmd/Ctrl-P` →
 
-- `Memoria: open Desk workspace` — the "what needs me?" look: the board front and center, the Inbox queue on the left
-- `Memoria: open Library workspace` — reading and synthesis: the reading pipeline front and center, catalog and discussion queues on the left
-- `Memoria: open Studio workspace` — drafting: your research focus front and center, claims and patterns on the left
+- `Memoria: open Desk workspace` — the "what needs me?" gate: next PI actions in the main pane, the Inbox queue on the left
+- `Memoria: open Library workspace` — reading and synthesis: sources, Catalog records, and claims in the main pane, catalog and discussion queues on the left
+- `Memoria: open Studio workspace` — drafting: research focus, claims, and patterns in the main pane, claims and patterns on the left
 
 The same three commands back the workspace buttons on `home.md` ([Vault homepage](use-the-vault-homepage.md)). The core plugin's own UI works too: click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**) and load by name.
 

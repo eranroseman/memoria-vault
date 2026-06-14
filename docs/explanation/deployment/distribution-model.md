@@ -26,16 +26,16 @@ Shipping `src/` rather than a live `vault/` template is deliberate ([ADR-55](../
 
 ## The golden copy: the restore source
 
-At install time, every system file is also staged at `<vault>/.memoria/golden/` with a hash manifest. That golden copy is what makes the deployed vault **self-healing for system files**: the Linter's daily pass compares the live system files against the manifest, flags drift, and can restore a corrupted or hand-mangled file from the known-good baseline (`lint:restore` — propose-only by default) without re-running the installer. Releases refresh the golden copy by fresh install — never by in-place migration, whose half-migrated states are the failure mode D52 rejected.
+At install time, every system file is also staged at `<vault>/.memoria/golden/` with a hash manifest. That golden copy is what makes the deployed vault **self-healing for system files**: the Linter's daily pass compares the live system files against the manifest, flags drift, and can restore a corrupted or hand-mangled file from the known-good baseline (`lint:restore` — propose-only by default) without re-running the installer. Releases refresh the golden copy by fresh install — never by in-place migration, whose half-migrated states [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) avoids.
 
 ---
 
 ## The five profiles: one shared layer, four unique files
 
-The agents ship as five hand-authored profile directories under `src/.memoria/profiles/` — `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`. Each agent is a **shared layer + a unique layer** (D46):
+The agents ship as five hand-authored profile directories under `src/.memoria/profiles/` — `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`. Each agent is a **shared layer + a unique layer** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)):
 
 - **Shared:** `AGENTS.md` — the one "how we work in this vault" instruction set every agent reads, living in the vault root so there is exactly one copy of the house rules.
-- **Unique per agent:** `SOUL.md` (its posture — the stable stance, like *faithful* or *skeptical*), `config.yaml` (model + tools), `skills/` (assigned per lane), and `mcp.json` (connections). `distribution.yaml` packages it.
+- **Unique per agent:** `SOUL.md` (its posture — the stable stance, like *faithful* or *skeptical*), `config.yaml` (model, tools, and MCP connections), optional `skills/` (assigned per lane), and `distribution.yaml` (packaging metadata).
 
 So the agents share the house rules but each brings its own stance and toolset. The old failure mode — seven near-identical SOUL files duplicating common policy by hand — is gone structurally: common content has one home (`AGENTS.md`), and what remains per-profile is genuinely per-profile. At five profiles, hand-authoring the unique layers stays cheap, and a profile compiler remains unnecessary.
 

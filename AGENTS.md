@@ -121,7 +121,7 @@ All must pass before merge:
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
-| `cspell (docs/ + src/ + root markdown)` | Spelling over docs, vault markdown, and root markdown |
+| `cspell` | Spelling over all tracked markdown (the prose surface); scope and exclusions live in `cspell.json` |
 
 **CI invariant:** required-check workflows must have **no** `paths:` filter — a
 path-filtered required check permanently blocks PRs that don't touch those

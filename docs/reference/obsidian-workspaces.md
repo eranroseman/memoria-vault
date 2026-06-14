@@ -24,9 +24,9 @@ Every workspace follows the same shape:
 
 | Workspace | Mode | Main pane | Left tabs (in order) | Right pane |
 | --- | --- | --- | --- | --- |
-| **Desk** (default) | "What needs me?" | `system/dashboards/board-state.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | Co-PI chat |
-| **Library** | Reading & synthesis | `system/dashboards/reading-pipeline.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | Co-PI chat |
-| **Studio** | Drafting | `research-focus.md` (`projects/` ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
+| **Desk** (default) | "What needs me?" | `system/dashboards/desk.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | Co-PI chat |
+| **Library** | Reading & synthesis | `system/dashboards/library.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | Co-PI chat |
+| **Studio** | Drafting | `system/dashboards/studio.md` (`projects/` ships empty — the priorities note remains the drafting anchor) | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
 
 Studio's right sidebar carries a second tab — the core backlink view — behind the Co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)).
 

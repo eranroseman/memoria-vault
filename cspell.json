@@ -1,10 +1,12 @@
 {
   "version": "0.2",
   "language": "en",
+  "enableGlobDot": true,
   "dictionaryDefinitions": [
     { "name": "project-words", "path": "./project-words.txt", "addWords": true }
   ],
   "dictionaries": ["project-words"],
+  "files": ["**/*.md"],
   "ignorePaths": [
     "docs/reference/bibliography.md",
     "src/.obsidian/**",

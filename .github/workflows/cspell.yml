@@ -1,7 +1,8 @@
 name: cspell
 
-# Spell-check over the prose surface (docs/ + src/ + root markdown) using the
-# shared root cspell.json and the project-words.txt dictionary. cSpell is the
+# Spell-check the markdown prose surface using the shared root cspell.json and the
+# project-words.txt dictionary. Scope is owned entirely by cspell.json (`files` +
+# `ignorePaths` + `enableGlobDot`) — see the step below. cSpell is the
 # sole speller (Harper's SpellCheck linter is disabled in the editor, and harper
 # CI runs --no-spell-check) — this is the only place spelling actually gates.
 #
@@ -25,7 +26,7 @@ permissions:
 
 jobs:
   cspell:
-    name: cspell (docs/ + src/ + root markdown)
+    name: cspell
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -34,7 +35,9 @@ jobs:
         with:
           node-version: "20"
       - name: cspell over prose markdown
-        # Same file set as the pre-commit `cspell` hook (docs/ + src/ + root
-        # markdown, including dot-directories like src/.memoria/ that a `**`
-        # glob would skip) so the gate is identical in both places.
-        run: git ls-files '*.md' | grep -E '^(docs/|src/|[^/]+\.md$)' | xargs npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files
+        # Scope lives only in cspell.json: `files: ["**/*.md"]` selects all markdown,
+        # `enableGlobDot: true` reaches dot-directories like src/.memoria/ and
+        # .agents/ that a plain `**` glob would skip, and `ignorePaths` holds every
+        # exclusion. `--gitignore` keeps this to tracked files. The pre-commit hook
+        # defers to the same cspell.json, so there is no file list to keep aligned.
+        run: npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files --gitignore "**/*.md"

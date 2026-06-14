@@ -44,7 +44,7 @@ python3 .memoria/engines/linter/detectors.py --vault <vault> [--json] [--gate da
 
 ## The pre-commit gate
 
-The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md) D50): the installer wires `src/.memoria/engines/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/engines/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/engines/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/engines/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/engines/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/engines/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
