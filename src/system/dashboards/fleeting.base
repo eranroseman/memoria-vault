@@ -2,6 +2,8 @@
 filters:
   and:
     - file.inFolder("notes/fleeting")
+    - 'file.ext == "md"'
+    - 'type == "fleeting"'
 views:
   - type: table
     name: "To process"
