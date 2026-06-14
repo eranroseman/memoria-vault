@@ -84,8 +84,10 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Every 15 min | `sweeps-cron.sh` | Reconcile, retry, stamp-chats, and inbox-archival sweeps. |
 | Daily 06:00 | `lint-cron.sh` | Detectors, golden check, session digests. |
 | Weekly | `metrics-cron.sh` | Per-lane metrics aggregation. |
-| Weekly | `refresh-retraction-watch.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/`. |
+| Monthly | `refresh-retraction-watch.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/` (`0 3 1 * *`), then runs a sweep. |
 | Quarterly | `eval-cron.sh` | Scores the previous quarter's eval run, then dispatches the new one. |
+
+These are the repo source wrappers under `.memoria/scripts/`. The installer copies each `<job>-cron.sh` to `~/.hermes/scripts/` renamed **`memoria-<job>.sh`** — that `memoria-*` form is the cron-job name `hermes cron list` shows.
 
 ## Agent skills (per lane)
 

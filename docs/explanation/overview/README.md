@@ -13,7 +13,7 @@ Start here. These three pages give the working mental model the rest of the Expl
 | Page | What it covers |
 |---|---|
 | [What Memoria is](what-memoria-is.md) | The system's identity: what it is, what it's not, and why it exists |
-| [Intellectual foundations](intellectual-foundations.md) | The three ideas Memoria builds on (Karpathy's LLM-wiki, Luhmann's Zettelkasten, Bush's Memex) and how the AI-research-systems survey shaped the design |
+| [Intellectual foundations](intellectual-foundations.md) | The four converging ideas Memoria builds on — Karpathy's LLM-wiki, Luhmann's Zettelkasten, Bush's Memex, and the AI-research-systems survey |
 | [Design principles](design-principles.md) | The cross-cutting principles the design returns to |
 
 ---

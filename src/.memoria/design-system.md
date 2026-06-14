@@ -29,7 +29,7 @@ palette:
   border:       "#E5E7EB"
 ```
 
-**Discipline:** one accent for callouts (`[!brief]`, `[!suggestions]`, `[!verification]`). Differentiate by icon, not by color — rainbow callouts train the eye to ignore them all.
+**Discipline:** a fixed three-color palette for callouts — one stable hue per type (`[!brief]` blue, `[!suggestions]` purple, `[!verification]` orange), each reinforced by a distinct icon. The colors are bounded and semantic — a code the eye learns — never arbitrary or per-note.
 
 ## 2. Typography
 
@@ -92,11 +92,11 @@ Single-column for prose. Multi-column belongs in specific tabular contexts only.
 ```yaml
 components:
   callouts:
-    brief:        { icon: "📄", color: "primary" }
-    suggestions:  { icon: "💡", color: "primary" }
-    verification: { icon: "✓",  color: "primary" }
-    # All three share the same accent color per Memoria discipline.
-    # Distinguish by icon, not hue.
+    brief:        { icon: "📄", color: "#4A90E2" }   # blue
+    suggestions:  { icon: "💡", color: "#7B4AE2" }   # purple
+    verification: { icon: "✓",  color: "#E2A44A" }   # orange
+    # A fixed three-color palette: one stable, semantic hue per callout
+    # type, reinforced by a distinct icon. Bounded, never per-note.
 
   code-block:
     background: "bg-light"
@@ -161,7 +161,7 @@ brand:
 
 - **Colors outside the palette.** If a document uses a color not listed in §1, it breaks export consistency. The Linter flags this.
 - **Font sizes outside the scale.** `18.5px` for an h2 because "h2 felt too big" — refactor the scale instead.
-- **Rainbow callouts.** Three callout types in three different hues defeats the eye-training discipline.
+- **Ad-hoc callout color.** The three callout types have three *fixed* hues (§5); coloring callouts per-note or outside that fixed set defeats the recognition discipline.
 - **Emoji in note titles.** They break filename portability across operating systems. Body emoji is fine; titles are filenames.
 - **Branded fonts the human can't install.** Stick to system stacks or commonly-installed fonts so exports work on every machine.
 - **Capitalization inconsistency.** `claim-note` and `Claim Note` and `claimnote` aren't the same; pick one and enforce.

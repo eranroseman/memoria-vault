@@ -1,37 +1,44 @@
-# Classification (`_proposed_classification`) — hybrid method
+# Classification (`_proposed_classification`) — automated, audited metadata
 
-The classification step is the most cost-sensitive part of ingest because every new source
-gets one. Memoria uses the **hybrid pattern** from the project's computational-methods design
-notes (not shipped to the runtime vault): a trained classifier with a confidence gate, an LLM
-fallback for the low-confidence tail, and human review as the final authority.
+The classification step runs on every new source, so it is built to be cheap and
+correctable rather than clever: it reuses the OpenAlex **topics already in the enrichment
+payload** (no extra network call) and audits every decision. Classification is **not a gate**
+(D16 / D21 / ADR-54) — the values land in the note's `_proposed_classification` block; the
+human-owned main fields stay empty until the PI promotes them at triage.
 
-## The four steps
+## How a value is chosen
 
-1. **Classifier proposal (deterministic).** A small multi-label classifier trained on the
-   human's past `lifecycle: current` papers proposes values for `research_area` and
-   `methodology`. The classifier emits a calibrated softmax probability per label.
-2. **Confidence gate.** If the classifier's confidence exceeds the threshold (default `0.85`),
-   accept the proposal directly into `_proposed_classification`.
-3. **LLM fallback.** For sources where classifier confidence is below the threshold, fall back
-   to an LLM proposal. This usually means the source is genuinely novel in topic or
-   methodology — the classifier hasn't seen enough similar examples yet.
-4. **Human review.** Either way, `_proposed_classification` is a *proposal*, not canonical. The
-   human confirms during classification; their confirmations become tomorrow's training data.
+1. **`research_area` — from the enrichment topics.** The clear-winning OpenAlex topic in the
+   merged enrichment payload becomes the `research_area` proposal. Values are constrained to
+   `system/vocabulary.md`.
+2. **`methodology` — from the S2 publication types (when derivable).** A conservative,
+   deterministic map turns Semantic Scholar `publicationTypes` into a methodology facet:
+   `review → review`, `metaanalysis → meta-analysis`, `clinicaltrial → clinical-trial`,
+   `casereport → case-report`, `dataset → dataset`. Venue-ish types (JournalArticle, Editorial,
+   News, …) are *not* a methodology and stay unmapped.
+3. **Project membership (ADR-15, optional).** When `.memoria/project-hints.yaml` exists, the
+   step also proposes project membership by topic overlap into
+   `_proposed_classification.projects` — for human confirmation at triage, never written
+   straight to the `projects` field. No hints file = fully manual project tagging (silent no-op).
 
-## Retraining cadence
+## The decision doctrine
 
-The retraining loop runs monthly on a cron (or when the override rate crosses 25%). As the
-corpus grows, the classifier becomes more accurate and the LLM-fallback rate drops. This is
-calibrated learning, not LLM self-reported confidence — see the project's computational-methods
-design notes' anti-patterns (not shipped to the runtime vault) for why that distinction matters.
+- **Clear winner** → apply the proposal silently.
+- **Near-tie or below the calibration floor** → leave the field unset and raise **one** Inbox
+  `flag` card (honesty rules: what was ambiguous plus the top candidates with their scores —
+  never a verdict).
+- **Enrichment off / no topic data** → no-op.
 
-## Corpus milestones
+Thresholds live in `.memoria/schemas/calibration.yaml` under `classify:` (`confidence_floor`,
+default `0.60`; `near_tie_margin`, default `0.15`), mirroring `entity_resolution` (ADR-56).
+Every applied or flagged decision appends one line to `system/logs/classify.jsonl` — the audit
+trail that makes the automation correctable.
 
-- **First ~200 paper-notes:** the classifier hasn't trained yet; all proposals go through the
-  LLM path.
-- **After ~500 classified paper-notes:** the classifier becomes useful.
-- **After ~1,000:** the classifier is calibrated.
+## What this is *not*
 
-This pattern is also the resolution to the design question of confidence scoring on
-`_proposed_classification`; the project's decision records (not shipped to the runtime vault)
-carry the current ADRs.
+There is **no trained classifier, no softmax probability, no LLM fallback, and no retraining
+loop**, and **no confidence threshold above which the main fields are filled automatically** —
+that "classification-confidence" auto-accept is a deliberately dropped anti-pattern (see the
+sibling `catalog-classify-source` skill, Honesty rules). Calibrated topic scores *propose*; the
+human *promotes*. The `research_area` and `methodology` values in `_proposed_classification` are
+always a proposal, never canonical.

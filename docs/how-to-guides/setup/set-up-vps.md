@@ -85,7 +85,7 @@ Only **one** machine may run the cron + dispatch side against a synced vault —
 
 ```bash
 # on WSL2 (desktop)
-for c in memoria-board-export memoria-sweeps memoria-lint memoria-metrics; do
+for c in memoria-board-export memoria-sweeps memoria-lint memoria-metrics memoria-eval; do
   hermes cron disable "$c"
 done
 ```

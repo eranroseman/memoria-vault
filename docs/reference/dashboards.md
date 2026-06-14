@@ -28,6 +28,8 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Agent-ops | Eval trend | `eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 | Agent-ops | Skill lifecycle | `skill-lifecycle.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
+The **Surface** column is where a dashboard opens in the UI. The explanation site groups the same twelve by the *kind of attention* they demand — **Home glance → Daily glance**, **Library → Synthesis agenda**, **Maintenance → Structural health**, **Agent-ops → Operational health** ([Dashboards](../explanation/dashboards/README.md)). The two are the same four buckets under different lenses, not different inventories.
+
 ---
 
 ## The Bases views

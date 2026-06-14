@@ -47,8 +47,8 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 **C1. Human writes a claim** in `notes/claims/` citing `smithA` (this is human territory — agents can't).
 - ✓ Pass: claim note created (human write, not gated as an agent).
 
-**C2. Map the corpus.** `hermes -p memoria-librarian chat -s scope-project --project test-proj --output projects/test-proj/01-map/corpus-map.md`
-- ✓ Pass: `corpus-map.md` under `01-map/`; audit row scoped to `01-map/`; **no** write outside it (map-lane write-wall).
+**C2. Map the corpus.** `hermes -p memoria-librarian chat -s scope-project --project test-proj --output projects/test-proj/map/corpus-map.md`
+- ✓ Pass: `corpus-map.md` under `map/`; audit row scoped to `map/`; **no** write outside it (map-lane write-wall).
 
 ---
 

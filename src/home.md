@@ -99,7 +99,6 @@ action QuickAdd: Memoria: workspace Studio
 > - [[weekly-review|Weekly Review]] — the Friday aggregator
 
 > [!example]- Agent ops
-> - [[board-state|Board State]] — the Inbox board + live worker cards
 > - [[audit-log|Audit Log]] — the provenance trail
 > - [[fleet-health|Fleet Health]] — agent operational rollup
 > - [[eval-trend|Eval Trend]] — quarterly vault-eval capability scores

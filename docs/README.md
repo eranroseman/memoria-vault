@@ -38,12 +38,12 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 | Tutorial                                                                 | What you'll do                                           | You'll end with                                     |
 | ------------------------------------------------------------------------ | -------------------------------------------------------- | --------------------------------------------------- |
 | [01 — Set up from zero](tutorials/01-set-up-from-zero.md)                | Run the installer, finish the setup steps                | A working vault, all plugins, the five profiles     |
-| [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a thought, discuss it, write a claim note        | One permanent claim note in your own words          |
-| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Wire Zotero (optional), ingest one paper, judge its card | A Catalog entity, a candidate card, a source note   |
-| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ingest five papers, write three linked claim notes       | Your first connected knowledge cluster              |
-| [05 — Synthesize toward a writing project](tutorials/05-synthesize-toward-a-writing-project.md)  | Synthesize claims + hubs; delegate a map task            | Coverage views over your corpus (workflow: v0.1.0-alpha.3)  |
-| [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Write a draft paragraph, run verification, close the gap | A verified draft with a complete citation trail     |
-| [07 — Find new sources](tutorials/07-find-new-sources.md)                | Run forward-citation search, triage candidates           | A populated candidates queue and one new paper-note |
+| [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a fleeting note from the palette, read its frontmatter, distill or archive it | One processed fleeting note and the distill-or-archive habit |
+| [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Optionally wire Zotero, capture a paper, judge its candidate card, write a source note | A Catalog entity, a kept candidate, and a source note in your own words |
+| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ask the co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |
+| [05 — Synthesize toward a writing project](tutorials/05-synthesize-toward-a-writing-project.md)  | Distill claims, gather them under a hub, delegate a `map` task for coverage | Your synthesis surface: claims, a hub, and a corpus map (project workflow previews v0.1.0-alpha.3) |
+| [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Delegate a `verify` task, read the finding-first cards, let gaps re-trigger discovery | A checked corpus and your first turn of the compounding loop |
+| [07 — Find new sources](tutorials/07-find-new-sources.md)                | Ask the co-PI to find sources on a topic; keep or skip the candidates it surfaces | A worked Inbox of honest candidate cards and new Catalog entries |
 
 ---
 

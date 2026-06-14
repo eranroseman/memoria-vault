@@ -48,7 +48,7 @@ For any item already in Zotero whose citekey might change if the formula is appl
 
 **5. Pin the key for every new item immediately after adding it.**
 
-Better BibTeX pins citation keys automatically — a generated key never regenerates, even when you correct metadata later. No manual pinning step is needed; the lock icon in Zotero's item list confirms it.
+Better BibTeX keys are **dynamic by default** — a generated key can change when you later correct an item's author, year, or title, silently breaking any note or `.bib` reference already using the old key. Pin each new item right after adding it: right-click → Better BibTeX → Pin BibTeX key. The lock icon in Zotero's item list confirms it. (This is the recurring discipline behind [Fix a stale `.bib`](fix-stale-bib.md).)
 
 **6. Verify the export ran.**
 

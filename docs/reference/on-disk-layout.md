@@ -102,7 +102,7 @@ The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox
 | --- | --- |
 | `<repo>/scripts/` | `install.sh` / `install.ps1`, `docs-doctor.py`, test drivers — install tooling never deploys into the vault. |
 | `~/.hermes/profiles/memoria-*/` | The deployed profile copies (config substituted, `.env` seeded). |
-| `~/.hermes/scripts/` | The substituted cron wrappers (`memoria-sweeps.sh`, `memoria-lint.sh`, `memoria-board-export.sh`). |
+| `~/.hermes/scripts/` | The substituted cron wrappers (`memoria-sweeps.sh`, `memoria-lint.sh`, `memoria-board-export.sh`, …), copied and renamed from the repo's `.memoria/scripts/<job>-cron.sh`. |
 | `~/.hermes/.env` | The global secrets file the installer propagates per profile. |
 
 ---

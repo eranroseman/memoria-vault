@@ -48,7 +48,7 @@ The gateway already reaches `inclusionai/ling-2.6-flash` via your existing
 > write) rather than the wiring, step down the fallback list above before concluding the
 > command is broken. Re-confirm prices at run time — the catalog changes.
 
-For each of the five profiles, edit `vault/.memoria/profiles/memoria-<name>/config.yaml`
+For each of the five profiles, edit `src/.memoria/profiles/memoria-<name>/config.yaml`
 and set the **main** model:
 
 ```yaml
@@ -90,8 +90,8 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | **F1** | Two Zotero items with pinned BBT citekeys exported to `.memoria/memoria.bib` — one with an open-access PDF (call it `smithA`) and one without (`jonesB`). |
 | **F2** | `research-focus.md` with ≥ 1 concrete priority topic. |
 | **F3** | ≥ 5 claim notes (`type: claim`) in `notes/claims/` on a shared topic (for Librarian map lane/Writer/Peer-reviewer). |
-| **F4** | A project at `projects/test-proj/` with a `README.md` (project note) and the canonical subfolders `01-map … 06-code`. |
-| **F5** | A draft `projects/test-proj/04-drafts/draft.md` citing both a **resolvable** citekey (`smithA`) and a **bogus** one (`@nope1999`). |
+| **F4** | A project at `projects/test-proj/` with a `README.md` (project note), a `map/` folder, and a `code/` folder. |
+| **F5** | A draft `projects/test-proj/draft.md` citing both a **resolvable** citekey (`smithA`) and a **bogus** one (`@nope1999`). |
 | **F6** | Two near-duplicate claim notes (`type: claim`, same idea, different wording) for `find-duplicates`. |
 | **F7** | One paper entry (`type: paper`) whose `enriched_date` is > 180 days old (for `enrich`/staleness). |
 | **F8** | One retracted-DOI paper entry (`type: paper`, or a known retracted DOI) for `retraction-check`. |
@@ -107,7 +107,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 ### 1.5 Reset after testing
 
 ```bash
-git checkout -- vault/.memoria/profiles/memoria-*/config.yaml   # restore production model tiers
+git checkout -- src/.memoria/profiles/memoria-*/config.yaml   # restore production model tiers
 bash scripts/install.sh --profiles-only                          # redeploy production config
 # discard the disposable test vault
 ```
@@ -159,10 +159,10 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| M1 | `scope-project` | F3 + F4 | `scope-project --project test-proj --output projects/test-proj/01-map/corpus-map.md` | `corpus-map.md` written under `01-map/`; `sources:` frontmatter names what was scanned; audit write row scoped to `01-map/` |
-| M2 | `gap-report` | F3 + F4 | `gap-report --project test-proj` | `gap-report.md` in `01-map/` listing thin-coverage topics |
-| M3 | `cluster-map` | F3 | `cluster-map "<topic>"` | density/recency artifact in `01-map/cluster-maps/` (table/figure, not prose) |
-| M4 | **map-lane write-wall** | — | (during M1) attempt/observe any write outside `01-map/` | none occurs; if forced, `deny` row for `memoria-librarian` (the map lane is read-only across `catalog/`, `notes/`, etc.) |
+| M1 | `scope-project` | F3 + F4 | `scope-project --project test-proj --output projects/test-proj/map/corpus-map.md` | `corpus-map.md` written under `map/`; `sources:` frontmatter names what was scanned; audit write row scoped to `map/` |
+| M2 | `gap-report` | F3 + F4 | `gap-report --project test-proj` | `gap-report.md` in `map/` listing thin-coverage topics |
+| M3 | `cluster-map` | F3 | `cluster-map "<topic>"` | density/recency artifact in `map/cluster-maps/` (table/figure, not prose) |
+| M4 | **map-lane write-wall** | — | (during M1) attempt/observe any write outside `map/` | none occurs; if forced, `deny` row for `memoria-librarian` (the map lane is read-only across `catalog/`, `notes/`, etc.) |
 
 ### 4.3 co-PI — `hermes -p memoria-copi chat -s …` (read-only)
 
@@ -184,7 +184,7 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| V1 | `cite-check` | F5 | `cite-check projects/test-proj/04-drafts/draft.md` | report/`[!verification]` flags `@nope1999` as unresolved, `smithA` as OK; **no edit to the draft** (dry-run) |
+| V1 | `cite-check` | F5 | `cite-check projects/test-proj/draft.md` | report/`[!verification]` flags `@nope1999` as unresolved, `smithA` as OK; **no edit to the draft** (dry-run) |
 | V2 | `claim-trace` | F5 + F3 | `claim-trace …/draft.md` | per-claim trace; each unsupported claim spawns a gap card in `inbox/` (`type: gap`, `source: gap`); only the gap-card write appears in audit |
 | V3 | `similarity-check` | F3 + a new claim | `similarity-check "<new claim>"` | top-N with scores; flags ≥ ~0.8; **never merges** (no write to existing notes) |
 | V4 | `find-duplicates` | F6 | `find-duplicates` | the F6 pair surfaced as a merge candidate; no auto-merge |
@@ -194,12 +194,12 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| K1 | `scaffold` | F4 | `scaffold --project test-proj` | code-note skeleton from template under `projects/test-proj/06-code/`; audit write row scoped to `06-code/` |
+| K1 | `scaffold` | F4 | `scaffold --project test-proj` | code-note skeleton from template under `projects/test-proj/code/`; audit write row scoped to `code/` |
 | K2 | `code` | F4 | `code "<task>"` | a code-note handoff scaffolded with vault context (sources, purpose); external-agent handoff recorded, not run by Memoria |
-| K3 | `commit` | a change in `06-code/` | `commit` | exactly one logical git commit created (one change per call) |
+| K3 | `commit` | a change in `code/` | `commit` | exactly one logical git commit created (one change per call) |
 | K4 | `revert` | a prior K3 commit | `revert <commit>` | that commit reverted; scope small; no other files touched |
-| K5 | `workspace` | F4 | `workspace` | VS Code workspace set up with vault **read-only** and the `06-code/` zone writable |
-| K6 | **Engineer write-wall** | — | (during K1) | writes confined to `projects/*/06-code/`; any write elsewhere → `deny` |
+| K5 | `workspace` | F4 | `workspace` | VS Code workspace set up with vault **read-only** and the `code/` zone writable |
+| K6 | **Engineer write-wall** | — | (during K1) | writes confined to `projects/*/code/`; any write elsewhere → `deny` |
 
 ### 4.7 Linter engine (report-only)
 

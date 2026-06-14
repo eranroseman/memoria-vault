@@ -372,3 +372,6 @@ rerank
 miscalibrated
 shabegom
 unshippable
+casereport
+clinicaltrial
+metaanalysis

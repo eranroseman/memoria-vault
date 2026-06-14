@@ -50,7 +50,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 - ✓ Pass: **no matches** — every placeholder was replaced with the absolute vault path (the policy MCP launch line in `config.yaml`, hooks). A leftover `{{VAULT_PATH}}` means the deployed gate can't find `policy_mcp.py`.
 
 **B2. `.env` bootstrapped + shared keys seeded.** `cat ~/.hermes/profiles/memoria-librarian/.env`
-- ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_EMAIL` for the Librarian.
+- ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_API_KEY` for the Librarian.
 - ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md), #39).
 
 **B3. Profile config is valid.** `hermes profile show memoria-librarian`

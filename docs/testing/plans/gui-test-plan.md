@@ -148,6 +148,7 @@ Home page — it is not a standalone dashboard file.)
 | 9 | `fleet-health.md` | `system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
 | 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 | 11 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
+| 12 | `skill-lifecycle.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
@@ -164,7 +165,8 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [ ] 9 · `fleet-health.md`
 - [ ] 10 · `audit-log.md`
 - [ ] 11 · `eval-trend.md`
-- [ ] **Part C / G4 Pass (all 11 resolve)**
+- [ ] 12 · `skill-lifecycle.md`
+- [ ] **Part C / G4 Pass (all 12 resolve)**
 
 ---
 
