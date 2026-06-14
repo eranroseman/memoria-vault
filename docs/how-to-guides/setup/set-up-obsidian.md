@@ -38,6 +38,7 @@ The required plugins:
 | `templater-obsidian` | Runs the templates in `system/templates/` for new notes |
 | `quickadd` | Registers the `Memoria:` command-palette entries |
 | `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
+| `modalforms` | Provides structured capture forms with controlled vocabulary fields |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 | `homepage` | Opens `home.md` on launch |
 | `buttons` | Renders the command buttons on `home.md` |
@@ -78,6 +79,7 @@ Memoria's linting is the Linter **engine** — deterministic Python with a daily
 - Settings → Local REST API shows a 64-char hex `apiKey`
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - The left ribbon includes Memoria capture, delegate, resolve, and workspace-switch buttons
+- Modal Forms lists the `memoria-source-capture` form
 - `Cmd/Ctrl-P` → `Memoria: workspace` lists **Desk**, **Library**, and **Studio**
 
 Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace (`Memoria: open Library workspace`) to work the reading pipeline.

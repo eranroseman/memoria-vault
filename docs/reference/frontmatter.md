@@ -131,7 +131,7 @@ All cards share `raised_by` (`str`) and `loudness` (`enum`: `quiet` / `notice` /
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
 | `title` / `name` | `str` | Notes and cards use `title`; catalog entities use `name` (papers carry both `citekey` and `title`). |
 | `created` | `date` | Optional everywhere. |
-| `research_area`, `methodology`, `topics` | `list` | Controlled-vocabulary classification (papers, sources, claims). |
+| `research_area`, `methodology`, `topics` | `list` | Controlled-vocabulary classification (papers, sources, claims); values live in [Vocabulary](vocabulary.md). |
 
 ---
 
@@ -148,5 +148,6 @@ All cards share `raised_by` (`str`) and `loudness` (`enum`: `quiet` / `notice` /
 ## Related
 
 - The per-type field tables: [Note types](note-types.md)
+- The controlled classification values: [Vocabulary](vocabulary.md)
 - What validates this contract: [Linter: detectors and auto-fix](linter.md)
 - Where the schema files live: [On-disk layout](on-disk-layout.md)
