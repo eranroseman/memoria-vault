@@ -2,7 +2,7 @@
 # Runtime/vault dependencies live in src/.memoria/mcp/requirements.txt.
 
 pre-commit==4.6.0
-pytest==9.0.3
+pytest==9.1.0
 PyYAML==6.0.3
-ruff==0.15.15
+ruff==0.15.17
 yamllint==1.38.0
