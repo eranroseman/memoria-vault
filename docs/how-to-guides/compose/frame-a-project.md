@@ -6,9 +6,9 @@ nav_order: 3
 
 # Frame a project
 
-Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft:outline-argument`, `draft:score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)); the choice is yours.
+Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft:outline-argument`, `draft:score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names)); the choice is yours.
 
-> The formal framing step — a project brief the outline scores against — arrives until the alpha.3 Project release ([Start a writing project](start-a-writing-project.md)). The delegation below works today; keep the outputs in your own `projects/<slug>/` scratch folder.
+> The formal framing step — a project brief the outline scores against — arrives with the deferred Project workflow after alpha.3 ([Start a writing project](start-a-writing-project.md)). The delegation below works today; keep the outputs in your own `projects/<slug>/` scratch folder.
 
 ## Prerequisites
 

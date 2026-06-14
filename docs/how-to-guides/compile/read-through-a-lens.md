@@ -6,7 +6,7 @@ nav_order: 7
 
 # Read a paper through a lens
 
-Read a paper through a named theoretical frame so the Co-PI questions it from an angle you choose. This is the Co-PI's read-only, synchronous `ask:read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)) — never queue-dispatched.
+Read a paper through a named theoretical frame so the Co-PI questions it from an angle you choose. This is the Co-PI's read-only, synchronous `ask:read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names)) — never queue-dispatched.
 
 ## Prerequisites
 

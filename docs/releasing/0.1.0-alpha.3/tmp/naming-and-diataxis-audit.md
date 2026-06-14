@@ -79,7 +79,7 @@ Adopting **Operations → Processing · Integrity · Cleanup · Telemetry** (com
 |---|---|---|
 | QuickAdd commands (`.obsidian/plugins/quickadd/data.json`) | `workspace Desk/Library/Studio` break the verb-first lowercase pattern; articles inconsistent ("a task"/"the corpus"/none) | `open Desk workspace`; normalize — drop all articles (`delegate task`, `link claim`, `catalog source`) |
 | Folder pluralization | `notes/source/`, `notes/index/` singular vs `notes/claims/`, `catalog/*` plural | `notes/sources/`, `notes/indexes/` |
-| Co-PI skills | `explain-the-system`, `explore-branch-framings`, `delegate-route-task` break the `verb-noun(-noun)` no-article pattern the other 22 skills follow | `explain-system`, `explore-framings`, `route-task` (or `delegate-task`, matching `delegate-task.js`) |
+| Co-PI skills | `explain-system`, `explore-framings`, `route-task` break the `verb-noun(-noun)` no-article pattern the other 22 skills follow | `explain-system`, `explore-framings`, `route-task` (or `delegate-task`, matching `delegate-task.js`) |
 | Non-developer jargon | `fleet-health` (worth changing), `board-state`/`board/`, `drift-watch`, `work-prompt`, `hubs`/`index` (term-of-art — document) | `fleet-health`→`agent-health`; `system/board/`→`board-tasks/`; `system/eval/`→`eval-tasks/` (disambiguates from `metrics/eval/` results) |
 
 **Cleanest areas (no change):** the 12 JS command scripts (all verb-noun kebab); the 17 templates (each matches its `type:`); librarian/writer/peer-reviewer skills (`<domain>-<verb>-<noun>`); base names; the two Claude-Code skills.

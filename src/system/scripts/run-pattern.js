@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: run a pattern".
+ * QuickAdd user script — "Memoria: run pattern".
  *
  * Suggester over the runnable patterns in system/patterns/ (type: pattern,
  * lifecycle: current — read from Obsidian's metadata cache, no file I/O),

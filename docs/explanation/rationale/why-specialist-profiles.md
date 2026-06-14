@@ -51,7 +51,7 @@ One consolidation was refused on principle: the **Peer-reviewer was never merged
 
 Memoria still deliberately omits two roles that comparable multi-agent systems include:
 
-**No Orchestrator profile.** Routing lives in the Co-PI's `delegate:route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
+**No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
 **No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the engines produce *recommendations* that inform the PI's judgment; the gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
 

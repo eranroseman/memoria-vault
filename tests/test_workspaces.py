@@ -116,8 +116,9 @@ def test_home_buttons_dispatch_registered_commands():
 def test_workspace_choices_reference_the_loader_script():
     by_name = {c["name"]: c for c in _choices()}
     for ws in WORKSPACE_NAMES:
-        choice = by_name.get(f"Memoria: workspace {ws}")
-        assert choice, f"QuickAdd choice 'Memoria: workspace {ws}' missing"
+        command = f"Memoria: open {ws} workspace"
+        choice = by_name.get(command)
+        assert choice, f"QuickAdd choice {command!r} missing"
         assert choice["command"], f"workspace {ws}: choice not exposed as a command"
         cmds = choice["macro"]["commands"]
         assert len(cmds) == 1 and cmds[0]["path"] == "system/scripts/load-workspace.js"

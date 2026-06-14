@@ -119,6 +119,21 @@ def test_skill_frontmatter_matches_js_parser_and_is_consistent():
         seen_ids[meta["skill_id"]] = where
 
 
+def test_copi_desk_skill_names_match_their_direct_load_names():
+    expected = {
+        "ask-question-source": "ask:question-source",
+        "ask-read-lens": "ask:read-lens",
+        "explore-framings": "explore-framings",
+        "route-task": "route-task",
+        "explain-system": "explain-system",
+    }
+    found = {}
+    for sk in sorted((PROFILES / "memoria-copi" / "skills").glob("*/SKILL.md")):
+        meta = _skill_meta_js(sk.read_text(encoding="utf-8"))
+        found[sk.parent.name] = meta["skill_id"]
+    assert found == expected
+
+
 def test_every_skill_shipping_profile_has_a_lane_override():
     for sk in _skill_files():
         profile = sk.parent.parent.parent.name

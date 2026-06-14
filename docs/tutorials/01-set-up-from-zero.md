@@ -81,7 +81,7 @@ Say hello and ask it something — "explain how this vault is organized" is a go
 
 ## Step 5 — Switch to the Library workspace
 
-Three saved layouts ship with the vault: **Desk** (the "what needs me?" look), **Library** (reading & synthesis), and **Studio** (drafting). Switch via the command palette: `Memoria: workspace Library` (one command per workspace). See [Obsidian workspaces](../reference/obsidian-workspaces.md).
+Three saved layouts ship with the vault: **Desk** (the "what needs me?" look), **Library** (reading & synthesis), and **Studio** (drafting). Switch via the command palette: `Memoria: open Library workspace` (one command per workspace). See [Obsidian workspaces](../reference/obsidian-workspaces.md).
 
 The Library workspace opens the reading pipeline, the discuss queue, and the Catalog view — empty for now. They fill as you work through the next tutorials.
 

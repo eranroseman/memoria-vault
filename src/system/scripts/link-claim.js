@@ -1,5 +1,5 @@
 /*
- * QuickAdd user script — "Memoria: link a claim".
+ * QuickAdd user script — "Memoria: link claim".
  *
  * Direct palette access to the link lane (#203): defaults to the active note
  * when it is a claim (under notes/claims/), otherwise prompts for the claim

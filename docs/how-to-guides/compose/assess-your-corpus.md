@@ -25,7 +25,7 @@ In the Co-PI pane:
 
 > "Map my corpus on `<topic>` — what do I have good coverage on, and where is it thin? I'm aiming at `<deliverable>`."
 
-The Co-PI delegates a **`map`** task to the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). (Palette twin: **Memoria: map the corpus** — prompts for an optional scope; see [Command palette](../../reference/obsidian-command-palette.md).)
+The Co-PI delegates a **`map`** task to the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). (Palette twin: **Memoria: map corpus** — prompts for an optional scope; see [Command palette](../../reference/obsidian-command-palette.md).)
 
 **3. Read the results from the Inbox.**
 

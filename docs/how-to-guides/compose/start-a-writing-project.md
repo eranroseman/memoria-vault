@@ -8,7 +8,7 @@ nav_order: 1
 
 Stand up the synthesis surface a writing project draws from.
 
-> **Deferred to v0.1.0-alpha.3.** The full project workflow — `projects/` scaffolding, the project brief, the Project workspace, and the brief → relevance-scan → canvas → outline path — ships with the **v0.1.0-alpha.3 Project release** (the form → script automation is tracked in [#154](https://github.com/eranroseman/memoria-vault/issues/154)). There is no `Memoria: new project` command in v0.1.0-alpha.2, and `projects/` starts empty.
+> **Deferred after v0.1.0-alpha.3.** The full project workflow — `projects/` scaffolding, the project brief, the Project workspace, and the brief → relevance-scan → canvas → outline path — ships with the deferred Project workflow (the form → script automation is tracked in [#154](https://github.com/eranroseman/memoria-vault/issues/154)). There is no `Memoria: new project` command yet, and `projects/` starts empty.
 
 ## Steps (meanwhile)
 
