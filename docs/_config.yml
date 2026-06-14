@@ -43,3 +43,6 @@ exclude:
   - contributing/
   - releasing/
   - testing/
+  # Scratch dirs anywhere under docs/ (e.g. a release folder's tmp/): tracked in
+  # git for relative linking, never published.
+  - "**/tmp/"
