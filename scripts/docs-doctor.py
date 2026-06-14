@@ -42,11 +42,25 @@ DROPPED_KEYS = ("mode", "audience", "tags")  # mode/audience dropped in the refa
 # published-docs bar.
 SCRATCH_DIRS = {"tmp"}
 
+# docs/ dirs kept in the repo for relative linking / github.com browsing but NOT
+# published to the Jekyll site (docs/_config.yml `exclude:`). A page in one of these
+# is read on github.com, where a relative link out to src/ still resolves — so the
+# "stay inside the site" rule below applies only to *published* pages.
+SITE_EXCLUDED_DIRS = {"contributing", "releasing", "testing"}
+
 
 def _scratch(p: Path, base: Path) -> bool:
     # Match a scratch dir only *within* the scanned tree, not the absolute path — so a
     # repo checked out under /tmp (or a pytest tmp_path root) is not wholesale excluded.
     return any(part in SCRATCH_DIRS for part in p.relative_to(base).parts)
+
+
+def _published(md: Path, root: Path) -> bool:
+    # True if this docs page is part of the published GitHub Pages site. Pages under a
+    # site-excluded dir or a scratch/tmp dir are repo-internal (read on github.com,
+    # not the built site), so their out-of-site relative links are intentional.
+    parts = set(md.relative_to(root).parts)
+    return not (parts & SITE_EXCLUDED_DIRS) and not _scratch(md, root)
 
 # [text](target) — but NOT images ![alt](src). Reference-style/wikilinks unused.
 LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
@@ -255,6 +269,36 @@ def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[s
             errors.append(f"{md}: wikilink [[{inner}]] resolves to no vault note")
 
 
+def check_site_local_links(md: Path, root: Path, warnings: list[str]) -> None:
+    # A *published* docs page must not link to a file outside the published site (docs/).
+    # The recurring case is a relative link into src/: it resolves on disk and on
+    # github.com, but src/ is a sibling of docs/ and is NOT part of the Jekyll site
+    # (docs/_config.yml), so the link 404s on the live site at *any* path depth — fixing
+    # the number of ../ never helps. Use inline code for a source path (`src/…`), or an
+    # absolute github.com/eranroseman/memoria-vault/blob/main/… URL when a click is
+    # genuinely wanted. Advisory for now; promote to an error once the existing links
+    # are swept, to stop the rule from regressing.
+    if not _published(md, root):
+        return
+    site = root.resolve()
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for raw in LINK_RE.findall(text):
+        target = raw.strip()
+        if target.startswith(("http://", "https://", "mailto:", "#")) or "{{" in target:
+            continue
+        path_part = re.split(r"\s+", target.partition("#")[0].strip())[0]
+        if not path_part:
+            continue
+        tgt = (md.parent / path_part).resolve()
+        try:
+            tgt.relative_to(site)
+        except ValueError:
+            warnings.append(
+                f"{md}: relative link '{path_part}' leaves the published site (docs/) — "
+                f"src/ is not on the Jekyll site; use inline code or an absolute github.com blob URL"
+            )
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -273,6 +317,7 @@ def main() -> int:
     for md in sorted(p for p in root.rglob("*.md") if not _scratch(p, root)):
         check_frontmatter(md, errors)
         check_links(md, errors)
+        check_site_local_links(md, root, warnings)
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)
 

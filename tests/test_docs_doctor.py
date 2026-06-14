@@ -266,6 +266,44 @@ def test_docs_doctor():
             check("check_thin_folders: single-file folder flagged as advisory",
                   any("thin/" in w for w in warns))
 
+        # --- check_site_local_links (advisory) ---
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            root = repo / "docs"
+            (root / "reference").mkdir(parents=True)
+            (repo / "src").mkdir()
+            (repo / "src" / "file.py").write_text("x = 1\n")
+            (root / "reference" / "sibling.md").write_text("# Sibling\n")
+
+            # published page linking into src/ -> advisory warning
+            pub = root / "reference" / "x.md"
+            pub.write_text("[code](../../src/file.py)\n[doc](sibling.md)\n")
+            warns: list[str] = []
+            check_site_local_links(pub, root, warns)
+            check("check_site_local_links: published page linking to src/ flagged",
+                  len(warns) == 1 and "leaves the published site" in warns[0])
+
+            # link to a sibling doc page stays inside the site -> not flagged
+            warns_doc: list[str] = []
+            (root / "reference" / "onlydoc.md").write_text("[doc](sibling.md)\n")
+            check_site_local_links(root / "reference" / "onlydoc.md", root, warns_doc)
+            check("check_site_local_links: in-site doc link not flagged", len(warns_doc) == 0)
+
+            # src/ path inside inline code -> ignored
+            warns_code: list[str] = []
+            (root / "reference" / "codey.md").write_text("Edit `[x](../../src/file.py)` here.\n")
+            check_site_local_links(root / "reference" / "codey.md", root, warns_code)
+            check("check_site_local_links: src/ link in inline code ignored", len(warns_code) == 0)
+
+            # unpublished (site-excluded) page may link to src/ — read on github.com, not the site
+            (root / "releasing").mkdir()
+            excl = root / "releasing" / "plan.md"
+            excl.write_text("[code](../../src/file.py)\n")
+            warns_excl: list[str] = []
+            check_site_local_links(excl, root, warns_excl)
+            check("check_site_local_links: site-excluded page linking to src/ not flagged",
+                  len(warns_excl) == 0)
+
         # --- heading_slugs ---
         with tempfile.TemporaryDirectory() as td:
             md = Path(td) / "h.md"
