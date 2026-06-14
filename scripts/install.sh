@@ -198,7 +198,9 @@ ensure_prereqs() {
   # without it has no pip. Probe ensurepip (not just venv) and add the package if
   # apt is available — far cleaner than the --break-system-packages fallback.
   detect_python
-  if [ -n "$PYTHON" ] && ! "$PYTHON" -c "import ensurepip" >/dev/null 2>&1 && have apt-get; then
+  if [ -z "$PYTHON" ]; then
+    missing="$missing python3"
+  elif ! "$PYTHON" -c "import ensurepip" >/dev/null 2>&1 && have apt-get; then
     missing="$missing python3-venv"
   fi
   if [ -z "$missing" ]; then ok "git, pandoc, and venv support present"; return; fi
@@ -389,7 +391,9 @@ install_mcp_deps() {
     return
   fi
   if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
-  if [ -z "$PYTHON" ]; then warn "No Python found — skipping MCP deps (install later into a venv)."; return; fi
+  if [ -z "$PYTHON" ]; then
+    die "No Python found. Install python3 (for Ubuntu/WSL: sudo apt-get install -y python3 python3-venv), then re-run the installer."
+  fi
 
   local venv="$VAULT_PATH/.memoria/.venv"
   # A venv is "usable" only if it has a working pip. Debian's `venv` without

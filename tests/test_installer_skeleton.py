@@ -58,3 +58,26 @@ def test_installer_escapes_template_replacements():
     assert "s|{{VAULT_PATH}}|$VAULT_PATH|g" not in text
     assert "s|{{PYTHON}}|$pybin|g" not in text
     assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text
+
+
+def test_installer_treats_python_as_a_hard_prerequisite():
+    text = INSTALL.read_text(encoding="utf-8")
+    ensure_prereqs = re.search(
+        r"ensure_prereqs\(\) \{(?P<body>.*?)\n\}",
+        text,
+        re.S,
+    ).group("body")
+    assert 'missing="$missing python3"' in ensure_prereqs
+    assert "sudo apt-get install -y$missing" in ensure_prereqs
+
+
+def test_mcp_deps_fail_loudly_without_python():
+    text = INSTALL.read_text(encoding="utf-8")
+    install_mcp_deps = re.search(
+        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
+        text,
+        re.S,
+    ).group("body")
+    assert "No Python found" in install_mcp_deps
+    assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
+    assert "skipping MCP deps" not in install_mcp_deps
