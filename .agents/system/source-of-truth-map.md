@@ -3,6 +3,9 @@
 Use this map to locate the file that owns a contract. Consumer files may mirror
 or explain the contract, but they must not silently redefine it.
 
+This map is how you uphold AGENTS.md's **Zero tolerated contradictions** principle:
+find the owning file, then fix the stale consumer rather than the source.
+
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
