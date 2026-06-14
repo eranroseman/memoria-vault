@@ -26,7 +26,7 @@ The vault **ships its plugins pre-installed and configured** in `.obsidian/plugi
 
 Settings → Community plugins → turn off **Restricted mode**. The bundled plugins activate on the next restart.
 
-The eight required plugins (plus `homepage`, which opens `home.md` on launch):
+The required plugins:
 
 | Plugin | Purpose |
 | --- | --- |
@@ -37,7 +37,10 @@ The eight required plugins (plus `homepage`, which opens `home.md` on launch):
 | `dataview` | Powers the dashboards and queue views |
 | `templater-obsidian` | Runs the templates in `system/templates/` for new notes |
 | `quickadd` | Registers the `Memoria:` command-palette entries |
+| `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
+| `homepage` | Opens `home.md` on launch |
+| `buttons` | Renders the command buttons on `home.md` |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
 
@@ -74,6 +77,7 @@ Memoria's linting is the Linter **engine** — deterministic Python with a daily
 - Status bar shows "Local REST API: started"
 - Settings → Local REST API shows a 64-char hex `apiKey`
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
+- The left ribbon includes Memoria capture, delegate, resolve, and workspace-switch buttons
 - `Cmd/Ctrl-P` → `Memoria: workspace` lists **Desk**, **Library**, and **Studio**
 
 Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace (`Memoria: open Library workspace`) to work the reading pipeline.

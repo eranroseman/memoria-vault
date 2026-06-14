@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, and the inbox resolve action.
+The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, workspace switching, and note-local claim/source actions. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, and the inbox resolve action.
 
 ---
 

@@ -11,7 +11,7 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 ## Prerequisites
 
 - Obsidian open with the vault
-- QuickAdd ships bundled and enabled with the starter vault — no install needed (see [Set up Obsidian](../setup/set-up-obsidian.md))
+- QuickAdd and Commander ship bundled and enabled with the starter vault — no install needed (see [Set up Obsidian](../setup/set-up-obsidian.md))
 - The Memoria command catalog open for reference: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 
 ## Steps
@@ -38,21 +38,26 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 
 The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file.
 
-**2. Or skip the palette and ask the Co-PI.**
+**2. Use the visible toolbar buttons for the main loop.**
+
+Commander places the high-frequency commands directly in Obsidian chrome: the left ribbon has capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and the Desk/Library/Studio workspace switchers. The note page header has create linked claim note, write claim note, extract claims, and link claim, so active-note defaults are visible when you invoke them.
+
+**3. Or skip the palette and ask the Co-PI.**
 
 The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane and task; use the Co-PI when you don't, or when the work spans several tasks. Two things have no command at all by design: linting needs no invocation — the Linter is an engine on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the deferred Project workflow after alpha.3. The assist surface (find/search/ask from the palette) is tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380).
 
-**3. Use the palette by type, not by scroll.**
+**4. Use the palette by type, not by scroll.**
 
 `Cmd-P` → type `M` → the palette filters to `Memoria:` commands only. Type 1–3 more letters to narrow further. The filter is fast enough that you do not need physical hotkeys for most commands.
 
-**4. Assign a physical hotkey to any command you invoke more than ten times a day** (optional).
+**5. Assign a physical hotkey to any command you invoke more than ten times a day** (optional).
 
 Settings → Hotkeys → search for the command name → assign a key combination. Reserve physical hotkeys for the genuinely highest-frequency commands only — `Memoria: capture fleeting` is the usual candidate.
 
 ## Verify
 
 - `Cmd-P` → `M` returns the `Memoria:` commands in both groups
+- The left ribbon exposes capture, delegate, resolve, and Desk/Library/Studio workspace buttons
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
 - `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding
 - A task command (e.g. `Memoria: map corpus`) lands a card on the board: `hermes kanban list` shows it addressed to the right lane

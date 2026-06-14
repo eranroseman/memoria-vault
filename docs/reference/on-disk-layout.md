@@ -88,7 +88,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, agent-client, Local REST API). `src/.obsidian/workspaces.json` ships the three saved layouts — **Desk**, **Library**, and **Studio** (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/`, and per-plugin config under `plugins/` (QuickAdd, Commander, agent-client, Local REST API, Homepage, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git). `src/.obsidian/workspaces.json` ships the three saved layouts — **Desk**, **Library**, and **Studio** (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 
