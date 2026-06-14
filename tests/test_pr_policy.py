@@ -22,7 +22,6 @@ def test_pr_policy():
         )
         check("is_safe: explanation prose prefix", is_safe("docs/explanation/architecture/human-channels.md"))
         check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
-        check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
         check("is_safe: .md suffix (arbitrary path)", is_safe("README.md"))
         check("is_safe: .txt suffix", is_safe("CHANGELOG.txt"))
         check("is_safe: .py file NOT safe", not is_safe("scripts/install.py"))

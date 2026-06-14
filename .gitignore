@@ -25,7 +25,6 @@ desktop.ini
 # Scratch at repo root — underscore-prefixed working dirs/files, never committed.
 # Root-anchored (leading /) and listed explicitly, NOT a `_*` glob: docs/_config.yml
 # (Jekyll) and other docs/_* files must stay tracked.
-/_reports/
 /_notes/
 /_papers/
 TODO*

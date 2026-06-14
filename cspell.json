@@ -10,7 +10,6 @@
     "src/.obsidian/**",
     "_papers/**",
     "_notes/**",
-    "_reports/**",
     "**/tmp/**",
     "**/_site/**",
     "docs/.jekyll-cache/**",

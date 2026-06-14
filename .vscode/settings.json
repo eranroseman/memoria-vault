@@ -3,7 +3,6 @@
     "**/_site/**": true,
     "docs/_site/**": true,
     "docs/.jekyll-cache/**": true,
-    "_reports/**": true,
     "_notes/**": true,
     "_papers/**": true
   },
@@ -12,7 +11,6 @@
     "docs/_site/**": true,
     "_papers/**": true,
     "_notes/**": true,
-    "_reports/**": true,
     "docs/.jekyll-cache/**": true
   },
   "shellcheck.customArgs": ["--severity=warning"],
