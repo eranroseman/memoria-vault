@@ -8,12 +8,12 @@ permalink: /explanation/architecture/
 
 # Architecture
 
-Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md)): the **PI** (the human — Principal Investigator), the **Interface** (the Obsidian UI), the **co-PI** (the one conversational agent), **Tasks** (the kanban board and its background lanes), **MCP** (the policy boundary), the **Engines** (deterministic apps), and the **Vault** (the files — the knowledge itself). One flow rule governs the stack: **decisions flow down, information flows up.**
+Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md)): the **PI** (the human — Principal Investigator), the **Interface** (the Obsidian UI), the **Co-PI** (the one conversational agent), **Tasks** (the kanban board and its background lanes), **MCP** (the policy boundary), the **Engines** (deterministic apps), and the **Vault** (the files — the knowledge itself). One flow rule governs the stack: **decisions flow down, information flows up.**
 
 ```text
 L1  PI          the human — the only actor who promotes to canonical
 L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Project Workspaces
-L3  co-PI       the permanent conversational agent (ACP pane); read-only, delegates writes
+L3  Co-PI       the permanent conversational agent (ACP pane); read-only, delegates writes
 L4  Tasks       ephemeral agent lanes + the kanban board + cards
 L5  MCP         the policy boundary — agents reach engines and the Vault only through it
 L6  Engines     deterministic apps: ingest · search · clustering · sweeps · Linter
@@ -27,14 +27,14 @@ Three kinds of actor work across the structural layers:
 | Actor-kind | Who | Trait |
 | --- | --- | --- |
 | **PI** | the human (L1) | judgment; the only actor who promotes to canonical |
-| **Agents** | the co-PI (L3) + the Task lanes (L4) | posture + LLM judgment; propose, never dispose |
+| **Agents** | the Co-PI (L3) + the Task lanes (L4) | posture + LLM judgment; propose, never dispose |
 | **Engines** | ingest · search · clustering · sweeps · Linter (L6) | deterministic, no posture; never on the board |
 
 The "is it an agent or an engine?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane.
 
 ## The layering binds the agent write-path only
 
-The strict each-layer-depends-only-on-the-one-below contract holds along the **agent write-path** (co-PI → Tasks → MCP → Engines/Vault). The PI and trusted automation are **direct edges, not rungs**: the PI edits the Vault directly in Obsidian, and cron, CI, and the PI invoke engines directly. Read the stack as a dependency *order*, not a claim that every actor traverses all seven layers.
+The strict each-layer-depends-only-on-the-one-below contract holds along the **agent write-path** (Co-PI → Tasks → MCP → Engines/Vault). The PI and trusted automation are **direct edges, not rungs**: the PI edits the Vault directly in Obsidian, and cron, CI, and the PI invoke engines directly. Read the stack as a dependency *order*, not a claim that every actor traverses all seven layers.
 
 **MCP is a policy gate, not an execution sandbox.** The MCP layer validates every agent request — allow-listing tools, scoping writes, rate-limiting, logging — before it touches the Vault or an external API. It does not confine processes; the honest phrase is *policy-sandboxed via MCP*. Under the solo, local premise the threat is *wrong writes*, not tenant escape, and the policy gate plus propose-not-dispose, the gated zones, the audit log, and git history cover it. Execution isolation is deferred until untrusted third-party code is actually run.
 
@@ -43,7 +43,7 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 | Page | What it covers |
 | --- | --- |
 | [The vault](vault.md) | The vault's category folders, type homes, gated zones, archived-as-state, and how Bases and the Linter keep it sound. |
-| [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the co-PI is the sole memory carrier. |
+| [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the Co-PI is the sole memory carrier. |
 | [The control plane](control-plane.md) | The board, the lanes, the hidden execution mechanic vs the PI-facing lifecycle, and the handoff payload. |
 | [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |

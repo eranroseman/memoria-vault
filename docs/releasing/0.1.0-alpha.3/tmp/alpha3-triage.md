@@ -39,7 +39,7 @@ Legend: **α3** = in alpha.3 · **α3-decide** = decide in alpha.3, execute late
 | Issue | Verdict | Rationale |
 |---|---|---|
 | Adopt **Commander** for ribbon/header placement (§1) | **α3** | the genuine ribbon gap; small, high-value |
-| Every action reachable without the co-PI (§1) | **α3** | PI-direct-access rule; audit + fill gaps |
+| Every action reachable without the Co-PI (§1) | **α3** | PI-direct-access rule; audit + fill gaps |
 | `system-actions` "how invoked" column (§1) | **α3** | cheap doc fix |
 | Adopt **Modal Forms** capture + radios for lifecycle (§2, §4b) | **α3** | capture is the core UI; help-text-stays-out |
 | Show only a type's properties, not all (§2) | **α3** | templates/Properties config |
@@ -92,7 +92,7 @@ Legend: **α3** = in alpha.3 · **α3-decide** = decide in alpha.3, execute late
 | **Accept the Operations vocabulary** (umbrella + 4 categories + bare-verb leaves) | **α3-decide** | UI/docs work references these terms |
 | Code/tree rename `engines/ → operations/{…}`; split `sweeps/`; rehome `cluster`; rename `pipeline.py`/`lib/`/`golden.py` (audit §1.2–1.3) | **defer (dedicated pass)** | high blast radius, not UI-serving; after the §8 link sweep |
 | `scripts/*.py` kebab→snake + retire `load_script()` (audit §1.4) | **defer** | CI blast radius, internal |
-| Obsidian-side user-facing names: QuickAdd command normalization, co-PI skill renames (audit §1.5) | **α3** | small, user-facing |
+| Obsidian-side user-facing names: QuickAdd command normalization, Co-PI skill renames (audit §1.5) | **α3** | small, user-facing |
 | Folder pluralization `notes/source→sources`, `notes/index→indexes` (audit §1.5) | **defer/batch** | touches base filters; low UI value, batch with a structural pass |
 | Test suite: split 18 legacy module-named tests (audit §1.6) | **defer** | internal quality |
 

@@ -16,14 +16,14 @@ mcp_servers:
     timeout: 30
   obsidian:
     # Native MCP from the Local REST API plugin over loopback HTTP (ADR-31). The
-    # co-PI uses it for READS; its lane-override has write_scope: [] so any write
+    # Co-PI uses it for READS; its lane-override has write_scope: [] so any write
     # attempt is denied by the gate.
     url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
   ingest:
-    # Read/compute facade over the ingest engine (D41) — lets the co-PI inspect a
+    # Read/compute facade over the ingest engine (D41) — lets the Co-PI inspect a
     # citekey's draft bundle while discussing it; the gated writes stay lane-side.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
@@ -60,7 +60,7 @@ mcp_servers:
     timeout: 30
     connect_timeout: 45
 
-# Capability allowlist (ADR-27): the co-PI keeps skills, todo, AND memory — it alone
+# Capability allowlist (ADR-27): the Co-PI keeps skills, todo, AND memory — it alone
 # carries the self-improving loop (memory · /goals · skills · /personality, D46).
 # Everything else stays disabled; the only write path would be the gated obsidian
 # MCP, and the copi lane-override denies every write.

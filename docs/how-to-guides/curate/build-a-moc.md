@@ -40,7 +40,7 @@ Add the claim notes (and key source notes) to the `members` list and wikilink th
 
 **5. Name the gaps.**
 
-Note what the cluster is missing — thin sub-topics, open questions, papers not yet captured. Each named gap is a ready-made discovery prompt for the co-PI ([Find new sources](../compile/find-new-sources.md)).
+Note what the cluster is missing — thin sub-topics, open questions, papers not yet captured. Each named gap is a ready-made discovery prompt for the Co-PI ([Find new sources](../compile/find-new-sources.md)).
 
 ## Splitting a hub
 

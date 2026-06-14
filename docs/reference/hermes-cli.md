@@ -5,7 +5,7 @@ parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is the co-PI conversation (the ACP pane), which delegates board work for you. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
+Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is the Co-PI conversation (the ACP pane), which delegates board work for you. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
 
 Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the desk pane).
 
@@ -27,7 +27,7 @@ The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the
 
 | Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
-| **co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` (delegate-task) — plus `explain-the-system`, the co-PI's meta skill outside the lane registry (ADR-48) |
+| **Co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore:branch-framings` · `delegate:route-task` (delegate-task) — plus `explain-the-system`, the Co-PI's meta skill outside the lane registry (ADR-48) |
 | **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (obsidian-paper-note) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-mapping) · `map:seed-canvas` (canvas-seed) |
 | **Writer** (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
 | **Peer-reviewer** (verify) | `verify:check-citation` (cite-check, ex-claim-checks) · `verify:trace-claim` (claim-trace, ex-claim-checks) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
@@ -49,7 +49,7 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 
 | Server | Tool | Does |
 | --- | --- | --- |
-| tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
+| tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The Co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
 | cluster | `cluster_build_graph(seed)` | NetworkX over authored `links:` + given `relationships` → nodes, typed edges, communities, centrality, layout. Read-only; params echoed. |
 | cluster | `cluster_model_topics(folder, min_cluster_size)` | BERTopic over note text → topics, doc-topic map, outliers (needs the opt-in cluster stack). |
 | cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the claim-debate JSON Canvas artifact (staging-only) — the Librarian's map lane (`map:seed-canvas`). |

@@ -39,7 +39,7 @@ Read:
    ```
 
 5. Verify the structural invariants:
-   - The co-PI remains hard read-only and delegates writes.
+   - The Co-PI remains hard read-only and delegates writes.
    - No profile gains direct-world `file`, `terminal`, `code_execution`,
      `browser`, `web`, or `computer_use`.
    - Review-gated prefixes cannot be automatically written.

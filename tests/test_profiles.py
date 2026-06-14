@@ -50,19 +50,19 @@ def test_every_agent_has_a_lane_override():
 
 
 def test_copi_is_hard_read_only():
-    """ADR-48: the co-PI delegates every write — empty write scope, denied everywhere."""
+    """ADR-48: the Co-PI delegates every write — empty write scope, denied everywhere."""
     lane = yaml.safe_load((LANES / "copi.yaml").read_text(encoding="utf-8"))
     assert lane["policy"]["allow"]["write"] == []
     assert lane["routing"]["write_scope"] == []
     assert lane["routing"]["invocation"] == "interactive_only"
     cfg = yaml.safe_load((PROFILES / "memoria-copi" / "config.yaml").read_text(encoding="utf-8"))
-    # the co-PI alone keeps the memory toolset (D46)
+    # the Co-PI alone keeps the memory toolset (D46)
     assert "memory" not in cfg["agent"]["disabled_toolsets"]
-    assert "tasks" in cfg["mcp_servers"], "the co-PI needs the delegation path"
+    assert "tasks" in cfg["mcp_servers"], "the Co-PI needs the delegation path"
 
 
 def test_specialists_keep_memory_disabled():
-    """D46: specialist postures are fixed; the learning loop is co-PI-only."""
+    """D46: specialist postures are fixed; the learning loop is Co-PI-only."""
     for name in EXPECTED - {"memoria-copi"}:
         cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
         assert "memory" in cfg["agent"]["disabled_toolsets"], f"{name} must not carry memory"
@@ -91,7 +91,14 @@ def test_acp_pane_is_copi_only():
                       .read_text(encoding="utf-8"))
     agents = data["customAgents"]
     assert [a["id"] for a in agents] == ["memoria-copi"]
+    assert agents[0]["displayName"] == "Memoria Co-PI"
     assert data["defaultAgentId"] == "memoria-copi"
+    exports = data["exportSettings"]
+    assert exports["defaultFolder"] == "system/exports"
+    assert exports["autoExportOnNewChat"] is True
+    assert exports["autoExportOnCloseChat"] is True
+    assert exports["openFileAfterExport"] is False
+    assert exports["imageCustomFolder"] == "system/exports/assets"
 
 
 def test_no_profile_has_direct_world_access():

@@ -11,7 +11,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## System
 
-**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to editor chat panes. The co-PI's desk pane in Obsidian is an ACP pane. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
+**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to editor chat panes. The Co-PI's desk pane in Obsidian is an ACP pane. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
 
 **Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
 
@@ -19,13 +19,13 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Hermes** — the Nous Research agent runtime Memoria runs on: Kanban, profile management, MCP server connections, skills, cron, and the gateway process.
 
-**Memoria** — the whole system: the vault, the co-PI + four background agents, the five engines, the policy gate, the board, and the tooling layer (`.memoria/`).
+**Memoria** — the whole system: the vault, the Co-PI + four background agents, the five engines, the policy gate, the board, and the tooling layer (`.memoria/`).
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
-**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: co-PI, Librarian, Writer, Peer-reviewer, Engineer. See [Profile capabilities](profiles.md).
+**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. See [Profile capabilities](profiles.md).
 
-**Seven-layer architecture** — PI · Interface · co-PI · Tasks · MCP · Engines · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
+**Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
 **Vault** — the Obsidian folder tree where durable knowledge lives, organized into five type-first categories: `catalog`, `notes`, `projects`, `inbox`, `system` ([ADR-47](../adr/47-type-first-category-folders.md)).
 
@@ -41,7 +41,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
-**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The co-PI has no lane; engines run off the board.
+**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The Co-PI has no lane; engines run off the board.
 
 **Worklist** — the batch surface for high-cardinality decisions ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): instead of one card per item, like decisions queue into one batch the PI can sweep (the two decision kinds being approval gates and work prompts).
 
@@ -95,11 +95,11 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 | Retired | Replaced by |
 | --- | --- |
-| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps engine (Verifier), the Engineer (Coder), and the Linter **engine** (no longer an agent). |
+| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps engine (Verifier), the Engineer (Coder), and the Linter **engine** (no longer an agent). |
 | **Reference note** (`reference-note`, `30-synthesis/02-reference/`) | Dropped ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)) — it double-encoded maturity; an `evergreen` claim is the settled unit. |
 | **MOC** (`moc`, `30-synthesis/03-moc/`) | The `hub` type in `notes/hubs/`. |
 | **`99-system`** (and the numbered folders `00-` … `95-`) | The five type-first categories ([ADR-47](../adr/47-type-first-category-folders.md)); system infrastructure now lives at `system/`. |
-| **"The human"** | The **PI** (and the agent fronting for them, the **co-PI**). |
+| **"The human"** | The **PI** (and the agent fronting for them, the **Co-PI**). |
 
 ---
 

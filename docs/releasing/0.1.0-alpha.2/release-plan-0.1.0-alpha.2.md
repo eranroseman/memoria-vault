@@ -20,10 +20,10 @@ run (S0–S5).
 
 ## 1. Scope — what this release is
 
-alpha.2 delivers the **consolidated system**: one conversational co-PI plus four background
+alpha.2 delivers the **consolidated system**: one conversational Co-PI plus four background
 lanes (librarian, writer, peer-reviewer, engineer) — five profiles, down from seven
 ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)); the seven-layer architecture
-PI · Interface · co-PI · Tasks · MCP · Engines · Vault
+PI · Interface · Co-PI · Tasks · MCP · Engines · Vault
 ([ADR-46](../../adr/46-seven-layer-architecture.md)); type-first category folders
 `catalog/ notes/ projects/ inbox/ system/` ([ADR-47](../../adr/47-type-first-category-folders.md));
 deterministic ingest / linter / sweeps **engines** that write while agents judge

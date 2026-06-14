@@ -6,7 +6,7 @@ nav_order: 3
 
 # Agent-client pane
 
-Talk to the co-PI from inside Obsidian without switching to a terminal. This guide covers opening the pane, attaching context, reading responses, and ending a session cleanly.
+Talk to the Co-PI from inside Obsidian without switching to a terminal. This guide covers opening the pane, attaching context, reading responses, and ending a session cleanly.
 
 ## Prerequisites
 
@@ -15,11 +15,11 @@ Talk to the co-PI from inside Obsidian without switching to a terminal. This gui
 
 ## One agent in the picker — by design
 
-The picker offers exactly one agent: the **co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-picker.md). The co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
+The picker offers exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-picker.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 
-The pane is pinned in the right sidebar of every shipped workspace — Desk, Library, and Studio ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) — so loading any layout brings the co-PI with it, and it keeps its session across workspace switches ([Workspaces](use-workspaces.md)). To open it manually: `Cmd/Ctrl+P` → **Agent Client: Open chat view**, the **Talk to co-PI** button on `home.md`, or the Hermes icon in the left ribbon.
+The pane is pinned in the right sidebar of every shipped workspace — Desk, Library, and Studio ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) — so loading any layout brings the Co-PI with it, and it keeps its session across workspace switches ([Workspaces](use-workspaces.md)). To open it manually: `Cmd/Ctrl+P` → **Agent Client: Open chat view**, the **Talk to Co-PI** button on `home.md`, or the Hermes icon in the left ribbon.
 
 ## Attaching a note as context
 
@@ -28,14 +28,14 @@ The pane is pinned in the right sidebar of every shipped workspace — Desk, Lib
 **Via the pane directly:**
 Click the paperclip icon at the top of the ACP pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
 
-The attached note appears as a named context card at the top of the conversation. The co-PI reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
+The attached note appears as a named context card at the top of the conversation. The Co-PI reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
 
 ## Reading responses
 
 Two kinds of turn come back:
 
-- **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The co-PI will not produce a finished note: when you've arrived at a durable claim, write the claim note yourself (`Memoria: write claim note`).
-- **Delegation receipts** — when you ask for work ("verify this draft", "bring in this paper"), the co-PI raises a card on the right lane and tells you so. Track it on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
+- **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The Co-PI will not produce a finished note: when you've arrived at a durable claim, write the claim note yourself (`Memoria: write claim note`).
+- **Delegation receipts** — when you ask for work ("verify this draft", "bring in this paper"), the Co-PI raises a card on the right lane and tells you so. Track it on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
 
 ## Ending a session
 
@@ -43,20 +43,17 @@ Leave the pane open during a reading session — sustained questioning across th
 
 ## Exporting a session
 
-Sessions are captured automatically: with the shipped config, closing a chat exports the conversation as a markdown file to `notes/fleeting/chats/` (filenames start with `chat_`). You can also export mid-session via `Cmd/Ctrl+P` → **Agent Client: Export chat**.
+Sessions are captured automatically: with the shipped config, opening and closing a chat exports the conversation as a markdown file to `system/exports/` (filenames start with `chat_`). You can also export mid-session via `Cmd/Ctrl+P` → **Agent Client: Export chat**.
 
-Exports are fleeting-grade raw material, and the system processes them instead of letting them rot:
+Exports are visible raw material for PI review. They are not canonical notes and they do not enter Inbox or fleeting triage automatically. When a conversation contains something durable, promote the insight yourself: create a fleeting note, claim note, source note annotation, or project scratch entry in the right visible folder.
 
-1. The plugin writes the transcript to `notes/fleeting/chats/` with no Memoria frontmatter.
-2. Within 15 minutes the sweeps cron stamps it with valid fleeting frontmatter (`type: fleeting`, `lifecycle: proposed`, `origin: chat`). Already-stamped files are never touched.
-3. The stamped export then appears in the fleeting dashboard (`system/dashboards/fleeting.base`) and is flagged by the stale-fleeting detector after a week — triage it like any other fleeting note: [Triage fleeting notes](../compile/triage-fleeting-notes.md).
+Three folders to **never** point `exportSettings.defaultFolder` at:
 
-Two folders to **never** point `exportSettings.defaultFolder` at:
-
+- `.memoria/` — hidden runtime internals, not a PI-facing review surface.
 - `inbox/` — reserved for agent-raised honesty cards (candidates, gaps, flags, alerts), not chat transcripts.
-- `projects/` — reserved and empty until v0.1.0-alpha.3.
+- `projects/` — reserved and empty until v0.1.0-alpha.4.
 
-Auto-export fires on chat **close**, not on new chat (`autoExportOnCloseChat: true`, `autoExportOnNewChat: false`) — you get one transcript per finished session, no empty stubs.
+Auto-export is enabled for both new-chat and close-chat events (`autoExportOnNewChat: true`, `autoExportOnCloseChat: true`) so a pane session has a visible transcript even if Obsidian closes unexpectedly.
 
 ## If the pane won't connect (Windows + WSL)
 
@@ -71,7 +68,7 @@ On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** a
 
 ## Verify
 
-- The picker shows one agent — **co-PI** — and the pane connects
+- The picker shows one agent — **Co-PI** — and the pane connects
 - Opening the pane with a note active attaches it as a context card (auto-mention)
 - Asking for lane work ("verify this draft") produces a card on the board, not prose-only
 - Pressing **Clear** empties the pane and resets the session

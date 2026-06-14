@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""tasks_mcp.py — the co-PI's delegation path (ADR-48).
+"""tasks_mcp.py — the Co-PI's delegation path (ADR-48).
 
-One tool: `delegate_route_task`. The co-PI converses and **delegates every
+One tool: `delegate_route_task`. The Co-PI converses and **delegates every
 write** — this server turns a delegation into a Hermes kanban card on the right
 lane, after validating the handoff against the lane's ceiling: `allowed_paths`
 may *narrow* but never *widen* the lane's write scope (lane = ceiling, payload
@@ -79,7 +79,7 @@ def validate(vault: Path, lane: str, allowed_paths: list[str]) -> list[str]:
     override = _lane_override(vault, profile)
     scopes = (override.get("routing") or {}).get("write_scope") or []
     if scopes == [] and "write_scope" in (override.get("routing") or {}):
-        # an explicitly empty scope (the co-PI pattern) can never receive writes
+        # an explicitly empty scope (the Co-PI pattern) can never receive writes
         return [f"lane '{lane}' has an empty write scope — nothing may be delegated to it"]
     for p in allowed_paths:
         if not _within_scope(p, scopes):

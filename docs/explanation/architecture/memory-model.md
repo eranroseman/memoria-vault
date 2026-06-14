@@ -18,13 +18,13 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones the runtime manages
 
-**Handoff memory** (what travels with a card between lanes), **agent memory** (the co-PI's `MEMORY.md` + `USER.md`, the **sole memory carrier** — the background lanes are stateless), **session history**, and **working memory** (the live session's reasoning).
+**Handoff memory** (what travels with a card between lanes), **agent memory** (the Co-PI's `MEMORY.md` + `USER.md`, the **sole memory carrier** — the background lanes are stateless), **session history**, and **working memory** (the live session's reasoning).
 
 What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory.md); the rest of this page explains *why* each has the scope it does.
 
 `SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
 
-**Why the co-PI alone carries memory.** Concentrating every conversation in one agent is what lets Hermes' self-improving loop — **memory · /goals · skills** — compound into a genuine co-PI rather than fragmenting across lanes that never converse ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The background lanes (Librarian, Writer, Peer-reviewer, Engineer) are stateless propose-then-dispose executors: each run grounds on the card's handoff payload and the vault, never on remembered context.
+**Why the Co-PI alone carries memory.** Concentrating every conversation in one agent is what lets Hermes' self-improving loop — **memory · /goals · skills** — compound into a genuine Co-PI rather than fragmenting across lanes that never converse ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The background lanes (Librarian, Writer, Peer-reviewer, Engineer) are stateless propose-then-dispose executors: each run grounds on the card's handoff payload and the vault, never on remembered context.
 
 ---
 
@@ -40,7 +40,7 @@ The scoping isn't arbitrary — it follows from what each substrate holds, and t
 
 **Handoff memory** is per-card rather than per-agent because the handoff is the unit of cross-lane communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-lane handoffs reliable without agents sharing session state.
 
-**Agent memory** belongs to the co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
+**Agent memory** belongs to the Co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
 
 **Session history** is the cross-session recall channel but carries no authority. It's searchable history — useful for "did we discuss X before?" — but it never gates promotion and is never authoritative over the vault. A session-history result that contradicts a vault note loses; the vault is ground truth.
 

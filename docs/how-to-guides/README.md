@@ -18,7 +18,7 @@ For the *why* behind any design choice, see [Explanation](../explanation). For e
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the co-PI's agent-client pane, and the Inbox are your primary controls. The guides in [Sources](compile), [Writing](compose), and [Curate](curate) are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Co-PI's agent-client pane, and the Inbox are your primary controls. The guides in [Sources](compile), [Writing](compose), and [Curate](curate) are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
 Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup), [Operate](operate), and [Troubleshooting](troubleshooting) are written for this mode.
@@ -50,7 +50,7 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | [Vault homepage](using-obsidian/use-the-vault-homepage.md) | Open the front door, work the Inbox, update research focus |
 | [Navigate the dashboards](using-obsidian/navigate-the-dashboards.md) | Which dashboard to open for each situation, and which workspace carries it |
 | [Workspaces](using-obsidian/use-workspaces.md) | Load and switch between the three shipped pane layouts — Desk, Library, and Studio |
-| [Agent-client pane](using-obsidian/use-the-acp-pane.md) | Open the co-PI pane, attach context, read responses, clear sessions |
+| [Agent-client pane](using-obsidian/use-the-acp-pane.md) | Open the Co-PI pane, attach context, read responses, clear sessions |
 | [Command palette](using-obsidian/obsidian-command-palette.md) | The shipped `Memoria:` capture and per-task commands, invoking by type, assigning hotkeys |
 
 ### Using Hermes Agent
@@ -60,7 +60,7 @@ Operational guides for the Hermes CLI — profile management, chat sessions, and
 | Guide | What it covers |
 | --- | --- |
 | [Configure a profile](hermes-agent/configuration.md) | Model routing, write permissions, skills, API keys |
-| [Run a CLI chat session](hermes-agent/chat-with-hermes.md) | The co-PI from the terminal; lane chats as a debugging posture |
+| [Run a CLI chat session](hermes-agent/chat-with-hermes.md) | The Co-PI from the terminal; lane chats as a debugging posture |
 
 Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [Hermes CLI](../reference/hermes-cli.md).
 
@@ -74,7 +74,7 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Triage fleeting notes](compile/triage-fleeting-notes.md) | Clear `notes/fleeting/`: promote, attach, or discard | Triage (on-ramp) |
 | [Capture and ingest a source](compile/capture-and-ingest.md) | Palette/Zotero capture → Catalog entity + candidate card: the complete intake path | Capture + Enrich |
 | [Classify a source](compile/classify-a-source.md) | Handle classify flags, review what the automation applied, promote proposals | Classify |
-| [Discuss a paper](compile/discuss-a-paper.md) | A questioning pass with the co-PI in the agent-client pane | Discuss |
+| [Discuss a paper](compile/discuss-a-paper.md) | A questioning pass with the Co-PI in the agent-client pane | Discuss |
 | [Read a paper through a lens](compile/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](compile/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
 | [Link related claims](compile/link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Connect |
@@ -93,7 +93,7 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 | [Assess your corpus](compose/assess-your-corpus.md) | Delegate a `map` task: dense clusters, thin coverage, gaps | Assess |
 | [Frame a project](compose/frame-a-project.md) | Generate competing outlines, choose one framing | Frame |
 | [Use canvas for argument mapping](compose/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting | Sketch |
-| [Query the vault](compose/query-the-vault.md) | Ask the co-PI, get a cited synthesis from your own notes | Query (aid) |
+| [Query the vault](compose/query-the-vault.md) | Ask the Co-PI, get a cited synthesis from your own notes | Query (aid) |
 | [Draft with the Writer](compose/draft-with-writer.md) | Delegate prose and outlines to the Writer's `draft` lane | Draft |
 | [Verify and revise a draft](compose/verify-and-revise.md) | Delegate a `verify` pass, read the findings, close gaps | Verify |
 | [Work the review queue](compose/work-the-review-queue.md) | Approve or reject agent writes held at the review gate | Review (gate) |

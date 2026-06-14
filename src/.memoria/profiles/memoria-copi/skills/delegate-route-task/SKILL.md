@@ -1,6 +1,6 @@
 ---
 name: delegate-route-task
-description: "Route work from the conversation to the right background lane via the tasks MCP (delegate_route_task): pick the lane, compose the self-contained handoff payload (goal · context · allowed_paths · expected_outputs · review_checks), and tell the PI what was sent. The co-PI's only write path — and it writes a board card, never the vault."
+description: "Route work from the conversation to the right background lane via the tasks MCP (delegate_route_task): pick the lane, compose the self-contained handoff payload (goal · context · allowed_paths · expected_outputs · review_checks), and tell the PI what was sent. The Co-PI's only write path — and it writes a board card, never the vault."
 version: 2.0.0
 author: Memoria
 license: MIT

@@ -15,7 +15,7 @@ nav_order: 26
 
 # ADR-26: The repo is the install unit; profiles are hand-authored and idempotently deployed
 
-> **Amended (2026-06-10).** Two specifics below are now stale: (1) the repo ships **`src/`**, not `vault/`, as the source-of-truth tree the installer scaffolds and populates — see [ADR-55](55-src-scaffold-populate-golden-copy.md); read "`vault/`" throughout as "`src/`". (2) The profile compiler this ADR calls "deferred ([ADR-42](42-profile-compilation.md))" is now superseded by the co-PI/agent consolidation in [ADR-48](48-copi-and-agent-consolidation.md); the seven-profile premise no longer holds. The core decision (the repo is the install unit; idempotent profile deploy) stands.
+> **Amended (2026-06-10).** Two specifics below are now stale: (1) the repo ships **`src/`**, not `vault/`, as the source-of-truth tree the installer scaffolds and populates — see [ADR-55](55-src-scaffold-populate-golden-copy.md); read "`vault/`" throughout as "`src/`". (2) The profile compiler this ADR calls "deferred ([ADR-42](42-profile-compilation.md))" is now superseded by the Co-PI/agent consolidation in [ADR-48](48-copi-and-agent-consolidation.md); the seven-profile premise no longer holds. The core decision (the repo is the install unit; idempotent profile deploy) stands.
 
 ## Context
 

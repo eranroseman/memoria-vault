@@ -29,7 +29,7 @@ One line: reviews pending · blocked cards · HIGH/CRITICAL lint findings, with 
 
 **3. Act from the action row.**
 
-Six command buttons (Buttons plugin, command-type only — [Obsidian plugins](../../reference/obsidian-plugins.md)): **Capture fleeting**, **Capture from Zotero**, **Capture URL**, **Delegate a task**, **Resolve card**, and **Talk to co-PI**. Each dispatches the matching palette command — the buttons are shortcuts, not a second mechanism.
+Six command buttons (Buttons plugin, command-type only — [Obsidian plugins](../../reference/obsidian-plugins.md)): **Capture fleeting**, **Capture from Zotero**, **Capture URL**, **Delegate a task**, **Resolve card**, and **Talk to Co-PI**. Each dispatches the matching palette command — the buttons are shortcuts, not a second mechanism.
 
 **4. Switch workspaces from the workspace row.**
 

@@ -1,7 +1,7 @@
 ---
 topic: decisions
 id: 48
-title: One co-PI fronts everything; specialists consolidate to posture-defined agents
+title: One Co-PI fronts everything; specialists consolidate to posture-defined agents
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
@@ -13,7 +13,7 @@ grand_parent: Explanation
 nav_order: 48
 ---
 
-# ADR-48: One co-PI fronts everything; specialists consolidate to posture-defined agents
+# ADR-48: One Co-PI fronts everything; specialists consolidate to posture-defined agents
 
 ## Context
 
@@ -25,11 +25,11 @@ conversation in a single front.
 
 ## Decision
 
-The PI converses with **one agent — the co-PI** — and **delegates** everything else.
-The co-PI is the permanent agent in the ACP pane: reflective thinking-partner posture
+The PI converses with **one agent — the Co-PI** — and **delegates** everything else.
+The Co-PI is the permanent agent in the ACP pane: reflective thinking-partner posture
 (it subsumes the old Socratic role), **read-only** (it runs read-only skills directly;
 every write goes out as a delegated task card), and the sole carrier of Hermes'
-self-improving loop (**memory · /goals · skills**); **`/personality` is a co-PI-only
+self-improving loop (**memory · /goals · skills**); **`/personality` is a Co-PI-only
 affordance** — specialist postures are fixed by design.
 
 The background agents are role-named, posture-defined lanes: **Librarian** (*faithful*;
@@ -41,7 +41,7 @@ independent* — never merged with the Librarian; separation of duties), **Engin
 the profile set. Each agent = a shared layer (the vault `AGENTS.md`) + a unique layer
 (`SOUL.md`, `skills/`, `config.yaml`, MCP wiring).
 
-**v0.1.0-alpha.2 ships all five profiles** (the original plan shipped only co-PI + Librarian,
+**v0.1.0-alpha.2 ships all five profiles** (the original plan shipped only Co-PI + Librarian,
 with the rest deferred to v0.1.0-alpha.3; the PI expanded the scope mid-build — 2026-06-09 — so
 Writer, Peer-reviewer, and Engineer landed in v0.1.0-alpha.2 as well; their *Project-workspace
 workflows* still arrive with v0.1.0-alpha.3).
@@ -50,7 +50,7 @@ workflows* still arrive with v0.1.0-alpha.3).
 
 - One conversational context compounds (memory/goals/skills) instead of seven that
   reset; background lanes stay stateless propose-then-dispose executors.
-- The board's lanes shrink to the background agents; there is no co-PI lane and no
+- The board's lanes shrink to the background agents; there is no Co-PI lane and no
   engine lane.
 - Drafting and verification interrogation are conversational but currently routed
   through one-shot cards — the open "conversational specialist work" question
@@ -61,7 +61,7 @@ workflows* still arrive with v0.1.0-alpha.3).
 ## Alternatives considered
 
 **Keep seven specialists.** Artificial handoffs between profiles sharing one posture,
-and the "who do I talk to?" confusion. **co-PI plus directly-conversable specialists.**
+and the "who do I talk to?" confusion. **Co-PI plus directly-conversable specialists.**
 Reintroduces the confusion and splits the learning loop; revisit only if a specialist
 conversation proves necessary. **Merging verification into the Librarian.** Breaks
 separation of duties — the agent that synthesizes must not grade its own work.

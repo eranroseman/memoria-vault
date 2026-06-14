@@ -15,7 +15,7 @@ Run a discovery pass — papers that build on what you hold, papers you're missi
 
 ## Steps
 
-**1. Ask the co-PI.**
+**1. Ask the Co-PI.**
 
 Open the Agent Client pane and name the need as a research question, not keywords:
 
@@ -23,7 +23,7 @@ Open the Agent Client pane and name the need as a research question, not keyword
 
 Seed it however helps: "papers that build on `<citekey>`" (forward citations), "the foundational papers `<citekey>` builds on" (backward), "recent work that disagrees with my receptivity claims."
 
-The co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_task`. If you already know the lane, the palette twin is `Cmd/Ctrl-P` → **Memoria: delegate a task** → `catalog`.
+The Co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_task`. If you already know the lane, the palette twin is `Cmd/Ctrl-P` → **Memoria: delegate a task** → `catalog`.
 
 **2. Let the Librarian search.**
 
@@ -40,7 +40,7 @@ Resolving a card flips it in place ([Work the review queue](../compose/work-the-
 
 **4. Feed it from gaps.**
 
-Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-written discovery prompt: hand it straight back to the co-PI ("that gap is real — find sources to fill it"). This is the compounding loop: mapping finds holes, discovery fills them, verification keeps the filling honest.
+Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-written discovery prompt: hand it straight back to the Co-PI ("that gap is real — find sources to fill it"). This is the compounding loop: mapping finds holes, discovery fills them, verification keeps the filling honest.
 
 ## Verify
 

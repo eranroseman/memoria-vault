@@ -12,7 +12,7 @@ The organizing principle: **each channel owns one mode.** Using one for another'
 
 | Channel | Mode | Purpose |
 | --- | --- | --- |
-| **Obsidian** | Desktop, focused, deliberate | Daily triage (the Inbox), reading, authoring, the co-PI conversation in the ACP pane |
+| **Obsidian** | Desktop, focused, deliberate | Daily triage (the Inbox), reading, authoring, the Co-PI conversation in the ACP pane |
 | **CLI** (`hermes …`) | Desktop, occasional, precise | Forensic queries, profile administration, manual dispatch, backup |
 | **Telegram** | Mobile, async, lightweight | Fleeting capture, source-URL queuing, urgent push notifications |
 

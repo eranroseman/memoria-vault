@@ -22,10 +22,10 @@ A grounding fact that recurs: **we already own a strong native baseline** — Ob
 
 ## Category 1 — Action invocation & surfacing
 
-**Issues:** pin Memoria commands in the ribbon (Tutorial 02); make the right command reachable in the right place; "every task should be performable without the co-PI — co-PI is always *on top of* the standard process, reserved for things that genuinely need two-way LLM conversation"; `system-actions` should state *how each action is invoked*; the **Resolve card** and **Delegate a task** buttons on `home.md`.
+**Issues:** pin Memoria commands in the ribbon (Tutorial 02); make the right command reachable in the right place; "every task should be performable without the Co-PI — Co-PI is always *on top of* the standard process, reserved for things that genuinely need two-way LLM conversation"; `system-actions` should state *how each action is invoked*; the **Resolve card** and **Delegate a task** buttons on `home.md`.
 
 ### Best practice
-A command should be reachable through the cheapest affordance that fits its frequency: **frequent → visible button/ribbon**, **occasional → command palette / pinned palette**, **power-user → hotkey or chord**, **in-flow while typing → slash menu**. Crucially, the co-PI (LLM chat) must never be the *only* path to an action — it's an escalation, not the front door. This is the direct-access rule formalized in [Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive](../../../adr/72-command-surfacing.md): every feature must be PI-accessible directly from the Obsidian UI; the co-PI is additive.
+A command should be reachable through the cheapest affordance that fits its frequency: **frequent → visible button/ribbon**, **occasional → command palette / pinned palette**, **power-user → hotkey or chord**, **in-flow while typing → slash menu**. Crucially, the Co-PI (LLM chat) must never be the *only* path to an action — it's an escalation, not the front door. This is the direct-access rule formalized in [Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive](../../../adr/72-command-surfacing.md): every feature must be PI-accessible directly from the Obsidian UI; the Co-PI is additive.
 
 ### What native already covers (no plugin needed)
 - **Hotkeys** — Settings → Hotkeys assigns any combo to any command. Done.
@@ -43,7 +43,7 @@ A command should be reachable through the cheapest affordance that fits its freq
 
 ### Recommendation
 - **[ADR] Adopt Commander** as the canonical way to place Memoria's QuickAdd commands in the ribbon / page-header, and rely on **native hotkeys + native palette pinning** for the rest. Optionally add **Slash Commander** if in-editor `/capture-*` is desired. Skip Leader Hotkeys (risk), Shell Commands (sandbox violation), Better Command Palette (abandoned).
-- **[FIX] "Every action without the co-PI."** Audit the action catalog: for each action currently reachable only by asking the co-PI, ensure a deterministic command exists (QuickAdd command + ribbon/palette entry). Tutorial 04 Step 1 ("Ask the co-PI for a batch") must show the direct path first, co-PI as the optional conversational alternative.
+- **[FIX] "Every action without the Co-PI."** Audit the action catalog: for each action currently reachable only by asking the Co-PI, ensure a deterministic command exists (QuickAdd command + ribbon/palette entry). Tutorial 04 Step 1 ("Ask the Co-PI for a batch") must show the direct path first, Co-PI as the optional conversational alternative.
 - **[FIX] `system-actions` "how invoked" column.** The page lists *performer* and *context* (e.g. "daily cron") but not the invocation. Add an **Invocation** column: the command name, hotkey, or cron script for each action. There's already a "Scheduled crons" table with script names — extend that pattern to non-cron actions.
 - **[FIX] Resolve card / Delegate a task buttons** — both are reported broken/awkward; tracked in the defect log (§9).
 
@@ -77,7 +77,7 @@ Capture should be a **form, not a free-text template**: typed fields, labels/hel
 
 ## Category 3 — Workspaces, home.md & the "gates" navigation model
 
-**Issues (large block):** workspace design "lacking," not using the native Workspaces plugin; `home.md` as the only open tab is pointless; co-PI not in the right pane; "home" workspace name is not self-describing; library right pane empty/enigmatic; redesign `home.md` from scratch; shared layout across all 3 workspaces; left pane = navigation, right pane = co-PI; treat workspaces as **gates** (system/maintenance gate → sources/library gate → knowledge/ZK gate → project gate); homepage plugin "not working"; buttons in a line; status glance as a link; dashboard callout shows only a list of links; "review all homepage plugin settings."
+**Issues (large block):** workspace design "lacking," not using the native Workspaces plugin; `home.md` as the only open tab is pointless; Co-PI not in the right pane; "home" workspace name is not self-describing; library right pane empty/enigmatic; redesign `home.md` from scratch; shared layout across all 3 workspaces; left pane = navigation, right pane = Co-PI; treat workspaces as **gates** (system/maintenance gate → sources/library gate → knowledge/ZK gate → project gate); homepage plugin "not working"; buttons in a line; status glance as a link; dashboard callout shows only a list of links; "review all homepage plugin settings."
 
 ### Status: largely **[DONE-68]**, with residual design work
 Most of this block describes **alpha.2** and is already resolved by **ADR-68 (PR #450)**. Confirmed live in `src/.obsidian/workspaces.json` and `src/home.md`:
@@ -85,10 +85,10 @@ Most of this block describes **alpha.2** and is already resolved by **ADR-68 (PR
 - Three workspaces **Desk / Library / Studio** under one shared layout contract (replaces the enigmatic "home"/"library" names). ✅
 - **Co-PI (`agent-client-chat-view`) pinned in the right pane of every workspace.** ✅
 - Main pane is always a real file; **`home.md` is no longer pinned** anywhere (Homepage opens it on launch). ✅
-- Left pane = 2–4 drill-down tabs + file explorer last; right pane = co-PI. ✅
+- Left pane = 2–4 drill-down tabs + file explorer last; right pane = Co-PI. ✅
 - `home.md` rebuilt as a four-block control panel: **Status glance** (already a link: `[[board-state|board]]`), **Act** (buttons), **Workspaces** (buttons), **Dashboards** (callouts). ✅
 
-So: "co-PI not in right pane," "home as only tab," "home/library naming," "shared layout," "redesign home.md," "status as a link" — **already done.** Don't re-recommend.
+So: "Co-PI not in right pane," "home as only tab," "home/library naming," "shared layout," "redesign home.md," "status as a link" — **already done.** Don't re-recommend.
 
 ### Residual design gaps (still open)
 1. **The "gates" model isn't fully expressed.** ADR-68 gives Desk (what-needs-me) / Library (reading) / Studio (drafting). The notes' richer framing is **gates**: a *maintenance/housekeeping* gate (where you go when the system needs you; status bar signals it), a *sources/library* gate, a *knowledge/ZK* gate, and later a *project* gate. Desk ≈ maintenance gate, Library ≈ sources gate, Studio ≈ drafting — but the **knowledge/ZK gate** (link-network health, hubs, indexes) and the eventual **project gate** are not first-class. There's even an open question in the notes worth deciding: *should bookkeeping/health be its own gate, separate from a knowledge-management gate?*
@@ -151,10 +151,10 @@ One clean invariant: **`.memoria/` = hidden infrastructure the user never opens;
 
 ## Category 6 — Co-PI / Client Agent configuration
 
-**Issues:** "co-PI should be **Co-PI**" (capitalization, sitewide); Client Agent — export to a dedicated system folder, auto-export **on**, open-note-after-export **off**, display name **"Memoria Co-PI"**; "the Zotero capture doesn't work"; "does the librarian create the proposed source note?"; the source note should have a **button to create a claim note** linked to it.
+**Issues:** the old lowercase spelling should be **Co-PI** (capitalization, sitewide); Client Agent — export to a dedicated system folder, auto-export **on**, open-note-after-export **off**, display name **"Memoria Co-PI"**; "the Zotero capture doesn't work"; "does the librarian create the proposed source note?"; the source note should have a **button to create a claim note** linked to it.
 
 ### Recommendation
-- **[FIX] Capitalization:** sitewide rename **co-PI → Co-PI**. Note the terminology boundary: "Co-PI" is the agent's name; "PI" remains an internal role, never a form of address. Do the rename as a careful find/replace across `docs/`, `src/` notes, templates, and the agent display config, then re-run docs-doctor.
+- **[FIX] Capitalization:** sitewide rename the old lowercase spelling to **Co-PI**. Note the terminology boundary: "Co-PI" is the agent's name; "PI" remains an internal role, never a form of address. Do the rename as a careful find/replace across `docs/`, `src/` notes, templates, and the agent display config, then re-run docs-doctor.
 - **[FIX] Client Agent settings:** set **display name = "Memoria Co-PI"**, **auto-export = on**, **open-after-export = off**, **export folder = the visible folder chosen in §5**. These are config changes in the Agent Client plugin data.
 - **[FIX/defect] Zotero capture** ("capture from Zotero selection") is broken — defect log §9.
 - **[FIX] Librarian → source note.** Clarify and, if missing, implement: does the Librarian *create the proposed source note*, or only the candidate card? Tutorial 03 Step 5 must match the implementation. The honesty-card flow suggests the Librarian proposes (card) and the PI/Co-PI creates the source note — confirm and document.

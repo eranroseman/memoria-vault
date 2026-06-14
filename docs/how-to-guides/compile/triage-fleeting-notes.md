@@ -25,7 +25,7 @@ Open `system/dashboards/fleeting.base` (the **To process** view), or the **Fleet
 
 - If it connects cleanly to an existing claim: open the claim note and work the idea into its Evidence or Connections section. Archive the fleeting note.
 - If it could stand alone as a claim: use it as the seed for [Write a claim note](write-a-claim-note.md), then archive the fleeting note.
-- If it's a paper or source to chase: capture it (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand it to the co-PI), then archive the fleeting note.
+- If it's a paper or source to chase: capture it (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand it to the Co-PI), then archive the fleeting note.
 
 **Attach — it's context for something else.**
 
@@ -44,7 +44,7 @@ Set `lifecycle: archived` (or delete outright — a fleeting note has no provena
 
 ## Notes
 
-**Chat exports count too.** Closed ACP-pane sessions are auto-exported to `notes/fleeting/chats/` and stamped by the sweep with fleeting frontmatter (`origin: chat`), so they show up in the same queue and the same stale-fleeting flags. Triage them like any other fleeting note: promote the durable insight, attach context to the relevant note, or discard the transcript. See [Agent-client pane](../using-obsidian/use-the-acp-pane.md).
+**Chat exports are adjacent, not automatic fleeting notes.** Closed ACP-pane sessions are auto-exported to `system/exports/` for PI review. They do not enter the fleeting queue automatically; when a transcript contains a durable thought, create the fleeting note yourself and link back to the export if the context matters. See [Agent-client pane](../using-obsidian/use-the-acp-pane.md).
 
 The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising fleeting backlog in the weekly review is a signal to run this triage before the next session.
 

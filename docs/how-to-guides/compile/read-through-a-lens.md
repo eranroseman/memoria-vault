@@ -6,7 +6,7 @@ nav_order: 7
 
 # Read a paper through a lens
 
-Read a paper through a named theoretical frame so the co-PI questions it from an angle you choose. This is the co-PI's read-only, synchronous `ask:read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)) — never queue-dispatched.
+Read a paper through a named theoretical frame so the Co-PI questions it from an angle you choose. This is the Co-PI's read-only, synchronous `ask:read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names-the-taskverb-object-convention)) — never queue-dispatched.
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ Choose by the question in your head, not by the paper on screen — the point of
 
 **2. Open the session in that lens.**
 
-Open the Agent Client pane — the active note auto-attaches — and ask the co-PI to read through the frame by name:
+Open the Agent Client pane — the active note auto-attaches — and ask the Co-PI to read through the frame by name:
 
 > "Read this through a sensemaking lens."
 
@@ -40,7 +40,7 @@ Switching lenses mid-session muddies whose questions are being asked. For a diff
 
 **4. Read actively — the lens shapes questions, not answers.**
 
-The co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault ([The co-PI](../../explanation/profiles/co-pi.md)). The entire product is the conversation (which exports to `notes/fleeting/chats/` on close).
+The Co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault ([The Co-PI](../../explanation/profiles/co-pi.md)). The entire product is the conversation (which exports to `system/exports/` on close).
 
 **5. Capture what the lens surfaced — yourself.**
 
@@ -48,12 +48,12 @@ When the frame surfaces something worth keeping, author it in your own words: a 
 
 ## Add a standing lens of your own
 
-Curate a lens you reach for repeatedly as a **pattern** in `system/patterns/` ([ADR-53](../../adr/53-pattern-library.md)). Author the framing as a pattern note (the stance and the *kinds of questions* the frame privileges — not a summary of any one paper), then set `lifecycle: current` when ready. The co-PI can then run it through the patterns MCP — typed, audited, and provenance-logged.
+Curate a lens you reach for repeatedly as a **pattern** in `system/patterns/` ([ADR-53](../../adr/53-pattern-library.md)). Author the framing as a pattern note (the stance and the *kinds of questions* the frame privileges — not a summary of any one paper), then set `lifecycle: current` when ready. The Co-PI can then run it through the patterns MCP — typed, audited, and provenance-logged.
 
 ## Verify
 
 - The session stays in the named frame and questions through it
-- Nothing in the vault was edited by the agent (the co-PI is write-denied)
+- Nothing in the vault was edited by the agent (the Co-PI is write-denied)
 - Anything durable from the session exists as *your* note — fleeting or claim
 
 ## Related
@@ -61,4 +61,4 @@ Curate a lens you reach for repeatedly as a **pattern** in `system/patterns/` ([
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](write-a-claim-note.md)
 - Curated frames as data: [Note types](../../reference/note-types.md)
-- The profile behind it: [The co-PI](../../explanation/profiles/co-pi.md)
+- The profile behind it: [The Co-PI](../../explanation/profiles/co-pi.md)

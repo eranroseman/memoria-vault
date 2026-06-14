@@ -14,7 +14,7 @@ Every task Memoria performs is classified as deterministic, hybrid, or generativ
 
 **Hybrid** tasks use a deterministic step to narrow the problem, then an LLM to handle the residual judgment on the narrow result. `_proposed_classification`, `cite-check`, and the `[!brief]` callout all follow this pattern: a classifier or similarity search produces a ranked candidate set; an LLM composes over that small set rather than the whole vault.
 
-**Generative** tasks have no fixed output and require open-ended composition. The co-PI's conversation, the Writer's drafting, counter-outlines, and comparative-brief prose are generative. These are LLM-required and irreducibly so.
+**Generative** tasks have no fixed output and require open-ended composition. The Co-PI's conversation, the Writer's drafting, counter-outlines, and comparative-brief prose are generative. These are LLM-required and irreducibly so.
 
 ## The default test
 

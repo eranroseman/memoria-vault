@@ -14,7 +14,7 @@ Because `notes/claims/` is review-gated, the link lane can't touch your `links:`
 
 ## Prerequisites
 
-- Link-lane cards in the Inbox — from asking the co-PI ("suggest links among my receptivity claims") or from a `map`/`verify` pass that ran the link lane
+- Link-lane cards in the Inbox — from asking the Co-PI ("suggest links among my receptivity claims") or from a `map`/`verify` pass that ran the link lane
 
 ## Steps
 

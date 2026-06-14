@@ -35,7 +35,7 @@ Memoria defines three sync topologies beyond `local-only`, a set of secondary-de
 - `always-on` adds standing cost and ops surface — a rented VPS, a Syncthing mesh to keep healthy, and a cron whose silent failure is the dominant operational risk.
 - `obsidian-sync` degrades Zotero to `.bib`-only on the VPS, constraining Librarian discovery on that node.
 - SSH-spawned ACP removes local install drift but adds a reachability dependency (primary awake, ~100–500ms/message latency).
-- Install drift across devices is a standing maintenance cost once more than one machine compiles profiles — the co-PI-only baseline is what keeps it bounded.
+- Install drift across devices is a standing maintenance cost once more than one machine compiles profiles — the Co-PI-only baseline is what keeps it bounded.
 
 ## When this matters
 

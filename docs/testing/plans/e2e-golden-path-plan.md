@@ -35,9 +35,9 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 
 ---
 
-## Part B — Discuss (co-PI questioning, read-only)
+## Part B — Discuss (Co-PI questioning, read-only)
 
-**B1.** `hermes -p memoria-copi chat catalog/papers/smithA.md` (a co-PI questioning pass)
+**B1.** `hermes -p memoria-copi chat catalog/papers/smithA.md` (a Co-PI questioning pass)
 - ✓ Pass: questioning turns only; **zero** vault writes (no `memoria-copi` `allow_with_log` row) — the write-wall holds mid-pipeline.
 
 ---
@@ -88,7 +88,7 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 | Stage | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
 | A | ingest + classify → pipeline | | |
-| B | co-PI read-only mid-pipeline | | |
+| B | Co-PI read-only mid-pipeline | | |
 | C | human claim + Librarian (map lane) scope | | |
 | D | draft + cite-check (dry-run) | | |
 | E | gate blocks promote → approve → export | | |

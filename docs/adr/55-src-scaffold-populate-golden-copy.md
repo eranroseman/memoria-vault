@@ -54,7 +54,7 @@ shipped shape (`src/`, not a live vault) and the new restore capability.
   separately testable steps.
 - Together with the lane ceilings this closes the template-protection question
   (#179) as **both**: agents cannot overwrite `system/templates/` because every
-  shipped lane-override denies `system/**` (the co-PI denies `**`) and no lane's
+  shipped lane-override denies `system/**` (the Co-PI denies `**`) and no lane's
   `allow.write` / `write_scope` / auto-fix scope reaches into `system/`, enforced
   by the write gate ([ADR-28](28-write-gate-as-plugin.md)); an accidental *human*
   overwrite (or deletion) is detected as golden-copy drift and restored via

@@ -5,7 +5,7 @@ parent: Tutorials
 
 # Tutorial 01: Set up from zero
 
-**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the co-PI answering in the Agent Client pane, and the Library workspace loaded.
+**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the Co-PI answering in the Agent Client pane, and the Library workspace loaded.
 
 **Time:** 20–30 minutes.
 
@@ -66,16 +66,16 @@ Re-run that command any time you add or rotate a key.
 
 ---
 
-## Step 4 — Open the co-PI pane
+## Step 4 — Open the Co-PI pane
 
-The co-PI is the one agent you converse with. Open it either way:
+The Co-PI is the one agent you converse with. Open it either way:
 
-- **In Obsidian:** command palette (`Cmd/Ctrl+P`) → **Agent Client: Open chat view**. The pane defaults to the co-PI.
+- **In Obsidian:** command palette (`Cmd/Ctrl+P`) → **Agent Client: Open chat view**. The pane defaults to the Co-PI.
 - **In a terminal:** `hermes -p memoria-copi acp`
 
 Verify the profiles installed first if you like: `hermes profile list` should show all five `memoria-*` profiles.
 
-Say hello and ask it something — "explain how this vault is organized" is a good first question. It questions, explains the system, and delegates tasks to the background lanes; it never writes your vault itself ([The co-PI](../explanation/profiles/co-pi.md)).
+Say hello and ask it something — "explain how this vault is organized" is a good first question. It questions, explains the system, and delegates tasks to the background lanes; it never writes your vault itself ([The Co-PI](../explanation/profiles/co-pi.md)).
 
 ---
 
@@ -92,7 +92,7 @@ The Library workspace opens the reading pipeline, the discuss queue, and the Cat
 - A runtime vault at `~/Memoria`, scaffolded, populated, and golden-copied
 - Five profiles installed and the maintenance crons wired
 - API keys in `~/.hermes/.env`, propagated to every profile
-- The co-PI answering in the Agent Client pane
+- The Co-PI answering in the Agent Client pane
 - The Library workspace loaded
 
 ---

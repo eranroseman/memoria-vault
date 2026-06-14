@@ -68,21 +68,21 @@ python3 .memoria/engines/sweeps/retraction.py --refresh
 
 Until the CSV is present, retraction checks degrade to the live CrossRef + Open Retractions sources.
 
-**6. Smoke-test the co-PI.**
+**6. Smoke-test the Co-PI.**
 
 ```bash
 hermes -p memoria-copi chat
 ```
 
-Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the picker offers exactly one agent, the co-PI ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
+Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the picker offers exactly one agent, the Co-PI ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
 
 **7. Test the ingest path end-to-end.**
 
-In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL (or tell the co-PI "bring in this paper: `<DOI>`"). Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
+In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL (or tell the Co-PI "bring in this paper: `<DOI>`"). Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
 
 **8. Route the auxiliary models to cheap flash tiers (cost efficiency).**
 
-Auxiliary slots default to the profile's main model, so a co-PI's title/compression calls would otherwise burn **Opus**. Add the `auxiliary:` block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes. The exact block, the GLM/DeepSeek split, why it goes globally, and the cost traps to avoid are in [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
+Auxiliary slots default to the profile's main model, so a Co-PI's title/compression calls would otherwise burn **Opus**. Add the `auxiliary:` block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes. The exact block, the GLM/DeepSeek split, why it goes globally, and the cost traps to avoid are in [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
 
 ## Verify
 
@@ -105,4 +105,4 @@ Each line should carry a `"decision"` (`allow_with_log` for the Librarian's Cata
 - API key sources: [Set up Zotero § API keys for enrichment](../zotero/set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - What the installer wires for you: [Installer (bootstrap)](../../reference/installer.md)
-- Profile design: [explanation/profiles/](../../explanation/profiles) (the co-PI and the four lanes)
+- Profile design: [explanation/profiles/](../../explanation/profiles) (the Co-PI and the four lanes)

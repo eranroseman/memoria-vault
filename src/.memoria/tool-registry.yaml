@@ -9,7 +9,7 @@
 #   - THIS file governs WHICH TOOLS a profile may invoke (capability).
 #   - lane-overrides/<lane>.yaml governs WHICH PATHS those tools may write (scope).
 # So a profile that writes only one folder still needs the vault_write *capability*
-# here; the narrowing to that folder lives in its lane-override. Only the co-PI —
+# here; the narrowing to that folder lives in its lane-override. Only the Co-PI —
 # which writes nowhere (write_scope: []) — is denied the write capability.
 #
 # No profile gets a direct-world toolset (terminal, file, code_execution, browser,

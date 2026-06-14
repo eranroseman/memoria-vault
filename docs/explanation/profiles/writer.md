@@ -20,7 +20,7 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 ## What the Writer is not
 
-**Not the co-PI.** The co-PI sharpens thinking *before* writing, in conversation; the Writer composes prose after the thinking is delegated as a card. Blurring them produces writing that sounds like the PI's thinking but never was.
+**Not the Co-PI.** The Co-PI sharpens thinking *before* writing, in conversation; the Writer composes prose after the thinking is delegated as a card. Blurring them produces writing that sounds like the PI's thinking but never was.
 
 **Not a promoter.** A draft becoming part of a claim or a deliverable is the PI's move, at the gate. The Writer can mark a draft ready — an FYI, not an approval request.
 

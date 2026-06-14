@@ -75,9 +75,9 @@ condition. See [the template](_template.md) for the required fields per status.
 | [43](43-skill-governance.md) | Skill governance and lifecycle | accepted |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [45](45-release-management-model.md) | Release management — gates as a tracking-issue checklist, release-please for versioning | accepted |
-| [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · co-PI · Tasks · MCP · Engines · Vault | accepted |
+| [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault | accepted |
 | [47](47-type-first-category-folders.md) | Type-first category folders — catalog · notes · projects · inbox · system | accepted |
-| [48](48-copi-and-agent-consolidation.md) | One co-PI fronts everything; specialists consolidate to posture-defined agents | accepted |
+| [48](48-copi-and-agent-consolidation.md) | One Co-PI fronts everything; specialists consolidate to posture-defined agents | accepted |
 | [49](49-catalog-in-bases-linter-monitor.md) | Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate | accepted |
 | [50](50-universal-lifecycle-and-maturity.md) | One lifecycle chain for everything; maturity is a claim property; reference dropped; MOC renamed hub | accepted |
 | [51](51-inbox-category-and-honesty-card.md) | The Inbox category and the honesty card — argument for/against, what tipped it, certainty; no verdict on proposals | accepted |

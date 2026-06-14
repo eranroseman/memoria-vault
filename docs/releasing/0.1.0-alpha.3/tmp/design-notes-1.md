@@ -41,9 +41,9 @@ Step 5 — Write the source note
 Does the librarian create the proposed source note?
 Tutorial 04: Build a reading batch
 
-Step 1 — Ask the co-PI for a batch
+Step 1 — Ask the Co-PI for a batch
 
-Asking the co-PI to perform a task is never the only way to do it. Every task should be able to be performed by the co-PI. I can ask it to create a fleeting note. But it is always on top of the standard process. Things that go only through the co-PI are only things that require LLM-human two-way conversation.
+Asking the Co-PI to perform a task is never the only way to do it. Every task should be able to be performed by the Co-PI. I can ask it to create a fleeting note. But it is always on top of the standard process. Things that go only through the Co-PI are only things that require LLM-human two-way conversation.
 The capture from Zotero doesn’t work.
 Tutorial 05: Synthesize toward a writing project
 
@@ -88,7 +88,7 @@ Where are the catalog bases?
 There is an error message saying that no Python is installed.
 Do we need to show all properties in all note types?
 
-co-PI should be Co-PI
+Co-PI should be Co-PI
 There are two ways to navigate the system: bases and dashboards/reports. I don’t see a reason for the user to try to navigate using the files view. We should think about how to provide access to the navigation and how to cluster it in a way that makes sense.
 Which views are needed for each base? Which dashboard goes hand in hand with each base? Which kanban view (https://community.obsidian.md/plugins/base-board ) can be used to present that information? How can we cluster them together based on the job to be done (https://strategyn.com/jobs-to-be-done/? How can we divide them between quick navigation on the left pane, dashboard pages for task-oriented work, and dashboard pages for deep work? How can we make the next action as frictionless as possible from the dashboard? Dashboards that are used often should be highly functional and include a help link. Diagnostic dashboards that are used infrequently should provide step-by-step guidance.  
 The system comes up with this:
@@ -100,7 +100,7 @@ Auto export should be on. Open note after export should be off.
 Display name should be Memoria Co-PI.
 Workspaces
 The workspace design is lacking. First, it doesn’t seem to take advantage of the plugin capabilities. https://obsidian.md/help/plugins/workspaces
-Both use home.md as the only open tab, which is pointless since it's always open.  They don’t open th co-PI in the right pane, which should be relevant at least for the library.
+Both use home.md as the only open tab, which is pointless since it's always open.  They don’t open th Co-PI in the right pane, which should be relevant at least for the library.
 The home workspace
 What does the name mean? It should be self-describing and thematic, and it’s neither. It has the default home page and file folder with the board state in the right pane. The text description is enigmatic and has an unhelpful link. There is nothing to hint at what the information in it means or what one might do with it.
 The library
@@ -115,7 +115,7 @@ They should provide easy access to all relevant actions
 The home.md is the starting point. It provides what is always needed in all workspaces. If there is no such need for a common card, then it should be discarded.
 We can use something like https://community.obsidian.md/plugins/buttons-panel https://community.obsidian.md/plugins/synaptic-view https://community.obsidian.md/plugins/buttons 
 The left pane is for navigation. It will enable you to get quickly to relevant stuff.
-The co-PI should be in the right pane.
+The Co-PI should be in the right pane.
 We should think about the workspaces as gates to the system. The first gate is the system/maintenance/housekeeping. This is where the user goes when a system issue requires their attention. The status bar should indicate it. 
 The second gate is the sources/library gate. It should enable the user to navigate the catalog and related notes and reports (source notes, gap reports, candidate cards) using bases and network views. It should enable the user to:
 See if there are any bookkeeping issues related to the health of the catalog and the source notes that require their attention 

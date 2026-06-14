@@ -58,7 +58,7 @@ def test_gold_set_covers_the_four_minimum_workflows():
 
 
 def test_lane_profile_mirrors_tasks_mcp():
-    """The dispatcher's lane → profile map cannot drift from the co-PI's (ADR-48)."""
+    """The dispatcher's lane → profile map cannot drift from the Co-PI's (ADR-48)."""
     assert eval_dispatch.LANE_PROFILE == tasks_mcp.LANE_PROFILE
 
 

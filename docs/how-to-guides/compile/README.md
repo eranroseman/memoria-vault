@@ -8,7 +8,7 @@ permalink: /how-to-guides/compile/
 
 # Compile
 
-Day-to-day tasks for moving sources from discovery to durable knowledge. Performed inside Obsidian — the co-PI pane, the palette, and the Inbox.
+Day-to-day tasks for moving sources from discovery to durable knowledge. Performed inside Obsidian — the Co-PI pane, the palette, and the Inbox.
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Triage fleeting notes](triage-fleeting-notes.md) | Clear `notes/fleeting/`: promote, attach, or archive | Triage (on-ramp) |
 | [Capture and ingest a source](capture-and-ingest.md) | Palette/Zotero capture → Catalog entity + candidate card | Capture + Enrich |
 | [Classify a source](classify-a-source.md) | Review the automated classification; handle ambiguity flags | Classify |
-| [Discuss a paper](discuss-a-paper.md) | Think a source through with the co-PI before distilling | Discuss |
+| [Discuss a paper](discuss-a-paper.md) | Think a source through with the Co-PI before distilling | Discuss |
 | [Read a paper through a lens](read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](write-a-claim-note.md) | Distill a source into a durable claim in `notes/claims/` | Distill |
 | [Link related claims](link-related-claims.md) | Add typed `supports` / `contradicts` entries to `links:` | Connect |

@@ -6,7 +6,7 @@ nav_order: 6
 
 # Discuss a paper
 
-Think a source through with the co-PI before writing a claim. The co-PI is the one conversational agent — a reflective thinking-partner that questions and pushes back; it is read-only ([The co-PI](../../explanation/profiles/co-pi.md)), so the thinking and the eventual claim note are yours.
+Think a source through with the Co-PI before writing a claim. The Co-PI is the one conversational agent — a reflective thinking-partner that questions and pushes back; it is read-only ([The Co-PI](../../explanation/profiles/co-pi.md)), so the thinking and the eventual claim note are yours.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ Open `system/dashboards/discuss-queue.md` — source notes at `lifecycle: provis
 
 Re-read your **In my words** and **Worth distilling** sections, and skim the extract at `.memoria/data/extracts/<citekey>.md` if you need the full text. Bring a position, not a blank page.
 
-**3. Open the co-PI pane.**
+**3. Open the Co-PI pane.**
 
 `Cmd/Ctrl-P` → **Agent Client: Open chat view** (or the ribbon icon). The active note auto-attaches as context. Ask it to discuss the source.
 
@@ -40,19 +40,19 @@ Answer in your own words, not the paper's.
 
 **5. Follow where the dialogue leads.**
 
-Don't treat the questions as a checklist. When a question feels too abstract, ask the co-PI to ground it in a specific passage. When you disagree with the paper's framing, say so directly — the dialogue exists to surface *your* position, not to defend the author's. The conversation is done when you can state the paper's core claim in your own words and name where you stand on it.
+Don't treat the questions as a checklist. When a question feels too abstract, ask the Co-PI to ground it in a specific passage. When you disagree with the paper's framing, say so directly — the dialogue exists to surface *your* position, not to defend the author's. The conversation is done when you can state the paper's core claim in your own words and name where you stand on it.
 
 **6. Decide the outcome.**
 
 - **The paper yields one or more claims** → proceed to [write a claim note](write-a-claim-note.md), then advance the source note to `lifecycle: current`.
 - **No standalone claim right now** → add one line to the source note's **Worth distilling** section saying why ("confirms existing claims, adds no new argument"), and advance the lifecycle anyway — the discuss queue reads `provisional`, and the decision is the work.
 
-Closing the pane exports the transcript to `notes/fleeting/chats/`, where the sweep stamps it as a fleeting note — triage it later like any other ([Triage fleeting notes](triage-fleeting-notes.md)).
+Closing the pane exports the transcript to `system/exports/` for later review. If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
 
 ## Verify
 
 - The source note has moved off `lifecycle: provisional` and out of the discuss queue
-- Nothing in the vault was edited by the agent — the co-PI's write scope is empty; if you see an unexpected edit, treat it as a configuration error and check `system/logs/audit.jsonl`
+- Nothing in the vault was edited by the agent — the Co-PI's write scope is empty; if you see an unexpected edit, treat it as a configuration error and check `system/logs/audit.jsonl`
 
 ## Related
 
@@ -68,5 +68,5 @@ Closing the pane exports the transcript to `notes/fleeting/chats/`, where the sw
 
 **Explanation**
 
-- The agent across the desk: [The co-PI](../../explanation/profiles/co-pi.md)
+- The agent across the desk: [The Co-PI](../../explanation/profiles/co-pi.md)
 - The queue this works down: [The discuss-queue dashboard](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)

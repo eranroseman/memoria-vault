@@ -39,7 +39,7 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter) and `{{VAULT_PATH}}` into each `config.yaml`, runs `hermes profile install`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
 | 7. Skills | Clones the K-Dense bundle, verifies the bundled official Hermes skills, and installs the hub skills (`obsidian-markdown`, `qmd`). |
 | 8. Obsidian | Guided, not silent: detects Obsidian or offers the Flatpak; reminds you to turn off Restricted mode. **Zotero is no longer provisioned** — it moved to the bring-in-a-paper tutorial (it's the PI's bibliographic-backbone choice, not core provisioning). |
-| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` → re-run `--profiles-only` to propagate) and the first-session checklist (open the co-PI pane, switch to the Library workspace). |
+| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` → re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, switch to the Library workspace). |
 
 ---
 

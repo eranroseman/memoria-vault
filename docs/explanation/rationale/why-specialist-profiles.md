@@ -6,7 +6,7 @@ nav_order: 2
 
 # Why specialist profiles, not a generalist agent
 
-Memoria uses **one conversational co-PI and four posture-defined background agents** instead of one generalist — and instead of the seven specialists it used to run ([ADR-48](../../adr/48-copi-and-agent-consolidation.md), superseding ADR-02). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes both arguments — why specialists at all, and why five postures beat seven roles.
+Memoria uses **one conversational Co-PI and four posture-defined background agents** instead of one generalist — and instead of the seven specialists it used to run ([ADR-48](../../adr/48-copi-and-agent-consolidation.md), superseding ADR-02). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes both arguments — why specialists at all, and why five postures beat seven roles.
 
 ---
 
@@ -27,19 +27,19 @@ A generalist agent that does everything — discovers sources, synthesizes claim
 The original cut produced seven role-named profiles (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter). Under the rule **a profile is a posture; skills attach per lane**, that set turned out to be over-divided — several profiles shared one stance:
 
 - The old Librarian and Mapper were both *faithful* — intake and corpus mapping are one research-librarian stance pointed in two directions. They merged into the **Librarian** (catalog · extract · link · map).
-- The old Socratic was the conversational stance with the write-wall — exactly the **co-PI**, so it folded in.
+- The old Socratic was the conversational stance with the write-wall — exactly the **Co-PI**, so it folded in.
 - The old Verifier mixed two method classes: its *judgment* checks became the **Peer-reviewer**; its deterministic sweeps became **engines**.
 - The old Linter was never an agent at all — zero-LLM, reproducible, cron-run: an **engine** by definition.
 - The old Coder kept its boundary and became the **Engineer**.
 
 One posture per agent, one agent per posture. The fragmentation cost of going finer is real: more lanes to route between, more permission matrices, and — decisively — a fragmented learning loop.
 
-## Why one co-PI fronts everything
+## Why one Co-PI fronts everything
 
-Seven specialists created a real UX failure: *who do I talk to?* Every profile was a possible conversation, so no conversation compounded. Concentrating all dialogue in **one co-PI** fixes both halves:
+Seven specialists created a real UX failure: *who do I talk to?* Every profile was a possible conversation, so no conversation compounded. Concentrating all dialogue in **one Co-PI** fixes both halves:
 
 - **The learning loop needs one home.** Hermes' self-improving loop — memory · /goals · skills — only compounds in an agent that has every conversation. Split across seven, each got a sliver of context and none grew.
-- **Delegation keeps the wall.** The co-PI is read-only; every write leaves as a routed card under a background lane's ceiling. You get one warm, remembering front *and* stateless, scoped executors — not a generalist with the union of everyone's permissions.
+- **Delegation keeps the wall.** The Co-PI is read-only; every write leaves as a routed card under a background lane's ceiling. You get one warm, remembering front *and* stateless, scoped executors — not a generalist with the union of everyone's permissions.
 
 The background lanes stay out of conversation by design: a lane is a propose-then-dispose executor, and keeping it stateless is what keeps its failures scoped and its permissions legible.
 
@@ -51,7 +51,7 @@ One consolidation was refused on principle: the **Peer-reviewer was never merged
 
 Memoria still deliberately omits two roles that comparable multi-agent systems include:
 
-**No Orchestrator profile.** Routing lives in the co-PI's `delegate:route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
+**No Orchestrator profile.** Routing lives in the Co-PI's `delegate:route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
 **No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the engines produce *recommendations* that inform the PI's judgment; the gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
 

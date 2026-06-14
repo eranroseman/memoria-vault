@@ -39,7 +39,7 @@ Read from the inside out: start with what the system is, then why it's shaped th
 ### Why the design is shaped this way
 
 1. **[Why the architecture is layered](rationale/why-three-layers.md)** — why board, workers, and vault are kept separate.
-2. **[Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md)** — why five profiles (one conversational co-PI plus four background lanes) instead of one generalist agent.
+2. **[Why specialist profiles, not a generalist agent](rationale/why-specialist-profiles.md)** — why five profiles (one conversational Co-PI plus four background lanes) instead of one generalist agent.
 3. **[Why the review gate is structural](rationale/why-human-gate.md)** — why the review gate is structural, not advisory.
 4. **[Why Memoria doesn't pursue full autonomy](rationale/why-not-autonomous.md)** — the autonomy ceiling and why Memoria doesn't cross it.
 
@@ -67,7 +67,7 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 - [Design rationale](rationale/README.md) — the `why-*` arguments: three-layers, specialist-profiles, human-gate, not-autonomous, hermes, computational-methods, pattern-provenance
 - [Architecture](architecture/README.md) — what each layer and surface *is*: vault, the memory model, control-plane, interaction channels, session-logging
 - [Knowledge](knowledge/README.md) — how durable knowledge is organized: note-types, knowledge-cycle, note-body-structure, lifecycle-over-topic, promotion-model, vocabulary-discipline, common-pitfalls
-- [Profiles](profiles/README.md) — the five profiles: co-PI (conversational front) plus four background lanes — librarian, writer, peer-reviewer, engineer — plus delegation-posture
+- [Profiles](profiles/README.md) — the five profiles: Co-PI (conversational front) plus four background lanes — librarian, writer, peer-reviewer, engineer — plus delegation-posture
 - [Kanban board](kanban-board/README.md) — the board as coordination layer: states, card-schema, obsidian-projection
 - [Workflows](workflows/README.md) — how work moves: compile-and-compose, board-as-state-machine, review-as-state, verify-on-commit
 - [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, the-status-line, callouts, agent-client-picker, visual-discipline, design-system

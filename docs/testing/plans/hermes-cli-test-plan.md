@@ -59,7 +59,7 @@ model:
 ```
 
 Production tiers to restore afterwards: Librarian/Engineer `claude-haiku-latest`,
-Writer `claude-sonnet-latest`, co-PI/Peer-reviewer `claude-opus-latest`.
+Writer `claude-sonnet-latest`, Co-PI/Peer-reviewer `claude-opus-latest`.
 
 Then **deploy** the source to the runtime copies and confirm:
 
@@ -164,7 +164,7 @@ If S1–S5 pass, proceed to the full matrix.
 | M3 | `cluster-map` | F3 | `cluster-map "<topic>"` | density/recency artifact in `map/cluster-maps/` (table/figure, not prose) |
 | M4 | **map-lane write-wall** | — | (during M1) attempt/observe any write outside `map/` | none occurs; if forced, `deny` row for `memoria-librarian` (the map lane is read-only across `catalog/`, `notes/`, etc.) |
 
-### 4.3 co-PI — `hermes -p memoria-copi chat -s …` (read-only)
+### 4.3 Co-PI — `hermes -p memoria-copi chat -s …` (read-only)
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
@@ -270,7 +270,7 @@ These assert the *architecture*, independent of any one command — run after th
 | ID | Test | Pass criteria |
 |---|---|---|
 | X1 | **Deny path** — force a Librarian write to `notes/claims/` | `decision: deny` row for `memoria-librarian` in `audit.jsonl`; no file written |
-| X2 | **co-PI write-wall** — any co-PI write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
+| X2 | **Co-PI write-wall** — any Co-PI write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
 | X3 | **Review-gate degradation** — Writer/agent write to `notes/claims/` or `notes/hubs/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
 | X5 | **Dry-run safety** — all Peer-reviewer/Linter-engine default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |

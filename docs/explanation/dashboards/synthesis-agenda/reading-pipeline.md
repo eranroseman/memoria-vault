@@ -19,7 +19,7 @@ It shows what is in flight on the Library side and what has come out the other s
 
 ## What this dashboard is not
 
-**Not [The discuss-queue dashboard](discuss-queue.md).** The discuss-queue is narrowly scoped to read-but-not-distilled sources that would benefit from a co-PI pass — one specific Library-side debt. Reading-pipeline is the broader working surface: sources in active processing plus the resulting claim maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
+**Not [The discuss-queue dashboard](discuss-queue.md).** The discuss-queue is narrowly scoped to read-but-not-distilled sources that would benefit from a Co-PI pass — one specific Library-side debt. Reading-pipeline is the broader working surface: sources in active processing plus the resulting claim maturity. Reading-pipeline asks "what's in flight?"; discuss-queue asks "what owes me a conversation?"
 
 **Not [The weekly-review dashboard](../structural-health/weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
 

@@ -16,7 +16,7 @@ Distill a source into a single, durable claim in `notes/claims/`. One claim per 
 
 **1. Check for a near-duplicate first.**
 
-Ask the co-PI: "Do I already hold a claim like *\<one-sentence statement\>*?" — it searches the vault read-only and answers in the pane. For a systematic pass over a whole folder, delegate a `verify` task instead (the Peer-reviewer's duplicate hunt returns flag cards). If a close match exists, extend that note rather than creating a twin.
+Ask the Co-PI: "Do I already hold a claim like *\<one-sentence statement\>*?" — it searches the vault read-only and answers in the pane. For a systematic pass over a whole folder, delegate a `verify` task instead (the Peer-reviewer's duplicate hunt returns flag cards). If a close match exists, extend that note rather than creating a twin.
 
 **2. Create the note from the template.**
 

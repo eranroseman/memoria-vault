@@ -26,7 +26,7 @@ It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-a
 
 **Not a truth oracle.** It judges whether a claim *traces* and whether an argument *holds*, and says so with calibrated certainty. Truth stays the PI's domain.
 
-**Not the co-PI's sparring.** The co-PI questions continuously and informally, inside the conversation; the Peer-reviewer is the formal, independent pass over a finished artifact. The first sharpens thinking; the second certifies work.
+**Not the Co-PI's sparring.** The Co-PI questions continuously and informally, inside the conversation; the Peer-reviewer is the formal, independent pass over a finished artifact. The first sharpens thinking; the second certifies work.
 
 **Not the sweeps.** If a check is reproducible without judgment, it belongs to an engine, and findings reach the PI the same way — as Inbox cards.
 
