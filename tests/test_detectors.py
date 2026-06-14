@@ -1,6 +1,6 @@
 """L1 component test for detectors — extracted from its former --self-test (ADR-44)."""
 import detectors as _m
-from _util import TestHarness
+from _util import CheckHarness
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -10,9 +10,9 @@ def test_detectors():
         import tempfile
 
         sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
-        from _util import TestHarness
+        from _util import CheckHarness
 
-        t = TestHarness()
+        t = CheckHarness()
         check = t.check
 
         with tempfile.TemporaryDirectory() as td:

@@ -24,7 +24,7 @@ l1() {
   echo "── L1: component tests (pytest) ──"
   # ADR-44: L1 tests live in tests/, run by pytest, instead of inline --self-test.
   if python3 -c "import pytest" >/dev/null 2>&1; then
-    run python3 -m pytest tests/ -q
+    run env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ -q
   else
     echo "→ pytest             ✗ NOT INSTALLED — python3 -m pip install -r requirements-dev.txt (L1 was NOT run)"
     fail=1
@@ -36,7 +36,7 @@ l1() {
 check_paths() {
   echo "── check: L1 tests collect ──"
   if python3 -c "import pytest" >/dev/null 2>&1; then
-    run python3 -m pytest tests/ --co -q
+    run env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ --co -q
   else
     echo "→ pytest --collect-only   (not installed — python3 -m pip install -r requirements-dev.txt)"
   fi

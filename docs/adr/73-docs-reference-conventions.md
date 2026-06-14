@@ -2,16 +2,15 @@
 topic: decisions
 id: 73
 title: Documentation references — source links, ADR links, and per-operation Diátaxis split
-status: proposed
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-14
 assumes: [46]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 73
-nav_exclude: true
 ---
 
 # ADR-73: Documentation references — source links, ADR links, and per-operation Diátaxis split

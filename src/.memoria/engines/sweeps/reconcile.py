@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""sweeps.py — the ingest backstops (ADR-30) + the chat-export stamp (#185).
+"""reconcile.py — the ingest backstops (ADR-30) + the chat-export stamp (#185).
 
 Re-ingest must be **board-serialized** (ADR-30): find-or-create is idempotent in
 writes but only safe under the single-lane WIP=1 invariant, which only serializes
