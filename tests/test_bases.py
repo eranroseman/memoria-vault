@@ -103,3 +103,13 @@ def test_inbox_base_has_needs_me_view():
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
     names = {v.get("name") for v in data.get("views", [])}
     assert "Needs me" in names  # home.md embeds this view by name
+
+
+def test_fleeting_base_matches_capture_template_home():
+    quickadd = yaml.safe_load((SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8"))
+    text = (SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8")
+    assert 'file.inFolder("notes/fleeting")' in text
+    assert 'file.ext == "md"' in text
+    assert 'type == "fleeting"' in text
+    names = {v.get("name") for v in quickadd.get("views", [])}
+    assert "To process" in names
