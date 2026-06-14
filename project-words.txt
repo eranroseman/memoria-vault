@@ -384,3 +384,8 @@ HODLX
 counterevidence
 unrun
 Propsec
+rsynced
+subpackages
+pyproject
+testpaths
+pythonpath
