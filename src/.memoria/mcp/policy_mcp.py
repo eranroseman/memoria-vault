@@ -29,19 +29,33 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from _shared import (
+_RUNTIME_ROOT = Path(__file__).resolve().parent.parent
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from _shared import (  # noqa: E402
     append_jsonl,
     iter_jsonl,
     now_iso,
 )
-from _shared import (
+from _shared import (  # noqa: E402
     resolve_vault as _resolve_vault,
 )
+from memoria_runtime.policy import (  # noqa: E402
+    ACTIONS,
+    MUTATING_ACTIONS,
+    REVIEW_GATED_PREFIXES,
+    glob_to_regex,
+    normalize_path,
+    path_matches,
+    within_scope,
+)
+
+__all__ = ["glob_to_regex", "normalize_path", "path_matches", "within_scope"]
 
 try:                                  # PyYAML is a runtime dep (see requirements.txt)
     import yaml  # but the core/self-test must run without it,
@@ -52,22 +66,6 @@ except ImportError:                   # so lane-file parsing degrades, decisions
 # --------------------------------------------------------------------------- #
 # Constants -- the vocabulary the design doc pins down
 # --------------------------------------------------------------------------- #
-# Eight guarded actions. `report` and `read` are non-mutating; the rest change
-# the vault and are subject to the review-gated dry_run rule.
-ACTIONS = frozenset(
-    {"read", "write", "append", "move", "delete", "mkdir", "auto_fix", "report"}
-)
-MUTATING_ACTIONS = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
-
-# Review-gated zones are *never auto-written*: an otherwise-allowed mutating
-# action here degrades to dry_run so a human approves the write. (policy.md
-# "decision protocol" + "two structural rules".)
-REVIEW_GATED_PREFIXES = (
-    "notes/claims/",
-    "notes/hubs/",
-)
-
-
 def load_gated_prefixes(vault) -> tuple:
     """Prefer the canonical schema home (.memoria/schemas/folders.yaml, ADR-49);
     the hardcoded tuple above is the dependency-free fallback and must stay in
@@ -95,95 +93,8 @@ AUDIT_RELPATH = "system/logs/audit.jsonl"
 LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 
 
-# --------------------------------------------------------------------------- #
-# Path + glob helpers
-# --------------------------------------------------------------------------- #
-def normalize_path(path: str) -> str:
-    """Normalize to a vault-relative POSIX path: forward slashes, no leading
-    ``./`` or ``/``, and no ``..`` traversal segments. Matches the request
-    contract ("normalized relative to the vault root, forward slashes only").
-
-    Raises ``ValueError`` if the resolved path escapes the vault root (i.e.
-    more ``..`` segments than real parents).
-    """
-    p = (path or "").strip().replace("\\", "/")
-    while p.startswith("./"):
-        p = p[2:]
-    p = p.lstrip("/")
-    # Collapse '..' segments so a path like 'a/b/../../c' becomes 'c' and
-    # paths that escape the root ('../../etc/passwd') are rejected.
-    parts: list[str] = []
-    for seg in p.split("/"):
-        if seg == "..":
-            if parts:
-                parts.pop()
-            else:
-                raise ValueError(f"path escapes vault root: {path!r}")
-        elif seg and seg != ".":
-            parts.append(seg)
-    return "/".join(parts)
-
-
-def glob_to_regex(pattern: str) -> str:
-    """Translate a lane-override glob to an anchored regex with doublestar
-    semantics:
-
-    - ``**`` matches any number of path segments (including zero), crossing ``/``
-    - ``*``  matches within a single segment (never crosses ``/``)
-    - ``?``  matches a single non-``/`` char
-
-    Verified against the real lane patterns: ``projects/*/code/**`` matches
-    ``projects/project-x/code/main.py`` but not ``projects/project-x/draft.md``;
-    ``**`` (co-PI deny-all) matches everything; an exact file path like
-    ``projects/acme/code/main.py`` matches only that file.
-    """
-    i, n, out = 0, len(pattern), ["^"]
-    while i < n:
-        c = pattern[i]
-        if c == "*":
-            if i + 1 < n and pattern[i + 1] == "*":     # '**'
-                if i + 2 < n and pattern[i + 2] == "/":  # '**/' -> zero+ segments
-                    out.append("(?:.*/)?")
-                    i += 3
-                else:                                    # trailing '**' -> rest of path
-                    out.append(".*")
-                    i += 2
-            else:                                        # '*' -> within one segment
-                out.append("[^/]*")
-                i += 1
-        elif c == "?":
-            out.append("[^/]")
-            i += 1
-        else:
-            out.append(re.escape(c))
-            i += 1
-    out.append("$")
-    return "".join(out)
-
-
-def path_matches(path: str, patterns: list[str]) -> bool:
-    """True if `path` matches any glob in `patterns`."""
-    for pat in patterns or []:
-        if re.match(glob_to_regex(pat), path):
-            return True
-    return False
-
-
 def is_review_gated(path: str) -> bool:
     return path.startswith(_gated_prefix_cache or REVIEW_GATED_PREFIXES)
-
-
-def within_scope(path: str, scope: list[str]) -> bool:
-    """True if `path` falls under any write_scope prefix (used for mkdir). Scope
-    entries are directory prefixes, possibly with a ``*`` segment."""
-    for s in scope or []:
-        prefix = s if s.endswith("/") else s + "/"
-        # allow the prefix itself or anything beneath it, honoring '*' segments
-        if re.match(glob_to_regex(prefix + "**"), path) or re.match(
-            glob_to_regex(prefix.rstrip("/")), path.rstrip("/")
-        ):
-            return True
-    return False
 
 
 # --------------------------------------------------------------------------- #

@@ -16,7 +16,10 @@ def test_pr_policy():
 
         # --- is_safe ---
         check("is_safe: docs/ prefix", is_safe("docs/reference/policy-mcp.md"))
-        check("is_safe: releasing docs prefix", is_safe("docs/releasing/0.1.0/release-plan-0.1.0.md"))
+        check(
+            "is_safe: releasing docs prefix",
+            is_safe("docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md"),
+        )
         check("is_safe: explanation prose prefix", is_safe("docs/explanation/architecture/human-channels.md"))
         check("is_safe: _notes/ prefix", is_safe("_notes/scratch.md"))
         check("is_safe: _reports/ prefix", is_safe("_reports/analysis.md"))
@@ -29,10 +32,14 @@ def test_pr_policy():
         # --- is_sensitive ---
         check("is_sensitive: workflow", is_sensitive(".github/workflows/ci.yml"))
         check("is_sensitive: .github/scripts/", is_sensitive(".github/scripts/pr_policy.py"))
+        check("is_sensitive: all .github/", is_sensitive(".github/CODEOWNERS"))
         check("is_sensitive: scripts/", is_sensitive("scripts/install.sh"))
         check("is_sensitive: vault profiles", is_sensitive("src/.memoria/profiles/memoria-linter/detectors.py"))
         check("is_sensitive: vault mcp", is_sensitive("src/.memoria/mcp/policy_mcp.py"))
         check("is_sensitive: lane-overrides", is_sensitive("src/.memoria/lane-overrides/coder.yaml"))
+        check("is_sensitive: vault engines", is_sensitive("src/.memoria/engines/ingest/pipeline.py"))
+        check("is_sensitive: vault schemas", is_sensitive("src/.memoria/schemas/folders.yaml"))
+        check("is_sensitive: vault design docs", is_sensitive("src/.memoria/design-system.md"))
         check("is_sensitive: adr (docs/adr/)", is_sensitive("docs/adr/29-testing-framework.md"))
         check("is_sensitive: testing docs NOT sensitive", not is_sensitive("docs/testing/coverage-matrix.md"))
         check("is_sensitive: docs/ NOT sensitive", not is_sensitive("docs/reference/policy-mcp.md"))
@@ -70,7 +77,7 @@ def test_pr_policy():
         check("decide: empty changeset -> needs_human", d == "needs_human")
 
         # --- decide: mixed safe + non-safe, non-sensitive -> needs_human ---
-        d, r = decide(["docs/reference/glossary.md", "src/.memoria/plugins/__init__.py"], "eranroseman", False)
+        d, r = decide(["docs/reference/glossary.md", "src/.obsidian/app.json"], "eranroseman", False)
         check("decide: mixed (non-sensitive, non-all-safe) -> needs_human", d == "needs_human")
 
         # --- edge: .md file in sensitive prefix is both safe and sensitive ---

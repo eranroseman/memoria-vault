@@ -28,9 +28,9 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 **Start every session in its own worktree — always, even solo, before you touch a single file.** A worktree gives you a private working tree *and* index, so a concurrent session's staged files can never be swept into your commit:
 
 ```bash
+git fetch origin
 git worktree add ~/mv-<session> -b agent/<session> origin/main
 cd ~/mv-<session>          # all edits, commits, PRs from here
-git worktree remove ~/mv-<session>   # when done
 ```
 
 Keep worktrees on ext4 (`~/…`), never under `/mnt/c`.
@@ -39,11 +39,11 @@ Prefer a worktree **per branch** even working solo: switching becomes `cd`, and 
 
 ## 2. Branch first — always
 
-**Before you edit, stage, or commit *anything*, start your own branch in your own worktree (§1).** No change — not even a one-line doc fix — happens on `main`, on the default/shared checkout, or on another session's branch.
-
-```bash
-git fetch origin && git switch -c fix/<thing> origin/main
-```
+**Before you edit, stage, or commit *anything*, create your branch as part of the
+`git worktree add -b ...` command in §1.** No change — not even a one-line doc
+fix — happens on `main`, on the default/shared checkout, or on another session's
+branch. Use a descriptive branch name such as `fix/installer-timeout` in place
+of `agent/<session>`; do not create a second branch after entering the worktree.
 
 **Why a worktree, not just a branch:** the index is **shared** across a checkout. In a checkout another agent may be using, `git add <your-file>` stages *alongside* their already-staged files, and `git commit` captures the **whole** index — sweeping their work into your commit (this happened 2026-06-09: a one-file config commit swallowed 73 files of another agent's in-flight restructure). Your own worktree has its own index, so this cannot occur. If you ever must share a checkout, run `git diff --cached --name-only` and confirm it lists **only your files** before every commit.
 
@@ -66,7 +66,8 @@ If you find unmerged work you didn't author, preserve it and surface it to the u
 git stash push -u -m wip     # -u also stashes untracked WIP; restore with: git stash pop
 ```
 
-The post-merge resync `git reset --hard origin/main` (PR flow) is the one safe exception — by then your work is already on `main` and the tree is clean. The durable fix is a worktree per branch (§1): it turns "switch" into `cd`, so there's never a dirty tree to lose.
+The durable fix is a worktree per branch (§1): it turns "switch" into `cd`, so
+there's normally no reason to switch or reset inside a task worktree.
 
 ---
 
@@ -81,10 +82,16 @@ gh pr checks <n> --watch
 gh pr merge <n> --squash --delete-branch
 ```
 
-After merge, resync local main:
+After merge, leave the task worktree, remove it, and fast-forward the dedicated
+main checkout. `main` is already checked out at `~/memoria-vault`, so trying to
+check it out inside the linked task worktree will fail:
 
 ```bash
-git checkout main && git fetch origin && git reset --hard origin/main
+cd ~/memoria-vault
+git worktree remove ~/mv-<session>  # refuses if the task worktree is dirty
+git status --short                  # must be empty before resync
+git fetch origin
+git merge --ff-only origin/main
 ```
 
 **Known quirk:** `gh pr merge` may print `fatal: Not possible to fast-forward` — the merge still **succeeds server-side**. Verify with `gh pr view <n> --json state -q .state`, then resync. Don't re-attempt the merge.
@@ -107,7 +114,20 @@ All must pass before merge:
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
 
-**CI invariant:** required-check workflows must have **no** `paths:` filter — a path-filtered required check permanently blocks PRs that don't touch those paths. Trigger them with `on: { pull_request:, push: { branches: [main] } }` — `pull_request` (unfiltered) reports on every PR; scoping `push` to `main` validates the post-merge state without a redundant second run on every feature-branch push (the `.githooks/pre-commit` hook already gives pre-push feedback). Add a `concurrency` group (`cancel-in-progress` except on `main`) so superseded runs are dropped.
+**CI invariant:** required-check workflows must have **no** `paths:` filter — a
+path-filtered required check permanently blocks PRs that don't touch those
+paths. Code-validation checks use
+`on: { pull_request:, push: { branches: [main] } }`: unfiltered
+`pull_request` reports on every PR, while `push` validates the post-merge state.
+Add a `concurrency` group (`cancel-in-progress` except on `main`) so superseded
+runs are dropped.
+
+**Exception — `pr-policy`:** `.github/workflows/pr-review-gate.yml` uses
+`pull_request_target` rather than `pull_request` because it needs base-repository
+write permission to comment and enable auto-merge without checking out PR code.
+It remains unfiltered and uses PR-number concurrency, but it does not need a
+post-merge `push` run because it classifies PR metadata rather than repository
+behavior.
 
 ### `pr-policy` tiers
 
@@ -137,14 +157,39 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
 | Stage | Skill | Use when |
 |---|---|---|
-| Any docs PR | `/docs-review` *(project)* | Before opening — checks quadrant fit, links, indexing, terminology |
-| Any PR | `/code-review` | Before opening — catches bugs and simplification opportunities |
-| Deeper review on a dimension | `pr-review-toolkit` agents *(plugin)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` | PRs touching `scripts/`, `.github/`, `src/.memoria/` |
-| Confirming a fix | `/verify` | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
+| Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
+| Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
+| Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
+| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `src/.memoria/` |
+| Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
+| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
 
-**Passive:** the `security-guidance` plugin runs *automatic* security scans as you work — a free per-edit pattern check plus an LLM review on `git commit`/`push` (secret leaks, injection, SSRF, weak crypto). It complements — does not replace — the manual `/security-review`, and is a first line against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule. Both plugins install from the `claude-code-plugins` marketplace (`/plugin`); tune `security-guidance`'s model-backed layers via its env vars if token cost matters.
+Skills and plugins are accelerators, not prerequisites. If a named command is
+unavailable, perform the equivalent checks directly:
+
+- Docs review: run `python scripts/docs-doctor.py docs`, check links, indexing,
+  terminology, and Diátaxis placement.
+- Code review: inspect the complete diff for regressions, simplification, error
+  handling, and missing tests.
+- Security review: trace trust boundaries, secrets, command/input handling,
+  network calls, and write scopes; run the relevant security tooling available
+  to the agent.
+- Verify: reproduce the changed behavior and run the narrow tests plus
+  `scripts/test.sh all` when the change warrants the full gate.
+
+Portable, tool-neutral versions of these procedures live in
+[`.agents/playbooks/`](.agents/playbooks/) with shared handoff and review
+templates under [`.agents/templates/`](.agents/templates/). Cross-cutting
+change maps and portable repository skills live under
+[`.agents/system/`](.agents/system/) and [`.agents/skills/`](.agents/skills/).
+They implement this file's policy; they do not override it.
+
+**Passive, when installed:** the `security-guidance` plugin runs automatic
+security scans as you work — a per-edit pattern check plus an LLM review on
+`git commit`/`push` (secret leaks, injection, SSRF, weak crypto). It complements
+the manual security review and is a first line against the "never commit
+`OBSIDIAN_API_KEY`/`.env`" rule. The optional review plugins install from the
+`claude-code-plugins` marketplace (`/plugin`).
 
 ---
 
@@ -153,9 +198,15 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 - **Hermes config:** consult the local docs at `~/.hermes/hermes-agent/website/docs/`, `cli-config.yaml.example`, and the skills catalogs (`skills-catalog.md`, `optional-skills-catalog.md`) before any Hermes decision. Do not infer from Memoria's existing files — the docs are the source of truth.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to LF. Working on ext4 avoids CRLF churn.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
-- **Profiles:** `src/.memoria/profiles/memoria-*/` — `SOUL.md` / `config.yaml` / `distribution.yaml` + `cron/` / `skills/`. Keep all in sync. No per-profile `mcp.json`.
+- **Profiles:** `src/.memoria/profiles/memoria-*/` — every profile has
+  `SOUL.md`, `config.yaml`, and `distribution.yaml`; profiles with bundled skills
+  also have `skills/` (the Engineer intentionally has none). Cron wrappers are
+  shared under `src/.memoria/scripts/`, not stored per profile. Keep shared
+  profile contracts in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
-- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues) and the [v0.1 release plan](docs/releasing/0.1.0/release-plan-0.1.0.md) for current blockers and known limitations.
+- **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
+  and the [release index](docs/releasing/README.md), which points to the current
+  checkpoint plan, for current blockers and known limitations.
 
 ---
 

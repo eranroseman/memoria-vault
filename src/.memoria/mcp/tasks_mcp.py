@@ -22,7 +22,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-import policy_mcp  # the gate's tested glob machinery (glob_to_regex / within_scope)
+_RUNTIME_ROOT = Path(__file__).resolve().parent.parent
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from memoria_runtime.policy import within_scope  # noqa: E402
 
 # task lane -> the background agent that owns it (ADR-48 §4.1)
 LANE_PROFILE = {
@@ -62,7 +66,7 @@ def _within_scope(path: str, scopes: list[str]) -> bool:
     lane carries `projects/*/code/`, which must admit `projects/x/code/main.py`.
     Reuse policy_mcp.within_scope (a trailing-slash scope matches `scope + **`)
     so the delegation ceiling and the write gate agree on semantics."""
-    return policy_mcp.within_scope(path.lstrip("/"), scopes)
+    return within_scope(path.lstrip("/"), scopes)
 
 
 def validate(vault: Path, lane: str, allowed_paths: list[str]) -> list[str]:

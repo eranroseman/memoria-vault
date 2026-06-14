@@ -32,8 +32,8 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
         with:
           python-version: "3.12"
-      - name: Install ruff
-        run: pip install --quiet ruff==0.15.15
+      - name: Install lint dependencies
+        run: pip install --quiet ruff==0.15.15 PyYAML
       - name: ruff
         run: ruff check scripts src/.memoria .github/scripts
       - name: docs-doctor
@@ -44,5 +44,9 @@ jobs:
         run: python scripts/check-test-refs.py
       - name: status-doctor
         run: python scripts/status-doctor.py
+      - name: agents-doctor
+        run: python scripts/agents-doctor.py
+      - name: ruleset contract
+        run: python scripts/ruleset-doctor.py
       - name: test-runner paths
         run: bash scripts/test.sh check   # L1 module paths in test.sh resolve (drift guard)

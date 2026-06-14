@@ -4,6 +4,10 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 # contents:write is required for gh pr merge --auto.
 # pull-requests:write is required for posting the review comment.
 # No elevated secrets are used; pr_policy.py only reads PR metadata via API.

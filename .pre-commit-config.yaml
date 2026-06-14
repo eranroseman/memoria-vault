@@ -132,6 +132,13 @@ repos:
         files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$
         pass_filenames: false
 
+      - id: agents-doctor
+        name: agents-doctor
+        language: system
+        entry: python scripts/agents-doctor.py
+        files: ^(\.agents/|AGENTS\.md$|scripts/agents-doctor\.py$|src/\.memoria/(profiles|lane-overrides)/)
+        pass_filenames: false
+
       # Block 12: harper grammar (advisory — always exits 0)
       - id: harper-grammar
         name: harper-grammar

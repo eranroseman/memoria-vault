@@ -7,12 +7,13 @@ import schema
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
+MANIFEST = ROOT / "scripts" / "install" / "manifest.sh"
 
 
 def _skeleton_dirs() -> set[str]:
-    text = INSTALL.read_text(encoding="utf-8")
+    text = MANIFEST.read_text(encoding="utf-8")
     m = re.search(r"SKELETON_DIRS=\((.*?)\)", text, re.S)
-    assert m, "SKELETON_DIRS not found in install.sh"
+    assert m, "SKELETON_DIRS not found in scripts/install/manifest.sh"
     return {line.strip() for line in m.group(1).splitlines()
             if line.strip() and not line.strip().startswith("#")}
 
@@ -22,7 +23,7 @@ def test_skeleton_covers_the_schema_skeleton():
     declared = set(schema.load_folders()["skeleton"])
     installed = _skeleton_dirs()
     missing = declared - installed
-    assert not missing, f"install.sh SKELETON_DIRS missing schema dirs: {sorted(missing)}"
+    assert not missing, f"installer SKELETON_DIRS missing schema dirs: {sorted(missing)}"
 
 
 def test_skeleton_covers_every_type_home():

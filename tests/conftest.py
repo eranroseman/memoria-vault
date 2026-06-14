@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 _DIRS = [
+    "src/.memoria",
     "src/.memoria/mcp",
     "src/.memoria/engines/lib",
     "src/.memoria/engines/ingest",

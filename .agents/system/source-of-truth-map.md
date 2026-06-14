@@ -1,0 +1,48 @@
+# Source-of-truth map
+
+Use this map to locate the file that owns a contract. Consumer files may mirror
+or explain the contract, but they must not silently redefine it.
+
+| Contract | Authoritative source | Important consumers and checks |
+|---|---|---|
+| Repository agent policy | `AGENTS.md` | `.agents/`, `.claude/skills/`, contributor docs |
+| Vault note types and fields | `src/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
+| Type homes, gated zones, skeleton | `src/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
+| Calibrated thresholds | `src/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
+| Profile tool capabilities | `src/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
+| Profile path permissions | `src/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
+| Hermes profile runtime wiring | `src/.memoria/profiles/*/config.yaml` | Installer deployment, MCP process startup |
+| Agent posture | `src/.memoria/profiles/*/SOUL.md` | Bundled profile skills and shared `src/AGENTS.md` |
+| Profile package metadata | `src/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
+| Task lane to profile routing | `src/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
+| Runtime path and glob semantics | `src/.memoria/memoria_runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
+| Runtime write decisions and audit | `src/.memoria/mcp/policy_mcp.py` | Policy hook/plugin, lane overrides, audit log |
+| Write interception | `src/.memoria/plugins/memoria-policy-gate/` and `src/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
+| Shared schema validation | `src/.memoria/engines/lib/schema.py` | Linter, pre-commit, installer and schema tests |
+| Inbox card rendering | `src/.memoria/engines/lib/inbox.py` | Engines and lanes that raise cards |
+| Runtime vault image | `src/` | `scripts/install.sh`, golden-copy staging |
+| Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
+| Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset-doctor.py`, and `AGENTS.md` |
+| Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
+| PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
+| Release scope | GitHub milestone | Release plan prose and tracking issue |
+| Release readiness | `Release vX.Y` tracking issue | Release plan and release skill |
+| Release prose | `docs/releasing/<version>/release-plan-*.md` | Release index and status doctor |
+| Product decisions | `docs/adr/` | Current docs and implementation |
+| Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
+
+## Mirrored constants
+
+The packaged policy layer and schema loader carry a dependency-free fallback for
+review-gated prefixes. It is a mirror, not an independent source; tests must
+prove it remains equal to canonical `folders.yaml`.
+
+## Decision rule
+
+When two files disagree:
+
+1. Identify the owner in this map.
+2. Confirm the owner still represents the intended current decision.
+3. Update consumers and tests together.
+4. If ownership itself must change, record the decision in an ADR before moving
+   the contract.

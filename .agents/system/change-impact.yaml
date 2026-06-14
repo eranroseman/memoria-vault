@@ -1,0 +1,100 @@
+version: 1
+areas:
+  - area: Type schema
+    paths:
+      - src/.memoria/schemas/types/**
+    inspect:
+      - Matching template and folder home
+      - Bases and dashboard queries
+      - Linter and pre-commit behavior
+      - Note-type and frontmatter documentation
+    checks:
+      - python -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
+  - area: Folder home, gated prefix, or skeleton
+    paths:
+      - src/.memoria/schemas/folders.yaml
+    inspect:
+      - Type schemas and templates
+      - Policy and pattern fallback constants
+      - Installer scaffold and golden-copy behavior
+      - Dashboards and links
+    checks:
+      - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_policy_mcp.py tests/test_patterns.py tests/test_detectors.py
+  - area: Profile capability or path policy
+    paths:
+      - src/.memoria/tool-registry.yaml
+      - src/.memoria/lane-overrides/**
+      - src/.memoria/profiles/**
+    inspect:
+      - Tool registry and matching profile config
+      - Lane override and delegation ceiling
+      - MCP availability and direct-world prohibitions
+      - Profile posture and bundled skills
+    checks:
+      - python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_lifecycle_dashboard.py
+  - area: Runtime policy
+    paths:
+      - src/.memoria/mcp/policy_mcp.py
+      - src/.memoria/mcp/policy_hook.py
+      - src/.memoria/plugins/memoria-policy-gate/**
+      - src/.memoria/memoria_runtime/policy/**
+    inspect:
+      - Lane overrides and gated-prefix schema
+      - Audit contract
+      - Mutating Obsidian tool mappings
+      - Tasks delegation semantics
+    checks:
+      - python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_schemas.py
+  - area: Ingest or linter engine
+    paths:
+      - src/.memoria/engines/ingest/**
+      - src/.memoria/engines/linter/**
+      - src/.memoria/mcp/ingest_mcp.py
+    inspect:
+      - Calibration and schemas
+      - Inbox card contract and shared writers
+      - Extract store and source/entity linking
+      - Cron wrappers and dashboard fields
+    checks:
+      - python -m pytest tests/test_pipeline.py tests/test_ingest_mcp.py tests/test_inbox_cards.py tests/test_detectors.py
+  - area: Installer
+    paths:
+      - scripts/install.sh
+      - scripts/install/**
+      - scripts/install.ps1
+    inspect:
+      - Installer reference docs
+      - Profile deployment and substitutions
+      - Disposable-vault behavior
+      - PowerShell bridge
+    checks:
+      - bash -n scripts/install.sh
+      - python -m pytest tests/test_installer_skeleton.py
+      - bash scripts/e2e-smoke.sh
+  - area: GitHub workflow or PR policy
+    paths:
+      - .github/workflows/**
+      - .github/scripts/pr_policy.py
+    inspect:
+      - Required-check invariant and ruleset assumptions
+      - Permissions, event trust, and concurrency
+      - Safe and sensitive paths
+      - Trusted authors
+    checks:
+      - python scripts/ruleset-doctor.py
+      - python -m pytest tests/test_pr_policy.py tests/test_ruleset_doctor.py
+  - area: Documentation or agent guidance
+    paths:
+      - docs/**
+      - .agents/**
+      - AGENTS.md
+    inspect:
+      - Section indexes and guide maps
+      - Frontmatter, links, and terminology
+      - Referenced commands and repository paths
+      - Generated agent references
+    checks:
+      - python scripts/docs-doctor.py docs
+      - bash scripts/check-vault-links.sh
+      - python scripts/status-doctor.py
+      - python scripts/agents-doctor.py

@@ -25,12 +25,15 @@ import sys
 import uuid
 from pathlib import Path
 
+_RUNTIME_ROOT = Path(__file__).resolve().parent.parent
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from memoria_runtime.policy import REVIEW_GATED_PREFIXES  # noqa: E402
+
 PATTERNS_RELDIR = "system/patterns"
 PROVENANCE_RELPATH = "system/logs/patterns.jsonl"
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n?", re.S)
-
-# Mirrors policy_mcp.REVIEW_GATED_PREFIXES — used only when folders.yaml is unreadable.
-REVIEW_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
 
 
 def _gated_prefixes(vault: Path) -> tuple:
