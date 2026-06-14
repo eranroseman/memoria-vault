@@ -17,7 +17,7 @@ The ingest engine (`src/.memoria/engines/ingest`): the deterministic spine that 
 | --- | --- | --- |
 | Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
 | Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref, merged per-field best-source-wins **with provenance**; references = the union across sources, deduped by DOI. |
-| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity (D21 / [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). Also proposes project membership from the optional `.memoria/project-hints.yaml` ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). No extra network call; without enrichment it is a no-op. |
+| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). Also proposes project membership from the optional `.memoria/project-hints.yaml` ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). No extra network call; without enrichment it is a no-op. |
 | Tier-1 extract | `extract.py` | Full text, pre-extracted-first: PMC JATS → local Zotero PDF via pymupdf4llm. A deterministic coherence check (chars/page, replacement-char ratio, word ratio) gatekeeps so only good text reaches the model; non-English text is flagged, never auto-failed. |
 | Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
 
@@ -32,7 +32,7 @@ The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relatio
 
 ---
 
-## The uncertainty floor (D51 / ADR-56)
+## The uncertainty floor
 
 The engine never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across the sources that resolved) in `[0,1]`; the floor comes from `src/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
 
@@ -40,7 +40,7 @@ Below the floor, the bundle carries a `flag_needed` block instead of a silent be
 
 ---
 
-## Automated classification (D21 / ADR-54)
+## Automated classification
 
 classify is **not a gate** ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): low-stakes metadata a human would rubber-stamp is automated, audited, and correctable. `classify.py` reads the **scored OpenAlex topics already in the enrichment payload** (no new network call), rolls them up to their subfield (the research-area granularity, best score per area), and decides:
 
@@ -75,24 +75,9 @@ The ingest MCP persists the un-gated derived artifacts the agent can't:
 
 ---
 
-## The sweeps
+## Recovery sweeps
 
-Two engines under `src/.memoria/engines/sweeps`; neither writes the vault.
-
-### Re-ingest backstops — `reconcile.py`
-
-Re-ingest must be board-serialized, so each backstop is a detector that enqueues an **idempotent** re-ingest card (`hermes kanban create --idempotency-key reingest:<citekey>`); the board provides dedup, backoff, and the failure circuit-breaker (the `needs-human` floor).
-
-| Pass | Detects |
-| --- | --- |
-| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk (the Tier-0 stub never landed). |
-| `--retry` | A `captured` note stuck at `ingest_status: tier0` (Tier-1 never completed). |
-
-`--dry-run` reports without touching the board. The installer wires both as the `memoria-sweeps` cron, every 15 minutes.
-
-### Retraction sweep — `retraction.py`
-
-Deterministic, read-only retraction-by-DOI from three sources, most authoritative first: the local Retraction Watch CSV (`--refresh` downloads it to `.memoria/data/retraction_watch.csv`; monthly cron), the live Crossref `update-to` delta, and Open Retractions as a cross-check. `retraction.py --sweep --vault V` scans the Catalog DOIs and raises Inbox **alerts** on hits — flag-don't-fix; the engine never flips a note.
+Re-ingest and retraction maintenance are deterministic sweep engines rather than ingest stages. Their command-level contract lives in [Sweeps](sweeps.md).
 
 ---
 
