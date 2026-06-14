@@ -26,7 +26,7 @@ l1() {
   if python3 -c "import pytest" >/dev/null 2>&1; then
     run python3 -m pytest tests/ -q
   else
-    echo "→ pytest             ✗ NOT INSTALLED — pip install pytest (L1 was NOT run)"
+    echo "→ pytest             ✗ NOT INSTALLED — python3 -m pip install -r requirements-dev.txt (L1 was NOT run)"
     fail=1
   fi
 }
@@ -38,15 +38,17 @@ check_paths() {
   if python3 -c "import pytest" >/dev/null 2>&1; then
     run python3 -m pytest tests/ --co -q
   else
-    echo "→ pytest --collect-only   (not installed — pip install pytest)"
+    echo "→ pytest --collect-only   (not installed — python3 -m pip install -r requirements-dev.txt)"
   fi
 }
 
 l0() {
   echo "── L0: static + schema ──"
+  run ruff check scripts src/.memoria .github/scripts
   run python3 scripts/docs-doctor.py docs
   run bash scripts/check-vault-links.sh
   run python3 scripts/agents-doctor.py
+  run python3 scripts/github-doctor.py
   run python3 scripts/ruleset-doctor.py
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi

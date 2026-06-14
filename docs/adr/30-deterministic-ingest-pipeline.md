@@ -5,6 +5,7 @@ title: Tiered ingest pipeline (capture → fallback-chained enrichment → gated
 status: accepted
 date_proposed: 2026-06-03
 date_resolved: 2026-06-03
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

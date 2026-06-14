@@ -37,9 +37,9 @@ Peer-reviewer / Engineer project workflows arrive in alpha.4 (alpha.3 is a UI-bu
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.2 ships when **every gate box in the Release v0.1.0-alpha.2 tracking issue is
-ticked** (issue: open per [Releasing](../README.md)). Definitions — its *state* is the
-checkbox in the issue, never a column here:
+v0.1.0-alpha.2 is complete when **every gate sub-issue under the Release
+v0.1.0-alpha.2 parent issue is closed** (issue: open per [Releasing](../README.md)).
+Definitions — state lives in the sub-issues, never a column here:
 
 | Gate | Proves | Verified by |
 | --- | --- | --- |
@@ -54,13 +54,13 @@ checkbox in the issue, never a column here:
 ## 3. Validation — stages
 
 The staged test plan that turns built artifacts into verified ones. A candidate re-runs
-**all stages green from a fresh clone** on a clean target box (track the runs as boxes in the
-tracking issue).
+**all stages green from a fresh clone** on a clean target box (track the runs in the
+relevant gate/stage sub-issues).
 
 | Stage | Proves |
 | --- | --- |
 | S0 | Static: parse, schema-correctness, docs link/title integrity ([Headless test plan](../../testing/plans/headless-test-plan.md) Parts B/C/E) |
-| S1 | Component self-tests — policy, hook, board-export, metrics, detectors ([Headless test plan](../../testing/plans/headless-test-plan.md) Part A) |
+| S1 | Pytest component suite — policy, hook, board-export, metrics, detectors ([Headless test plan](../../testing/plans/headless-test-plan.md) Part A) |
 | S2 | Agent wiring + per-lane policy-gate enforcement ([Hermes CLI test plan](../../testing/plans/hermes-cli-test-plan.md)) |
 | S3 | Real install into a throwaway vault; profiles register; idempotent re-run ([Installer test plan](../../testing/plans/installer-test-plan.md)) |
 | S4 | Live connectivity + gate enforcement (Obsidian MCP round-trip; a denied write is blocked and audited) |
@@ -68,8 +68,8 @@ tracking issue).
 
 ## 4. Blockers
 
-Not enumerated here — a second list would drift. **By definition the blockers are** any gate
-in §2 not yet done, plus any open **P0** issue in the project issue tracker.
+Not enumerated here — a second list would drift. **By definition the blockers are** any open
+gate/stage sub-issue, plus any open High-priority blocker in Memoria Issue Tracker.
 
 ## 5. Out of scope (deferred)
 
@@ -97,12 +97,12 @@ extensions ([ADR-65](../../adr/65-retrieval-and-schema-extensions.md)).
 alpha.2 is an **internal checkpoint, not a formal release** — there is no release-please cut,
 version tag, or GitHub Release. The checkpoint is reached when:
 
-1. Every gate + stage box is ticked in the "Release v0.1.0-alpha.2" tracking issue; required CI is green on `main`; no open **P0**.
+1. Every gate + stage sub-issue under "Release v0.1.0-alpha.2" is closed; required CI is green on `main`; no open High-priority blocker.
 2. All stages re-run green from a fresh clone on a clean target box.
 3. The ADRs are retire-swept ([retirement criteria](../../adr/README.md)) as their own small PR.
 
-Record it by setting `status: done` and noting the date here; `released:` stays `false`
-(alphas are never formally released). Close the milestone and tracking issue, rolling
+Record it by setting `status: complete` and noting the date here; `released:` stays `false`
+(alphas are never formally released). Close the milestone and release parent issue, rolling
 unfinished issues forward to alpha.3. The first **formal** release — a release-please tag and
 GitHub Release — is the beta (§8).
 

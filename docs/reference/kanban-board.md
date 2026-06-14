@@ -17,7 +17,7 @@ A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-ag
 
 ## Delegation: the tasks MCP
 
-The co-PI delegates every write through `delegate_route_task` on the tasks MCP ([src/.memoria/mcp/tasks_mcp.py](../../src/.memoria/mcp/tasks_mcp.py)):
+The co-PI delegates every write through `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`):
 
 1. The task lane resolves to its owning profile (table above; an unknown lane is refused).
 2. **Ceiling validation:** every `allowed_paths` prefix must sit inside the lane-override's `routing.write_scope`. Paths may _narrow_ but never _widen_ the lane (lane = ceiling, payload = floor); a violation returns `ceiling-violation` and no card is created. An empty write scope (the co-PI's own) can never receive a delegation.
@@ -63,7 +63,7 @@ Three orthogonal dimensions keep an agent verdict from rubber-stamping a human d
 
 ### Done → review prompt
 
-The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — a finished card must surface there, not wait silently in a board column. When the board-export cron ([src/.memoria/mcp/board_export.py](../../src/.memoria/mcp/board_export.py)) observes a card transition into `done`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — review the work product, then accept it or archive the board card. Honesty rules apply: action + what happened + where to look, never a verdict.
+The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — a finished card must surface there, not wait silently in a board column. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — review the work product, then accept it or archive the board card. Honesty rules apply: action + what happened + where to look, never a verdict.
 
 The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same done card never produces two prompts across cron runs. On a fresh cache (first run), only cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
 

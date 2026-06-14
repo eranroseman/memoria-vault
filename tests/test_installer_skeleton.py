@@ -50,3 +50,11 @@ def test_cron_wrappers_exist_for_wired_jobs():
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text
+
+
+def test_installer_escapes_template_replacements():
+    text = INSTALL.read_text(encoding="utf-8")
+    assert "sed_repl()" in text
+    assert "s|{{VAULT_PATH}}|$VAULT_PATH|g" not in text
+    assert "s|{{PYTHON}}|$pybin|g" not in text
+    assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text

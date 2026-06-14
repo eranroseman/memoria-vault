@@ -16,8 +16,8 @@ Thanks for your interest in contributing. Memoria is a research operating system
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
-# One-time: wire the local quality gate (installs pre-commit hooks, installs
-# ruff + yamllint + MCP self-test deps). Git does NOT activate repo hooks on clone.
+# One-time: wire the local quality gate (installs requirements-dev.txt tooling,
+# pre-commit hooks, and MCP self-test deps). Git does NOT activate repo hooks on clone.
 bash scripts/dev-setup.sh
 
 # Validate the installer without running it
@@ -28,9 +28,12 @@ bash scripts/install.sh --dry-run
 ```
 
 `dev-setup.sh` sets up the **contributor toolchain** only; it does not install or run
-the Memoria product (that's `scripts/install.sh`). It runs `pre-commit install` to
-wire the hooks defined in `.pre-commit-config.yaml` — a fast local mirror of the
-required CI checks. The hooks also run an advisory grammar check with
+the Memoria product (that's `scripts/install.sh`). The root `requirements-dev.txt`
+is for local/CI tooling such as `pre-commit`, `pytest`, `ruff`, and `yamllint`;
+vault runtime dependencies stay under `src/.memoria/mcp/requirements.txt`. The
+setup script runs `pre-commit install` to wire the hooks defined in
+`.pre-commit-config.yaml` — a fast local mirror of the required CI checks. The
+hooks also run an advisory grammar check with
 [harper](https://github.com/elijah-potter/harper) (output is informational; it never
 blocks a commit). Bypass all hooks for a single commit, rarely, with
 `git commit --no-verify`. Recommended VS Code extensions are listed in
@@ -61,6 +64,13 @@ The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becom
 
 ## Coding conventions
 
+- **Python:** Ruff is the Python linter for repo tooling and runtime code
+  (`scripts/`, `.github/scripts/`, `src/.memoria/`). It is intentionally **not**
+  used as the formatter today: `ruff format` would rewrite most Python files for
+  style-only churn, and the existing code keeps some hand-shaped line breaks for
+  readability. Tests are not in the Ruff gate yet because several still use dynamic
+  `globals().update(...)` imports from their former inline self-test shape; refactor
+  those imports before widening Ruff to `tests/`.
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
 - **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `config.yaml` / `distribution.yaml` / `skills/` structure used by the existing five profiles (the shared `AGENTS.md` layer is vault-level, not per-profile).

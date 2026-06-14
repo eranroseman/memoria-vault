@@ -5,6 +5,7 @@ title: Advisor-review exports are live-citation artifacts, outside the frozen-de
 status: accepted
 date_proposed: 2026-05-30
 date_resolved: 2026-05-30
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

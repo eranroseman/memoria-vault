@@ -5,6 +5,9 @@ title: Per-note-type acceptance checklists ("frozen evaluator") — deferred
 status: deferred
 assumes: []
 date_proposed: 2026-05-30
+date_resolved:
+supersedes: []
+superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 39

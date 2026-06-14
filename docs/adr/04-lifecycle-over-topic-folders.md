@@ -5,6 +5,7 @@ title: Folders encode lifecycle stage, not subject area
 status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
+assumes: []
 supersedes: []
 superseded_by: [47]
 parent: Decisions

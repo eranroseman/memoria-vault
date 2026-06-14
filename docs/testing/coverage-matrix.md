@@ -10,7 +10,7 @@ nav_order: 10
 
 Every design component → the layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../adr/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
 
-**Layers** (see [ADR-29](../adr/29-testing-framework.md)): **L0** static+schema · **L1** component self-tests · **L2** agent wiring + policy gate · **L3** system/GUI · **L4** golden-path E2E · **L5** quality/eval · **X** cross-cutting.
+**Layers** (see [ADR-29](../adr/29-testing-framework.md)): **L0** static+schema · **L1** pytest component suite · **L2** agent wiring + policy gate · **L3** system/GUI · **L4** golden-path E2E · **L5** quality/eval · **X** cross-cutting.
 
 **Status:** ✅ covered · 🟡 partial · ⛔ gap (no coverage yet).
 
@@ -22,7 +22,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
 | 5 | Dashboard ↔ writer-schema drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
 | 6 | 5 profiles — every documented CLI command | L2 | [hermes-cli](plans/hermes-cli-test-plan.md) §4 | manual | ✅ |
-| 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all lanes' write-walls self-tested, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
+| 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all lanes' write-walls covered by pytest, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
 | 9 | Audit pairing — `before_hash`/`after_hash`, `audit-unpaired-writes` | L1+L2 | headless §A · hermes-cli §5 (X4) | semi | ✅ |
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
@@ -44,7 +44,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 
 ## L2 — automating the wiring layer
 
-L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now self-tested for all lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half is settled too: driver `hermes -z` / `hermes chat -q` (not ACP), and it needs **no Obsidian** — the gate is transport-agnostic, so a filesystem-backed `obsidian` MCP shim (Option B) lets it run on any box. It lands as an opt-in `scripts/test-l2.sh` smoke set (§3 S1–S5 + one §4 case per profile) — nightly, not PR-blocking. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
+L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now covered for all lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **agent-wiring** half is settled too: driver `hermes -z` / `hermes chat -q` (not ACP), and it needs **no Obsidian** — the gate is transport-agnostic, so a filesystem-backed `obsidian` MCP shim (Option B) lets it run on any box. It lands as an opt-in `scripts/test-l2.sh` smoke set (§3 S1–S5 + one §4 case per profile) — nightly, not PR-blocking. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
 
 ## Open gaps (⛔ / 🟡), prioritized
 

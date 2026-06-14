@@ -19,7 +19,9 @@ repos:
         exclude: src/\.obsidian/plugins/
 
   # ---------------------------------------------------------------------------
-  # ruff (Python linter)  —  Block 3 partial
+  # ruff (Python linter) — production/tooling only. Tests still use dynamic
+  # globals().update(...) imports, so extending Ruff there would hide real F821
+  # findings behind broad ignores. Refactor test imports before widening this.
   # ---------------------------------------------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.15
@@ -44,7 +46,7 @@ repos:
     hooks:
       - id: shellcheck
         args: [--severity=warning]
-        files: ^scripts/install\.sh$
+        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
 
   # ---------------------------------------------------------------------------
   # Local hooks
@@ -63,8 +65,8 @@ repos:
       - id: bash-syntax
         name: bash-syntax
         language: system
-        entry: bash -n scripts/install.sh
-        files: ^scripts/install\.sh$
+        entry: bash -n scripts/install.sh scripts/install/manifest.sh scripts/install/runtime-tools.sh
+        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
         pass_filenames: false
 
       # Block 3 partial: pytest
@@ -129,14 +131,21 @@ repos:
         name: status-doctor
         language: system
         entry: python scripts/status-doctor.py
-        files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.claude/skills/release/SKILL\.md$|^scripts/status-doctor\.py$
+        files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.agents/playbooks/release\.md$|^scripts/status-doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor
         name: agents-doctor
         language: system
         entry: python scripts/agents-doctor.py
-        files: ^(\.agents/|AGENTS\.md$|scripts/agents-doctor\.py$|src/\.memoria/(profiles|lane-overrides)/)
+        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents-doctor\.py$|src/\.memoria/(profiles|lane-overrides)/)
+        pass_filenames: false
+
+      - id: github-doctor
+        name: github-doctor
+        language: system
+        entry: python scripts/github-doctor.py
+        files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/github-doctor\.py$
         pass_filenames: false
 
       # Block 12: harper grammar (advisory — always exits 0)

@@ -109,10 +109,11 @@ All must pass before merge:
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
+| `cspell (docs/ + src/ + root markdown)` | Spelling over docs, vault markdown, and root markdown |
 
 **CI invariant:** required-check workflows must have **no** `paths:` filter — a
 path-filtered required check permanently blocks PRs that don't touch those
@@ -133,11 +134,11 @@ behavior.
 
 | Decision | Trigger |
 |---|---|
-| `auto_approve` | Trusted author + all files in safe paths (`docs/` — except `docs/adr/` — `.md`/`.txt`) |
+| `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
 | `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `src/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`.
+Sensitive paths: `src/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -146,9 +147,9 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
 ## Test before opening a PR
 
-- **Shell** (`scripts/install.sh`): `bash -n scripts/install.sh` (parse) + a `--dry-run` pass.
+- **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44).
-- **PowerShell** (`scripts/install.ps1`): rely on CI; `Write-Host` is intentional and excluded via `scripts/PSScriptAnalyzerSettings.psd1`. Functions must use approved verbs (`Install-`, not `Ensure-`).
+- **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
 
 ---
@@ -160,9 +161,9 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 | Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `src/.memoria/` |
+| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `src/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
 | Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" tracking issue (gate checklist); release-please owns version/notes |
+| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with gate/stage sub-issues; release-please owns version/notes |
 
 Skills and plugins are accelerators, not prerequisites. If a named command is
 unavailable, perform the equivalent checks directly:
@@ -269,7 +270,7 @@ stays in the gitignored `_notes/`.
 
 ### Release plans (`docs/releasing/`)
 
-One file per version, copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" tracking issue** (a gate checklist), scope in the milestone, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`.
+One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its gate/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
 
 ---
 
@@ -277,18 +278,19 @@ One file per version, copied from `docs/releasing/release-plan-template.md` — 
 
 | Item | Goes to |
 |---|---|
-| Bug, enhancement, doc fix, question | GitHub issue (label; milestone only if scheduled) |
+| Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`/`deferred`) |
-| Release scope | the GitHub milestone `vX.Y` (assigned issues) |
-| Release readiness (gates/stages) | the **"Release vX.Y" tracking issue** — a gate checklist (progress bar), *not* the plan §2/§3 |
+| Release scope | the GitHub milestone `vX.Y` (assigned issues) + Memoria Issue Tracker view filtered to that milestone |
+| Release readiness (gates/stages) | the **"Release vX.Y" parent issue** and its gate/stage sub-issues, *not* the plan §2/§3 |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: deferred` for forward-looking) |
+| In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
-- GitHub project board: "Memoria backlog" — Inbox → Scheduled → In progress → In review → Done.
-- Labels: `bug` / `enhancement` / `documentation` / `question` / `research` + priority `P0`/`P1`/`P2`.
+- GitHub Project: "Memoria Issue Tracker" — fields `Status`, `Area`, `Type`, `Priority`; see `docs/contributing/issue-tracking.md`.
+- Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Type/Area/Status/Priority live in Project fields.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **transient** scratch/personal notes go in `_notes/` (gitignored) — never `docs/` or the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 

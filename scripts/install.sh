@@ -91,6 +91,11 @@ run_sh() {
   [ "$DRY_RUN" -eq 1 ] || bash -c "$1"
 }
 
+# Escape a value for use as the replacement side of s|needle|replacement|g.
+sed_repl() {
+  printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
+}
+
 # ask "prompt" "default"  — echo the answer (default when --yes or no tty).
 ask() {
   local prompt="$1" default="${2:-}" reply=""
@@ -477,7 +482,10 @@ deploy_policy_plugin() {
   # Substitute {{PROFILE}} and {{VAULT_PATH}} into the plugin code (mirrors the
   # config.yaml substitution; the plugin runs in the Hermes process, so no PYTHON).
   if [ -f "$plugin_src/__init__.py" ]; then
-    run_sh "sed -e 's|{{PROFILE}}|$prof|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
+    local prof_esc vault_esc
+    prof_esc="$(sed_repl "$prof")"
+    vault_esc="$(sed_repl "$VAULT_PATH")"
+    run_sh "sed -e 's|{{PROFILE}}|$prof_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \
                 \"$plugin_src/__init__.py\" > \"$plugin_dst/__init__.py\""
   fi
   say "    deployed write-gate plugin (memoria-policy-gate)"
@@ -537,9 +545,13 @@ install_profiles() {
     #   - {{VAULT_PATH}} -> the real vault path.
     local pybin="${VENV_PYTHON:-python}"
     if [ -f "$dst/config.yaml" ]; then
-      run_sh "sed -e 's|{{PYTHON}}|$pybin|g' \
-                  -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \
-                  -e 's|{{QMD}}|${QMD_BIN:-qmd}|g' \
+      local pybin_esc vault_esc qmd_esc
+      pybin_esc="$(sed_repl "$pybin")"
+      vault_esc="$(sed_repl "$VAULT_PATH")"
+      qmd_esc="$(sed_repl "${QMD_BIN:-qmd}")"
+      run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' \
+                  -e 's|{{VAULT_PATH}}|$vault_esc|g' \
+                  -e 's|{{QMD}}|$qmd_esc|g' \
                   \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
     fi
 
@@ -743,7 +755,10 @@ wire_telemetry_cron() {
   fi
   run mkdir -p "$scripts_dir"
   local pybin="${VENV_PYTHON:-python}"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  local pybin_esc vault_esc
+  pybin_esc="$(sed_repl "$pybin")"
+  vault_esc="$(sed_repl "$VAULT_PATH")"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
   # Create the recurring no-agent job (idempotent — skip if one already exists).
   if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-board-export"; then
@@ -774,7 +789,10 @@ wire_sweeps_cron() {
   fi
   run mkdir -p "$scripts_dir"
   local pybin="${VENV_PYTHON:-python}"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  local pybin_esc vault_esc
+  pybin_esc="$(sed_repl "$pybin")"
+  vault_esc="$(sed_repl "$VAULT_PATH")"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
   # Create the recurring no-agent job (idempotent — skip if one already exists).
   if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-sweeps"; then
@@ -800,7 +818,10 @@ wire_lint_cron() {
   fi
   run mkdir -p "$scripts_dir"
   local pybin="${VENV_PYTHON:-python}"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  local pybin_esc vault_esc
+  pybin_esc="$(sed_repl "$pybin")"
+  vault_esc="$(sed_repl "$VAULT_PATH")"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
   if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-lint"; then
     say "  lint cron already present — wrapper refreshed, job left as-is"
@@ -825,7 +846,10 @@ wire_metrics_cron() {
   fi
   run mkdir -p "$scripts_dir"
   local pybin="${VENV_PYTHON:-python}"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  local pybin_esc vault_esc
+  pybin_esc="$(sed_repl "$pybin")"
+  vault_esc="$(sed_repl "$VAULT_PATH")"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
   if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-metrics"; then
     say "  metrics cron already present — wrapper refreshed, job left as-is"
@@ -850,7 +874,10 @@ wire_eval_cron() {
   fi
   run mkdir -p "$scripts_dir"
   local pybin="${VENV_PYTHON:-python}"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin|g' -e 's|{{VAULT_PATH}}|$VAULT_PATH|g' \"$src\" > \"$dst\""
+  local pybin_esc vault_esc
+  pybin_esc="$(sed_repl "$pybin")"
+  vault_esc="$(sed_repl "$VAULT_PATH")"
+  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
   if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-eval"; then
     say "  eval cron already present — wrapper refreshed, job left as-is"

@@ -5,6 +5,7 @@ title: Vault access via the Local REST API plugin's native MCP (HTTP), not uvx m
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

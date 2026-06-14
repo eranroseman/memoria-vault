@@ -15,10 +15,11 @@ recording each [gate](../../adr/29-testing-framework.md) green. Work top
 to bottom; if a step fails, stop and file it — a candidate is green only when
 every row is.
 
-**Per release:** copy the [sign-off template](#sign-off-template) into that
-release's `validation-log.md` and tick as you go. Gate/stage **state** lives in
-the release's **"Release vX.Y" tracking issue** (the Tier-2 gate checklist) — not
-in this file (the procedure) and not in the release plan (the prose/definitions).
+**Per release:** record each result in the relevant gate/stage sub-issue under the
+release parent issue. Copy the [sign-off template](#sign-off-template) into that
+release's `validation-log.md` only when the issue/Actions trail needs a curated
+long-lived summary. Gate/stage **state** never lives in this file (the procedure)
+or the release plan (the prose/definitions).
 
 The per-area detail lives in the linked plan docs; this sheet sequences them and
 adds the exact commands plus the ingest/runtime setup.
@@ -32,7 +33,7 @@ adds the exact commands plus the ingest/runtime setup.
 - [ ] Fresh clone: `git clone https://github.com/eranroseman/memoria-vault.git && cd memoria-vault` — record the commit (`git rev-parse --short HEAD`).
 - [ ] `~/.hermes/.env` has the scholarly-API keys (`S2_API_KEY`, `OPENALEX_API_KEY`, `NCBI_EMAIL`) and `OBSIDIAN_API_KEY`; the installer sets `OBSIDIAN_VAULT_PATH`. **Never print key values.**
 
-## S0–S1 — static + self-tests  → records G6 (partial), S0, S1
+## S0–S1 — static + pytest component suite  → records G6 (partial), S0, S1
 
 ```bash
 bash scripts/test.sh all          # l1 (component tests, pytest) + l0 (static)
@@ -117,9 +118,9 @@ ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings}.json
 - [ ] `board-state`, `board-transitions`, `audit`, and `lint-findings` all gain rows from the live activity above.
 - [ ] **Known limitation (not a defect):** `disposition.jsonl` + `cost.jsonl` stay empty — they read the card `metadata` overlay the current Hermes doesn't surface; `board_export.py` is ready to emit them when it does. Record this in the release's known-limitations section.
 
-## G7 — no open P0
+## G7 — no High-priority blockers
 
-- [ ] `gh issue list --label P0 --state open` is empty.
+- [ ] Memoria Issue Tracker has no open issue with Priority `High` that blocks the release.
 
 ## G8 + cut mechanics  → records G8, then ships
 
@@ -128,16 +129,18 @@ Only after every row above is green:
 - [ ] Confirm `version: vX.Y.0` across the five `src/.memoria/profiles/*/distribution.yaml`.
 - [ ] **Version + CHANGELOG + tag + GitHub Release** are owned by **release-please** — merge its open release PR; that cuts the tag, finalizes `CHANGELOG [vX.Y.0]`, and publishes the Release. Don't hand-tag or hand-edit the CHANGELOG. (See [Releases](../../releasing/README.md).)
 - [ ] Flip `released: false → true` / `status: draft → released` in that release's `release-plan-<v>.md` frontmatter.
-- [ ] Close the release's **"Release vX.Y" tracking issue** + the milestone, rolling any unfinished issues to the next milestone.
+- [ ] Close the release's **"Release vX.Y" parent issue** + the milestone, rolling any unfinished issues to the next milestone.
 
 ## Sign-off template
 
-Copy into the release's `validation-log.md`. Record commit `__________` and date `__________`.
+Record these results in the relevant release gate/stage sub-issues. Copy this table
+into the release's `validation-log.md` only when a curated summary is worth keeping.
+Record commit `__________` and date `__________`.
 
 | Gate / stage | Records | Result | Notes |
 | --- | --- | --- | --- |
 | S0 | static | ☐ | |
-| S1 | self-tests | ☐ | |
+| S1 | pytest component suite | ☐ | |
 | S2 | dry-run install | ☐ | |
 | S3 / G1 | real install, 5 profiles, idempotent | ☐ | |
 | S4 / G3 | model + REST bridge live | ☐ | |
@@ -148,7 +151,7 @@ Copy into the release's `validation-log.md`. Record commit `__________` and date
 | S5 / G4 | GUI + 12 dashboards render | ☐ | |
 | G5 | four telemetry signals emit | ☐ | disposition/cost = known limitation |
 | G6 | CI green on the commit | ☐ | |
-| G7 | no open P0 | ☐ | |
+| G7 | no High-priority blockers | ☐ | |
 | G8 | version + CHANGELOG cut | ☐ | at cut |
 
 When every row is checked, proceed to the cut mechanics above.

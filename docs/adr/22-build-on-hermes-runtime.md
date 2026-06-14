@@ -5,6 +5,7 @@ title: Build on the Hermes Agent runtime rather than a bespoke one
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

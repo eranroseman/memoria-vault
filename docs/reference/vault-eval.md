@@ -11,7 +11,7 @@ parent: Reference
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as typed notes — `type: eval-task`, schema [src/.memoria/schemas/types/eval-task.yaml](../../src/.memoria/schemas/types/eval-task.yaml). Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
+Gold tasks live in `system/eval/` as typed notes — `type: eval-task`, schema `src/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ Like patterns, eval tasks are authored directly — the files *are* the instance
 
 ## Dispatch
 
-[src/.memoria/engines/sweeps/eval_dispatch.py](../../src/.memoria/engines/sweeps/eval_dispatch.py) — a sweeps-shaped engine: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
+`src/.memoria/engines/sweeps/eval_dispatch.py` — a sweeps-shaped engine: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
 - One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the co-PI's `tasks_mcp.py`; a test guards the parity).
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
@@ -52,7 +52,7 @@ python .memoria/engines/sweeps/eval_dispatch.py --vault <vault> --dry-run  # pri
 
 ## Scoring
 
-[src/.memoria/engines/sweeps/eval_score.py](../../src/.memoria/engines/sweeps/eval_score.py) — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
+`src/.memoria/engines/sweeps/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
 
 **The result contract.** A lane never writes the vault; it ends its card report with one fenced `json` block (the card body shows the exact template, pre-filled with the task id and quarter):
 
@@ -88,7 +88,7 @@ python .memoria/engines/sweeps/eval_score.py --vault <vault> --quarter 2026-Q2 -
 
 ## Cadence
 
-The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of every third month) from the wrapper [src/.memoria/scripts/eval-cron.sh](../../src/.memoria/scripts/eval-cron.sh), following the same pattern as the lint and metrics crons — see [Installer (bootstrap)](installer.md). The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
+The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of every third month) from the wrapper `src/.memoria/scripts/eval-cron.sh`, following the same pattern as the lint and metrics crons — see [Installer (bootstrap)](installer.md). The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
 
 ---
 

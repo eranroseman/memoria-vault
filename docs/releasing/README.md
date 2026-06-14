@@ -8,8 +8,8 @@ topic: releases
 
 # Releasing
 
-One folder per version, `releasing/vX.Y/`, holding the **prose** of that cut (scope,
-known limitations, cut procedure, roadmap). The reusable body is
+One folder per version, `docs/releasing/<version>/`, holding the **prose** of that cut (scope,
+known limitations, cut procedure, roadmap). Live state lives in GitHub. The reusable body is
 [Release plan — vX.Y.Z](release-plan-template.md); the current checkpoint is
 [v0.1.0-alpha.2](0.1.0-alpha.2/) (in draft), and the prior one is
 [v0.1.0-alpha.1](0.1.0-alpha.1/) — alpha checkpoints are internal milestones, not formal
@@ -19,46 +19,59 @@ releases. The *live readiness state* lives outside the file — see below.
 
 | Thing | Lives in |
 |---|---|
-| **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` (assigned issues) |
-| **Readiness** (gate + validation-stage state) | the **"Release vX.Y" tracking issue** — a gate checklist GitHub renders as a progress bar |
-| **Prose** (scope summary, limitations, cut steps, roadmap) | `release/vX.Y/release-plan-vX.Y.md` |
+| **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` plus the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1) view filtered to that milestone |
+| **Readiness** (gate + validation-stage state) | the parent **"Release vX.Y"** issue and its gate/stage sub-issues |
+| **Prose** (scope summary, limitations, cut steps, roadmap) | `docs/releasing/<version>/release-plan-<version>.md` |
 | **Build gaps** | GitHub issues |
 | **Scope cuts** | `docs/adr/` (deferred-status ADRs) |
 | **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
+| **Automated test evidence** | GitHub Actions runs and artifacts |
+| **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |
 
-The plan file holds **prose, not state tables**. Gate/stage state is the checklist
-in the tracking issue; everything else points — never restates.
+The plan file holds **prose, not state tables**. Gate/stage state is in the release
+issue/sub-issues; routine automated evidence is in Actions. Everything else points,
+never restates.
 
 ## Starting a new release — vX.Y
 
-1. **Folder + plan.** Create `release/vX.Y/README.md` (thin index) and copy
+1. **Folder + plan.** Create `docs/releasing/<version>/README.md` (thin index) and copy
    [Release plan — vX.Y.Z](release-plan-template.md) →
-   `release/vX.Y/release-plan-vX.Y.md`. Fill the prose; set frontmatter
+   `docs/releasing/<version>/release-plan-<version>.md`. Fill the prose; set frontmatter
    `status: draft`, `released: false`.
-2. **Milestone = scope.** Create the `vX.Y` milestone
+2. **Milestone + Project view = scope.** Create the `vX.Y` milestone
    (`gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`) and assign the
-   issues that scope it (AGENTS.md "Work routing").
-3. **Tracking issue = readiness.** Open a **"Release vX.Y"** issue (label `release`,
-   milestone `vX.Y`) whose body is the **gate checklist** (one `- [ ]` per gate
-   `G#` and validation stage `S#`). GitHub shows the progress bar; tick boxes as
-   gates go green — no markdown state table to hand-edit.
-4. **Overflow** (optional) → `release-plan-vX.Y-appendix.md`.
+   issues that scope it. In [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1),
+   use a table filtered to the milestone and sorted by Priority as the live release plan.
+3. **Parent issue + sub-issues = readiness.** Open a **"Release vX.Y"** issue
+   (label `release`, milestone `vX.Y`). Add one sub-issue per gate/stage (`G#`,
+   `S#`) so GitHub shows sub-issue progress and each gate can carry its own evidence,
+   owner, and comments. Do not hand-maintain a markdown state table.
+4. **In-work design notes** (optional) → `tmp/`. These files are tracked so a branch
+   can cite design research while the release is being shaped, but they are not
+   published release artifacts. Keep links portable within the repo and delete
+   `tmp/` when the release is done.
+5. **Overflow** (optional) → `release-plan-<version>-appendix.md`.
 
 ## Cutting a release
 
-1. Every gate/stage box in the tracking issue ticked; required CI green on `main`; no open **P0**.
+1. Every gate/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
 2. **Retire-sweep the ADRs.** Delete any ADR whose question this release dissolved or whose decision it superseded — keep the *Alternatives considered* memory; leave the number gap. See the [retirement criteria](../adr/README.md#when-to-retire-an-adr). (Lands as its own small PR before the cut.)
 3. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
    `vX.Y`, and publishes the GitHub Release with curated notes (fold in the plan's
    known-limitations).
-4. Set the plan frontmatter `status: released`, `released: true`.
-5. Close the milestone and the tracking issue; roll unfinished issues forward.
+4. Set the plan frontmatter. For a formal release, use `status: released`,
+   `released: true`. For an internal checkpoint that does not cut a tag or GitHub
+   Release, use `status: complete`, `released: false`.
+5. Close the milestone and the release parent issue; roll unfinished issues forward.
+6. Delete the release folder's `tmp/` design notes before the release/checkpoint is
+   considered done.
 
-## Standard contents of a `release/vX.Y/` folder
+## Standard contents of a `docs/releasing/<version>/` folder
 
 | File | Holds |
 |---|---|
 | `README.md` | Thin index of this release's files |
-| `release-plan-vX.Y.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
-| `release-plan-vX.Y-appendix.md` | *(optional)* phase roadmap + investigation detail |
-| *run records* | *(optional)* completed test-plan runs + sign-off sheets (reusable plans live in [Testing](../testing/)) |
+| `release-plan-<version>.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
+| `release-plan-<version>-appendix.md` | *(optional)* phase roadmap + investigation detail |
+| `validation-log.md` | *(optional)* curated release evidence worth preserving after the GitHub issue/Actions trail |
+| `tmp/` | *(temporary)* tracked in-work design notes; remove when the release is done |

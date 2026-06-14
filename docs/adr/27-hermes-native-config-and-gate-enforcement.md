@@ -5,6 +5,7 @@ title: Configure Hermes the way Hermes reads config; the review gate enforces vi
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: [28]
 parent: Decisions

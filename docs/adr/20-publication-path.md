@@ -5,6 +5,7 @@ title: Publication path — vault-eval benchmark first, capture-now
 status: accepted
 date_proposed: 2026-05-27
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

@@ -378,3 +378,7 @@ metaanalysis
 JTBD
 bypassable
 façade
+autorelease
+HODLX
+counterevidence
+unrun

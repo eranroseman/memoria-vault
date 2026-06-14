@@ -5,6 +5,7 @@ title: Agent-proposed MOCs (threshold alert; Mapper stub deferred)
 status: accepted
 date_proposed: 2026-05-31
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

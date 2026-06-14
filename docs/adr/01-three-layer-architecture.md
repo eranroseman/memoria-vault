@@ -5,6 +5,7 @@ title: Three-layer architecture — board, workers, vault
 status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
+assumes: []
 supersedes: []
 superseded_by: [46]
 parent: Decisions

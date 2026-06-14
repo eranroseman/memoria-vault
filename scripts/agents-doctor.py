@@ -12,6 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS = ROOT / ".agents"
+GUIDANCE_DIRS = (".agents", ".claude", ".codex", ".kilo")
 IMPACT_SOURCE = AGENTS / "system/change-impact.yaml"
 IMPACT_DOC = AGENTS / "system/change-impact-map.md"
 PROFILE_DOC = AGENTS / "system/profile-policy-matrix.md"
@@ -103,7 +104,8 @@ def _render_profiles() -> str:
 def _local_link_errors() -> list[str]:
     errors = []
     link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-    for path in sorted(AGENTS.rglob("*.md")):
+    roots = [ROOT / name for name in GUIDANCE_DIRS if (ROOT / name).is_dir()]
+    for path in sorted(p for root in roots for p in root.rglob("*.md")):
         for target in link_re.findall(path.read_text(encoding="utf-8")):
             target = target.split("#", 1)[0]
             if not target or "://" in target or target.startswith("#"):
@@ -115,7 +117,9 @@ def _local_link_errors() -> list[str]:
 
 def _skill_errors() -> list[str]:
     errors = []
-    for path in sorted((AGENTS / "skills").glob("*/SKILL.md")):
+    skill_roots = [ROOT / ".agents" / "skills", ROOT / ".claude" / "skills",
+                   ROOT / ".codex" / "skills", ROOT / ".kilo" / "skills"]
+    for path in sorted(p for root in skill_roots if root.is_dir() for p in root.glob("*/SKILL.md")):
         text = path.read_text(encoding="utf-8")
         if not text.startswith("---\n"):
             errors.append(f"{path.relative_to(ROOT)}: missing YAML frontmatter")

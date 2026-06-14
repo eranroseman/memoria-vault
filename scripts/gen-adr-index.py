@@ -29,18 +29,43 @@ END = "<!-- ADR-INDEX:END -->"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 ADR_FILE_RE = re.compile(r"^\d+-.+\.md$")
+ADR_STATUSES = {"proposed", "accepted", "deferred", "rejected", "superseded"}
+REQUIRED_KEYS = (
+    "topic",
+    "id",
+    "title",
+    "status",
+    "date_proposed",
+    "date_resolved",
+    "assumes",
+    "supersedes",
+    "superseded_by",
+)
+RESOLVED_STATUSES = {"accepted", "rejected", "superseded"}
+UNRESOLVED_STATUSES = {"proposed", "deferred"}
 
 
 def parse_adr(text: str) -> dict[str, object]:
     """Pull id, title, status, and superseded_by from an ADR's frontmatter."""
     m = FRONTMATTER_RE.match(text.replace("\r\n", "\n"))
     fm = m.group(1) if m else ""
-    out: dict[str, object] = {"id": None, "title": "", "status": "", "superseded_by": []}
+    out: dict[str, object] = {
+        "id": None,
+        "title": "",
+        "status": "",
+        "date_proposed": "",
+        "date_resolved": "",
+        "assumes": [],
+        "supersedes": [],
+        "superseded_by": [],
+        "_keys": set(),
+    }
     for line in fm.splitlines():
         key, sep, val = line.partition(":")
         if not sep:
             continue
         key, val = key.strip(), val.strip()
+        out["_keys"].add(key)
         if key == "id":
             out["id"] = int(val) if val.isdigit() else None
         elif key == "title":
@@ -48,13 +73,50 @@ def parse_adr(text: str) -> dict[str, object]:
         elif key == "status":
             # drop any trailing YAML inline comment (e.g. "deferred  # NOT folded …")
             out["status"] = val.split("#", 1)[0].strip()
-        elif key == "superseded_by":
+        elif key in {"date_proposed", "date_resolved"}:
+            out[key] = val.split("#", 1)[0].strip()
+        elif key in {"assumes", "supersedes", "superseded_by"}:
             # parse only the IDs inside the [...] list — never digits in a trailing
             # "# … (D18) …" comment, which would invent phantom supersessors
             bracket = re.search(r"\[([^\]]*)\]", val)
             ids = bracket.group(1) if bracket else val.split("#", 1)[0]
-            out["superseded_by"] = [int(n) for n in re.findall(r"\d+", ids)]
+            out[key] = [int(n) for n in re.findall(r"\d+", ids)]
     return out
+
+
+def validate_adr(path: Path, adr: dict[str, object]) -> list[str]:
+    """Return frontmatter/schema drift findings for one ADR."""
+    errs: list[str] = []
+    try:
+        rel = path.relative_to(ROOT)
+    except ValueError:
+        rel = path
+    keys = adr.get("_keys", set())
+    if isinstance(keys, set):
+        for key in REQUIRED_KEYS:
+            if key not in keys:
+                errs.append(f"{rel}: missing frontmatter key `{key}`")
+
+    status = str(adr["status"])
+    if status not in ADR_STATUSES:
+        allowed = ", ".join(sorted(ADR_STATUSES))
+        errs.append(f"{rel}: invalid status `{status}` — expected one of: {allowed}")
+
+    date_proposed = str(adr.get("date_proposed", ""))
+    date_resolved = str(adr.get("date_resolved", ""))
+    if not _dateish(date_proposed):
+        errs.append(f"{rel}: date_proposed must be YYYY-MM-DD")
+    if status in RESOLVED_STATUSES and not _dateish(date_resolved):
+        errs.append(f"{rel}: {status} ADR must set date_resolved")
+    if status in UNRESOLVED_STATUSES and date_resolved:
+        errs.append(f"{rel}: {status} ADR must leave date_resolved blank")
+    if status == "superseded" and not adr.get("superseded_by"):
+        errs.append(f"{rel}: superseded ADR must set superseded_by")
+    return errs
+
+
+def _dateish(value: str) -> bool:
+    return bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", value))
 
 
 def status_cell(adr: dict[str, object]) -> str:
@@ -86,6 +148,9 @@ def collect_adrs(adr_dir: Path) -> list[dict[str, object]]:
         adr = parse_adr(path.read_text(encoding="utf-8"))
         if adr["id"] is None:
             raise SystemExit(f"gen-adr-index: {path.name} has no numeric 'id' in frontmatter")
+        errors = validate_adr(path, adr)
+        if errors:
+            raise SystemExit("gen-adr-index: ADR frontmatter invalid\n  ✗ " + "\n  ✗ ".join(errors))
         adr["slug"] = path.stem.split("-", 1)[1]
         adrs.append(adr)
     return adrs

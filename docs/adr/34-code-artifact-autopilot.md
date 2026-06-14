@@ -5,6 +5,9 @@ title: Code-artifact autopilot
 status: deferred
 assumes: []
 date_proposed: 2026-05-15
+date_resolved:
+supersedes: []
+superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 34

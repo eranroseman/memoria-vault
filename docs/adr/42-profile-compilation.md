@@ -6,6 +6,8 @@ status: superseded
 superseded_by: [48]  # the shared AGENTS.md layer + unique SOUL/skills/config (D46) removes the drift problem the compiler addressed
 assumes: []
 date_proposed: 2026-05-31
+date_resolved: 2026-06-10
+supersedes: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 42

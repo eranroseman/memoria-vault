@@ -5,6 +5,7 @@ title: Adopt-on-demand — systematic-review tooling
 status: accepted
 date_proposed: 2026-05-30
 date_resolved: 2026-06-01
+assumes: []
 supersedes: []
 superseded_by: []
 parent: Decisions

@@ -21,7 +21,7 @@ A `candidate` (a *found* source proposed for intake) and a `gap` (a *missing*-so
 | `argument_against` | the agent's strongest honest self-rebuttal                   |
 | `certainty`        | `confident` / `likely` / `unsure` — 3-level, action-labelled |
 
-These are what make the PI judge the argument rather than wave through a foregone conclusion. A card whose against-case is vacuous is a badly written card, and the design rule applies: *an Inbox item a human can clear without reading is a design smell* — give it real decision material or automate the decision. The full honesty-body field list (`title`, `action`, `argument_for`, `what_tipped_it`, `lifecycle`, and the provenance/routing optionals `citekey`/`url`, `raised_by`, `loudness`) is in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields), backed by [the candidate schema](../../../src/.memoria/schemas/types/candidate.yaml) and [the gap schema](../../../src/.memoria/schemas/types/gap.yaml).
+These are what make the PI judge the argument rather than wave through a foregone conclusion. A card whose against-case is vacuous is a badly written card, and the design rule applies: *an Inbox item a human can clear without reading is a design smell* — give it real decision material or automate the decision. The full honesty-body field list (`title`, `action`, `argument_for`, `what_tipped_it`, `lifecycle`, and the provenance/routing optionals `citekey`/`url`, `raised_by`, `loudness`) is in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields), backed by the candidate schema (`src/.memoria/schemas/types/candidate.yaml`) and the gap schema (`src/.memoria/schemas/types/gap.yaml`).
 
 ## Verification cards: flag and alert
 
@@ -32,11 +32,11 @@ A `flag` (a verification or integrity issue) and an `alert` (a drift or retracti
 | `finding`              | what the check found — leads the card                                 |
 | `agent_recommendation` | the soft verdict — meaningful here because it is *not* implied        |
 
-The remaining fields (`title`, the `target` / `citekey` the `flag` must point at, `lifecycle`) are in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields), backed by [the flag schema](../../../src/.memoria/schemas/types/flag.yaml) and [the alert schema](../../../src/.memoria/schemas/types/alert.yaml). `agent_recommendation` is the soft 3-tier verdict ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — meaningful here precisely because it is *not* implied, and still never a gate: a `clean` flag closes nothing on its own.
+The remaining fields (`title`, the `target` / `citekey` the `flag` must point at, `lifecycle`) are in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields), backed by the flag schema (`src/.memoria/schemas/types/flag.yaml`) and the alert schema (`src/.memoria/schemas/types/alert.yaml`). `agent_recommendation` is the soft 3-tier verdict ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — meaningful here precisely because it is *not* implied, and still never a gate: a `clean` flag closes nothing on its own.
 
 ## Work prompts: work-prompt
 
-A `work-prompt` is the third shape: not a proposal to judge and not a finding to adjudicate, but **work waiting on the PI** — the board export raises one when a worker card reaches `done`, and a batch worklist surfaces as one aggregate prompt. Like proposals, it carries **no verdict** (see [the work-prompt schema](../../../src/.memoria/schemas/types/work-prompt.yaml)): `action` (what to do — e.g. review, then accept or archive), `what_happened` (which lane finished what), and where to look (`target` output path(s) and/or the board `task_id`).
+A `work-prompt` is the third shape: not a proposal to judge and not a finding to adjudicate, but **work waiting on the PI** — the board export raises one when a worker card reaches `done`, and a batch worklist surfaces as one aggregate prompt. Like proposals, it carries **no verdict** (see the work-prompt schema (`src/.memoria/schemas/types/work-prompt.yaml`)): `action` (what to do — e.g. review, then accept or archive), `what_happened` (which lane finished what), and where to look (`target` output path(s) and/or the board `task_id`).
 
 ---
 

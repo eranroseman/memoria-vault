@@ -78,7 +78,7 @@ Legend: **α3** = in alpha.3 · **α3-decide** = decide in alpha.3, execute late
 |---|---|---|
 | Purge `(D41)`-style stale refs (§8) | **α3** | link rot / zero-contradiction |
 | Sweep docs→`src/` links to inline-code / tag permalink (§8, Issue 3c) | **α3** | broken-on-site; do **before** any path rename |
-| Promote `check_site_local_links` warning → error after sweep (§8) | **α3** | locks the rule |
+| Promote `check_site_local_links` warning → error after sweep (§8) | **Done** | locks the rule |
 | ADR-link policy: out of body/subheadings; footer "Decisions" + explanation-only (§8, Issue 3b) | **α3** | cheap convention |
 | Define "CI invocation"; delete "app" from prose (§7) | **α3** | cheap terminology fix (ahead of the rename) |
 | Diátaxis: split sweeps out of `reference/ingest.md`; lift the `engines/README` + `card-schema` reference tables (audit §2) | **α3** | high-impact, contained |

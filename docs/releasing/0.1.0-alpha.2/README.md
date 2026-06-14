@@ -16,5 +16,5 @@ as GitHub issues.
 | [Release plan — v0.1.0-alpha.2](release-plan-0.1.0-alpha.2.md) | The alpha.2 release plan: scope, gates (G#), validation stages (S#), blockers, known limitations, cut procedure, roadmap |
 
 Live readiness state (gate + stage checkboxes) lives in the **Release v0.1.0-alpha.2**
-tracking issue, not in these files — see [Releasing](../README.md) for where each thing
+release parent issue/sub-issues, not in these files — see [Releasing](../README.md) for where each thing
 lives.

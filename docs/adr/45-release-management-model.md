@@ -41,7 +41,7 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
   from Conventional Commits, replacing the tag-only `release.yml`. Don't hand-edit
   `CHANGELOG.md` or tag by hand.
 - **Prose** (scope summary, cut procedure, known-limitations) stays in
-  `docs/releasing/vX.Y/`, guarded by `status-doctor` against link/path/flag drift.
+  `docs/releasing/<version>/`, guarded by `status-doctor` against link/path/flag drift.
 - The in-flight **v0.1** plan keeps its §2/§3 tables as the at-cut record (with a pointer
   to its tracking issue); **v0.2+** uses the checklist model from the start.
 

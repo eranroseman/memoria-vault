@@ -20,6 +20,9 @@ fail=0
 
 for f in "$@"; do
   [ -f "$f" ] || continue
+  case "$f" in
+    tests/*) continue ;;  # tests contain synthetic paths that exercise validators
+  esac
 
   # 4a. bare repo-relative docs/<path>.md must exist
   while IFS= read -r ref; do

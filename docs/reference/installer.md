@@ -5,7 +5,7 @@ parent: Reference
 
 # Installer (bootstrap)
 
-The bootstrap installer ([scripts/install.sh](../../scripts/install.sh); Windows runs it under WSL2 via `install.ps1`): what each step does, the flags, and the crons it wires. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `src/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `src/`, and stages a restorable golden copy of every system file.
+The bootstrap installer (`scripts/install.sh`; Windows runs it under WSL2 via `install.ps1`): what each step does, the flags, and the crons it wires. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `src/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `src/`, and stages a restorable golden copy of every system file.
 
 Safety posture: no silent privilege escalation (every `sudo` is printed and confirmed), `--dry-run` echoes everything and touches nothing, and the recommended invocation is inspect-first (`curl -o install.sh`, read it, then run it).
 
@@ -55,7 +55,7 @@ All five are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappe
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
 | `memoria-eval` | `0 7 1 */3 *` | `engines/sweeps/eval_score.py` + `eval_dispatch.py` | Quarterly vault-eval: scores the previous quarter's run into `system/metrics/eval/runs.jsonl`, then fans the `system/eval/` gold set out as one idempotent eval card per task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |
 
-A further wrapper ships for the monthly Retraction Watch refresh ([src/.memoria/scripts/refresh-retraction-watch.sh](../../src/.memoria/scripts/refresh-retraction-watch.sh) — `retraction.py --refresh` + `--sweep`).
+A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/scripts/refresh-retraction-watch.sh` — `retraction.py --refresh` + `--sweep`).
 
 ---
 

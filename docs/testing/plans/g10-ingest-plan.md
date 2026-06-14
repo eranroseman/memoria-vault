@@ -128,4 +128,4 @@ Not a pass/fail of the run but of the **data** — ADR-30 mandates it before bui
 | F | Tier-1 correctness spike (merge / tags / extract) | | |
 | G | nothing-lost / scriptable-first / gate / serialized | | |
 
-**G10 green** when one real source traverses A → E producing a correct `proposed` paper entity, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record in [Release plan — v0.1.0-alpha.1](../../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md) (gate G10).
+**G10 green** when one real source traverses A → E producing a correct `proposed` paper entity, every write `allow_with_log` + audited, all G invariants hold, **and** the Part F spike passes (or Tier-1 is explicitly scoped to single-source-with-fallback for the cut). Record the result in the G10 sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.
