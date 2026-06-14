@@ -375,3 +375,6 @@ unshippable
 casereport
 clinicaltrial
 metaanalysis
+JTBD
+bypassable
+façade

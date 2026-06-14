@@ -21,8 +21,12 @@ Flag any mixed-quadrant page — it should be split.
 ## 2. Links
 
 - `docs/` → docs/ links are **relative**. `vault/` → docs links are **absolute** website URLs.
+- **Never link into `src/` from a published page.** `src/` is a sibling of `docs/` and is excluded from the Jekyll site (`docs/_config.yml`), so a relative link like `../../src/.memoria/…` resolves on disk and on github.com but **404s on the live site at any depth** — adding `../` never fixes it. To reference a source file:
+  - **Default — inline code, not a link:** `` `src/.memoria/engines/ingest/…` `` (also immune to source-file renames).
+  - **Only when a click is genuinely warranted** (e.g. a reference page's "Source:" pointer): an **absolute** `https://github.com/eranroseman/memoria-vault/blob/main/src/…` URL (`tree/main` for a directory). Note it pins to `main` and will drift if the file moves.
+  - This rule applies only to *published* pages — pages under `contributing/`, `releasing/`, `testing/`, or any `tmp/` are repo-internal (read on github.com) and may link to `src/`.
 - Run the checkers and report failures:
-  - `python scripts/docs-doctor.py docs`
+  - `python scripts/docs-doctor.py docs` — flags published→`src/` links as **advisory warnings** (`check_site_local_links`); these don't fail the build yet but must be swept. Note docs-doctor's link check resolves against the *filesystem*, so a `src/` link can pass the broken-link check while still being dead on the site — that's exactly what the advisory catches.
   - `bash scripts/check-vault-links.sh`
 - Spot filename-style link text (visible text restates the target filename) — link text should be the page title.
 
