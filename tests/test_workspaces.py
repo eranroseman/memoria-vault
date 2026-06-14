@@ -16,6 +16,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 WORKSPACES = SRC / ".obsidian" / "workspaces.json"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
 HOMEPAGE = SRC / ".obsidian" / "plugins" / "homepage" / "data.json"
+COMMANDER = SRC / ".obsidian" / "plugins" / "cmdr" / "data.json"
 HOME = SRC / "home.md"
 LOADER = SRC / "system" / "scripts" / "load-workspace.js"
 
@@ -100,6 +101,14 @@ def _choices():
     return json.loads(QUICKADD.read_text(encoding="utf-8"))["choices"]
 
 
+def _quickadd_command_ids_by_name():
+    return {
+        choice["name"]: f"quickadd:choice:{choice['id']}"
+        for choice in _choices()
+        if choice.get("command")
+    }
+
+
 def test_home_buttons_dispatch_registered_commands():
     text = HOME.read_text(encoding="utf-8")
     blocks = re.findall(r"```button\n(.*?)```", text, re.S)
@@ -139,3 +148,47 @@ def test_buttons_plugin_is_bundled():
     roster = json.loads(
         (SRC / ".obsidian" / "community-plugins.json").read_text(encoding="utf-8"))
     assert "buttons" in roster
+
+
+def test_commander_plugin_is_bundled():
+    plugin_dir = SRC / ".obsidian" / "plugins" / "cmdr"
+    for filename in ("main.js", "manifest.json", "styles.css", "data.json"):
+        assert (plugin_dir / filename).is_file(), f"Commander missing {filename}"
+    assert json.loads((plugin_dir / "manifest.json").read_text(encoding="utf-8"))["id"] == "cmdr"
+    roster = json.loads(
+        (SRC / ".obsidian" / "community-plugins.json").read_text(encoding="utf-8"))
+    assert "cmdr" in roster
+
+
+def test_commander_toolbar_commands_reference_quickadd_choices():
+    data = json.loads(COMMANDER.read_text(encoding="utf-8"))
+    quickadd_ids = _quickadd_command_ids_by_name()
+
+    expected_left_ribbon = [
+        "Memoria: capture fleeting",
+        "Memoria: capture from Zotero selection",
+        "Memoria: capture source from URL",
+        "Memoria: delegate task",
+        "Memoria: resolve inbox card",
+        "Memoria: open Desk workspace",
+        "Memoria: open Library workspace",
+        "Memoria: open Studio workspace",
+    ]
+    expected_page_header = [
+        "Memoria: create linked claim note",
+        "Memoria: write claim note",
+        "Memoria: extract claims",
+        "Memoria: link claim",
+    ]
+
+    assert data["showAddCommand"] is False
+    for surface, names in (
+        ("leftRibbon", expected_left_ribbon),
+        ("pageHeader", expected_page_header),
+    ):
+        configured = data[surface]
+        assert [entry["name"] for entry in configured] == names
+        assert [entry["id"] for entry in configured] == [
+            quickadd_ids[name] for name in names
+        ]
+        assert all(entry["mode"] == "any" for entry in configured)

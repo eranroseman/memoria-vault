@@ -1,0 +1,103 @@
+{
+  "confirmDeletion": true,
+  "showAddCommand": false,
+  "debug": false,
+  "editorMenu": [],
+  "fileMenu": [],
+  "leftRibbon": [
+    {
+      "id": "quickadd:choice:7c9406c9-ba8a-454f-a813-1f420795ed07",
+      "icon": "inbox",
+      "name": "Memoria: capture fleeting",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:2cc964f1-b720-468b-8d2e-b5b14a890127",
+      "icon": "book-open",
+      "name": "Memoria: capture from Zotero selection",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:f5be1f23-3244-4891-95d5-f48663d3df4c",
+      "icon": "link",
+      "name": "Memoria: capture source from URL",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:9d3f2b71-4e8a-4c5d-9b06-2f7c81d4a350",
+      "icon": "send",
+      "name": "Memoria: delegate task",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:a7f04d28-31b5-49ce-bd62-0e95c8a7f413",
+      "icon": "check-circle",
+      "name": "Memoria: resolve inbox card",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:71138de4-6029-416b-8559-fb61fde5efb1",
+      "icon": "layout-dashboard",
+      "name": "Memoria: open Desk workspace",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:5f43d3c5-544c-4a38-ba5b-be3891254236",
+      "icon": "library",
+      "name": "Memoria: open Library workspace",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:4a9ffb2d-0cec-4436-9b39-a41384da9670",
+      "icon": "pen-tool",
+      "name": "Memoria: open Studio workspace",
+      "mode": "any"
+    }
+  ],
+  "rightRibbon": [],
+  "titleBar": [],
+  "statusBar": [],
+  "pageHeader": [
+    {
+      "id": "quickadd:choice:d93115ab-346a-4f65-b107-4af5b9a6f8e1",
+      "icon": "file-plus-2",
+      "name": "Memoria: create linked claim note",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:c5a18ecf-087e-4546-bf96-8941743b8a42",
+      "icon": "file-pen",
+      "name": "Memoria: write claim note",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:46f31a2a-cd67-4d0d-9239-8d0271baf636",
+      "icon": "list-plus",
+      "name": "Memoria: extract claims",
+      "mode": "any"
+    },
+    {
+      "id": "quickadd:choice:bf05fcc8-50e3-4597-9984-d7c7cc507b02",
+      "icon": "git-merge",
+      "name": "Memoria: link claim",
+      "mode": "any"
+    }
+  ],
+  "explorer": [],
+  "macros": [],
+  "hide": {
+    "statusbar": [],
+    "leftRibbon": []
+  },
+  "spacing": 8,
+  "advancedToolbar": {
+    "rowHeight": 48,
+    "rowCount": 1,
+    "spacing": 0,
+    "buttonWidth": 48,
+    "columnLayout": false,
+    "mappedIcons": [],
+    "tooltips": false,
+    "heightOffset": 0
+  }
+}

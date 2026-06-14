@@ -55,33 +55,39 @@ end (the boxes are clickable in Obsidian).
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
 - [ ] **A2 Pass**
 
-**A3. Confirm all 8 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
+**A3. Confirm all 11 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
 | Plugin | Purpose | ✓ Validate it loaded |
 | --- | --- | --- |
 | `Agent Client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
+| `Buttons` | Renders `home.md` command buttons | home buttons render and invoke commands (Part C1) |
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
+| `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, resolve, and workspace buttons |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
+| `Homepage` | Opens `home.md` on startup | `home.md` opens as the startup surface |
 | `Local REST API with MCP` | Exposes the vault to Hermes (HTTP 27123) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
 
-- ✓ Pass: **8/8 enabled**, no "Failed to load plugin" notices.
+- ✓ Pass: **11/11 enabled**, no "Failed to load plugin" notices.
 - ✗ Fails: a plugin missing → reinstall via `--profiles-only` or copy `.obsidian/plugins/<name>`; a plugin disabled → enable it; load error → check its `data.json` (the two private ones ship as `data.json.example` and must be copied — see A-note).
 
 Tick each plugin that is enabled and validated:
 
 - [ ] `Agent Client`
+- [ ] `Buttons`
 - [ ] `Callout Manager`
 - [ ] `Citations`
+- [ ] `Commander`
 - [ ] `Dataview`
 - [ ] `Git`
+- [ ] `Homepage`
 - [ ] `Local REST API with MCP`
 - [ ] `QuickAdd`
 - [ ] `Templater`
-- [ ] **A3 Pass (8/8)**
+- [ ] **A3 Pass (11/11)**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a

@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (9)
+## Required Obsidian plugins (11)
 
-Memoria breaks without these. The starter vault **ships all nine bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all eleven bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
@@ -20,22 +20,23 @@ Memoria breaks without these. The starter vault **ships all nine bundled and con
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
+| cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, resolution, and workspace switching do not require a palette round trip. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
+| homepage | `homepage` | Opens `home.md` on startup as the deterministic landing surface. |
 | buttons | `buttons` | Renders the command buttons on the `home.md` control panel ([ADR-68](../adr/68-workspaces-desk-library-studio.md)). **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
 ---
 
-## Recommended Obsidian plugins (11)
+## Recommended Obsidian plugins (9)
 
 Install when the friction is felt. Not required for core function.
 
-### Core eight
+### Core seven
 
 | Plugin | Purpose |
 | --- | --- |
-| obsidian-homepage | Opens `home.md` on startup (deterministic landing). |
 | smart-connections | Vector search across notes. |
 | smart-lookup | Question-first semantic search (shares index with smart-connections). |
 | omnisearch | Fast fuzzy full-text search (keyword counterpart to smart-*). |
@@ -44,11 +45,10 @@ Install when the friction is felt. Not required for core function.
 | tag-wrangler | Bulk-rename, merge, and inspect tags. |
 | pdf-plus | Deep-link from notes to specific PDF passages. |
 
-### Narrower three (install for specific use cases)
+### Narrower two (install for specific use cases)
 
 | Plugin | When to install |
 | --- | --- |
-| cmdr (Commander) | When binding Memoria commands to ribbon buttons becomes worthwhile. |
 | obsidian-outliner | When nested-list editing becomes friction. |
 | obsidian-excalidraw | When hand-drawn diagrams are needed (stored as `.excalidraw`). |
 
@@ -138,6 +138,14 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `exportSettings.autoExportOnNewChat` / `autoExportOnCloseChat` | `true` / `true` | Pane sessions export automatically at session start and close. |
 | `exportSettings.openFileAfterExport` | `false` | Exporting a session must not steal focus from the Co-PI conversation. |
 | `exportSettings.imageCustomFolder` | `system/exports/assets` | Exported images stay beside the visible transcript surface, never in hidden runtime internals. |
+
+### cmdr
+
+| Setting | Required value | Constraint |
+| --- | --- | --- |
+| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and open Desk/Library/Studio workspace. | The always-visible ribbon carries the commands needed for the alpha.3 capture → triage → navigate loop. |
+| `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
+| `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 
 ### callout-manager
 
