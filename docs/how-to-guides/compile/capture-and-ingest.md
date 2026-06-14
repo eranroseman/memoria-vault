@@ -31,7 +31,7 @@ The Librarian claims the card and drives the deterministic ingest engine over th
 
 - Created the **Catalog entity** at `catalog/papers/<citekey>.md` — merged metadata with per-field provenance (Semantic Scholar + OpenAlex + Crossref) and `relationships` edges (`authored_by`, `published_in`, `cites`) into person, venue, and paper entities it finds or creates alongside
 - Applied `research_area` (and `methodology` where derivable) automatically when the classification is clear — or left it unset and raised one Inbox `flag` on genuine ambiguity
-- Extracted the full text to `.memoria/data/extracts/<citekey>.md` where one is available
+- Recorded the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the private engine extract path is reflected in that entity's metadata
 - Raised a **`candidate` card** in your Inbox proposing the keep, with the honesty body and the Librarian's `_proposed_classification`
 
 **4. Judge the candidate card.**
@@ -47,7 +47,7 @@ For a kept paper, create your reading record in `notes/source/` from `system/tem
 - `catalog/papers/<citekey>.md` exists with `type: paper` and a `relationships` block
 - `system/logs/capture-intake.jsonl` has a new line for the capture, and `system/logs/audit.jsonl` shows the gated writes
 - A `candidate` card landed in `inbox/` (or you've already resolved it)
-- The extract exists at `.memoria/data/extracts/<citekey>.md` (when full text was available)
+- `catalog/papers/<citekey>.md` includes the visible metadata and any extract-path metadata the engine produced
 
 ## Batch capture
 
