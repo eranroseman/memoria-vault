@@ -72,7 +72,8 @@ Context for the cadence review, not a gate — pick this up when **any** holds:
 
 ## Related
 
-- **Tracking issue / origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494); full analysis in the design note [install a real package](../releasing/0.1.0-alpha.4/tmp/install-a-real-package.md).
+- **Tracking issue:** [#521](https://github.com/eranroseman/memoria-vault/issues/521) — revisit at each release cadence.
+- **Origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) (research); full analysis in the design note [install a real package](../releasing/0.1.0-alpha.4/tmp/install-a-real-package.md).
 - **Depends on:** [L1 component tests live in the pytest tree](44-tests-in-pytest-tree.md) (the conftest `sys.path` block this deletes); [seven-layer architecture](46-seven-layer-architecture.md) (the MCP-only sandbox that *is* the code-integrity story); [operations-layer naming](69-operations-layer-naming.md) (sequence packaging with the rename); [docs reference conventions](73-docs-reference-conventions.md) (land before path-pinned links move).
 - **In tension with:** [repo as install unit](26-repo-as-install-unit.md) (install unit becomes a wheel).
 - **Explicitly untouched:** [src scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md) — golden never covered `.memoria/` code; this design does not change its scope.
