@@ -35,7 +35,12 @@ def targets(root: Path) -> list[Path]:
     # checks docs/ links generally, this adds the released-flag consistency guard.
     files: list[Path] = []
     for sub in ("releasing", "testing", "contributing"):
-        files += sorted((root / "docs" / sub).rglob("*.md"))
+        # Skip scratch dirs (a release folder's tmp/): tracked for relative
+        # linking but not held to the published-docs bar.
+        files += sorted(
+            p for p in (root / "docs" / sub).rglob("*.md")
+            if "tmp" not in p.relative_to(root).parts
+        )
     skill = root / ".claude" / "skills" / "release" / "SKILL.md"
     if skill.is_file():
         files.append(skill)

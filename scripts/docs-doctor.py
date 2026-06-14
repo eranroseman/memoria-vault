@@ -36,6 +36,18 @@ from pathlib import Path
 
 DROPPED_KEYS = ("mode", "audience", "tags")  # mode/audience dropped in the refactor; tags unsanctioned (use the controlled topic/methods vocabularies)
 
+# Scratch dirs: tracked in git so relative links resolve, but excluded from the
+# published site (docs/_config.yml) and skipped by these structural checks —
+# planning notes / generated reports under a tmp/ folder are not held to the
+# published-docs bar.
+SCRATCH_DIRS = {"tmp"}
+
+
+def _scratch(p: Path, base: Path) -> bool:
+    # Match a scratch dir only *within* the scanned tree, not the absolute path — so a
+    # repo checked out under /tmp (or a pytest tmp_path root) is not wholesale excluded.
+    return any(part in SCRATCH_DIRS for part in p.relative_to(base).parts)
+
 # [text](target) — but NOT images ![alt](src). Reference-style/wikilinks unused.
 LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
 LINK_TEXT_RE = re.compile(r"(?<!\!)\[([^\]]*)\]\(([^)]+)\)")  # captures (text, target)
@@ -55,7 +67,7 @@ def read(path: Path) -> str:
 def check_readmes(root: Path, errors: list[str]) -> None:
     if not (root / "README.md").exists():
         errors.append(f"{root}/: missing README.md")
-    for d in sorted(p for p in root.rglob("*") if p.is_dir()):
+    for d in sorted(p for p in root.rglob("*") if p.is_dir() and not _scratch(p, root)):
         md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
         if len(md_files) <= 1:
             continue  # single-file folders need no landing page; the file is its own landing
@@ -66,7 +78,7 @@ def check_readmes(root: Path, errors: list[str]) -> None:
 def check_thin_folders(root: Path, warnings: list[str]) -> None:
     # Advisory: flag folders thin enough to consider flattening into their parent.
     # Does not affect exit code — the human decides whether to act.
-    for d in sorted(p for p in root.rglob("*") if p.is_dir()):
+    for d in sorted(p for p in root.rglob("*") if p.is_dir() and not _scratch(p, root)):
         md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
         has_readme = (d / "README.md").exists()
         if len(md_files) == 1 and not has_readme:
@@ -255,10 +267,10 @@ def main() -> int:
 
     errors: list[str] = []
     warnings: list[str] = []
-    doc_md_names = {p.name.lower() for p in root.rglob("*.md")}
+    doc_md_names = {p.name.lower() for p in root.rglob("*.md") if not _scratch(p, root)}
     check_readmes(root, errors)
     check_thin_folders(root, warnings)
-    for md in sorted(root.rglob("*.md")):
+    for md in sorted(p for p in root.rglob("*.md") if not _scratch(p, root)):
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_wikilinks(md, errors, doc_md_names)
@@ -275,9 +287,9 @@ def main() -> int:
     # title — markdown link text and wikilink aliases — never the bare filename.
     vault = root.parent / "src"
     if vault.is_dir():
-        vault_stems = {p.stem.lower() for p in vault.rglob("*.md") if ".obsidian" not in p.parts}
+        vault_stems = {p.stem.lower() for p in vault.rglob("*.md") if ".obsidian" not in p.parts and not _scratch(p, vault)}
         for md in sorted(vault.rglob("*.md")):
-            if ".obsidian" in md.parts or "templates" in md.parts:
+            if ".obsidian" in md.parts or "templates" in md.parts or _scratch(md, vault):
                 continue
             check_link_text(md, errors)
             check_wikilink_aliases(md, errors)

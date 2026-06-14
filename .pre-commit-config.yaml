@@ -105,6 +105,7 @@ repos:
         language: system
         entry: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json
         files: ^docs/.*\.md$
+        exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
 
       # Block 9b: cspell spell-check (docs/ + src/ + root markdown)
