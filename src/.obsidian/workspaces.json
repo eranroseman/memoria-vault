@@ -15,7 +15,7 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "system/dashboards/board-state.md",
+                    "file": "system/dashboards/desk.md",
                     "mode": "preview",
                     "source": false
                   }
@@ -123,7 +123,7 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "system/dashboards/reading-pipeline.md",
+                    "file": "system/dashboards/library.md",
                     "mode": "preview",
                     "source": false
                   }
@@ -243,7 +243,7 @@
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "research-focus.md",
+                    "file": "system/dashboards/studio.md",
                     "mode": "preview",
                     "source": false
                   }

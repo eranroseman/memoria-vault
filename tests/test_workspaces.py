@@ -18,6 +18,7 @@ QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
 HOMEPAGE = SRC / ".obsidian" / "plugins" / "homepage" / "data.json"
 COMMANDER = SRC / ".obsidian" / "plugins" / "cmdr" / "data.json"
 HOME = SRC / "home.md"
+DESK_DASHBOARD = SRC / "system" / "dashboards" / "desk.md"
 LOADER = SRC / "system" / "scripts" / "load-workspace.js"
 
 WORKSPACE_NAMES = ["Desk", "Library", "Studio"]
@@ -90,6 +91,21 @@ def test_main_pane_is_a_real_work_surface():
                 f"{name}: home.md must not be pinned in a workspace (ADR-68)")
 
 
+def test_workspace_main_panes_open_gate_dashboards():
+    expected = {
+        "Desk": "system/dashboards/desk.md",
+        "Library": "system/dashboards/library.md",
+        "Studio": "system/dashboards/studio.md",
+    }
+    for name, ws in _data()["workspaces"].items():
+        files = [
+            leaf.get("state", {}).get("file")
+            for leaf in _leaves(ws["main"])
+            if leaf.get("state", {}).get("file")
+        ]
+        assert files == [expected[name]], f"{name}: unexpected main pane files {files}"
+
+
 def test_file_explorer_is_the_last_left_tab():
     for name, ws in _data()["workspaces"].items():
         types = [leaf["type"] for leaf in _leaves(ws["left"])]
@@ -109,17 +125,25 @@ def _quickadd_command_ids_by_name():
     }
 
 
-def test_home_buttons_dispatch_registered_commands():
-    text = HOME.read_text(encoding="utf-8")
+def _assert_buttons_dispatch_registered_commands(path):
+    text = path.read_text(encoding="utf-8")
     blocks = re.findall(r"```button\n(.*?)```", text, re.S)
-    assert blocks, "no button blocks in home.md"
+    assert blocks, f"no button blocks in {path.relative_to(SRC)}"
     choice_commands = {f"QuickAdd: {c['name']}" for c in _choices() if c.get("command")}
     for block in blocks:
         assert re.search(r"^type command$", block, re.M), (
-            f"non-command button in home.md (ADR-68 bans them):\n{block}")
+            f"non-command button in {path.relative_to(SRC)} (ADR-68 bans them):\n{block}")
         action = re.search(r"^action (.+)$", block, re.M).group(1)
         assert action == COPI_COMMAND or action in choice_commands, (
-            f"home.md button action {action!r} matches no registered command")
+            f"{path.relative_to(SRC)} button action {action!r} matches no registered command")
+
+
+def test_home_buttons_dispatch_registered_commands():
+    _assert_buttons_dispatch_registered_commands(HOME)
+
+
+def test_desk_dashboard_buttons_dispatch_registered_commands():
+    _assert_buttons_dispatch_registered_commands(DESK_DASHBOARD)
 
 
 def test_workspace_choices_reference_the_loader_script():

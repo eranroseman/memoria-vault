@@ -16,7 +16,7 @@ The three shipped workspaces pre-load the highest-frequency views ([Workspaces](
 | --- | --- |
 | **Desk** (default) | Board State in the main pane; `inbox.base`, Drift Watch, Weekly Review as left tabs |
 | **Library** | Reading Pipeline in the main pane; `catalog.base`, Discuss Queue, Open Questions, Contradictions as left tabs |
-| **Studio** | `research-focus.md` in the main pane; `claims.base`, `patterns.base` as left tabs |
+| **Studio** | `system/dashboards/studio.md` in the main pane; `claims.base`, `patterns.base` as left tabs |
 
 Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
@@ -32,13 +32,13 @@ Glance at the start of every session. Empty means nothing urgent; under 30 secon
 
 ### "What work is in flight? What's stuck?"
 
-**Board State** — Desk workspace, main pane.
+**Desk** — Desk workspace, main pane.
 
 A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
 ### "What should I read and distill next?"
 
-**Reading Pipeline** — Library workspace, main pane.
+**Library** — Library workspace, main pane.
 
 Oldest-first — clear the oldest items first. See [Classify a source](../compile/classify-a-source.md).
 
