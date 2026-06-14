@@ -48,6 +48,7 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: verify draft",
         "Memoria: run pattern",
         "Memoria: resolve inbox card",
+        "Memoria: create linked claim note",
         "Memoria: write claim note",
         "Memoria: open Desk workspace",
         "Memoria: open Library workspace",
@@ -174,6 +175,26 @@ def test_url_capture_writes_visible_candidate_card():
         "raised_by: quickadd",
     ):
         assert field in script
+
+
+def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
+    script = (SCRIPTS / "create-linked-claim.js").read_text(encoding="utf-8")
+    assert 'source.path.startsWith("notes/source/")' in script
+    assert '"notes/claims/" + slug(claim) + ".md"' in script
+    for field in (
+        "type: claim",
+        "lifecycle: current",
+        "maturity: seedling",
+        "sources:",
+        "topics: []",
+        "supports: []",
+        "contradicts: []",
+    ):
+        assert field in script
+    assert "appendWorthDistillingLink(sourceText, claimLink)" in script
+    assert "app.vault.create(claimPath, frontmatter + body)" in script
+    assert "app.vault.modify(source," in script
+    assert "app.workspace.getLeaf(true).openFile(created)" in script
 
 
 def test_capture_and_catalog_cards_request_source_note_stub():

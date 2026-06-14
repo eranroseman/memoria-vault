@@ -56,6 +56,18 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 
 ---
 
+## Note utility commands
+
+These commands write notes directly from local templates or the active note; they do
+not create board cards.
+
+| Command | Use | Implementation |
+| --- | --- | --- |
+| `Memoria: write claim note` | Create a standalone claim note from `system/templates/claim.md`. | QuickAdd Template |
+| `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
+
+---
+
 ## Removed and retired commands
 
 | Command | Status | Where the job went |

@@ -69,7 +69,7 @@ source_type: paper
 Fill the three body sections the template gives you:
 
 1. **In my words** — what the paper claims, on what evidence. Write it fresh; don't paste the abstract.
-2. **Worth distilling** — candidate claims you might extract later (Tutorial 05 turns these into claim notes).
+2. **Worth distilling** — candidate claims you might extract later. Use the **Create linked claim** button here when a sentence is ready to become a claim note.
 3. **Tensions** — where it disagrees with anything your vault already holds.
 
 Save. Then resolve the candidate card from Step 3 — its job is done.
