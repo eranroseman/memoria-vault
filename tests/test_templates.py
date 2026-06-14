@@ -25,6 +25,13 @@ def _frontmatter(path: Path) -> dict:
     return yaml.safe_load(_PLACEHOLDER.sub("PLACEHOLDER", m.group(1)))
 
 
+def _frontmatter_text(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    assert m, f"{path.name}: no frontmatter block"
+    return m.group(1)
+
+
 def test_one_template_per_type():
     types = schema.load_types()
     names = {p.stem for p in TEMPLATES.glob("*.md")}
@@ -49,6 +56,13 @@ def test_templates_conform_to_schemas():
                 allowed = enums[kind.split(":", 1)[1]]
                 assert fm[field] in allowed, (
                     f"{tpl.name}: {field}={fm[field]!r} not a valid default {allowed}")
+
+
+def test_fleeting_template_keeps_origin_comment_out_of_yaml():
+    """Obsidian Bases failed to index later keys when this carried an inline comment."""
+    fm = _frontmatter_text(TEMPLATES / "fleeting.md")
+    assert "origin: human\n" in f"{fm}\n"
+    assert "origin: human #" not in fm
 
 
 def test_proposal_cards_carry_honesty_body():
