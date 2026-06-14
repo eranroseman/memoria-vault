@@ -29,7 +29,7 @@ It shows what is in flight on the Library side and what has come out the other s
 
 ## Why it's designed this way
 
-**Two queries, two cadences.** "Sources awaiting reading" answers a near-term question: what should I read this session? "Claims by maturity" answers a longer-term question: what is the durable output of all this reading? Showing both in one dashboard prevents optimizing one measure while ignoring the other — reading without synthesis, or synthesis without new sources.
+**Two Bases views, two cadences.** "Sources awaiting reading" answers a near-term question: what should I read this session? "Claims by maturity" answers a longer-term question: what is the durable output of all this reading? Showing both in one dashboard prevents optimizing one measure while ignoring the other — reading without synthesis, or synthesis without new sources.
 
 **Source `lifecycle` is the in-flight signal.** A source note is `proposed` from the moment it's created until the PI reads it, then `provisional` once read but not yet distilled into claims, reaching `current` only when its claims are written. Reading-pipeline shows the `proposed` and `provisional` sources in `notes/source/` — the pipeline's working middle band. (The Catalog entity behind each source is already `current` — facts don't queue; the *reading* does.)
 

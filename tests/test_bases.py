@@ -101,8 +101,19 @@ def test_base_properties_exist_in_schemas():
 def test_inbox_base_has_needs_me_view():
     inbox = SRC / "inbox" / "inbox.base"
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
-    names = {v.get("name") for v in data.get("views", [])}
+    views = {v.get("name"): v for v in data.get("views", [])}
+    names = set(views)
     assert "Needs me" in names  # home.md embeds this view by name
+    needs_me_order = views["Needs me"]["order"]
+    assert "action" in needs_me_order
+    assert "finding" in needs_me_order
+
+
+def test_reading_pipeline_embeds_source_and_claim_bases():
+    text = (SRC / "system" / "dashboards" / "reading-pipeline.md").read_text(encoding="utf-8")
+    assert "![[sources.base#To read & distill]]" in text
+    assert "![[claims.base#By maturity]]" in text
+    assert "```dataview" not in text
 
 
 def test_fleeting_base_matches_capture_template_home():
