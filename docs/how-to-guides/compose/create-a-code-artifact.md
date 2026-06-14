@@ -17,11 +17,11 @@ Delegate analysis or figure code to the **Engineer** — the `code` lane. Code i
 
 **1. Delegate the code task.**
 
-In the co-PI pane, state the artifact and the claim it serves:
+In the Co-PI pane, state the artifact and the claim it serves:
 
 > "Code task: produce the figure-3 receptivity curve for `projects/<slug>/`, from the data behind `[[receptivity-decreases-under-high-cognitive-load]]`."
 
-The co-PI delegates a **`code`** task to the Engineer. (Palette twin: **Memoria: delegate a task** → `code`; see [Command palette](../../reference/obsidian-command-palette.md).)
+The Co-PI delegates a **`code`** task to the Engineer. (Palette twin: **Memoria: delegate a task** → `code`; see [Command palette](../../reference/obsidian-command-palette.md).)
 
 **2. Let the Engineer scaffold.**
 

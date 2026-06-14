@@ -6,7 +6,7 @@ permalink: /
 
 # Memoria
 
-A research operating system for a single researcher (the PI) — a co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
+A research operating system for a single researcher (the PI) — a Co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
 **[Read about what Memoria is](explanation/overview/what-memoria-is.md)**, what it's not, and why it exists. Everything else builds on this.
 If you want a guided first experience, see [Tutorials](tutorials).
@@ -40,10 +40,10 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 | [01 — Set up from zero](tutorials/01-set-up-from-zero.md)                | Run the installer, finish the setup steps                | A working vault, all plugins, the five profiles     |
 | [02 — Your first note](tutorials/02-your-first-note.md)                  | Capture a fleeting note from the palette, read its frontmatter, distill or archive it | One processed fleeting note and the distill-or-archive habit |
 | [03 — Bring in a paper](tutorials/03-bring-in-a-paper.md)                | Optionally wire Zotero, capture a paper, judge its candidate card, write a source note | A Catalog entity, a kept candidate, and a source note in your own words |
-| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ask the co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |
+| [04 — Build a reading batch](tutorials/04-build-a-reading-batch.md)      | Ask the Co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |
 | [05 — Synthesize toward a writing project](tutorials/05-synthesize-toward-a-writing-project.md)  | Distill claims, gather them under a hub, delegate a `map` task for coverage | Your synthesis surface: claims, a hub, and a corpus map (project workflow previews v0.1.0-alpha.3) |
 | [06 — Verify and address a gap](tutorials/06-verify-and-address-gaps.md) | Delegate a `verify` task, read the finding-first cards, let gaps re-trigger discovery | A checked corpus and your first turn of the compounding loop |
-| [07 — Find new sources](tutorials/07-find-new-sources.md)                | Ask the co-PI to find sources on a topic; keep or skip the candidates it surfaces | A worked Inbox of honest candidate cards and new Catalog entries |
+| [07 — Find new sources](tutorials/07-find-new-sources.md)                | Ask the Co-PI to find sources on a topic; keep or skip the candidates it surfaces | A worked Inbox of honest candidate cards and new Catalog entries |
 
 ---
 
@@ -70,7 +70,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 
 | Agent             | What it does                                                                  |
 | ----------------- | ----------------------------------------------------------------------------- |
-| **co-PI**         | The one agent you converse with — questions, explains, and delegates; read-only |
+| **Co-PI**         | The one agent you converse with — questions, explains, and delegates; read-only |
 | **Librarian**     | The four processing lanes (catalog · extract · link · map) — intake to corpus maps |
 | **Writer**        | Turns evidence into draft prose — lands in review, never direct to canonical  |
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |

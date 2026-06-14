@@ -18,11 +18,11 @@ Put a draft in front of the **Peer-reviewer** — the independent, adversarial `
 
 **1. Delegate a verify pass.**
 
-In the co-PI pane:
+In the Co-PI pane:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 
-The co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify a draft** — defaults to the active note when it's under `projects/`; see [Command palette](../../reference/obsidian-command-palette.md).) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
+The Co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify a draft** — defaults to the active note when it's under `projects/`; see [Command palette](../../reference/obsidian-command-palette.md).) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
 
 **2. Read the flag cards.**
 

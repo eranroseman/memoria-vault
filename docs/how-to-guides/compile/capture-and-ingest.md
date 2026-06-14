@@ -19,7 +19,7 @@ Move a paper from discovery into the vault as a Catalog entity with a judged can
 
 - **From Zotero:** add the source to Zotero (Better BibTeX pins the citekey automatically), select the item, then in Obsidian press `Cmd/Ctrl-P` → **Memoria: capture from Zotero selection**.
 - **From a URL:** `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste the paper's URL. A URL with a resolvable DOI ingests; a bare or proxied URL asks you for the DOI or citekey.
-- **From the co-PI:** open the Agent Client pane and say "bring in this paper: `<DOI or citekey>`" — it delegates the same card.
+- **From the Co-PI:** open the Agent Client pane and say "bring in this paper: `<DOI or citekey>`" — it delegates the same card.
 
 **2. Clean the metadata in Zotero (Zotero route only).**
 
@@ -51,7 +51,7 @@ For a kept paper, create your reading record in `notes/source/` from `system/tem
 
 ## Batch capture
 
-Capture each source individually — one palette invocation (or one Zotero selection) per paper; each enqueues its own card and the Librarian processes them one at a time (one `running` card per lane). For a topic-sized batch, skip manual capture entirely and ask the co-PI for a reading batch: [Find new sources](find-new-sources.md).
+Capture each source individually — one palette invocation (or one Zotero selection) per paper; each enqueues its own card and the Librarian processes them one at a time (one `running` card per lane). For a topic-sized batch, skip manual capture entirely and ask the Co-PI for a reading batch: [Find new sources](find-new-sources.md).
 
 ## If a capture stalls
 

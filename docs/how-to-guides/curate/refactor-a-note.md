@@ -16,7 +16,7 @@ Keep claim notes atomic and remove duplication without losing provenance. Agents
 
 ## Find duplicate candidates
 
-Delegate the hunt from the co-PI pane:
+Delegate the hunt from the Co-PI pane:
 
 > "Verify my claims on `<topic>` for near-duplicates."
 

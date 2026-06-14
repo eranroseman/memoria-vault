@@ -9,7 +9,7 @@ parent: Tutorials
 
 **Time:** 45–60 minutes.
 
-**You will use:** Obsidian, your source notes from Tutorial 04, and the co-PI pane.
+**You will use:** Obsidian, your source notes from Tutorial 04, and the Co-PI pane.
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
@@ -61,11 +61,11 @@ List your claim notes (and key sources) as `members`, and write a few lines of o
 
 ## Step 3 — Delegate a map task
 
-Now ask the system what your corpus actually covers. In the co-PI pane:
+Now ask the system what your corpus actually covers. In the Co-PI pane:
 
 > "Map my corpus on `<your-topic>` — what do I have good coverage on, and where is it thin?"
 
-The co-PI delegates a **`map`** task to the Librarian, whose map lane produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
+The Co-PI delegates a **`map`** task to the Librarian, whose map lane produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
 
 Read the coverage view and decide: is any cluster dense enough to write from (a hub with several mutually linked claims is the tell)? Keep the gap cards — Tutorial 06 closes the loop on them.
 

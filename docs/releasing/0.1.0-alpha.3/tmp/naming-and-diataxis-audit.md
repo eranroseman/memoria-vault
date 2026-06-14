@@ -79,7 +79,7 @@ Adopting **Operations → Processing · Integrity · Cleanup · Telemetry** (com
 |---|---|---|
 | QuickAdd commands (`.obsidian/plugins/quickadd/data.json`) | `workspace Desk/Library/Studio` break the verb-first lowercase pattern; articles inconsistent ("a task"/"the corpus"/none) | `open Desk workspace`; normalize — drop all articles (`delegate task`, `link claim`, `catalog source`) |
 | Folder pluralization | `notes/source/`, `notes/index/` singular vs `notes/claims/`, `catalog/*` plural | `notes/sources/`, `notes/indexes/` |
-| co-PI skills | `explain-the-system`, `explore-branch-framings`, `delegate-route-task` break the `verb-noun(-noun)` no-article pattern the other 22 skills follow | `explain-system`, `explore-framings`, `route-task` (or `delegate-task`, matching `delegate-task.js`) |
+| Co-PI skills | `explain-the-system`, `explore-branch-framings`, `delegate-route-task` break the `verb-noun(-noun)` no-article pattern the other 22 skills follow | `explain-system`, `explore-framings`, `route-task` (or `delegate-task`, matching `delegate-task.js`) |
 | Non-developer jargon | `fleet-health` (worth changing), `board-state`/`board/`, `drift-watch`, `work-prompt`, `hubs`/`index` (term-of-art — document) | `fleet-health`→`agent-health`; `system/board/`→`board-tasks/`; `system/eval/`→`eval-tasks/` (disambiguates from `metrics/eval/` results) |
 
 **Cleanest areas (no change):** the 12 JS command scripts (all verb-noun kebab); the 17 templates (each matches its `type:`); librarian/writer/peer-reviewer skills (`<domain>-<verb>-<noun>`); base names; the two Claude-Code skills.
@@ -145,7 +145,7 @@ Highest-impact:
 
 1. D-1…D-4 defects (reconcile docstring, `TestHarness` rename, retraction-cron name, Zone.Identifier cruft).
 2. Document the `_notes/_papers` convention; one-line `src/` clarification.
-3. co-PI skill renames; QuickAdd article/verb normalization; `notes/source→sources`, `notes/index→indexes`.
+3. Co-PI skill renames; QuickAdd article/verb normalization; `notes/source→sources`, `notes/index→indexes`.
 4. Lift the easy Diátaxis strays: split sweeps out of `reference/ingest.md`; move the field tables out of `kanban-board/card-schema.md` and the five-engine table out of `explanation/engines/README.md`.
 
 **Needs a decision — [ADR]:**

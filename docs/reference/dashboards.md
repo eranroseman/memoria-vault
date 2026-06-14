@@ -17,7 +17,7 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | --- | --- | --- | --- |
 | Home | Board state | `board-state.md` | The Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`) plus live worker cards from `system/board/`. |
 | Library | Reading pipeline | `reading-pipeline.md` | Sources at `lifecycle: proposed` awaiting reading & distillation + claims by maturity. |
-| Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a co-PI pass. |
+| Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
 | Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
 | Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also push to Home. |

@@ -19,19 +19,19 @@ Generate competing argument structures and commit to one framing before drafting
 
 **1. Delegate competing outlines.**
 
-In the co-PI pane:
+In the Co-PI pane:
 
 > "Outline the argument for `<research question>` two or three different ways — chronological, mechanism-of-action, and theory-first. Work from my claims on `<topic>`."
 
-The co-PI delegates a **`draft`** task to the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
+The Co-PI delegates a **`draft`** task to the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
 
 **2. Read each option — then let them sit.**
 
 Don't commit immediately; the framing that still feels right after a break is usually the one. The options are competing *structures*, not drafts — judge which order of argument your claims actually support.
 
-**3. Stress-test the leading framing with the co-PI.**
+**3. Stress-test the leading framing with the Co-PI.**
 
-At the desk: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../compile/read-through-a-lens.md) — the same move pointed at your own outline). The co-PI is read-only; copy anything useful into your notes yourself.
+At the desk: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../compile/read-through-a-lens.md) — the same move pointed at your own outline). The Co-PI is read-only; copy anything useful into your notes yourself.
 
 **4. Choose and record the framing.**
 

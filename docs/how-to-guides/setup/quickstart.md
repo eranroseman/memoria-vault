@@ -7,7 +7,7 @@ nav_order: 1
 
 # Quickstart
 
-Five steps from zero to a working vault with the co-PI answering. For the full walkthrough with explanations, see [Tutorial 01: Set up from zero](../../tutorials/01-set-up-from-zero.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
+Five steps from zero to a working vault with the Co-PI answering. For the full walkthrough with explanations, see [Tutorial 01: Set up from zero](../../tutorials/01-set-up-from-zero.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
 
 ## Prerequisites
 
@@ -55,7 +55,7 @@ cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
-**5. Bring in your first source.** In Obsidian: `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste a paper's URL (one with a resolvable DOI) — or open the Agent Client pane and tell the co-PI "bring in this paper: `<DOI>`". The Librarian's lane does the rest and raises a candidate card in your Inbox.
+**5. Bring in your first source.** In Obsidian: `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste a paper's URL (one with a resolvable DOI) — or open the Agent Client pane and tell the Co-PI "bring in this paper: `<DOI>`". The Librarian's lane does the rest and raises a candidate card in your Inbox.
 
 ## Verify
 

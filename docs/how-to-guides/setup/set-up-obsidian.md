@@ -31,7 +31,7 @@ The eight required plugins (plus `homepage`, which opens `home.md` on launch):
 | Plugin | Purpose |
 | --- | --- |
 | `obsidian-local-rest-api` | Hermes reaches the vault over this plugin's native MCP |
-| `agent-client` | The co-PI chat pane (ACP) inside Obsidian |
+| `agent-client` | The Co-PI chat pane (ACP) inside Obsidian |
 | `obsidian-citation-plugin` | Reads `.memoria/memoria.bib`; inserts citations |
 | `callout-manager` | Renders `[!brief]`, `[!suggestions]`, `[!verification]` callout types |
 | `dataview` | Powers the dashboards and queue views |
@@ -76,7 +76,7 @@ Memoria's linting is the Linter **engine** — deterministic Python with a daily
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - `Cmd/Ctrl-P` → `Memoria: workspace` lists **Desk**, **Library**, and **Studio**
 
-Once Hermes is set up, the working loop is: open the co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace (`Memoria: workspace Library`) to work the reading pipeline.
+Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then load the **Library** workspace (`Memoria: workspace Library`) to work the reading pipeline.
 
 ## Related
 

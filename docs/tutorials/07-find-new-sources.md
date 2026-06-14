@@ -5,11 +5,11 @@ parent: Tutorials
 
 # Tutorial 07: Find new sources
 
-**You will end with:** a discovery run delegated through the co-PI, a queue of honest candidate cards judged keep-or-skip, and new Catalog entries you didn't know to look for.
+**You will end with:** a discovery run delegated through the Co-PI, a queue of honest candidate cards judged keep-or-skip, and new Catalog entries you didn't know to look for.
 
 **Time:** 25–35 minutes.
 
-**You will use:** the co-PI pane and the Inbox.
+**You will use:** the Co-PI pane and the Inbox.
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — a few Catalog entries and source notes give discovery something to compare against.
 
@@ -17,15 +17,15 @@ Tutorials 03 and 04 brought in papers you already knew about; this is the other 
 
 ---
 
-## Step 1 — Ask the co-PI
+## Step 1 — Ask the Co-PI
 
-Open the co-PI pane and name the need in your own words:
+Open the Co-PI pane and name the need in your own words:
 
 > "Find sources on just-in-time interventions for physical activity — what am I missing?"
 
 Phrase it as a research question, not keywords. Seed it however helps: "papers that build on `<citekey>`", "recent work that disagrees with my receptivity claims", "the foundational papers I skipped."
 
-The co-PI delegates a **`catalog`** task; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
+The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
 
 ---
 

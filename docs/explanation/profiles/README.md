@@ -8,13 +8,13 @@ permalink: /explanation/profiles/
 
 # Profiles
 
-Memoria runs **one conversational agent — the co-PI — and four background agents** it delegates to ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The PI talks to exactly one agent; everything else runs as a lane on the board, invisible until it has something for you. A profile's stable trait is its **posture** — a stance like *faithful* or *skeptical* — while the skills it runs attach per lane.
+Memoria runs **one conversational agent — the Co-PI — and four background agents** it delegates to ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The PI talks to exactly one agent; everything else runs as a lane on the board, invisible until it has something for you. A profile's stable trait is its **posture** — a stance like *faithful* or *skeptical* — while the skills it runs attach per lane.
 
 ## The one you talk to
 
 | Agent | Posture | Where | What it does |
 | --- | --- | --- | --- |
-| **[The co-PI](co-pi.md)** | reflective thinking-partner | the ACP pane (the desk) | Holds the conversation, asks the sharpening questions, and delegates every write as a task card. Read-only by design. |
+| **[The Co-PI](co-pi.md)** | reflective thinking-partner | the ACP pane (the desk) | Holds the conversation, asks the sharpening questions, and delegates every write as a task card. Read-only by design. |
 
 ## The four background lanes
 
@@ -33,7 +33,7 @@ The tables above orient by posture; the canonical lane→profile map, write-scop
 
 Each agent is a **shared** layer (the vault's `AGENTS.md` house rules, one copy for all) plus a **unique** layer (its own posture, skills, model, and connections). How those layers are packaged and shipped is owned by [Distribution model](../deployment/distribution-model.md); what matters here is the consequence — the agents share the house rules but each brings its own stance and toolset.
 
-The co-PI is the sole memory carrier, and two affordances are co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The co-PI](co-pi.md)). The specialists' postures are fixed by design — stable traits, not per-run knobs — and the lanes stay stateless propose-then-dispose executors.
+The Co-PI is the sole memory carrier, and two affordances are Co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The Co-PI](co-pi.md)). The specialists' postures are fixed by design — stable traits, not per-run knobs — and the lanes stay stateless propose-then-dispose executors.
 
 ## The bounded rule
 
@@ -41,6 +41,6 @@ All five agents **propose**; the **PI disposes**. Promotions, the `retracted` de
 
 ## Where to go next
 
-- Why one co-PI + four lanes, not seven specialists: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- Why one Co-PI + four lanes, not seven specialists: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
 - The deterministic actors that left the profile set: [Engines](../engines/README.md)
 - How cards reach the lanes and come back: [The control plane](../architecture/control-plane.md)

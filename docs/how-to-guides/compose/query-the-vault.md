@@ -6,7 +6,7 @@ nav_order: 5
 
 # Query the vault
 
-Ask the vault a research question and get a grounded answer in the co-PI pane. Query is a read operation — nothing is written; the v0.1.0-alpha.1 answer-note inbox is retired, and anything worth keeping you author yourself.
+Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a read operation — nothing is written; the v0.1.0-alpha.1 answer-note inbox is retired, and anything worth keeping you author yourself.
 
 ## Which retrieval path?
 
@@ -14,8 +14,8 @@ Several surfaces overlap; pick by what you want *out*:
 
 | You want… | Use | Output |
 | --- | --- | --- |
-| A synthesized answer grounded in your notes | **Ask the co-PI** (this guide) | conversation in the pane |
-| To sharpen your *own* thinking by being questioned | The co-PI's questioning posture — say "push back on this" | conversation in the pane |
+| A synthesized answer grounded in your notes | **Ask the Co-PI** (this guide) | conversation in the pane |
+| To sharpen your *own* thinking by being questioned | The Co-PI's questioning posture — say "push back on this" | conversation in the pane |
 | A written, citable synthesis to keep | Delegate a **`draft`** task | a draft in `projects/`, via the Inbox |
 | A fast lookup of a known term or field | Obsidian search, or a Dataview/Bases view | results in the UI |
 
@@ -24,7 +24,7 @@ Rule of thumb: converse when *you* should do the synthesizing; delegate a draft 
 ## Prerequisites
 
 - At least a handful of classified sources and a few claims — retrieval needs something to retrieve
-- The `qmd` search index current (the co-PI's vault search runs on it — [Rebuild the search index](../operate/rebuild-the-search-index.md) if results look stale)
+- The `qmd` search index current (the Co-PI's vault search runs on it — [Rebuild the search index](../operate/rebuild-the-search-index.md) if results look stale)
 
 ## Steps
 
@@ -40,13 +40,13 @@ The active note auto-attaches; attach others via the paperclip when the question
 
 **2. Interrogate the answer.**
 
-The co-PI reads the vault directly and never writes (hybrid keyword + vector search over `qmd`, plus the typed graph — [The co-PI](../../explanation/profiles/co-pi.md)). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
+The Co-PI reads the vault directly and never writes (hybrid keyword + vector search over `qmd`, plus the typed graph — [The Co-PI](../../explanation/profiles/co-pi.md)). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
 
 **3. Keep what's worth keeping — yourself.**
 
 - A genuine new synthesis → distill it properly: [Write a claim note](../compile/write-a-claim-note.md).
 - Context for a writing project → copy into your `projects/<slug>/` scratch.
-- A one-off answer → close the pane. The transcript auto-exports to `notes/fleeting/chats/` and surfaces in fleeting triage, so nothing silently rots.
+- A one-off answer → close the pane. The transcript auto-exports to `system/exports/`; promote anything durable yourself instead of letting the raw transcript become a canonical note.
 
 ## Verify
 
@@ -58,4 +58,4 @@ The co-PI reads the vault directly and never writes (hybrid keyword + vector sea
 - Distilling a kept answer: [Write a claim note](../compile/write-a-claim-note.md)
 - The transcript's afterlife: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
 - The search engine underneath: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- The agent across the desk: [The co-PI](../../explanation/profiles/co-pi.md)
+- The agent across the desk: [The Co-PI](../../explanation/profiles/co-pi.md)

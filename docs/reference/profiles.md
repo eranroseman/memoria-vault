@@ -11,7 +11,7 @@ The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)):
 
 ## The five profiles
 
-One conversational agent (the co-PI) plus four background agents, each defined by a posture rather than a tool list:
+One conversational agent (the Co-PI) plus four background agents, each defined by a posture rather than a tool list:
 
 | Profile | Posture | Role | Invocation | Default model |
 | --- | --- | --- | --- | --- |
@@ -34,7 +34,7 @@ A lane _is_ an `assignee` value on the Hermes board. The task-lane → profile m
 | `verify` | `memoria-peer-reviewer` |
 | `code` | `memoria-engineer` |
 
-The co-PI has **no lane** — it converses at the desk and delegates via `delegate_route_task`, which validates every handoff against the receiving lane's ceiling. See [Kanban board reference](kanban-board.md).
+The Co-PI has **no lane** — it converses at the desk and delegates via `delegate_route_task`, which validates every handoff against the receiving lane's ceiling. See [Kanban board reference](kanban-board.md).
 
 ---
 
@@ -105,7 +105,7 @@ The previous seven-profile fleet consolidated into the five above ([ADR-48](../a
 
 | Retired profile | Where its job went |
 | --- | --- |
-| `memoria-socratic` | The co-PI (`memoria-copi`) — the conversational front, now hard read-only |
+| `memoria-socratic` | The Co-PI (`memoria-copi`) — the conversational front, now hard read-only |
 | `memoria-mapper` | The Librarian's `map` lane + the cluster MCP |
 | `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps engine (deterministic checks) |
 | `memoria-coder` | `memoria-engineer` |

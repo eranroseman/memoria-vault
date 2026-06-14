@@ -28,7 +28,7 @@ Group notes by sub-argument. Place claims that support the same point together; 
 
 **4. Identify gaps.**
 
-Any text card not grounded in a claim note is an unverified assertion. Before drafting, either write the claim from a source you hold, or queue the missing source (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand the gap to the co-PI — [Find new sources](../compile/find-new-sources.md)).
+Any text card not grounded in a claim note is an unverified assertion. Before drafting, either write the claim from a source you hold, or queue the missing source (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand the gap to the Co-PI — [Find new sources](../compile/find-new-sources.md)).
 
 **5. Build the outline.**
 

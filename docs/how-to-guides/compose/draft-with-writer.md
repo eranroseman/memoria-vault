@@ -6,7 +6,7 @@ nav_order: 6
 
 # Draft with the Writer
 
-Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — the co-PI delegates, the board dispatches, and the result resurfaces through the Inbox.
+Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — the Co-PI delegates, the board dispatches, and the result resurfaces through the Inbox.
 
 ## Prerequisites
 
@@ -17,11 +17,11 @@ Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is hu
 
 **1. Delegate a section.**
 
-In the co-PI pane, name the section, the framing, and the working set:
+In the Co-PI pane, name the section, the framing, and the working set:
 
 > "Draft the introduction for `<deliverable>` from `projects/<slug>/chosen-framing.md`, using my claims on `<topic>`. Cite citekeys in-text."
 
-The co-PI delegates via `delegate_route_task` ([Hermes CLI](../../reference/hermes-cli.md)); the handoff is validated against the Writer's lane ceiling and the card lands on the board. (Palette twin: **Memoria: draft a section** — prompts for the goal or outline ref; see [Command palette](../../reference/obsidian-command-palette.md).)
+The Co-PI delegates via `delegate_route_task` ([Hermes CLI](../../reference/hermes-cli.md)); the handoff is validated against the Writer's lane ceiling and the card lands on the board. (Palette twin: **Memoria: draft a section** — prompts for the goal or outline ref; see [Command palette](../../reference/obsidian-command-palette.md).)
 
 **2. Know what the lane can and can't do.**
 

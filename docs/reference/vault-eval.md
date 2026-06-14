@@ -40,7 +40,7 @@ Like patterns, eval tasks are authored directly — the files *are* the instance
 
 `src/.memoria/engines/sweeps/eval_dispatch.py` — a sweeps-shaped engine: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
-- One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the co-PI's `tasks_mcp.py`; a test guards the parity).
+- One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the Co-PI's `tasks_mcp.py`; a test guards the parity).
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
 - The card body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported on the card — a run never mutates the vault.
 - The dispatch record is written to `system/eval/last-run.md` (plain markdown, overwritten each run).

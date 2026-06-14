@@ -17,18 +17,18 @@ Every workspace follows the same shape:
 
 - **Main pane** — the mode's work surface: a real file, never `home.md`, never an empty leaf.
 - **Left sidebar** (~320) — navigation: 2–4 pinned tabs of that mode's drill-down views, with the **file explorer always the last tab**.
-- **Right sidebar** (~360) — the co-PI: the agent-client chat view, pinned in every workspace.
+- **Right sidebar** (~360) — the Co-PI: the agent-client chat view, pinned in every workspace.
 - `home.md` is pinned in **no** workspace — the obsidian-homepage plugin opens it on launch ([ADR-13](../adr/13-homepage-front-door.md)).
 
 ## The three workspaces
 
 | Workspace | Mode | Main pane | Left tabs (in order) | Right pane |
 | --- | --- | --- | --- | --- |
-| **Desk** (default) | "What needs me?" | `system/dashboards/board-state.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | co-PI chat |
-| **Library** | Reading & synthesis | `system/dashboards/reading-pipeline.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | co-PI chat |
-| **Studio** | Drafting | `research-focus.md` (`projects/` ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | co-PI chat + backlinks |
+| **Desk** (default) | "What needs me?" | `system/dashboards/board-state.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | Co-PI chat |
+| **Library** | Reading & synthesis | `system/dashboards/reading-pipeline.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | Co-PI chat |
+| **Studio** | Drafting | `research-focus.md` (`projects/` ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
 
-Studio's right sidebar carries a second tab — the core backlink view — behind the co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)).
+Studio's right sidebar carries a second tab — the core backlink view — behind the Co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)).
 
 ## Palette commands
 
@@ -52,6 +52,6 @@ Layouts are saved in `.obsidian/workspaces.json`. `.base` files are pinned as `b
 
 - The dashboards the panes open: [Dashboards](dashboards.md)
 - The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)
-- The co-PI pane every right sidebar pins: [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md)
+- The Co-PI pane every right sidebar pins: [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md)
 - Why workspaces map to cognitive modes: [Visual-style discipline](../explanation/obsidian/visual-discipline.md)
 - The decision record: [ADR-68](../adr/68-workspaces-desk-library-studio.md)

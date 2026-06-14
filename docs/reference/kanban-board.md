@@ -5,7 +5,7 @@ parent: Reference
 
 # Kanban board reference
 
-Lookup tables for the Hermes Kanban board — the control plane for every unit of **agent** work. A human action (usually a co-PI delegation) or a cron creates a card; the dispatcher assigns it to a lane; the worker runs it; the result resurfaces as an Inbox signal. Engines run _off_ the board (cron/CI), and the co-PI has no lane — it converses at the desk.
+Lookup tables for the Hermes Kanban board — the control plane for every unit of **agent** work. A human action (usually a Co-PI delegation) or a cron creates a card; the dispatcher assigns it to a lane; the worker runs it; the result resurfaces as an Inbox signal. Engines run _off_ the board (cron/CI), and the Co-PI has no lane — it converses at the desk.
 
 ---
 
@@ -17,10 +17,10 @@ A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-ag
 
 ## Delegation: the tasks MCP
 
-The co-PI delegates every write through `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`):
+The Co-PI delegates every write through `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`):
 
 1. The task lane resolves to its owning profile (table above; an unknown lane is refused).
-2. **Ceiling validation:** every `allowed_paths` prefix must sit inside the lane-override's `routing.write_scope`. Paths may _narrow_ but never _widen_ the lane (lane = ceiling, payload = floor); a violation returns `ceiling-violation` and no card is created. An empty write scope (the co-PI's own) can never receive a delegation.
+2. **Ceiling validation:** every `allowed_paths` prefix must sit inside the lane-override's `routing.write_scope`. Paths may _narrow_ but never _widen_ the lane (lane = ceiling, payload = floor); a violation returns `ceiling-violation` and no card is created. An empty write scope (the Co-PI's own) can never receive a delegation.
 3. The card body is assembled from the handoff payload and created via `hermes kanban create --assignee <profile> --created-by memoria-copi` (optionally with `--idempotency-key`), so board semantics — WIP, dedup, dispatch — stay Hermes-native.
 
 ### Handoff payload

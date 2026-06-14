@@ -2,7 +2,7 @@
  * QuickAdd user script — "Memoria: delegate a task".
  *
  * Prompts for a lane and a goal, then creates a card on that lane's agent
- * (`hermes kanban create`) — the palette twin of the co-PI's
+ * (`hermes kanban create`) — the palette twin of the Co-PI's
  * `delegate_route_task`. The lane → profile mapping mirrors LANE_PROFILE in
  * `.memoria/mcp/tasks_mcp.py`. Mirrors capture-from-url.js: the card-create
  * goes through `bash -lc` (wrapped in wsl.exe on Windows) so it reaches

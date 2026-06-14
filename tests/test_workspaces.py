@@ -1,7 +1,7 @@
 """The shipped workspace layouts and the home.md control panel are internally consistent.
 
 ADR-68: three workspaces (Desk / Library / Studio) share one layout contract —
-every file a layout pins exists under src/, the co-PI chat view is pinned in
+every file a layout pins exists under src/, the Co-PI chat view is pinned in
 every right sidebar, and home.md's command buttons dispatch only commands that
 actually exist (a QuickAdd choice registered as `QuickAdd: <choice name>`, or
 the agent-client chat command). The three workspace-switch choices must point

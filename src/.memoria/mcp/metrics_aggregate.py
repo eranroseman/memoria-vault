@@ -46,7 +46,7 @@ TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # status/review tra
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 LANES = ("memoria-librarian", "memoria-writer", "memoria-peer-reviewer",
-         "memoria-engineer")   # the background agents (ADR-48); no co-PI/engine lanes
+         "memoria-engineer")   # the background agents (ADR-48); no Co-PI/engine lanes
 LOW_CONFIDENCE_SAMPLES = 5          # below this, the score is flagged insufficient-data
 
 # --- Trust-score weights (tunable; bands are fixed by the glossary) ---------- #

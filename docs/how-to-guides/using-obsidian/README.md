@@ -15,5 +15,5 @@ Driving Memoria from inside Obsidian — the command palette, the agent-client (
 | [Vault homepage](use-the-vault-homepage.md) | Open the front door, navigate dashboards, update research focus |
 | [Navigate the dashboards](navigate-the-dashboards.md) | Which dashboard to open for each situation, and which workspace carries it |
 | [Workspaces](use-workspaces.md) | Load and switch between the three shipped pane layouts — Desk, Library, and Studio |
-| [Agent-client pane](use-the-acp-pane.md) | Open the co-PI pane, attach context, read responses, clear sessions |
+| [Agent-client pane](use-the-acp-pane.md) | Open the Co-PI pane, attach context, read responses, clear sessions |
 | [Command palette](obsidian-command-palette.md) | The shipped `Memoria:` capture and per-task commands, invoking by type, assigning hotkeys |

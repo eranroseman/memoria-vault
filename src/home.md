@@ -60,7 +60,7 @@ action QuickAdd: Memoria: resolve inbox card
 ```
 
 ```button
-name Talk to co-PI
+name Talk to Co-PI
 type command
 action Agent Client: Open chat view
 ```
@@ -89,7 +89,7 @@ action QuickAdd: Memoria: workspace Studio
 
 > [!example]- Library — reading & synthesis
 > - [[reading-pipeline|Reading Pipeline]] — sources to read & distill; claims by maturity
-> - [[discuss-queue|Discuss Queue]] — read-but-not-distilled, worth a co-PI pass
+> - [[discuss-queue|Discuss Queue]] — read-but-not-distilled, worth a Co-PI pass
 > - [[open-questions|Open Questions]] — unconnected claims (the synthesis backlog)
 > - [[contradictions|Contradictions]] — open tensions to resolve
 

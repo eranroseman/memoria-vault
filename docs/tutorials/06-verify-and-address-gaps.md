@@ -9,7 +9,7 @@ parent: Tutorials
 
 **Time:** 30–45 minutes.
 
-**You will use:** the co-PI pane and the Inbox.
+**You will use:** the Co-PI pane and the Inbox.
 
 **Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the `map` task in your Inbox.
 
@@ -17,11 +17,11 @@ parent: Tutorials
 
 ## Step 1 — Delegate a verify task
 
-In the co-PI pane:
+In the Co-PI pane:
 
 > "Verify my claims on `<your-topic>` — check that each one is actually supported by its sources."
 
-The co-PI delegates a **`verify`** task to the **Peer-reviewer** — the adversarial lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
+The Co-PI delegates a **`verify`** task to the **Peer-reviewer** — the adversarial lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
 
 You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
@@ -49,7 +49,7 @@ Now return to the **`gap` cards** — from Tutorial 05's map task, or raised by 
 
 > "That gap on `<sub-topic>` is real — find sources to fill it."
 
-The co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next map or verify pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
+The Co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next map or verify pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
 
 Skip the gaps you don't buy — archive them with a clear conscience. The honesty body exists so you can disagree.
 

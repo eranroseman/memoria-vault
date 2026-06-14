@@ -9,7 +9,7 @@ parent: Tutorials
 
 **Time:** 10–15 minutes.
 
-**You will use:** the Obsidian command palette (`Cmd+P` on Mac, `Ctrl+P` on Windows/Linux) and, optionally, the co-PI pane.
+**You will use:** the Obsidian command palette (`Cmd+P` on Mac, `Ctrl+P` on Windows/Linux) and, optionally, the Co-PI pane.
 
 **Prerequisite:** [Tutorial 01: Set up from zero](01-set-up-from-zero.md) complete.
 
@@ -51,7 +51,7 @@ A fleeting note is a queue item, not a home for an idea. It has exactly two futu
 - **Distill** — the thought is worth keeping. Restate it in durable form: usually a claim note later (Tutorial 05), or fold it into an existing note. The fleeting note then gets archived.
 - **Archive** — the thought served its moment. Change `lifecycle: proposed` to `lifecycle: archived` and move on. Archiving is success, not failure; most captures should end here.
 
-Not sure which? Open the co-PI pane with the note active (it auto-attaches) and ask: *"Is there a durable claim in this, or should I archive it?"* It will question you — that sparring is its job — but the decision and the writing are yours.
+Not sure which? Open the Co-PI pane with the note active (it auto-attaches) and ask: *"Is there a durable claim in this, or should I archive it?"* It will question you — that sparring is its job — but the decision and the writing are yours.
 
 For this tutorial, make the call now. If you distill, write the durable version somewhere real first; either way, set the fleeting note to `lifecycle: archived` when you're done.
 

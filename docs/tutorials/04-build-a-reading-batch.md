@@ -9,19 +9,19 @@ parent: Tutorials
 
 **Time:** 30 minutes to build the queue; reading time is yours, spread across sessions.
 
-**You will use:** the co-PI pane, the Inbox, `sources.base`, and the reading-pipeline dashboard.
+**You will use:** the Co-PI pane, the Inbox, `sources.base`, and the reading-pipeline dashboard.
 
 **Prerequisite:** [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) complete.
 
 ---
 
-## Step 1 — Ask the co-PI for a batch
+## Step 1 — Ask the Co-PI for a batch
 
-Open the co-PI pane and name a topic — the same area as your Tutorial 03 paper. For example:
+Open the Co-PI pane and name a topic — the same area as your Tutorial 03 paper. For example:
 
 > "Build me a reading batch on notification receptivity — find the key papers and bring in the ones I should read. Mix foundational and recent; include something that might disagree with the rest."
 
-The co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
+The Co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
 
 (You can also seed the batch yourself by capturing papers you already know, exactly as in [Tutorial 03](03-bring-in-a-paper.md) — the same queue either way.)
 

@@ -41,7 +41,7 @@ It is **knowledge production**, not just storage: the vault grows more useful ov
 
 **Not a Deep Research agent.** Deep Research tools (OpenAI DR, Gemini DR, Perplexity DR) are query-driven and ephemeral: they produce a comprehensive report per query and end. Memoria is corpus-curating and durable: the human builds a vault over months, and each session compounds with prior sessions. The two categories serve different needs.
 
-**Not a single-agent system.** "One model does everything" produces an agent with unclear responsibility, ambiguous permission boundaries, and no separation between discovery and synthesis. Memoria explicitly avoids this. Five profiles — one conversational co-PI plus four background lanes, each with narrow permissions and a clear exit condition — replace one generalist.
+**Not a single-agent system.** "One model does everything" produces an agent with unclear responsibility, ambiguous permission boundaries, and no separation between discovery and synthesis. Memoria explicitly avoids this. Five profiles — one conversational Co-PI plus four background lanes, each with narrow permissions and a clear exit condition — replace one generalist.
 
 **Not a team tool in its current form.** The design assumes one human reviewer who owns judgment about what enters the canonical vault. Multi-user review semantics are not in scope.
 

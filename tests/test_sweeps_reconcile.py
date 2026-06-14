@@ -55,7 +55,7 @@ def test_stamp_chat_exports(tmp_path):
     chats.mkdir(parents=True)
     # a bare export (no frontmatter) — the stamp target
     bare = chats / "chat_2026-06-10_09-00.md"
-    bare.write_text("# co-PI session\n\nUser: hello\nAgent: hi\n", encoding="utf-8")
+    bare.write_text("# Co-PI session\n\nUser: hello\nAgent: hi\n", encoding="utf-8")
     # an already-stamped export — must be left byte-identical
     stamped = chats / "chat_2026-06-09_15-30.md"
     stamped_text = ("---\ntitle: \"old chat\"\ntype: fleeting\nlifecycle: proposed\n"

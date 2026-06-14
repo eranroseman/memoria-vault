@@ -124,7 +124,7 @@ def test_policy_mcp():
               d(writer, "write", "notes/hubs/r.md") == "dry_run")
         check("Writer write to claims -> deny (lane deny beats degrade)",
               d(writer, "write", "notes/claims/c.md") == "deny")
-        check("co-PI write anywhere -> deny (hard write-denial)",
+        check("Co-PI write anywhere -> deny (hard write-denial)",
               d(copi, "write", "notes/fleeting/f.md") == "deny")
 
         # ---- read decisions ---------------------------------------------------- #
@@ -251,7 +251,7 @@ SHIPPED_PROFILES = ("memoria-copi", "memoria-engineer", "memoria-librarian",
 
 def test_shipped_lanes_deny_template_mutations():
     """#179: every shipped lane ceiling denies every mutating action under
-    system/templates/. Agents are blocked here (deny.write `system/**`, co-PI
+    system/templates/. Agents are blocked here (deny.write `system/**`, Co-PI
     `**`); accidental *human* overwrites are the golden copy's job
     (tests/test_golden_restore.py)."""
     if _m.yaml is None:

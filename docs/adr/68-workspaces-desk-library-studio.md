@@ -20,7 +20,7 @@ nav_order: 68
 The shipped workspace set was two layouts (**Home**, **Library**) with a promised
 third ("Project", slated for v0.1.0-alpha.3) that never shipped. The two layouts had
 no shared contract: Home put the board in the *right* pane and the homepage in the
-main pane, Library opened on an empty tab, the co-PI chat pane appeared in neither,
+main pane, Library opened on an empty tab, the Co-PI chat pane appeared in neither,
 and the catalog base was serialized as a `markdown` leaf. Meanwhile `home.md` had
 grown prose (explanatory header, "Start here", a web link-dump) around its working
 parts, and every quick action still required a palette round-trip.
@@ -36,7 +36,7 @@ The shared contract, in every workspace:
   empty leaf.
 - **Left sidebar** (~320) is navigation: 2–4 pinned tabs of that mode's drill-down
   views, with the file explorer always the **last** tab.
-- **Right sidebar** (~360) is the co-PI: the agent-client chat view
+- **Right sidebar** (~360) is the Co-PI: the agent-client chat view
   (`agent-client-chat-view`) pinned in every workspace — the conversation partner
   travels with the mode.
 - `home.md` is pinned in **no** workspace; the obsidian-homepage plugin opens it on
@@ -49,7 +49,7 @@ The shared contract, in every workspace:
 | **Studio** | Drafting | `research-focus.md` (projects/ ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base`, `system/patterns/patterns.base` |
 
 Studio's right sidebar carries a second tab — the core backlink view — behind the
-co-PI tab: backlinks finally live where there is an active note. **Studio replaces
+Co-PI tab: backlinks finally live where there is an active note. **Studio replaces
 the planned "Project" workspace.** `.base` leaves serialize as view type `bases`
 (the core Bases view registered for the `base` extension), fixing the previous
 `markdown` mis-serialization.
@@ -58,7 +58,7 @@ the planned "Project" workspace.** `.base` leaves serialize as view type `bases`
 note per ADR-13): (1) a one-line **status strip** (reviews pending · blocked ·
 HIGH/CRITICAL findings, linking board and drift-watch); (2) an **action row** of
 command buttons (capture fleeting / Zotero / URL, delegate, resolve card, talk to
-co-PI); (3) a **workspace row** (Desk · Library · Studio); (4) the **drill-down
+Co-PI); (3) a **workspace row** (Desk · Library · Studio); (4) the **drill-down
 index** — the three collapsed dashboard callouts plus research-focus and
 troubleshooting. Everything else (prose, link-dumps, docs-site links beyond
 troubleshooting) is dropped.
@@ -78,7 +78,7 @@ Two mechanisms support the panel:
 
 ## Consequences
 
-- Switching workspaces is one click or one palette command; the co-PI pane is
+- Switching workspaces is one click or one palette command; the Co-PI pane is
   present in every mode, so "talk to the agent" never requires layout surgery.
 - `home.md` is glance-and-go: status, actions, navigation — no duplicated dashboard
   queries, no prose to rot. It remains git-tracked, lintable, consumer-only.
@@ -122,7 +122,7 @@ minimal writing-free mechanism.
   `src/.obsidian/plugins/quickadd/data.json`, `src/.obsidian/community-plugins.json`.
 - **Related decisions:** [ADR-13](13-homepage-front-door.md) (the front door —
   unchanged; its note is now the control panel), [ADR-48](48-copi-and-agent-consolidation.md)
-  (the co-PI the right pane pins), [ADR-49](49-catalog-in-bases-linter-monitor.md)
+  (the Co-PI the right pane pins), [ADR-49](49-catalog-in-bases-linter-monitor.md)
   (catalog in Bases), [ADR-55](55-src-scaffold-populate-golden-copy.md) (golden copy
   covers the shipped plugin files).
 - **Reference:** [Obsidian workspaces](../reference/obsidian-workspaces.md),

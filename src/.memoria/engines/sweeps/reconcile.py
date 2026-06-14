@@ -17,7 +17,7 @@ Two distinct backstops, distinct sources:
 
 A third pass rides the same cron but is NOT a re-ingest detector:
 
-  (c) stamp      — ACP-pane session exports land in notes/fleeting/chats/ as bare
+  (c) stamp      — legacy ACP-pane session exports land in notes/fleeting/chats/ as bare
                    markdown (the agent-client plugin writes no Memoria frontmatter).
                    This pass prepends valid fleeting frontmatter (type: fleeting,
                    lifecycle: proposed, origin: chat) so the exports surface in the
@@ -52,7 +52,7 @@ except ImportError:  # executed from elsewhere
     from link import read_frontmatter
 
 SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
-CHATS_FOLDER = "notes/fleeting/chats"  # ACP-pane export target (exportSettings.defaultFolder)
+CHATS_FOLDER = "notes/fleeting/chats"  # legacy ACP-pane export stamp target
 LIBRARIAN = "memoria-librarian"
 SKILL = "catalog-enrich-record"  # on-disk form of catalog:enrich-record
 

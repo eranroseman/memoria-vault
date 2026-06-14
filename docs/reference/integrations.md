@@ -62,7 +62,7 @@ Used during enrichment to link paper notes to person, organization, and venue en
 | Integration | Role |
 |---|---|
 | **Obsidian Local REST API** (native MCP, loopback HTTP port 27123) | Lets Hermes profiles read and write vault files through the plugin's native MCP rather than direct filesystem calls. Required for the Librarian and other write-active profiles. |
-| **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
+| **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the Co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
 | **qmd** | Hybrid BM25 + vector search over the vault. Used by the Librarian's map lane (`map:cluster-corpus`, `map:report-coverage`) and the Sweeps engine (`sweep:check-similarity`, `sweep:find-duplicates`). |
 | **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
 

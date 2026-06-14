@@ -7,11 +7,11 @@ nav_order: 5
 
 # Rebuild the search index
 
-Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vector search) is the shared similarity index behind the co-PI's vault search, the Librarian's comparative pulls, and the Peer-reviewer's verify checks ([External integrations](../../reference/integrations.md)).
+Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vector search) is the shared similarity index behind the Co-PI's vault search, the Librarian's comparative pulls, and the Peer-reviewer's verify checks ([External integrations](../../reference/integrations.md)).
 
 ## When to rebuild
 
-- The co-PI's vault answers miss notes you know exist ([Query the vault](../compose/query-the-vault.md))
+- The Co-PI's vault answers miss notes you know exist ([Query the vault](../compose/query-the-vault.md))
 - New papers stop showing up in `[!brief]` comparisons or similarity checks
 - A batch of 20+ notes was ingested and you haven't rebuilt since
 - `qmd search "known term"` returns empty or omits notes you know exist
@@ -25,7 +25,7 @@ A full `qmd embed` re-embeds *every* note. Before spending the time, rule out ch
 | One new note isn't found | Not yet indexed | Confirm it's saved to disk; a few notes rarely justify a full rebuild — let the scheduled rebuild (step 4) catch it |
 | Search misses many notes or returns empty | Stale or missing index | Full `qmd embed` (this guide) |
 | Found by keyword but not by meaning | Vectors stale / embedding model changed | Full `qmd embed` — re-embedding is the only fix when the vectors are stale |
-| Found by `qmd search` but the co-PI doesn't cite it | Not an index problem — a retrieval/prompt issue | Push the co-PI ("which note says that?"), not the index |
+| Found by `qmd search` but the Co-PI doesn't cite it | Not an index problem — a retrieval/prompt issue | Push the Co-PI ("which note says that?"), not the index |
 
 ## Steps
 
@@ -61,7 +61,7 @@ The index lives inside the vault and is gitignored — never commit it.
 qmd search "<term>"
 ```
 
-Confirm the expected notes now appear. Then test the consumer you actually noticed the staleness in — ask the co-PI a question whose answer lives in a recently added note and check it cites that note.
+Confirm the expected notes now appear. Then test the consumer you actually noticed the staleness in — ask the Co-PI a question whose answer lives in a recently added note and check it cites that note.
 
 **4. Set up automatic rebuilds** (optional).
 
@@ -82,7 +82,7 @@ hermes cron create '0 3 * * 0' --script memoria-qmd-embed.sh --no-agent \
 qmd search "claim note you recently wrote"
 ```
 
-Returns the note, and the co-PI's vault answers cite recently added notes again.
+Returns the note, and the Co-PI's vault answers cite recently added notes again.
 
 ## Related
 

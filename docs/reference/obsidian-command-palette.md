@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). The co-PI conversation remains the primary route for agent tasks — you tell the co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, and the inbox resolve action.
+The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, and the inbox resolve action.
 
 ---
 
@@ -39,7 +39,7 @@ Pane-by-pane contents of each layout: [Obsidian workspaces](obsidian-workspaces.
 
 ## Per-task lane commands
 
-One command per lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). All six lane tasks are reachable here without the co-PI.
+One command per lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). All six lane tasks are reachable here without the Co-PI.
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |
@@ -61,15 +61,15 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 | Command | Status | Where the job went |
 | --- | --- | --- |
 | `Memoria: lint this note` | **Removed** | The Linter is an engine, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
-| `Memoria: verify this draft` | Replaced | `Memoria: verify a draft` (above), or ask the co-PI. |
-| `Memoria: frame this section` | Replaced | `Memoria: draft a section` (above), or ask the co-PI. |
-| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.0-alpha.3 Project release; meanwhile `Memoria: map the corpus` or the co-PI covers `map` lane work. |
+| `Memoria: verify this draft` | Replaced | `Memoria: verify a draft` (above), or ask the Co-PI. |
+| `Memoria: frame this section` | Replaced | `Memoria: draft a section` (above), or ask the Co-PI. |
+| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return with the v0.1.0-alpha.3 Project release; meanwhile `Memoria: map the corpus` or the Co-PI covers `map` lane work. |
 
 ---
 
-## The co-PI delegation path
+## The Co-PI delegation path
 
-For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the co-PI, with the active note auto-attached): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
+For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note auto-attached): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
 
 ---
 

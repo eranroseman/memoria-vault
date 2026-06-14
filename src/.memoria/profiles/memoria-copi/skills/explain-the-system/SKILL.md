@@ -1,6 +1,6 @@
 ---
 name: explain-the-system
-description: "Teach the PI how Memoria works — the co-PI's meta skill (ADR-48). Answer how/where/why questions from the system model and point at the concrete affordance (palette command, dashboard, Inbox card). Read-only; outside the <task>:<verb>-<object> lane registry by design (it explains the system, it is not a lane task)."
+description: "Teach the PI how Memoria works — the Co-PI's meta skill (ADR-48). Answer how/where/why questions from the system model and point at the concrete affordance (palette command, dashboard, Inbox card). Read-only; outside the <task>:<verb>-<object> lane registry by design (it explains the system, it is not a lane task)."
 version: 2.0.0
 author: Memoria
 license: MIT
@@ -23,13 +23,13 @@ metadata:
 
 # explain-the-system
 
-Teach the PI how Memoria works — the co-PI's "memoria" skill (ADR-48). When the PI asks
+Teach the PI how Memoria works — the Co-PI's "memoria" skill (ADR-48). When the PI asks
 "how do I…", "where does…", or "why did…", answer from the system model and point at the
 concrete affordance (palette command, dashboard, Inbox card), not at abstract design.
 
 ## The model in one breath
 
-Seven layers: PI · Interface · co-PI (you) · Tasks · MCP · Engines · Vault (ADR-46).
+Seven layers: PI · Interface · Co-PI (you) · Tasks · MCP · Engines · Vault (ADR-46).
 Three actor-kinds: the PI decides, agents (you + the four lanes) judge and propose,
 engines run deterministically. Decisions flow down, information flows up.
 

@@ -131,8 +131,13 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `defaultAgentId` | `memoria-copi` | The co-PI is the only ACP chat partner (`test_acp_pane_is_copi_only`). |
+| `defaultAgentId` | `memoria-copi` | The Co-PI is the only ACP chat partner (`test_acp_pane_is_copi_only`). |
+| `customAgents[0].displayName` | `Memoria Co-PI` | The pane label uses the product-facing agent name, not the internal profile id. |
 | `autoMentionActiveNote` | `true` | Active note is automatically attached as context. |
+| `exportSettings.defaultFolder` | `system/exports` | Session exports are visible PI review material; never point them at hidden `.memoria/` internals. |
+| `exportSettings.autoExportOnNewChat` / `autoExportOnCloseChat` | `true` / `true` | Pane sessions export automatically at session start and close. |
+| `exportSettings.openFileAfterExport` | `false` | Exporting a session must not steal focus from the Co-PI conversation. |
+| `exportSettings.imageCustomFolder` | `system/exports/assets` | Exported images stay beside the visible transcript surface, never in hidden runtime internals. |
 
 ### callout-manager
 

@@ -109,7 +109,7 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
-- co-PI (`memoria-copi`) with any allowed write (its lane is `write: []`).
+- Co-PI (`memoria-copi`) with any allowed write (its lane is `write: []`).
 - Peer-reviewer (`memoria-peer-reviewer`) allowed write outside `inbox/`.
 - Writer (`memoria-writer`) allowed write outside `projects/`.
 - Engineer (`memoria-engineer`) allowed write outside `projects/*/code/`.

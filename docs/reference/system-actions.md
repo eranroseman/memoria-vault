@@ -42,7 +42,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | --- | --- | --- |
 | Reconcile | sweeps engine (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
 | Retry tier-0 | sweeps engine (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
-| Stamp chats | sweeps engine (`reconcile.py`) | Prepends fleeting frontmatter to bare ACP chat exports in `notes/fleeting/chats/`. |
+| Stamp chats | sweeps engine (`reconcile.py`) | Prepends fleeting frontmatter to legacy bare ACP chat exports in `notes/fleeting/chats/`. |
 | Archive inbox | sweeps engine (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
 | Eval dispatch | sweeps engine (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
 | Eval score | sweeps engine (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
@@ -63,7 +63,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Emit canvas | cluster MCP (`cluster_mcp.py`) | Renders the claim-debate map as a JSON Canvas with maturity-colored nodes and typed edges. |
 | Model topics | cluster MCP (`cluster_mcp.py`) | Runs BERTopic over the corpus to extract topics, the doc-topic map, and outliers. |
 | List / run patterns | patterns MCP (`patterns_mcp.py`) | Lists runnable patterns from `system/patterns/` and composes a pattern run (refusing gated-zone output targets), logging provenance. |
-| Route task | tasks MCP (`tasks_mcp.py`), co-PI-facing | Validates a delegation against the target lane's ceiling and creates the kanban card. |
+| Route task | tasks MCP (`tasks_mcp.py`), Co-PI-facing | Validates a delegation against the target lane's ceiling and creates the kanban card. |
 | Board export | board export (`board_export.py`, 60 s cron) | Projects kanban cards into `system/board/` and appends the telemetry logs (board state, transitions, dispositions, cost). |
 | Metrics aggregate | metrics aggregator (`metrics_aggregate.py`, weekly cron) | Rolls audit + board + lint signals into per-lane trust-score notes under `system/metrics/`. |
 
@@ -72,7 +72,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Vault read / gated write | obsidian native MCP (all lanes) | File reads, search, and writes into the vault over the Local REST API plugin's MCP — every write passing the policy gate. |
-| Vault search | qmd MCP (Librarian, Writer, co-PI, Peer-reviewer) | Hybrid BM25 + vector + rerank search over the vault corpus, local and read-only. |
+| Vault search | qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Hybrid BM25 + vector + rerank search over the vault corpus, local and read-only. |
 | Literature discovery | paper_search MCP (Librarian) | Searches arXiv, PubMed, Semantic Scholar, Google Scholar, and bioRxiv (Unpaywall email for OA lookups). |
 | Zotero reads | pyzotero MCP (Librarian, Peer-reviewer) | Read-only citekey resolution, metadata, and citation context from the local Zotero library — no write-back. |
 
@@ -150,7 +150,7 @@ These are the repo source wrappers under `.memoria/scripts/`. The installer copi
 | Map the corpus | Prompts for an optional scope and creates a map-lane card. |
 | Draft a section | Prompts for a goal and creates a draft-lane card. |
 | Verify a draft | Sends the active (or chosen) draft to the verify lane. |
-| Delegate a task | Prompts for a lane and goal — the palette twin of the co-PI's routing skill. |
+| Delegate a task | Prompts for a lane and goal — the palette twin of the Co-PI's routing skill. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
 | Workspace Desk / Library / Studio | Loads the named workspace layout via the core Workspaces plugin (`load-workspace.js`, [ADR-68](../adr/68-workspaces-desk-library-studio.md)); also wired to the workspace buttons on `home.md`. |

@@ -25,6 +25,8 @@ SKELETON_DIRS=(
   projects
   inbox
   system/board
+  system/exports
+  system/exports/assets
   system/logs
   system/logs/sessions
   system/metrics

@@ -90,15 +90,15 @@ for c in memoria-board-export memoria-sweeps memoria-lint memoria-metrics memori
 done
 ```
 
-**8. Point the co-PI pane at the VPS (optional).**
+**8. Point the Co-PI pane at the VPS (optional).**
 
-ACP is a stdio protocol — the `agent-client` plugin launches the agent as a command. To converse with the VPS-side co-PI from desktop Obsidian, set the agent command in Settings → **Agent Client** to an SSH invocation:
+ACP is a stdio protocol — the `agent-client` plugin launches the agent as a command. To converse with the VPS-side Co-PI from desktop Obsidian, set the agent command in Settings → **Agent Client** to an SSH invocation:
 
 ```text
 ssh user@your-vps-ip hermes -p memoria-copi acp
 ```
 
-(On Windows, keep WSL mode on so the `ssh` runs inside WSL2.) Alternatively, keep running the co-PI locally — it only reads the vault, so the desktop copy is safe even with dispatch on the VPS.
+(On Windows, keep WSL mode on so the `ssh` runs inside WSL2.) Alternatively, keep running the Co-PI locally — it only reads the vault, so the desktop copy is safe even with dispatch on the VPS.
 
 **9. Smoke test.**
 
