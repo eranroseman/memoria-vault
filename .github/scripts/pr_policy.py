@@ -10,8 +10,9 @@ causes the workflow to enable auto-merge. Safe PRs can be any size — a single
 docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
 docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
 
-Block: any PR touching sensitive paths (CI workflows, vault profiles, scripts,
-ADRs at docs/adr/) is blocked regardless of author, requiring a human decision.
+Block: any PR touching sensitive paths (.github/, src/.memoria/, scripts/, or
+ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
+human review.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -38,13 +39,9 @@ SAFE_SUFFIXES = (".md", ".txt")
 # decision record (ADRs at every lifecycle status) and stays review-required even
 # though it lives under the otherwise-safe docs/ tree — is_sensitive wins over is_safe.
 SENSITIVE_PREFIXES = (
-    ".github/workflows/",
-    ".github/scripts/",
+    ".github/",
     "scripts/",
-    "src/.memoria/profiles/",
-    "src/.memoria/mcp/",
-    "src/.memoria/lane-overrides/",
-    "src/.memoria/plugins/",
+    "src/.memoria/",
     "docs/adr/",
 )
 

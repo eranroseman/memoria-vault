@@ -4,6 +4,7 @@ __pycache__/
 
 # Claude Code local worktrees (per-branch checkouts; never part of the repo)
 .claude/worktrees/
+/.worktrees/
 
 # Jekyll build artifacts (published via GitHub Pages from /docs)
 docs/_site/
@@ -28,5 +29,4 @@ desktop.ini
 /_notes/
 /_papers/
 TODO*
-
 

@@ -103,6 +103,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | proposed |
 | [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | proposed |
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | proposed |
+| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | deferred |
 
 <!-- ADR-INDEX:END -->
 

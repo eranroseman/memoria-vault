@@ -71,6 +71,7 @@ VAULT_PATH=""
 PYTHON=""
 VENV_PYTHON=""    # interpreter the MCP deps land in; wired into config.yaml at deploy
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
+INSTALL_MODULES_LOADED=0
 
 # --- helpers -----------------------------------------------------------------
 say()  { printf '%s\n' "$*"; }
@@ -121,6 +122,22 @@ detect_python() {
   if have python3; then PYTHON=python3
   elif have python; then PYTHON=python
   else PYTHON=""; fi
+}
+
+load_install_modules() {
+  [ "$INSTALL_MODULES_LOADED" -eq 1 ] && return 0
+  local script_dir candidate
+  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
+  candidate="$script_dir/install"
+  if [ ! -d "$candidate" ] && [ -n "$REPO_DIR" ]; then
+    candidate="$REPO_DIR/scripts/install"
+  fi
+  [ -f "$candidate/manifest.sh" ] || die "Installer modules not found under $candidate"
+  # shellcheck source=scripts/install/manifest.sh
+  source "$candidate/manifest.sh"
+  # shellcheck source=scripts/install/runtime-tools.sh
+  source "$candidate/runtime-tools.sh"
+  INSTALL_MODULES_LOADED=1
 }
 
 # =============================================================================
@@ -260,42 +277,6 @@ ensure_hermes() {
 # =============================================================================
 # Step 4 — copy the runtime vault to its target  (sets VAULT_PATH)
 # =============================================================================
-# Canonical empty-folder skeleton. Git can't track empty dirs, so the repo
-# image used to keep these alive with ~39 `.keep` placeholders that rode along
-# to every target. We drop the `.keep`s and recreate the skeleton here instead,
-# so a fresh deploy still has the full layout (and the linter can restore it).
-# Keep this list in sync with src/ — these are the dirs that hold no tracked
-# content of their own.
-SKELETON_DIRS=(
-  .memoria/csl
-  .memoria/lane-overrides
-  .memoria/profiles/memoria-librarian/cron
-  .memoria/profiles/memoria-librarian/skills
-  catalog/papers
-  catalog/people
-  catalog/organizations
-  catalog/venues
-  catalog/datasets
-  catalog/repositories
-  notes/fleeting
-  notes/fleeting/chats
-  notes/fleeting/maps
-  notes/source
-  notes/claims
-  notes/hubs
-  notes/index
-  projects
-  inbox
-  system/board
-  system/logs
-  system/logs/sessions
-  system/metrics
-  system/templates
-  system/patterns
-  system/eval
-  system/dashboards
-)
-
 copy_vault() {
   hdr "Runtime vault"
   local target="$VAULT_OVERRIDE"
@@ -326,7 +307,7 @@ copy_vault() {
     # .memoria subtrees that hold authored code — never user notes; .env files
     # are per-machine and kept.
     local infra
-    for infra in profiles engines mcp schemas scripts plugins; do
+    for infra in profiles engines mcp memoria_runtime schemas scripts plugins; do
       [ -d "$src/.memoria/$infra" ] || continue
       run rsync -a --delete --exclude '.env' "$src/.memoria/$infra"/ "$VAULT_PATH/.memoria/$infra"/
     done
@@ -832,56 +813,6 @@ wire_lint_cron() {
   ok "Lint cron wired"
 }
 
-# qmd — the search engine binary (@tobilu/qmd). PATH lookup is unsafe: an
-# unrelated conda package also installs a `qmd`; prefer the npm-global binary.
-resolve_qmd() {
-  local npm_qmd=""
-  if have npm; then npm_qmd="$(npm prefix -g 2>/dev/null)/bin/qmd"; fi
-  if [ -n "$npm_qmd" ] && [ -x "$npm_qmd" ]; then printf '%s' "$npm_qmd"; return; fi
-  command -v qmd 2>/dev/null || printf 'qmd'
-}
-
-ensure_qmd() {
-  hdr "qmd search engine"
-  local q; q="$(resolve_qmd)"
-  if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
-    ok "qmd present: $q"
-  elif have npm && node --version 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])'; then
-    run npm install -g @tobilu/qmd \
-      || warn "qmd install failed — search MCP will not serve (npm install -g @tobilu/qmd)"
-    q="$(resolve_qmd)"
-  else
-    warn "qmd not installed and Node >=22 unavailable — search MCP will not serve until you: npm install -g @tobilu/qmd"
-  fi
-  QMD_BIN="$q"
-  # Register the vault collection (instant; BM25 search works without models).
-  if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
-    run "$q" collection add "$VAULT_PATH" --name vault \
-      || warn "qmd collection add failed — register manually: qmd collection add \"$VAULT_PATH\" --name vault"
-    # Vector embeddings download ~2GB of local models on first run — opt-in.
-    if confirm "Build the qmd vector index now (first run downloads ~2GB of local models)?"; then
-      run "$q" embed || warn "qmd embed failed — re-run later: qmd embed"
-    else
-      say "  (skipped — BM25 search works now; run 'qmd embed' later for semantic search)"
-    fi
-  fi
-}
-
-wire_commit_gate() {
-  # The commit gate (D50): if the vault is a git repo, wire the pre-commit hook.
-  # Called from BOTH install paths: a fresh install has no .git yet (the
-  # finish-setup tip says git init afterwards), so the maintenance path
-  # (--profiles-only) must wire it on the next run too.
-  if [ -d "$VAULT_PATH/.git" ]; then
-    run mkdir -p "$VAULT_PATH/.git/hooks"
-    run cp "$VAULT_PATH/.memoria/engines/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
-    run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
-    ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
-  else
-    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit gate)"
-  fi
-}
-
 wire_metrics_cron() {
   hdr "Metrics cron (fleet health)"
   if ! have hermes; then warn "Hermes not on PATH — skipping the metrics cron."; return 0; fi
@@ -939,6 +870,7 @@ main() {
   parse_args "$@"
 
   if [ "$PROFILES_ONLY" -eq 1 ]; then
+    load_install_modules
     resolve_vault_for_profiles
     install_mcp_deps
     ensure_qmd
@@ -957,6 +889,7 @@ main() {
   confirm "Proceed with the full Memoria install?" || die "Aborted — nothing changed."
   ensure_prereqs
   resolve_repo
+  load_install_modules
   ensure_hermes
   copy_vault
   install_mcp_deps
