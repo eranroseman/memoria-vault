@@ -62,12 +62,16 @@ def test_installer_escapes_template_replacements():
 
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
+    assert "python_install_guidance()" in text
+    assert "Python 3 is required for Memoria's deterministic tools and MCP servers." in text
+    assert "sudo apt-get update && sudo apt-get install -y python3 python3-venv" in text
     ensure_prereqs = re.search(
         r"ensure_prereqs\(\) \{(?P<body>.*?)\n\}",
         text,
         re.S,
     ).group("body")
     assert 'missing="$missing python3"' in ensure_prereqs
+    assert "python_install_guidance" in ensure_prereqs
     assert "sudo apt-get install -y$missing" in ensure_prereqs
 
 
@@ -79,5 +83,6 @@ def test_mcp_deps_fail_loudly_without_python():
         re.S,
     ).group("body")
     assert "No Python found" in install_mcp_deps
+    assert "python_install_guidance" in install_mcp_deps
     assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
     assert "skipping MCP deps" not in install_mcp_deps
