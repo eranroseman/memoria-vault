@@ -38,8 +38,9 @@ give it real decision material, or automate it. **classify fails this test and i
 automated** (audited, correctable; a `flag` fires only on genuine ambiguity) — the real
 Read-side gates are candidate triage (keep/skip) and link confirmation.
 **High-cardinality per-item decisions live in a batch worklist** — a Bases-backed
-screening surface where each row carries a lifecycle `decision` the PI toggles at
-group or item granularity — surfaced as **one aggregate work-prompt**, never N cards.
+screening surface where each file-backed `worklist-item` row carries a `decision`
+field the PI toggles at group or item granularity — surfaced as **one aggregate
+work-prompt**, never N cards.
 No confidence-tiered auto-accept anywhere: confident-wrong is the failure mode the
 gate exists to catch.
 

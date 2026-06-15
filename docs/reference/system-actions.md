@@ -7,7 +7,7 @@ parent: Reference
 
 Every action the system can perform, with its performer. Three performer kinds: **deterministic operations** (zero-LLM Python, report-only or idempotent), **agents** (LLM lanes acting through gated MCP tools and skills), and the **PI** (palette actions and review decisions). Where a topic has its own reference page, that page is authoritative for the details — this catalog is the map.
 
-## Deterministic engines
+## Deterministic operations
 
 ### Ingest pipeline (`operations/processing/ingest/`)
 
@@ -49,6 +49,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Eval score | sweeps operation (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | sweeps operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
 | Retraction sweep | sweeps operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
+| Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed `worklist-item` rows and one aggregate Inbox `work-prompt`. |
 
 ## Vault-side MCP servers and hooks (`.memoria/mcp/`)
 
@@ -98,7 +99,7 @@ These are the repo source wrappers under `.memoria/scripts/`. The installer copi
 | Skill | What it does |
 | --- | --- |
 | catalog-find-source | Searches the literature via paper_search, screens against the vault, raises honesty-bodied candidate cards. |
-| catalog-rank-candidate | Ranks candidate sources by relevance / novelty / venue into a worklist card. |
+| catalog-rank-candidate | Ranks candidate sources by relevance / novelty / venue into a batch worklist. |
 | catalog-classify-source | Proposes `research_area` / `methodology` from the vocabulary for human promotion at triage. |
 | catalog-enrich-record | Runs the ingest pipeline MCP, fills the classification and `[!brief]` holes, applies the gated writes. |
 | extract-flag-distill | Flags kept sources worth reading and raises a distill work-prompt. |

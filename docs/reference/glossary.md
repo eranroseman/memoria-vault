@@ -43,7 +43,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The Co-PI has no lane; engines run off the board.
 
-**Worklist** — the batch surface for high-cardinality decisions ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): instead of one card per item, like decisions queue into one batch the PI can sweep (the two decision kinds being approval gates and work prompts).
+**Worklist** — the batch surface for high-cardinality decisions ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): instead of one card per item, like decisions queue into one `system/worklists/` batch where each `worklist-item` row has a `decision` field the PI can sweep in Bases.
 
 ---
 
@@ -59,7 +59,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Links vs relationships** — the two kinds of connection ([ADR-52](../adr/52-links-vs-relationships.md)): `links:` are **authored** edges on notes (the PI's thinking); `relationships` are **given** edges on catalog entities (facts from the record), written by the ingest engine. The field contract is specified in [Frontmatter fields](frontmatter.md).
 
-**Note type** — one of the 18 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
+**Note type** — one of the 19 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
 
 **Pattern** — a curated prompt-transformation stored as data in `system/patterns/` ([ADR-53](../adr/53-pattern-library.md)), typed and lifecycle-gated, executed only through the patterns MCP runner (one audited chokepoint; gated output targets degrade to dry-run).
 

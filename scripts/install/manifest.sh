@@ -33,5 +33,6 @@ SKELETON_DIRS=(
   system/templates
   system/patterns
   system/eval
+  system/worklists
   system/dashboards
 )

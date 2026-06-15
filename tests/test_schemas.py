@@ -5,11 +5,12 @@ import schema
 
 def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 18
+    assert len(types) == 19
     expected = {
         "paper", "person", "organization", "venue", "dataset", "repository",
         "fleeting", "source", "claim", "hub", "index",
         "candidate", "gap", "flag", "alert", "work-prompt", "pattern", "eval-task",
+        "worklist-item",
     }
     assert set(types) == expected
 

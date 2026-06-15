@@ -77,7 +77,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | Subset | Types |
 | --- | --- |
 | full chain | `source` |
-| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern`, `eval-task` |
+| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern`, `eval-task`, `worklist-item` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
 | `current → archived` | `person`, `organization`, `venue`, `repository`, `hub`, `index` |
@@ -106,6 +106,12 @@ Two related fields: a `source` note's required `entity` field is a wikilink to t
 ## The honesty-card fields
 
 Inbox cards split into proposals (`candidate`, `gap`), verification cards (`flag`, `alert`), and work prompts (`work-prompt`) ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). Their field-level contract lives in [Inbox card fields](inbox-card-fields.md).
+
+---
+
+## Batch worklist fields
+
+Worklist rows are `worklist-item` notes under `system/worklists/`. Their `lifecycle` says whether the row is still active in the vault; their separate `decision` field is the PI's batch-screening choice: `proposed`, `include`, `exclude`, `maybe`, or `archived`. `worklist` groups rows into one batch, `group` supports grouped sweeps, `rank` preserves report order, and `item_ref` points at the source/path/citekey being screened. The emitter raises one aggregate `work-prompt` for the batch, never one card per row.
 
 ---
 

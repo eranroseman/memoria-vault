@@ -107,7 +107,7 @@ from the original disposition.
 | #145 | Property reorder / group / color-code | **done:** lifecycle/state surfaced in templates, emitters, Bases, docs, and property-badge CSS |
 | #183 | Obsidian forms for structured capture | **done:** Modal Forms source capture writes proposed source notes + Inbox candidates; project-start form reserved for #154 |
 | #154 | Automate start-a-writing-project | form → script scaffolds `40-workbench/<project>/` + Mapper scope card |
-| #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row lifecycle `decision`; one aggregate prompt |
+| #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row `decision`; one aggregate prompt |
 | #381 | Remaining map skills | **deferred** (with #379/#344): score-* gated on the calibration spec (needs real-data shadow calibration); graph-claims/canvas-hub revisit later |
 | #329 | Obsidian project-management research | survey PM plugins/methods → adopt/borrow/reject; feeds the project workspace |
 
@@ -356,7 +356,8 @@ evidence, real transcripts:
 - [x] 2026-06-15 — D #380 assist surface implemented on `feat/alpha4-assist-surface`; PR #551 merged and issue closed.
 - [x] 2026-06-15 — D #145 property display implemented on `feat/alpha4-property-display`: lifecycle/state order is surfaced in templates, ingest emitters, Bases, docs, and shipped property-badge CSS.
 - [x] 2026-06-15 — D #183 structured capture forms implemented on `feat/alpha4-structured-forms`: Modal Forms source capture writes proposed source notes + Inbox candidates; project-start form is available for #154 without implementing #154.
-- [ ] (next) D — continue PI surface (#336/#378). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
+- [x] 2026-06-15 — D #336 batch worklists implemented on `feat/alpha4-batch-worklists`: file-backed `worklist-item` rows live under `system/worklists/`, `worklists.base` groups them by worklist/decision/group, and `worklists.py` emits one aggregate Inbox prompt per report.
+- [ ] (next) D — continue PI surface (#378). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
@@ -496,3 +497,8 @@ evidence, real transcripts:
 ## Execution log — #183 structured forms
 
 - 2026-06-15: Started #183 in `feat/alpha4-structured-forms`; wiring Modal Forms to QuickAdd for staged source capture and adding a reusable project-start form contract without doing #154.
+
+
+## Execution log — #336 batch worklists
+
+- 2026-06-15: Started #336 in `feat/alpha4-batch-worklists`; implementing ADR-54 as file-backed Bases rows (`worklist-item`) plus a report→worklist emitter that raises exactly one aggregate work-prompt.

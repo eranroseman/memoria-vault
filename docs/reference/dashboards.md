@@ -47,6 +47,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and workspa
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
+| `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 
 ---
 
