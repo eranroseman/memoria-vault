@@ -13,10 +13,13 @@ deleted before the alpha.4 checkpoint closes.
   build/defect/PI-surface issues, land the actionable packaging slice, and park
   the deferred items honestly.
 - **Worktree / branch:** `~/mv-alpha4` · `docs/alpha4-execplan` (off `origin/main`)
-- **Milestone:** `0.1.0-alpha.4` (#3) — 25 open, 0 closed at authoring.
-- **Related ADRs:** ADR-30 (ingest), ADR-31 (native Obsidian MCP), ADR-54 (batch
-  worklists), ADR-55 (golden copy / upgrade), ADR-57 (engines write, agents
-  judge), ADR-69 (operations naming), ADR-76 (deferred — runtime as wheel).
+- **Milestone:** `0.1.0-alpha.4` (#3) — 25 open at authoring; scope finalized
+  2026-06-15 (§2.2): 6 deferred out, 4 added in.
+- **Related ADRs:** ADR-19 (Mapper MOCs; Tier 2 via #439), ADR-30 (ingest),
+  ADR-31 (native Obsidian MCP), ADR-54 (batch worklists), ADR-55 (golden copy /
+  upgrade), ADR-57 (engines write, agents judge), ADR-64 (native Windows; via
+  #414), ADR-69 (operations naming; rename now), ADR-76 (deferred — wheel; step-1
+  tooling only).
 - **Design inputs:** [the packaging design note](install-a-real-package.md)
   (ADR-76 / #494 / #521).
 - **Started:** 2026-06-15 · **Last updated:** 2026-06-15
@@ -60,18 +63,21 @@ For a reader new to this repo:
 
 ### 2.1 Scope — the 25 open alpha.4 issues, grouped
 
-**A. Ingest / extraction engine (ADR-30)**
+The 2026-06-15 decision (§2.2) is authoritative; the tags below mark the changes
+from the original disposition.
+
+**A. Ingest / extraction engine (ADR-30) — in**
 
 | # | Title | One-line scope |
 |---|---|---|
 | #438 | Unpaywall OA lookup FIRST in extraction | add an Unpaywall tier ahead of PMC + local PDF; OA PDF goes through the same detect path |
 | #437 | PubMed/NCBI as a 4th metadata source | add `fetch_pubmed` to resolve/merge cross-check (MeSH, PMID/PMCID, pub types) |
 
-**B. Security / transport**
+**B. Security / transport — deferred out (2026-06-15)**
 
 | # | Title | One-line scope |
 |---|---|---|
-| #527 | HTTPS for Obsidian Local REST API + native MCP | close ADR-31's residual: bearer key currently travels over loopback HTTP; revisit once Hermes supports CA/insecure TLS |
+| #527 | HTTPS for Obsidian Local REST API + native MCP | **deferred:** keep ADR-31's documented loopback-HTTP residual; revisit later via OS/Python trust-store or mkcert (not a Hermes-only blocker) |
 
 **C. Defects / quality / contradictions**
 
@@ -95,7 +101,7 @@ For a reader new to this repo:
 | #183 | Obsidian forms for structured capture | modal-form plugin → valid frontmatter into staging |
 | #154 | Automate start-a-writing-project | form → script scaffolds `40-workbench/<project>/` + Mapper scope card |
 | #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row lifecycle `decision`; one aggregate prompt |
-| #381 | Remaining map skills | score-writability/readiness, graph-claims, canvas-hub · **blocked by #379** (calibration spec, unmilestoned) |
+| #381 | Remaining map skills | **deferred** (with #379/#344): score-* gated on the calibration spec (needs real-data shadow calibration); graph-claims/canvas-hub revisit later |
 | #329 | Obsidian project-management research | survey PM plugins/methods → adopt/borrow/reject; feeds v0.1.2 |
 
 **E. Runtime packaging (the `install-a-real-package.md` workstream)**
@@ -118,41 +124,84 @@ need.
 |---|---|---|
 | #339 | Golden-copy update path on release upgrade | ADR-55 open question: three-way reconcile (golden-old/new/live) without clobbering PI edits |
 
-**G. Deferred-ADR cadence tracking — listed for completeness, NOT alpha.4 deliverables**
+**G. Formerly deferred-tracking — split by the 2026-06-15 decision**
 
 | # | Tracks | Disposition |
 |---|---|---|
-| #414 | ADR-64 native Windows support | deferred; revisit each cadence |
-| #412 | ADR-62 measurement/verification harnesses | deferred; revisit each cadence |
-| #370 | ADR-38 pre-file similarity ratchet | deferred; revisit each cadence |
-| #439 | ADR-19 Tier 2 Mapper handoff | deferred; decide build vs supersede at cadence |
-| #296 | Migrate Windows WSL2 → native | v0.3 direction; v0.2 unaffected |
+| #414 | ADR-64 native Windows support | **added → in** — build this checkpoint ⇒ accept ADR-64 + supersede the WSL2-only rule (#296). Large roadmap change (see §2.2) |
+| #439 | ADR-19 Tier 2 Mapper handoff | **added → in** — build the hub/MOC handoff (review-gated; hubs stay approved) ⇒ update ADR-19 status |
+| #412 | ADR-62 measurement/verification harnesses | **deferred** — instrument once more behavior ships |
+| #370 | ADR-38 pre-file similarity ratchet | **deferred** — depends on the deferred calibration discipline (#379) |
+| #296 | Migrate Windows WSL2 → native | folds into #414's WSL2-rule supersession; track the broader migration here |
+
+**H. Structural — `engines → operations` rename (ADR-69) — added → in**
+
+ADR-69 is accepted; execute the code-tree rename now as a standalone wide PR
+(touches `conftest.py`, `install.sh`, tests, docs, every import). It unblocks
+#472 and is the prerequisite for the step-1 packaging tooling. Doing it now also
+opens the option to do the full ADR-76 wheel migration in the same tree-move pass
+— but that stays deferred unless its §4.5 (policy-gate) and §6.7 (schemas)
+decisions are made.
+
+### 2.2 Scope decisions (2026-06-15)
+
+**Deferred out of alpha.4:** #527 (HTTPS transport — keep ADR-31's documented
+residual); #379 + #381 + #344 (calibration spec, score-* map skills, diversity
+reserve — need real-data shadow calibration); #412 (ADR-62 harnesses); #370
+(ADR-38 ratchet — depends on the deferred calibration). Their issues stay open.
+
+**Added to alpha.4 (over the original deferred disposition):**
+
+- **ADR-69 rename** — execute `engines → operations` now (Workstream H).
+- **#414 native Windows (ADR-64) — major change.** Building it means *accepting
+  ADR-64* and *superseding the WSL2-only rule* (the AGENTS.md "work inside WSL2"
+  constraint and #296). It collapses the two-OS topology and has wide blast
+  radius — the installer, AGENTS.md, the ADR-31 WSL2↔Windows bridge, and the
+  analysis-stack wheels. Native Windows is normally framed v0.3; pulling it into
+  an alpha checkpoint is a deliberate scope-up. **Verify Hermes' native-Windows
+  support against the primary `~/.hermes` docs first** — it is the load-bearing
+  assumption in #296 — and record the supersession as an ADR before the port.
+- **#439 Mapper Tier 2 (ADR-19)** — build the hub-threshold → agent-drafted
+  hub/MOC handoff (review-gated; `notes/hubs/` stays approved); update ADR-19's
+  status from "Tier 2 deferred" to built.
+- **#443 contradiction pages** — fix by *building* the in-scope features
+  (#375/#376/#377/#343) and *re-scoping* the one genuinely retired page
+  (agent-client-picker) to match reality.
+
+**Held to recommendation (flip if you want otherwise):** #339 first (amend
+ADR-55 with the reconcile design); packaging **step-1 tooling `pyproject` only**,
+full ADR-76 wheel migration **deferred**; #378 bundles supercharged-links under
+the current ADR-26/55 baseline (ADR-74 not required).
+
+**ADR actions this scope implies** (ADR edits the plan links to, not recorded
+here): accept ADR-64 + supersede the WSL2-only rule (#414); update ADR-19 (#439);
+amend ADR-55 with the upgrade reconcile (#339).
 
 ## 3. Plan of work
 
-The work is sequenced so the load-bearing engine + security + integrity changes
-land before the broad UI surface, and the deferred items are dispositioned (not
-built):
+Sequenced so structural and load-bearing changes land before the broad UI
+surface; deferred items (§2.2) are not built this checkpoint.
 
-1. **Workstream A/B/F first (engine, security, integrity).** These have the
-   narrowest blast radius and the clearest acceptance: extraction/merge changes
-   (#438, #437) are unit-testable against fixture papers; #527 is a transport
-   swap behind ADR-31; #339 is an installer/upgrade-path change behind ADR-55.
-2. **Workstream C (defects) in parallel.** #443 is a zero-contradiction fix that
-   should not wait — either build the behavior or re-scope the page to deferred.
-   #493 and #472 are quality refactors that also unblock Workstream E step 1.
-3. **Workstream E step 1 (tooling pyproject)** rides #493: once tests stop using
-   `globals()` injection, the `conftest.py` `sys.path` block moves into a
-   tooling-only `pyproject.toml`. The wheel migration itself stays deferred.
-4. **Workstream D (PI surface) last and incrementally.** Each verb/indicator is
-   independently shippable and must satisfy the PI direct-access rule. Before
-   building any D item, fix its retired `docs/design/` reference to the current
-   ADR/doc (zero-contradiction). #381 is blocked by #379 (calibration spec) —
-   either pull #379 in or leave #381 open.
-5. **Workstream G — disposition, don't build.** Confirm each tracking issue's ADR
-   is `status: deferred` with a current *When this matters*; record the cadence
-   verdict in the Execution log. Any decision to build one is a new ADR, not a
-   line in this plan.
+1. **Structural first — `engines → operations` rename (H, ADR-69).** A standalone
+   wide PR merged before other branches (AGENTS.md merge discipline); active
+   branches rebase the same day. Unblocks #472 and the step-1 packaging tooling.
+2. **Engine + integrity (A, F).** #438/#437 are unit-testable against fixture
+   papers; #339 resolves ADR-55's upgrade reconcile (amend ADR-55).
+3. **Defects / quality (C).** #493 (off `globals()`) + #472 (naming, rides the
+   rename); #443 is resolved by building its in-scope producers (step 5) and
+   re-scoping the one retired page (agent-client-picker) now.
+4. **Packaging step-1 (E).** Tooling-only `pyproject` (pytest + ruff, delete the
+   conftest `sys.path` block) once #493 lands. Full ADR-76 stays deferred.
+5. **PI surface (D), incrementally.** Each verb/indicator independently
+   shippable, reachable from Obsidian (PI rule); repoint any retired
+   `docs/design/` reference first. Covers #443's producers
+   (#375/#376/#377/#343), #336, #380, #145, #183 → #154, #329, and #378 (bundle
+   supercharged-links under the current baseline).
+6. **Mapper Tier 2 (#439, ADR-19).** Build the hub/MOC handoff; update ADR-19.
+7. **Native Windows (#414, ADR-64) — its own track, last.** First land the ADR:
+   accept ADR-64 + supersede the WSL2-only rule (verify Hermes native support
+   against the `~/.hermes` docs). Then the port (installer, ADR-31 bridge,
+   analysis stack). Largest blast radius — isolate it.
 
 ## 4. Concrete steps
 
@@ -217,13 +266,17 @@ evidence, real transcripts:
 
 ## 7. Progress
 
-- [ ] 2026-06-15 — ExecPlan authored; `project-starter.md` + `test-env.md` moved
+- [x] 2026-06-15 — ExecPlan authored; `project-starter.md` + `test-env.md` moved
       to `docs/releasing/0.1.0-alpha.5/tmp/`; 25 issues inventoried + grouped.
-- [ ] (next) Workstream A/B/F — engine, security, integrity.
-- [ ] (next) Workstream C — defects/quality.
-- [ ] (next) Workstream E step 1 — tooling `pyproject.toml`.
-- [ ] (next) Workstream D — PI surface, incrementally.
-- [ ] (next) Workstream G — cadence dispositions recorded.
+- [x] 2026-06-15 — Scope finalized (§2.2): deferred #527/#379/#381/#344/#412/#370;
+      added ADR-69 rename, #414, #439, #443.
+- [ ] (next) H — `engines → operations` rename (ADR-69), structural PR first.
+- [ ] (next) A/F — ingest (#438/#437) + golden upgrade (#339, amend ADR-55).
+- [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
+- [ ] (next) E step 1 — tooling `pyproject.toml`.
+- [ ] (next) D — PI surface incl. #443 producers, incrementally.
+- [ ] (next) #439 Mapper Tier 2 (update ADR-19).
+- [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
 ## 8. Execution log
 
@@ -234,12 +287,18 @@ evidence, real transcripts:
 - 2026-06-15 — Decision deferred to ADR, not recorded here: whether to un-defer
   ADR-76 (full wheel migration). Blocked on the §4.5 policy-gate version-skew
   choice and the ADR-69 rename ordering (see the packaging note).
+- 2026-06-15 — Scope decision (yours): deferred #527, #379, #381, #344 (plus
+  #412, #370) out of alpha.4; added the ADR-69 rename, #414, #439, #443 in.
+  Sequencing in §3; architectural consequences routed to ADRs (§2.2), not here:
+  accept ADR-64 + supersede the WSL2-only rule (#414), update ADR-19 (#439),
+  amend ADR-55 (#339).
 
 ## 9. Surprises & discoveries
 
-- Several alpha.4-milestoned issues are **deferred-ADR tracking issues**
-  (#521, #414, #412, #370, #439) — milestoned for visibility but not buildable
-  deliverables. Listed in Workstream G so the active scope isn't overstated.
+- Several alpha.4-milestoned issues began as **deferred-ADR tracking issues**
+  (#521, #414, #412, #370, #439). The 2026-06-15 decision pulled **#414** and
+  **#439** into scope (accepting ADR-64 + superseding the WSL2-only rule, and
+  building ADR-19 Tier 2); #412, #370, and the full ADR-76 stay deferred.
 - Six PI-surface issues (#380, #375, #378, #343, #145-adjacent) cite **retired
   `docs/design/*` paths**. Each needs its reference repointed to the current
   ADR/doc before build — a zero-contradiction fix that travels with the feature.
@@ -251,8 +310,17 @@ evidence, real transcripts:
 - **Ingest:** `src/.memoria/engines/ingest/extract.py` (ADR-30 tier order; #438),
   `src/.memoria/engines/ingest/resolve_merge.py` (`fetch_*`; #437). NCBI/Unpaywall
   keys already provisioned in profile `.env`.
-- **Transport:** ADR-31 native Obsidian MCP over loopback; #527 depends on
-  Hermes CA/insecure-TLS support (external dependency — verify before building).
+- **Transport:** ADR-31 native Obsidian MCP over loopback. #527 (HTTPS) is
+  **deferred** — the residual stays documented; later resolve via OS/Python
+  trust-store or mkcert (not a Hermes-only blocker).
+- **Rename (ADR-69):** `src/.memoria/engines/` → `operations/` across
+  `conftest.py`, `install.sh`, tests, docs, imports — a standalone structural PR
+  (Workstream H).
+- **Native Windows (#414, ADR-64):** accept ADR-64 + supersede the WSL2-only
+  rule; touches the installer, the ADR-31 WSL2↔Windows bridge, and the
+  analysis-stack wheels. Verify Hermes native support against `~/.hermes` first.
+- **Mapper Tier 2 (#439, ADR-19):** a fired hub-threshold finding → a drafted hub
+  note, review-gated; `notes/hubs/` stays approved.
 - **Upgrade:** `golden.py` manifest + ADR-55 (#339).
 - **Packaging:** full design + the policy-gate version-skew options (i/ii/iii)
   are in [the packaging design note](install-a-real-package.md); the wheel
