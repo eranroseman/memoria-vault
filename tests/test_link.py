@@ -1,6 +1,8 @@
 """L1 component test for link — extracted from its former --self-test (ADR-44)."""
 import link as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+plan_cites = _m.plan_cites
+plan_entities = _m.plan_entities
 
 
 def test_link():

@@ -1,7 +1,19 @@
 """L1 component test for gen-adr-index — extracted from its former --self-test (ADR-44)."""
 from _util import load_script
+
 _m = load_script("scripts/gen-adr-index.py")
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+END = _m.END
+Path = _m.Path
+START = _m.START
+_dateish = _m._dateish
+_written = _m._written
+build = _m.build
+collect_adrs = _m.collect_adrs
+parse_adr = _m.parse_adr
+render_table = _m.render_table
+splice = _m.splice
+status_cell = _m.status_cell
+validate_adr = _m.validate_adr
 
 
 def test_gen_adr_index():

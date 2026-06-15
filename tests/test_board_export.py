@@ -2,12 +2,26 @@
 import re
 from datetime import datetime, timedelta, timezone
 
-import yaml
-
 import board_export as _m
 import schema as _schema
+import yaml
 from _util import CheckHarness
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+BOARD_RELDIR = _m.BOARD_RELDIR
+COST_RELPATH = _m.COST_RELPATH
+DISPOSITION_RELPATH = _m.DISPOSITION_RELPATH
+Path = _m.Path
+SNAPSHOT_RELPATH = _m.SNAPSHOT_RELPATH
+TRANSITIONS_RELPATH = _m.TRANSITIONS_RELPATH
+export_events = _m.export_events
+export_markdown = _m.export_markdown
+export_review_prompts = _m.export_review_prompts
+export_snapshot = _m.export_snapshot
+json = _m.json
+load_state_cache = _m.load_state_cache
+normalize = _m.normalize
+run_export = _m.run_export
+save_state_cache = _m.save_state_cache
 
 
 def test_board_export():

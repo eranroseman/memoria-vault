@@ -1,7 +1,11 @@
 """L1 component test for status-doctor — extracted from its former --self-test (ADR-44)."""
 from _util import load_script
+
 _m = load_script("scripts/status-doctor.py")
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+Path = _m.Path
+_release_tmp = _m._release_tmp
+check_file = _m.check_file
+targets = _m.targets
 
 
 def test_status_doctor():

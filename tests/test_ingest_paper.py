@@ -1,6 +1,9 @@
 """L1 component test for ingest_paper — extracted from its former --self-test (ADR-44)."""
 import ingest_paper as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+_EXPECT = _m._EXPECT
+_FIXTURE = _m._FIXTURE
+ingest_text = _m.ingest_text
 
 
 def test_ingest_paper():

@@ -1,6 +1,11 @@
 """L1 component test for ingest_mcp — extracted from its former --self-test (ADR-44)."""
 import ingest_mcp as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+INTAKE_LOG = _m.INTAKE_LOG
+Path = _m.Path
+SCRIPTS_DIR = _m.SCRIPTS_DIR
+append_intake_anchor = _m.append_intake_anchor
+json = _m.json
 
 
 def test_ingest_mcp():

@@ -19,15 +19,13 @@ repos:
         exclude: src/\.obsidian/plugins/
 
   # ---------------------------------------------------------------------------
-  # ruff (Python linter) — production/tooling only. Tests still use dynamic
-  # globals().update(...) imports, so extending Ruff there would hide real F821
-  # findings behind broad ignores. Refactor test imports before widening this.
+  # ruff (Python linter) — production, tooling, and tests.
   # ---------------------------------------------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.15
     hooks:
       - id: ruff
-        files: ^scripts/|^src/\.memoria/|^\.github/scripts/
+        files: ^scripts/|^src/\.memoria/|^\.github/scripts/|^tests/
 
   # ---------------------------------------------------------------------------
   # yamllint  —  Block 7

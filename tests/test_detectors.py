@@ -1,7 +1,16 @@
 """L1 component test for detectors — extracted from its former --self-test (ADR-44)."""
+import hashlib
+import json as _json
+from pathlib import Path as _Path
+
 import detectors as _m
 from _util import CheckHarness
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+Path = _m.Path
+run_all = _m.run_all
+sys = _m.sys
+time = _m.time
+verdict = _m.verdict
 
 
 def test_detectors():
@@ -10,7 +19,6 @@ def test_detectors():
         import tempfile
 
         sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
-        from _util import CheckHarness
 
         t = CheckHarness()
         check = t.check
@@ -153,10 +161,6 @@ def test_detectors():
 # vault-hash-drift (#392), audit-log-size (#393), hub-threshold (#426),
 # skeleton-drift (#394)
 # --------------------------------------------------------------------------- #
-import hashlib
-import json as _json
-from pathlib import Path as _Path
-
 _EMPTY = "sha256:" + hashlib.sha256(b"").hexdigest()
 
 

@@ -1,8 +1,7 @@
 """The cluster MCP: typed-graph metrics (networkx) + clean degradation (ADR-33)."""
 
-import pytest
-
 import cluster_mcp
+import pytest
 
 networkx = pytest.importorskip("networkx", reason="cluster graph path needs networkx")
 

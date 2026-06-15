@@ -78,7 +78,7 @@ Day-to-day tasks for moving sources from discovery to durable knowledge. Perform
 | [Read a paper through a lens](compile/read-through-a-lens.md) | Question a paper through a named theoretical frame | Discuss |
 | [Write a claim note](compile/write-a-claim-note.md) | Distill a source into a durable claim | Distill |
 | [Link related claims](compile/link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims | Connect |
-| [Review link suggestions](compile/review-link-suggestions.md) | Triage the Librarian's `[!suggestions]` callout — approve / reject candidate links | Connect |
+| [Review link suggestions](compile/review-link-suggestions.md) | Triage link-lane candidate cards — approve / reject proposed links | Connect |
 | [Advance a claim to evergreen](compile/promote-a-claim.md) | Mark a settled claim by advancing its `maturity` — no move, no folder | Maintenance |
 | [Archive a source](compile/archive-a-source.md) | Retire a source with `lifecycle: archived` — a state, not a folder | Maintenance |
 | [Run a systematic review](compile/run-a-systematic-review.md) | PRISMA-compliant protocol → screening → ingest for defensible literature searches | Screen (opt-in) |

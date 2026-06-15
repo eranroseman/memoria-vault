@@ -1,6 +1,13 @@
 """L1 component test for sweeps — extracted from its former --self-test (ADR-44)."""
 import reconcile as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+Path = _m.Path
+note_for = _m.note_for
+read_frontmatter = _m.read_frontmatter
+read_log = _m.read_log
+reconcile = _m.reconcile
+retry = _m.retry
+stamp_chats = _m.stamp_chats
 
 
 def test_reconcile_intake():

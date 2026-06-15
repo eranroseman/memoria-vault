@@ -18,8 +18,8 @@ One principle runs through every page below: **the architecture is invisible dur
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [Home — the vault front door](home.md)          | The front door — why launch opens a plain note that _consumes_ dashboards and computes nothing itself.                           |
 | [The status line](the-status-line.md)           | The one always-visible ambient indicator — why a glance-readable count, not a dashboard, answers "is everything fine?"           |
-| [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) agents write into notes, and what each means.         |
-| [The agent-client pane](agent-client-picker.md) | The ACP chat pane and its profile picker — why a conversational surface exists alongside the board, and why it clears on switch. |
+| [Callouts](callouts.md)                         | The inline callout types (`[!brief]` shipped; `[!suggestions]` / `[!verification]` deferred), and what each means.              |
+| [The agent-client pane](agent-client-picker.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
 
 ## The discipline behind them
 

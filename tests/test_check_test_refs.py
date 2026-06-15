@@ -1,7 +1,11 @@
 """L1 component test for check-test-refs — extracted from its former --self-test (ADR-44)."""
 from _util import load_script
+
 _m = load_script("scripts/check-test-refs.py")
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+MD_LINK = _m.MD_LINK
+Path = _m.Path
+REPO_PATH = _m.REPO_PATH
+check_protocol = _m.check_protocol
 
 
 def test_check_test_refs():

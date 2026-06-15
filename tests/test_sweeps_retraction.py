@@ -1,6 +1,13 @@
 """L1 component test for verify_mcp — extracted from its former --self-test (ADR-44)."""
 import retraction as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+Path = _m.Path
+build_rw_index = _m.build_rw_index
+combine = _m.combine
+crossref_retraction = _m.crossref_retraction
+csv = _m.csv
+open_retractions_verdict = _m.open_retractions_verdict
+rw_lookup = _m.rw_lookup
 
 
 def test_retraction_verdicts():

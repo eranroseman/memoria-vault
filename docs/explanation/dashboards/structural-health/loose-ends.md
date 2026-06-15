@@ -7,19 +7,19 @@ grand_parent: Dashboards
 
 # `loose-ends` dashboard
 
-Batches the lowest-stakes structural debt — the `flag` cards the Linter raised at **Notice** loudness, which never push to Home. Run it during the weekly review or whenever you want to clear cosmetic findings in one pass. The dashboard lists; you decide the action per card.
+Batches the lowest-stakes structural debt — the `flag` cards the Linter raised at **Notice** loudness, which stay out of the daily glance. Run it during the weekly review or whenever you want to clear cosmetic findings in one pass. The dashboard lists; you decide the action per card.
 
 ## What it shows
 
-The `flag` cards in `inbox/` still in `proposed` with `loudness = notice`, sorted oldest-first (`file.ctime ASC`) — each row carrying its `type`, `finding`, and `raised_by`. Older findings have lingered longest and lead the list. These are cosmetic and low-stakes integrity findings the Linter deliberately did not push to Home or block on; they wait here for the weekly batch.
+The `flag` cards in `inbox/` still in `proposed` with `loudness = notice`, sorted oldest-first (`file.ctime ASC`) — each row carrying its `type`, `finding`, and `raised_by`. Older findings have lingered longest and lead the list. These are cosmetic and low-stakes integrity findings the Linter deliberately keeps out of the daily glance; they wait here for the weekly batch.
 
 ## Why Notice loudness and not louder findings
 
-Loudness, not finding type, is what routes a card here. Louder findings surface in `drift-watch` and push to Home — they need attention sooner. Loose-ends is reserved for the `notice` tail: real findings, but none worth interrupting the PI for. Batching them into the weekly pass keeps the daily glance quiet without losing the debt. (The loudness model the routing follows is owned by [Interaction channels](../../architecture/human-channels.md).)
+Loudness, not finding type, is what routes a card here. Louder findings surface in `drift-watch` and the daily glance — they need attention sooner. Loose-ends is reserved for the `notice` tail: real findings, but none worth interrupting the PI for. Batching them into the weekly pass keeps the daily glance quiet without losing the debt. (The loudness model the routing follows is owned by [Interaction channels](../../architecture/human-channels.md).)
 
 ## What it is not
 
-**Not drift-watch.** Drift-watch shows the open `flag`/`alert` cards loud enough to act on now (`alert` also pushes to Home). Loose-ends shows only the `notice`-loudness `flag` tail. Same card queue, different loudness slice.
+**Not drift-watch.** Drift-watch shows the open `flag`/`alert` cards loud enough to act on now (`alert` also reaches the daily glance). Loose-ends shows only the `notice`-loudness `flag` tail. Same card queue, different loudness slice.
 
 **Not data-quality validation itself.** The Linter detects the issues — empty frontmatter, weak naming, soft integrity smells — and writes the cards. Loose-ends is the *view* over the Notice-level subset, not the detector.
 
