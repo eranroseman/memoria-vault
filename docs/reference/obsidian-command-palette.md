@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, workspace switching, and note-local claim/source actions. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, and the inbox resolve action.
+The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, workspace switching, and note-local claim/source actions. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
 
 ---
 
@@ -56,6 +56,20 @@ The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py`
 
 ---
 
+
+## Assist commands
+
+Assist commands are verb-shaped entry points for work that starts in the current surface. Invoke them from the palette, from a selected span in the editor, or by asking the Co-PI in the Agent Client pane. Palette/selection invocations create staged cards or proposal artifacts; pane invocations stay conversational until you ask the Co-PI to delegate. None of these commands writes directly to canonical notes.
+
+| Command | Existing skill / operation | Palette and selection behavior | Pane behavior |
+| --- | --- | --- | --- |
+| `Memoria: assist find` | Librarian `catalog-find-source` | Prompts for a source, topic, DOI, URL, or clue; selected text and the active note ride on the card. | Ask the Co-PI to find a source; it delegates if the result should persist. |
+| `Memoria: assist search` | Librarian `map-report-coverage` | Prompts for a search lens or coverage question and stages a coverage/gap report request. | Ask the Co-PI what the corpus already holds for the lens. |
+| `Memoria: assist patterns` | Librarian card invoking `patterns_run` | Picks a runnable pattern from `system/patterns/`; selected text/active note become input context, and output goes only to the returned target. | Ask the Co-PI which pattern to run, then delegate or use this command. |
+| `Memoria: assist ask` | Co-PI `ask-question-source` / `ask-read-lens` | Stages a Co-PI question card when the answer should be reviewable or persistent. | Ask directly in the Agent Client pane; the active note is auto-attached. |
+| `Memoria: assist draft` | Writer `draft-write-section` | Prompts for a section/outline goal and stages a draft request with selected text as source context. | Ask the Co-PI to shape the draft, then delegate the durable drafting step. |
+| `Memoria: assist explore` | Co-PI `explore-framings` | Stages an exploration card with the active note/selection attached. | Explore directly in the pane while the output is still human understanding. |
+
 ## Note utility commands
 
 These commands write notes directly from local templates or the active note; they do
@@ -72,7 +86,7 @@ not create board cards.
 
 | Command | Status | Where the job went |
 | --- | --- | --- |
-| `Memoria: lint this note` | **Removed** | The Linter is an engine, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
+| `Memoria: lint this note` | **Removed** | The Linter is an operation, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
 | `Memoria: verify this draft` | Replaced | `Memoria: verify draft` (above), or ask the Co-PI. |
 | `Memoria: frame this section` | Replaced | `Memoria: draft section` (above), or ask the Co-PI. |
 | `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return after alpha.3 with the deferred Project workflow; meanwhile `Memoria: map corpus` or the Co-PI covers `map` lane work. |

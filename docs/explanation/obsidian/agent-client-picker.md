@@ -26,7 +26,7 @@ The consolidation dissolves the problem the picker existed to manage. With one a
 
 What the picker's separation protected now lives where it belongs — on the board. Each lane runs under its own scoped write ceiling, each delegation is ceiling-validated, and each result comes back through the review gate ([The control plane](../architecture/control-plane.md)). The boundary between specialists is physical (separate dispatched processes with separate permissions), not a UI affordance the human must operate correctly.
 
-> **Deferred — the assist surface.** A follow-up layer of quick verb-shaped entry points (Find / Search / Patterns / Ask / Draft / Explore, from the palette, the pane, or a selection) is designed but not built; tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380). In v0.1.0-alpha.2 the equivalents are the per-task palette commands ([Obsidian command palette](../../reference/obsidian-command-palette.md)) and asking the Co-PI directly.
+The assist surface keeps that split visible instead of hiding it behind the old picker. Find/Search/Patterns/Ask/Draft/Explore exist as direct palette commands and can carry the active editor selection into a staged card or proposal artifact; the same verbs can also start in the pane as conversation. The rule is the same in both places: exploratory Ask/Explore can stay read-only in the pane, while anything durable leaves through a gated card or PI-authored note ([Obsidian command palette](../../reference/obsidian-command-palette.md)).
 
 ## Exploratory vs. durable work
 

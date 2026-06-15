@@ -36,7 +36,14 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 - `Memoria: run pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along
 - `Memoria: delegate task` — the generic fallback: pick any lane (including `code`) and type a free-form goal
 
-The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file.
+**Assist commands** — verb-shaped starts from the palette, a pane conversation, or selected text:
+
+- `Memoria: assist find` · `Memoria: assist search` · `Memoria: assist patterns`
+- `Memoria: assist ask` · `Memoria: assist draft` · `Memoria: assist explore`
+
+Palette/selection assist commands create cards or proposal artifacts in staging. They never write directly to canonical notes.
+
+The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file. Assist commands also carry the active note and selected text as context when present.
 
 **2. Use the visible toolbar buttons for the main loop.**
 
@@ -44,7 +51,7 @@ Commander places the high-frequency commands directly in Obsidian chrome: the le
 
 **3. Or skip the palette and ask the Co-PI.**
 
-The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane and task; use the Co-PI when you don't, or when the work spans several tasks. Two things have no command at all by design: linting needs no invocation — the Linter is an engine on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the deferred Project workflow after alpha.3. The assist surface (find/search/ask from the palette) is tracked in [#380](https://github.com/eranroseman/memoria-vault/issues/380).
+The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane when work should become durable ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane, task, or assist verb; use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational. Two things have no command at all by design: linting needs no invocation — the Linter is an operation on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)) — and project scaffolding returns with the deferred Project workflow after alpha.3.
 
 **4. Use the palette by type, not by scroll.**
 
@@ -56,7 +63,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Verify
 
-- `Cmd-P` → `M` returns the `Memoria:` commands in both groups
+- `Cmd-P` → `M` returns the `Memoria:` commands in the capture, task, assist, and workspace groups
 - The left ribbon exposes capture, delegate, resolve, and Desk/Library/Studio workspace buttons
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
 - `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding

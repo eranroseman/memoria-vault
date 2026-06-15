@@ -98,7 +98,7 @@ from the original disposition.
 
 | # | Title | One-line scope · note |
 |---|---|---|
-| #380 | Assist surface (Find/Search/Patterns/Ask/Draft/Explore) | in-Obsidian invocation (palette/pane/selection) → proposals · cites retired design doc |
+| #380 | Assist surface (Find/Search/Patterns/Ask/Draft/Explore) | **done:** palette/selection QuickAdd verbs + pane docs route every assist to staged proposals |
 | #375 | Status-bar ambient indicator | one indicator: Linter verdict + queue depths · cites retired design doc |
 | #378 | Design-system enforcement | Linter anti-pattern checks + lifecycle link coloring · cites retired design doc |
 | #376 | Callout producers `[!suggestions]` / `[!verification]` | deterministic top-K + LLM line (ADR-57 split) |
@@ -477,3 +477,8 @@ evidence, real transcripts:
 - **Routed to:** decisions → ADRs (e.g. ADR-76 for packaging); readiness/scope →
   milestone #3 issues; this plan holds no durable record of its own.
 - **Lessons:** (fill at checkpoint close, before deleting this `tmp/` note.)
+
+
+## Execution log — #380 assist surface
+
+- 2026-06-15: Started #380 in `feat/alpha4-assist-surface`; adding QuickAdd assist verbs for Find/Search/Patterns/Ask/Draft/Explore with active-note/selection context and staged proposal outputs.
