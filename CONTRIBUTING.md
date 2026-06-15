@@ -40,6 +40,13 @@ blocks a commit). Bypass all hooks for a single commit, rarely, with
 [.vscode/extensions.json](.vscode/extensions.json) (VS Code prompts to install them on
 first open).
 
+If Node ≥22 is present, `dev-setup.sh` also installs the repo-local
+[qmd](https://github.com/tobi/qmd) code-search engine (a `devDependency`, never deployed)
+and builds a project-local `./.qmd/` index of this repo for coding agents — see
+[Searching the codebase (qmd)](AGENTS.md#searching-the-codebase-qmd). It is optional and
+not part of the commit gate; if Node is missing the step is skipped with a pointer to
+install it. Run `bash scripts/qmd-codebase-index.sh --embed` to add semantic vectors.
+
 See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md) for a full walkthrough.
 
 ### Optional: a git safety alias
