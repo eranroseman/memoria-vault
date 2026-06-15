@@ -193,7 +193,7 @@ policy:
       - "inbox/**"
       - "catalog/**"
       - "notes/fleeting/**"
-      - "notes/source/**"
+      - "notes/sources/**"
   deny:
     skills: [review_gated_publish, destructive_shell]
     write:
@@ -211,7 +211,7 @@ routing:
     - "inbox/"
     - "catalog/"
     - "notes/fleeting/"
-    - "notes/source/"
+    - "notes/sources/"
 ```
 
 `policy.deny` wins over `policy.allow`; an unmatched path is default-denied. The Co-PI's override is the limiting case: `allow.write: []` plus `deny.write: "**"` — the structural guarantee behind "read directly, delegate writes". The full scope table is in [Profile capabilities](profiles.md).

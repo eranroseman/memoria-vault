@@ -57,7 +57,7 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 ## Part B — Doc + repo integrity (mirrors `docs-doctor` + `docs-links` CI)
 
-**B1. docs-doctor.** `python scripts/docs-doctor.py docs`
+**B1. docs-doctor.** `python scripts/docs_doctor.py docs`
 - ✓ Pass: `docs-doctor: clean ✓` (page-title link text, internal links, template-field references).
 - ✗ Fails: it prints `file:line` + the rule — fix the link text / path it names.
 

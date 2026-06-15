@@ -13,7 +13,7 @@ Three inline callout types defined via the [Callout Manager](obsidian-plugins.md
 
 | Callout | Location | Producer | Purpose |
 | --- | --- | --- | --- |
-| `[!brief]` | Top of every source note in `notes/source/` | Librarian (composed during ingest by `catalog-enrich-record`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
+| `[!brief]` | Top of every source note in `notes/sources/` | Librarian (composed during ingest by `catalog-enrich-record`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
 | `[!suggestions]` | Deferred | None shipped yet ([#376](https://github.com/eranroseman/memoria-vault/issues/376)) | Intended bounded candidate links (5 forward + 5 backward, hard cap) |
 | `[!verification]` | Deferred | None shipped yet ([#376](https://github.com/eranroseman/memoria-vault/issues/376), [#377](https://github.com/eranroseman/memoria-vault/issues/377)) | Intended per-claim trace back to claim notes |
 

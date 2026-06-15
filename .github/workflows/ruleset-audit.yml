@@ -26,4 +26,4 @@ jobs:
       - name: Audit repository and live ruleset
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python scripts/ruleset-doctor.py --live
+        run: python scripts/ruleset_doctor.py --live

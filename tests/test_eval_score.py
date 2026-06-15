@@ -80,7 +80,7 @@ def test_superseded_classification_matches_the_linter_detector(tmp_path):
     import detectors
     v = _vault(tmp_path)
     # a downstream note citing every claim: the detector flags exactly the superseded set
-    src = v / "notes/source"
+    src = v / "notes/sources"
     src.mkdir(parents=True)
     (src / "uses.md").write_text(
         "---\ntype: source\n---\n[[old-claim]] [[replaced-claim]] [[good-claim]]\n",

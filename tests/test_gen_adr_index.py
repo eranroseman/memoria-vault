@@ -1,7 +1,6 @@
 """L1 component test for gen-adr-index — extracted from its former --self-test (ADR-44)."""
-from _util import load_script
+import gen_adr_index as _m
 
-_m = load_script("scripts/gen-adr-index.py")
 END = _m.END
 Path = _m.Path
 START = _m.START

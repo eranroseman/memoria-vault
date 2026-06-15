@@ -40,7 +40,7 @@ matter for this brief** — and that ranking is argued, not asserted.
 | Input | Required | Meaning |
 | --- | --- | --- |
 | project brief | yes | The lens that defines "matters". |
-| folders | no | Retrieval restriction (default: `notes/source`, `notes/claims`). |
+| folders | no | Retrieval restriction (default: `notes/sources`, `notes/claims`). |
 | threshold | no | Notes-per-topic floor below which a topic counts as thin (default from calibration). |
 
 ## Procedure

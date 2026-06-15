@@ -28,7 +28,7 @@ match their filename and index link text.
 Run:
 
 ```bash
-python scripts/docs-doctor.py docs
+python scripts/docs_doctor.py docs
 bash scripts/check-vault-links.sh
 ```
 

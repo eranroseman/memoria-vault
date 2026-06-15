@@ -19,7 +19,7 @@ id: memoria-link-colors
 settings:
   -
     id: memoria-source-color
-    title: Source layer (catalog/, notes/source/)
+    title: Source layer (catalog/, notes/sources/)
     description: Color for links into the source layer (literature, items, entities).
     type: variable-color
     format: hex
@@ -50,8 +50,8 @@ settings:
 /* Source layer — neutral accent (signals "describes the world", not your thinking) */
 a[data-href^="catalog/"],
 a.internal-link[data-href^="catalog/"],
-a[data-href^="notes/source/"],
-a.internal-link[data-href^="notes/source/"] {
+a[data-href^="notes/sources/"],
+a.internal-link[data-href^="notes/sources/"] {
   color: var(--memoria-source-color);
 }
 

@@ -70,14 +70,14 @@ Do not create a second markdown state table for gate or stage progress.
 Run:
 
 ```bash
-python scripts/status-doctor.py
-python scripts/docs-doctor.py docs
+python scripts/status_doctor.py
+python scripts/docs_doctor.py docs
 ```
 
 For release/process changes that touch agent guidance, also run:
 
 ```bash
-python scripts/agents-doctor.py
+python scripts/agents_doctor.py
 ```
 
 Report which GitHub state changes were made, which could not be made locally, and

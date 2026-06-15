@@ -107,11 +107,11 @@ def test_policy_mcp():
         )
         librarian = LanePolicy(
             profile="memoria-librarian",
-            allow_write=["inbox/**", "catalog/**", "notes/fleeting/**", "notes/source/**"],
-            deny_write=["notes/claims/**", "notes/hubs/**", "notes/index/**",
+            allow_write=["inbox/**", "catalog/**", "notes/fleeting/**", "notes/sources/**"],
+            deny_write=["notes/claims/**", "notes/hubs/**", "notes/indexes/**",
                         "projects/**", "system/**"],
             require=["audit_log"],
-            write_scope=["inbox/", "catalog/", "notes/fleeting/", "notes/source/"],
+            write_scope=["inbox/", "catalog/", "notes/fleeting/", "notes/sources/"],
         )
         peer_reviewer = LanePolicy(
             profile="memoria-peer-reviewer",
@@ -128,7 +128,7 @@ def test_policy_mcp():
         check("Engineer write to own code scope -> allow_with_log",
               d(engineer, "write", "projects/x/code/main.py") == "allow_with_log")
         check("Engineer write to notes -> deny (lane deny)",
-              d(engineer, "write", "notes/source/d.md") == "deny")
+              d(engineer, "write", "notes/sources/d.md") == "deny")
         check("Engineer write to unmapped path -> deny (default-deny)",
               d(engineer, "write", "99-nowhere/x.md") == "deny")
         check("Writer write to project scratch -> allow_with_log",

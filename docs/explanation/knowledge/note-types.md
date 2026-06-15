@@ -25,7 +25,7 @@ The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliograp
 
 All in `catalog/`, all engine-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Note types](../../reference/note-types.md#catalog-entities-6).
 
-An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/source/` that points back at the entity.
+An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/sources/` that points back at the entity.
 
 ---
 

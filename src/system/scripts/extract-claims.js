@@ -2,7 +2,7 @@
  * QuickAdd user script — "Memoria: extract claims".
  *
  * Direct palette access to the extract lane (#203): defaults to the active
- * note when it is a source (under catalog/papers/ or notes/source/),
+ * note when it is a source (under catalog/papers/ or notes/sources/),
  * otherwise prompts for a source note path or citekey, then creates a
  * correctly-addressed card on the Librarian (`hermes kanban create
  * --skill extract-stub-claim`). Mirrors delegate-task.js: the card-create
@@ -13,7 +13,7 @@
 const LANE = "extract";
 const ASSIGNEE = "memoria-librarian";
 const SKILL = "extract-stub-claim";
-const SOURCE_PREFIXES = ["catalog/papers/", "notes/source/"];
+const SOURCE_PREFIXES = ["catalog/papers/", "notes/sources/"];
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

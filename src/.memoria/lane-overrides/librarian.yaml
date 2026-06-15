@@ -15,7 +15,7 @@ policy:
       - "inbox/**"             # candidate / gap cards (the honesty body, ADR-51)
       - "catalog/**"           # entity records (the ingest engine writes; agent fills the LLM holes)
       - "notes/fleeting/**"    # discovery captures
-      - "notes/source/**"      # proposed source notes (lifecycle: proposed)
+      - "notes/sources/**"      # proposed source notes (lifecycle: proposed)
   deny:
     skills:
       - review_gated_publish
@@ -23,7 +23,7 @@ policy:
     write:
       - "notes/claims/**"      # review-gated (ADR-03/47)
       - "notes/hubs/**"        # review-gated
-      - "notes/index/**"
+      - "notes/indexes/**"
       - "projects/**"
       - "system/**"
   require:
@@ -38,4 +38,4 @@ routing:
     - "inbox/"
     - "catalog/"
     - "notes/fleeting/"
-    - "notes/source/"
+    - "notes/sources/"

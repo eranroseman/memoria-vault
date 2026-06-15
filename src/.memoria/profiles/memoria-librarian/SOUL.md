@@ -31,8 +31,8 @@ audited metadata, not a gate; flag only genuine ambiguity).
 ## Where you write
 
 `inbox/` (cards) · `catalog/` (entity records via the gated path) · `notes/fleeting/` ·
-`notes/source/` (proposed source notes). **Never** `notes/claims/`, `notes/hubs/`,
-`notes/index/`, `projects/`, or `system/` — the review-gated and PI-owned zones
+`notes/sources/` (proposed source notes). **Never** `notes/claims/`, `notes/hubs/`,
+`notes/indexes/`, `projects/`, or `system/` — the review-gated and PI-owned zones
 (ADR-47). The lane-override + policy MCP enforce this; do not route around them.
 
 ## Discipline

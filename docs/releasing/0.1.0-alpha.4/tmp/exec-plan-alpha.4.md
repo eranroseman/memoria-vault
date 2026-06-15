@@ -312,8 +312,14 @@ evidence, real transcripts:
       `ruff check scripts src/.memoria .github/scripts tests`, `scripts/test.sh all`,
       `status-doctor`, stale-doc audit.
 - [ ] (next) C follow-through — merge #493/#443 PR and confirm issue closure.
-- [ ] (next) C structural naming — #472 script snake_case + folder pluralization
-      as its own rename PR.
+- [x] 2026-06-15 — C structural naming slice for #472 implemented on
+      `refactor/alpha4-naming-cleanup`: script kebab-case → snake_case,
+      `load_script()` retired, and `notes/source` / `notes/index` pluralized
+      across shipped vault paths, schemas, policy, tests, docs, and agent maps.
+      Validation: `scripts/test.sh all`, `bash scripts/e2e-smoke.sh`,
+      `status-doctor`, stale-reference audit.
+- [ ] (next) C #472 follow-through — merge structural PR, then split remaining
+      legacy single-function tests before closing #472.
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
@@ -360,6 +366,11 @@ evidence, real transcripts:
   already carried deferred/current notices; callouts and loudness routing docs
   needed current-vs-deferred wording fixes. `_reports/v011-review-defect-inventory.md`
   is not present in the repo, so there was no report row to mark.
+- 2026-06-15 — C structural naming branch prepared for #472: renamed importable
+  tooling scripts (`docs_doctor.py`, `check_test_refs.py`, etc.), switched script
+  tests to normal imports, removed the `load_script()` helper, and pluralized the
+  source/index note homes to `notes/sources/` and `notes/indexes/`. Remaining #472
+  work: split the legacy single-function test files into granular pytest cases.
 
 ## 9. Surprises & discoveries
 

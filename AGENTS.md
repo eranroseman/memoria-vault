@@ -197,7 +197,7 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 Skills and plugins are accelerators, not prerequisites. If a named command is
 unavailable, perform the equivalent checks directly:
 
-- Docs review: run `python scripts/docs-doctor.py docs`, check links, indexing,
+- Docs review: run `python scripts/docs_doctor.py docs`, check links, indexing,
   terminology, and Diátaxis placement.
 - Code review: inspect the complete diff for regressions, simplification, error
   handling, and missing tests.

@@ -55,7 +55,7 @@ repos:
       - id: docs-doctor
         name: docs-doctor
         language: system
-        entry: python scripts/docs-doctor.py docs
+        entry: python scripts/docs_doctor.py docs
         files: ^docs/|^scripts/docs-doctor\.py
         pass_filenames: false
 
@@ -87,7 +87,7 @@ repos:
       - id: check-test-refs
         name: check-test-refs
         language: system
-        entry: python scripts/check-test-refs.py
+        entry: python scripts/check_test_refs.py
         files: ^docs/testing/.*\.md$|^scripts/check-test-refs\.py$
         pass_filenames: false
 
@@ -123,7 +123,7 @@ repos:
       - id: adr-index
         name: adr-index
         language: system
-        entry: python scripts/gen-adr-index.py --check
+        entry: python scripts/gen_adr_index.py --check
         files: ^docs/adr/.*\.md$|^scripts/gen-adr-index\.py$
         pass_filenames: false
 
@@ -131,21 +131,21 @@ repos:
       - id: status-doctor
         name: status-doctor
         language: system
-        entry: python scripts/status-doctor.py
+        entry: python scripts/status_doctor.py
         files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.agents/playbooks/release\.md$|^scripts/status-doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor
         name: agents-doctor
         language: system
-        entry: python scripts/agents-doctor.py
+        entry: python scripts/agents_doctor.py
         files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents-doctor\.py$|src/\.memoria/(profiles|lane-overrides)/)
         pass_filenames: false
 
       - id: github-doctor
         name: github-doctor
         language: system
-        entry: python scripts/github-doctor.py
+        entry: python scripts/github_doctor.py
         files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/github-doctor\.py$
         pass_filenames: false
 

@@ -81,7 +81,7 @@ areas:
       - Safe and sensitive paths
       - Trusted authors
     checks:
-      - python scripts/ruleset-doctor.py
+      - python scripts/ruleset_doctor.py
       - python -m pytest tests/test_pr_policy.py tests/test_ruleset_doctor.py
   - area: Documentation or agent guidance
     paths:
@@ -94,7 +94,7 @@ areas:
       - Referenced commands and repository paths
       - Generated agent references
     checks:
-      - python scripts/docs-doctor.py docs
+      - python scripts/docs_doctor.py docs
       - bash scripts/check-vault-links.sh
-      - python scripts/status-doctor.py
-      - python scripts/agents-doctor.py
+      - python scripts/status_doctor.py
+      - python scripts/agents_doctor.py

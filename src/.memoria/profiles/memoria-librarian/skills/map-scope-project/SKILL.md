@@ -41,7 +41,7 @@ not the map's.
 | Input | Required | Meaning |
 | --- | --- | --- |
 | project brief / question | yes | What to scope (a project note, or a question verbatim). |
-| folders | no | Restrict retrieval (default: `notes/claims`, `notes/source`, `catalog/papers`). |
+| folders | no | Restrict retrieval (default: `notes/claims`, `notes/sources`, `catalog/papers`). |
 
 ## Procedure
 

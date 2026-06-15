@@ -40,8 +40,8 @@ def test_policy_hook():
                                    "memoria-engineer", Path("/nonexistent"))
             check(f"evaluate_pre: {direct} hard-denied",
                   blocked.get("decision") == "block" and "MCP" in blocked.get("reason", ""))
-        check("extract_path: filepath", extract_path({"filepath": "notes/source/x.md"}) == "notes/source/x.md")
-        check("extract_path: file_path", extract_path({"file_path": "notes/source/y.md"}) == "notes/source/y.md")
+        check("extract_path: filepath", extract_path({"filepath": "notes/sources/x.md"}) == "notes/sources/x.md")
+        check("extract_path: file_path", extract_path({"file_path": "notes/sources/y.md"}) == "notes/sources/y.md")
 
         # evaluate against a temp vault + real lane files -------------------------
         with tempfile.TemporaryDirectory() as td:

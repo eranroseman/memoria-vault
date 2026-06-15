@@ -19,7 +19,7 @@ prose.) Guards six drift modes:
   6. Release agent guidance lives in the portable `.agents` playbook.
 
 Scope: docs/{releasing,testing,contributing}/**/*.md + .agents/playbooks/release.md.
-Exit 0 if clean, 1 if any issue. Usage: python scripts/status-doctor.py [--self-test]
+Exit 0 if clean, 1 if any issue. Usage: python scripts/status_doctor.py [--self-test]
 """
 from __future__ import annotations
 

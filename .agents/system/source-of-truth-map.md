@@ -25,9 +25,9 @@ find the owning file, then fix the stale consumer rather than the source.
 | Inbox card rendering | `src/.memoria/operations/lib/inbox.py` | Operations and lanes that raise cards |
 | Runtime vault image | `src/` | `scripts/install.sh`, golden-copy staging |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
-| Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset-doctor.py`, and `AGENTS.md` |
+| Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |
 | Contributor Python tooling | `requirements-dev.txt` | Dev setup, lint workflows, python-selftest, Dependabot |
-| GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/github-doctor.py`, issue tracking docs |
+| GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/github_doctor.py`, issue tracking docs |
 | Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
 | PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
 | Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |

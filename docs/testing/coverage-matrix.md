@@ -40,7 +40,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |
 | 24 | **Deployment modes** — local / mesh / VPS, Syncthing, `memories/` junction | X | — | — | ⛔ |
-| 25 | **Plan drift** — plans' own references resolve | L0 | `scripts/check-test-refs.py` (CI + `.githooks/pre-commit`) | ✅ | ✅ |
+| 25 | **Plan drift** — plans' own references resolve | L0 | `scripts/check_test_refs.py` (CI + `.githooks/pre-commit`) | ✅ | ✅ |
 
 ## L2 — automating the wiring layer
 

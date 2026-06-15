@@ -18,10 +18,10 @@ SKELETON_DIRS=(
   notes/fleeting
   notes/fleeting/chats
   notes/fleeting/maps
-  notes/source
+  notes/sources
   notes/claims
   notes/hubs
-  notes/index
+  notes/indexes
   projects
   inbox
   system/board

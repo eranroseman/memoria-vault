@@ -5,7 +5,7 @@ the claims firm up. [Dashboard rationale](https://eranroseman.github.io/memoria-
 
 ```dataview
 TABLE file.link AS Source, entity, research_area
-FROM "notes/source"
+FROM "notes/sources"
 WHERE lifecycle = "provisional"
 SORT file.mtime ASC
 ```

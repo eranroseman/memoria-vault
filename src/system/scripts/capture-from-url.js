@@ -36,7 +36,7 @@ module.exports = async (params) => {
     "intake:source — captured from URL. Resolve and ingest the source at " + url + " " +
     "using the catalog-enrich-record skill: fetch its metadata (DOI / identifiers), add it to the " +
     "library, create the paper entity under catalog/papers/, create the proposed source-note stub " +
-    "under notes/source/ for the PI to fill, enrich it, propose the classification, then " +
+    "under notes/sources/ for the PI to fill, enrich it, propose the classification, then " +
     "kanban_complete with review_status: requested.";
 
   new Notice("Capturing " + url + " …", 3000);

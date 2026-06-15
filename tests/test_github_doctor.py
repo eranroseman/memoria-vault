@@ -2,9 +2,7 @@
 
 from pathlib import Path
 
-from _util import load_script
-
-github_doctor = load_script("scripts/github-doctor.py")
+import github_doctor
 
 
 def test_github_doctor_accepts_current_github_files():

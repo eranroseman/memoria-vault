@@ -30,7 +30,7 @@ hermes kanban archive <card-id> --reason "source archived: superseded"
 
 **2. Open the source note in Obsidian.**
 
-Navigate to `notes/source/<note>.md` — your reading record for the source.
+Navigate to `notes/sources/<note>.md` — your reading record for the source.
 
 **3. Set `lifecycle: archived` in frontmatter.**
 
