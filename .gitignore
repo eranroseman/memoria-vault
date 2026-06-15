@@ -12,6 +12,9 @@ __pycache__/
 .claude/worktrees/
 /.worktrees/
 
+# qmd local semantic-search index (per-machine; absolute paths in index.yml)
+/.qmd/
+
 # Jekyll build artifacts (published via GitHub Pages from /docs)
 docs/_site/
 docs/.jekyll-cache/
