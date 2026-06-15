@@ -20,6 +20,7 @@ copying their implementation details.
 |---|---|
 | [Code review](playbooks/code-review.md) | Review a patch for defects, regressions, complexity, and missing tests |
 | [Documentation review](playbooks/docs-review.md) | Check Diátaxis placement, links, indexing, and terminology |
+| [ExecPlan](playbooks/exec-plan.md) | Author and run a self-contained living plan for a complex, multi-hour task |
 | [Release](playbooks/release.md) | Start, manage, or cut a release using the GitHub-first release model |
 | [Security review](playbooks/security-review.md) | Review trust boundaries, secrets, input handling, and write authority |
 | [Verify a change](playbooks/verify-change.md) | Demonstrate that changed behavior works and relevant regressions are covered |
@@ -29,6 +30,7 @@ copying their implementation details.
 | Template | Use |
 |---|---|
 | [Agent handoff](templates/handoff.md) | Transfer a bounded task without relying on chat history |
+| [ExecPlan](templates/exec-plan.md) | Skeleton for a complex task's self-contained living plan (instances live in a release `tmp/`) |
 | [Review report](templates/review-report.md) | Report findings first with evidence and residual risk |
 
 ## Skills
