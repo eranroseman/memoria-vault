@@ -1,4 +1,5 @@
-"""L1 component test for verify_mcp — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for retraction (ADR-44)."""
+
 import retraction as _m
 
 Path = _m.Path
@@ -9,73 +10,98 @@ csv = _m.csv
 open_retractions_verdict = _m.open_retractions_verdict
 rw_lookup = _m.rw_lookup
 
+RW_ROWS = [
+    {
+        "OriginalPaperDOI": "10.1/Retracted",
+        "RetractionNature": "Retraction",
+        "RetractionDate": "2021-05-03",
+        "RetractionDOI": "10.1/rw-ret",
+    },
+    {
+        "OriginalPaperDOI": "10.1/Concern",
+        "RetractionNature": "Expression of Concern",
+        "RetractionDate": "2022-01-01",
+        "RetractionDOI": "10.1/rw-eoc",
+    },
+]
 
-def test_retraction_verdicts():
-    def _run():
-        import tempfile
-        global _RW_INDEX
 
-        # Retraction Watch CSV fixture
-        rw_rows = [
-            {"OriginalPaperDOI": "10.1/Retracted", "RetractionNature": "Retraction",
-             "RetractionDate": "2021-05-03", "RetractionDOI": "10.1/rw-ret"},
-            {"OriginalPaperDOI": "10.1/Concern", "RetractionNature": "Expression of Concern",
-             "RetractionDate": "2022-01-01", "RetractionDOI": "10.1/rw-eoc"},
-        ]
-        idx = build_rw_index(rw_rows)
+def test_build_rw_index_distinguishes_retractions_from_concerns():
+    idx = build_rw_index(RW_ROWS)
 
-        cr_upd = {"update-to": [{"type": "retraction", "DOI": "10.1/cr",
-                                 "updated": {"date-parts": [[2021, 5, 3]]}}]}
-        cr_rel = {"relation": {"is-retracted-by": [{"id-type": "doi", "id": "10.1/rb"}]}}
-        cr_clean = {"title": ["Fine"]}
+    assert idx["10.1/retracted"]["retracted"] is True
+    assert idx["10.1/concern"]["retracted"] is False
 
-        # CSV file round-trip for load/lookup
-        with tempfile.TemporaryDirectory() as td:
-            p = Path(td) / "rw.csv"
-            with p.open("w", newline="", encoding="utf-8") as f:
-                w = csv.DictWriter(f, fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"])
-                w.writeheader()
-                w.writerows(rw_rows)
-            _m._RW_INDEX = None
-            hit = rw_lookup("10.1/RETRACTED", p)         # case-insensitive match
-            _m._RW_INDEX = None
-            miss = rw_lookup("10.1/unknown", p)
-            _m._RW_INDEX = None
-            absent = rw_lookup("10.1/x", Path(td) / "nope.csv")
-        _m._RW_INDEX = None
 
-        checks = [
-            ("rw index: retraction indexed", idx["10.1/retracted"]["retracted"] is True),
-            ("rw index: EoC not a retraction", idx["10.1/concern"]["retracted"] is False),
-            ("rw lookup: case-insensitive hit", hit and hit["retracted"] is True and hit["date"] == "2021-05-03"),
-            ("rw lookup: known-clean DOI → not retracted", miss is not None and miss["retracted"] is False),
-            ("rw lookup: absent CSV → None (unavailable)", absent is None),
-            ("crossref update-to → retracted + date", crossref_retraction(cr_upd)["retracted"] is True
-             and crossref_retraction(cr_upd)["date"] == "2021-05-03"),
-            ("crossref relation → retracted", crossref_retraction(cr_rel)["via"] == "relation"),
-            ("crossref clean → not retracted", crossref_retraction(cr_clean)["retracted"] is False),
-            ("open-retractions 404 → not retracted", open_retractions_verdict(404, None)["retracted"] is False),
-            ("open-retractions 200 → retracted", open_retractions_verdict(200, {"retracted": True, "retractions": [{"date": "2020-01-01"}]})["retracted"] is True),
-            ("open-retractions error → unknown", open_retractions_verdict(0, None)["retracted"] is None),
-            ("combine all-clean → False/agree",
-             (lambda r: r["retracted"] is False and r["agreement"] == "agree")(
-                 combine("10.1/x", {"retraction_watch": {"retracted": False}, "crossref": {"retracted": False}, "open_retractions": {"retracted": False}}, {}))),
-            ("combine RW-retracted others-clean → True/disagree",
-             (lambda r: r["retracted"] is True and r["agreement"] == "disagree" and r["retraction_doi"] == "10.1/rw")(
-                 combine("10.1/x", {"retraction_watch": {"retracted": True, "retraction_doi": "10.1/rw"}, "crossref": {"retracted": False}, "open_retractions": {"retracted": False}}, {}))),
-            ("combine all-retracted → True/agree",
-             (lambda r: r["retracted"] is True and r["agreement"] == "agree")(
-                 combine("10.1/x", {"retraction_watch": {"retracted": True}, "crossref": {"retracted": True}, "open_retractions": {"retracted": True}}, {}))),
-            ("combine no-data → None/no-data",
-             (lambda r: r["retracted"] is None and r["agreement"] == "no-data")(
-                 combine("10.1/x", {"retraction_watch": None, "crossref": None, "open_retractions": None}, {}))),
-            ("combine single-source clean → False/single-source",
-             (lambda r: r["retracted"] is False and r["agreement"] == "single-source")(
-                 combine("10.1/x", {"retraction_watch": {"retracted": False}, "crossref": None, "open_retractions": None}, {}))),
-        ]
-        bad = [n for n, ok in checks if not ok]
-        for n, ok in checks:
-            print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: retraction.py self-test ({len(checks)} checks)")
-        return 1 if bad else 0
-    assert _run() == 0
+def test_rw_lookup_loads_csv_case_insensitively_and_handles_missing_data(tmp_path):
+    p = tmp_path / "rw.csv"
+    with p.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"])
+        w.writeheader()
+        w.writerows(RW_ROWS)
+
+    _m._RW_INDEX = None
+    hit = rw_lookup("10.1/RETRACTED", p)
+    _m._RW_INDEX = None
+    miss = rw_lookup("10.1/unknown", p)
+    _m._RW_INDEX = None
+    absent = rw_lookup("10.1/x", tmp_path / "nope.csv")
+    _m._RW_INDEX = None
+
+    assert hit and hit["retracted"] is True and hit["date"] == "2021-05-03"
+    assert miss is not None and miss["retracted"] is False
+    assert absent is None
+
+
+def test_crossref_retraction_reads_update_to_relation_and_clean_records():
+    update_to = {"update-to": [{"type": "retraction", "DOI": "10.1/cr", "updated": {"date-parts": [[2021, 5, 3]]}}]}
+    relation = {"relation": {"is-retracted-by": [{"id-type": "doi", "id": "10.1/rb"}]}}
+
+    assert crossref_retraction(update_to)["retracted"] is True
+    assert crossref_retraction(update_to)["date"] == "2021-05-03"
+    assert crossref_retraction(relation)["via"] == "relation"
+    assert crossref_retraction({"title": ["Fine"]})["retracted"] is False
+
+
+def test_open_retractions_verdict_maps_http_statuses():
+    assert open_retractions_verdict(404, None)["retracted"] is False
+    assert open_retractions_verdict(200, {"retracted": True, "retractions": [{"date": "2020-01-01"}]})[
+        "retracted"
+    ] is True
+    assert open_retractions_verdict(0, None)["retracted"] is None
+
+
+def test_combine_reports_agreement_disagreement_and_missing_data():
+    all_clean = combine(
+        "10.1/x",
+        {"retraction_watch": {"retracted": False}, "crossref": {"retracted": False}, "open_retractions": {"retracted": False}},
+        {},
+    )
+    rw_only_disagrees = combine(
+        "10.1/x",
+        {
+            "retraction_watch": {"retracted": True, "retraction_doi": "10.1/rw"},
+            "crossref": {"retracted": False},
+            "open_retractions": {"retracted": False},
+        },
+        {},
+    )
+    all_retracted = combine(
+        "10.1/x",
+        {"retraction_watch": {"retracted": True}, "crossref": {"retracted": True}, "open_retractions": {"retracted": True}},
+        {},
+    )
+    no_data = combine("10.1/x", {"retraction_watch": None, "crossref": None, "open_retractions": None}, {})
+    single_clean = combine(
+        "10.1/x",
+        {"retraction_watch": {"retracted": False}, "crossref": None, "open_retractions": None},
+        {},
+    )
+
+    assert all_clean["retracted"] is False and all_clean["agreement"] == "agree"
+    assert rw_only_disagrees["retracted"] is True
+    assert rw_only_disagrees["agreement"] == "disagree"
+    assert rw_only_disagrees["retraction_doi"] == "10.1/rw"
+    assert all_retracted["retracted"] is True and all_retracted["agreement"] == "agree"
+    assert no_data["retracted"] is None and no_data["agreement"] == "no-data"
+    assert single_clean["retracted"] is False and single_clean["agreement"] == "single-source"

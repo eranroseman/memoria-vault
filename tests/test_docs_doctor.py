@@ -1,7 +1,7 @@
-"""L1 component test for docs-doctor — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for docs_doctor (ADR-44)."""
+
 import docs_doctor as _m
 
-Path = _m.Path
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
 check_frontmatter = _m.check_frontmatter
 check_link_text = _m.check_link_text
@@ -16,326 +16,276 @@ gh_slug = _m.gh_slug
 heading_slugs = _m.heading_slugs
 
 
-def test_docs_doctor():
-    def _run():
-        """Synthetic-fixture unit tests for every check function."""
-        import tempfile
+def test_gh_slug_matches_github_heading_rules():
+    assert gh_slug("Install requirements") == "install-requirements"
+    assert gh_slug("`code` in heading") == "code-in-heading"
+    assert gh_slug("[text](url) heading") == "text-heading"
+    assert gh_slug("What's new?") == "whats-new"
 
-        failures = 0
 
-        def check(name, ok):
-            nonlocal failures
-            if not ok:
-                failures += 1
-            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+def test_check_readmes_flags_missing_indexes_only_for_multi_file_folders(tmp_path):
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "a.md").write_text("# A\n")
+    (tmp_path / "sub" / "b.md").write_text("# B\n")
+    (tmp_path / "single").mkdir()
+    (tmp_path / "single" / "only.md").write_text("# Only\n")
 
-        # --- gh_slug ---
-        check("gh_slug: basic heading",
-              gh_slug("Install requirements") == "install-requirements")
-        check("gh_slug: strips backticks",
-              gh_slug("`code` in heading") == "code-in-heading")
-        check("gh_slug: strips link syntax",
-              gh_slug("[text](url) heading") == "text-heading")
-        check("gh_slug: removes punctuation",
-              gh_slug("What's new?") == "whats-new")
+    errs: list[str] = []
+    check_readmes(tmp_path, errs)
 
-        # --- check_readmes ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            # root missing README -> error
-            (root / "sub").mkdir()
-            (root / "sub" / "a.md").write_text("# A\n")
-            (root / "sub" / "b.md").write_text("# B\n")
-            errs: list[str] = []
-            check_readmes(root, errs)
-            check("check_readmes: missing root README flagged",
-                  any("missing README.md" in e for e in errs))
-            check("check_readmes: missing sub README flagged (multi-file dir)",
-                  any("sub/" in e and "missing README.md" in e for e in errs))
+    assert any("missing README.md" in e for e in errs)
+    assert any("sub/" in e and "missing README.md" in e for e in errs)
 
-            # single-file folder needs no README
-            (root / "single").mkdir()
-            (root / "single" / "only.md").write_text("# Only\n")
-            errs2: list[str] = []
-            (root / "README.md").write_text("# Root\n")
-            check_readmes(root, errs2)
-            check("check_readmes: single-file folder not flagged",
-                  not any("single/" in e for e in errs2))
+    (tmp_path / "README.md").write_text("# Root\n")
+    errs2: list[str] = []
+    check_readmes(tmp_path, errs2)
 
-        # --- check_frontmatter ---
-        with tempfile.TemporaryDirectory() as td:
-            # disallowed key
-            bad = Path(td) / "bad.md"
-            bad.write_text("---\nmode: reference\ntitle: X\n---\n# X\n")
-            errs = []
-            check_frontmatter(bad, errs)
-            check("check_frontmatter: disallowed 'mode:' flagged", len(errs) == 1)
+    assert not any("single/" in e for e in errs2)
 
-            # unquoted colon in value
-            bad2 = Path(td) / "bad2.md"
-            bad2.write_text("---\ntitle: Linter: detectors\n---\n# X\n")
-            errs2 = []
-            check_frontmatter(bad2, errs2)
-            check("check_frontmatter: unquoted colon in value flagged", len(errs2) == 1)
 
-            # clean frontmatter
-            good = Path(td) / "good.md"
-            good.write_text("---\ntitle: \"Clean: title\"\nstatus: draft\n---\n# X\n")
-            errs3: list[str] = []
-            check_frontmatter(good, errs3)
-            check("check_frontmatter: clean file passes", len(errs3) == 0)
+def test_check_frontmatter_flags_disallowed_keys_and_unquoted_colons(tmp_path):
+    bad = tmp_path / "bad.md"
+    bad.write_text("---\nmode: reference\ntitle: X\n---\n# X\n")
+    bad2 = tmp_path / "bad2.md"
+    bad2.write_text("---\ntitle: Linter: detectors\n---\n# X\n")
 
-            # no frontmatter at all -> no error
-            nofm = Path(td) / "nofm.md"
-            nofm.write_text("# Just a heading\n")
-            errs4: list[str] = []
-            check_frontmatter(nofm, errs4)
-            check("check_frontmatter: no frontmatter -> no error", len(errs4) == 0)
+    errs: list[str] = []
+    errs2: list[str] = []
+    check_frontmatter(bad, errs)
+    check_frontmatter(bad2, errs2)
 
-        # --- check_links ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            (root / "target.md").write_text("# Real heading\n## Sub section\n")
-            # good link
-            good = root / "good.md"
-            good.write_text("[link](target.md)\n[anchor](target.md#sub-section)\n")
-            errs = []
-            check_links(good, errs)
-            check("check_links: valid relative link + anchor pass", len(errs) == 0)
+    assert len(errs) == 1
+    assert len(errs2) == 1
 
-            # broken link
-            bad = root / "bad.md"
-            bad.write_text("[link](nonexistent.md)\n")
-            errs2 = []
-            check_links(bad, errs2)
-            check("check_links: broken relative link flagged", len(errs2) == 1)
 
-            # broken anchor
-            bad2 = root / "bad2.md"
-            bad2.write_text("[link](target.md#no-such-anchor)\n")
-            errs3 = []
-            check_links(bad2, errs3)
-            check("check_links: broken anchor flagged", len(errs3) == 1)
+def test_check_frontmatter_accepts_clean_and_missing_frontmatter(tmp_path):
+    good = tmp_path / "good.md"
+    good.write_text("---\ntitle: \"Clean: title\"\nstatus: draft\n---\n# X\n")
+    nofm = tmp_path / "nofm.md"
+    nofm.write_text("# Just a heading\n")
 
-            # link inside fenced code block -> ignored
-            code = root / "code.md"
-            code.write_text("```\n[link](nonexistent.md)\n```\n")
-            errs4: list[str] = []
-            check_links(code, errs4)
-            check("check_links: link in fenced code ignored", len(errs4) == 0)
+    errs: list[str] = []
+    errs2: list[str] = []
+    check_frontmatter(good, errs)
+    check_frontmatter(nofm, errs2)
 
-            # same-file anchor
-            self_anchor = root / "self.md"
-            self_anchor.write_text("# Top\n## Details\n[jump](#details)\n[bad](#nope)\n")
-            errs5: list[str] = []
-            check_links(self_anchor, errs5)
-            check("check_links: same-file anchor valid passes, broken flagged", len(errs5) == 1)
+    assert errs == []
+    assert errs2 == []
 
-        # --- check_wikilinks ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            # a wikilink that resolves to a known doc -> error
-            md = root / "test.md"
-            md.write_text("See [[policy-mcp]] for details.\n")
-            doc_names = {"policy-mcp.md", "readme.md"}
-            errs = []
-            check_wikilinks(md, errs, doc_names)
-            check("check_wikilinks: resolving wikilink flagged", len(errs) == 1)
 
-            # wikilink that does NOT resolve to any doc -> allowed (vault syntax)
-            md2 = root / "test2.md"
-            md2.write_text("See [[someCitekey]] here.\n")
-            errs2 = []
-            check_wikilinks(md2, errs2, doc_names)
-            check("check_wikilinks: non-resolving wikilink allowed", len(errs2) == 0)
+def test_check_links_validates_relative_links_and_anchors(tmp_path):
+    (tmp_path / "target.md").write_text("# Real heading\n## Sub section\n")
+    good = tmp_path / "good.md"
+    good.write_text("[link](target.md)\n[anchor](target.md#sub-section)\n")
+    bad = tmp_path / "bad.md"
+    bad.write_text("[link](nonexistent.md)\n")
+    bad_anchor = tmp_path / "bad-anchor.md"
+    bad_anchor.write_text("[link](target.md#no-such-anchor)\n")
+    self_anchor = tmp_path / "self.md"
+    self_anchor.write_text("# Top\n## Details\n[jump](#details)\n[bad](#nope)\n")
 
-            # wikilink inside inline code -> ignored
-            md3 = root / "test3.md"
-            md3.write_text("Use `[[policy-mcp]]` syntax.\n")
-            errs3: list[str] = []
-            check_wikilinks(md3, errs3, doc_names)
-            check("check_wikilinks: wikilink in inline code ignored", len(errs3) == 0)
+    good_errs: list[str] = []
+    bad_errs: list[str] = []
+    anchor_errs: list[str] = []
+    self_errs: list[str] = []
+    check_links(good, good_errs)
+    check_links(bad, bad_errs)
+    check_links(bad_anchor, anchor_errs)
+    check_links(self_anchor, self_errs)
 
-        # --- check_link_text ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            # link text that IS the filename -> error
-            md = root / "test.md"
-            md.write_text("[policy-mcp.md](policy-mcp.md)\n")
-            errs = []
-            check_link_text(md, errs)
-            check("check_link_text: filename as link text flagged", len(errs) == 1)
+    assert good_errs == []
+    assert len(bad_errs) == 1
+    assert len(anchor_errs) == 1
+    assert len(self_errs) == 1
 
-            # link text that IS the stem -> error
-            md2 = root / "test2.md"
-            md2.write_text("[policy-mcp](policy-mcp.md)\n")
-            errs2 = []
-            check_link_text(md2, errs2)
-            check("check_link_text: stem as link text flagged", len(errs2) == 1)
 
-            # proper link text -> no error
-            md3 = root / "test3.md"
-            md3.write_text("[Policy MCP reference](policy-mcp.md)\n")
-            errs3: list[str] = []
-            check_link_text(md3, errs3)
-            check("check_link_text: proper title text passes", len(errs3) == 0)
+def test_check_links_ignores_links_inside_fenced_code(tmp_path):
+    code = tmp_path / "code.md"
+    code.write_text("```\n[link](nonexistent.md)\n```\n")
+    errs: list[str] = []
 
-            # external link -> not checked
-            md4 = root / "test4.md"
-            md4.write_text("[policy-mcp](https://example.com/policy-mcp.md)\n")
-            errs4: list[str] = []
-            check_link_text(md4, errs4)
-            check("check_link_text: external link not checked", len(errs4) == 0)
+    check_links(code, errs)
 
-        # --- check_wikilink_aliases ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            # bare wikilink -> error
-            md = root / "test.md"
-            md.write_text("See [[some-note]] for info.\n")
-            errs = []
-            check_wikilink_aliases(md, errs)
-            check("check_wikilink_aliases: bare wikilink flagged", len(errs) == 1)
+    assert errs == []
 
-            # aliased wikilink -> ok
-            md2 = root / "test2.md"
-            md2.write_text("See [[some-note|Some Note]] for info.\n")
-            errs2 = []
-            check_wikilink_aliases(md2, errs2)
-            check("check_wikilink_aliases: aliased wikilink passes", len(errs2) == 0)
 
-            # anchor-only wikilink with no target -> not flagged (empty target after split)
-            md3 = root / "test3.md"
-            md3.write_text("See [[#heading]] here.\n")
-            errs3: list[str] = []
-            check_wikilink_aliases(md3, errs3)
-            check("check_wikilink_aliases: anchor-only wikilink passes", len(errs3) == 0)
+def test_check_wikilinks_flags_doc_resolving_wikilinks_but_allows_vault_citations(tmp_path):
+    md = tmp_path / "test.md"
+    md.write_text("See [[policy-mcp]] for details.\n")
+    md2 = tmp_path / "test2.md"
+    md2.write_text("See [[someCitekey]] here.\n")
+    md3 = tmp_path / "test3.md"
+    md3.write_text("Use `[[policy-mcp]]` syntax.\n")
 
-        # --- check_broken_vault_wikilinks ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            stems = {"real-note", "good"}
-            # aliased link to a MISSING note -> error (the gap check_wikilink_aliases misses)
-            md = root / "test.md"
-            md.write_text("See [[ghost-note|A Title]] here.\n")
-            errs = []
-            check_broken_vault_wikilinks(md, errs, stems)
-            check("check_broken_vault_wikilinks: aliased link to missing note flagged", len(errs) == 1)
+    doc_names = {"policy-mcp.md", "readme.md"}
+    errs: list[str] = []
+    errs2: list[str] = []
+    errs3: list[str] = []
+    check_wikilinks(md, errs, doc_names)
+    check_wikilinks(md2, errs2, doc_names)
+    check_wikilinks(md3, errs3, doc_names)
 
-            # aliased link to an EXISTING note -> ok
-            md2 = root / "test2.md"
-            md2.write_text("See [[real-note|A Title]] here.\n")
-            errs2 = []
-            check_broken_vault_wikilinks(md2, errs2, stems)
-            check("check_broken_vault_wikilinks: aliased link to existing note passes", len(errs2) == 0)
+    assert len(errs) == 1
+    assert errs2 == []
+    assert errs3 == []
 
-            # bare link to existing note (with #anchor) -> ok
-            md3 = root / "test3.md"
-            md3.write_text("See [[good#section]] here.\n")
-            errs3: list[str] = []
-            check_broken_vault_wikilinks(md3, errs3, stems)
-            check("check_broken_vault_wikilinks: link with anchor to existing note passes", len(errs3) == 0)
 
-            # asset path -> not a note, ignored
-            md4 = root / "test4.md"
-            md4.write_text("![[90-assets/img.png]]\n")
-            errs4: list[str] = []
-            check_broken_vault_wikilinks(md4, errs4, stems)
-            check("check_broken_vault_wikilinks: asset path ignored", len(errs4) == 0)
+def test_check_link_text_flags_filename_or_stem_as_link_text(tmp_path):
+    filename_text = tmp_path / "filename.md"
+    filename_text.write_text("[policy-mcp.md](policy-mcp.md)\n")
+    stem_text = tmp_path / "stem.md"
+    stem_text.write_text("[policy-mcp](policy-mcp.md)\n")
+    proper = tmp_path / "proper.md"
+    proper.write_text("[Policy MCP reference](policy-mcp.md)\n")
+    external = tmp_path / "external.md"
+    external.write_text("[policy-mcp](https://example.com/policy-mcp.md)\n")
 
-            # wikilink inside inline code -> ignored
-            md5 = root / "test5.md"
-            md5.write_text("Use `[[ghost-note]]` syntax.\n")
-            errs5: list[str] = []
-            check_broken_vault_wikilinks(md5, errs5, stems)
-            check("check_broken_vault_wikilinks: wikilink in inline code ignored", len(errs5) == 0)
+    filename_errs: list[str] = []
+    stem_errs: list[str] = []
+    proper_errs: list[str] = []
+    external_errs: list[str] = []
+    check_link_text(filename_text, filename_errs)
+    check_link_text(stem_text, stem_errs)
+    check_link_text(proper, proper_errs)
+    check_link_text(external, external_errs)
 
-        # --- check_template_frontmatter ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            # disallowed key inside yaml fence
-            md = root / "tmpl.md"
-            md.write_text("# Template\n\n```yaml\ntitle: X\nmode: reference\n```\n")
-            errs = []
-            check_template_frontmatter(md, errs)
-            check("check_template_frontmatter: disallowed key in fence flagged", len(errs) == 1)
+    assert len(filename_errs) == 1
+    assert len(stem_errs) == 1
+    assert proper_errs == []
+    assert external_errs == []
 
-            # clean template
-            md2 = root / "tmpl2.md"
-            md2.write_text("# Template\n\n```yaml\ntitle: X\nstatus: draft\n```\n")
-            errs2 = []
-            check_template_frontmatter(md2, errs2)
-            check("check_template_frontmatter: clean fence passes", len(errs2) == 0)
 
-        # --- check_thin_folders (advisory) ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            (root / "README.md").write_text("# Root\n")
-            (root / "thin").mkdir()
-            (root / "thin" / "only.md").write_text("# Only\n")
-            warns: list[str] = []
-            check_thin_folders(root, warns)
-            check("check_thin_folders: single-file folder flagged as advisory",
-                  any("thin/" in w for w in warns))
+def test_check_wikilink_aliases_requires_aliases_except_anchor_only_links(tmp_path):
+    bare = tmp_path / "bare.md"
+    bare.write_text("See [[some-note]] for info.\n")
+    aliased = tmp_path / "aliased.md"
+    aliased.write_text("See [[some-note|Some Note]] for info.\n")
+    anchor = tmp_path / "anchor.md"
+    anchor.write_text("See [[#heading]] here.\n")
 
-            (root / "releasing").mkdir()
-            (root / "releasing" / "README.md").write_text("# Releasing\n")
-            (root / "releasing" / "plan.md").write_text("# Plan\n")
-            warns_excl: list[str] = []
-            check_thin_folders(root, warns_excl)
-            check("check_thin_folders: site-excluded folder not flagged",
-                  not any("releasing/" in w for w in warns_excl))
+    bare_errs: list[str] = []
+    aliased_errs: list[str] = []
+    anchor_errs: list[str] = []
+    check_wikilink_aliases(bare, bare_errs)
+    check_wikilink_aliases(aliased, aliased_errs)
+    check_wikilink_aliases(anchor, anchor_errs)
 
-        # --- check_site_local_links ---
-        with tempfile.TemporaryDirectory() as td:
-            repo = Path(td)
-            root = repo / "docs"
-            (root / "reference").mkdir(parents=True)
-            (repo / "src").mkdir()
-            (repo / "src" / "file.py").write_text("x = 1\n")
-            (root / "reference" / "sibling.md").write_text("# Sibling\n")
+    assert len(bare_errs) == 1
+    assert aliased_errs == []
+    assert anchor_errs == []
 
-            # published page linking into src/ -> blocking error
-            pub = root / "reference" / "x.md"
-            pub.write_text("[code](../../src/file.py)\n[doc](sibling.md)\n")
-            errs: list[str] = []
-            check_site_local_links(pub, root, errs)
-            check("check_site_local_links: published page linking to src/ blocked",
-                  len(errs) == 1 and "leaves the published site" in errs[0])
 
-            # link to a sibling doc page stays inside the site -> not flagged
-            warns_doc: list[str] = []
-            (root / "reference" / "onlydoc.md").write_text("[doc](sibling.md)\n")
-            check_site_local_links(root / "reference" / "onlydoc.md", root, warns_doc)
-            check("check_site_local_links: in-site doc link not flagged", len(warns_doc) == 0)
+def test_check_broken_vault_wikilinks_validates_note_targets_and_ignores_assets_or_code(tmp_path):
+    stems = {"real-note", "good"}
+    missing = tmp_path / "missing.md"
+    missing.write_text("See [[ghost-note|A Title]] here.\n")
+    existing = tmp_path / "existing.md"
+    existing.write_text("See [[real-note|A Title]] here.\n")
+    anchor = tmp_path / "anchor.md"
+    anchor.write_text("See [[good#section]] here.\n")
+    asset = tmp_path / "asset.md"
+    asset.write_text("![[90-assets/img.png]]\n")
+    code = tmp_path / "code.md"
+    code.write_text("Use `[[ghost-note]]` syntax.\n")
 
-            # src/ path inside inline code -> ignored
-            warns_code: list[str] = []
-            (root / "reference" / "codey.md").write_text("Edit `[x](../../src/file.py)` here.\n")
-            check_site_local_links(root / "reference" / "codey.md", root, warns_code)
-            check("check_site_local_links: src/ link in inline code ignored", len(warns_code) == 0)
+    missing_errs: list[str] = []
+    existing_errs: list[str] = []
+    anchor_errs: list[str] = []
+    asset_errs: list[str] = []
+    code_errs: list[str] = []
+    check_broken_vault_wikilinks(missing, missing_errs, stems)
+    check_broken_vault_wikilinks(existing, existing_errs, stems)
+    check_broken_vault_wikilinks(anchor, anchor_errs, stems)
+    check_broken_vault_wikilinks(asset, asset_errs, stems)
+    check_broken_vault_wikilinks(code, code_errs, stems)
 
-            # unpublished (site-excluded) page may link to src/ — read on github.com, not the site
-            (root / "releasing").mkdir()
-            excl = root / "releasing" / "plan.md"
-            excl.write_text("[code](../../src/file.py)\n")
-            warns_excl: list[str] = []
-            check_site_local_links(excl, root, warns_excl)
-            check("check_site_local_links: site-excluded page linking to src/ not flagged",
-                  len(warns_excl) == 0)
+    assert len(missing_errs) == 1
+    assert existing_errs == []
+    assert anchor_errs == []
+    assert asset_errs == []
+    assert code_errs == []
 
-        # --- heading_slugs ---
-        with tempfile.TemporaryDirectory() as td:
-            md = Path(td) / "h.md"
-            md.write_text("# Top Level\n## Sub Heading\n<a id=\"custom-anchor\"></a>\n")
-            slugs = heading_slugs(md)
-            check("heading_slugs: top-level heading",
-                  "top-level" in slugs)
-            check("heading_slugs: sub heading",
-                  "sub-heading" in slugs)
-            check("heading_slugs: HTML id attribute",
-                  "custom-anchor" in slugs)
 
-        print(f"\n{'FAILED' if failures else 'OK'}: {failures} failing check(s) — docs-doctor self-test")
-        return failures
-    assert _run() == 0
+def test_check_template_frontmatter_validates_yaml_fences(tmp_path):
+    bad = tmp_path / "tmpl.md"
+    bad.write_text("# Template\n\n```yaml\ntitle: X\nmode: reference\n```\n")
+    good = tmp_path / "tmpl2.md"
+    good.write_text("# Template\n\n```yaml\ntitle: X\nstatus: draft\n```\n")
+
+    bad_errs: list[str] = []
+    good_errs: list[str] = []
+    check_template_frontmatter(bad, bad_errs)
+    check_template_frontmatter(good, good_errs)
+
+    assert len(bad_errs) == 1
+    assert good_errs == []
+
+
+def test_check_thin_folders_warns_for_site_folders_but_skips_site_excluded(tmp_path):
+    (tmp_path / "README.md").write_text("# Root\n")
+    (tmp_path / "thin").mkdir()
+    (tmp_path / "thin" / "only.md").write_text("# Only\n")
+    (tmp_path / "releasing").mkdir()
+    (tmp_path / "releasing" / "README.md").write_text("# Releasing\n")
+    (tmp_path / "releasing" / "plan.md").write_text("# Plan\n")
+
+    warns: list[str] = []
+    check_thin_folders(tmp_path, warns)
+
+    assert any("thin/" in w for w in warns)
+    assert not any("releasing/" in w for w in warns)
+
+
+def test_check_site_local_links_blocks_published_pages_that_leave_the_site(tmp_path):
+    repo = tmp_path
+    root = repo / "docs"
+    (root / "reference").mkdir(parents=True)
+    (repo / "src").mkdir()
+    (repo / "src" / "file.py").write_text("x = 1\n")
+    (root / "reference" / "sibling.md").write_text("# Sibling\n")
+    published = root / "reference" / "x.md"
+    published.write_text("[code](../../src/file.py)\n[doc](sibling.md)\n")
+
+    errs: list[str] = []
+    check_site_local_links(published, root, errs)
+
+    assert len(errs) == 1
+    assert "leaves the published site" in errs[0]
+
+
+def test_check_site_local_links_allows_in_site_excluded_and_inline_code_links(tmp_path):
+    repo = tmp_path
+    root = repo / "docs"
+    (root / "reference").mkdir(parents=True)
+    (repo / "src").mkdir()
+    (repo / "src" / "file.py").write_text("x = 1\n")
+    (root / "reference" / "sibling.md").write_text("# Sibling\n")
+    doc = root / "reference" / "onlydoc.md"
+    doc.write_text("[doc](sibling.md)\n")
+    code = root / "reference" / "codey.md"
+    code.write_text("Edit `[x](../../src/file.py)` here.\n")
+    (root / "releasing").mkdir()
+    excluded = root / "releasing" / "plan.md"
+    excluded.write_text("[code](../../src/file.py)\n")
+
+    doc_errs: list[str] = []
+    code_errs: list[str] = []
+    excluded_errs: list[str] = []
+    check_site_local_links(doc, root, doc_errs)
+    check_site_local_links(code, root, code_errs)
+    check_site_local_links(excluded, root, excluded_errs)
+
+    assert doc_errs == []
+    assert code_errs == []
+    assert excluded_errs == []
+
+
+def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
+    md = tmp_path / "h.md"
+    md.write_text("# Top Level\n## Sub Heading\n<a id=\"custom-anchor\"></a>\n")
+
+    slugs = heading_slugs(md)
+
+    assert "top-level" in slugs
+    assert "sub-heading" in slugs
+    assert "custom-anchor" in slugs

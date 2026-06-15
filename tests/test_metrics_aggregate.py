@@ -1,10 +1,9 @@
-"""L1 component test for metrics_aggregate — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for metrics_aggregate (ADR-44)."""
+
 import metrics_aggregate as _m
-from _util import CheckHarness
 
 AUDIT_RELPATH = _m.AUDIT_RELPATH
 METRICS_RELDIR = _m.METRICS_RELDIR
-Path = _m.Path
 accept_ratio_of = _m.accept_ratio_of
 aggregate = _m.aggregate
 datetime = _m.datetime
@@ -17,109 +16,131 @@ read_lint_verdict = _m.read_lint_verdict
 timezone = _m.timezone
 trust_score = _m.trust_score
 
+NOW = datetime(2026, 5, 28, tzinfo=timezone.utc)
+PERIOD = "2026-W22"
 
-def test_metrics_aggregate():
-    def _run():
-        import tempfile
 
-        t = CheckHarness()
-        check = t.check
+def test_trust_score_math_and_bands():
+    assert trust_score(0, 0, 1.0) == (100, "healthy")
+    assert trust_score(0.8, 0, 1.0)[1] == "act"
+    assert trust_score(0.0, 0.0, 0.8) == (92, "healthy")
+    assert trust_score(0.0, 0.0, 0.5)[1] == "watch"
+    assert trust_score(0, 0, 1.0, accept_ratio=0.95)[0] == 90
+    assert iso_period(NOW) == PERIOD
 
-        # trust-score math + bands
-        check("clean lane -> healthy 100", trust_score(0, 0, 1.0) == (100, "healthy"))
-        check("high deny -> act band", trust_score(0.8, 0, 1.0)[1] == "act")
-        s_watch, b_watch = trust_score(0.0, 0.0, 0.8)               # 100 - 40*0.2 = 92? -> healthy
-        check("20% failure -> 92 healthy", (s_watch, b_watch) == (92, "healthy"))
-        check("50% failure -> watch", trust_score(0.0, 0.0, 0.5)[1] == "watch")
-        check("rubber-stamp down-weight", trust_score(0, 0, 1.0, accept_ratio=0.95)[0] == 90)
 
-        now = datetime(2026, 5, 28, tzinfo=timezone.utc)            # 2026-W22
-        period = iso_period(now)
-        check("iso_period format", period == "2026-W22")
+def test_aggregate_rolls_up_audit_and_cards_by_lane(tmp_path):
+    (tmp_path / "system" / "logs").mkdir(parents=True)
+    audit_lines = [
+        json.dumps({"timestamp": "2026-05-28T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "allow"})
+        for _ in range(5)
+    ]
+    audit_lines.append(
+        json.dumps({"timestamp": "2026-05-28T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "deny"})
+    )
+    audit_lines.append(
+        json.dumps({"timestamp": "2026-01-01T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "deny"})
+    )
+    (tmp_path / AUDIT_RELPATH).write_text("\n".join(audit_lines), encoding="utf-8")
+    cards = [
+        {"task_id": "t1", "status": "done", "assignee": "memoria-writer", "metadata": {"retry_count": 1}},
+        {"task_id": "t2", "status": "done", "assignee": "memoria-writer"},
+        {"task_id": "t3", "status": "blocked", "assignee": "memoria-writer"},
+        {"task_id": "t4", "status": "running", "assignee": "memoria-linter"},
+    ]
 
-        with tempfile.TemporaryDirectory() as td:
-            vault = Path(td)
-            (vault / "system" / "logs").mkdir(parents=True)
-            # audit: writer made 6 writes, 1 deny, this period
-            audit_lines = []
-            for _ in range(5):
-                audit_lines.append(json.dumps({"timestamp": "2026-05-28T10:00:00Z",
-                                               "profile": "memoria-writer", "action": "write", "decision": "allow"}))
-            audit_lines.append(json.dumps({"timestamp": "2026-05-28T10:00:00Z",
-                                           "profile": "memoria-writer", "action": "write", "decision": "deny"}))
-            # an out-of-period entry that must be ignored
-            audit_lines.append(json.dumps({"timestamp": "2026-01-01T10:00:00Z",
-                                           "profile": "memoria-writer", "action": "write", "decision": "deny"}))
-            (vault / AUDIT_RELPATH).write_text("\n".join(audit_lines), encoding="utf-8")
+    res = aggregate(tmp_path, cards, now=NOW)
+    note = (tmp_path / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
 
-            cards = [
-                {"task_id": "t1", "status": "done", "assignee": "memoria-writer", "metadata": {"retry_count": 1}},
-                {"task_id": "t2", "status": "done", "assignee": "memoria-writer"},
-                {"task_id": "t3", "status": "blocked", "assignee": "memoria-writer"},
-                {"task_id": "t4", "status": "running", "assignee": "memoria-linter"},  # no done/blocked, no audit -> skipped
-            ]
+    assert any(ln["lane"] == "memoria-writer" for ln in res["lanes"])
+    assert not any(ln["lane"] == "memoria-mapper" for ln in res["lanes"])
+    assert "type: \"lane-metric\"" in note
+    assert "deny_rate: 0.167" in note
+    assert "success_rate: 0.667" in note
+    assert "trust_score:" in note
 
-            res = aggregate(vault, cards, now=now)
-            check("aggregated the writer lane", any(ln["lane"] == "memoria-writer" for ln in res["lanes"]))
-            check("inactive lane skipped", not any(ln["lane"] == "memoria-mapper" for ln in res["lanes"]))
-            note = (vault / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
-            check("lane note has type: lane-metric", "type: \"lane-metric\"" in note)
-            check("deny_rate computed in-period only (1/6)", "deny_rate: 0.167" in note)
-            check("success_rate 2/3", "success_rate: 0.667" in note)
-            check("note has trust_score frontmatter", "trust_score:" in note)
 
-        # --- new telemetry: disposition, cost, decision-time --------------------
-        with tempfile.TemporaryDirectory() as td:
-            vault = Path(td)
-            logs = vault / "system" / "logs"
-            logs.mkdir(parents=True)
-            disp_rows = ([{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
-                         + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]
-                         + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "rejected"}]
-                         + [{"timestamp": "2026-01-01T00:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}])  # out-of-period
-            (logs / "disposition.jsonl").write_text("\n".join(json.dumps(r) for r in disp_rows), encoding="utf-8")
-            d = read_disposition(vault, period)
-            check("disposition counts in-period only", d["memoria-writer"] == {"accepted": 3, "edited": 1, "rejected": 1})
-            check("accept_ratio 3/5", round(accept_ratio_of(d["memoria-writer"]), 2) == 0.6)
-
-            (logs / "cost.jsonl").write_text("\n".join(json.dumps(r) for r in [
+def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
+    logs = tmp_path / "system" / "logs"
+    logs.mkdir(parents=True)
+    disp_rows = (
+        [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
+        + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]
+        + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "rejected"}]
+        + [{"timestamp": "2026-01-01T00:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}]
+    )
+    (logs / "disposition.jsonl").write_text("\n".join(json.dumps(r) for r in disp_rows), encoding="utf-8")
+    (logs / "cost.jsonl").write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
                 {"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "cost": 0.10, "tokens_in": 100, "tokens_out": 200},
                 {"timestamp": "2026-05-28T11:00:00Z", "lane": "memoria-writer", "cost": 0.30, "tokens_in": 50, "tokens_out": 80},
-            ]), encoding="utf-8")
-            c = read_cost(vault, period)
-            check("cost summed per lane", round(c["memoria-writer"]["cost"], 2) == 0.40 and c["memoria-writer"]["tokens_out"] == 280)
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (logs / "board-transitions.jsonl").write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
+                {
+                    "timestamp": "2026-05-28T10:00:00Z",
+                    "task_id": "x",
+                    "lane": "memoria-writer",
+                    "kind": "review",
+                    "from": "unreviewed",
+                    "to": "requested",
+                },
+                {
+                    "timestamp": "2026-05-28T10:30:00Z",
+                    "task_id": "x",
+                    "lane": "memoria-writer",
+                    "kind": "review",
+                    "from": "requested",
+                    "to": "approved",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
 
-            (logs / "board-transitions.jsonl").write_text("\n".join(json.dumps(r) for r in [
-                {"timestamp": "2026-05-28T10:00:00Z", "task_id": "x", "lane": "memoria-writer", "kind": "review", "from": "unreviewed", "to": "requested"},
-                {"timestamp": "2026-05-28T10:30:00Z", "task_id": "x", "lane": "memoria-writer", "kind": "review", "from": "requested", "to": "approved"},
-            ]), encoding="utf-8")
-            check("decision time 30 min", read_decision_time(vault, period).get("memoria-writer") == 30.0)
+    disposition = read_disposition(tmp_path, PERIOD)
+    cost = read_cost(tmp_path, PERIOD)
+    aggregate(tmp_path, [], now=NOW)
+    note = (tmp_path / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
 
-            aggregate(vault, [], now=now)   # disposition alone (5 reviews) yields enough samples
-            note = (vault / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
-            check("note carries accept_ratio", "accept_ratio: 0.6" in note)
-            check("note carries decision_time_min", "decision_time_min: 30.0" in note)
-            check("note carries cost", "cost: 0.4" in note)
-            check("note carries pass^k null placeholder", "consistency_passk: null" in note)
+    assert disposition["memoria-writer"] == {"accepted": 3, "edited": 1, "rejected": 1}
+    assert round(accept_ratio_of(disposition["memoria-writer"]), 2) == 0.6
+    assert round(cost["memoria-writer"]["cost"], 2) == 0.40
+    assert cost["memoria-writer"]["tokens_out"] == 280
+    assert read_decision_time(tmp_path, PERIOD).get("memoria-writer") == 30.0
+    assert "accept_ratio: 0.6" in note
+    assert "decision_time_min: 30.0" in note
+    assert "cost: 0.4" in note
+    assert "consistency_passk: null" in note
 
-        # --- lint-verdict rollup (periodized from timestamped lint-findings) -----
-        with tempfile.TemporaryDirectory() as td:
-            vault = Path(td)
-            logs = vault / "system" / "logs"
-            logs.mkdir(parents=True)
-            (logs / "lint-findings.jsonl").write_text("\n".join(json.dumps(r) for r in [
+
+def test_lint_verdict_rollup_writes_periodized_verdict_note(tmp_path):
+    logs = tmp_path / "system" / "logs"
+    logs.mkdir(parents=True)
+    (logs / "lint-findings.jsonl").write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
                 {"timestamp": "2026-05-28T02:00:00Z", "detector": "broken-wikilink", "severity": "HIGH", "path": "a.md", "message": "x"},
                 {"timestamp": "2026-05-28T02:00:00Z", "detector": "stale-fleeting", "severity": "LOW", "path": "b.md", "message": "y"},
-                {"timestamp": "2026-01-01T02:00:00Z", "detector": "fama-exposure", "severity": "CRITICAL", "path": "c.md", "message": "z"},  # out-of-period
-            ]), encoding="utf-8")
-            lv = read_lint_verdict(vault, period)
-            check("lint verdict REVIEW (HIGH, no CRITICAL in-period)", lv["verdict"] == "REVIEW")
-            check("lint counts in-period only (1 HIGH, 1 LOW, 0 CRITICAL)",
-                  (lv["HIGH"], lv["LOW"], lv["CRITICAL"], lv["total"]) == (1, 1, 0, 2))
-            aggregate(vault, [], now=now)
-            vnote = (vault / METRICS_RELDIR / "lint-verdict-2026-W22.md").read_text(encoding="utf-8")
-            check("lint-verdict note written with type + verdict",
-                  'type: "lint-verdict"' in vnote and 'verdict: "REVIEW"' in vnote)
+                {"timestamp": "2026-01-01T02:00:00Z", "detector": "fama-exposure", "severity": "CRITICAL", "path": "c.md", "message": "z"},
+            ]
+        ),
+        encoding="utf-8",
+    )
 
-        return t.summary()
-    assert _run() == 0
+    verdict = read_lint_verdict(tmp_path, PERIOD)
+    aggregate(tmp_path, [], now=NOW)
+    vnote = (tmp_path / METRICS_RELDIR / "lint-verdict-2026-W22.md").read_text(encoding="utf-8")
+
+    assert verdict["verdict"] == "REVIEW"
+    assert (verdict["HIGH"], verdict["LOW"], verdict["CRITICAL"], verdict["total"]) == (1, 1, 0, 2)
+    assert 'type: "lint-verdict"' in vnote
+    assert 'verdict: "REVIEW"' in vnote

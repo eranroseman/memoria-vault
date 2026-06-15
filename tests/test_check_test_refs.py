@@ -1,4 +1,5 @@
-"""L1 component test for check-test-refs — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for check-test-refs (ADR-44)."""
+
 import check_test_refs as _m
 
 MD_LINK = _m.MD_LINK
@@ -7,85 +8,66 @@ REPO_PATH = _m.REPO_PATH
 check_protocol = _m.check_protocol
 
 
-def test_check_test_refs():
-    def _run():
-        """Synthetic-fixture unit tests for check_protocol and the regex patterns."""
-        import tempfile
+def test_md_link_regex_matches_markdown_links():
+    assert MD_LINK.findall("[text](target.md)") == ["target.md"]
+    assert MD_LINK.findall("![alt](image.png)") == []
+    assert MD_LINK.findall("[t](file.md#heading)") == ["file.md#heading"]
+    assert len(MD_LINK.findall("[a](x.md) and [b](y.md)")) == 2
 
-        failures = 0
 
-        def check(name, ok):
-            nonlocal failures
-            if not ok:
-                failures += 1
-            print(f"  {'PASS' if ok else 'FAIL'}  {name}")
+def test_repo_path_regex_matches_backticked_repo_paths():
+    assert REPO_PATH.findall("`docs/reference/policy-mcp.md`") == ["docs/reference/policy-mcp.md"]
+    assert REPO_PATH.findall("`project-files/tests/coverage-matrix.md`") == [
+        "project-files/tests/coverage-matrix.md"
+    ]
+    assert REPO_PATH.findall("`src/something.md`") == []
+    assert REPO_PATH.findall("docs/reference/policy-mcp.md") == []
 
-        # --- MD_LINK regex ---
-        check("MD_LINK: matches standard link",
-              MD_LINK.findall("[text](target.md)") == ["target.md"])
-        check("MD_LINK: ignores images",
-              MD_LINK.findall("![alt](image.png)") == [])
-        check("MD_LINK: matches with anchor",
-              MD_LINK.findall("[t](file.md#heading)") == ["file.md#heading"])
-        check("MD_LINK: matches multiple",
-              len(MD_LINK.findall("[a](x.md) and [b](y.md)")) == 2)
 
-        # --- REPO_PATH regex ---
-        check("REPO_PATH: matches docs/ path",
-              REPO_PATH.findall("`docs/reference/policy-mcp.md`") == ["docs/reference/policy-mcp.md"])
-        check("REPO_PATH: matches project-files/ path",
-              REPO_PATH.findall("`project-files/tests/coverage-matrix.md`") == ["project-files/tests/coverage-matrix.md"])
-        check("REPO_PATH: ignores non-matching prefix",
-              REPO_PATH.findall("`src/something.md`") == [])
-        check("REPO_PATH: ignores non-backtick text",
-              REPO_PATH.findall("docs/reference/policy-mcp.md") == [])
+def test_check_protocol_accepts_valid_links(tmp_path):
+    proto_dir = tmp_path / "project-files" / "tests"
+    proto_dir.mkdir(parents=True)
+    (tmp_path / "docs" / "reference").mkdir(parents=True)
+    (tmp_path / "docs" / "reference" / "policy-mcp.md").write_text("# Policy MCP\n")
 
-        # --- check_protocol with synthetic files ---
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            proto_dir = root / "project-files" / "tests"
-            proto_dir.mkdir(parents=True)
-            (root / "docs" / "reference").mkdir(parents=True)
-            (root / "docs" / "reference" / "policy-mcp.md").write_text("# Policy MCP\n")
+    valid = proto_dir / "valid.md"
+    valid.write_text(
+        "See [policy](../../docs/reference/policy-mcp.md) and "
+        "`docs/reference/policy-mcp.md` for details.\n"
+        "[external](https://example.com) should be skipped.\n"
+    )
 
-            # valid protocol: relative link resolves, repo path resolves
-            valid = proto_dir / "valid.md"
-            valid.write_text(
-                "See [policy](../../docs/reference/policy-mcp.md) and "
-                "`docs/reference/policy-mcp.md` for details.\n"
-                "[external](https://example.com) should be skipped.\n"
-            )
-            errs = check_protocol(valid, root)
-            check("check_protocol: valid links produce no errors", len(errs) == 0)
+    assert check_protocol(valid, tmp_path) == []
 
-            # broken relative link
-            # Note: paths below are built at runtime to avoid triggering the
-            # pre-commit repo-path grep on the .py source itself.
-            _d = "docs"
-            broken_link = proto_dir / "broken-link.md"
-            broken_link.write_text(f"[missing](../../{_d}/nonexistent.md)\n")
-            errs = check_protocol(broken_link, root)
-            check("check_protocol: broken relative link detected", len(errs) == 1)
-            check("check_protocol: error mentions broken link",
-                  "broken link" in errs[0])
 
-            # stale repo path
-            stale = proto_dir / "stale.md"
-            stale.write_text(f"Refer to `{_d}/dissolved/old-page.md` here.\n")
-            errs = check_protocol(stale, root)
-            check("check_protocol: stale repo path detected", len(errs) == 1)
-            check("check_protocol: error mentions stale repo path",
-                  "stale repo path" in errs[0])
+def test_check_protocol_reports_broken_relative_link(tmp_path):
+    proto_dir = tmp_path / "project-files" / "tests"
+    proto_dir.mkdir(parents=True)
+    broken_link = proto_dir / "broken-link.md"
+    broken_link.write_text("[missing](../../docs/nonexistent.md)\n")
 
-            # multiple errors in one file
-            multi = proto_dir / "multi.md"
-            multi.write_text(
-                "[bad](../../no-such.md)\n"
-                f"`{_d}/fake/path.md` and `project-files/fake.md`\n"
-            )
-            errs = check_protocol(multi, root)
-            check("check_protocol: multiple errors all caught", len(errs) == 3)
+    errs = check_protocol(broken_link, tmp_path)
 
-        print(f"\n{'OK' if not failures else f'{failures} FAILING'}: check-test-refs self-test")
-        return 1 if failures else 0
-    assert _run() == 0
+    assert len(errs) == 1
+    assert "broken link" in errs[0]
+
+
+def test_check_protocol_reports_stale_repo_path(tmp_path):
+    proto_dir = tmp_path / "project-files" / "tests"
+    proto_dir.mkdir(parents=True)
+    stale = proto_dir / "stale.md"
+    stale.write_text("Refer to `docs/dissolved/old-page.md` here.\n")
+
+    errs = check_protocol(stale, tmp_path)
+
+    assert len(errs) == 1
+    assert "stale repo path" in errs[0]
+
+
+def test_check_protocol_reports_multiple_errors(tmp_path):
+    proto_dir = tmp_path / "project-files" / "tests"
+    proto_dir.mkdir(parents=True)
+    multi = proto_dir / "multi.md"
+    multi.write_text("[bad](../../no-such.md)\n`docs/fake/path.md` and `project-files/fake.md`\n")
+
+    assert len(check_protocol(multi, tmp_path)) == 3

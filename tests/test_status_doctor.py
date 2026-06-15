@@ -1,4 +1,5 @@
-"""L1 component test for status-doctor — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for status_doctor (ADR-44)."""
+
 import status_doctor as _m
 
 Path = _m.Path
@@ -7,125 +8,136 @@ check_file = _m.check_file
 targets = _m.targets
 
 
-def test_status_doctor():
-    def _run():
-        import tempfile
+def _release_root(tmp_path):
+    rel = tmp_path / "project" / "release"
+    (rel / "adr").mkdir(parents=True)
+    (rel / "adr" / "x.md").write_text("# x\n")
+    return rel
 
-        failures = 0
 
-        def check(name: str, cond: bool) -> None:
-            nonlocal failures
-            print(f"  {'PASS' if cond else 'FAIL'}  {name}")
-            failures += 0 if cond else 1
+def test_check_file_accepts_consistent_release_frontmatter_and_valid_links(tmp_path):
+    rel = _release_root(tmp_path)
+    good = rel / "good.md"
+    good.write_text("---\nstatus: complete\nreleased: false\n---\n[x](adr/x.md) {{ #NN }} placeholder ok\n")
+    released_ok = rel / "released.md"
+    released_ok.write_text("---\nstatus: released\nreleased: true\n---\n# x\n")
+    candidate_ok = rel / "candidate.md"
+    candidate_ok.write_text("---\nstatus: candidate\nreleased: false\n---\n# x\n")
+    draft_no_flag = rel / "draft-no-flag.md"
+    draft_no_flag.write_text("---\nstatus: draft\n---\n# x\n")
 
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            rel = root / "project" / "release"
-            (rel / "adr").mkdir(parents=True)        # real target for a good link
-            (rel / "adr" / "x.md").write_text("# x\n")
+    assert check_file(good, tmp_path) == []
+    assert check_file(released_ok, tmp_path) == []
+    assert check_file(candidate_ok, tmp_path) == []
+    assert check_file(draft_no_flag, tmp_path) == []
 
-            good = rel / "good.md"
-            good.write_text("---\nstatus: complete\nreleased: false\n---\n[x](adr/x.md) {{ #NN }} placeholder ok\n")
-            check("clean file -> no findings", check_file(good, root) == [])
 
-            released_ok = rel / "released.md"
-            released_ok.write_text("---\nstatus: released\nreleased: true\n---\n# x\n")
-            check("released true + status released -> no findings", check_file(released_ok, root) == [])
+def test_check_file_flags_stale_release_and_test_paths(tmp_path):
+    rel = _release_root(tmp_path)
+    stale = rel / "stale.md"
+    stale.write_text(
+        "see [r](../tests/g9.md), `project/releases/v0.1/p.md`, "
+        "`release/vX.Y/p.md`, `releasing/vX.Y/p.md`, and `docs/releasing/vX.Y/p.md`\n"
+    )
 
-            candidate_ok = rel / "candidate.md"
-            candidate_ok.write_text("---\nstatus: candidate\nreleased: false\n---\n# x\n")
-            check("candidate false -> no findings", check_file(candidate_ok, root) == [])
+    errs = check_file(stale, tmp_path)
 
-            draft_no_flag = rel / "draft-no-flag.md"
-            draft_no_flag.write_text("---\nstatus: draft\n---\n# x\n")
-            check("status without released flag -> no findings", check_file(draft_no_flag, root) == [])
+    assert any("tests" in e and "stale path" in e for e in errs)
+    assert any("releases" in e and "stale path" in e for e in errs)
+    assert any("release/vX.Y/" in e and "stale path" in e for e in errs)
+    assert any("releasing/vX.Y/" in e and "stale path" in e for e in errs)
+    assert any("docs/releasing/vX.Y/" in e and "stale path" in e for e in errs)
 
-            stale = rel / "stale.md"
-            stale.write_text(
-                "see [r](../tests/g9.md), `project/releases/v0.1/p.md`, "
-                "`release/vX.Y/p.md`, `releasing/vX.Y/p.md`, and `docs/releasing/vX.Y/p.md`\n")
-            errs = check_file(stale, root)
-            check("stale ../tests/ flagged", any("tests" in e and "stale path" in e for e in errs))
-            check("stale project/releases/ flagged", any("releases" in e and "stale path" in e for e in errs))
-            check("stale release/vX.Y/ flagged", any("release/vX.Y/" in e and "stale path" in e for e in errs))
-            check("stale releasing/vX.Y/ flagged", any("releasing/vX.Y/" in e and "stale path" in e for e in errs))
-            check("stale docs/releasing/vX.Y/ flagged", any("docs/releasing/vX.Y/" in e and "stale path" in e for e in errs))
 
-            broken = rel / "broken.md"
-            broken.write_text("[gone](nope/missing.md)\n")
-            check("broken link flagged", any("broken link" in e for e in check_file(broken, root)))
+def test_check_file_flags_broken_links_but_ignores_external_placeholders_and_ellipsis(tmp_path):
+    rel = _release_root(tmp_path)
+    broken = rel / "broken.md"
+    broken.write_text("[gone](nope/missing.md)\n")
+    ignored_links = rel / "ignored-links.md"
+    ignored_links.write_text(
+        "[web](https://example.com) [mail](mailto:a@example.com) [anchor](#x) "
+        "[placeholder]({{ #NN }}) [ellipsis](...) [unicode](…)\n"
+    )
 
-            ignored_links = rel / "ignored-links.md"
-            ignored_links.write_text(
-                "[web](https://example.com) [mail](mailto:a@example.com) [anchor](#x) "
-                "[placeholder]({{ #NN }}) [ellipsis](...) [unicode](…)\n")
-            check("external/placeholders/ellipsis links ignored", check_file(ignored_links, root) == [])
+    assert any("broken link" in e for e in check_file(broken, tmp_path))
+    assert check_file(ignored_links, tmp_path) == []
 
-            bad_fm = rel / "bad.md"
-            bad_fm.write_text("---\nstatus: released\nreleased: false\n---\n# x\n")
-            check("released-flag inconsistency flagged",
-                  any("inconsistent" in e for e in check_file(bad_fm, root)))
 
-            bad_status = rel / "bad-status.md"
-            bad_status.write_text("---\nstatus: done\nreleased: false\n---\n# x\n")
-            check("invalid release status flagged",
-                  any("invalid release status" in e for e in check_file(bad_status, root)))
+def test_check_file_flags_release_status_frontmatter_inconsistencies(tmp_path):
+    rel = _release_root(tmp_path)
+    bad_fm = rel / "bad.md"
+    bad_fm.write_text("---\nstatus: released\nreleased: false\n---\n# x\n")
+    bad_status = rel / "bad-status.md"
+    bad_status.write_text("---\nstatus: done\nreleased: false\n---\n# x\n")
+    prose = rel / "prose.md"
+    prose.write_text("This records releases and test plans.\n")
 
-            # prose mentioning "releases" without a path must NOT trip the stale check
-            prose = rel / "prose.md"
-            prose.write_text("This records releases and test plans.\n")
-            check("prose 'releases' (no path) -> not flagged",
-                  not any("stale path" in e for e in check_file(prose, root)))
+    assert any("inconsistent" in e for e in check_file(bad_fm, tmp_path))
+    assert any("invalid release status" in e for e in check_file(bad_status, tmp_path))
+    assert not any("stale path" in e for e in check_file(prose, tmp_path))
 
-            # scope: targets() covers the moved docs/ subtrees (releasing/testing/contributing)
-            (root / "docs" / "testing").mkdir(parents=True)
-            tp = root / "docs" / "testing" / "g9.md"
-            tp.write_text("see [r](missing/x.md)\n")
-            check("targets() includes docs/testing files", tp in targets(root))
-            check("broken link in a test plan flagged", any("broken link" in e for e in check_file(tp, root)))
 
-            release_tmp = root / "docs" / "releasing" / "0.1.0-alpha.3" / "tmp"
-            release_tmp.mkdir(parents=True)
-            scratch = release_tmp / "note.md"
-            scratch.write_text("[private](../../../../../.claude/projects/x/memory/rule.md)\n")
-            check("release tmp files are in scope", scratch in targets(root))
-            check("private scratch memory link flagged",
-                  any("local/private memory" in e for e in check_file(scratch, root)))
+def test_targets_include_docs_testing_release_tmp_and_release_playbook(tmp_path):
+    (tmp_path / "docs" / "testing").mkdir(parents=True)
+    testing = tmp_path / "docs" / "testing" / "g9.md"
+    testing.write_text("see [r](missing/x.md)\n")
+    release_tmp = tmp_path / "docs" / "releasing" / "0.1.0-alpha.3" / "tmp"
+    release_tmp.mkdir(parents=True)
+    scratch = release_tmp / "note.md"
+    scratch.write_text("[private](../../../../../.claude/projects/x/memory/rule.md)\n")
+    playbook = tmp_path / ".agents" / "playbooks" / "release.md"
+    playbook.parent.mkdir(parents=True)
+    playbook.write_text("# Release\n")
 
-            other_tmp = root / "docs" / "testing" / "tmp" / "note.md"
-            other_tmp.parent.mkdir(parents=True)
-            other_tmp.write_text("# scratch\n")
-            check("tmp outside release folder flagged",
-                  any("tmp/ is allowed only" in e for e in check_file(other_tmp, root)))
+    found = targets(tmp_path)
 
-            check("release tmp helper accepts canonical release scratch",
-                  _release_tmp(Path("docs/releasing/0.1.0-alpha.3/tmp/note.md")))
-            check("release tmp helper rejects non-release scratch",
-                  not _release_tmp(Path("docs/testing/tmp/note.md")))
+    assert testing in found
+    assert scratch in found
+    assert playbook in found
+    assert any("broken link" in e for e in check_file(testing, tmp_path))
+    assert any("local/private memory" in e for e in check_file(scratch, tmp_path))
 
-            # scope: the portable release playbook is canonical.
-            playbook = root / ".agents" / "playbooks" / "release.md"
-            playbook.parent.mkdir(parents=True)
-            playbook.write_text("# Release\n")
-            check("targets() includes portable release playbook", playbook in targets(root))
 
-            old_root = _m.ROOT
-            try:
-                _m.ROOT = root
-                check("main returns nonzero on findings", _m.main() == 1)
-                bad_status.write_text("---\nstatus: draft\nreleased: false\n---\n# x\n")
-                bad_fm.write_text("---\nstatus: draft\nreleased: false\n---\n# x\n")
-                broken.write_text("[ok](adr/x.md)\n")
-                stale.write_text("release prose, no stale path\n")
-                tp.write_text("test plan, no broken links\n")
-                (root / "docs" / "adr").mkdir(parents=True)
-                (root / "docs" / "adr" / "72-command-surfacing.md").write_text("# ADR 72\n")
-                scratch.write_text("[repo](../../../adr/72-command-surfacing.md)\n")
-                other_tmp.unlink()
-                check("main returns zero when clean", _m.main() == 0)
-            finally:
-                _m.ROOT = old_root
+def test_release_tmp_helper_and_tmp_scope_guard(tmp_path):
+    other_tmp = tmp_path / "docs" / "testing" / "tmp" / "note.md"
+    other_tmp.parent.mkdir(parents=True)
+    other_tmp.write_text("# scratch\n")
 
-        print(f"\n{'OK' if not failures else f'{failures} FAILING'}: status-doctor self-test")
-        return 1 if failures else 0
-    assert _run() == 0
+    assert _release_tmp(Path("docs/releasing/0.1.0-alpha.3/tmp/note.md"))
+    assert not _release_tmp(Path("docs/testing/tmp/note.md"))
+    assert any("tmp/ is allowed only" in e for e in check_file(other_tmp, tmp_path))
+
+
+def test_main_returns_nonzero_with_findings_and_zero_when_clean(tmp_path):
+    rel = _release_root(tmp_path)
+    bad_status = rel / "bad-status.md"
+    bad_status.write_text("---\nstatus: done\nreleased: false\n---\n# x\n")
+    broken = rel / "broken.md"
+    broken.write_text("[gone](nope/missing.md)\n")
+    stale = rel / "stale.md"
+    stale.write_text("see `release/vX.Y/p.md`\n")
+    testing = tmp_path / "docs" / "testing" / "g9.md"
+    testing.parent.mkdir(parents=True)
+    testing.write_text("see [r](missing/x.md)\n")
+    scratch = tmp_path / "docs" / "releasing" / "0.1.0-alpha.3" / "tmp" / "note.md"
+    scratch.parent.mkdir(parents=True)
+    scratch.write_text("[private](../../../../../.claude/projects/x/memory/rule.md)\n")
+    other_tmp = tmp_path / "docs" / "testing" / "tmp" / "note.md"
+    other_tmp.parent.mkdir(parents=True)
+    other_tmp.write_text("# scratch\n")
+
+    old_root = _m.ROOT
+    try:
+        _m.ROOT = tmp_path
+        assert _m.main() == 1
+        bad_status.write_text("---\nstatus: draft\nreleased: false\n---\n# x\n")
+        broken.write_text("[ok](adr/x.md)\n")
+        stale.write_text("release prose, no stale path\n")
+        testing.write_text("test plan, no broken links\n")
+        (tmp_path / "docs" / "adr").mkdir(parents=True)
+        (tmp_path / "docs" / "adr" / "72-command-surfacing.md").write_text("# ADR 72\n")
+        scratch.write_text("[repo](../../../adr/72-command-surfacing.md)\n")
+        other_tmp.unlink()
+        assert _m.main() == 0
+    finally:
+        _m.ROOT = old_root
