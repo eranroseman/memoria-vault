@@ -24,7 +24,7 @@ Checks:
                         silent).
 
 Exit 0 if clean, 1 if any error.
-Usage: python scripts/docs-doctor.py [docs_root]   (default: docs)
+Usage: python scripts/docs_doctor.py [docs_root]   (default: docs)
 
 One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 """

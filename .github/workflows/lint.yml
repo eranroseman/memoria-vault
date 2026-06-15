@@ -38,18 +38,18 @@ jobs:
         # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
         run: ruff check scripts src/.memoria .github/scripts tests
       - name: docs-doctor
-        run: python scripts/docs-doctor.py docs
+        run: python scripts/docs_doctor.py docs
       - name: docs-links
         run: bash scripts/check-vault-links.sh
       - name: check-test-refs
-        run: python scripts/check-test-refs.py
+        run: python scripts/check_test_refs.py
       - name: status-doctor
-        run: python scripts/status-doctor.py
+        run: python scripts/status_doctor.py
       - name: agents-doctor
-        run: python scripts/agents-doctor.py
+        run: python scripts/agents_doctor.py
       - name: github-doctor
-        run: python scripts/github-doctor.py
+        run: python scripts/github_doctor.py
       - name: ruleset contract
-        run: python scripts/ruleset-doctor.py
+        run: python scripts/ruleset_doctor.py
       - name: test-runner paths
         run: bash scripts/test.sh check   # L1 module paths in test.sh resolve (drift guard)

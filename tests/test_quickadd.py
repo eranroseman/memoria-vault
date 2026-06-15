@@ -195,7 +195,7 @@ def test_url_capture_writes_visible_candidate_card():
 
 def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     script = (SCRIPTS / "create-linked-claim.js").read_text(encoding="utf-8")
-    assert 'source.path.startsWith("notes/source/")' in script
+    assert 'source.path.startsWith("notes/sources/")' in script
     assert '"notes/claims/" + slug(claim) + ".md"' in script
     for field in (
         "type: claim",
@@ -217,7 +217,7 @@ def test_capture_and_catalog_cards_request_source_note_stub():
     for fname in ("capture-from-url.js", "capture-from-zotero.js", "catalog-source.js"):
         script = (SCRIPTS / fname).read_text(encoding="utf-8")
         assert "proposed source-note stub" in script
-        assert "notes/source/ for the PI to fill" in script
+        assert "notes/sources/ for the PI to fill" in script
 
 
 def test_resolve_inbox_card_uses_schema_valid_lifecycles():

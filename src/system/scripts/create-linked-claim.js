@@ -10,8 +10,8 @@ module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const app = params.app || globalThis.app;
   const source = app?.workspace?.getActiveFile?.();
-  if (!source || !source.path.startsWith("notes/source/")) {
-    new Notice("Open a source note in notes/source/ before creating a linked claim.", 7000);
+  if (!source || !source.path.startsWith("notes/sources/")) {
+    new Notice("Open a source note in notes/sources/ before creating a linked claim.", 7000);
     return;
   }
 

@@ -12,7 +12,7 @@ def _vault(tmp_path: Path) -> Path:
     lo.mkdir(parents=True)
     (lo / "librarian.yaml").write_text(
         'profile: memoria-librarian\nrouting:\n  write_scope:\n'
-        '    - "inbox/"\n    - "catalog/"\n    - "notes/source/"\n', encoding="utf-8")
+        '    - "inbox/"\n    - "catalog/"\n    - "notes/sources/"\n', encoding="utf-8")
     (lo / "copi.yaml").write_text(
         "profile: memoria-copi\nrouting:\n  write_scope: []\n", encoding="utf-8")
     (lo / "writer.yaml").write_text(

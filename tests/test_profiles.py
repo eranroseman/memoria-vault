@@ -92,7 +92,7 @@ def _skill_frontmatter(profile: str, skill: str) -> dict:
 def test_catalog_enrich_record_creates_proposed_source_notes():
     fm = _skill_frontmatter("memoria-librarian", "catalog-enrich-record")
     memoria = fm["metadata"]["memoria"]
-    assert "notes/source/" in memoria["write_scope"]
+    assert "notes/sources/" in memoria["write_scope"]
     assert "source" in memoria["outputs"]
 
 

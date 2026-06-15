@@ -98,7 +98,7 @@ module.exports = async (params) => {
     (title ? " (title: " + title + ")" : "") +
     " using the catalog-enrich-record skill with source " + citekey + ". " +
     "Create the paper entity under catalog/papers/, create the proposed source-note stub " +
-    "under notes/source/ for the PI to fill, enrich it, propose the classification, " +
+    "under notes/sources/ for the PI to fill, enrich it, propose the classification, " +
     "then kanban_complete with review_status: requested.";
 
   new Notice(`Capturing ${citekey}…`, 3000);

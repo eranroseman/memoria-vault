@@ -41,16 +41,16 @@ dependencies remain in `src/.memoria/mcp/requirements.txt`.
 | `src/.obsidian/**` | Run workspace, QuickAdd, Bases, or installer tests matching the changed configuration |
 | `scripts/install.sh` or `scripts/install/**` | `bash -n scripts/install.sh scripts/install/*.sh`; dry-run; installer tests; disposable-vault end-to-end when behavior changes |
 | `scripts/install.ps1` | `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1` when `pwsh` is available; CI enforces otherwise |
-| `scripts/docs-doctor.py` | `python -m pytest tests/test_docs_doctor.py`; run the doctor over `docs/` |
-| `scripts/status-doctor.py` | `python -m pytest tests/test_status_doctor.py`; run the doctor |
-| `scripts/github-doctor.py` or `.github/ISSUE_TEMPLATE/**` or `.github/dependabot.yml` | `python -m pytest tests/test_github_doctor.py`; `python scripts/github-doctor.py` |
+| `scripts/docs_doctor.py` | `python -m pytest tests/test_docs_doctor.py`; run the doctor over `docs/` |
+| `scripts/status_doctor.py` | `python -m pytest tests/test_status_doctor.py`; run the doctor |
+| `scripts/github_doctor.py` or `.github/ISSUE_TEMPLATE/**` or `.github/dependabot.yml` | `python -m pytest tests/test_github_doctor.py`; `python scripts/github_doctor.py` |
 | `.github/scripts/pr_policy.py` | `python -m pytest tests/test_pr_policy.py` |
 | `.github/workflows/**` | actionlint when available; run tests for invoked local scripts; inspect permissions and triggers |
-| `.github/ruleset-contract.yaml` or `scripts/ruleset-doctor.py` | `python scripts/ruleset-doctor.py`; `python -m pytest tests/test_ruleset_doctor.py` |
+| `.github/ruleset-contract.yaml` or `scripts/ruleset_doctor.py` | `python scripts/ruleset_doctor.py`; `python -m pytest tests/test_ruleset_doctor.py` |
 | `.pre-commit-config.yaml`, `.github/workflows/cspell.yml`, or `project-words.txt` | Run the gate as the workflow does (scope and exclusions live in `cspell.json`): `npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files --gitignore "**/*.md"` |
 | `requirements-dev.txt`, `scripts/dev-setup.sh`, or Python dependency workflow installs | Install from `requirements-dev.txt` in a disposable venv when practical; run affected lint/test workflows locally |
-| `docs/**` | `python scripts/docs-doctor.py docs`; `bash scripts/check-vault-links.sh`; `python scripts/status-doctor.py` for contributing/testing/releasing |
-| `.agents/**`, `.codex/**`, `.kilo/**`, `AGENTS.md` | `python scripts/agents-doctor.py`; Markdown lint when available |
+| `docs/**` | `python scripts/docs_doctor.py docs`; `bash scripts/check-vault-links.sh`; `python scripts/status_doctor.py` for contributing/testing/releasing |
+| `.agents/**`, `.codex/**`, `.kilo/**`, `AGENTS.md` | `python scripts/agents_doctor.py`; Markdown lint when available |
 
 ## Full-gate triggers
 

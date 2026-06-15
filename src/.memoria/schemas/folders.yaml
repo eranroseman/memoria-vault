@@ -12,10 +12,10 @@ homes:
   dataset: catalog/datasets
   repository: catalog/repositories
   fleeting: notes/fleeting
-  source: notes/source
+  source: notes/sources
   claim: notes/claims
   hub: notes/hubs
-  index: notes/index
+  index: notes/indexes
   candidate: inbox
   gap: inbox
   flag: inbox
@@ -44,10 +44,10 @@ skeleton:
   - notes/fleeting
   - notes/fleeting/chats
   - notes/fleeting/maps
-  - notes/source
+  - notes/sources
   - notes/claims
   - notes/hubs
-  - notes/index
+  - notes/indexes
   - projects
   - inbox
   - system/board

@@ -180,7 +180,7 @@ def _self_test() -> int:
         ck("list shows only current patterns",
            [p["id"] for p in list_patterns(v)] == ["gated", "good"])
         ck("mode filter works", [p["id"] for p in list_patterns(v, "project")] == [])
-        r = run_pattern(v, "good", "INPUT TEXT", "notes/source/s.md")
+        r = run_pattern(v, "good", "INPUT TEXT", "notes/sources/s.md")
         ck("preamble + substitution composed",
            "VOICE RULES" in r["prompt"] and "Do X with INPUT TEXT." in r["prompt"])
         ck("staging target passes", r["dry_run"] is False and r["output_target"] == "notes/fleeting/")

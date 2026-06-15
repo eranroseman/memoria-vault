@@ -274,9 +274,9 @@ existence.
 ## 5. Retirements — approved 2026-06-15 (execute later; no ADRs edited yet)
 
 Three ADRs are approved to retire. Mechanics + ripple edits captured here so the
-eventual `docs/adr/` PR is clean and `gen-adr-index.py` passes (it requires
+eventual `docs/adr/` PR is clean and `gen_adr_index.py` passes (it requires
 rejected/superseded ADRs to set `date_resolved`, and superseded to set
-`superseded_by`; run `python scripts/gen-adr-index.py` after to refresh the index
+`superseded_by`; run `python scripts/gen_adr_index.py` after to refresh the index
 table in `docs/adr/README.md`).
 
 ### ADR-17 — Shared candidate frontmatter format → superseded
@@ -313,7 +313,7 @@ table in `docs/adr/README.md`).
 
 ### After editing (validation)
 
-- `python scripts/gen-adr-index.py` to regenerate `docs/adr/README.md`
+- `python scripts/gen_adr_index.py` to regenerate `docs/adr/README.md`
   (the `adr-index` pre-commit hook enforces freshness).
 - Confirm: every retired ADR has `date_resolved`; ADR-17 has `superseded_by`;
   no remaining `assumes:`/prose reference to 17 (→50/51), 34, 40, or superseded 37

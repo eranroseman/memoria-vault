@@ -61,4 +61,4 @@ Code, or Codex unless that client explicitly supports `.agents/skills/`.
 - Prefer repository commands such as `scripts/test.sh` over hand-written command lists.
 - Keep examples generic; never include real API keys, profile `.env` values, or runtime-vault content.
 - Skills must reference the system maps instead of copying their dependency tables.
-- Regenerate derived maps with `python scripts/agents-doctor.py --write`.
+- Regenerate derived maps with `python scripts/agents_doctor.py --write`.

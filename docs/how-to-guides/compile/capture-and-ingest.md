@@ -33,7 +33,7 @@ The Librarian claims the card and drives the deterministic ingest operation over
 - Applied `research_area` (and `methodology` where derivable) automatically when the classification is clear — or left it unset and raised one Inbox `flag` on genuine ambiguity
 - Recorded the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the private engine extract path is reflected in that entity's metadata
 - Raised a **`candidate` card** in your Inbox proposing the keep, with the honesty body and the Librarian's `_proposed_classification`
-- Created a proposed source-note stub in `notes/source/<citekey>.md` for your reading record
+- Created a proposed source-note stub in `notes/sources/<citekey>.md` for your reading record
 
 **4. Judge the candidate card.**
 
@@ -41,7 +41,7 @@ Open the Desk workspace's Inbox tab — the **Needs me** view of `inbox.base` (o
 
 **5. Write your source note.**
 
-For a kept paper, open the proposed reading record in `notes/source/` — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up here), then `current` once you've distilled its claims. The full loop is [Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md).
+For a kept paper, open the proposed reading record in `notes/sources/` — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up here), then `current` once you've distilled its claims. The full loop is [Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md).
 
 ## Verify
 
@@ -49,7 +49,7 @@ For a kept paper, open the proposed reading record in `notes/source/` — `entit
 - `system/logs/capture-intake.jsonl` has a new line for the capture, and `system/logs/audit.jsonl` shows the gated writes
 - A `candidate` card landed in `inbox/` (or you've already resolved it)
 - `catalog/papers/<citekey>.md` includes the visible metadata and any extract-path metadata the engine produced
-- `notes/source/<citekey>.md` exists at `lifecycle: proposed`, ready for your reading notes
+- `notes/sources/<citekey>.md` exists at `lifecycle: proposed`, ready for your reading notes
 
 ## Batch capture
 

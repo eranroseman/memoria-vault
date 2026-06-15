@@ -39,7 +39,7 @@ module.exports = async (params) => {
     (goal ? goal + " " : "") +
     "Use the " + SKILL + " skill: fetch its metadata (DOI / identifiers), add it to the " +
     "library, create or enrich the paper entity under catalog/papers/, create the " +
-    "proposed source-note stub under notes/source/ for the PI to fill, propose the " +
+    "proposed source-note stub under notes/sources/ for the PI to fill, propose the " +
     "classification, then kanban_complete with review_status: requested.";
   // Stable per ref+goal so a double-fire creates one card, not two.
   const idemKey = "quickadd-" + LANE + "-" + fnv1a(ref + "\n" + goal);

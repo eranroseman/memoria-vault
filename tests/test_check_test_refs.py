@@ -1,7 +1,6 @@
 """L1 component test for check-test-refs — extracted from its former --self-test (ADR-44)."""
-from _util import load_script
+import check_test_refs as _m
 
-_m = load_script("scripts/check-test-refs.py")
 MD_LINK = _m.MD_LINK
 Path = _m.Path
 REPO_PATH = _m.REPO_PATH

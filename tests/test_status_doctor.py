@@ -1,7 +1,6 @@
 """L1 component test for status-doctor — extracted from its former --self-test (ADR-44)."""
-from _util import load_script
+import status_doctor as _m
 
-_m = load_script("scripts/status-doctor.py")
 Path = _m.Path
 _release_tmp = _m._release_tmp
 check_file = _m.check_file

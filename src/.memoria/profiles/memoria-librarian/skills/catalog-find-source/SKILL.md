@@ -50,7 +50,7 @@ and report state — the PI's keep/skip gate filters, not you.
 ## Procedure
 
 1. **Check what exists.** `qmd` + `obsidian` search over `catalog/` and
-   `notes/source/` — a "discovery" the vault already holds is a duplicate, not a find.
+   `notes/sources/` — a "discovery" the vault already holds is a duplicate, not a find.
 2. **Search.** Use the `paper_search` **`search_*` tools only** — PDF retrieval and
    extraction belong to the ingest pipeline (`download_*` / `read_paper` are off-limits,
    as is any Sci-Hub fallback). Vary phrasing across 2–3 queries per database; record

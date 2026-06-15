@@ -13,7 +13,7 @@ Open the reading-pipeline dashboard during a reading session when the queue feel
 
 ## What it shows
 
-It shows what is in flight on the Library side and what has come out the other side — answering two questions at once: "what should I read next?" (source notes in `notes/source/` at `lifecycle: proposed`, awaiting reading) and "what came out of my recent reading?" (claims in `notes/claims/` grouped by `maturity`). Sources you've read but not yet distilled into claims sit at `lifecycle: provisional` in between. The two halves together make visible whether reading is converting into synthesis.
+It shows what is in flight on the Library side and what has come out the other side — answering two questions at once: "what should I read next?" (source notes in `notes/sources/` at `lifecycle: proposed`, awaiting reading) and "what came out of my recent reading?" (claims in `notes/claims/` grouped by `maturity`). Sources you've read but not yet distilled into claims sit at `lifecycle: provisional` in between. The two halves together make visible whether reading is converting into synthesis.
 
 ---
 
@@ -31,7 +31,7 @@ It shows what is in flight on the Library side and what has come out the other s
 
 **Two Bases views, two cadences.** "Sources awaiting reading" answers a near-term question: what should I read this session? "Claims by maturity" answers a longer-term question: what is the durable output of all this reading? Showing both in one dashboard prevents optimizing one measure while ignoring the other — reading without synthesis, or synthesis without new sources.
 
-**Source `lifecycle` is the in-flight signal.** A source note is `proposed` from the moment it's created until the PI reads it, then `provisional` once read but not yet distilled into claims, reaching `current` only when its claims are written. Reading-pipeline shows the `proposed` and `provisional` sources in `notes/source/` — the pipeline's working middle band. (The Catalog entity behind each source is already `current` — facts don't queue; the *reading* does.)
+**Source `lifecycle` is the in-flight signal.** A source note is `proposed` from the moment it's created until the PI reads it, then `provisional` once read but not yet distilled into claims, reaching `current` only when its claims are written. Reading-pipeline shows the `proposed` and `provisional` sources in `notes/sources/` — the pipeline's working middle band. (The Catalog entity behind each source is already `current` — facts don't queue; the *reading* does.)
 
 **Sort by modification time, not creation date.** Recency of touch matters more than recency of intake. A source kept six months ago and annotated yesterday is more likely the PI's current focus than one catalogued yesterday but not yet touched.
 

@@ -47,7 +47,7 @@ jobs:
         # ADR-44: the former per-module --self-test suites now live in tests/.
         run: python -m pytest tests/ -q
       - name: Check ADR index is current
-        run: python scripts/gen-adr-index.py --check
+        run: python scripts/gen_adr_index.py --check
       - name: Gate dashboard schema-drift (real vault)
         # Only dashboard-field-drift blocks; vault content findings (broken
         # wikilinks, schema-check) stay advisory — they're not this gate's job.

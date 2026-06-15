@@ -45,7 +45,7 @@ From `routing.write_scope` and the `policy` block in each lane-override. The pol
 | Profile | Write scope | Explicitly denied |
 | --- | --- | --- |
 | `memoria-copi` | `[]` — **no write paths at all** (`deny.write: "**"`) | everything |
-| `memoria-librarian` | `inbox/` · `catalog/` · `notes/fleeting/` · `notes/source/` | `notes/claims/**` · `notes/hubs/**` · `notes/index/**` · `projects/**` · `system/**` |
+| `memoria-librarian` | `inbox/` · `catalog/` · `notes/fleeting/` · `notes/sources/` | `notes/claims/**` · `notes/hubs/**` · `notes/indexes/**` · `projects/**` · `system/**` |
 | `memoria-writer` | `projects/` | `notes/claims/**` · `notes/hubs/**` · `catalog/**` · `inbox/**` · `system/**` |
 | `memoria-peer-reviewer` | `inbox/` (flag / gap cards only) | `notes/**` · `catalog/**` · `projects/**` · `system/**` |
 | `memoria-engineer` | `projects/*/code/` | `notes/**` · `catalog/**` · `inbox/**` · `system/**` |

@@ -23,7 +23,7 @@ metadata:
       - obsidian.put_content
       - policy.check_permission
       - policy.complete_write
-    write_scope: ["inbox/", "catalog/", "notes/source/"]
+    write_scope: ["inbox/", "catalog/", "notes/sources/"]
     outputs: [paper, dataset, repository, person, organization, venue, source]
 ---
 
@@ -118,7 +118,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    human-set frontmatter.**
 
 6. **Write the proposed source note — gated.** For paper-like sources, create
-   `notes/source/<citekey>.md` if it does not already exist. It is the PI's reading
+   `notes/sources/<citekey>.md` if it does not already exist. It is the PI's reading
    record, not an agent summary: set `type: source`, `lifecycle: proposed`,
    `source_type: paper`, and `entity: "[[catalog/papers/<citekey>]]"`; copy the
    final title into `title`, and carry over the controlled `research_area` /
@@ -156,7 +156,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 - The note exists at `catalog/papers/<citekey>.md` (or `catalog/repositories/<citekey>.md`
   for software / `catalog/datasets/<citekey>.md` for datasets) with `lifecycle: proposed` and `ingest_status: complete` —
   confirming the classification proposal landed and the gated writes applied.
-- For paper-like sources, a proposed source note exists at `notes/source/<citekey>.md`
+- For paper-like sources, a proposed source note exists at `notes/sources/<citekey>.md`
   and links back to the Catalog entity; it contains empty reading sections for the
   PI to fill, not generated reading prose.
 - A capture record (citekey, path, timestamp) exists in

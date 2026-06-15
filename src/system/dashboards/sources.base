@@ -1,7 +1,7 @@
 # The reading list — source notes by lifecycle (proposed = awaiting your reading).
 filters:
   and:
-    - file.inFolder("notes/source")
+    - file.inFolder("notes/sources")
     - 'lifecycle != "archived"'
 views:
   - type: table

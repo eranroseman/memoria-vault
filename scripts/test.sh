@@ -45,12 +45,12 @@ check_paths() {
 l0() {
   echo "── L0: static + schema ──"
   run ruff check scripts src/.memoria .github/scripts tests
-  run python3 scripts/docs-doctor.py docs
+  run python3 scripts/docs_doctor.py docs
   run bash scripts/check-vault-links.sh
-  run python3 scripts/agents-doctor.py
-  run python3 scripts/github-doctor.py
-  run python3 scripts/ruleset-doctor.py
-  if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
+  run python3 scripts/agents_doctor.py
+  run python3 scripts/github_doctor.py
+  run python3 scripts/ruleset_doctor.py
+  if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
   run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P"/operations/lib/schema.py "$P"/operations/lib/inbox.py "$P"/operations/integrity/linter/detectors.py "$P"/operations/integrity/linter/golden_restore.py "$P"/operations/integrity/linter/session_summary.py "$P"/operations/integrity/linter/precommit_check.py "$P"/operations/processing/ingest/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh

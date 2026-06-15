@@ -40,7 +40,7 @@ from pathlib import Path
 _FM_RE = re.compile(r"^---\n(.*?)\n---", re.S)
 _WIKI = re.compile(r"\[\[([^\]|#]+)")
 
-NOTE_FOLDERS = ("notes/claims", "notes/hubs", "notes/source")
+NOTE_FOLDERS = ("notes/claims", "notes/hubs", "notes/sources")
 ENTITY_FOLDERS = ("catalog/papers", "catalog/people", "catalog/organizations",
                   "catalog/venues", "catalog/datasets", "catalog/repositories")
 
@@ -276,7 +276,7 @@ def emit_canvas(vault: Path, scope: str = "notes/claims",
     }
 
 
-def model_topics(vault: Path, folder: str = "notes/source",
+def model_topics(vault: Path, folder: str = "notes/sources",
                  min_cluster_size: int | None = None, seed: int | None = None) -> dict:
     """BERTopic over note bodies. Heavy path — requires requirements-cluster.txt."""
     try:
@@ -334,7 +334,7 @@ def build_server(vault: Path):
         return emit_canvas(vault, scope, out, seed if seed >= 0 else None)
 
     @server.tool()
-    def cluster_model_topics(folder: str = "notes/source",
+    def cluster_model_topics(folder: str = "notes/sources",
                              min_cluster_size: int = 0, seed: int = -1) -> dict:
         """BERTopic topics over note text: topics, doc-topic map, outliers.
         Errors cleanly if the optional cluster deps are not installed."""

@@ -1,6 +1,6 @@
 ---
 name: extract-stub-claim
-description: "On a kept source, propose claim stubs — one-sentence, citekey-bound candidate claims — into the source note's 'Worth distilling' section in notes/source/. Stubs are proposals: notes/claims/ is review-gated (ADR-47), so the PI promotes a stub into a claim note; you never create one. Use when a kept source is ready for distillation, typically after the PI accepts the distill work-prompt from extract:flag-distill."
+description: "On a kept source, propose claim stubs — one-sentence, citekey-bound candidate claims — into the source note's 'Worth distilling' section in notes/sources/. Stubs are proposals: notes/claims/ is review-gated (ADR-47), so the PI promotes a stub into a claim note; you never create one. Use when a kept source is ready for distillation, typically after the PI accepts the distill work-prompt from extract:flag-distill."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -22,7 +22,7 @@ metadata:
       - obsidian.put_content
       - policy.check_permission
       - policy.complete_write
-    write_scope: ["notes/source/", "inbox/"]
+    write_scope: ["notes/sources/", "inbox/"]
     outputs: [source, candidate]
 ---
 
@@ -39,7 +39,7 @@ note's `## Worth distilling` section, never as claim notes.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| citekey / source note | yes | The kept source (`notes/source/<citekey>.md`; catalog note read for evidence). |
+| citekey / source note | yes | The kept source (`notes/sources/<citekey>.md`; catalog note read for evidence). |
 | focus | no | A question or project lens narrowing which findings to stub. |
 
 ## Procedure
@@ -55,7 +55,7 @@ note's `## Worth distilling` section, never as claim notes.
    than proposed fresh; a stub that contradicts one is marked *tension with:*
    `[[claim]]` (the link lane will surface it properly).
 4. **Write — gated.** Append/refresh the `## Worth distilling` section in the source
-   note (`notes/source/`): one bullet per stub — stub sentence · locator · suggested
+   note (`notes/sources/`): one bullet per stub — stub sentence · locator · suggested
    `maturity: seedling` · duplicate/tension note. Never create or edit anything under
    `notes/claims/`.
 5. **Hand off.** If this run was not already card-driven, raise ONE `candidate` card

@@ -43,7 +43,7 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 
 1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
-3. **Drift control.** A check (`scripts/check-test-refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
+3. **Drift control.** A check (`scripts/check_test_refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
 4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
 
 All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing), built from `test-plan-template.md`.

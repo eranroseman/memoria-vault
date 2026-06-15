@@ -44,7 +44,7 @@ never gates anything (reports inform — ADR-54).
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| topic / folder | yes | What to map — a topic phrase (qmd retrieval) or a vault folder (`notes/source`, `notes/claims`). |
+| topic / folder | yes | What to map — a topic phrase (qmd retrieval) or a vault folder (`notes/sources`, `notes/claims`). |
 | `min_cluster_size` | no | Passed through to `cluster_model_topics`; default from `calibration.yaml`. |
 | `seed` | no | Fixed seed for reproducibility; default from calibration. |
 

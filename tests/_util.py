@@ -1,17 +1,4 @@
 """Helpers for the L1 pytest tree (ADR-44)."""
-import importlib.util
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-
-def load_script(rel: str):
-    """Import a hyphenated-name script (e.g. scripts/status-doctor.py) by path."""
-    name = Path(rel).stem.replace("-", "_")
-    spec = importlib.util.spec_from_file_location(name, ROOT / rel)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
 
 class CheckHarness:
     """Minimal pass/fail harness for the extracted L1 tests (ADR-44; formerly _shared.py)."""

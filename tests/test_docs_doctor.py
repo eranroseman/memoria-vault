@@ -1,7 +1,6 @@
 """L1 component test for docs-doctor — extracted from its former --self-test (ADR-44)."""
-from _util import load_script
+import docs_doctor as _m
 
-_m = load_script("scripts/docs-doctor.py")
 Path = _m.Path
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
 check_frontmatter = _m.check_frontmatter

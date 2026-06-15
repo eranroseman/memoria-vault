@@ -10,7 +10,7 @@ Think a source through with the Co-PI before writing a claim. The Co-PI is the o
 
 ## Prerequisites
 
-- A source you've read, with a source note in `notes/source/` ([Capture and ingest a source](capture-and-ingest.md))
+- A source you've read, with a source note in `notes/sources/` ([Capture and ingest a source](capture-and-ingest.md))
 - The `agent-client` Obsidian plugin connected ([Agent-client pane](../using-obsidian/use-the-acp-pane.md))
 
 ## Steps

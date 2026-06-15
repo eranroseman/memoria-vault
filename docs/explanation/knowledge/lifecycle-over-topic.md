@@ -6,7 +6,7 @@ nav_order: 4
 
 # Lifecycle, not topic — and state, not folders
 
-Two organizational decisions shape the vault. The first survives from the earliest design: **a note's position in the system is its lifecycle, never its topic**. The second is newer (ADR-47/ADR-50) and changes the mechanism: **lifecycle is a state property in frontmatter, not a folder**. Folders now encode one thing only — the *type-first category* a note belongs to (`catalog/`, `notes/source/`, `notes/claims/`, …). Where a note stands — `proposed`, `provisional`, `current`, `retracted`, `archived` — is a frontmatter field on the universal chain.
+Two organizational decisions shape the vault. The first survives from the earliest design: **a note's position in the system is its lifecycle, never its topic**. The second is newer (ADR-47/ADR-50) and changes the mechanism: **lifecycle is a state property in frontmatter, not a folder**. Folders now encode one thing only — the *type-first category* a note belongs to (`catalog/`, `notes/sources/`, `notes/claims/`, …). Where a note stands — `proposed`, `provisional`, `current`, `retracted`, `archived` — is a frontmatter field on the universal chain.
 
 ---
 
