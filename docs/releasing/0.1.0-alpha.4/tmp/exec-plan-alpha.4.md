@@ -157,8 +157,11 @@ reserve — need real-data shadow calibration); #412 (ADR-62 harnesses); #370
   ADR-64* and *superseding the WSL2-only rule* (the AGENTS.md "work inside WSL2"
   constraint and #296). It collapses the two-OS topology and has wide blast
   radius — the installer, AGENTS.md, the ADR-31 WSL2↔Windows bridge, and the
-  analysis-stack wheels. Native Windows is normally framed v0.3; pulling it into
-  an alpha checkpoint is a deliberate scope-up. **Verify Hermes' native-Windows
+  analysis-stack wheels. Native Windows was **intended for alpha.3** (ADR-64's
+  *When this matters*: "revisit after v0.1.0-alpha.3"); it slipped, so alpha.4
+  picks it up as the **overdue carry-over**, not a scope-up. (#296's body still
+  mislabels it "Direction for v0.3 / v0.2 unaffected" — stale framing to fix at
+  source.) **Verify Hermes' native-Windows
   support against the primary `~/.hermes` docs first** — it is the load-bearing
   assumption in #296 — and record the supersession as an ADR before the port.
 - **#439 Mapper Tier 2 (ADR-19)** — build the hub-threshold → agent-drafted
