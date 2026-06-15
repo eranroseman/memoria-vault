@@ -316,8 +316,24 @@ copy_vault() {
 
   run mkdir -p "$VAULT_PATH"
   # rsync preserves user notes/.env on refresh; fall back to cp on a clean target.
+  local has_golden=0
+  [ -f "$VAULT_PATH/.memoria/golden/manifest.json" ] && has_golden=1
   if have rsync; then
-    run rsync -a --exclude '.git' "$src"/ "$VAULT_PATH"/
+    run rsync -a \
+      --exclude '.git' \
+      --exclude 'system/templates/' \
+      --exclude 'system/dashboards/' \
+      --exclude 'system/patterns/' \
+      --exclude 'system/eval/' \
+      --exclude 'system/scripts/' \
+      --exclude 'home.md' \
+      --exclude 'system/vocabulary.md' \
+      --exclude 'AGENTS.md' \
+      --exclude '.obsidian/community-plugins.json' \
+      --exclude '.obsidian/core-plugins.json' \
+      --exclude '.obsidian/snippets/memoria-link-colors.css' \
+      --exclude '.obsidian/plugins/*/data.json' \
+      "$src"/ "$VAULT_PATH"/
     # Authored infra must MIRROR the repo on refresh: without --delete, renamed
     # or removed skills/operations linger in the vault and re-deploy alongside the
     # new ones (observed live on the v0.1.0-alpha.2 skill renames). Scoped strictly to
@@ -335,6 +351,9 @@ copy_vault() {
       run rm -rf "$VAULT_PATH/.memoria/engines"
     fi
   else
+    if [ "$has_golden" -eq 1 ]; then
+      die "rsync is required to refresh an existing Memoria vault without clobbering golden-covered system files"
+    fi
     run_sh "cp -R \"$src\"/. \"$VAULT_PATH\"/"
   fi
   ok "Vault deployed to $VAULT_PATH"
@@ -348,12 +367,32 @@ copy_vault() {
   done
   ok "Folder skeleton ensured (${#SKELETON_DIRS[@]} dirs)"
 
-  # Stage the golden copy (ADR-55): a canonical copy of every system file with a
-  # hash manifest at <vault>/.memoria/golden/ — the Linter's restore source.
+  # Stage or upgrade the golden copy (ADR-55): a canonical copy of every system
+  # file with a hash manifest at <vault>/.memoria/golden/. On refresh, reconcile
+  # old-golden vs new-source vs live so PI customizations are surfaced instead of
+  # overwritten.
   local pybin="${VENV_PYTHON:-python3}"
-  run "$pybin" "$VAULT_PATH/.memoria/operations/integrity/linter/golden_restore.py" --vault "$VAULT_PATH" stage \
-    || warn "golden copy not staged — run golden_restore.py stage manually (lint:restore needs it)"
-  ok "Golden copy staged (.memoria/golden/)"
+  if [ -f "$src/.memoria/operations/integrity/linter/golden_restore.py" ]; then
+    if [ "$DRY_RUN" -eq 1 ]; then
+      run "$pybin" "$src/.memoria/operations/integrity/linter/golden_restore.py" \
+        --vault "$VAULT_PATH" upgrade --source "$src" --apply
+    else
+      set +e
+      "$pybin" "$src/.memoria/operations/integrity/linter/golden_restore.py" \
+        --vault "$VAULT_PATH" upgrade --source "$src" --apply
+      local golden_rc=$?
+      set -e
+      if [ "$golden_rc" -eq 2 ]; then
+        warn "golden upgrade preserved customized system-file conflicts; run golden_restore.py check to review"
+      elif [ "$golden_rc" -ne 0 ]; then
+        warn "golden copy not staged — run golden_restore.py upgrade manually (lint:restore needs it)"
+      fi
+    fi
+  else
+    run "$pybin" "$VAULT_PATH/.memoria/operations/integrity/linter/golden_restore.py" --vault "$VAULT_PATH" stage \
+      || warn "golden copy not staged — run golden_restore.py stage manually (lint:restore needs it)"
+  fi
+  ok "Golden copy reconciled (.memoria/golden/)"
 
   wire_commit_gate
 
