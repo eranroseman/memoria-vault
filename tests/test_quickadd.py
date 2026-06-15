@@ -150,9 +150,25 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
         assert field in script
     assert "function hermesCommand()" in script
     assert 'command -v hermes' in script
-    assert '$HOME/.local/bin/hermes' in script
+    assert '$HOME/.local/bin' in script
     assert "Hermes not found on PATH" in script
     assert 'hermes kanban create' not in script
+
+
+def test_zotero_capture_uses_bbt_json_rpc_not_cayw():
+    """Better BibTeX CAYW can invoke the active Zotero citation style.
+
+    The capture command only needs the selected item's citekey, so it should
+    use BBT's JSON-RPC citekey lookup instead of a formatter/style path.
+    """
+    script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
+    assert "better-bibtex/json-rpc" in script
+    assert '"method":"item.citationkey"' in script
+    assert '"params":["selected"]' in script
+    assert "parseSelectedCitekeys(raw)" in script
+    assert "better-bibtex/cayw" not in script
+    assert "format=biblatex" not in script
+    assert "format=json" not in script
 
 
 def test_url_capture_writes_visible_candidate_card():
