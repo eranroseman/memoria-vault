@@ -5,25 +5,25 @@ parent: Reference
 
 # Obsidian status line
 
-The ambient indicator showing Linter findings and Kanban queue counts. Rendered as a Dataview widget pinned in `home.md`, not the OS status bar (which Dataview cannot write to).
+The ambient indicator showing the Linter verdict and Kanban queue counts. Rendered as the Dataview widget pinned in `home.md`, not the OS status bar (which Dataview cannot write to).
 
 ## Format
 
 Two producers share one line, Linter first then Kanban, separated by `·`:
 
 ```text
-✓ Schema valid · 2 broken links · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0
+✓ PASS · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0
 ```
 
 When everything is quiet:
 
 ```text
-✓ · 0 · 0 · 0 · 0
+✓ PASS · Active: 0 · Waiting: 0 · Review: 0 · Retries: 0
 ```
 
 ## Linter segment
 
-Shows lightweight findings from the last lint pass: schema validity, broken link count, oversized notes. Heavy findings (schema migrations, structural drift) escalate to the `drift-watch` dashboard — they don't belong in the ambient indicator.
+Shows the latest Linter verdict (`PASS`, `REVIEW`, or `FAIL`) from `system/metrics/lint-verdict-*.md`, falling back to the current `lint-findings.jsonl` severity mix before metrics have run. Heavy findings still escalate to the `drift-watch` dashboard — they do not expand into the ambient indicator.
 
 ## Kanban segment
 
@@ -32,13 +32,13 @@ Shows lightweight findings from the last lint pass: schema validity, broken link
 | **Active** | Cards in `running` state across all lanes |
 | **Waiting** | Cards in `blocked` state |
 | **Review** | Cards in `done` with `review_status: requested` (handed off, awaiting human review) |
-| **Retries** | Cards returned to `ready` after a recoverable failure |
+| **Retries** | Cards in `ready` with `retry_count > 0` |
 
 Click anywhere in the Kanban counts to open `board-state.md` for the full view.
 
 ## Implementation
 
-A Dataview inline query in a pinned note. The query reads from a periodically-refreshed `board-state.jsonl` snapshot `board_export.py` writes, or polls the Hermes API (port 8642). No standard implementation is shipped — human setups vary.
+The shipped widget lives in `home.md`. It reads `system/logs/board-state.jsonl` snapshots written by `board_export.py` and the latest `lint-verdict` metric note written by `metrics_aggregate.py`, with a `lint-findings.jsonl` fallback before metrics exist.
 
 ## Constraints
 

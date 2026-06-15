@@ -8,7 +8,7 @@ projections the dashboards consume, plus append-only event logs the metrics
 aggregator and any publication analysis read (see docs/reference/telemetry.md):
 
   system/board/<task_id>.md          one markdown file per live card  (board-state dashboard)
-  system/logs/board-state.jsonl   per-lane count snapshot, one line per run (status line)
+  system/logs/board-state.jsonl   per-lane queue-depth snapshot, one line per run (status line)
   system/logs/board-transitions.jsonl  per-card state/review transitions (time-series)
   system/logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
   system/logs/cost.jsonl          API spend + token counts per card at completion
@@ -200,13 +200,14 @@ def export_markdown(vault: Path, cards: list[dict]) -> set[str]:
 
 
 def board_snapshot(cards: list[dict]) -> dict:
-    """Per-lane counts (running / ready / blocked / review-queue) + totals."""
+    """Per-lane queue depths (running / ready / blocked / review / retries) + totals."""
     lanes: dict[str, dict] = {}
-    totals = {"running": 0, "ready": 0, "blocked": 0, "review_queue": 0}
+    totals = {"running": 0, "ready": 0, "blocked": 0, "review_queue": 0, "retrying": 0}
     for raw in cards:
         c = normalize(raw)
         lane = lanes.setdefault(c["assignee"],
-                                {"running": 0, "ready": 0, "blocked": 0, "review_queue": 0})
+                                {"running": 0, "ready": 0, "blocked": 0,
+                                 "review_queue": 0, "retrying": 0})
         st = c["status"]
         if st in ("running", "ready", "blocked"):
             lane[st] += 1
@@ -214,6 +215,9 @@ def board_snapshot(cards: list[dict]) -> dict:
         if st == "done" and c["review_status"] in REVIEW_QUEUE_STATES:
             lane["review_queue"] += 1
             totals["review_queue"] += 1
+        if st == "ready" and int(c.get("retry_count") or 0) > 0:
+            lane["retrying"] += 1
+            totals["retrying"] += 1
     return {"timestamp": now_iso(), "lanes": lanes, "totals": totals}
 
 

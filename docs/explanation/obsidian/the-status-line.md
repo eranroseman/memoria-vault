@@ -6,9 +6,7 @@ nav_order: 2
 
 # The status line
 
-> **Not built in v0.1.0-alpha.2 — deferred.** No producer renders the status line yet; nothing in the shipped vault emits the Dataview widget described below. The page stands as design intent for the surface, tracked in [#375](https://github.com/eranroseman/memoria-vault/issues/375).
-
-The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows Linter findings and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.
+The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows the Linter verdict and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.
 
 For the exact format, counters, and design rules, see the reference: [Obsidian status line](../../reference/obsidian-status-line.md). This page explains *why* it exists and why it's shaped the way it is.
 
@@ -16,7 +14,7 @@ For the exact format, counters, and design rules, see the reference: [Obsidian s
 
 ## What it shows
 
-Two producers share one line — Linter first, then Kanban — e.g. `✓ Schema valid · 2 broken links · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0`. The Linter segment reports lightweight last-pass findings (schema validity, broken-link count); the Kanban segment reports live queue depths (running, blocked, awaiting-review, retrying). It is rendered as a Dataview widget pinned in a note — not the OS status bar, which Dataview cannot write to.
+Two producers share one line — Linter first, then Kanban — e.g. `✓ PASS · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0`. The Linter segment reports the latest deterministic verdict; the Kanban segment reports live queue depths (running, blocked, awaiting-review, retrying). It is rendered as a Dataview widget pinned in a note — not the OS status bar, which Dataview cannot write to.
 
 ---
 
@@ -32,7 +30,7 @@ Forcing that constant question through a dashboard would mean either keeping a d
 
 The governing rule is **show state, not decisions**. A count is ambient — `Review: 7` tells you a queue has depth without telling you what to do. The list of *which* seven cards, and the act of approving them, belongs in the [board-state dashboard](../dashboards/daily-glance/board-state.md). This division is what keeps the line glance-readable in under a second: it never grows into a panel, because anything that would require reading prose or making a choice is, by rule, escalated to a dashboard.
 
-The same rule bounds the Linter segment: lightweight findings (broken links, schema validity) sit on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch dashboard](../dashboards/structural-health/drift-watch.md). The line carries the *temperature*, not the diagnosis.
+The same rule bounds the Linter segment: the verdict sits on the line; heavy findings (schema migrations, structural drift) escalate to [drift-watch dashboard](../dashboards/structural-health/drift-watch.md). The line carries the *temperature*, not the diagnosis.
 
 ---
 

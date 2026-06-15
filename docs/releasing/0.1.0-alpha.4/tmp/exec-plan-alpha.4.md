@@ -330,7 +330,12 @@ evidence, real transcripts:
       `requirements-dev.txt` plus runtime bootstraps untouched. Validation:
       `python -m pytest tests/ --co -q`, `python -m pytest tests/ -q`, and
       `ruff check .`. #521 remains open/deferred for the full ADR-76 wheel migration.
-- [ ] (next) D — PI surface incl. #443 producers, incrementally.
+- [x] 2026-06-15 — D #375 status-line surface implemented on
+      `feat/alpha4-status-bar`: Home now ships the Dataview status line showing
+      Linter verdict plus Active/Waiting/Review/Retries queue depths;
+      `board_export.py` snapshots retrying depth; status-line docs are no longer
+      deferred. Validation: focused pytest, `scripts/test.sh all`, docs-doctor.
+- [ ] (next) D — continue PI surface (#376/#377/#343/#380/#145/#183/#154/#336/#329/#378).
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
@@ -392,6 +397,12 @@ evidence, real transcripts:
   policy from `tool.ruff.lint`. This intentionally does not add `[project]`,
   does not change requirements files, and does not touch deployed runtime
   `__file__` bootstraps; ADR-76 remains deferred via #521.
+
+- 2026-06-15 — D #375 branch prepared: promoted the existing Home status
+  glance into the shipped status line by reading latest lint verdict metrics (with
+  lint-findings fallback) and board-state queue counts. `board_export.py` now
+  includes `retrying` counts for ready cards with retries, so the line can show
+  Active/Waiting/Review/Retries without querying Hermes directly.
 
 ## 9. Surprises & discoveries
 
