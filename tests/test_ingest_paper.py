@@ -32,3 +32,12 @@ def test_ingest_paper_preserves_expected_external_ids(frontmatter_by_citekey, ci
     for key in ("arxiv_id", "pmcid", "isbn"):
         if key in want:
             assert fm[key] == want[key]
+
+
+
+def test_ingest_paper_frontmatter_order_surfaces_state():
+    citekey = _EXPECT[0][0]
+    note = ingest_text(citekey, _FIXTURE)
+    keys = list(note["frontmatter"])
+    assert keys[:5] == ["title", "name", "type", "lifecycle", "ingest_status"]
+    assert keys.index("citekey") < keys.index("authors")

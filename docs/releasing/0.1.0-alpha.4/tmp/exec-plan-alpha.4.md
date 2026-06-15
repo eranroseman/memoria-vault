@@ -104,7 +104,7 @@ from the original disposition.
 | #376 | Callout producers `[!suggestions]` / `[!verification]` | deterministic top-K + LLM line (ADR-57 split) |
 | #377 | verify-on-commit trigger | draft commit → verify-lane card |
 | #343 | Graded-loudness routing | alert→push, block→hold until ack, quiet/notice pull-only · cites retired design doc |
-| #145 | Property reorder / group / color-code | lifecycle stage is buried in frontmatter; define display order + coloring |
+| #145 | Property reorder / group / color-code | **done:** lifecycle/state surfaced in templates, emitters, Bases, docs, and property-badge CSS |
 | #183 | Obsidian forms for structured capture | modal-form plugin → valid frontmatter into staging |
 | #154 | Automate start-a-writing-project | form → script scaffolds `40-workbench/<project>/` + Mapper scope card |
 | #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row lifecycle `decision`; one aggregate prompt |
@@ -205,8 +205,9 @@ surface; deferred items (§2.2) are not built this checkpoint.
 5. **PI surface (D), incrementally.** Each verb/indicator independently
    shippable, reachable from Obsidian (PI rule); repoint any retired
    `docs/design/` reference first. Covers #443's producers
-   (#375/#376/#377/#343), #336, #380, #145, #183 → #154, #329, and #378 (bundle
-   supercharged-links under the current baseline).
+   (#375/#376/#377/#343), #336, #380, #145, #183, and #378 (bundle
+   supercharged-links under the current baseline). User-skipped for this run:
+   #154 and #329.
 6. **Mapper Tier 2 (#439, ADR-19).** Build the hub/MOC handoff; update ADR-19.
 7. **Native Windows (#414, ADR-64) — its own track, last.** First land the ADR:
    accept ADR-64 + supersede the WSL2-only rule (verify Hermes native support
@@ -352,7 +353,9 @@ evidence, real transcripts:
       open block cards stop `tasks_mcp` delegation and review-gated policy writes
       until resolved, and quiet/notice stay pull-only. Validation: focused
       loudness/tasks/policy pytest, Ruff, docs-doctor.
-- [ ] (next) D — continue PI surface (#380/#145/#183/#154/#336/#329/#378).
+- [x] 2026-06-15 — D #380 assist surface implemented on `feat/alpha4-assist-surface`; PR #551 merged and issue closed.
+- [x] 2026-06-15 — D #145 property display implemented on `feat/alpha4-property-display`: lifecycle/state order is surfaced in templates, ingest emitters, Bases, docs, and shipped property-badge CSS.
+- [ ] (next) D — continue PI surface (#183/#336/#378). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
@@ -482,3 +485,8 @@ evidence, real transcripts:
 ## Execution log — #380 assist surface
 
 - 2026-06-15: Started #380 in `feat/alpha4-assist-surface`; adding QuickAdd assist verbs for Find/Search/Patterns/Ask/Draft/Explore with active-note/selection context and staged proposal outputs.
+
+
+## Execution log — #145 property display
+
+- 2026-06-15: Started #145 in `feat/alpha4-property-display`; defining display order/grouping without schema-field changes, surfacing lifecycle/state in Bases and adding property badge CSS.

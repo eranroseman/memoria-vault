@@ -81,6 +81,7 @@ def _seed_obsidian(v: Path) -> None:
     (v / ".obsidian/core-plugins.json").write_text('["graph"]', encoding="utf-8")
     (v / ".obsidian/snippets").mkdir(parents=True)
     (v / ".obsidian/snippets/memoria-link-colors.css").write_text("a {}", encoding="utf-8")
+    (v / ".obsidian/snippets/memoria-property-badges.css").write_text("b {}", encoding="utf-8")
     (v / ".obsidian/workspace.json").write_text('{"user": "state"}', encoding="utf-8")
 
 
@@ -95,6 +96,7 @@ def test_manifest_covers_shipped_plugin_config_only(tmp_path):
     assert ".obsidian/community-plugins.json" in manifest
     assert ".obsidian/core-plugins.json" in manifest
     assert ".obsidian/snippets/memoria-link-colors.css" in manifest
+    assert ".obsidian/snippets/memoria-property-badges.css" in manifest
     # per-machine state: agent-client is seeded per machine, the REST API plugin
     # regenerates its data.json, and workspace state is the user's
     assert ".obsidian/plugins/agent-client/data.json" not in manifest

@@ -11,6 +11,7 @@ views:
         - 'lifecycle == "proposed"'
     order:
       - file.name
+      - lifecycle
       - entity
       - source_type
       - file.mtime
@@ -21,6 +22,6 @@ views:
       direction: ASC
     order:
       - file.name
+      - lifecycle
       - entity
       - research_area
-      - lifecycle

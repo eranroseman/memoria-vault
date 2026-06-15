@@ -1,1 +1,6 @@
-{}
+{
+  "enabledCssSnippets": [
+    "memoria-link-colors",
+    "memoria-property-badges"
+  ]
+}

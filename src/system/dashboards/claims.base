@@ -11,10 +11,10 @@ views:
       direction: DESC
     order:
       - file.name
+      - lifecycle
       - maturity
       - topics
       - sources
-      - lifecycle
   - type: table
     name: "Retracted"
     filters:

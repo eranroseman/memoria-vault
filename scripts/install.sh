@@ -331,7 +331,9 @@ copy_vault() {
       --exclude 'AGENTS.md' \
       --exclude '.obsidian/community-plugins.json' \
       --exclude '.obsidian/core-plugins.json' \
+      --exclude '.obsidian/appearance.json' \
       --exclude '.obsidian/snippets/memoria-link-colors.css' \
+      --exclude '.obsidian/snippets/memoria-property-badges.css' \
       --exclude '.obsidian/plugins/*/data.json' \
       "$src"/ "$VAULT_PATH"/
     # Authored infra must MIRROR the repo on refresh: without --delete, renamed

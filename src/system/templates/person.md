@@ -1,7 +1,7 @@
 ---
+name: "{{VALUE:person name}}"
 type: person
 lifecycle: current
-name: "{{VALUE:person name}}"
 orcid: ""
 affiliations: []
 relationships: {}

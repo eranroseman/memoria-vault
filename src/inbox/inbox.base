@@ -20,6 +20,7 @@ views:
       direction: ASC
     order:
       - file.name
+      - lifecycle
       - action
       - finding
       - type
@@ -37,9 +38,9 @@ views:
       direction: ASC
     order:
       - file.name
+      - lifecycle
       - action
       - finding
       - type
-      - lifecycle
       - raised_by
       - formula.age_days

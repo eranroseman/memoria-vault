@@ -5,7 +5,7 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
+The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
 
 ---
 
@@ -67,7 +67,7 @@ differs from the old golden baseline, the live file wins for safety. The command
 refreshes the golden baseline to the new release and leaves that path reported as
 drifted, so the PI can compare and decide rather than losing a customization.
 
-The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` snippet. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
+The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` and `memoria-property-badges.css` snippets. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
 
 ---
 

@@ -66,7 +66,7 @@ The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-
 | --- | --- | --- |
 | `work-prompt` | `title`, `action`, `what_happened`, and at least one of `target` / `task_id` (`required_any`) | Work waiting on the PI — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). Optional: `lane`. |
 
-All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Engines and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
+All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Operations and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
 
 ---
 

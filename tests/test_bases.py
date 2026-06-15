@@ -72,12 +72,10 @@ _FILTER_NOISE = {
     "now", "today", "date", "if", "true", "false",
 }
 
-
 def test_every_base_parses_as_yaml():
     assert _bases(), "no .base files shipped"
     for b in _bases():
         yaml.safe_load(b.read_text(encoding="utf-8"))
-
 
 def test_base_properties_exist_in_schemas():
     types = schema.load_types()
@@ -96,7 +94,6 @@ def test_base_properties_exist_in_schemas():
         unknown = _referenced_properties(data) - known
         assert not unknown, f"{b}: references properties not in any schema: {sorted(unknown)}"
 
-
 def test_inbox_base_has_needs_me_view():
     inbox = SRC / "inbox" / "inbox.base"
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
@@ -107,13 +104,11 @@ def test_inbox_base_has_needs_me_view():
     assert "action" in needs_me_order
     assert "finding" in needs_me_order
 
-
 def test_reading_pipeline_embeds_source_and_claim_bases():
     text = (SRC / "system" / "dashboards" / "reading-pipeline.md").read_text(encoding="utf-8")
     assert "![[sources.base#To read & distill]]" in text
     assert "![[claims.base#By maturity]]" in text
     assert "```dataview" not in text
-
 
 def test_fleeting_base_matches_capture_template_home():
     quickadd = yaml.safe_load((SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8"))
@@ -123,3 +118,19 @@ def test_fleeting_base_matches_capture_template_home():
     assert 'type == "fleeting"' in text
     names = {v.get("name") for v in quickadd.get("views", [])}
     assert "To process" in names
+
+
+def test_key_bases_surface_lifecycle_near_left_edge():
+    """The PI-facing state should be visible without horizontal scanning (#145)."""
+    bases = [
+        SRC / "system" / "dashboards" / "sources.base",
+        SRC / "catalog" / "catalog.base",
+        SRC / "inbox" / "inbox.base",
+        SRC / "system" / "dashboards" / "claims.base",
+    ]
+    for path in bases:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        for view in data.get("views", []):
+            order = view.get("order", [])
+            if "lifecycle" in order:
+                assert order.index("lifecycle") <= 1, f"{path.name}::{view.get('name')} buries lifecycle"
