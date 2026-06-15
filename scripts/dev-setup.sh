@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Memoria dev bootstrap — run ONCE per fresh clone to wire the local quality gate.
 #
-#   bash scripts/dev-setup.sh
+#   bash scripts/dev-setup.sh                 # toolchain + repo-local qmd index
+#   bash scripts/dev-setup.sh --with-hooks    # also wire qmd auto-refresh git hooks
 #
 # This sets up the CONTRIBUTOR toolchain (the pre-commit gate + linters). It does
 # NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
@@ -14,6 +15,9 @@ unset CDPATH
 cd "$(dirname -- "$0")/.." || exit 1
 
 note() { printf '  %s\n' "$1"; }
+
+WITH_HOOKS=0
+[ "${1:-}" = "--with-hooks" ] && WITH_HOOKS=1
 
 echo "==> Installing Python dev tooling + MCP self-test deps"
 PY=$(command -v python3 || command -v python || true)
@@ -53,6 +57,11 @@ if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
     note "repo-local qmd installed (node_modules/)"
     bash scripts/qmd-codebase-index.sh \
       || note "qmd index build skipped/failed — re-run: bash scripts/qmd-codebase-index.sh"
+    if [ "$WITH_HOOKS" -eq 1 ]; then
+      bash scripts/qmd-install-hooks.sh || note "qmd hook install skipped"
+    else
+      note "(auto-refresh hooks not wired — add them with: bash scripts/qmd-install-hooks.sh)"
+    fi
   else
     note "npm install failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
   fi

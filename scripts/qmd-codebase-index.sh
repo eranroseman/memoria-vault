@@ -49,6 +49,16 @@ if [ ! -d "$ROOT/.qmd" ]; then
   $QMD init >/dev/null && note "initialized project-local index (./.qmd/)"
 fi
 
+# Serialize concurrent runs (manual invocations and the git hooks) so they never collide.
+# Non-blocking: if a refresh is already in flight, skip — it already covers the current tree.
+# A crash leaves the dir; clear a stale lock with: rmdir .qmd/.refresh.lock
+LOCK="$ROOT/.qmd/.refresh.lock"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  note "a refresh is already running — skipping (clear a stale lock: rmdir .qmd/.refresh.lock)"
+  exit 0
+fi
+trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT INT TERM
+
 existing="$($QMD collection list 2>/dev/null || true)"
 printf '%s\n' "$COLLECTIONS" | while IFS="$(printf '\t')" read -r name path mask; do
   [ -n "$name" ] || continue

@@ -249,6 +249,9 @@ bash scripts/qmd-codebase-index.sh`); needs Node ≥22.
 - **Semantic:** `npx qmd query "<intent>"` — needs vectors first: `bash scripts/qmd-codebase-index.sh --embed`.
 - **Open a hit:** `npx qmd get <file>`.
 - **Rebuild after large changes:** `bash scripts/qmd-codebase-index.sh --embed`.
+- **Auto-refresh (optional):** `bash scripts/qmd-install-hooks.sh` (or `dev-setup.sh --with-hooks`)
+  wires git hooks that refresh the index after commits/merges/branch switches — non-blocking,
+  and a no-op until the index exists. Remove with `bash scripts/qmd-install-hooks.sh --uninstall`.
 
 GPU is auto-detected (leave `QMD_LLAMA_GPU` unset). On WSL/Linux with an NVIDIA card,
 semantic search needs the CUDA 13 runtime (`libcudart.so.13` + `libcublas.so.13`);
