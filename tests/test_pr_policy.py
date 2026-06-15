@@ -1,6 +1,9 @@
 """L1 component test for pr_policy — extracted from its former --self-test (ADR-44)."""
 import pr_policy as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+decide = _m.decide
+is_safe = _m.is_safe
+is_sensitive = _m.is_sensitive
 
 
 def test_pr_policy():

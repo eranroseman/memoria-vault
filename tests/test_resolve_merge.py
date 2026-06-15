@@ -1,6 +1,10 @@
 """L1 component test for resolve_merge — extracted from its former --self-test (ADR-44)."""
 import resolve_merge as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+_get = _m._get
+agreement = _m.agreement
+merge = _m.merge
+urllib = _m.urllib
 
 
 def test_resolve_merge():

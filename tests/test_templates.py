@@ -9,9 +9,8 @@ from a template starts schema-valid.
 import re
 from pathlib import Path
 
-import yaml
-
 import schema
+import yaml
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "src" / "system" / "templates"
 

@@ -1,6 +1,8 @@
 """L1 component test for pipeline — extracted from its former --self-test (ADR-44)."""
 import runner as _m
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+_bib_local_pdf = _m._bib_local_pdf
+run = _m.run
 
 
 def test_pipeline():

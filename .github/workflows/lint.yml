@@ -36,9 +36,7 @@ jobs:
         run: python -m pip install --quiet -r requirements-dev.txt
       - name: ruff
         # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
-        # Tests still use dynamic globals().update(...) imports, so Ruff is
-        # production/tooling-only until the test import style is refactored.
-        run: ruff check scripts src/.memoria .github/scripts
+        run: ruff check scripts src/.memoria .github/scripts tests
       - name: docs-doctor
         run: python scripts/docs-doctor.py docs
       - name: docs-links

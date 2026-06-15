@@ -1,7 +1,11 @@
 """L1 component test for extract — extracted from its former --self-test (ADR-44)."""
 import extract as _m
 
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+Path = _m.Path
+coherence = _m.coherence
+extract = _m.extract
+from_pdf = _m.from_pdf
+tempfile = _m.tempfile
 
 
 def test_extract():

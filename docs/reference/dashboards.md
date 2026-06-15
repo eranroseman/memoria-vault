@@ -23,7 +23,7 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
 | Studio | Studio gate | `studio.md` | Synthesis landing surface: `research-focus.md`, claims by maturity, and the pattern library. Project workflow stays deferred. |
-| Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also push to Home. |
+| Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
 | Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
 | Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
 | Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |

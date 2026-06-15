@@ -1,7 +1,20 @@
 """L1 component test for docs-doctor — extracted from its former --self-test (ADR-44)."""
 from _util import load_script
+
 _m = load_script("scripts/docs-doctor.py")
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+Path = _m.Path
+check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
+check_frontmatter = _m.check_frontmatter
+check_link_text = _m.check_link_text
+check_links = _m.check_links
+check_readmes = _m.check_readmes
+check_site_local_links = _m.check_site_local_links
+check_template_frontmatter = _m.check_template_frontmatter
+check_thin_folders = _m.check_thin_folders
+check_wikilink_aliases = _m.check_wikilink_aliases
+check_wikilinks = _m.check_wikilinks
+gh_slug = _m.gh_slug
+heading_slugs = _m.heading_slugs
 
 
 def test_docs_doctor():

@@ -1,7 +1,21 @@
 """L1 component test for metrics_aggregate — extracted from its former --self-test (ADR-44)."""
 import metrics_aggregate as _m
 from _util import CheckHarness
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+AUDIT_RELPATH = _m.AUDIT_RELPATH
+METRICS_RELDIR = _m.METRICS_RELDIR
+Path = _m.Path
+accept_ratio_of = _m.accept_ratio_of
+aggregate = _m.aggregate
+datetime = _m.datetime
+iso_period = _m.iso_period
+json = _m.json
+read_cost = _m.read_cost
+read_decision_time = _m.read_decision_time
+read_disposition = _m.read_disposition
+read_lint_verdict = _m.read_lint_verdict
+timezone = _m.timezone
+trust_score = _m.trust_score
 
 
 def test_metrics_aggregate():

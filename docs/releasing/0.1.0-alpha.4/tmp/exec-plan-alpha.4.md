@@ -303,8 +303,17 @@ evidence, real transcripts:
       golden-covered system files through it. Validation: focused pytest,
       `golden_restore.py --self-test`, `scripts/test.sh all`,
       `bash scripts/e2e-smoke.sh`, installer dry-run, `status-doctor`.
-- [ ] (next) F follow-through — merge #339 PR and confirm issue closure.
-- [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
+- [x] 2026-06-15 — F follow-through complete: #339 merged via PR #538 and
+      issue closed.
+- [x] 2026-06-15 — C defects slice #493/#443 implemented on
+      `fix/alpha4-defects`: tests no longer use dynamic `globals().update(...)`,
+      Ruff/pre-commit/CI now cover `tests/`, and the retired/unbuilt explanation
+      pages are re-scoped to shipped vs deferred behavior. Validation:
+      `ruff check scripts src/.memoria .github/scripts tests`, `scripts/test.sh all`,
+      `status-doctor`, stale-doc audit.
+- [ ] (next) C follow-through — merge #493/#443 PR and confirm issue closure.
+- [ ] (next) C structural naming — #472 script snake_case + folder pluralization
+      as its own rename PR.
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
@@ -345,6 +354,12 @@ evidence, real transcripts:
   `golden_restore.py upgrade --source SRC --apply`. Clean additions/edits/removals
   apply when live still matches old golden; PI-customized conflicts are preserved
   and remain visible as drift against the refreshed golden baseline.
+- 2026-06-15 — C defects branch prepared for #493/#443: explicit test bindings
+  replace `globals().update(...)` and the Ruff gate now includes `tests/`. The
+  five contradiction pages were audited: agent-client/status-line/verify pages
+  already carried deferred/current notices; callouts and loudness routing docs
+  needed current-vs-deferred wording fixes. `_reports/v011-review-defect-inventory.md`
+  is not present in the repo, so there was no report row to mark.
 
 ## 9. Surprises & discoveries
 

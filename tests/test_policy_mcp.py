@@ -1,9 +1,22 @@
 """L1 component test for policy_mcp — extracted from its former --self-test (ADR-44)."""
-import pytest
-
 import policy_mcp as _m
+import pytest
 from _util import CheckHarness
-globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
+
+AUDIT_RELPATH = _m.AUDIT_RELPATH
+EMPTY_SHA256 = _m.EMPTY_SHA256
+LANE_OVERRIDE_RELDIR = _m.LANE_OVERRIDE_RELDIR
+LanePolicy = _m.LanePolicy
+Path = _m.Path
+PolicyEngine = _m.PolicyEngine
+compose_skill_deny = _m.compose_skill_deny
+decide = _m.decide
+json = _m.json
+load_lane = _m.load_lane
+normalize_path = _m.normalize_path
+path_matches = _m.path_matches
+sha256_file = _m.sha256_file
+yaml = _m.yaml
 
 
 def test_policy_mcp():

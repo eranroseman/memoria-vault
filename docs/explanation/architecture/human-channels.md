@@ -48,10 +48,10 @@ Every agent and engine finding carries one of four loudness levels, and the leve
 | --- | --- |
 | **Quiet** | logged only; aggregated in the weekly review; no interruption |
 | **Notice** | appears in the relevant dashboard + weekly review; no push |
-| **Alert** | appears in the Inbox's "Needs me" queue + Home's status strip; pushed; does **not** block |
-| **Block** | blocks the action (dispatch / promotion) until acknowledged; pushed |
+| **Alert** | appears in the Inbox's "Needs me" queue; future push routing is deferred |
+| **Block** | reserved for future acknowledged blockers; no shipped action blocks on loudness yet |
 
-The test for push vs dashboard: *does it change what the PI does in the next 30 minutes?* Only Alert and Block ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
+The test for future push vs dashboard routing: *does it change what the PI does in the next 30 minutes?* Only Alert and Block should ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
 
 ---
 
@@ -59,7 +59,7 @@ The test for push vs dashboard: *does it change what the PI does in the next 30 
 
 Telegram serves two purposes that are easy to conflate but that need to remain separate: push notification for urgent signals, and lightweight mobile capture.
 
-The push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
+The deferred push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
 
 The mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, or quick corpus lookups while in motion. The key constraint is that the Telegram toolset is intentionally narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
 
