@@ -5,7 +5,7 @@ parent: Reference
 
 # Ingest routing
 
-The ingest engine (`src/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
+The ingest operation (`src/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the operation itself writes no vault notes.
 
 ---
 
@@ -16,9 +16,9 @@ The ingest engine (`src/.memoria/operations/processing/ingest`): the determinist
 | Stage | Module | Does |
 | --- | --- | --- |
 | Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
-| Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref, merged per-field best-source-wins **with provenance**; references = the union across sources, deduped by DOI. |
+| Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref + PubMed/NCBI, merged per-field best-source-wins **with provenance**; PubMed contributes PMID/PMCID, publication types, and MeSH terms when available; references = the union across sources, deduped by DOI. |
 | Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). Also proposes project membership from the optional `.memoria/project-hints.yaml` ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). No extra network call; without enrichment it is a no-op. |
-| Tier-1 extract | `extract.py` | Full text, pre-extracted-first: PMC JATS → local Zotero PDF via pymupdf4llm. A deterministic coherence check (chars/page, replacement-char ratio, word ratio) gatekeeps so only good text reaches the model; non-English text is flagged, never auto-failed. |
+| Tier-1 extract | `extract.py` | Full text, open-access-first: Unpaywall OA PDF → PMC JATS → local Zotero PDF via pymupdf4llm. OA and local PDFs pass through the same deterministic coherence check (chars/page, replacement-char ratio, word ratio) so only good text reaches the model; non-English text is flagged, never auto-failed. |
 | Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
 
 The bundle arrives **with two holes** the Librarian fills: `_proposed_classification` (LLM #1 — its `projects` sub-key is pre-filled deterministically from the optional project hints, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) and the `[!brief]` comparative read (LLM #2). `ingest_pipeline(citekey, enrich=True, pdf_path="")` is the MCP tool; without `enrich` only Tier-0 runs.
@@ -34,7 +34,7 @@ The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relatio
 
 ## The uncertainty floor
 
-The engine never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across the sources that resolved) in `[0,1]`; the floor comes from `src/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
+The operation never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across Semantic Scholar, OpenAlex, Crossref, and PubMed when they resolve) in `[0,1]`; the floor comes from `src/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
 
 Below the floor, the bundle carries a `flag_needed` block instead of a silent best-source-wins merge: the Librarian raises a **near-tie `flag` card** in the Inbox ("Identity disagreement on `<citekey>`", with the agreement score and the disagreements), and the PI decides. One source found = trusted (1.0) — the floor measures _disagreement_, not coverage.
 

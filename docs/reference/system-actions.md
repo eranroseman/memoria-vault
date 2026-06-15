@@ -5,7 +5,7 @@ parent: Reference
 
 # System actions
 
-Every action the system can perform, with its performer. Three performer kinds: **deterministic engines** (zero-LLM Python, report-only or idempotent), **agents** (LLM lanes acting through gated MCP tools and skills), and the **PI** (palette actions and review decisions). Where a topic has its own reference page, that page is authoritative for the details — this catalog is the map.
+Every action the system can perform, with its performer. Three performer kinds: **deterministic operations** (zero-LLM Python, report-only or idempotent), **agents** (LLM lanes acting through gated MCP tools and skills), and the **PI** (palette actions and review decisions). Where a topic has its own reference page, that page is authoritative for the details — this catalog is the map.
 
 ## Deterministic engines
 
@@ -13,15 +13,15 @@ Every action the system can perform, with its performer. Three performer kinds: 
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Tier-0 capture | ingest engine (`ingest_paper.py`) | Extracts citekey identity and frontmatter from local BibTeX — no network. |
-| Tier-0 routing | ingest engine (`ingest_paper.py`) | Routes the entry type (article / book / software / dataset) to its catalog home and note type ([Ingest routing](ingest.md)). |
-| Resolve | ingest engine (`resolve_merge.py`) | Queries Semantic Scholar, OpenAlex, and Crossref to resolve identity, authors, citations, and enrichment metadata. |
-| Merge | ingest engine (`resolve_merge.py`) | Merges per-field best-source-wins across the three sources with provenance, and scores identity disagreement. |
-| Classify | ingest engine (`classify.py`) | Proposes `research_area` / `methodology` from OpenAlex topics, with a confidence floor and near-tie flagging; audited to `system/logs/classify.jsonl`. |
-| Project-hints proposal | ingest engine (`classify.py`) | Scores topic overlap against `.memoria/project-hints.yaml` and proposes `projects` membership for human confirmation (ADR-15). |
-| Extract | ingest engine (`extract.py`) | Pulls full text — PMC JATS first, then the local PDF via sandboxed pymupdf4llm — behind a deterministic coherence gate; marks `degraded` otherwise. |
-| Link entities | ingest engine (`link.py`) | Plans idempotent find-or-create venue / person / organization entities from merged metadata. |
-| Link citations | ingest engine (`link.py`) | Plans cited-by / cites edges by matching the reference union against the vault by DOI / arXiv id. |
+| Tier-0 capture | ingest operation (`ingest_paper.py`) | Extracts citekey identity and frontmatter from local BibTeX — no network. |
+| Tier-0 routing | ingest operation (`ingest_paper.py`) | Routes the entry type (article / book / software / dataset) to its catalog home and note type ([Ingest routing](ingest.md)). |
+| Resolve | ingest operation (`resolve_merge.py`) | Queries Semantic Scholar, OpenAlex, Crossref, and PubMed/NCBI to resolve identity, authors, citations, biomedical identifiers, and enrichment metadata. |
+| Merge | ingest operation (`resolve_merge.py`) | Merges per-field best-source-wins across the four sources with provenance, and scores identity disagreement. |
+| Classify | ingest operation (`classify.py`) | Proposes `research_area` / `methodology` from OpenAlex topics, with a confidence floor and near-tie flagging; audited to `system/logs/classify.jsonl`. |
+| Project-hints proposal | ingest operation (`classify.py`) | Scores topic overlap against `.memoria/project-hints.yaml` and proposes `projects` membership for human confirmation (ADR-15). |
+| Extract | ingest operation (`extract.py`) | Pulls full text — Unpaywall OA PDF first, then PMC JATS, then the local PDF via sandboxed pymupdf4llm — behind a deterministic coherence gate; marks `degraded` otherwise. |
+| Link entities | ingest operation (`link.py`) | Plans idempotent find-or-create venue / person / organization entities from merged metadata. |
+| Link citations | ingest operation (`link.py`) | Plans cited-by / cites edges by matching the reference union against the vault by DOI / arXiv id. |
 
 ### Linter (`operations/integrity/linter/`)
 

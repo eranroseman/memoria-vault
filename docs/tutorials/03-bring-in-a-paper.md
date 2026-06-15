@@ -23,14 +23,14 @@ Pick a paper you actually want to read, and copy its URL (the publisher page, or
 
 ---
 
-## Step 2 — What the ingest engine creates
+## Step 2 — What the ingest operation creates
 
-Within a couple of minutes the deterministic ingest engine, driven by the Librarian, has:
+Within a couple of minutes the deterministic ingest operation, driven by the Librarian, has:
 
-- Created the **Catalog entity**: `catalog/papers/<citekey>.md` with `type: paper`, merged metadata (title, DOI, authors, year, venue — per-field provenance from Semantic Scholar, OpenAlex, and Crossref), and **`relationships`** edges — `authored_by`, `published_in`, `cites` — linking it to person, venue, and paper entities it finds or creates alongside.
-- Recorded the source in the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the engine keeps its private extract path in that entity's metadata.
+- Created the **Catalog entity**: `catalog/papers/<citekey>.md` with `type: paper`, merged metadata (title, DOI, authors, year, venue — per-field provenance from Semantic Scholar, OpenAlex, Crossref, and PubMed/NCBI), and **`relationships`** edges — `authored_by`, `published_in`, `cites` — linking it to person, venue, and paper entities it finds or creates alongside.
+- Recorded the source in the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the operation keeps its private extract path in that entity's metadata.
 
-Open `catalog/papers/<citekey>.md` and look at the `relationships` block — that's the knowledge graph's *given* edges, built by the engine. Your own `links:` come later, on notes you author. Full pipeline reference: [Ingest routing](../reference/ingest.md).
+Open `catalog/papers/<citekey>.md` and look at the `relationships` block — that's the knowledge graph's *given* edges, built by the operation. Your own `links:` come later, on notes you author. Full pipeline reference: [Ingest routing](../reference/ingest.md).
 
 ---
 

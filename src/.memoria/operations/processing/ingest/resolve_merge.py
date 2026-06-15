@@ -2,14 +2,14 @@
 """resolve_merge.py — Tier-1 resolve + multi-source merge (ADR-30).
 
 Fetch a paper from the open-access fallback chain (Semantic Scholar + OpenAlex
-co-primary; Crossref for non-arXiv DOIs) and merge **per-field, best-source-wins
-with provenance** — the merge contract grounded by the ADR-30 spike (sources
-disagree and are each incomplete):
+co-primary; Crossref for non-arXiv DOIs; PubMed/NCBI for biomedical identifiers)
+and merge **per-field, best-source-wins with provenance** — the merge contract
+grounded by the ADR-30 spike (sources disagree and are each incomplete):
 
   authors + ORCID + affiliations  <- OpenAlex
   tldr / embedding / intents / influence / contexts / fields-of-study  <- S2
   references = union across sources, deduped by DOI (the keyspace the vault stores)
-  canonical scalar metadata (title/year/venue)  <- Crossref / OpenAlex / S2
+  canonical scalar metadata (title/year/venue)  <- Crossref / OpenAlex / PubMed / S2
 
 `--diagnose --bib PATH --sample N` runs the build-time merge spike: it resolves a
 random sample of the library and reports coverage, author/ORCID alignment, and
@@ -29,6 +29,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import ingest_paper  # sibling module — reuse the .bib parser
@@ -36,6 +37,7 @@ import ingest_paper  # sibling module — reuse the .bib parser
 S2_BASE = "https://api.semanticscholar.org/graph/v1"
 OA_BASE = "https://api.openalex.org"
 CR_BASE = "https://api.crossref.org"
+NCBI_EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 S2_FIELDS = ("title,year,externalIds,referenceCount,citationCount,tldr,"
              "s2FieldsOfStudy,publicationTypes,authors.name,authors.externalIds,"
              "references.externalIds,references.title")
@@ -70,6 +72,29 @@ def _get(url: str, headers: dict | None = None, data: bytes | None = None, retri
                 time.sleep(wait + random.random())
                 continue
             if e.code not in (404, 429):
+                print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
+            return None
+        except Exception as exc:
+            print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}",
+                  file=sys.stderr)
+            return None
+    return None
+
+
+def _get_text(url: str, retries: int = 3) -> str | None:
+    """GET text/XML with the same 429 retry behavior as _get."""
+    req = urllib.request.Request(url)
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=25) as r:
+                return r.read().decode("utf-8", errors="ignore")
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < retries:
+                ra = (e.headers or {}).get("Retry-After", "")
+                wait = float(ra) if ra.isdigit() else min(2 ** attempt, 8)
+                time.sleep(wait + random.random())
+                continue
+            if e.code != 404:
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
             return None
         except Exception as exc:
@@ -225,6 +250,97 @@ def fetch_crossref(ids: dict, email: str) -> dict:
     }
 
 
+def _article_text(article: ET.Element, path: str) -> str:
+    node = article.find(path)
+    return "".join(node.itertext()).strip() if node is not None else ""
+
+
+def _pubmed_year(article: ET.Element):
+    for path in (
+        ".//JournalIssue/PubDate/Year",
+        ".//ArticleDate/Year",
+        ".//PubMedPubDate[@PubStatus='pubmed']/Year",
+        ".//PubMedPubDate/Year",
+    ):
+        text = _article_text(article, path)
+        if text.isdigit():
+            return int(text)
+    return None
+
+
+def parse_pubmed(xml: str) -> dict:
+    """Normalize PubMed efetch XML into the partial-record shape."""
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError:
+        return {"source": "pubmed", "found": False}
+    article = root.find(".//PubmedArticle")
+    if article is None:
+        return {"source": "pubmed", "found": False}
+    ids = {}
+    for node in article.findall(".//ArticleId"):
+        kind = (node.attrib.get("IdType") or "").lower()
+        if kind:
+            ids[kind] = (node.text or "").strip()
+    medline = article.find(".//MedlineCitation")
+    pmid = _article_text(article, ".//MedlineCitation/PMID")
+    title = _article_text(article, ".//Article/ArticleTitle")
+    venue = _article_text(article, ".//Journal/Title")
+    authors = []
+    for a in article.findall(".//AuthorList/Author"):
+        collective = _article_text(a, "CollectiveName")
+        if collective:
+            authors.append({"name": collective, "orcid": ""})
+            continue
+        name = " ".join(x for x in (_article_text(a, "ForeName"),
+                                    _article_text(a, "LastName")) if x)
+        orcid = ""
+        for ident in a.findall("Identifier"):
+            if (ident.attrib.get("Source") or "").upper() == "ORCID":
+                orcid = (ident.text or "").rsplit("/", 1)[-1]
+        if name:
+            authors.append({"name": name, "orcid": orcid})
+    pub_types = [_article_text(p, ".") for p in article.findall(".//PublicationTypeList/PublicationType")]
+    mesh = [_article_text(m, "DescriptorName") for m in article.findall(".//MeshHeadingList/MeshHeading")]
+    return {
+        "source": "pubmed", "found": True,
+        "pmid": pmid or ids.get("pubmed", ""), "pmcid": ids.get("pmc", ""),
+        "doi": ids.get("doi", ""), "title": title, "year": _pubmed_year(article),
+        "authors": authors, "orcid_count": sum(1 for a in authors if a["orcid"]),
+        "venue": venue,
+        "publication_types": [p for p in pub_types if p],
+        "mesh_terms": [m for m in mesh if m],
+        "nlm_unique_id": _article_text(medline, "MedlineJournalInfo/NlmUniqueID") if medline is not None else "",
+    }
+
+
+def _pubmed_id(ids: dict, email: str, api_key: str) -> str:
+    if ids.get("pmid"):
+        return ids["pmid"]
+    if not ids.get("doi"):
+        return ""
+    params = {"db": "pubmed", "retmode": "json", "term": f"{ids['doi']}[doi]",
+              "email": email}
+    if api_key:
+        params["api_key"] = api_key
+    d = _get(f"{NCBI_EUTILS}/esearch.fcgi?{urllib.parse.urlencode(params)}")
+    ids_found = (((d or {}).get("esearchresult") or {}).get("idlist") or [])
+    return str(ids_found[0]) if ids_found else ""
+
+
+def fetch_pubmed(ids: dict, email: str, api_key: str) -> dict:
+    pmid = _pubmed_id(ids, email, api_key)
+    if not pmid:
+        return {"source": "pubmed", "found": False}
+    params = {"db": "pubmed", "id": pmid, "retmode": "xml", "email": email}
+    if api_key:
+        params["api_key"] = api_key
+    xml = _get_text(f"{NCBI_EUTILS}/efetch.fcgi?{urllib.parse.urlencode(params)}")
+    if not xml:
+        return {"source": "pubmed", "found": False}
+    return parse_pubmed(xml)
+
+
 # --------------------------------------------------------------------------- #
 # Merge — per-field best-source, references union deduped by DOI
 # --------------------------------------------------------------------------- #
@@ -265,7 +381,7 @@ def agreement(parts: dict) -> tuple[float, list[str]]:
     across found sources) and year agreement. One source found = trusted (1.0) —
     nothing to disagree with; zero found = 0.0.
     """
-    found = [s for s in ("crossref", "openalex", "s2") if parts.get(s, {}).get("found")]
+    found = [s for s in ("crossref", "openalex", "pubmed", "s2") if parts.get(s, {}).get("found")]
     if not found:
         return 0.0, ["no source resolved this work"]
     if len(found) == 1:
@@ -285,27 +401,31 @@ def agreement(parts: dict) -> tuple[float, list[str]]:
 
 def merge(parts: dict) -> dict:
     # authors: prefer the source carrying the most ORCIDs (OpenAlex, per the spike)
-    auth_src = max(("openalex", "s2", "crossref"),
+    auth_src = max(("openalex", "pubmed", "s2", "crossref"),
                    key=lambda s: parts.get(s, {}).get("orcid_count", -1)
                    if parts.get(s, {}).get("found") else -1)
     authors = parts.get(auth_src, {}).get("authors") or []
-    title, t_src = _pick(parts, "title", ["crossref", "openalex", "s2"])
-    year, y_src = _pick(parts, "year", ["crossref", "openalex", "s2"])
-    venue, v_src = _pick(parts, "venue", ["openalex", "crossref"])
+    title, t_src = _pick(parts, "title", ["crossref", "openalex", "pubmed", "s2"])
+    year, y_src = _pick(parts, "year", ["crossref", "openalex", "pubmed", "s2"])
+    venue, v_src = _pick(parts, "venue", ["openalex", "crossref", "pubmed"])
     refs = union_refs(parts)
     return {
         "title": title, "year": year, "venue": venue,
         "issn": parts.get("openalex", {}).get("issn") or parts.get("crossref", {}).get("issn", ""),
         "s2_id": parts.get("s2", {}).get("s2_id", ""),
         "openalex_id": parts.get("openalex", {}).get("openalex_id", ""),
-        "pmid": parts.get("openalex", {}).get("pmid") or parts.get("s2", {}).get("pmid", ""),
-        "pmcid": parts.get("openalex", {}).get("pmcid") or parts.get("s2", {}).get("pmcid", ""),
+        "pmid": (parts.get("pubmed", {}).get("pmid") or parts.get("openalex", {}).get("pmid")
+                 or parts.get("s2", {}).get("pmid", "")),
+        "pmcid": (parts.get("pubmed", {}).get("pmcid") or parts.get("openalex", {}).get("pmcid")
+                  or parts.get("s2", {}).get("pmcid", "")),
         "authors": authors,
         "tldr": parts.get("s2", {}).get("tldr", ""),
         "fields_of_study": parts.get("s2", {}).get("fields_of_study") or [],
         "topics": parts.get("openalex", {}).get("topics") or [],
         "topics_scored": parts.get("openalex", {}).get("topics_scored") or [],
-        "publication_types": parts.get("s2", {}).get("publication_types") or [],
+        "publication_types": (parts.get("pubmed", {}).get("publication_types")
+                              or parts.get("s2", {}).get("publication_types") or []),
+        "mesh_terms": parts.get("pubmed", {}).get("mesh_terms") or [],
         "references": refs,
         "citation_count": parts.get("s2", {}).get("citation_count"),
         "provenance": {"title": t_src, "year": y_src, "venue": v_src, "authors": auth_src},
@@ -319,6 +439,7 @@ def resolve(citekey: str, bib_text: str) -> dict:
         "s2": fetch_s2(ids, _env("S2_API_KEY")),
         "openalex": fetch_openalex(ids, _env("OPENALEX_API_KEY"), _env("NCBI_EMAIL")),
         "crossref": fetch_crossref(ids, _env("NCBI_EMAIL")),
+        "pubmed": fetch_pubmed(ids, _env("NCBI_EMAIL"), _env("NCBI_API_KEY")),
     }
     return {"citekey": citekey, "ids": ids, "parts": parts, "merged": merge(parts)}
 
@@ -332,7 +453,7 @@ def diagnose(bib_path: Path, n: int, seed: int = 13) -> int:
     keys = re.findall(r"^@[a-z]+\{([^,]+),", text, re.M | re.I)
     random.seed(seed)
     sample = random.sample(keys, min(n, len(keys)))
-    agg = {"n": 0, "s2": 0, "oa": 0, "cr": 0, "any": 0,
+    agg = {"n": 0, "s2": 0, "oa": 0, "cr": 0, "pm": 0, "any": 0,
            "auth_match": 0, "auth_both": 0, "orcid_s2": 0, "orcid_oa": 0,
            "ref_union": 0, "ref_s2": 0, "ref_cr": 0, "oa_refs_wid": 0, "no_id": 0}
     t0 = time.monotonic()
@@ -346,10 +467,12 @@ def diagnose(bib_path: Path, n: int, seed: int = 13) -> int:
         if not _s2_id(r["ids"]) and not r["ids"]["doi"]:
             agg["no_id"] += 1
         s2f, oaf, crf = p["s2"]["found"], p["openalex"]["found"], p["crossref"]["found"]
+        pmf = p["pubmed"]["found"]
         agg["s2"] += s2f
         agg["oa"] += oaf
         agg["cr"] += crf
-        agg["any"] += (s2f or oaf or crf)
+        agg["pm"] += pmf
+        agg["any"] += (s2f or oaf or crf or pmf)
         if s2f and oaf:
             agg["auth_both"] += 1
             agg["auth_match"] += (len(p["s2"]["authors"]) == len(p["openalex"]["authors"]))
@@ -363,14 +486,14 @@ def diagnose(bib_path: Path, n: int, seed: int = 13) -> int:
         if s2f and oaf and len(p["s2"]["authors"]) != len(p["openalex"]["authors"]):
             flags.append(f"authors {len(p['s2']['authors'])}/{len(p['openalex']['authors'])}")
         print(f"  {ck[:30]:30} S2={'Y' if s2f else '.'} OA={'Y' if oaf else '.'} "
-              f"CR={'Y' if crf else '.'} | refs U={len(m['references'])} "
+              f"CR={'Y' if crf else '.'} PM={'Y' if pmf else '.'} | refs U={len(m['references'])} "
               f"(s2={p['s2'].get('refs_returned',0)} cr={len(p['crossref'].get('refs') or [])}) "
               f"| auth<-{m['provenance']['authors']}" + (f"  ! {','.join(flags)}" if flags else ""))
     a, dt = agg, time.monotonic() - t0
     nz = max(a["n"], 1)
     print(f"\n=== merge diagnostics (n={a['n']}, {dt:.0f}s) ===")
     print(f"  coverage:  any={a['any']}/{a['n']}  S2={a['s2']}  OpenAlex={a['oa']}  "
-          f"Crossref={a['cr']}  no-resolvable-id={a['no_id']}")
+          f"Crossref={a['cr']}  PubMed={a['pm']}  no-resolvable-id={a['no_id']}")
     print(f"  authors:   both-present={a['auth_both']}  count-agree={a['auth_match']}/{max(a['auth_both'],1)}")
     print(f"  ORCID:     total from S2={a['orcid_s2']}  vs OpenAlex={a['orcid_oa']}  "
           f"(merge takes authors from the higher-ORCID source)")

@@ -23,18 +23,18 @@ env_requires:
     required: false
     default: "27123"
   - name: OPENALEX_API_KEY
-    description: "OpenAlex API key (openalex.org/settings/api), sent as the ?api_key= query param — enrichment (citation count, abstract, OA status) at ingest, read by the ingest engine's resolve/merge step. As of 2026-02 OpenAlex requires a key; the former polite-pool contact email (OPENALEX_EMAIL) is discontinued."
+    description: "OpenAlex API key (openalex.org/settings/api), sent as the ?api_key= query param — enrichment (citation count, abstract, OA status) at ingest, read by the ingest operation's resolve/merge step. As of 2026-02 OpenAlex requires a key; the former polite-pool contact email (OPENALEX_EMAIL) is discontinued."
     required: true
   - name: S2_API_KEY
-    description: "Semantic Scholar API key (x-api-key header) — read by the ingest engine's resolve/merge step and passed to the `paper_search` MCP for higher rate limits; works without it on a shared pool. NOTE: the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY."
+    description: "Semantic Scholar API key (x-api-key header) — read by the ingest operation's resolve/merge step and passed to the `paper_search` MCP for higher rate limits; works without it on a shared pool. NOTE: the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY."
     required: false
     default: ""
   - name: NCBI_API_KEY
-    description: "NCBI E-utilities key (ncbi.nlm.nih.gov/account/settings), sent as &api_key= by the extract step's PMC E-utilities call for rate-limit raises (10 req/s vs 3 without). NOTE: the var is NCBI_API_KEY, not PUBMED_API_KEY."
+    description: "NCBI E-utilities key (ncbi.nlm.nih.gov/account/settings), sent as &api_key= by the ingest operation's PubMed resolve/merge and PMC extract calls for rate-limit raises (10 req/s vs 3 without). NOTE: the var is NCBI_API_KEY, not PUBMED_API_KEY."
     required: false
     default: ""
   - name: NCBI_EMAIL
-    description: "Contact email for NCBI E-utilities (Entrez requires it) — read by the ingest engine (PubMed/PMC at extract, OpenAlex polite pool, Crossref `mailto`) and passed to the `paper_search` MCP as its Unpaywall `email` param (Unpaywall rejects placeholder addresses)."
+    description: "Contact email for NCBI E-utilities (Entrez requires it) — read by the ingest operation for PubMed/PMC, Unpaywall OA lookup, OpenAlex polite pool, and Crossref `mailto`; also passed to the `paper_search` MCP as its Unpaywall `email` param (Unpaywall rejects placeholder addresses)."
     required: false
     default: ""
   # Zotero: the `pyzotero` MCP server runs in local read-only mode against the Zotero

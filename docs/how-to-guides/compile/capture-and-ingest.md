@@ -27,9 +27,9 @@ Check title, authors, and year in Zotero's item panel before capture. These valu
 
 **3. Let the engine run — nothing to invoke.**
 
-The Librarian claims the card and drives the deterministic ingest engine over the ingest MCP ([Ingest routing](../../reference/ingest.md)). Within a couple of minutes it has:
+The Librarian claims the card and drives the deterministic ingest operation over the ingest MCP ([Ingest routing](../../reference/ingest.md)). Within a couple of minutes it has:
 
-- Created the **Catalog entity** at `catalog/papers/<citekey>.md` — merged metadata with per-field provenance (Semantic Scholar + OpenAlex + Crossref) and `relationships` edges (`authored_by`, `published_in`, `cites`) into person, venue, and paper entities it finds or creates alongside
+- Created the **Catalog entity** at `catalog/papers/<citekey>.md` — merged metadata with per-field provenance (Semantic Scholar + OpenAlex + Crossref + PubMed/NCBI) and `relationships` edges (`authored_by`, `published_in`, `cites`) into person, venue, and paper entities it finds or creates alongside
 - Applied `research_area` (and `methodology` where derivable) automatically when the classification is clear — or left it unset and raised one Inbox `flag` on genuine ambiguity
 - Recorded the visible Catalog entity at `catalog/papers/<citekey>.md`; when full text is available, the private engine extract path is reflected in that entity's metadata
 - Raised a **`candidate` card** in your Inbox proposing the keep, with the honesty body and the Librarian's `_proposed_classification`
