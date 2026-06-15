@@ -47,6 +47,12 @@ def test_cron_wrappers_exist_for_wired_jobs():
         assert (ROOT / "src/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
 
 
+def test_lint_cron_writes_lint_findings_telemetry():
+    text = (ROOT / "src/.memoria/scripts/lint-cron.sh").read_text(encoding="utf-8")
+    assert "--jsonl-out" in text
+    assert "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" in text
+
+
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text

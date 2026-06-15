@@ -220,6 +220,30 @@ def test_audit_log_size(tmp_path):
     assert f[0].detector == "audit-log-size"
 
 
+def test_append_findings_jsonl_creates_append_only_signal(tmp_path):
+    out = tmp_path / "system/logs/lint-findings.jsonl"
+    findings = [
+        _m.Finding("schema-check", "MEDIUM", "notes/fleeting/x.md", "bad lifecycle"),
+        _m.Finding("broken-wikilink", "LOW", "notes/claims/y.md", "missing target"),
+    ]
+    for f in findings:
+        f.timestamp = "2026-06-15T02:40:00Z"
+
+    _m.append_findings_jsonl(out, findings[:1])
+    _m.append_findings_jsonl(out, findings[1:])
+
+    rows = [_json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+    assert [row["detector"] for row in rows] == ["schema-check", "broken-wikilink"]
+    assert rows[0]["timestamp"] == "2026-06-15T02:40:00Z"
+
+
+def test_append_findings_jsonl_touches_empty_file_for_clean_runs(tmp_path):
+    out = tmp_path / "system/logs/lint-findings.jsonl"
+    _m.append_findings_jsonl(out, [])
+    assert out.is_file()
+    assert out.read_text(encoding="utf-8") == ""
+
+
 def _claim(v, name, topics):
     (v / "notes/claims").mkdir(parents=True, exist_ok=True)
     (v / f"notes/claims/{name}.md").write_text(
