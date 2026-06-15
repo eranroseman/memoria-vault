@@ -17,6 +17,27 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
 ---
 
+## ExecPlans — for complex, multi-hour work
+
+For a complex feature, significant refactor, or multi-step migration, work from
+an **ExecPlan**: a single, self-contained, living document that carries the task
+from research to a validated, observable result so a stateless agent — or a
+novice — can run it top to bottom. Author and run it with the
+[ExecPlan playbook](.agents/playbooks/exec-plan.md) (skeleton:
+[`.agents/templates/exec-plan.md`](.agents/templates/exec-plan.md)).
+
+An ExecPlan is a **working artifact, not a permanent record.** The instance
+lives in `docs/releasing/<version>/tmp/` under the current release or checkpoint
+(tracked for handoff, deleted before that release closes — `_notes/` is
+gitignored, so a plan meant to be resumed never lives there); its durable
+outputs route as usual — decisions to ADRs, readiness/state to issues.
+Tactical sequencing lives in the plan's Execution log; architectural and product
+decisions still go to an ADR (§"ADR template") and are linked, never recorded
+only in the plan. Skip the ceremony for small, single-sitting changes — use the
+[handoff template](.agents/templates/handoff.md) or just make the change.
+
+---
+
 ## Where things live
 
 | Piece | Host | Path |
@@ -286,6 +307,7 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 
 | Item | Goes to |
 |---|---|
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `docs/releasing/<version>/tmp/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`/`deferred`) |
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) + Memoria Issue Tracker view filtered to that milestone |
