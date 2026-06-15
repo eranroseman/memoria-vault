@@ -7,6 +7,7 @@ deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
 
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path>     # run against a vault, print findings
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --json
+    python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --jsonl-out system/logs/lint-findings.jsonl
 
 Of the formerly out-of-scope drift procedures (ADR-67): skeleton-drift and
 vault-hash-drift turned out to need only the vault tree and live here now;
@@ -738,6 +739,14 @@ def verdict(findings: list[Finding]) -> str:
     return "PASS"
 
 
+def append_findings_jsonl(path: Path, findings: list[Finding]) -> None:
+    """Append one row per finding and create the file for clean no-data runs."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for finding in findings:
+            fh.write(json.dumps(finding.__dict__, sort_keys=True) + "\n")
+
+
 # --------------------------------------------------------------------------- #
 # Self-test -- builds a throwaway vault, asserts each detector fires correctly.
 # --------------------------------------------------------------------------- #
@@ -747,6 +756,8 @@ def main() -> None:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault", type=Path, help="vault root to lint")
     ap.add_argument("--json", action="store_true", help="emit findings as JSON")
+    ap.add_argument("--jsonl-out", type=Path,
+                    help="append findings as JSONL to this file; creates an empty file when clean")
     ap.add_argument("--gate", metavar="DETECTORS",
                     help="comma-separated detector names that MUST be zero; exit 1 if any "
                          "such finding exists (e.g. dashboard-field-drift). All other "
@@ -759,6 +770,8 @@ def main() -> None:
         sys.exit(f"not a directory: {args.vault}")
 
     findings = run_all(args.vault)
+    if args.jsonl_out:
+        append_findings_jsonl(args.jsonl_out, findings)
     if args.json:
         print(json.dumps([f.__dict__ for f in findings], indent=2))
     else:
