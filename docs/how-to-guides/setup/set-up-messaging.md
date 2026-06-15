@@ -4,11 +4,11 @@ parent: Setup
 nav_order: 7
 ---
 
-# Set up the messaging gateway [deferred]
+# Set up messaging
 
-> **Status — deferred.** The Telegram messaging gateway is a designed but not-yet-shipped component; the bot wiring and inbound capture path are not validated end-to-end in v0.1.0-alpha.2 (tracked in [#382](https://github.com/eranroseman/memoria-vault/issues/382)). Use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported path until this lands.
+> **Status.** Outbound alert/block push is shipped for the shared Inbox card writer when `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` are present in the runtime environment. The inbound mobile-capture gateway remains deferred (tracked in [#382](https://github.com/eranroseman/memoria-vault/issues/382)); use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported capture path until that lands.
 
-Connect a Telegram bot to Hermes so you can send fleeting notes from your phone directly into the vault's fleeting queue.
+Connect a Telegram bot so Memoria can push urgent alert/block cards to you, and later so you can send fleeting notes from your phone directly into the vault's fleeting queue.
 
 ## Prerequisites
 
@@ -28,7 +28,14 @@ Message `@userinfobot` in Telegram. Copy the numeric `Id` it returns — this is
 
 **3. Configure the Hermes gateway.**
 
-Edit `~/.hermes/gateway.yaml` and add the Telegram integration block:
+For outbound loudness push, put these in the environment that runs Memoria operations (for profile runs, `~/.hermes/.env` is propagated by the installer):
+
+```bash
+MEMORIA_TELEGRAM_BOT_TOKEN=<bot token>
+MEMORIA_TELEGRAM_CHAT_ID=<your numeric Telegram user ID>
+```
+
+For the deferred inbound capture gateway, edit `~/.hermes/gateway.yaml` and add the Telegram integration block:
 
 ```yaml
 telegram:
@@ -62,7 +69,8 @@ Send any message to your bot in Telegram. Within a few seconds, a `.md` file sho
 
 ## Verify
 
-- Sending a Telegram message to your bot creates a file in `notes/fleeting/`
+- Creating an `alert` or `block` Inbox card through the shared card writer appends a `system/logs/loudness-push.jsonl` row; with the bot env set, that row reports `status: sent`
+- Sending a Telegram message to your bot creates a file in `notes/fleeting/` (deferred inbound gateway)
 - The file carries fleeting frontmatter (`type: fleeting`, `lifecycle: proposed` — the value all fleeting notes carry). A capture that lands without frontmatter still enters the flow: the sweeps cron stamps unstamped files in `notes/fleeting/`, after which it shows up in the fleeting queue for triage
 - `systemctl --user status hermes-gateway` shows `active (running)` if you set it up as a service
 

@@ -34,9 +34,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
-if str(_RUNTIME_ROOT) not in sys.path:
-    sys.path.insert(0, str(_RUNTIME_ROOT))
+_OPERATIONS_LIB = _RUNTIME_ROOT / "operations" / "lib"
+for _path in (_RUNTIME_ROOT, _OPERATIONS_LIB):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
+import loudness  # noqa: E402
 from _shared import (  # noqa: E402
     append_jsonl,
     iter_jsonl,
@@ -424,6 +427,22 @@ class PolicyEngine:
             self._audit_traversal(profile, action, path, task_id, str(exc))
             return {"decision": "deny", "policy_rule": "path.traversal",
                     "message": str(exc)}
+        if action in MUTATING_ACTIONS and is_review_gated(npath):
+            blockers = loudness.open_blockers(self.vault)
+            if blockers:
+                message = loudness.blocker_message(blockers)
+                append_audit(self.vault, {
+                    "timestamp": now_iso(),
+                    "profile": profile,
+                    "action": action,
+                    "path": npath,
+                    "task_id": task_id,
+                    "decision": "deny",
+                    "policy_rule": "loudness.block.active",
+                    "message": message,
+                })
+                return {"decision": "deny", "policy_rule": "loudness.block.active",
+                        "message": message, "blockers": blockers}
         try:
             lane = self.lane(profile)
         except (FileNotFoundError, RuntimeError) as exc:
