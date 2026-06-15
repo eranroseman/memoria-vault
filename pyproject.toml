@@ -1,0 +1,39 @@
+# Tooling-only configuration for the current loose-runtime layout.
+# Do not add [project] here until ADR-76's wheel migration actually starts.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+  "src/.memoria",
+  "src/.memoria/mcp",
+  "src/.memoria/operations/lib",
+  "src/.memoria/operations/processing/ingest",
+  "src/.memoria/operations/integrity/retraction",
+  "src/.memoria/operations/cleanup",
+  "src/.memoria/operations/telemetry/eval",
+  "src/.memoria/operations/integrity/linter",
+  "scripts",
+  ".github/scripts",
+]
+
+[tool.ruff.lint]
+# Ruff is used as a LINTER only. The codebase is hand-formatted (aligned comment
+# columns, deliberate line breaks); `ruff format` is intentionally NOT used --
+# reformatting would churn ~2k lines for no behavioral gain.
+#
+# Curated, high-signal rule set. Beyond ruff's defaults (E4/E7/E9 + F = pyflakes
+# real bugs) this adds:
+#   W   pycodestyle warnings (trailing whitespace, invalid escapes)
+#   I   import sorting (isort)
+#   B   flake8-bugbear -- likely bugs (mutable defaults, unused loop vars, ...)
+#   C4  flake8-comprehensions -- clearer/faster comprehensions
+#   UP  pyupgrade -- modern syntax for the target Python
+#   RUF ruff-specific (mutable class defaults, etc.)
+#   PIE flake8-pie -- misc small correctness/clarity rules
+# E501 (line length) is deliberately NOT enabled -- many lines are intentionally
+# long. SIM/PERF/FURB are omitted: they push opinionated refactors (contextlib
+# .suppress, list-extend, removeprefix) that trade clarity for terseness here.
+select = ["E4", "E7", "E9", "F", "W", "I", "B", "C4", "UP", "RUF", "PIE"]
+ignore = [
+  "E731",  # assigning a lambda to a name -- idiomatic for concise test helpers.
+]

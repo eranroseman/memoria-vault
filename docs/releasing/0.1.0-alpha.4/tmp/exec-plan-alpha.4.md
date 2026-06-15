@@ -201,7 +201,7 @@ surface; deferred items (§2.2) are not built this checkpoint.
    rename); #443 is resolved by building its in-scope producers (step 5) and
    re-scoping the one retired page (agent-client-picker) now.
 4. **Packaging step-1 (E).** Tooling-only `pyproject` (pytest + ruff, delete the
-   conftest `sys.path` block) once #493 lands. Full ADR-76 stays deferred.
+   repo-side conftest import bootstrap). Full ADR-76 stays deferred.
 5. **PI surface (D), incrementally.** Each verb/indicator independently
    shippable, reachable from Obsidian (PI rule); repoint any retired
    `docs/design/` reference first. Covers #443's producers
@@ -324,7 +324,12 @@ evidence, real transcripts:
       remaining legacy single-function test files were split into granular pytest
       cases. Validation: focused pytest, Ruff, one-test-file inventory, and
       `scripts/test.sh all`. Merge this PR to close #472.
-- [ ] (next) E step 1 — tooling `pyproject.toml`.
+- [x] 2026-06-15 — E step 1 implemented on `chore/alpha4-packaging-tooling`: added
+      tooling-only `pyproject.toml` for pytest `pythonpath` and Ruff config,
+      removed `tests/conftest.py` import bootstrapping and the standalone Ruff config, and kept
+      `requirements-dev.txt` plus runtime bootstraps untouched. Validation:
+      `python -m pytest tests/ --co -q`, `python -m pytest tests/ -q`, and
+      `ruff check .`. #521 remains open/deferred for the full ADR-76 wheel migration.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
@@ -381,6 +386,12 @@ evidence, real transcripts:
   `gen_adr_index`, `ingest_mcp`, `ingest_paper`, `link`, `metrics_aggregate`,
   `runner`, `policy_hook`, `pr_policy`, `status_doctor`, and `retraction`) into
   behavior-scoped pytest cases. The inventory now reports no one-test files.
+
+- 2026-06-15 — E tooling branch prepared: repo-side import roots now live in
+  `pyproject.toml` (`tool.pytest.ini_options.pythonpath`) and Ruff reads its lint
+  policy from `tool.ruff.lint`. This intentionally does not add `[project]`,
+  does not change requirements files, and does not touch deployed runtime
+  `__file__` bootstraps; ADR-76 remains deferred via #521.
 
 ## 9. Surprises & discoveries
 
