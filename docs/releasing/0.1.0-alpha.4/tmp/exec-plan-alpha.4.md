@@ -56,6 +56,10 @@ For a reader new to this repo:
   `design-system-and-visual-discipline.md`). Those design docs are retired — the
   source of truth is now the relevant ADR or current `docs/` page. Treat the
   `docs/design/` references as stale pointers to fix, not as live specs.
+- **Versioning note.** The canonical scheme is `0.1.0-alpha.N`. Older docs/issues
+  used a carry-over labelling (`0.1.0` = alpha.1) where `v0.2`/`v0.1.1` meant
+  **alpha.2** and `v0.3`/`v0.1.2` meant **alpha.3**; treat those as alpha labels.
+  (#198 "Decide v0.2 scope" is the genuine future 0.2.0 — not a mislabel.)
 - **Release housekeeping done in this change.** Two alpha.4 `tmp/` notes that are
   *not* alpha.4 work were moved forward to `docs/releasing/0.1.0-alpha.5/tmp/`
   (`project-starter.md`, `test-env.md`). The packaging note
@@ -87,7 +91,7 @@ from the original disposition.
 | #493 | Refactor tests off dynamic `globals()` imports | explicit module aliases; clears ~hundreds of `F821`; overlaps Workstream E step 1 |
 | #472 | Code/test naming cleanup | script kebab→snake + retire `load_script()`; folder pluralization; rides ADR-69 |
 
-**D. Obsidian PI surface + v0.1.2 project workspace (PI direct-access)**
+**D. Obsidian PI surface + project workspace (PI direct-access)**
 
 | # | Title | One-line scope · note |
 |---|---|---|
@@ -102,7 +106,7 @@ from the original disposition.
 | #154 | Automate start-a-writing-project | form → script scaffolds `40-workbench/<project>/` + Mapper scope card |
 | #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row lifecycle `decision`; one aggregate prompt |
 | #381 | Remaining map skills | **deferred** (with #379/#344): score-* gated on the calibration spec (needs real-data shadow calibration); graph-claims/canvas-hub revisit later |
-| #329 | Obsidian project-management research | survey PM plugins/methods → adopt/borrow/reject; feeds v0.1.2 |
+| #329 | Obsidian project-management research | survey PM plugins/methods → adopt/borrow/reject; feeds the project workspace |
 
 **E. Runtime packaging (the `install-a-real-package.md` workstream)**
 
@@ -159,9 +163,9 @@ reserve — need real-data shadow calibration); #412 (ADR-62 harnesses); #370
   radius — the installer, AGENTS.md, the ADR-31 WSL2↔Windows bridge, and the
   analysis-stack wheels. Native Windows was **intended for alpha.3** (ADR-64's
   *When this matters*: "revisit after v0.1.0-alpha.3"); it slipped, so alpha.4
-  picks it up as the **overdue carry-over**, not a scope-up. (#296's body still
-  mislabels it "Direction for v0.3 / v0.2 unaffected" — stale framing to fix at
-  source.) **Verify Hermes' native-Windows
+  picks it up as the **overdue carry-over**, not a scope-up. (#296's body carried
+  a "v0.3 / v0.2" label — the versioning carry-over where v0.3 = alpha.3 and
+  v0.2 = alpha.2; corrected at source.) **Verify Hermes' native-Windows
   support against the primary `~/.hermes` docs first** — it is the load-bearing
   assumption in #296 — and record the supersession as an ADR before the port.
 - **#439 Mapper Tier 2 (ADR-19)** — build the hub-threshold → agent-drafted

@@ -43,7 +43,7 @@ pre-commit hook run `pytest`. The deployed vault carries **zero test code**.
 This **amends ADR-29's L1 implementation only** — the pyramid (L0–L5), the coverage
 matrix, drift control, and gate mapping are unchanged. The installer-side **checksum +
 import smoke check** is the right home for in-situ verification and is **deferred to
-v0.2**, when the installer is being reworked anyway.
+alpha.2**, when the installer is being reworked anyway.
 
 ## Consequences
 
@@ -52,7 +52,7 @@ v0.2**, when the installer is being reworked anyway.
   `requirements.txt` — the shipped runtime stays dependency-light).
 - Standard tooling is available: fixtures, `pytest -k`, assertion introspection, and
   `coverage.py` can now measure the matrix instead of asserting it by hand.
-- Until the v0.2 installer work lands, a deployed install has **no** post-install
+- Until the alpha.2 installer work lands, a deployed install has **no** post-install
   self-check. This is the status quo (it never had one) — not a regression.
 
 ## Alternatives considered
