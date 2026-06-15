@@ -39,13 +39,16 @@ by design.
   empty" line. *Verified: all three files exist.*
 - **ADR-44 (L1 tests in pytest tree) — end-state not met.** Claims "the deployed
   vault carries zero test code," but 7 shipped modules still carry inline
-  `_self_test()`: `engines/lib/schema.py`, `engines/lib/inbox.py`,
-  `engines/linter/golden.py`, `engines/linter/precommit_check.py`,
-  `mcp/cluster_mcp.py`, `mcp/tasks_mcp.py`, `mcp/patterns_mcp.py` (two —
-  `precommit_check`, `patterns_mcp` — have no `tests/` equivalent, so stripping
-  now loses coverage). **Fix:** finish the migration (add the 2 missing test
-  files first, then strip the 7) or amend the "zero test code" consequence.
-  *Verified: all 7 present.*
+  `_self_test()` (paths after the #541 rename): `operations/lib/schema.py`,
+  `operations/lib/inbox.py`, `operations/integrity/linter/golden_restore.py`,
+  `operations/integrity/linter/precommit_check.py`, `mcp/cluster_mcp.py`,
+  `mcp/tasks_mcp.py`, `mcp/patterns_mcp.py`. **Fix:** strip the inline blocks —
+  the `tests/` equivalents already exist (incl. `test_precommit_schema.py`,
+  `test_patterns.py`, `test_cluster_mcp.py`), so confirm coverage per module and
+  remove; no new test files needed. (Or amend the "zero test code" consequence.)
+  *Corrected 2026-06-15: paths updated for the operations rename; the earlier
+  "precommit_check / patterns_mcp have no tests" claim was FALSE — both have
+  tests.*
 
 ### 1.2 Minor / cosmetic
 
@@ -69,10 +72,13 @@ by design.
 
 ### 1.4 Accepted-but-partial — by design, already tracked
 
-ADR-69 (engines→operations rename not executed — sequenced; Workstream H in the
-alpha.4 ExecPlan), ADR-70 (Knowledge-gate dashboard + status-bar indicator #375),
-ADR-71 (schema↔form parity test + per-type forms). Open work inside in-progress
-alpha ADRs, not status drift.
+ADR-69 (engines→operations rename — **CORRECTION: now executed** via #541/#542;
+code lives under `src/.memoria/operations/` and `golden.py`→`golden_restore.py`.
+This supersedes the earlier "not executed" read and the stale `engines/` paths
+in §1.1; confirm only residual `install.sh`/docs references remain),
+ADR-70 (Knowledge-gate dashboard + status-bar indicator #375), ADR-71
+(schema↔form parity test + per-type forms). Open work inside in-progress alpha
+ADRs, not status drift.
 
 ---
 
@@ -90,20 +96,26 @@ Several triggers do not hold up when challenged.
 
 ### 2.2 Gating on the wrong signal — rescope
 
-- **ADR-74 (plugin provenance) — wrong signal.** "Revisit when a security
-  advisory hits" inverts a supply-chain control (you want provenance *before* an
-  incident). 12 executable plugins are vendored under `src/.obsidian/plugins/`
-  with zero pinned commit/SHA/license today. → Land the static lock manifest now
-  [S]; defer the updater + CI doctor.
+- **ADR-74 (plugin provenance) — weak gate, not wrong ADR.** *Correction:* the
+  ADR-74 trigger is **multi-signal** (release cadence, artifact changes,
+  untraceable updates, security advisory, local patches, reproducibility) — the
+  advisory is one higher-priority signal, not the sole gate; "inverts the control"
+  overstated it. The substantive point stands: starting a supply-chain audit only
+  on an incident is backwards, and 12 executable plugins are vendored under
+  `src/.obsidian/plugins/` with zero pinned commit/SHA/license today (confirmed).
+  → Land the static lock manifest now [S]; defer the updater + CI doctor.
 - **ADR-39 — arbitrary threshold holds the cheap half hostage.** "50+ claim
   notes" gates everything, but the mechanically-checkable criteria are
   template-derivable now. → Split (see 3.2).
 - **ADR-61 (nightly loop) — false dependency.** Requires "always-on
   Syncthing+VPS," but a single non-sleeping workstation suffices; it imports
   ADR-63's heaviest topology. → Rescope to "any always-on machine" (doc-only).
-- **ADR-59 (discovery relevance scorer) — over-coupled.** Gated on ADR-61's loop,
-  but the deterministic scorer already ships and could apply to *reactive* find
-  today. → Decouple.
+- **ADR-59 (discovery relevance scorer) — over-coupled, but no act-now win.**
+  *Correction:* the deterministic `[!suggestions]` scorer does **NOT** ship — it
+  is deferred (`obsidian-callouts.md`, #376; no producer under `operations/`).
+  Decoupling from ADR-61's loop removes a false dependency, but unlocks nothing
+  today because the scorer must still be built. The ≥30-batch reframe (§3.2)
+  stands; the "apply to reactive find now" justification does not.
 - **ADR-40 (admin GUI) — gates on the wrong thing.** Waits on a hackathon tool's
   stars/maintainers; the real objection is architectural (a second un-gated write
   surface). → Re-point at "does the ADR-58 read-only Inspector cover the forensic
@@ -128,8 +140,10 @@ calibration hazards), 16/35 (felt-need, sound). Deferral discipline
 
 ### 2.5 Doc-integrity bugs found
 
-- **ADR-65** lists `assumes: [8]` and calls superseded ADR-08 its "base" →
-  re-point to **ADR-52** (the superseder; substance unaffected).
+- **ADR-65** — `assumes:` is actually **`[8, 52, 30]`** (not `[8]`); its prose
+  calls superseded ADR-08 its "base". *Correct fix: **drop `8`**, keep `52` and
+  `30`* — do NOT replace `[8]` with `[52]` (that would drop the `30` ingest
+  dependency). Re-point the prose "base" to ADR-52.
 - **ADR-61** Related section cites ADR-37 as the find mechanism, but ADR-37 is
   superseded by ADR-48 (capability ships as `catalog-find-source`).
 - **ADR-38 / ADR-62** carry stale "waiting for…" text (see 2.1).
@@ -141,7 +155,7 @@ calibration hazards), 16/35 (felt-need, sound). Deferral discipline
 ### 3.1 The principle (what the research converged on)
 
 Replace every "when the PI feels it" trigger with: (1) **a count over a log the
-vault already writes** (`classify.jsonl`, the dup sweep, `link.py`'s
+vault already writes** (`classify.jsonl`, `link.py`'s
 `recorded_by_name`, audit log, Git author metadata, session logs, the tag/link
 graph) so the system surfaces "trigger ready"; (2) **shadow-first calibration** —
 run the scorer silently, log, label a sample, pin the threshold in
@@ -152,17 +166,22 @@ feature waits — without them the trigger can never self-detect.
 
 ### 3.2 Per item (best-practice number → Memoria-way trigger)
 
-- **ADR-38 — pre-file dedup.** Near-dup cosine **~0.8–0.825**, but corpus-specific
-  (optimal cutoffs span 0.33–0.87 across model/dataset — calibrate on your own
-  corpus+model; NeMo SemDedup; MDPI 2025, https://www.mdpi.com/2073-431X/14/9/385).
-  Duplicate risk follows a power-law that accelerates with size. **Memoria way:**
-  mechanism half-exists (peer-reviewer `similarity-check` ~0.8). Trigger = the
-  monthly dup sweep catches **born-duplicate pairs in ≥2 of 3 consecutive
-  months** (with a ~50-claim pre-filter floor); shadow-log neighbors now,
-  calibrate a `similarity_gate:` block in `calibration.yaml`, output a flag never
-  a merge. [S–M]
+- **ADR-38 — pre-file dedup.** Near-dup cosine ~0.8 is a **generic heuristic**,
+  corpus-specific in practice (paraphrase cutoffs span ~0.33–0.87 by
+  model/dataset — calibrate on your own corpus+model; MDPI 2025,
+  https://www.mdpi.com/2073-431X/14/9/385). *(Citation fix: NeMo SemDedup's
+  default is cosine-distance ~0.01 ≈ 0.99 cosine — not a 0.8 source; don't cite
+  it for 0.8.)* Duplicate risk rises with corpus size. **Memoria way:** the gate
+  primitive half-exists (peer-reviewer `similarity-check` ~0.8) **but the
+  retrospective `find-duplicates` sweep does NOT exist yet — build it first**
+  (§1.3). Then trigger = the sweep catches **born-duplicate pairs in ≥2 of 3
+  months** (~50-claim pre-filter floor); shadow-log neighbors, calibrate a
+  `similarity_gate:` block in `calibration.yaml`, output a flag never a merge.
+  [build sweep M; then gate S–M]
 - **ADR-39 — acceptance checklists.** **30–100 labeled examples** to ground a
-  rubric; binary beats Likert (Twine; GoDaddy; arXiv 2501.00274). **Memoria way:
+  rubric; prefer binary/low-precision over fine-grained Likert (Twine; GoDaddy).
+  *(Citation fix: drop the arXiv 2501.00274 anchor — LLM-Rubric is itself
+  Likert-based and gives no 30–100 figure.)* **Memoria way:
   split** — mechanical criteria (citekey present, <250 words, title=claim) ship
   now as a Linter flag (template-derivable); soft criteria gate on **≥30
   PI-blessed exemplars + a recurring quality miss**, then shadow-calibrate a
@@ -177,13 +196,16 @@ feature waits — without them the trigger can never self-detect.
   (≥~30 confirmable pairs, shadow precision ≥~0.7); `_aspects` → shadow-extract
   over `_papers/` now, wire at **~50 papers + ≥0.8 sample accuracy**,
   confidence→flag; exploration traces → capture by default now (engine-written),
-  re-exploration detector reuses the qmd threshold. **Doc fix:** `assumes`
-  `[8]`→`[52]`. [M / M–L / S–M]
-- **ADR-16 — systematic-review tooling.** PRISMA 2020 permits
-  single-screening-with-verification (PMC8005925); κ **≥0.6** substantial
-  (Landis & Koch); ASReview SAFE stop ~**50–100 consecutive irrelevant**, ~95%
-  recall (Syst Rev 2024); RoB 2 / ROBINS-I / GRADE per included study (Cochrane
-  Handbook Ch. 8). **Memoria way:** the protocol note's frontmatter is the
+  re-exploration detector reuses the qmd threshold (which needs the
+  `find-duplicates` sweep built first, per ADR-38). **Doc fix:** `assumes` is
+  `[8, 52, 30]` → **drop `8`** (keep 52 and 30); not "[8]→[52]". [M / M–L / S–M]
+- **ADR-16 — systematic-review tooling.** PRISMA 2020 is a *reporting* guideline
+  (it flags single-screening as higher-risk rather than "permitting" a method);
+  single-screen-with-verification is accepted by **Cochrane MECIR**. κ **≥0.6**
+  substantial (Landis & Koch); ASReview **SAFE** uses a fixed "last 50
+  irrelevant" heuristic (the ~95% recall target comes from other studies, not
+  SAFE itself); RoB 2 (Cochrane Handbook **Ch. 8**), ROBINS-I (Ch. 25), GRADE
+  (Ch. 14) per included study. **Memoria way:** the protocol note's frontmatter is the
   recordable switch — `review_mode: systematic-review` is the master trigger.
   Screening → batch-import ASReview output into `candidate` cards (mostly built
   on ADR-17); PRISMA fields on the protocol note only + a Linter count-reconcile
@@ -191,11 +213,13 @@ feature waits — without them the trigger can never self-detect.
   human verdicts). **Dual-rater reframed for single-researcher: AI-as-second
   screener with κ computed deterministically** (PRISMA-legitimate). [S–M]
 - **ADR-59 — classical displacements.** (1) Learning-to-rank's edge is *features,
-  not volume*; works on small sets (~40 *queries* × dozens of judgments;
-  softwaredoug LambdaMART). "≥300 decisions" conflates decisions with queries →
-  reframe to **≥30 batches × ≥10 judgments, kept-rate 10–90%**, shadow NDCG@10 vs
-  heuristic. (5) Keyphrase: KeyBERT ~40–45% F1 (candidate-gen, not decider), YAKE
-  ~30× faster — trigger on a **measured miss rate** (human adds a `topic:` the
+  not volume* (the "~40 queries × dozens" figure is illustrative, not a hard
+  floor). "≥300 decisions" conflates decisions with queries → reframe to **≥30
+  batches × ≥10 judgments, kept-rate 10–90%**, shadow NDCG@10 vs heuristic.
+  *Caveat (per §2.2): the `[!suggestions]` scorer does not ship, so this is
+  build-then-shadow, not a now-item.* (5) Keyphrase: YAKE is ~30× faster than
+  KeyBERT at comparable quality (F1 figures are dataset-dependent — don't quote a
+  single number) — trigger on a **measured miss rate** (human adds a `topic:` the
   classifier missed in ≥20% of last 50), not a 3-month timer; YAKE-first. (6)
   Record linkage: best practice is blocking→matching, deterministic ID-first —
   which `link.py` already implements to best practice (close that sub-item); only
@@ -225,7 +249,8 @@ feature waits — without them the trigger can never self-detect.
 - triage-decision log (`system/logs/triage.jsonl`) — feeds ADR-59(1), ADR-66
 - classify-miss counter over `classify.jsonl` — feeds ADR-59(5), ADR-35
 - by-name collision counter over `link.py`'s `recorded_by_name` — feeds ADR-59(6)
-- shadow-log on the dup sweep — feeds ADR-38
+- **build** the `find-duplicates` sweep first (it does not exist yet), then
+  shadow-log it — feeds ADR-38 [M, not S]
 - `similar` shadow proposer + `_aspects` shadow extraction (read-only) — feeds ADR-65
 - cron heartbeat (last-successful-run timestamp) — feeds ADR-63 always-on
 
@@ -242,7 +267,8 @@ feature waits — without them the trigger can never self-detect.
 - Trigger rescopes (replace eyeball with the §3.2 self-detecting conditions):
   ADR-38, 39, 59 (decouple discovery scorer), 61 (drop VPS dependency), 65,
   16, 35, 60, 63, 74.
-- Doc-integrity: ADR-65 `assumes` `[8]`→`[52]`; ADR-61 ADR-37→ADR-48 reference;
+- Doc-integrity: ADR-65 `assumes` is `[8,52,30]` → **drop `8`** (keep 52, 30);
+  ADR-61 ADR-37→ADR-48 reference;
   ADR-38/62 stale "waiting for" text.
 - Minor: ADR-30 schema enum, ADR-18 alias note, ADR-54 worklist clarification.
 
@@ -318,3 +344,52 @@ table in `docs/adr/README.md`).
 - Confirm: every retired ADR has `date_resolved`; ADR-17 has `superseded_by`;
   no remaining `assumes:`/prose reference to 17 (→50/51), 34, 40, or superseded 37
   (→48).
+
+---
+
+## 6. Red-team corrections (2026-06-15)
+
+This note was independently red-teamed; the §1 status-gap audit and §5
+retirement mechanics held up, but several §2–§3 reads were stale (notably the
+`engines→operations` rename landing via #541/#542 *after* the note was written)
+or miscited. Corrections applied inline above; logged here for traceability.
+
+**Load-bearing fixes (would have injected errors if executed as written):**
+
+- **ADR-59 scorer does NOT ship** (deferred, #376 / `obsidian-callouts.md`). The
+  "scorer already ships → apply to reactive find now" claim was false; the
+  decouple/reframe stands but is build-then-shadow, not a now-item. (§2.2, §3.2)
+- **ADR-65 `assumes` is `[8, 52, 30]`**, not `[8]`. Fix is **drop `8`** (keep 52
+  and 30) — the earlier "[8]→[52]" would have dropped the `30` ingest dep.
+  (§2.5, §3.2, §4.1, §5)
+- **The `find-duplicates` sweep does not exist** — it is a prerequisite to build,
+  not an existing log to instrument. Removed from the "logs we already write"
+  list; ADR-38/65 triggers and the §3.3 task now say build-first. (§3.1, §3.2, §3.3)
+- **ADR-44**: paths updated for the operations rename
+  (`operations/lib/schema.py`, `operations/integrity/linter/golden_restore.py`,
+  …); the "precommit_check / patterns_mcp lack tests" claim was FALSE
+  (`test_precommit_schema.py`, `test_patterns.py` exist) — no new test files
+  needed, just strip the inline blocks. (§1.1)
+- **ADR-69 rename is now executed** (#541/#542); the §1.4 "not executed" status
+  and §1.1 `engines/` paths were stale — corrected.
+
+**Citation / framing fixes:**
+
+- **NeMo SemDedup ≠ 0.8** (its default is cosine-distance ~0.01 ≈ 0.99); 0.8 is a
+  generic heuristic. (§3.2 ADR-38)
+- **arXiv 2501.00274 (LLM-Rubric) dropped** for "binary > Likert" — it is itself
+  Likert-based and gives no 30–100 figure. (§3.2 ADR-39)
+- **PRISMA 2020 is a reporting guideline**, it does not "permit" single-screening;
+  Cochrane MECIR is the source for single-screen-with-verification. (§3.2 ADR-16)
+- **ASReview SAFE** = fixed "last 50 irrelevant"; the ~95% recall figure is from
+  other studies, not SAFE. RoB 2 = Handbook Ch. 8, ROBINS-I Ch. 25, GRADE Ch. 14
+  (not all "Ch. 8"). (§3.2 ADR-16)
+- **KeyBERT F1 is dataset-dependent** (don't quote one number); the robust claim
+  is YAKE ~30× faster. LTR "~40 queries" is illustrative, not a floor. (§3.2 ADR-59)
+- **ADR-74**: its trigger is multi-signal, not just "security advisory"; "inverts
+  the control" overstated it. The land-the-manifest-now recommendation stands. (§2.2)
+
+**Verified accurate (no change):** the §1 status gaps (ADR-17 schema mismatch +
+empty `superseded_by`, ADR-62 aggregator built, ADR-30 `ingest_status`, ADR-18
+fallback), ADR-39/40/34 trigger reads, ADR-61 `assumes` + ADR-37→48, and all §5
+retirement mechanics. ADR-21 and ADR-54 remain "verify" (§1.3) — honestly flagged.
