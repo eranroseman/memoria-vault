@@ -55,7 +55,7 @@ l0() {
   run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P"/operations/lib/schema.py "$P"/operations/lib/inbox.py "$P"/operations/integrity/linter/detectors.py "$P"/operations/integrity/linter/golden_restore.py "$P"/operations/integrity/linter/session_summary.py "$P"/operations/integrity/linter/precommit_check.py "$P"/operations/processing/ingest/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh
   if command -v shellcheck >/dev/null 2>&1; then
-    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit "$P"/scripts/*.sh
+    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
   # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
   # querying a field no template emits is a silent failure — CI gates it too);

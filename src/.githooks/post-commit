@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Create Peer-reviewer verify cards for committed project drafts.
+set -uo pipefail
+
+warn() { printf 'memoria post-commit: %s\n' "$*" >&2; }
+
+if ! command -v git >/dev/null 2>&1; then
+  warn "git unavailable; skipping verify-on-commit"
+  exit 0
+fi
+
+if ! command -v hermes >/dev/null 2>&1; then
+  warn "hermes unavailable; skipping verify-on-commit"
+  exit 0
+fi
+
+commit="$(git rev-parse --verify HEAD 2>/dev/null)" || exit 0
+short_commit="$(git rev-parse --short HEAD 2>/dev/null || printf '%s' "${commit:0:12}")"
+
+mapfile -t draft_paths < <(
+  git diff-tree --root --no-commit-id --name-only -r "$commit" -- 'projects/**/*.md' 'projects/*.md' 2>/dev/null \
+    | LC_ALL=C sort -u
+)
+
+if [ "${#draft_paths[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+for draft in "${draft_paths[@]}"; do
+  [ -n "$draft" ] || continue
+  key_path="${draft//[^A-Za-z0-9._-]/-}"
+  title="Verify draft: $draft"
+  body="Verify committed draft \`$draft\` from commit \`$short_commit\`. Route through the normal Peer-reviewer verify workflow; report findings as Inbox flag cards and leave edits to the PI."
+  if ! hermes kanban create \
+    --lane verify \
+    --title "$title" \
+    --body "$body" \
+    --assignee memoria-peer-reviewer \
+    --skill verify-check-citation \
+    --idempotency-key "verify-on-commit-$commit-$key_path" >/dev/null; then
+    warn "could not enqueue verify card for $draft"
+  fi
+done
+
+exit 0

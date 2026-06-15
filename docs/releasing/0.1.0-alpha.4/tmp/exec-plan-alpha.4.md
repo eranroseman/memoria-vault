@@ -341,7 +341,12 @@ evidence, real transcripts:
       `Memoria: verify draft` writes an expanded `[!verification]` trace callout
       before delegating. Validation: JS syntax checks, focused QuickAdd pytest,
       docs-doctor.
-- [ ] (next) D — continue PI surface (#377/#343/#380/#145/#183/#154/#336/#329/#378).
+- [x] 2026-06-15 — D #377 verify-on-commit implemented on
+      `feat/alpha4-verify-on-commit`: shipped `.githooks/post-commit`, installer
+      wiring for `.git/hooks/post-commit`, and tests that a committed
+      `projects/**/*.md` draft enqueues a normal Peer-reviewer verify card.
+      Validation: focused hook pytest, Bash syntax/shellcheck, docs-doctor.
+- [ ] (next) D — continue PI surface (#343/#380/#145/#183/#154/#336/#329/#378).
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 

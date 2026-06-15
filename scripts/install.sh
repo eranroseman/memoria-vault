@@ -395,6 +395,7 @@ copy_vault() {
   ok "Golden copy reconciled (.memoria/golden/)"
 
   wire_commit_gate
+  wire_verify_on_commit_hook
 
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
@@ -422,7 +423,7 @@ copy_vault() {
     say "  This folder is your vault — set up your own git here (obsidian-git needs a repo):"
     say "      cd \"$VAULT_PATH\""
     say "      git init && git add -A && git commit -m \"Initial Memoria vault\""
-    say "      (then re-run with --profiles-only to wire the pre-commit schema gate)"
+    say "      (then re-run with --profiles-only to wire the git hooks)"
     say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
   fi
 }
@@ -968,6 +969,7 @@ main() {
     wire_metrics_cron
     wire_eval_cron
     wire_commit_gate
+    wire_verify_on_commit_hook
     print_next_steps
     return
   fi

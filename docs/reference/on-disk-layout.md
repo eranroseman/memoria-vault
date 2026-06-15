@@ -76,6 +76,10 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ├── design-system.md · project-hints.yaml.example
 ```
 
+## `.githooks/` — source hooks
+
+Shipped in `src/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `projects/`.
+
 Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
@@ -85,6 +89,7 @@ Runtime-only (created in the deployed vault, never shipped):
 | `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python the MCP servers run on. |
 | `.git/hooks/pre-commit` | installer | The schema commit gate (once the vault is a git repo). |
+| `.git/hooks/post-commit` | installer | The verify-on-commit trigger copied from `.githooks/post-commit`. |
 
 ---
 

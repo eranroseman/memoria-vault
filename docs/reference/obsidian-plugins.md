@@ -24,7 +24,7 @@ Memoria breaks without these. The starter vault **ships all twelve bundled and c
 | modalforms | `modalforms` | Provides structured in-Obsidian forms for capture flows, including controlled `research_area` and `methodology` fields sourced from `system/vocabulary.md`. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
-| obsidian-git | `obsidian-git` | Git commits from inside Obsidian; `post-commit` hook fires Verify/Revise workflows. |
+| obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
 | homepage | `homepage` | Opens `home.md` on startup as the deterministic landing surface. |
 | buttons | `buttons` | Renders the command buttons on the `home.md` control panel ([ADR-68](../adr/68-workspaces-desk-library-studio.md)). **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
@@ -105,7 +105,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `autoSaveInterval` | `30` | Scheduled commit every 30 min (the replacement for per-change backup). `0` disables it. |
 | `pullBeforePush` | `true` | Required; prevents conflicts on multi-machine setups. |
 | `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
-| `post-commit` hook | enabled | Load-bearing — fires Verify workflow. Lives in `.githooks/`, not `data.json`. Do not disable. |
+| `post-commit` hook | enabled | Load-bearing — enqueues Peer-reviewer verification for committed `projects/**/*.md` drafts. Source lives in `.githooks/`, installer copies it into `.git/hooks/`; it is not a `data.json` setting. Do not disable. |
 
 > **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps deployments onto those keys.
 

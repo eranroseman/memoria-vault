@@ -8,21 +8,19 @@ nav_order: 7
 
 Put a draft in front of the **Peer-reviewer** — the independent, adversarial `verify` lane — read the finding-first flag cards it raises, close the gaps, and loop until clean or the remaining gaps are consciously accepted. The Peer-reviewer's posture is *flag, don't fix*: the only thing it can write is Inbox cards; every edit is yours.
 
-> Per-commit project verification arrives with the deferred Project workflow ([Start a writing project](start-a-writing-project.md)); for now you run verify passes deliberately, as below.
-
 ## Prerequisites
 
 - A draft in `projects/<slug>/` ([Draft with the Writer](draft-with-writer.md)), or any text whose claims you want traced
 
 ## Steps
 
-**1. Delegate a verify pass.**
+**1. Delegate or commit a verify pass.**
 
-In the Co-PI pane:
+For project drafts under `projects/<slug>/`, committing the draft enqueues a verify-lane card automatically through the vault's `post-commit` hook. You can also request a pass directly in the Co-PI pane:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 
-The Co-PI delegates a **`verify`** task. (Palette twin: **Memoria: verify draft** — defaults to the active note when it's under `projects/`; see [Command palette](../../reference/obsidian-command-palette.md).) You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
+The Co-PI delegates a **`verify`** task. Palette twin: **Memoria: verify draft** — defaults to the active note when it's under `projects/` and writes a local `[!verification]` preflight trace before delegating (see [Command palette](../../reference/obsidian-command-palette.md)). You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
 
 **2. Read the flag cards.**
 
@@ -39,7 +37,7 @@ Resolve each handled flag (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**); th
 
 **4. Loop.**
 
-After revising, delegate another pass over the same file. Verify ↔ fix is a loop, not a single gate.
+After revising, commit the project draft again or delegate another pass over the same file. Verify ↔ fix is a loop, not a single gate.
 
 **5. Accept a gap without closing it** (when appropriate).
 
