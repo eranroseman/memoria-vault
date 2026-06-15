@@ -42,8 +42,8 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
   `CHANGELOG.md` or tag by hand.
 - **Prose** (scope summary, cut procedure, known-limitations) stays in
   `docs/releasing/<version>/`, guarded by `status-doctor` against link/path/flag drift.
-- The in-flight **v0.1** plan keeps its §2/§3 tables as the at-cut record (with a pointer
-  to its tracking issue); **v0.2+** uses the checklist model from the start.
+- The in-flight **alpha.1** plan keeps its §2/§3 tables as the at-cut record (with a pointer
+  to its tracking issue); **alpha.2+** uses the checklist model from the start.
 
 The live process this produced is documented in [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md) and
 scaffolded by the `/release` skill.
