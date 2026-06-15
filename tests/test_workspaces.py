@@ -138,6 +138,21 @@ def _assert_buttons_dispatch_registered_commands(path):
             f"{path.relative_to(SRC)} button action {action!r} matches no registered command")
 
 
+
+def test_home_status_line_reads_linter_verdict_and_board_queue_depths():
+    text = HOME.read_text(encoding="utf-8")
+
+    assert "> [!info] Status line" in text
+    assert "dv.pages(" in text
+    assert "system/metrics" in text
+    assert 'page.type === "lint-verdict"' in text
+    assert 'system/logs/lint-findings.jsonl' in text
+    assert 'system/logs/board-state.jsonl' in text
+    for field in ("running", "blocked", "review_queue", "retrying"):
+        assert f"totals.{field}" in text
+    assert "Active:" in text and "Waiting:" in text
+    assert "Review:" in text and "Retries:" in text
+
 def test_home_buttons_dispatch_registered_commands():
     _assert_buttons_dispatch_registered_commands(HOME)
 

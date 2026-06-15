@@ -43,6 +43,8 @@ def test_board_export():
             {"task_id": "t_c3", "title": "Old", "status": "archived", "assignee": "memoria-writer"},
             {"task_id": "t_d4", "title": "Blocked card", "status": "blocked",
              "assignee": "memoria-librarian", "reason": "needs human input"},
+            {"task_id": "t_e5", "title": "Retry card", "status": "ready",
+             "assignee": "memoria-writer", "metadata": {"retry_count": 2}},
         ]
 
         # normalize: metadata-as-string parses; defaults fill in
@@ -83,6 +85,7 @@ def test_board_export():
             check("snapshot counts running", snap["totals"]["running"] == 1)
             check("snapshot counts blocked", snap["totals"]["blocked"] == 1)
             check("snapshot counts review-queue (done+requested)", snap["totals"]["review_queue"] == 1)
+            check("snapshot counts retrying ready cards", snap["totals"]["retrying"] == 1)
             check("snapshot per-lane present", snap["lanes"]["memoria-librarian"]["running"] == 1)
             lines = (vault / SNAPSHOT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
             check("snapshot appends one JSONL line", len(lines) == 1 and json.loads(lines[0]))

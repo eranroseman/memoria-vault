@@ -47,14 +47,14 @@ A queue-depth snapshot appended once per `board_export.py` run. Counts only — 
 {
   "timestamp": "2026-06-01T09:00:00Z",
   "lanes": {
-    "memoria-writer":    {"running": 1, "ready": 0, "blocked": 1, "review_queue": 2},
-    "memoria-librarian": {"running": 0, "ready": 3, "blocked": 0, "review_queue": 0}
+    "memoria-writer":    {"running": 1, "ready": 0, "blocked": 1, "review_queue": 2, "retrying": 0},
+    "memoria-librarian": {"running": 0, "ready": 3, "blocked": 0, "review_queue": 0, "retrying": 1}
   },
-  "totals": {"running": 1, "ready": 3, "blocked": 1, "review_queue": 2}
+  "totals": {"running": 1, "ready": 3, "blocked": 1, "review_queue": 2, "retrying": 1}
 }
 ```
 
-`review_queue` counts cards that are `status: done` **and** sitting in a non-terminal `review_status` (awaiting a human). A card is counted in exactly one of `running` / `ready` / `blocked`; `review_queue` is an orthogonal overlay.
+`review_queue` counts cards that are `status: done` **and** sitting in a non-terminal `review_status` (awaiting a human). `retrying` counts cards in `ready` with `retry_count > 0`. A card is counted in exactly one of `running` / `ready` / `blocked`; `review_queue` and `retrying` are overlays for the ambient status line.
 
 ## board-transitions.jsonl
 

@@ -7,24 +7,32 @@ cssclasses:
 
 # Memoria
 
-> [!info] Status glance
+> [!info] Status line
 > ```dataviewjs
-> async function load(path) {
->   const t = await dv.io.load(path);
->   return (!t || !t.trim()) ? null : t.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
+> async function loadJsonl(path) {
+>   const text = await dv.io.load(path);
+>   return (!text || !text.trim()) ? [] : text.trim().split("\n").filter(Boolean).map(line => JSON.parse(line));
 > }
-> const board = await load("system/logs/board-state.jsonl");   // per-run snapshots
-> const lint  = await load("system/logs/lint-findings.jsonl"); // one row per finding
-> if (board === null && lint === null) {
->   dv.paragraph("_Status feeds not wired yet — they appear after the first agent run._");
-> } else {
->   const latest   = (board ?? []).length ? board[board.length - 1] : null;  // newest snapshot
->   const reviews  = latest?.totals?.review_queue ?? 0;
->   const blocked  = latest?.totals?.blocked ?? 0;
->   const findings = (lint ?? []).filter(e => e.severity === "HIGH" || e.severity === "CRITICAL").length;
->   const clear    = reviews === 0 && blocked === 0 && findings === 0;
->   dv.paragraph(`${clear ? "✅ " : "⚠ "}${reviews} review(s) pending · ${blocked} blocked · ${findings} HIGH/CRITICAL finding(s) — [[board-state|board]] · [[drift-watch|findings]]`);
+> function linterFallback(rows) {
+>   const sev = rows.map(row => row.severity).filter(Boolean);
+>   if (sev.includes("CRITICAL")) return "FAIL";
+>   if (sev.includes("HIGH") || sev.includes("MEDIUM")) return "REVIEW";
+>   return rows.length ? "PASS" : "--";
 > }
+> const boardRows = await loadJsonl("system/logs/board-state.jsonl");
+> const lintRows = await loadJsonl("system/logs/lint-findings.jsonl");
+> const verdicts = dv.pages('"system/metrics"')
+>   .where(page => page.type === "lint-verdict")
+>   .sort(page => page.period ?? page.file.name, "desc");
+> const latest = boardRows.length ? boardRows[boardRows.length - 1] : null;
+> const totals = latest?.totals ?? {};
+> const verdict = verdicts.length ? verdicts[0].verdict : linterFallback(lintRows);
+> const icon = verdict === "FAIL" ? "✕" : verdict === "REVIEW" ? "!" : verdict === "PASS" ? "✓" : "…";
+> const active = totals.running ?? 0;
+> const waiting = totals.blocked ?? 0;
+> const review = totals.review_queue ?? 0;
+> const retries = totals.retrying ?? 0;
+> dv.paragraph(`${icon} ${verdict} · Active: ${active} · Waiting: ${waiting} · Review: ${review} · Retries: ${retries} — [[board-state|board]] · [[drift-watch|findings]]`);
 > ```
 
 ## Act
