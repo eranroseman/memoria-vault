@@ -21,7 +21,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   ├── catalog.base           the Catalog Bases view
 │   ├── papers/  people/  organizations/  venues/  datasets/  repositories/
 ├── notes/                   the PI's knowledge (authored links:)
-│   ├── fleeting/  source/  index/
+│   ├── fleeting/  sources/  indexes/
 │   ├── claims/                review-gated
 │   └── hubs/                  review-gated
 ├── projects/                project scratch (drafts, code) — Writer/Engineer lanes
@@ -35,6 +35,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── board/                 board-export card projections
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
+    ├── worklists/             Bases-backed batch screening rows (worklist-item notes)
     ├── metrics/               derived metric notes (lane-*, lint-verdict-*) + eval/runs.jsonl
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
@@ -50,7 +51,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      18 per-type frontmatter schemas
+│   ├── types/<type>.yaml      19 per-type frontmatter schemas
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution floor, cluster params)
 ├── operations/              the deterministic operation cores
@@ -99,7 +100,7 @@ Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggl
 
 ### The Bases views
 
-The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, the `claims`/`sources`/`fleeting` bases in `system/dashboards/`, and `system/patterns/patterns.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
+The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, the `claims`/`sources`/`fleeting` bases in `system/dashboards/`, `system/patterns/patterns.base`, and `system/worklists/worklists.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
 
 ---
 

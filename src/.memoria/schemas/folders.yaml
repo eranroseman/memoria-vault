@@ -23,6 +23,7 @@ homes:
   work-prompt: inbox
   pattern: system/patterns
   eval-task: system/eval
+  worklist-item: system/worklists
 
 # review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
 gated_prefixes:
@@ -59,4 +60,5 @@ skeleton:
   - system/templates
   - system/patterns
   - system/eval
+  - system/worklists
   - system/dashboards

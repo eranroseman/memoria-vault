@@ -134,3 +134,19 @@ def test_key_bases_surface_lifecycle_near_left_edge():
             order = view.get("order", [])
             if "lifecycle" in order:
                 assert order.index("lifecycle") <= 1, f"{path.name}::{view.get('name')} buries lifecycle"
+
+
+def test_worklists_base_groups_by_worklist_decision_and_group():
+    data = yaml.safe_load((SRC / "system" / "worklists" / "worklists.base").read_text(encoding="utf-8"))
+    text = (SRC / "system" / "worklists" / "worklists.base").read_text(encoding="utf-8")
+    assert 'file.inFolder("system/worklists")' in text
+    assert 'type == "worklist-item"' in text
+    views = {v.get("name"): v for v in data.get("views", [])}
+    assert {"By worklist", "By decision", "By group"} <= set(views)
+    assert views["By worklist"]["groupBy"]["property"] == "worklist"
+    assert views["By decision"]["groupBy"]["property"] == "decision"
+    assert views["By group"]["groupBy"]["property"] == "group"
+    for view in views.values():
+        order = view.get("order", [])
+        assert "lifecycle" in order and order.index("lifecycle") <= 1
+        assert "decision" in order and order.index("decision") <= 2

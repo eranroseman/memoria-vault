@@ -13,6 +13,7 @@ Visible system artifacts live under `system/` in the runtime vault. They are not
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
 | `system/dashboards/*.base` | Bases views for sources, claims, and fleeting notes. | [Dashboards](dashboards.md) |
 | `system/patterns/patterns.base` | Bases view over runnable patterns. | [System actions](system-actions.md) |
+| `system/worklists/worklists.base` | Bases view over batch screening rows; the Inbox points here with one aggregate work-prompt per batch. | [Dashboards](dashboards.md) |
 | `catalog/catalog.base` | Catalog-wide Bases view for papers, people, organizations, venues, datasets, and repositories. | [Note types](note-types.md) |
 | `inbox/inbox.base` | Inbox card Bases view, including the `Needs me` surface embedded on `home.md`. | [Kanban board reference](kanban-board.md) |
 

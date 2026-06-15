@@ -35,7 +35,7 @@ Not every place the PI acts is an approval ([ADR-54](../../adr/54-two-decision-k
 
 **Classify is neither — it is automated.** Assigning facet metadata to a kept source is low-stakes, high-volume, and verifiable: a human gate on it is a guaranteed rubber stamp. So classification ships as audited, correctable metadata, with a `flag` only on genuine ambiguity. Prefer full automation over a fake decision.
 
-**High-cardinality decisions become a batch worklist, never N cards.** When a coverage report finds forty sources each needing a keep/reject call, the Inbox gets *one* aggregate work-prompt ("40 sources to screen"), pointing at a Bases-backed worklist where each row carries a lifecycle `decision` the PI toggles at group or item granularity — the systematic-review screening model. Forty cards would flood a queue meant to converge to zero and train select-all-accept.
+**High-cardinality decisions become a batch worklist, never N cards.** When a coverage report finds forty sources each needing a keep/reject call, the Inbox gets *one* aggregate work-prompt ("40 sources to screen"), pointing at a Bases-backed worklist where each file-backed row carries a `decision` field the PI toggles at group or item granularity — the systematic-review screening model. Forty cards would flood a queue meant to converge to zero and train select-all-accept.
 
 And nowhere is there confidence-tiered auto-accept: confident-wrong is exactly the failure the gate exists to catch.
 
