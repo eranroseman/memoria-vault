@@ -69,7 +69,7 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 ## Part C — Installer lint (mirrors `lint-installers` CI — both are required checks)
 
-**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/engines/linter/pre-commit src/.memoria/scripts/*.sh`
+**C1. shellcheck.** `shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit src/.memoria/scripts/*.sh`
 - ✓ Pass: no output, exit 0.
 - ✗ Fails: `SCxxxx` at a `file:line` — fix it, or scope a `# shellcheck disable=SCxxxx`. (The cron *template* `board-export-cron.sh` carries `{{PYTHON}}` placeholders that read as a brace command → `SC2288` is disabled on that line by design.)
 
@@ -83,7 +83,7 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against the repo source tree (`src/`) and, when validating an installed candidate, the rebuilt test vault.
 
-**D1. dashboard-field-drift on the repo source.** `python src/.memoria/engines/linter/detectors.py --vault src --gate dashboard-field-drift`
+**D1. dashboard-field-drift on the repo source.** `python src/.memoria/operations/integrity/linter/detectors.py --vault src --gate dashboard-field-drift`
 - ✓ Pass: no `dashboard-field-drift` findings — every field a dashboard queries **over a note folder** exists in some template.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 
@@ -108,7 +108,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ## Part E — Quick syntax sanity (pre-commit)
 
-**E1. Python compiles.** `python -m py_compile src/.memoria/mcp/*.py src/.memoria/engines/linter/detectors.py`
+**E1. Python compiles.** `python -m py_compile src/.memoria/mcp/*.py src/.memoria/operations/integrity/linter/detectors.py`
 - ✓ Pass: exit 0, no output.
 
 **E2. Shell parses.** `bash -n scripts/install.sh`

@@ -27,7 +27,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 | **Peer-reviewer** | The independent verify gate — traces claims to sources, validates every `[@citekey]`, and red-teams arguments for soundness; flags, never fixes |
 | **Engineer** | Scaffolds handoffs to an external coding agent and owns the commit/revert gate |
 
-Deterministic **engines** do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP. The full roster: [Engines — the deterministic layer](docs/explanation/engines/README.md).
+Deterministic **operations** do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP. The full roster: [Operations — the deterministic layer](docs/explanation/operations/README.md).
 
 Canonical roster, postures, and write-scope ceilings for each agent: [Profile capabilities](docs/reference/profiles.md). Design rationale per agent: [`docs/explanation/profiles/`](docs/explanation/profiles).
 

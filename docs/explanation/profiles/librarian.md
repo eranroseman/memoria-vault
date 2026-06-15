@@ -45,6 +45,6 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 ## Related
 
-- The mechanical counterpart: [Engines](../engines/README.md)
+- The mechanical counterpart: [Operations](../operations/README.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
 - Why intake is separated from verification: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)

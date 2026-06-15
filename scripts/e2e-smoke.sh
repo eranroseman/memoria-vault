@@ -30,13 +30,13 @@ print(f"   skeleton ensured ({len(folders['skeleton'])} dirs); tree matches fold
 PYEOF
 
 echo "== 2. golden copy + commit gate wiring =="
-"$PY" "$V/.memoria/engines/linter/golden.py" --vault "$V" stage
+"$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" stage
 git -C "$V" init -q
-cp "$V/.memoria/engines/linter/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
+cp "$V/.memoria/operations/integrity/linter/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
 
 echo "== 3. fresh-vault integrity =="
-"$PY" "$V/.memoria/engines/linter/detectors.py" --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"
-"$PY" "$V/.memoria/engines/linter/golden.py" --vault "$V" check || fail "golden drift on a fresh vault"
+"$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"
+"$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" check || fail "golden drift on a fresh vault"
 
 echo "== 4. the commit gate =="
 git -C "$V" add -A
@@ -57,8 +57,8 @@ echo "== 5. offline ingest -> entity -> honesty card =="
 "$PY" - "$ROOT" "$V" <<'PYEOF'
 import sys, pathlib, re, yaml
 root, vault = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
-sys.path.insert(0, str(root / "src/.memoria/engines/ingest"))
-sys.path.insert(0, str(root / "src/.memoria/engines/lib"))
+sys.path.insert(0, str(root / "src/.memoria/operations/processing/ingest"))
+sys.path.insert(0, str(root / "src/.memoria/operations/lib"))
 import ingest_paper, schema, inbox
 BIB = "@article{x2024demo,\n  title = {Demo Work},\n  author = {Doe, Jane},\n  year = {2024},\n  journal = {Demo Journal},\n}\n"
 note = ingest_paper.ingest_text("x2024demo", BIB)
@@ -92,9 +92,9 @@ print(f"   graph: {len(g['nodes'])} nodes / {len(g['edges'])} edges")
 PYEOF
 
 echo "== 7. final lint over the worked vault =="
-verdict=$("$PY" "$V/.memoria/engines/linter/detectors.py" --vault "$V" | tail -1)
+verdict=$("$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1)
 echo "   $verdict"
 echo "$verdict" | grep -qE "PASS|REVIEW" || fail "worked vault verdict: $verdict"
-"$PY" "$V/.memoria/engines/linter/golden.py" --vault "$V" check || fail "golden drift after the loop"
+"$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" check || fail "golden drift after the loop"
 
 echo "e2e-smoke: ✅ all gates green"

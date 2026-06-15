@@ -7,10 +7,12 @@ ROOT = Path(__file__).resolve().parent.parent
 _DIRS = [
     "src/.memoria",
     "src/.memoria/mcp",
-    "src/.memoria/engines/lib",
-    "src/.memoria/engines/ingest",
-    "src/.memoria/engines/sweeps",
-    "src/.memoria/engines/linter",
+    "src/.memoria/operations/lib",
+    "src/.memoria/operations/processing/ingest",
+    "src/.memoria/operations/integrity/retraction",
+    "src/.memoria/operations/cleanup",
+    "src/.memoria/operations/telemetry/eval",
+    "src/.memoria/operations/integrity/linter",
     "scripts",
     ".github/scripts",
 ]

@@ -42,7 +42,7 @@ def test_pr_policy():
         check("is_sensitive: vault profiles", is_sensitive("src/.memoria/profiles/memoria-linter/detectors.py"))
         check("is_sensitive: vault mcp", is_sensitive("src/.memoria/mcp/policy_mcp.py"))
         check("is_sensitive: lane-overrides", is_sensitive("src/.memoria/lane-overrides/coder.yaml"))
-        check("is_sensitive: vault engines", is_sensitive("src/.memoria/engines/ingest/pipeline.py"))
+        check("is_sensitive: vault engines", is_sensitive("src/.memoria/operations/processing/ingest/runner.py"))
         check("is_sensitive: vault schemas", is_sensitive("src/.memoria/schemas/folders.yaml"))
         check("is_sensitive: vault design docs", is_sensitive("src/.memoria/design-system.md"))
         check("is_sensitive: adr (docs/adr/)", is_sensitive("docs/adr/29-testing-framework.md"))

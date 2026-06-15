@@ -154,5 +154,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [engines](../explanation/engines/README.md) (Linter, Clustering, Sweeps)
+- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [engines](../explanation/operations/README.md) (Linter, Clustering, Sweeps)
 - Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/

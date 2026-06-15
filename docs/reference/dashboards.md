@@ -52,7 +52,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and workspa
 
 ## Verdict band (drift-watch)
 
-The drift-watch dashboard rolls the Linter engine's detector findings up into a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
+The drift-watch dashboard rolls the Linter operation's detector findings up into a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
 ## Trust score (fleet-health)
 
@@ -60,7 +60,7 @@ A 0–100 composite per lane, computed by `src/.memoria/mcp/metrics_aggregate.py
 
 ## Eval metrics (eval-trend)
 
-Per-quarter capability scores, computed by the deterministic scorer `src/.memoria/engines/sweeps/eval_score.py` into `system/metrics/eval/runs.jsonl` ([ADR-11](../adr/11-vault-eval-maintenance.md)). Each metric is 0–1, higher is better: **recall@k** (gold citekeys in the top-k retrieved), **support-rate** (cited evidence resolving to real catalog records), **FAMA-clean** (no superseded/archived claim reused). A gold task whose card reported no machine-readable result shows as **unscored** — never a faked score. Diagnostic, not gating: a dip informs the PI; it does not pause scheduled work. Full contract: [Vault eval](vault-eval.md).
+Per-quarter capability scores, computed by the deterministic scorer `src/.memoria/operations/telemetry/eval/eval_score.py` into `system/metrics/eval/runs.jsonl` ([ADR-11](../adr/11-vault-eval-maintenance.md)). Each metric is 0–1, higher is better: **recall@k** (gold citekeys in the top-k retrieved), **support-rate** (cited evidence resolving to real catalog records), **FAMA-clean** (no superseded/archived claim reused). A gold task whose card reported no machine-readable result shows as **unscored** — never a faked score. Diagnostic, not gating: a dip informs the PI; it does not pause scheduled work. Full contract: [Vault eval](vault-eval.md).
 
 ---
 

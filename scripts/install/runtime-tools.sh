@@ -37,7 +37,7 @@ ensure_qmd() {
 wire_commit_gate() {
   if [ -d "$VAULT_PATH/.git" ]; then
     run mkdir -p "$VAULT_PATH/.git/hooks"
-    run cp "$VAULT_PATH/.memoria/engines/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
+    run cp "$VAULT_PATH/.memoria/operations/integrity/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
     run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
     ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
   else

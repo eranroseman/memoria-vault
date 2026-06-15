@@ -5,13 +5,13 @@ parent: Reference
 
 # Ingest routing
 
-The ingest engine (`src/.memoria/engines/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
+The ingest engine (`src/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the engine itself writes no vault notes.
 
 ---
 
 ## The pipeline
 
-`src/.memoria/engines/ingest/pipeline.py` chains four deterministic stages into a single **draft bundle**:
+`src/.memoria/operations/processing/ingest/runner.py` chains four deterministic stages into a single **draft bundle**:
 
 | Stage | Module | Does |
 | --- | --- | --- |

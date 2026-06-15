@@ -6,7 +6,7 @@ enforced here. Every vault action goes through ``check_permission`` and gets
 one of four decisions -- ``allow`` / ``allow_with_log`` / ``deny`` / ``dry_run``
 -- per the contract in docs/reference/policy-mcp.md.
 
-Design (mirrors .memoria/engines/linter/detectors.py): a dependency-
+Design (mirrors .memoria/operations/integrity/linter/detectors.py): a dependency-
 light, unit-testable *core* (the decision engine, the glob matcher, the SHA-256
 hashing, the audit append) plus a thin MCP-server wrapper. The core runs and
 self-tests without the MCP SDK or even PyYAML installed, so the enforcement

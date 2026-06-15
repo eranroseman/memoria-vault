@@ -28,7 +28,7 @@ This makes imports fragile, complicates static analysis, blocks reliable console
 
 The target is settled here but **deferred**: reaching it changes the deployment mechanism and the on-disk vault shape (real blast radius), and it must not churn the tree before the operations rename lands. The incremental tooling step (below) is issue work and needs no ADR.
 
-This decision does **not** touch code integrity. A common misconception — that ADR-55's golden copy protects the runtime code — is false: `golden.py`'s manifest covers `system/{templates,dashboards,patterns,eval,scripts}/`, three system files, and three `.obsidian` config files, with **no `.memoria/` prefix**. Code integrity is the MCP-only sandbox (agents cannot write files; [seven-layer architecture](46-seven-layer-architecture.md)) plus Git as source of truth. Packaging changes neither, so [src scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md) is **untouched** and is not an assumption of this ADR.
+This decision does **not** touch code integrity. A common misconception — that ADR-55's golden copy protects the runtime code — is false: `golden_restore.py`'s manifest covers `system/{templates,dashboards,patterns,eval,scripts}/`, three system files, and three `.obsidian` config files, with **no `.memoria/` prefix**. Code integrity is the MCP-only sandbox (agents cannot write files; [seven-layer architecture](46-seven-layer-architecture.md)) plus Git as source of truth. Packaging changes neither, so [src scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md) is **untouched** and is not an assumption of this ADR.
 
 ## Decision
 

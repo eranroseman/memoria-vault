@@ -35,8 +35,8 @@ from pathlib import Path
 
 from _shared import append_jsonl, now_iso, resolve_vault, safe_filename
 
-# The shared Inbox card writer (ADR-51) — engines and lanes never invent card formats.
-_LIB_DIR = Path(__file__).resolve().parent.parent / "engines" / "lib"
+# The shared Inbox card writer (ADR-51) — operations and lanes never invent card formats.
+_LIB_DIR = Path(__file__).resolve().parent.parent / "operations" / "lib"
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
 import inbox  # noqa: E402

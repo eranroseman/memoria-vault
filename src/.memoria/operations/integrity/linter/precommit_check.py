@@ -16,7 +16,7 @@ from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE))
-sys.path.insert(0, str(_HERE.parent / "lib"))
+sys.path.insert(0, str(_HERE.parents[1] / "lib"))
 
 import schema  # noqa: E402
 from detectors import is_untyped_infra, parse_frontmatter  # noqa: E402

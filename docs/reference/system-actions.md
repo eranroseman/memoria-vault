@@ -9,7 +9,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 
 ## Deterministic engines
 
-### Ingest pipeline (`engines/ingest/`)
+### Ingest pipeline (`operations/processing/ingest/`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 | Link entities | ingest engine (`link.py`) | Plans idempotent find-or-create venue / person / organization entities from merged metadata. |
 | Link citations | ingest engine (`link.py`) | Plans cited-by / cites edges by matching the reference union against the vault by DOI / arXiv id. |
 
-### Linter (`engines/linter/`)
+### Linter (`operations/integrity/linter/`)
 
 The detector table with severities lives in [Linter: detectors and auto-fix](linter.md); every detector is report-only. The sixteen registered detectors: orphan-working-files, stale-fleeting, stale-answer-drafts, extract-path-broken, frontmatter-schema-check, frontmatter-link-check, broken-wikilink, dashboard-field-drift, graph-analyze, fama-exposure, misplaced-note, audit-unpaired-writes, vault-hash-drift, audit-log-size, hub-threshold, skeleton-drift.
 
@@ -31,23 +31,23 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | --- | --- | --- |
 | Run detectors | Linter (`detectors.py`, daily cron) | Runs all sixteen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit gate | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one gate that prevents rather than reports. |
-| Golden stage | Linter (`golden.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
-| Golden check | Linter (`golden.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
-| Golden restore | Linter (`golden.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
+| Golden stage | Linter (`golden_restore.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
+| Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
+| Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log (ADR-25). |
 
-### Sweeps (`engines/sweeps/`)
+### Sweeps (`operations/`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Reconcile | sweeps engine (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
-| Retry tier-0 | sweeps engine (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
-| Stamp chats | sweeps engine (`reconcile.py`) | Prepends fleeting frontmatter to legacy bare ACP chat exports in `notes/fleeting/chats/`. |
-| Archive inbox | sweeps engine (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
-| Eval dispatch | sweeps engine (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
-| Eval score | sweeps engine (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
-| Retraction check | sweeps engine (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
-| Retraction sweep | sweeps engine (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
+| Reconcile | sweeps operation (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
+| Retry tier-0 | sweeps operation (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
+| Stamp chats | sweeps operation (`reconcile.py`) | Prepends fleeting frontmatter to legacy bare ACP chat exports in `notes/fleeting/chats/`. |
+| Archive inbox | sweeps operation (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
+| Eval dispatch | sweeps operation (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
+| Eval score | sweeps operation (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
+| Retraction check | sweeps operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
+| Retraction sweep | sweeps operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
 
 ## Vault-side MCP servers and hooks (`.memoria/mcp/`)
 

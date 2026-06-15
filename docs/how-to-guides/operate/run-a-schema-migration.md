@@ -52,7 +52,7 @@ For anything non-mechanical (restructuring a map, splitting a field), edit by ha
 **5. Validate.**
 
 ```bash
-python3 .memoria/engines/linter/detectors.py --vault .
+python3 .memoria/operations/integrity/linter/detectors.py --vault .
 ```
 
 `schema-check` must report nothing for the migrated field. The pre-commit gate will re-validate every staged note at commit, so a missed file blocks rather than lands.

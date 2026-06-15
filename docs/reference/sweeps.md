@@ -5,7 +5,7 @@ parent: Reference
 
 # Sweeps
 
-Deterministic maintenance passes under `src/.memoria/engines/sweeps`. Sweeps are read-only against notes: they detect drift, missing work, and external status changes, then surface review items through the board or Inbox.
+Deterministic maintenance passes under `src/.memoria/operations`. Sweeps are read-only against notes: they detect drift, missing work, and external status changes, then surface review items through the board or Inbox.
 
 ## Re-ingest backstops
 

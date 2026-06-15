@@ -5,7 +5,7 @@ parent: Reference
 
 # Frontmatter fields
 
-The frontmatter contract for every typed note. **The single source is `.memoria/schemas/`** — per-type field schemas in `src/.memoria/schemas/types`, the type → folder map in `src/.memoria/schemas/folders.yaml`, and the calibrated thresholds in `src/.memoria/schemas/calibration.yaml`. The shared loader/validator is `src/.memoria/engines/lib/schema.py`; the Linter, the pre-commit gate, and the installer-skeleton tests all read it, so a schema change is a one-file edit, never a hunt across hardcoded lists. This page explains the grammar and the universal fields; the per-type tables live in [Note types](note-types.md).
+The frontmatter contract for every typed note. **The single source is `.memoria/schemas/`** — per-type field schemas in `src/.memoria/schemas/types`, the type → folder map in `src/.memoria/schemas/folders.yaml`, and the calibrated thresholds in `src/.memoria/schemas/calibration.yaml`. The shared loader/validator is `src/.memoria/operations/lib/schema.py`; the Linter, the pre-commit gate, and the installer-skeleton tests all read it, so a schema change is a one-file edit, never a hunt across hardcoded lists. This page explains the grammar and the universal fields; the per-type tables live in [Note types](note-types.md).
 
 ---
 
@@ -108,7 +108,7 @@ Inbox cards split into proposals (`candidate`, `gap`), verification cards (`flag
 
 | Where | What |
 | --- | --- |
-| Pre-commit gate | Every staged `.md` note must pass its type schema; exit 1 blocks the commit (`src/.memoria/engines/linter/precommit_check.py`). |
+| Pre-commit gate | Every staged `.md` note must pass its type schema; exit 1 blocks the commit (`src/.memoria/operations/integrity/linter/precommit_check.py`). |
 | Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
 | Exemptions | `system/` infrastructure (everything except `system/patterns/`) and vault-root navigation pages (`home.md`, `research-focus.md`, `troubleshooting.md`) are untyped and exempt. |
 

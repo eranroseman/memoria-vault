@@ -7,8 +7,8 @@
 # to ~/.hermes/scripts/memoria-lint.sh.
 set -u
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/linter/detectors.py" --vault "{{VAULT_PATH}}" --jsonl-out "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/detectors.py" --vault "{{VAULT_PATH}}" --jsonl-out "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" >/dev/null || true
 # shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/linter/golden.py" --vault "{{VAULT_PATH}}" check >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/golden_restore.py" --vault "{{VAULT_PATH}}" check >/dev/null || true
 # shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/linter/session_summary.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/session_summary.py" --vault "{{VAULT_PATH}}" >/dev/null || true

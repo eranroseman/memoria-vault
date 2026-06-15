@@ -1,5 +1,5 @@
 """L1 component test for pipeline — extracted from its former --self-test (ADR-44)."""
-import pipeline as _m
+import runner as _m
 globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 
 
@@ -31,6 +31,6 @@ def test_pipeline():
         bad = [n for n, ok in checks if not ok]
         for n, ok in checks:
             print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: pipeline.py self-test")
+        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: runner.py self-test")
         return 1 if bad else 0
     assert _run() == 0

@@ -9,7 +9,7 @@ Inbox flag. Offline: enrichment is stubbed with fixture payloads — no network.
 import json
 
 import classify
-import pipeline
+import runner
 
 # --------------------------------------------------------------------------- #
 # fixtures
@@ -40,13 +40,13 @@ def _topic(name, score, subfield=""):
 
 def _run_pipeline(monkeypatch, vault, merged):
     """Run the enriched pipeline offline: stub the network stages."""
-    monkeypatch.setattr(pipeline.resolve_merge, "resolve", lambda ck, bib: {
+    monkeypatch.setattr(runner.resolve_merge, "resolve", lambda ck, bib: {
         "citekey": ck, "ids": {}, "merged": merged,
         "parts": {"s2": {"found": True}, "openalex": {"found": True},
                   "crossref": {"found": False}}})
-    monkeypatch.setattr(pipeline.extract, "extract", lambda ids, pdf, email, api_key="": {
+    monkeypatch.setattr(runner.extract, "extract", lambda ids, pdf, email, api_key="": {
         "source": "none", "chars": 0, "degraded": True, "text": ""})
-    return pipeline.run("x2024Test", BIB, vault, enrich=True)
+    return runner.run("x2024Test", BIB, vault, enrich=True)
 
 
 def _audit_lines(vault):
@@ -149,7 +149,7 @@ def test_no_topic_data_is_a_noop(monkeypatch, tmp_path):
 
 
 def test_no_enrichment_no_op(tmp_path):
-    b = pipeline.run("x2024Test", BIB, tmp_path, enrich=False)
+    b = runner.run("x2024Test", BIB, tmp_path, enrich=False)
     assert "classify" not in b               # classify never ran
     assert b["frontmatter"]["research_area"] == []
     assert _audit_lines(tmp_path) == []

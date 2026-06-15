@@ -9,10 +9,10 @@ default** (a dry-run diff + an Inbox flag); `--apply` performs the restore
 (the PI or cron runs it deliberately).
 
 Usage:
-  python3 golden.py --vault V stage          stage/refresh the golden copy from the live system files
-  python3 golden.py --vault V check          report drifted/missing system files (exit 1 if any)
-  python3 golden.py --vault V restore [--apply] [PATH ...]
-  python3 golden.py --self-test
+  python3 golden_restore.py --vault V stage          stage/refresh the golden copy from the live system files
+  python3 golden_restore.py --vault V check          report drifted/missing system files (exit 1 if any)
+  python3 golden_restore.py --vault V restore [--apply] [PATH ...]
+  python3 golden_restore.py --self-test
 """
 
 from __future__ import annotations

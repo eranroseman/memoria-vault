@@ -15,7 +15,7 @@ nav_order: 11
 
 # ADR-11: vault-eval as a maintenance capability
 
-> **Implementation status: shipped.** The gold set, the lane dispatcher (`engines/sweeps/eval_dispatch.py`), the non-committing scratch contract, and the quarterly cron shipped first (0.1.0-alpha.1). The **scoring + observability** half landed with [#424](https://github.com/eranroseman/memoria-vault/issues/424): a deterministic scorer (`engines/sweeps/eval_score.py` — the Linter's zero-LLM, report-only discipline, hosted with the sweeps engines beside the dispatcher) reads each card's machine-readable result block off the board, computes recall@k / support-rate / FAMA, appends per-run scores to `system/metrics/eval/runs.jsonl`, and the `eval-trend` dashboard renders the trend. The lane's rubric self-score on the card is recorded for comparison, never aggregated.
+> **Implementation status: shipped.** The gold set, the lane dispatcher (`operations/telemetry/eval/eval_dispatch.py`), the non-committing scratch contract, and the quarterly cron shipped first (0.1.0-alpha.1). The **scoring + observability** half landed with [#424](https://github.com/eranroseman/memoria-vault/issues/424): a deterministic scorer (`operations/telemetry/eval/eval_score.py` — the Linter's zero-LLM, report-only discipline, hosted with the sweeps engines beside the dispatcher) reads each card's machine-readable result block off the board, computes recall@k / support-rate / FAMA, appends per-run scores to `system/metrics/eval/runs.jsonl`, and the `eval-trend` dashboard renders the trend. The lane's rubric self-score on the card is recorded for comparison, never aggregated.
 
 ## Context
 

@@ -11,7 +11,7 @@ deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
 
 Of the formerly out-of-scope drift procedures (ADR-67): skeleton-drift and
 vault-hash-drift turned out to need only the vault tree and live here now;
-plugin-config-drift is covered by the golden copy (golden.py); and
+plugin-config-drift is covered by the golden copy (golden_restore.py); and
 profile-install-drift / command-vocab-drift are retired -- the first needs
 ~/.hermes deploy state the vault-side Linter doesn't have (the idempotent
 installer re-run is the fix), the second is a repo CI concern.

@@ -38,7 +38,7 @@ Like patterns, eval tasks are authored directly — the files *are* the instance
 
 ## Dispatch
 
-`src/.memoria/engines/sweeps/eval_dispatch.py` — a sweeps-shaped engine: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
+`src/.memoria/operations/telemetry/eval/eval_dispatch.py` — a sweeps-shaped engine: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
 - One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the Co-PI's `tasks_mcp.py`; a test guards the parity).
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
@@ -46,13 +46,13 @@ Like patterns, eval tasks are authored directly — the files *are* the instance
 - The dispatch record is written to `system/eval/last-run.md` (plain markdown, overwritten each run).
 
 ```sh
-python .memoria/engines/sweeps/eval_dispatch.py --vault <vault>            # dispatch
-python .memoria/engines/sweeps/eval_dispatch.py --vault <vault> --dry-run  # print, create nothing
+python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault>            # dispatch
+python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault> --dry-run  # print, create nothing
 ```
 
 ## Scoring
 
-`src/.memoria/engines/sweeps/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
+`src/.memoria/operations/telemetry/eval/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
 
 **The result contract.** A lane never writes the vault; it ends its card report with one fenced `json` block (the card body shows the exact template, pre-filled with the task id and quarter):
 
@@ -81,9 +81,9 @@ The lane's rubric `self_score` is recorded per task for comparison but never agg
 **The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
 
 ```sh
-python .memoria/engines/sweeps/eval_score.py --vault <vault>                       # score the current quarter
-python .memoria/engines/sweeps/eval_score.py --vault <vault> --quarter previous    # what the cron runs
-python .memoria/engines/sweeps/eval_score.py --vault <vault> --quarter 2026-Q2 --dry-run
+python .memoria/operations/telemetry/eval/eval_score.py --vault <vault>                       # score the current quarter
+python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarter previous    # what the cron runs
+python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarter 2026-Q2 --dry-run
 ```
 
 ## Cadence
