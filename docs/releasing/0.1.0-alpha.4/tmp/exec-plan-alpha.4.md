@@ -335,7 +335,13 @@ evidence, real transcripts:
       Linter verdict plus Active/Waiting/Review/Retries queue depths;
       `board_export.py` snapshots retrying depth; status-line docs are no longer
       deferred. Validation: focused pytest, `scripts/test.sh all`, docs-doctor.
-- [ ] (next) D — continue PI surface (#376/#377/#343/#380/#145/#183/#154/#336/#329/#378).
+- [x] 2026-06-15 — D #376 callout producers implemented on
+      `feat/alpha4-callout-producers`: `Memoria: link claim` writes a collapsed
+      deterministic `[!suggestions]` top-K callout before delegating, and
+      `Memoria: verify draft` writes an expanded `[!verification]` trace callout
+      before delegating. Validation: JS syntax checks, focused QuickAdd pytest,
+      docs-doctor.
+- [ ] (next) D — continue PI surface (#377/#343/#380/#145/#183/#154/#336/#329/#378).
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
@@ -403,6 +409,13 @@ evidence, real transcripts:
   lint-findings fallback) and board-state queue counts. `board_export.py` now
   includes `retrying` counts for ready cards with retries, so the line can show
   Active/Waiting/Review/Retries without querying Hermes directly.
+
+- 2026-06-15 — D #376 branch prepared: QuickAdd link/verify palette actions
+  now produce the inline callout surfaces directly in Obsidian before creating
+  their lane cards. Link suggestions are deterministic top-K local overlap
+  candidates capped at 5 forward + 5 backward; verification callouts record a
+  deterministic claim-link/citekey preflight while the Peer-reviewer card keeps
+  the support judgment.
 
 ## 9. Surprises & discoveries
 

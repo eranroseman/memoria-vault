@@ -5,7 +5,7 @@ parent: Reference
 
 # Obsidian callouts
 
-Three inline callout types defined via the [Callout Manager](obsidian-plugins.md) plugin. In the current shipped system only `[!brief]` has a producer; `[!suggestions]` and `[!verification]` are styled/reserved callout types whose producers are deferred.
+Three inline callout types defined via the [Callout Manager](obsidian-plugins.md) plugin. All three now have shipped producers: `[!brief]` during ingest, `[!suggestions]` from the link-claim palette action, and `[!verification]` from the verify-draft palette action.
 
 ---
 
@@ -14,8 +14,8 @@ Three inline callout types defined via the [Callout Manager](obsidian-plugins.md
 | Callout | Location | Producer | Purpose |
 | --- | --- | --- | --- |
 | `[!brief]` | Top of every source note in `notes/sources/` | Librarian (composed during ingest by `catalog-enrich-record`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
-| `[!suggestions]` | Deferred | None shipped yet ([#376](https://github.com/eranroseman/memoria-vault/issues/376)) | Intended bounded candidate links (5 forward + 5 backward, hard cap) |
-| `[!verification]` | Deferred | None shipped yet ([#376](https://github.com/eranroseman/memoria-vault/issues/376), [#377](https://github.com/eranroseman/memoria-vault/issues/377)) | Intended per-claim trace back to claim notes |
+| `[!suggestions]` | Claim notes in `notes/claims/` | QuickAdd `Memoria: link claim` preflight, followed by Librarian `link-suggest-claim` | Bounded deterministic candidate links (5 forward + 5 backward, hard cap) |
+| `[!verification]` | Drafts in `projects/` | QuickAdd `Memoria: verify draft` preflight, followed by Peer-reviewer `verify-check-citation` | Deterministic claim-link/citekey trace scaffold; the lane performs support judgment |
 
 ---
 
@@ -35,8 +35,8 @@ Three inline callout types defined via the [Callout Manager](obsidian-plugins.md
 
 | Property | Value |
 | --- | --- |
-| Default collapse state | `[!brief]` expanded; deferred `[!suggestions]` is designed to collapse, and deferred `[!verification]` is designed to expand |
-| Re-run on edited callout | `[!brief]` is producer-owned during ingest; deferred producers must preserve edited callouts rather than overwriting them |
+| Default collapse state | `[!brief]` expanded; `[!suggestions]` collapsed; `[!verification]` expanded |
+| Re-run on edited callout | Producers append a dated callout instead of overwriting existing human-edited callouts |
 | Write path | Policy-MCP gated — logged with SHA-256 hashes, reversible from the audit log |
 
 For why each behaves this way, see [Callouts](../explanation/obsidian/callouts.md).
@@ -45,21 +45,21 @@ For why each behaves this way, see [Callouts](../explanation/obsidian/callouts.m
 
 ## How content is produced (hybrid pattern)
 
-The shipped `[!brief]` producer uses a deterministic candidate-selection step followed by an LLM composition step. The deferred producers are designed to follow the same hybrid pattern when built.
+The shipped `[!brief]` producer uses a deterministic candidate-selection step followed by an LLM composition step. The `[!suggestions]` and `[!verification]` producers ship the deterministic preflight now; their delegated lane cards are where optional one-line explanations and support judgments happen.
 
 | Callout | Deterministic step | LLM step |
 | --- | --- | --- |
 | `[!brief]` | Top-5 candidates ranked by: shared-citation overlap + embedding similarity + topic-tag intersection | Composes the "overlaps with / may contradict / new construct" narrative over the 5 candidates |
-| `[!suggestions]` (deferred) | Intended top-10 candidates ranked by: embedding similarity (0.4) + shared citations (0.3) + topic-tag overlap (0.2) + recency boost (0.1); truncated to 5 forward + 5 backward | Optional one-line explanation per candidate |
-| `[!verification]` (deferred) | Intended per-claim trace via regex citation extraction + embedding similarity; auto-clean above ~0.75, auto-fail below ~0.4 | Judges only the middle ambiguous band (0.4–0.75 similarity) |
+| `[!suggestions]` | Top-10 local candidates ranked deterministically by claim/source token overlap, truncated to 5 forward + 5 backward | Optional Librarian one-line explanation per candidate on the delegated card |
+| `[!verification]` | Regex extraction of claim links and citekeys from the draft; writes the trace scaffold inline | Peer-reviewer judges whether the cited material supports the draft claims |
 
-For `[!brief]`, the audit-relevant part is the deterministic candidate set that the Librarian composes over. For the deferred callouts, the same principle applies as design intent: the LLM's prose is the visible presentation, but the deterministic scoring is what later dashboard signals should measure.
+For `[!brief]`, the audit-relevant part is the deterministic candidate set that the Librarian composes over. For the link and verify callouts, the deterministic preflight is visible immediately and the delegated lane card carries any judgment/prose that should not be done by the UI script.
 
 ---
 
 ## Drift signals
 
-No shipped dashboard tracks `[!suggestions]` accept/reject ratios yet because the producer is deferred. The intended drift signal is documented here so the future producer has a contract: ratio extremes should flag rubber-stamping versus over-strict scoring in fleet health. How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
+No shipped dashboard tracks `[!suggestions]` accept/reject ratios yet. The producer now exists, and the intended drift signal remains: ratio extremes should flag rubber-stamping versus over-strict scoring in fleet health. How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
 
 ---
 

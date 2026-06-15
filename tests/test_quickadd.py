@@ -213,6 +213,37 @@ def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     assert "app.workspace.getLeaf(true).openFile(created)" in script
 
 
+
+def test_link_claim_writes_suggestions_callout_before_delegating():
+    script = (SCRIPTS / "link-claim.js").read_text(encoding="utf-8")
+
+    assert "[!suggestions]- Link suggestions" in script
+    assert "rankLinkSuggestions(params.app, claim, claimText)" in script
+    assert "SUGGESTION_LIMIT = 10" in script
+    assert "Forward candidates" in script
+    assert "Backward candidates" in script
+    assert "score.toFixed(3)" in script
+    assert "appendCallout(params.app, claim, buildSuggestionsCallout(suggestions))" in script
+    assert "text.trimEnd()" in script
+    assert "app.vault.modify(file," in script
+    assert "optional LLM one-line explanations" in script
+    assert "hermes kanban create" in script
+
+
+def test_verify_draft_writes_verification_callout_before_delegating():
+    script = (SCRIPTS / "verify-draft.js").read_text(encoding="utf-8")
+
+    assert "[!verification] Verification trace" in script
+    assert "traceDraftMarkers(draftText)" in script
+    assert "Claim links found:" in script
+    assert "Citekeys found:" in script
+    assert "No claim links or citekeys found" in script
+    assert "appendCallout(params.app, draft, buildVerificationCallout(trace))" in script
+    assert "text.trimEnd()" in script
+    assert "app.vault.modify(file," in script
+    assert "The deterministic [!verification] preflight callout has been written" in script
+    assert "hermes kanban create" in script
+
 def test_capture_and_catalog_cards_request_source_note_stub():
     for fname in ("capture-from-url.js", "capture-from-zotero.js", "catalog-source.js"):
         script = (SCRIPTS / fname).read_text(encoding="utf-8")

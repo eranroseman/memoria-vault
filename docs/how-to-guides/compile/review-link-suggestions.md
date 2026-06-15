@@ -6,7 +6,7 @@ nav_order: 10
 
 # Review link suggestions
 
-Work through the link proposals the Librarian's **`link` lane** raises — candidate connections (`link:suggest-claim`) and tensions (`link:surface-tension`) — approving the ones that belong and rejecting the rest. This is the curation step that turns proposed connections into real `links:` entries without rubber-stamping.
+Work through the `[!suggestions]` callout and link proposals the Librarian's **`link` lane** raises — candidate connections (`link:suggest-claim`) and tensions (`link:surface-tension`) — approving the ones that belong and rejecting the rest. This is the curation step that turns proposed connections into real `links:` entries without rubber-stamping.
 
 This is different from [Link related claims](link-related-claims.md): that guide is for *manually* typing a `supports`/`contradicts` link you've decided on; this one is for *triaging the agent's proposals*.
 
@@ -14,17 +14,19 @@ Because `notes/claims/` is review-gated, the link lane can't touch your `links:`
 
 ## Prerequisites
 
-- Link-lane cards in the Inbox — from asking the Co-PI ("suggest links among my receptivity claims") or from a `map`/`verify` pass that ran the link lane
+- A claim note with a `[!suggestions]` callout from `Cmd/Ctrl-P` → **Memoria: link claim**, or link-lane cards in the Inbox from the delegated `link` lane
 
 ## Steps
 
-**1. Open the cards in one sitting.**
+**1. Open the suggestions in context.**
 
-The **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+Run **Memoria: link claim** from the claim note. The command writes a collapsed `[!suggestions]` callout with deterministic top-K candidates, then delegates the richer link-lane review. Open the callout first, in the note where the edge would matter.
+
+If the lane also raised cards, open the **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each candidate before deciding.**
 
-For each proposed link, ask: *would I want this edge to exist when I come back to either note?* A good link is one a future reading or writing session would actually traverse. Read `argument_against` first — it's the information-bearing field; high similarity can still be a link not worth making.
+For each callout row or proposed link card, ask: *would I want this edge to exist when I come back to either note?* A good link is one a future reading or writing session would actually traverse. Read `argument_against` first — it's the information-bearing field; high similarity can still be a link not worth making.
 
 **3. Approve by writing the link yourself.**
 
@@ -49,6 +51,7 @@ The fleet-health dashboard tracks your accept/reject ratio as a trust-score sign
 ## Verify
 
 - No link-lane card remains at `lifecycle: proposed`
+- The latest `[!suggestions]` callout has been read, not mass-approved
 - Every approved proposal exists as a `links:` entry on the claim, in your hand
 - A `contradicts` approval now shows on `system/dashboards/contradictions.md`
 
@@ -57,6 +60,7 @@ The fleet-health dashboard tracks your accept/reject ratio as a trust-score sign
 **How-to**
 
 - The deliberate, non-proposed path: [Link related claims](link-related-claims.md)
+- The callout shape: [Obsidian callouts](../../reference/obsidian-callouts.md)
 - Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
 
 **Reference**
