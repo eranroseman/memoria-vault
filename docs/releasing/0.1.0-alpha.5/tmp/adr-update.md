@@ -120,10 +120,11 @@ Several triggers do not hold up when challenged.
 
 ### 2.4 Triggers that hold up — keep deferred
 
-ADR-34 (no substrate — downstream of the #369 code lane), 58, 60, 63, 64 (gated
-on Hermes native-Windows GA — an external claim the author already flagged
-contested), 66 (operational-load gates guarding real calibration hazards), 16/35
-(felt-need, sound). Deferral discipline (anti-premature-infra guards) is good.
+ADR-58, 60, 63, 64 (gated on Hermes native-Windows GA — an external claim the
+author already flagged contested), 66 (operational-load gates guarding real
+calibration hazards), 16/35 (felt-need, sound). Deferral discipline
+(anti-premature-infra guards) is good. **ADR-34 and ADR-40 — previously deferred
+— are now approved for retirement (see §5), not kept on the cadence list.**
 
 ### 2.5 Doc-integrity bugs found
 
@@ -234,10 +235,12 @@ feature waits — without them the trigger can never self-detect.
 
 ### 4.1 One `docs/adr/` PR — status fixes + trigger rescopes + doc-integrity
 
-- Status: ADR-17 `superseded_by: [50,51]`; ADR-62 split out the built aggregator;
-  ADR-44 reconcile the "zero test code" consequence (or finish migration).
+- Retirements (see §5, approved 2026-06-15): ADR-17 → superseded by [50,51];
+  ADR-34 → rejected; ADR-40 → rejected.
+- Status fixes: ADR-62 split out the built aggregator; ADR-44 reconcile the
+  "zero test code" consequence (or finish migration).
 - Trigger rescopes (replace eyeball with the §3.2 self-detecting conditions):
-  ADR-38, 39, 59 (decouple discovery scorer), 61 (drop VPS dependency), 40, 65,
+  ADR-38, 39, 59 (decouple discovery scorer), 61 (drop VPS dependency), 65,
   16, 35, 60, 63, 74.
 - Doc-integrity: ADR-65 `assumes` `[8]`→`[52]`; ADR-61 ADR-37→ADR-48 reference;
   ADR-38/62 stale "waiting for" text.
@@ -265,3 +268,53 @@ than memory.
 
 ADR-21 overnight-inbox enforcement location; ADR-38's `find-duplicates` sweep
 existence.
+
+---
+
+## 5. Retirements — approved 2026-06-15 (execute later; no ADRs edited yet)
+
+Three ADRs are approved to retire. Mechanics + ripple edits captured here so the
+eventual `docs/adr/` PR is clean and `gen-adr-index.py` passes (it requires
+rejected/superseded ADRs to set `date_resolved`, and superseded to set
+`superseded_by`; run `python scripts/gen-adr-index.py` after to refresh the index
+table in `docs/adr/README.md`).
+
+### ADR-17 — Shared candidate frontmatter format → superseded
+
+- `status: accepted` → `superseded`; `superseded_by: [50, 51]`;
+  `date_resolved: 2026-06-15`.
+- Replace the "Accepted / implemented in v0.1" banner with a "Superseded by
+  ADR-50/51 — the shipped candidate type is the ADR-51 honesty card" note; drop
+  the stale `candidate-note`/`candidate_status`/`source` schema body.
+- Bidirectional bookkeeping: add `supersedes: [17]` to ADR-50 and ADR-51
+  (both currently `supersedes: []`).
+- Ripple: ADR-61 cites ADR-17 as "the shared candidate schema" in prose (~line 31)
+  and its Related block (~line 49) → re-point to ADR-51 (+ADR-50).
+
+### ADR-34 — Code-artifact autopilot → rejected
+
+- `status: deferred` → `rejected`; set `date_resolved: 2026-06-15`; keep
+  `nav_exclude: true`.
+- Rationale to record in the ADR: structurally precluded by ADR-21 (L3 ceiling),
+  and any code-lane execution is the #369 "define the code lane" decision — not an
+  autopilot. Declined, not parked.
+- Ripple: ADR-61 `assumes: [34, 37, 21]` → drop 34 (and 37 is already superseded
+  by 48 — re-point to 48); ADR-61 Related block cites ADR-34 → update.
+
+### ADR-40 — Admin/forensic GUI (hermes-workspace) → rejected
+
+- `status: deferred` → `rejected`; set `date_resolved: 2026-06-15`; keep
+  `nav_exclude: true`.
+- Rationale to record: the forensic need is met by the CLI + dashboards now and
+  the (deferred) ADR-58 read-only Inspector later; an external admin GUI would add
+  a second un-gated write surface — declined on architecture, not tool maturity.
+- Ripple: ADR-58 `assumes: [40, 32]` → drop 40 (ADR-58 must not depend on a
+  rejected ADR; its read-only Inspector item stands on its own).
+
+### After editing (validation)
+
+- `python scripts/gen-adr-index.py` to regenerate `docs/adr/README.md`
+  (the `adr-index` pre-commit hook enforces freshness).
+- Confirm: every retired ADR has `date_resolved`; ADR-17 has `superseded_by`;
+  no remaining `assumes:`/prose reference to 17 (→50/51), 34, 40, or superseded 37
+  (→48).
