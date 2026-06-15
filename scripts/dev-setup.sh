@@ -42,6 +42,26 @@ else
   note "pre-commit not found — install requirements-dev.txt, then run: pre-commit install"
 fi
 
+echo "==> Setting up the repo-local qmd code-search index (needs Node >=22)"
+NODE=$(command -v node || true)
+NODE_MAJOR=0
+if [ -n "$NODE" ]; then
+  NODE_MAJOR=$("$NODE" -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
+fi
+if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
+  if command -v npm >/dev/null 2>&1 && npm install --silent; then
+    note "repo-local qmd installed (node_modules/)"
+    bash scripts/qmd-codebase-index.sh \
+      || note "qmd index build skipped/failed — re-run: bash scripts/qmd-codebase-index.sh"
+  else
+    note "npm install failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
+  fi
+else
+  note "Node >=22 not found — repo code search skipped (not required for the commit gate)."
+  note "  fnm gives a standalone Node (independent of any runtime): https://github.com/Schniz/fnm"
+  note "  then: fnm install 22 && npm install && bash scripts/qmd-codebase-index.sh"
+fi
+
 echo "==> Optional system tools the hook uses if present (not auto-installed):"
 for t in shellcheck npx; do
   if command -v "$t" >/dev/null 2>&1; then

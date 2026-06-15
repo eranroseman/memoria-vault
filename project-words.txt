@@ -390,3 +390,6 @@ subpackages
 pyproject
 testpaths
 pythonpath
+CUDA
+libcudart
+libcublas

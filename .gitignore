@@ -15,6 +15,9 @@ __pycache__/
 # qmd local semantic-search index (per-machine; absolute paths in index.yml)
 /.qmd/
 
+# Node deps for the repo-local qmd code-search engine (devDependency; pinned via package-lock.json)
+/node_modules/
+
 # Jekyll build artifacts (published via GitHub Pages from /docs)
 docs/_site/
 docs/.jekyll-cache/

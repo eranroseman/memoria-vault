@@ -238,6 +238,22 @@ the manual security review and is a first line against the "never commit
   and the [release index](docs/releasing/README.md), which points to the current
   checkpoint plan, for current blockers and known limitations.
 
+### Searching the codebase (qmd)
+
+The repo carries an optional **project-local qmd index** (`./.qmd/`, gitignored) for
+hybrid keyword+semantic code search — separate from the runtime/vault qmd, and indexing
+this repo only. Set it up once with `bash scripts/dev-setup.sh` (or `npm install &&
+bash scripts/qmd-codebase-index.sh`); needs Node ≥22.
+
+- **Keyword:** `npx qmd search "<terms>"` — BM25, instant, no models.
+- **Semantic:** `npx qmd query "<intent>"` — needs vectors first: `bash scripts/qmd-codebase-index.sh --embed`.
+- **Open a hit:** `npx qmd get <file>`.
+- **Rebuild after large changes:** `bash scripts/qmd-codebase-index.sh --embed`.
+
+GPU is auto-detected (leave `QMD_LLAMA_GPU` unset). On WSL/Linux with an NVIDIA card,
+semantic search needs the CUDA 13 runtime (`libcudart.so.13` + `libcublas.so.13`);
+without it qmd falls back to CPU (slower, still works).
+
 ---
 
 ## Writing docs

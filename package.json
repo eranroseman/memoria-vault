@@ -1,0 +1,15 @@
+{
+  "name": "memoria-vault-devtools",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + src/.memoria/). Currently pins the repo-local qmd code-search engine; never deployed to a vault.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "qmd": "qmd"
+  },
+  "devDependencies": {
+    "@tobilu/qmd": "^2.5.3"
+  }
+}
