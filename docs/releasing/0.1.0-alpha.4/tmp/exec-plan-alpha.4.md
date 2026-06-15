@@ -12,9 +12,10 @@ deleted before the alpha.4 checkpoint closes.
 - **Task:** complete the v0.1.0-alpha.4 internal checkpoint — close the active
   build/defect/PI-surface issues, land the actionable packaging slice, and park
   the deferred items honestly.
-- **Worktree / branch:** `~/mv-alpha4` · `docs/alpha4-execplan` (off `origin/main`)
-- **Milestone:** `0.1.0-alpha.4` (#3) — 25 open at authoring; scope finalized
-  2026-06-15 (§2.2): 6 deferred out, 4 added in.
+- **Execution model:** each workstream below is its own worktree → branch → PR
+  (`AGENTS.md` §1/§2; see §4). Authored on the now-merged `docs/alpha4-execplan`.
+- **Milestone:** `0.1.0-alpha.4` (#3) — 25 open issues at authoring; scope
+  finalized 2026-06-15 (§2.2 is authoritative for what is in vs out).
 - **Related ADRs:** ADR-19 (Mapper MOCs; Tier 2 via #439), ADR-30 (ingest),
   ADR-31 (native Obsidian MCP), ADR-54 (batch worklists), ADR-55 (golden copy /
   upgrade), ADR-57 (engines write, agents judge), ADR-64 (native Windows; via
@@ -60,10 +61,12 @@ For a reader new to this repo:
   used a carry-over labelling (`0.1.0` = alpha.1) where `v0.2`/`v0.1.1` meant
   **alpha.2** and `v0.3`/`v0.1.2` meant **alpha.3**; treat those as alpha labels.
   (#198 "Decide v0.2 scope" is the genuine future 0.2.0 — not a mislabel.)
-- **Release housekeeping done in this change.** Two alpha.4 `tmp/` notes that are
-  *not* alpha.4 work were moved forward to `docs/releasing/0.1.0-alpha.5/tmp/`
-  (`project-starter.md`, `test-env.md`). The packaging note
-  (`install-a-real-package.md`) stays here and is folded into Workstream E below.
+- **Release housekeeping (already landed).** `project-starter.md` and
+  `test-env.md` — not alpha.4 work — were moved to
+  `docs/releasing/0.1.0-alpha.5/tmp/` (#530). The packaging note
+  (`install-a-real-package.md`) stays here (Workstream E references it) and was
+  also **copied** to `0.1.0-alpha.5/tmp/` (#533) where the deferred wheel
+  migration will land; the alpha.4 copy is deleted when this checkpoint closes.
 
 ### 2.1 Scope — the 25 open alpha.4 issues, grouped
 
@@ -212,12 +215,13 @@ surface; deferred items (§2.2) are not built this checkpoint.
 
 ## 4. Concrete steps
 
-1. **Isolate the session** (`AGENTS.md` §1) — done for this plan:
+1. **Isolate each workstream** (`AGENTS.md` §1) — a fresh worktree + branch per
+   workstream/issue, off the latest `origin/main`:
 
    ```bash
    git fetch origin
-   git worktree add ~/mv-alpha4 -b docs/alpha4-execplan origin/main
-   cd ~/mv-alpha4
+   git worktree add ~/mv-<slug> -b <type>/<slug> origin/main
+   cd ~/mv-<slug>
    ```
 
 2. **Pick the next issue from §2.1 in the §3 order.** Open its own worktree +
@@ -248,9 +252,9 @@ evidence, real transcripts:
 - **#437:** Given a paper resolvable only via PMID, when resolve/merge runs, then
   `fetch_pubmed` contributes MeSH/PMID/PMCID to the cross-checked record. *Prove
   with:* a resolve_merge unit test.
-- **#527:** Given the native Obsidian MCP, when a lane writes, then the bearer
-  key travels over TLS (or the residual is re-documented if Hermes still lacks
-  CA/insecure support). *Prove with:* a connection test against `~/Memoria-test`.
+- **Workstream H (rename):** Given the `engines → operations` rename, when the
+  suite runs, then imports resolve, `scripts/test.sh all` stays green, and no
+  stale `engines` path remains. *Prove with:* `scripts/test.sh all` + a tree grep.
 - **#339:** Given a vault with PI edits, when a release upgrade runs, then changed
   system files refresh and PI customizations survive (three-way reconcile).
   *Prove with:* a disposable-vault upgrade test — never `~/Memoria`.
@@ -260,16 +264,23 @@ evidence, real transcripts:
 - **Workstream E step 1:** Given the tooling `pyproject.toml`, when tests run
   without the `conftest.py` `sys.path` block, then `python -m pytest` and
   `ruff check .` stay green. *Prove with:* `scripts/test.sh all`.
-- **Workstream G:** Given each tracking issue, when reviewed, then its ADR is
-  `status: deferred` with a current *When this matters*. *Prove with:* the ADR
-  file + a one-line cadence verdict in §8.
+- **#439 (Mapper Tier 2):** Given a fired `hub-threshold` finding, when handed to
+  the Mapper, then a hub/MOC note is drafted as a review-gated proposal and
+  `notes/hubs/` stays PI-approved. *Prove with:* a runtime test on a seeded vault.
+- **#414 (native Windows):** Given a native-Windows host (no WSL2), when installed,
+  then Hermes + the MCP servers run and a capture→file round-trip works. *Prove
+  with:* an attended native-Windows install — **gated on** accepting ADR-64 and
+  verifying Hermes native support first (§2.2).
+- **Deferred (#412, #370):** confirm each ADR is `status: deferred` with a current
+  *When this matters*; record the cadence verdict in §8 — do **not** build.
 
 ## 6. Idempotence and recovery
 
 - **Safe to re-run:** each issue is its own branch/PR; re-running an unstarted
   issue is a no-op. This plan is regenerable from the milestone #3 issue list.
 - **Rollback:** `git worktree remove` a per-issue worktree; revert the PR commit.
-  The file moves in this PR are pure renames — revert restores them to alpha.4.
+  The structural rename (H) is the only wide change — revert it as one squash
+  commit before dependent workstreams build on it.
 
 ## 7. Progress
 
@@ -277,6 +288,8 @@ evidence, real transcripts:
       to `docs/releasing/0.1.0-alpha.5/tmp/`; 25 issues inventoried + grouped.
 - [x] 2026-06-15 — Scope finalized (§2.2): deferred #527/#379/#381/#344/#412/#370;
       added ADR-69 rename, #414, #439, #443.
+- [x] 2026-06-15 — Versioning carry-over labels fixed (#532); packaging note
+      copied to `0.1.0-alpha.5/tmp/` (#533); plan readiness pass — execution can start.
 - [ ] (next) H — `engines → operations` rename (ADR-69), structural PR first.
 - [ ] (next) A/F — ingest (#438/#437) + golden upgrade (#339, amend ADR-55).
 - [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
@@ -299,6 +312,10 @@ evidence, real transcripts:
   Sequencing in §3; architectural consequences routed to ADRs (§2.2), not here:
   accept ADR-64 + supersede the WSL2-only rule (#414), update ADR-19 (#439),
   amend ADR-55 (#339).
+- 2026-06-15 — Readiness pass: dropped stale refs (the merged authoring worktree;
+  the packaging note now also in alpha.5/tmp), removed the deferred-#527
+  validation claim, added acceptance for the rename (H), #439, and #414, and
+  corrected the retired-design-doc count. The plan is executable as written.
 
 ## 9. Surprises & discoveries
 
@@ -306,17 +323,18 @@ evidence, real transcripts:
   (#521, #414, #412, #370, #439). The 2026-06-15 decision pulled **#414** and
   **#439** into scope (accepting ADR-64 + superseding the WSL2-only rule, and
   building ADR-19 Tier 2); #412, #370, and the full ADR-76 stay deferred.
-- Six PI-surface issues (#380, #375, #378, #343, #145-adjacent) cite **retired
-  `docs/design/*` paths**. Each needs its reference repointed to the current
-  ADR/doc before build — a zero-contradiction fix that travels with the feature.
+- Four PI-surface issues (#380, #375, #378, #343) cite **retired `docs/design/*`
+  paths**. Each needs its reference repointed to the current ADR/doc before build
+  — a zero-contradiction fix that travels with the feature.
 - #381 is blocked by #379 (calibration threshold spec), which is **not in the
   alpha.4 milestone** — a cross-milestone dependency to surface.
 
 ## 10. Interfaces & dependencies
 
-- **Ingest:** `src/.memoria/engines/ingest/extract.py` (ADR-30 tier order; #438),
-  `src/.memoria/engines/ingest/resolve_merge.py` (`fetch_*`; #437). NCBI/Unpaywall
-  keys already provisioned in profile `.env`.
+- **Ingest:** `src/.memoria/engines/ingest/extract.py` (ADR-30 tier order; #438)
+  and `…/ingest/resolve_merge.py` (`fetch_*`; #437) — these move under
+  `operations/` once Workstream H lands, so sequence H first. NCBI/Unpaywall keys
+  already provisioned in profile `.env`.
 - **Transport:** ADR-31 native Obsidian MCP over loopback. #527 (HTTPS) is
   **deferred** — the residual stays documented; later resolve via OS/Python
   trust-store or mkcert (not a Hermes-only blocker).
@@ -337,9 +355,8 @@ evidence, real transcripts:
 
 ## 11. Artifacts & notes
 
-- File moves (this PR): pure git renames of `project-starter.md` and
-  `test-env.md` from the alpha.4 `tmp/` into `docs/releasing/0.1.0-alpha.5/tmp/`
-  (no content change).
+- Release-scratch moves: `project-starter.md` + `test-env.md` renamed into
+  `0.1.0-alpha.5/tmp/` (#530); `install-a-real-package.md` copied there (#533).
 - Per-issue transcripts to be pasted here as each workstream lands.
 
 ## 12. Outcomes & retrospective
