@@ -17,7 +17,6 @@ def _skeleton_dirs() -> set[str]:
     return {line.strip() for line in m.group(1).splitlines()
             if line.strip() and not line.strip().startswith("#")}
 
-
 def test_skeleton_covers_the_schema_skeleton():
     """Every dir folders.yaml declares must be created by the installer."""
     declared = set(schema.load_folders()["skeleton"])
@@ -25,13 +24,11 @@ def test_skeleton_covers_the_schema_skeleton():
     missing = declared - installed
     assert not missing, f"installer SKELETON_DIRS missing schema dirs: {sorted(missing)}"
 
-
 def test_skeleton_covers_every_type_home():
     folders = schema.load_folders()
     installed = _skeleton_dirs()
     for t, home in folders["homes"].items():
         assert home in installed, f"type {t} home {home} not in SKELETON_DIRS"
-
 
 def test_installer_deploys_exactly_the_shipped_profiles():
     text = INSTALL.read_text(encoding="utf-8")
@@ -40,23 +37,19 @@ def test_installer_deploys_exactly_the_shipped_profiles():
     shipped = {p.name for p in (ROOT / "src/.memoria/profiles").iterdir() if p.is_dir()}
     assert listed == shipped, f"ALL_PROFILES {listed ^ shipped} out of sync with src profiles"
 
-
 def test_cron_wrappers_exist_for_wired_jobs():
     text = INSTALL.read_text(encoding="utf-8")
     for wrapper in re.findall(r'\.memoria/scripts/([a-z-]+\.sh)', text):
         assert (ROOT / "src/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
-
 
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "src/.memoria/scripts/lint-cron.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
     assert "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" in text
 
-
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text
-
 
 def test_installer_escapes_template_replacements():
     text = INSTALL.read_text(encoding="utf-8")
@@ -64,7 +57,6 @@ def test_installer_escapes_template_replacements():
     assert "s|{{VAULT_PATH}}|$VAULT_PATH|g" not in text
     assert "s|{{PYTHON}}|$pybin|g" not in text
     assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text
-
 
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
@@ -80,7 +72,6 @@ def test_installer_treats_python_as_a_hard_prerequisite():
     assert "python_install_guidance" in ensure_prereqs
     assert "sudo apt-get install -y$missing" in ensure_prereqs
 
-
 def test_mcp_deps_fail_loudly_without_python():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
@@ -92,3 +83,7 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "python_install_guidance" in install_mcp_deps
     assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
     assert "skipping MCP deps" not in install_mcp_deps
+
+def test_installer_preserves_user_appearance_on_refresh():
+    text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    assert "--exclude '.obsidian/appearance.json'" in text

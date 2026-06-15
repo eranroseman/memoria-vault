@@ -1,0 +1,95 @@
+/* Memoria property badges — PI-facing state accents (#145)
+ *
+ * Enable with Settings -> Appearance -> CSS snippets -> memoria-property-badges.
+ * The rules keep lifecycle/status fields visually near the top of the Properties
+ * panel and color the states that decide what needs attention.
+ */
+
+/* @settings
+name: Memoria property badges
+id: memoria-property-badges
+settings:
+  -
+    id: memoria-proposed-color
+    title: Proposed / needs PI
+    description: Accent for proposal states awaiting the PI.
+    type: variable-color
+    format: hex
+    default: '#c47f00'
+  -
+    id: memoria-current-color
+    title: Current / accepted
+    description: Accent for accepted current records.
+    type: variable-color
+    format: hex
+    default: '#2f7d32'
+  -
+    id: memoria-retracted-color
+    title: Retracted / blocked
+    description: Accent for retracted records and block loudness.
+    type: variable-color
+    format: hex
+    default: '#b3261e'
+  -
+    id: memoria-archived-color
+    title: Archived / quiet
+    description: Accent for archived or quiet states.
+    type: variable-color
+    format: hex
+    default: '#6f7782'
+  -
+    id: memoria-ingest-pending-color
+    title: Ingest pending
+    description: Accent for tier0 or enriched records that still need completion.
+    type: variable-color
+    format: hex
+    default: '#9467bd'
+*/
+
+.metadata-property[data-property-key="type"],
+.metadata-property[data-property-key="lifecycle"],
+.metadata-property[data-property-key="maturity"],
+.metadata-property[data-property-key="certainty"],
+.metadata-property[data-property-key="agent_recommendation"],
+.metadata-property[data-property-key="loudness"],
+.metadata-property[data-property-key="origin"],
+.metadata-property[data-property-key="ingest_status"] {
+  --metadata-label-text-color: var(--text-normal);
+}
+
+.metadata-property[data-property-key="lifecycle"] {
+  border-left: 3px solid var(--memoria-proposed-color);
+  padding-left: 0.35rem;
+}
+
+.metadata-property[data-property-key="lifecycle"]:has([value="current"]),
+.metadata-property[data-property-key="lifecycle"]:has([data-property-value="current"]),
+.metadata-property[data-property-key="ingest_status"]:has([value="complete"]),
+.metadata-property[data-property-key="ingest_status"]:has([data-property-value="complete"]) {
+  border-left-color: var(--memoria-current-color);
+}
+
+.metadata-property[data-property-key="lifecycle"]:has([value="retracted"]),
+.metadata-property[data-property-key="loudness"]:has([value="block"]),
+.metadata-property[data-property-key="loudness"]:has([data-property-value="block"]) {
+  border-left-color: var(--memoria-retracted-color);
+}
+
+.metadata-property[data-property-key="lifecycle"]:has([value="archived"]),
+.metadata-property[data-property-key="loudness"]:has([value="quiet"]),
+.metadata-property[data-property-key="loudness"]:has([data-property-value="quiet"]) {
+  border-left-color: var(--memoria-archived-color);
+}
+
+.metadata-property[data-property-key="ingest_status"] {
+  border-left: 3px solid var(--memoria-ingest-pending-color);
+  padding-left: 0.35rem;
+}
+
+.metadata-property[data-property-key="loudness"]:has([value="alert"]),
+.metadata-property[data-property-key="loudness"]:has([data-property-value="alert"]),
+.metadata-property[data-property-key="agent_recommendation"]:has([value="issues-found"]),
+.metadata-property[data-property-key="agent_recommendation"]:has([data-property-value="issues-found"]) {
+  border-left: 3px solid var(--memoria-proposed-color);
+  padding-left: 0.35rem;
+}

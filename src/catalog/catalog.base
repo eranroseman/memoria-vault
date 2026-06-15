@@ -12,11 +12,11 @@ views:
         - file.inFolder("catalog/papers")
     order:
       - file.name
+      - lifecycle
       - citekey
       - authors
       - year
       - venue
-      - lifecycle
   - type: table
     name: "People"
     filters:
@@ -51,9 +51,9 @@ views:
         - file.inFolder("catalog/datasets")
     order:
       - file.name
+      - lifecycle
       - doi
       - license
-      - lifecycle
   - type: table
     name: "Repositories"
     filters:

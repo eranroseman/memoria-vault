@@ -48,6 +48,22 @@ optional:
 
 ---
 
+
+## Display order and grouping
+
+The schema validates field presence and kind; display order is a shipped-vault convention so the Properties pane is scannable. Templates and deterministic emitters put fields in this order:
+
+1. Human identity: `title` or `name`.
+2. Schema identity and PI-facing state: `type`, then `lifecycle`.
+3. Type-specific state: `maturity`, `certainty`, `agent_recommendation`, `loudness`, `origin`, or `ingest_status`.
+4. Primary references: `citekey`, `entity`, `target`, `task_id`, `url`, `doi`.
+5. Classification and relations: `research_area`, `methodology`, `topics`, `sources`, `links`, `relationships`.
+6. Provenance and housekeeping: owned namespaces such as `_enrichment` / `_proposed_classification`, then `created`, `updated`, `enriched_date`, and version fields.
+
+Obsidian does not have a global property-order schema file, so the shipped templates, emitters, and Bases carry this convention directly. The `memoria-property-badges.css` snippet colors the scan-critical state fields (`lifecycle`, `ingest_status`, `loudness`, and verification status) when Obsidian exposes editable property values; the field order still carries the meaning when snippets are disabled.
+
+---
+
 ## `lifecycle` — the one chain
 
 Every typed note carries `lifecycle`, drawn from the **universal chain** ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)):

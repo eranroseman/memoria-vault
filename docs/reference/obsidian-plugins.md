@@ -41,7 +41,7 @@ Install when the friction is felt. Not required for core function.
 | smart-connections | Vector search across notes. |
 | smart-lookup | Question-first semantic search (shares index with smart-connections). |
 | omnisearch | Fast fuzzy full-text search (keyword counterpart to smart-*). |
-| supercharged-links + style-settings | Color-code links by note `type`. |
+| supercharged-links + style-settings | Tune the shipped CSS snippets for link colors and property state badges. |
 | hover-editor | Preview wikilinked notes in a popup. |
 | tag-wrangler | Bulk-rename, merge, and inspect tags. |
 | pdf-plus | Deep-link from notes to specific PDF passages. |
@@ -95,6 +95,13 @@ Settings with a fixed required value. All others are personal preference. See [e
 | Literature note folder (`literatureNoteFolder`) | `catalog/papers` | Notes must land in the canonical papers home (ADR-47). |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
 | Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `system/templates/paper.md` (the human-facing copy): both follow the `paper` schema in `.memoria/schemas/types/paper.yaml`. They are not identical field-for-field (the citation copy carries Zotero `{{vars}}`); edit both together when the shared structure changes. |
+
+### CSS snippets
+
+| Snippet | Required value | Constraint |
+| --- | --- | --- |
+| `memoria-link-colors.css` | Enabled in the starter `appearance.json`; user can toggle | Colors wikilinks by folder/type when supercharged-links exposes link attributes. |
+| `memoria-property-badges.css` | Enabled in the starter `appearance.json`; user can toggle | Accents scan-critical Properties rows: `lifecycle`, `ingest_status`, `loudness`, and verification status. This is the visual layer for the property display order in [Frontmatter fields](frontmatter.md). |
 
 ### obsidian-git
 

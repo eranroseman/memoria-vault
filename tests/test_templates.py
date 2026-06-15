@@ -82,3 +82,18 @@ def test_source_template_exposes_linked_claim_button():
     body = (TEMPLATES / "source.md").read_text(encoding="utf-8")
     assert "action QuickAdd: Memoria: create linked claim note" in body
     assert body.index("```button") > body.index("# Worth distilling")
+
+
+
+def test_templates_surface_identity_type_lifecycle_first():
+    """Properties pane scan order: identity first, then type/lifecycle (#145)."""
+    for tpl in sorted(TEMPLATES.glob("*.md")):
+        keys = [line.split(":", 1)[0] for line in _frontmatter_text(tpl).splitlines()
+                if line and not line.startswith(" ")]
+        assert "type" in keys and "lifecycle" in keys, tpl.name
+        identity = "title" if "title" in keys else "name"
+        assert keys[:3] == [identity, "type", "lifecycle"], tpl.name
+        if tpl.name == "claim.md":
+            assert keys[:4] == ["title", "type", "lifecycle", "maturity"]
+        if tpl.name == "fleeting.md":
+            assert keys[:4] == ["title", "type", "lifecycle", "origin"]

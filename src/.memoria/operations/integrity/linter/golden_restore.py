@@ -47,6 +47,7 @@ OBSIDIAN_FILES = (
     ".obsidian/community-plugins.json",
     ".obsidian/core-plugins.json",
     ".obsidian/snippets/memoria-link-colors.css",
+    ".obsidian/snippets/memoria-property-badges.css",
 )
 OBSIDIAN_PLUGIN_DATA_SKIP = ("agent-client", "obsidian-local-rest-api")
 

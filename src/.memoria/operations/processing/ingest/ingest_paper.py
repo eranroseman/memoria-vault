@@ -167,19 +167,20 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         arxiv = doi.split("arxiv.", 1)[-1]
     fm = {
         "title": f.get("title", ""),
+        "name": f.get("title", ""),         # dataset/repository records key on name
         "type": note_type,
         "lifecycle": "current",             # entities are current from creation (ADR-50)
+        "ingest_status": "tier0",           # captured but not yet enriched (ADR-30)
         "citekey": citekey,
-        "name": f.get("title", ""),         # dataset/repository records key on name
+        "source_type": source_type,
+        "doi": doi,
+        "url": f.get("url", ""),
         "authors": _authors(f.get("author", "") or f.get("editor", "")),
         "year": year,
         "venue": f.get("journal", "") or f.get("booktitle", "") or f.get("publisher", ""),
-        "doi": doi,
-        "url": f.get("url", ""),
-        "relationships": {},                # given edges; Tier-1 link builds them (ADR-52)
         "research_area": [],
         "methodology": [],
-        "source_type": source_type,
+        "relationships": {},                # given edges; Tier-1 link builds them (ADR-52)
         "zotero_uri": "",
         "pdf_uri": "",
         "extract_path": "",
@@ -190,7 +191,6 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "pmcid": f.get("pmcid", ""),
         "isbn": f.get("isbn", ""),
         "pub_status": "active",
-        "ingest_status": "tier0",           # captured but not yet enriched (ADR-30)
         "full_text_reviewed": False,
         "created": now,
         "updated": now,

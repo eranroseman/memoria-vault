@@ -1,7 +1,7 @@
 ---
+name: "{{VALUE:repository name}}"
 type: repository
 lifecycle: current
-name: "{{VALUE:repository name}}"
 url: ""
 language: ""
 license: ""
