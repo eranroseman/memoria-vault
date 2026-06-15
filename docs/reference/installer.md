@@ -33,7 +33,7 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | 3. Hermes | Runs the official Hermes installer; verifies the ACP extra. |
 | 4. Scaffold + populate | Copies `src/` to the vault (rsync — a refresh overwrites author files, keeps your notes and `.env`), then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). |
 | 4a. Golden copy | Reconciles shipped system files against the previous golden baseline and stages the new SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden_restore.py upgrade --source SRC --apply`). |
-| 4b. Pre-commit gate | If the vault is a git repo, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/` — every staged note must pass its schema. (The vault is _your_ repo; the installer never `git init`s for you.) |
+| 4b. Git hooks | If the vault is a git repo, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue Peer-reviewer verification. (The vault is _your_ repo; the installer never `git init`s for you.) |
 | 5. MCP dependencies | Creates the vault-local venv at `.memoria/.venv` and pip-installs `mcp/requirements.txt`. The **clustering stack is opt-in**: a confirm prompt offers `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
 | 5b. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing, registers the vault as a qmd collection (BM25 works immediately), and offers the ~2GB vector-model embed as an opt-in. Resolves the absolute binary path into each profile's `{{QMD}}` slot — a conda package also ships a `qmd`, so PATH lookup is unsafe. |
 | 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter) and `{{VAULT_PATH}}` into each `config.yaml`, runs `hermes profile install`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
@@ -65,7 +65,7 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 | --- | --- |
 | `KILOCODE_API_KEY` (model access), `OBSIDIAN_API_KEY` (Local REST API), `OPENALEX_API_KEY` (required since 2026-02) | `~/.hermes/.env`, then `bash scripts/install.sh --profiles-only --vault <vault>` to propagate |
 | Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
-| git in the vault | `git init && git add -A && git commit` — obsidian-git and the pre-commit gate need a repo |
+| git in the vault | `git init && git add -A && git commit` — obsidian-git, the pre-commit gate, and verify-on-commit need a repo |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
 ---

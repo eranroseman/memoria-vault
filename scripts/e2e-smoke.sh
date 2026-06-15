@@ -2,8 +2,8 @@
 # e2e-smoke.sh — the offline end-to-end gate (added after it caught two real
 # bugs the unit suite missed). Builds a vault from src/ exactly as the installer
 # would (scaffold + populate + golden), then walks the Library loop:
-#   tree==schemas -> golden clean -> detectors PASS -> the commit gate blocks a
-#   malformed claim and passes a valid one -> offline Tier-0 ingest -> a
+#   tree==schemas -> golden clean -> detectors PASS -> the commit hooks wire ->
+#   the schema gate blocks a malformed claim and passes a valid one -> offline Tier-0 ingest -> a
 #   schema-valid Catalog entity -> an honesty candidate card -> lint PASS.
 # Pure-local: no Hermes, no network. The cluster-graph step runs only if
 # networkx is installed.
@@ -29,10 +29,11 @@ assert not missing, f"skeleton missing {missing}"
 print(f"   skeleton ensured ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
 PYEOF
 
-echo "== 2. golden copy + commit gate wiring =="
+echo "== 2. golden copy + git hook wiring =="
 "$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" stage
 git -C "$V" init -q
 cp "$V/.memoria/operations/integrity/linter/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
+cp "$V/.githooks/post-commit" "$V/.git/hooks/post-commit" && chmod +x "$V/.git/hooks/post-commit"
 
 echo "== 3. fresh-vault integrity =="
 "$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"

@@ -19,6 +19,6 @@ Two flows run on the board: a **Compile** flow that brings new knowledge into th
 | [The Compile and Compose flows](compile-and-compose.md)                       | The Compile (find → distill) and Compose (assess → export) flows, what each phase means, and why they run continuously rather than as one sequential script.         |
 | [The board as a state machine (the control plane)](board-as-state-machine.md) | Why Kanban is the coordination layer (not chat), what a card carries, the card lifecycle, why cards and notes differ, and why there is no Orchestrator.              |
 | [Review as a first-class state](review-as-state.md)                           | Why review is a structured field rather than a convention, what "blocking" means technically, and the post-rejection paths.                                          |
-| [Verify-on-commit](verify-on-commit.md)                                       | Deferred design intent for draft-commit verification; today, run verification deliberately from the palette or Co-PI. |
+| [Verify-on-commit](verify-on-commit.md)                                       | How draft commits enqueue Peer-reviewer verification cards through the post-commit hook. |
 
 For step-by-step workflow recipes, see [how-to guides](../../how-to-guides).

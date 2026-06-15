@@ -69,7 +69,7 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 - [Knowledge](knowledge/README.md) — how durable knowledge is organized: note-types, knowledge-cycle, note-body-structure, lifecycle-over-topic, promotion-model, vocabulary-discipline, common-pitfalls
 - [Profiles](profiles/README.md) — the five profiles: Co-PI (conversational front) plus four background lanes — librarian, writer, peer-reviewer, engineer — plus delegation-posture
 - [Kanban board](kanban-board/README.md) — the board as coordination layer: states, card-schema, obsidian-projection
-- [Workflows](workflows/README.md) — how work moves: compile-and-compose, board-as-state-machine, review-as-state, plus deferred verify-on-commit design
+- [Workflows](workflows/README.md) — how work moves: compile-and-compose, board-as-state-machine, review-as-state, plus verify-on-commit
 - [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, the-status-line, callouts, agent-client-picker, visual-discipline, design-system
 - [Dashboards](dashboards/README.md) — the twelve dashboards, grouped: daily-glance, synthesis-agenda, structural-health, operational-health
 - [Deployment](deployment/README.md) — how the system is packaged and installed: distribution-model, bootstrap-installer, deployment-options

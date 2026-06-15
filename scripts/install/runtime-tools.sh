@@ -44,3 +44,14 @@ wire_commit_gate() {
     say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit gate)"
   fi
 }
+
+wire_verify_on_commit_hook() {
+  if [ -d "$VAULT_PATH/.git" ]; then
+    run mkdir -p "$VAULT_PATH/.git/hooks"
+    run cp "$VAULT_PATH/.githooks/post-commit" "$VAULT_PATH/.git/hooks/post-commit"
+    run chmod +x "$VAULT_PATH/.git/hooks/post-commit"
+    ok "post-commit verify trigger wired (.git/hooks/post-commit)"
+  else
+    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the post-commit verify trigger)"
+  fi
+}
