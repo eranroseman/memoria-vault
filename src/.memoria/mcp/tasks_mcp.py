@@ -23,9 +23,12 @@ import sys
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
-if str(_RUNTIME_ROOT) not in sys.path:
-    sys.path.insert(0, str(_RUNTIME_ROOT))
+_OPERATIONS_LIB = _RUNTIME_ROOT / "operations" / "lib"
+for _path in (_RUNTIME_ROOT, _OPERATIONS_LIB):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
+import loudness  # noqa: E402
 from memoria_runtime.policy import within_scope  # noqa: E402
 
 # task lane -> the background agent that owns it (ADR-48 §4.1)
@@ -120,6 +123,10 @@ def delegate(vault: Path, lane: str, goal: str, context: str = "",
              allowed_paths: list[str] | None = None, expected_outputs: str = "",
              review_checks: str = "", idempotency_key: str = "") -> dict:
     """Validate the handoff payload against the lane ceiling, then create the card."""
+    blockers = loudness.open_blockers(vault)
+    if blockers:
+        return {"created": False, "error": "loudness-block-active",
+                "detail": loudness.blocker_message(blockers), "blockers": blockers}
     allowed_paths = allowed_paths or []
     errors = validate(vault, lane, allowed_paths)
     if errors:

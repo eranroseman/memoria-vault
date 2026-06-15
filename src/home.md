@@ -32,7 +32,10 @@ cssclasses:
 > const waiting = totals.blocked ?? 0;
 > const review = totals.review_queue ?? 0;
 > const retries = totals.retrying ?? 0;
-> dv.paragraph(`${icon} ${verdict} · Active: ${active} · Waiting: ${waiting} · Review: ${review} · Retries: ${retries} — [[board-state|board]] · [[drift-watch|findings]]`);
+> const urgentCards = dv.pages('"inbox"').where(page => page.lifecycle === "proposed" && ["alert", "block"].includes(page.loudness));
+> const alerts = urgentCards.where(page => page.loudness === "alert").length;
+> const blocks = urgentCards.where(page => page.loudness === "block").length;
+> dv.paragraph(`${icon} ${verdict} · Active: ${active} · Waiting: ${waiting} · Review: ${review} · Retries: ${retries} · Alerts: ${alerts} · Blocks: ${blocks} — [[board-state|board]] · [[drift-watch|findings]]`);
 > ```
 
 ## Act

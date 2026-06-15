@@ -289,3 +289,38 @@ def test_shipped_lanes_deny_template_mutations():
         for cls in ("safe-and-unambiguous", "authorized-targeted"):
             dec = decide(profile, "auto_fix", path, lane, flags={"class": cls})
             assert dec.decision == "deny", (profile, "auto_fix", cls, dec)
+
+
+def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged(tmp_path):
+    lane_dir = tmp_path / LANE_OVERRIDE_RELDIR
+    lane_dir.mkdir(parents=True)
+    (lane_dir / "writer.yaml").write_text(
+        'profile: memoria-writer\n'
+        'policy:\n'
+        '  allow:\n'
+        '    write: ["notes/hubs/**"]\n'
+        '  require: ["audit_log"]\n'
+        'routing:\n'
+        '  write_scope: ["notes/hubs/"]\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "inbox").mkdir()
+    blocker = tmp_path / "inbox/block.md"
+    blocker.write_text(
+        "---\ntitle: Stop\ntype: alert\nlifecycle: proposed\nloudness: block\n---\n",
+        encoding="utf-8",
+    )
+
+    engine = PolicyEngine(tmp_path)
+    blocked = engine.check("memoria-writer", "write", "notes/hubs/h.md", "T-BLOCK")
+    assert blocked["decision"] == "deny"
+    assert blocked["policy_rule"] == "loudness.block.active"
+    assert blocked["blockers"][0]["path"] == "inbox/block.md"
+
+    blocker.write_text(
+        "---\ntitle: Stop\ntype: alert\nlifecycle: current\nloudness: block\nresolved: 2026-06-15\n---\n",
+        encoding="utf-8",
+    )
+    unblocked = engine.check("memoria-writer", "write", "notes/hubs/h.md", "T-OPEN")
+    assert unblocked["decision"] == "dry_run"
+    assert unblocked["policy_rule"] == "review_gated.dry_run"

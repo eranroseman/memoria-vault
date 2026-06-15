@@ -64,7 +64,8 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Emit canvas | cluster MCP (`cluster_mcp.py`) | Renders the claim-debate map as a JSON Canvas with maturity-colored nodes and typed edges. |
 | Model topics | cluster MCP (`cluster_mcp.py`) | Runs BERTopic over the corpus to extract topics, the doc-topic map, and outliers. |
 | List / run patterns | patterns MCP (`patterns_mcp.py`) | Lists runnable patterns from `system/patterns/` and composes a pattern run (refusing gated-zone output targets), logging provenance. |
-| Route task | tasks MCP (`tasks_mcp.py`), Co-PI-facing | Validates a delegation against the target lane's ceiling and creates the kanban card. |
+| Route task | tasks MCP (`tasks_mcp.py`), Co-PI-facing | Validates a delegation against the target lane's ceiling, refuses dispatch while an open `loudness: block` card exists, and creates the kanban card. |
+| Loudness routing | shared operation helper (`operations/lib/loudness.py`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
 | Board export | board export (`board_export.py`, 60 s cron) | Projects kanban cards into `system/board/` and appends the telemetry logs (board state, transitions, dispositions, cost). |
 | Metrics aggregate | metrics aggregator (`metrics_aggregate.py`, weekly cron) | Rolls audit + board + lint signals into per-lane trust-score notes under `system/metrics/`. |
 

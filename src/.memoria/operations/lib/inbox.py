@@ -17,6 +17,8 @@ import re
 import sys
 from pathlib import Path
 
+import loudness as loudness_routing
+
 PROPOSAL_TYPES = {"candidate", "gap"}
 VERIFICATION_TYPES = {"flag", "alert"}
 CERTAINTY = ("confident", "likely", "unsure")
@@ -64,7 +66,7 @@ def write_proposal(vault: Path, card_type: str, title: str, action: str,
               f"created: {today}", "---", ""]
     body = (f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
             f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n")
-    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body)
+    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
 
 
 def write_finding(vault: Path, card_type: str, title: str, finding: str,
@@ -98,7 +100,7 @@ def write_finding(vault: Path, card_type: str, title: str, finding: str,
     body = f"# Finding\n\n{finding}\n"
     if evidence:
         body += f"\n# Evidence\n\n{evidence}\n"
-    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body)
+    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
 
 
 def write_work_prompt(vault: Path, title: str, action: str, what_happened: str,
@@ -143,11 +145,12 @@ def write_work_prompt(vault: Path, title: str, action: str, what_happened: str,
         if path.exists():
             return None
         path.write_text(content, encoding="utf-8")
+        loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness})
         return path
-    return _write(vault, "work-prompt", title, content)
+    return _write(vault, "work-prompt", title, content, loudness=loudness)
 
 
-def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
+def _write(vault: Path, card_type: str, title: str, content: str, loudness: str = "notice") -> Path:
     inbox = vault / "inbox"
     inbox.mkdir(parents=True, exist_ok=True)
     base = f"{card_type}-{_slug(title)}"
@@ -157,6 +160,7 @@ def _write(vault: Path, card_type: str, title: str, content: str) -> Path:
         n += 1
         path = inbox / f"{base}-{n}.md"
     path.write_text(content, encoding="utf-8")
+    loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness, "type": card_type})
     return path
 
 

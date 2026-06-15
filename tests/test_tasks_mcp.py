@@ -97,3 +97,27 @@ def test_card_creation_degrades_with_fallback_hint(tmp_path, monkeypatch):
         assert out["error"].startswith(("hermes-cli-not-found", "kanban-create"))
         if out["error"] == "hermes-cli-not-found":
             assert "fallback" in out
+
+
+def test_delegate_stops_when_block_loudness_card_is_open(tmp_path):
+    v = _vault(tmp_path)
+    (v / "inbox").mkdir()
+    (v / "inbox/block.md").write_text(
+        "---\ntitle: Stop\ntype: alert\nlifecycle: proposed\nloudness: block\n---\n",
+        encoding="utf-8",
+    )
+    out = tasks_mcp.delegate(v, "catalog", "goal", allowed_paths=["catalog/"])
+    assert out["created"] is False
+    assert out["error"] == "loudness-block-active"
+    assert out["blockers"][0]["path"] == "inbox/block.md"
+
+
+def test_delegate_resumes_after_block_card_is_acknowledged(tmp_path, monkeypatch):
+    v = _vault(tmp_path)
+    (v / "inbox").mkdir()
+    (v / "inbox/block.md").write_text(
+        "---\ntitle: Stop\ntype: alert\nlifecycle: current\nloudness: block\n---\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(tasks_mcp, "create_card", lambda *args, **kwargs: {"created": True})
+    assert tasks_mcp.delegate(v, "catalog", "goal", allowed_paths=["catalog/"])["created"] is True

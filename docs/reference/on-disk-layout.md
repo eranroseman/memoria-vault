@@ -54,7 +54,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution floor, cluster params)
 ├── operations/              the deterministic operation cores
-│   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer)
+│   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer) + loudness.py (alert/block routing)
 │   ├── processing/ingest/     runner.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
 │   ├── integrity/linter/      detectors.py, precommit_check.py, pre-commit, golden_restore.py
 │   ├── integrity/retraction/  retraction.py

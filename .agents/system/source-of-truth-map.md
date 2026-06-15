@@ -22,7 +22,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Runtime write decisions and audit | `src/.memoria/mcp/policy_mcp.py` | Policy hook/plugin, lane overrides, audit log |
 | Write interception | `src/.memoria/plugins/memoria-policy-gate/` and `src/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
 | Shared schema validation | `src/.memoria/operations/lib/schema.py` | Linter, pre-commit, installer and schema tests |
-| Inbox card rendering | `src/.memoria/operations/lib/inbox.py` | Operations and lanes that raise cards |
+| Inbox card rendering and loudness routing | `src/.memoria/operations/lib/inbox.py` + `src/.memoria/operations/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
 | Runtime vault image | `src/` | `scripts/install.sh`, golden-copy staging |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |

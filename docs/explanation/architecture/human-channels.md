@@ -40,18 +40,16 @@ For command syntax and available operations, see [Hermes CLI](../../reference/he
 
 ## Graded loudness — how a signal picks its surface
 
-> **Partially built in v0.1.0-alpha.2.** Loudness levels ship as metadata, and the quiet/notice surfaces (logs, dashboards, the Inbox) work today. The **push and block routing** for the alert/block levels is **deferred** — nothing pushes to Telegram or blocks dispatch on loudness yet; tracked in [#343](https://github.com/eranroseman/memoria-vault/issues/343).
-
-Every agent and engine finding carries one of four loudness levels, and the level decides where it surfaces:
+Every agent and operation finding carries one of four loudness levels, and the level decides where it surfaces:
 
 | Level | Outcome |
 | --- | --- |
-| **Quiet** | logged only; aggregated in the weekly review; no interruption |
+| **Quiet** | logged only; no push |
 | **Notice** | appears in the relevant dashboard + weekly review; no push |
-| **Alert** | appears in the Inbox's "Needs me" queue; future push routing is deferred |
-| **Block** | reserved for future acknowledged blockers; no shipped action blocks on loudness yet |
+| **Alert** | appears in Home / the Inbox's "Needs me" queue and sends Telegram push when configured |
+| **Block** | appears in Home, sends Telegram push when configured, and pauses new delegation plus review-gated promotion until acknowledged |
 
-The test for future push vs dashboard routing: *does it change what the PI does in the next 30 minutes?* Only Alert and Block should ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
+The test for push vs dashboard routing: *does it change what the PI does in the next 30 minutes?* Only Alert and Block should ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
 
 ---
 
@@ -59,7 +57,7 @@ The test for future push vs dashboard routing: *does it change what the PI does 
 
 Telegram serves two purposes that are easy to conflate but that need to remain separate: push notification for urgent signals, and lightweight mobile capture.
 
-The deferred push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
+The push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
 
 The mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, or quick corpus lookups while in motion. The key constraint is that the Telegram toolset is intentionally narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
 

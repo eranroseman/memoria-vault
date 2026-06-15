@@ -346,7 +346,13 @@ evidence, real transcripts:
       wiring for `.git/hooks/post-commit`, and tests that a committed
       `projects/**/*.md` draft enqueues a normal Peer-reviewer verify card.
       Validation: focused hook pytest, Bash syntax/shellcheck, docs-doctor.
-- [ ] (next) D — continue PI surface (#343/#380/#145/#183/#154/#336/#329/#378).
+- [x] 2026-06-15 — D #343 graded-loudness routing implemented on
+      `feat/alpha4-graded-loudness`: alert/block cards written through the shared
+      Inbox writer record Telegram push attempts, Home counts alert/block cards,
+      open block cards stop `tasks_mcp` delegation and review-gated policy writes
+      until resolved, and quiet/notice stay pull-only. Validation: focused
+      loudness/tasks/policy pytest, Ruff, docs-doctor.
+- [ ] (next) D — continue PI surface (#380/#145/#183/#154/#336/#329/#378).
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 

@@ -30,11 +30,12 @@ dependencies remain in `src/.memoria/mcp/requirements.txt`.
 | `src/.memoria/lane-overrides/**` | `python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_lifecycle_dashboard.py` |
 | `src/.memoria/tool-registry.yaml` | `python -m pytest tests/test_profiles.py tests/test_skill_lifecycle_dashboard.py` |
 | `src/.memoria/profiles/**` | `python -m pytest tests/test_profiles.py tests/test_skill_lifecycle_dashboard.py` |
-| `src/.memoria/mcp/policy_*` or policy plugin | `python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_schemas.py` |
-| `src/.memoria/mcp/tasks_mcp.py` | `python -m pytest tests/test_tasks_mcp.py tests/test_profiles.py tests/test_quickadd.py` |
+| `src/.memoria/mcp/policy_*` or policy plugin | `python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_loudness.py tests/test_schemas.py` |
+| `src/.memoria/mcp/tasks_mcp.py` | `python -m pytest tests/test_tasks_mcp.py tests/test_loudness.py tests/test_profiles.py tests/test_quickadd.py` |
 | `src/.memoria/mcp/ingest_mcp.py` | `python -m pytest tests/test_ingest_mcp.py tests/test_pipeline.py tests/test_inbox_cards.py` |
 | `src/.memoria/operations/processing/ingest/**` | Run `test_pipeline.py` plus the matching component tests: classify, extract, ingest_paper, link, project_hints, or resolve_merge |
 | `src/.memoria/operations/integrity/linter/**` | `python -m pytest tests/test_detectors.py tests/test_precommit_schema.py tests/test_golden_restore.py tests/test_session_summary.py` |
+| `src/.memoria/operations/lib/loudness.py` | `python -m pytest tests/test_loudness.py tests/test_tasks_mcp.py tests/test_policy_mcp.py tests/test_inbox_cards.py` |
 | `src/.memoria/operations/**` | Run the matching `test_sweeps_*.py` or eval tests |
 | `src/system/templates/**` | `python -m pytest tests/test_templates.py tests/test_schemas.py tests/test_bases.py` |
 | `src/system/scripts/**` | `python -m pytest tests/test_quickadd.py` plus the workflow-specific test |
