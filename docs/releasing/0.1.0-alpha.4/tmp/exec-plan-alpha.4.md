@@ -297,7 +297,13 @@ evidence, real transcripts:
       `feat/alpha4-ingest-sources`: Unpaywall OA PDF lookup is the first extract
       option, and PubMed/NCBI is the fourth resolve/merge source. Validation:
       focused ingest/classify pytest and `scripts/test.sh all`.
-- [ ] (next) F — golden upgrade (#339, amend ADR-55).
+- [x] 2026-06-15 — F golden upgrade #339 implemented on
+      `feat/alpha4-golden-restore`: ADR-55 amended; `golden_restore.py upgrade`
+      performs old-golden/new-source/live reconcile; installer routes
+      golden-covered system files through it. Validation: focused pytest,
+      `golden_restore.py --self-test`, `scripts/test.sh all`,
+      `bash scripts/e2e-smoke.sh`, installer dry-run, `status-doctor`.
+- [ ] (next) F follow-through — merge #339 PR and confirm issue closure.
 - [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
@@ -334,6 +340,11 @@ evidence, real transcripts:
   through the same coherence gate; `resolve_merge.py` now fetches PubMed via
   E-utilities, merges PMID/PMCID/publication types/MeSH terms, and includes
   PubMed in identity-agreement diagnostics. Offline tests cover both paths.
+- 2026-06-15 — F golden branch prepared for #339: release refresh now excludes
+  golden-covered system files from the bulk deploy and reconciles them via
+  `golden_restore.py upgrade --source SRC --apply`. Clean additions/edits/removals
+  apply when live still matches old golden; PI-customized conflicts are preserved
+  and remain visible as drift against the refreshed golden baseline.
 
 ## 9. Surprises & discoveries
 

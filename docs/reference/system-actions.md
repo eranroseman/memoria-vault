@@ -32,6 +32,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Run detectors | Linter (`detectors.py`, daily cron) | Runs all sixteen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit gate | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one gate that prevents rather than reports. |
 | Golden stage | Linter (`golden_restore.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
+| Golden upgrade | Linter (`golden_restore.py upgrade`) | Three-way reconciles old golden, new source, and live system files; applies clean release changes and preserves PI-customized conflicts. |
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log (ADR-25). |
