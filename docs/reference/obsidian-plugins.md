@@ -159,7 +159,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `formDefinitions[].name` | `memoria-source-capture` | Structured source capture form for PI-entered source metadata. |
+| `formDefinitions[].name` | `memoria-source-capture`, `memoria-project-start` | Structured source capture is active now; project-start exists as the reusable form contract for #154 without scaffolding projects in this slice. |
 | `research_area` / `methodology` fields | Fixed multiselect options matching `system/vocabulary.md`. | `system/vocabulary.md` is the source of truth; `tests/test_modalforms.py` fails if the committed form options drift. |
 | `globalNamespace` | `MF` | Keeps the plugin API available at the default namespace used by Modal Forms examples. |
 

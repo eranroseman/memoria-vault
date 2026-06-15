@@ -39,6 +39,7 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: capture fleeting",
         "Memoria: capture from Zotero selection",
         "Memoria: capture source from URL",
+        "Memoria: structured source capture",
         "Memoria: delegate task",
         "Memoria: catalog source",
         "Memoria: extract claims",
@@ -163,6 +164,25 @@ def test_assist_surface_commands_are_staged_and_skill_backed():
         ("memoria-writer", "draft-write-section"),
     ):
         assert (PROFILES / assignee / "skills" / skill).is_dir()
+
+
+def test_structured_source_capture_is_palette_wired_and_staged():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: structured source capture"]
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/structured-source-capture.js"
+    script = (SCRIPTS / "structured-source-capture.js").read_text(encoding="utf-8")
+    for marker in (
+        'openForm(FORM_NAME)',
+        'FORM_NAME = "memoria-source-capture"',
+        'SOURCE_FOLDER = "notes/sources/"',
+        '"type: source"',
+        '"lifecycle: proposed"',
+        '"type: candidate"',
+        '"raised_by: modalforms"',
+        '"target: " + yamlString(sourcePath)',
+    ):
+        assert marker in script
 
 def test_zotero_capture_writes_intake_log_where_readers_look():
     """capture-from-zotero.js must append its durability anchor to the same

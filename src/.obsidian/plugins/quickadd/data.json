@@ -70,6 +70,25 @@
       }
     },
     {
+      "id": "ad54dc7d-09b9-4c83-ae5c-2cd912190a00",
+      "name": "Memoria: structured source capture",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: structured source capture",
+        "id": "e5198d02-573e-4552-9cfa-4167ecbf1be9",
+        "commands": [
+          {
+            "name": "structured-source-capture",
+            "type": "UserScript",
+            "id": "7f876442-692a-4d59-989e-b2001a20baad",
+            "path": "system/scripts/structured-source-capture.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "9d3f2b71-4e8a-4c5d-9b06-2f7c81d4a350",
       "name": "Memoria: delegate task",
       "type": "Macro",

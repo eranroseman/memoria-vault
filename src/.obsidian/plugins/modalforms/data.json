@@ -148,6 +148,129 @@
           }
         }
       ]
+    },
+    {
+      "title": "Memoria project start",
+      "name": "memoria-project-start",
+      "version": "1",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Project title",
+          "description": "Human-readable project name.",
+          "isRequired": true,
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "slug",
+          "label": "Project slug",
+          "description": "Folder-safe slug for the future project workspace.",
+          "isRequired": true,
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "goal",
+          "label": "Project goal",
+          "description": "One-paragraph goal or research question.",
+          "isRequired": true,
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "seed_sources",
+          "label": "Seed sources",
+          "description": "Optional citekeys, source paths, or URLs to seed the future mapper handoff.",
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "research_area",
+          "label": "Research area",
+          "description": "Controlled terms from system/vocabulary.md.",
+          "input": {
+            "type": "multiselect",
+            "source": "fixed",
+            "options": [
+              "personal-informatics",
+              "mobile-health",
+              "digital-mental-health",
+              "health-equity",
+              "patient-clinician-communication",
+              "engagement-sustained-use",
+              "chronic-disease-management",
+              "behavior-change",
+              "llm-generative-ai-for-health",
+              "patient-generated-data",
+              "family-caregiver-health",
+              "mobile-sensing",
+              "sociotechnical-systems",
+              "social-computing-for-health",
+              "conversational-agents",
+              "community-health",
+              "digital-therapeutics",
+              "wearable-sensing",
+              "aging",
+              "human-ai-interaction",
+              "online-health-communities",
+              "implementation-science",
+              "sensemaking",
+              "race-intersectionality",
+              "cscw-collaborative-work",
+              "jitai",
+              "ema-self-report"
+            ]
+          }
+        },
+        {
+          "name": "methodology",
+          "label": "Methodology",
+          "description": "Controlled terms from system/vocabulary.md.",
+          "input": {
+            "type": "multiselect",
+            "source": "fixed",
+            "options": [
+              "rct",
+              "quasi-experiment",
+              "observational",
+              "field-study",
+              "lab-experiment",
+              "survey-study",
+              "qualitative",
+              "design-science",
+              "formative-study",
+              "case-study",
+              "systematic-review",
+              "meta-analysis",
+              "secondary-analysis",
+              "semi-structured-interview",
+              "thematic-analysis",
+              "grounded-theory",
+              "contextual-inquiry",
+              "experience-sampling",
+              "ecological-momentary-assessment",
+              "diary-study",
+              "co-design",
+              "usability-testing",
+              "think-aloud",
+              "survey",
+              "regression",
+              "mixed-effects-model",
+              "log-analysis",
+              "machine-learning",
+              "nlp",
+              "content-analysis",
+              "participant-observation",
+              "ab-test"
+            ]
+          }
+        }
+      ]
     }
   ]
 }
