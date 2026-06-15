@@ -1,38 +1,50 @@
-"""L1 component test for pipeline — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for runner (ADR-44)."""
+
 import runner as _m
 
 _bib_local_pdf = _m._bib_local_pdf
 run = _m.run
 
 
-def test_pipeline():
-    def _run():
-        """Offline test of the assembly: Tier-0 only (no network)."""
-        fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
-                   "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n"
-                   "  zoteroselect = {zotero://select/library/items/ABCD1234},\n"
-                   "  file = {C:\\Users\\me\\Zotero\\storage\\WXYZ5678\\A Test.pdf},\n}\n")
-        b = run("x2024Test", fixture, enrich=False)
-        fm = b["frontmatter"]
-        checks = [
-            ("tier0 floor", b["lifecycle"] == "current" and b["ingest_status"] == "tier0"),
-            ("routes to paper", b["note_type"] == "paper"),
-            ("two holes declared", b["holes"] == ["_proposed_classification", "brief"]),
-            ("frontmatter has identity", fm["title"] == "A Test" and fm["doi"] == "10.1/x"),
-            ("zotero_uri from zoteroselect (no API)", fm["zotero_uri"] == "zotero://select/library/items/ABCD1234"),
-            ("pdf_uri from bib file storage key", fm["pdf_uri"] == "zotero://open-pdf/library/items/WXYZ5678"),
-            ("no enrichment without --enrich", b["extract"] is None and b["link_plan"] is None),
-        ]
-        pdf, key = _bib_local_pdf(
-            "y2024Pdf",
-            "@article{y2024Pdf,\n  title = {P},\n"
-            "  file = {C:\\Users\\me\\Zotero\\storage\\ABCD1234\\My Paper - 2024.pdf},\n}\n")
-        checks.append(("bib file -> wsl path + zotero storage key",
-                       key == "ABCD1234"
-                       and pdf == "/mnt/c/Users/me/Zotero/storage/ABCD1234/My Paper - 2024.pdf"))
-        bad = [n for n, ok in checks if not ok]
-        for n, ok in checks:
-            print(f"  {'PASS' if ok else 'FAIL'}  {n}")
-        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: runner.py self-test")
-        return 1 if bad else 0
-    assert _run() == 0
+FIXTURE = (
+    "@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
+    "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n"
+    "  zoteroselect = {zotero://select/library/items/ABCD1234},\n"
+    "  file = {C:\\Users\\me\\Zotero\\storage\\WXYZ5678\\A Test.pdf},\n}\n"
+)
+
+
+def test_runner_builds_tier0_paper_bundle():
+    bundle = run("x2024Test", FIXTURE, enrich=False)
+
+    assert bundle["lifecycle"] == "current"
+    assert bundle["ingest_status"] == "tier0"
+    assert bundle["note_type"] == "paper"
+    assert bundle["holes"] == ["_proposed_classification", "brief"]
+
+
+def test_runner_frontmatter_includes_identity_and_local_uris():
+    fm = run("x2024Test", FIXTURE, enrich=False)["frontmatter"]
+
+    assert fm["title"] == "A Test"
+    assert fm["doi"] == "10.1/x"
+    assert fm["zotero_uri"] == "zotero://select/library/items/ABCD1234"
+    assert fm["pdf_uri"] == "zotero://open-pdf/library/items/WXYZ5678"
+
+
+def test_runner_skips_enrichment_when_disabled():
+    bundle = run("x2024Test", FIXTURE, enrich=False)
+
+    assert bundle["extract"] is None
+    assert bundle["link_plan"] is None
+
+
+def test_bib_local_pdf_returns_wsl_path_and_storage_key():
+    pdf, key = _bib_local_pdf(
+        "y2024Pdf",
+        "@article{y2024Pdf,\n  title = {P},\n"
+        "  file = {C:\\Users\\me\\Zotero\\storage\\ABCD1234\\My Paper - 2024.pdf},\n}\n",
+    )
+
+    assert key == "ABCD1234"
+    assert pdf == "/mnt/c/Users/me/Zotero/storage/ABCD1234/My Paper - 2024.pdf"

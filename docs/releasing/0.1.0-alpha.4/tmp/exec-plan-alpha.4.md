@@ -311,15 +311,19 @@ evidence, real transcripts:
       pages are re-scoped to shipped vs deferred behavior. Validation:
       `ruff check scripts src/.memoria .github/scripts tests`, `scripts/test.sh all`,
       `status-doctor`, stale-doc audit.
-- [ ] (next) C follow-through — merge #493/#443 PR and confirm issue closure.
+- [x] 2026-06-15 — C follow-through complete: #493/#443 merged via PR #541 and
+      both issues closed.
 - [x] 2026-06-15 — C structural naming slice for #472 implemented on
       `refactor/alpha4-naming-cleanup`: script kebab-case → snake_case,
       `load_script()` retired, and `notes/source` / `notes/index` pluralized
       across shipped vault paths, schemas, policy, tests, docs, and agent maps.
       Validation: `scripts/test.sh all`, `bash scripts/e2e-smoke.sh`,
       `status-doctor`, stale-reference audit.
-- [ ] (next) C #472 follow-through — merge structural PR, then split remaining
-      legacy single-function tests before closing #472.
+- [x] 2026-06-15 — C #472 follow-through implemented on
+      `refactor/alpha4-test-splitting`: structural PR #542 merged, and the
+      remaining legacy single-function test files were split into granular pytest
+      cases. Validation: focused pytest, Ruff, one-test-file inventory, and
+      `scripts/test.sh all`. Merge this PR to close #472.
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
 - [ ] (next) #439 Mapper Tier 2 (update ADR-19).
@@ -369,8 +373,14 @@ evidence, real transcripts:
 - 2026-06-15 — C structural naming branch prepared for #472: renamed importable
   tooling scripts (`docs_doctor.py`, `check_test_refs.py`, etc.), switched script
   tests to normal imports, removed the `load_script()` helper, and pluralized the
-  source/index note homes to `notes/sources/` and `notes/indexes/`. Remaining #472
-  work: split the legacy single-function test files into granular pytest cases.
+  source/index note homes to `notes/sources/` and `notes/indexes/`. PR #542
+  merged; #472 stayed open for the remaining test split.
+
+- 2026-06-15 — C #472 test-splitting branch prepared: converted the remaining
+  legacy single-function L1 tests (`check_test_refs`, `docs_doctor`,
+  `gen_adr_index`, `ingest_mcp`, `ingest_paper`, `link`, `metrics_aggregate`,
+  `runner`, `policy_hook`, `pr_policy`, `status_doctor`, and `retraction`) into
+  behavior-scoped pytest cases. The inventory now reports no one-test files.
 
 ## 9. Surprises & discoveries
 

@@ -1,30 +1,34 @@
-"""L1 component test for ingest_paper — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for ingest_paper (ADR-44)."""
+
 import ingest_paper as _m
+import pytest
 
 _EXPECT = _m._EXPECT
 _FIXTURE = _m._FIXTURE
 ingest_text = _m.ingest_text
 
 
-def test_ingest_paper():
-    def _run():
-        fails = 0
-        for ck, ntype, stype, want in _EXPECT:
-            fm = ingest_text(ck, _FIXTURE)["frontmatter"]
-            checks = [
-                ("current + tier0", fm["lifecycle"] == "current" and fm["ingest_status"] == "tier0"),
-                ("title", bool(fm["title"])),
-                ("note_type", fm["type"] == ntype),
-                ("source_type", fm["source_type"] == stype),
-                ("authors", len(fm["authors"]) == want["authors"]),
-            ]
-            for key in ("arxiv_id", "pmcid", "isbn"):
-                if key in want:
-                    checks.append((key, fm[key] == want[key]))
-            bad = [name for name, ok in checks if not ok]
-            print(f"  {'PASS' if not bad else 'FAIL'}  {ck:18} -> {fm['type']:9} {fm['source_type']:8}"
-                  + (f"  BAD: {bad}" if bad else ""))
-            fails += bool(bad)
-        print(f"\n{'OK' if not fails else f'{fails} FAILING'}: ingest_paper Tier-0 self-test")
-        return 1 if fails else 0
-    assert _run() == 0
+@pytest.fixture(scope="module")
+def frontmatter_by_citekey():
+    return {ck: ingest_text(ck, _FIXTURE)["frontmatter"] for ck, *_ in _EXPECT}
+
+
+@pytest.mark.parametrize(("citekey", "note_type", "source_type", "want"), _EXPECT)
+def test_ingest_paper_sets_tier0_identity(frontmatter_by_citekey, citekey, note_type, source_type, want):
+    fm = frontmatter_by_citekey[citekey]
+
+    assert fm["lifecycle"] == "current"
+    assert fm["ingest_status"] == "tier0"
+    assert fm["title"]
+    assert fm["type"] == note_type
+    assert fm["source_type"] == source_type
+    assert len(fm["authors"]) == want["authors"]
+
+
+@pytest.mark.parametrize(("citekey", "_note_type", "_source_type", "want"), _EXPECT)
+def test_ingest_paper_preserves_expected_external_ids(frontmatter_by_citekey, citekey, _note_type, _source_type, want):
+    fm = frontmatter_by_citekey[citekey]
+
+    for key in ("arxiv_id", "pmcid", "isbn"):
+        if key in want:
+            assert fm[key] == want[key]

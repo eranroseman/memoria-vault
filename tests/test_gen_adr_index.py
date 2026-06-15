@@ -1,8 +1,9 @@
-"""L1 component test for gen-adr-index — extracted from its former --self-test (ADR-44)."""
+"""L1 component tests for gen_adr_index (ADR-44)."""
+
 import gen_adr_index as _m
+import pytest
 
 END = _m.END
-Path = _m.Path
 START = _m.START
 _dateish = _m._dateish
 _written = _m._written
@@ -15,103 +16,126 @@ status_cell = _m.status_cell
 validate_adr = _m.validate_adr
 
 
-def test_gen_adr_index():
-    def _run():
-        import tempfile
+def _frontmatter(**overrides):
+    values = {
+        "topic": "decisions",
+        "id": "28",
+        "title": "Write gate, a plugin",
+        "status": "accepted",
+        "date_proposed": "2026-06-01",
+        "date_resolved": "2026-06-01",
+        "assumes": "[]",
+        "supersedes": "[]",
+        "superseded_by": "[]",
+    }
+    values.update(overrides)
+    body = "\n".join(f"{key}: {value}" for key, value in values.items())
+    return f"---\n{body}\n---\n# body"
 
-        failures = 0
 
-        def check(name: str, cond: bool) -> None:
-            nonlocal failures
-            print(f"  {'PASS' if cond else 'FAIL'}  {name}")
-            failures += 0 if cond else 1
+def test_parse_adr_reads_typed_frontmatter_fields():
+    adr = parse_adr(_frontmatter())
 
-        # --- parse_adr ---
-        fm = "---\ntopic: decisions\nid: 28\ntitle: Write gate, a plugin\nstatus: accepted\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-01\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n# body"
-        adr = parse_adr(fm)
-        check("parse_adr: id", adr["id"] == 28)
-        check("parse_adr: title with comma", adr["title"] == "Write gate, a plugin")
-        check("parse_adr: status", adr["status"] == "accepted")
-        check("parse_adr: empty superseded_by", adr["superseded_by"] == [])
-        check("validate_adr: full frontmatter passes", validate_adr(Path("docs/adr/28-x.md"), adr) == [])
+    assert adr["id"] == 28
+    assert adr["title"] == "Write gate, a plugin"
+    assert adr["status"] == "accepted"
+    assert adr["superseded_by"] == []
+    assert validate_adr(_m.Path("docs/adr/28-x.md"), adr) == []
 
-        sup = parse_adr("---\ntopic: decisions\nid: 27\ntitle: Old\nstatus: superseded\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\nassumes: []\nsupersedes: []\nsuperseded_by: [28]\n---\n")
-        check("parse_adr: superseded_by list", sup["superseded_by"] == [28])
-        check("status_cell: supersession arrow", status_cell(sup) == "superseded → ADR-28")
-        check("status_cell: plain", status_cell(adr) == "accepted")
 
-        bad = parse_adr("---\nid: 3\ntitle: Bad\nstatus: deferred\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n")
-        bad_errs = validate_adr(Path("docs/adr/03-bad.md"), bad)
-        check("validate_adr: missing keys flagged", any("missing frontmatter key `assumes`" in e for e in bad_errs))
-        check("validate_adr: unresolved date_resolved flagged", any("must leave date_resolved blank" in e for e in bad_errs))
+def test_status_cell_renders_superseded_target():
+    superseded = parse_adr(_frontmatter(id="27", title="Old", status="superseded", superseded_by="[28]"))
 
-        malformed = parse_adr("---\ntopic: decisions\nid: xx\ntitle: Bad\nstatus: banana\ndate_proposed: soon\ndate_resolved:\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-        malformed_errs = validate_adr(Path("docs/adr/bad.md"), malformed)
-        check("parse_adr: nonnumeric id -> None", malformed["id"] is None)
-        check("validate_adr: invalid status flagged", any("invalid status `banana`" in e for e in malformed_errs))
-        check("validate_adr: bad date_proposed flagged", any("date_proposed must be" in e for e in malformed_errs))
+    assert superseded["superseded_by"] == [28]
+    assert status_cell(superseded) == "superseded → ADR-28"
 
-        accepted_open = parse_adr("---\ntopic: decisions\nid: 4\ntitle: Bad\nstatus: accepted\ndate_proposed: 2026-06-01\ndate_resolved:\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-        check("validate_adr: accepted must resolve",
-              any("accepted ADR must set date_resolved" in e for e in validate_adr(Path("docs/adr/04-bad.md"), accepted_open)))
 
-        superseded_missing_by = parse_adr("---\ntopic: decisions\nid: 5\ntitle: Bad\nstatus: superseded\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-        check("validate_adr: superseded must point forward",
-              any("superseded ADR must set superseded_by" in e
-                  for e in validate_adr(Path("docs/adr/05-bad.md"), superseded_missing_by)))
+def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
+    bad = parse_adr("---\nid: 3\ntitle: Bad\nstatus: deferred\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n")
+    bad_errs = validate_adr(_m.Path("docs/adr/03-bad.md"), bad)
+    accepted_open = parse_adr(_frontmatter(id="4", title="Bad", date_resolved=""))
+    superseded_missing_by = parse_adr(
+        _frontmatter(id="5", title="Bad", status="superseded", date_resolved="2026-06-02")
+    )
 
-        proposed = parse_adr("---\ntopic: decisions\nid: 6\ntitle: Proposal\nstatus: proposed\ndate_proposed: 2026-06-01\ndate_resolved:\nassumes: [1]\nsupersedes: []\nsuperseded_by: []\n---\n")
-        check("validate_adr: proposed unresolved passes", validate_adr(Path("docs/adr/06-proposed.md"), proposed) == [])
-        check("_dateish: valid date", _dateish("2026-06-14"))
-        check("_dateish: invalid date", not _dateish("2026-6-14"))
+    assert any("missing frontmatter key `assumes`" in e for e in bad_errs)
+    assert any("must leave date_resolved blank" in e for e in bad_errs)
+    assert any("accepted ADR must set date_resolved" in e for e in validate_adr(_m.Path("docs/adr/04-bad.md"), accepted_open))
+    assert any(
+        "superseded ADR must set superseded_by" in e
+        for e in validate_adr(_m.Path("docs/adr/05-bad.md"), superseded_missing_by)
+    )
 
-        # --- render_table (sorting + link form) ---
-        table = render_table([
+
+def test_validate_adr_reports_malformed_status_id_and_dates():
+    malformed = parse_adr(
+        _frontmatter(id="xx", title="Bad", status="banana", date_proposed="soon", date_resolved="")
+    )
+    malformed_errs = validate_adr(_m.Path("docs/adr/bad.md"), malformed)
+
+    assert malformed["id"] is None
+    assert any("invalid status `banana`" in e for e in malformed_errs)
+    assert any("date_proposed must be" in e for e in malformed_errs)
+    assert _dateish("2026-06-14")
+    assert not _dateish("2026-6-14")
+
+
+def test_validate_adr_accepts_unresolved_proposals():
+    proposed = parse_adr(
+        _frontmatter(id="6", title="Proposal", status="proposed", date_resolved="", assumes="[1]")
+    )
+
+    assert validate_adr(_m.Path("docs/adr/06-proposed.md"), proposed) == []
+
+
+def test_render_table_sorts_by_id_and_uses_zero_padded_links():
+    table = render_table(
+        [
             {"id": 2, "slug": "second", "title": "Second", "status": "accepted", "superseded_by": []},
             {"id": 1, "slug": "first", "title": "First", "status": "accepted", "superseded_by": []},
-        ])
-        check("render_table: sorted by id", table.index("[01]") < table.index("[02]"))
-        check("render_table: zero-padded link", "[01](01-first.md)" in table)
+        ]
+    )
 
-        # --- collect_adrs + splice + build round-trips against a temp tree ---
-        with tempfile.TemporaryDirectory() as d:
-            adr_dir = Path(d)
-            (adr_dir / "01-alpha.md").write_text("---\ntopic: decisions\nid: 1\ntitle: Alpha\nstatus: accepted\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-01\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-            (adr_dir / "02-beta.md").write_text("---\ntopic: decisions\nid: 2\ntitle: Beta\nstatus: superseded\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\nassumes: []\nsupersedes: []\nsuperseded_by: [1]\n---\n")
-            (adr_dir / "_template.md").write_text("---\nid: 0\ntitle: T\nstatus: x\n---\n")
-            readme = adr_dir / "README.md"
-            readme.write_text(f"# Decisions\n\n{START}\n\nstale\n\n{END}\n\ntail\n")
-            adrs = collect_adrs(adr_dir)
-            check("collect_adrs: skips _template.md", len(adrs) == 2)
-            out = splice(readme.read_text(), render_table(adrs))
-            check("splice: marker fence preserved", out.count(START) == 1 and out.count(END) == 1)
-            check("splice: tail preserved", out.endswith("tail\n"))
-            check("splice: stale content gone", "stale" not in out)
-            check("build: idempotent", build(adr_dir, _written(readme, out)) == out)
+    assert table.index("[01]") < table.index("[02]")
+    assert "[01](01-first.md)" in table
 
-            (adr_dir / "03-no-id.md").write_text("---\ntopic: decisions\nid: xx\ntitle: No ID\nstatus: accepted\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-01\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-            try:
-                collect_adrs(adr_dir)
-                check("collect_adrs: nonnumeric id raises", False)
-            except SystemExit as e:
-                check("collect_adrs: nonnumeric id raises", "no numeric 'id'" in str(e))
-            (adr_dir / "03-no-id.md").unlink()
 
-            (adr_dir / "03-invalid.md").write_text("---\ntopic: decisions\nid: 3\ntitle: Invalid\nstatus: accepted\ndate_proposed: 2026-06-01\ndate_resolved:\nassumes: []\nsupersedes: []\nsuperseded_by: []\n---\n")
-            try:
-                collect_adrs(adr_dir)
-                check("collect_adrs: invalid frontmatter raises", False)
-            except SystemExit as e:
-                check("collect_adrs: invalid frontmatter raises", "ADR frontmatter invalid" in str(e))
-            (adr_dir / "03-invalid.md").unlink()
+def test_collect_splice_and_build_round_trip(tmp_path):
+    adr_dir = tmp_path
+    (adr_dir / "01-alpha.md").write_text(_frontmatter(id="1", title="Alpha"))
+    (adr_dir / "02-beta.md").write_text(_frontmatter(id="2", title="Beta", status="superseded", superseded_by="[1]"))
+    (adr_dir / "_template.md").write_text("---\nid: 0\ntitle: T\nstatus: x\n---\n")
+    readme = adr_dir / "README.md"
+    readme.write_text(f"# Decisions\n\n{START}\n\nstale\n\n{END}\n\ntail\n")
 
-            readme.write_text("# Decisions\n\nno markers here\n")
-            try:
-                build(adr_dir, readme)
-                check("build: missing markers raises", False)
-            except SystemExit:
-                check("build: missing markers raises", True)
+    adrs = collect_adrs(adr_dir)
+    out = splice(readme.read_text(), render_table(adrs))
 
-        print(f"\n{'OK' if not failures else f'{failures} FAILING'}: gen-adr-index self-test")
-        return 1 if failures else 0
-    assert _run() == 0
+    assert len(adrs) == 2
+    assert out.count(START) == 1 and out.count(END) == 1
+    assert out.endswith("tail\n")
+    assert "stale" not in out
+    assert build(adr_dir, _written(readme, out)) == out
+
+
+def test_collect_adrs_exits_on_nonnumeric_id(tmp_path):
+    (tmp_path / "03-no-id.md").write_text(_frontmatter(id="xx", title="No ID"))
+
+    with pytest.raises(SystemExit, match="no numeric 'id'"):
+        collect_adrs(tmp_path)
+
+
+def test_collect_adrs_exits_on_invalid_frontmatter(tmp_path):
+    (tmp_path / "03-invalid.md").write_text(_frontmatter(id="3", title="Invalid", date_resolved=""))
+
+    with pytest.raises(SystemExit, match="ADR frontmatter invalid"):
+        collect_adrs(tmp_path)
+
+
+def test_build_exits_when_readme_markers_are_missing(tmp_path):
+    (tmp_path / "01-alpha.md").write_text(_frontmatter(id="1", title="Alpha"))
+    readme = tmp_path / "README.md"
+    readme.write_text("# Decisions\n\nno markers here\n")
+
+    with pytest.raises(SystemExit):
+        build(tmp_path, readme)
