@@ -24,9 +24,15 @@ def test_resolve_merge():
                          "venue": "CR Venue", "issn": "9999",
                          "refs": [{"doi": "10.1/b", "arxiv": "", "title": ""},
                                   {"doi": "10.1/c", "arxiv": "", "title": ""}]},
+            "pubmed": {"found": True, "title": "PM Title", "year": 2020,
+                       "pmid": "333", "pmcid": "PMC333",
+                       "authors": [{"name": "Alice A", "orcid": ""}], "orcid_count": 0,
+                       "venue": "PubMed Journal", "publication_types": ["Journal Article"],
+                       "mesh_terms": ["Telemedicine"]},
         }
         m = merge(parts)
-        m0 = merge({"s2": {"found": False}, "openalex": {"found": False}, "crossref": {"found": False}})
+        m0 = merge({"s2": {"found": False}, "openalex": {"found": False},
+                    "crossref": {"found": False}, "pubmed": {"found": False}})
 
         # _get must retry a 429 then succeed, rather than silently dropping the source
         _calls = [0]
@@ -64,7 +70,9 @@ def test_resolve_merge():
             ("refs union deduped by DOI = 3", len(m["references"]) == 3),
             ("shared ref tagged both sources", any(set(r["sources"]) == {"s2", "crossref"} for r in m["references"])),
             ("stable IDs surfaced (s2/openalex)", m["s2_id"] == "S2PAPER1" and m["openalex_id"] == "W123"),
-            ("pmid/pmcid prefer openalex", m["pmid"] == "222" and m["pmcid"] == "PMC999"),
+            ("pmid/pmcid prefer pubmed", m["pmid"] == "333" and m["pmcid"] == "PMC333"),
+            ("mesh/pub types<-pubmed", m["mesh_terms"] == ["Telemedicine"]
+             and m["publication_types"] == ["Journal Article"]),
             ("all-missing -> empty merge", m0["title"] == "" and m0["references"] == [] and m0["authors"] == []
              and m0["s2_id"] == "" and m0["openalex_id"] == ""),
         ]
@@ -95,3 +103,45 @@ def test_agreement_confidence_d51():
     nothing = {"crossref": {"found": False}}
     score, dis = agreement(nothing)
     assert score == 0.0 and dis
+
+
+def test_pubmed_parse_and_fetch(monkeypatch):
+    xml = """<?xml version="1.0"?>
+    <PubmedArticleSet><PubmedArticle>
+      <MedlineCitation><PMID>12345</PMID>
+        <Article>
+          <Journal><Title>Journal of Tests</Title><JournalIssue><PubDate><Year>2024</Year></PubDate></JournalIssue></Journal>
+          <ArticleTitle>A PubMed Only Work</ArticleTitle>
+          <AuthorList><Author><ForeName>Jane</ForeName><LastName>Doe</LastName><Identifier Source="ORCID">https://orcid.org/0000-0001</Identifier></Author></AuthorList>
+          <PublicationTypeList><PublicationType>Journal Article</PublicationType><PublicationType>Clinical Trial</PublicationType></PublicationTypeList>
+        </Article>
+        <MeshHeadingList><MeshHeading><DescriptorName>Telemedicine</DescriptorName></MeshHeading></MeshHeadingList>
+      </MedlineCitation>
+      <PubmedData><ArticleIdList><ArticleId IdType="doi">10.1/x</ArticleId><ArticleId IdType="pmc">PMC123</ArticleId></ArticleIdList></PubmedData>
+    </PubmedArticle></PubmedArticleSet>"""
+    parsed = _m.parse_pubmed(xml)
+    assert parsed["found"] is True
+    assert parsed["pmid"] == "12345"
+    assert parsed["pmcid"] == "PMC123"
+    assert parsed["title"] == "A PubMed Only Work"
+    assert parsed["year"] == 2024
+    assert parsed["authors"][0]["orcid"] == "0000-0001"
+    assert parsed["publication_types"] == ["Journal Article", "Clinical Trial"]
+    assert parsed["mesh_terms"] == ["Telemedicine"]
+
+    seen = {}
+
+    def fake_get(url, *a, **k):
+        seen["esearch"] = url
+        return {"esearchresult": {"idlist": ["12345"]}}
+
+    def fake_text(url, *a, **k):
+        seen["efetch"] = url
+        return xml
+
+    monkeypatch.setattr(_m, "_get", fake_get)
+    monkeypatch.setattr(_m, "_get_text", fake_text)
+    got = _m.fetch_pubmed({"doi": "10.1/x", "pmid": ""}, "pi@example.test", "KEY")
+    assert got["found"] is True
+    assert "10.1%2Fx%5Bdoi%5D" in seen["esearch"]
+    assert "api_key=KEY" in seen["efetch"]

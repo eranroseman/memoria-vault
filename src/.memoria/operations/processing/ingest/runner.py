@@ -5,10 +5,10 @@ Chains the four deterministic stages into a single **draft bundle** that the
 Librarian worker completes (the two LLM judgments) and writes (gated):
 
     Tier-0  ingest_paper  -> identity + route + captured frontmatter
-    Tier-1  resolve_merge -> S2+OpenAlex+Crossref merged metadata + ref union
+    Tier-1  resolve_merge -> S2+OpenAlex+Crossref+PubMed merged metadata + ref union
             classify      -> research_area/methodology from the OpenAlex topics
                              (automated, audited, flag-on-ambiguity — D21/ADR-54)
-            extract       -> full text (PMC / local PDF), gatekept by coherence
+            extract       -> full text (Unpaywall / PMC / local PDF), gatekept by coherence
             link          -> entity find-or-create plan + cites edges
 
 Output (`--json`): the assembled paper-note **with two holes** —
@@ -121,8 +121,9 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
         "tldr": m.get("tldr", ""),
         "fields_of_study": m.get("fields_of_study", []),
         "topics": m.get("topics", []),
+        "mesh_terms": m.get("mesh_terms", []),
         "reference_count_union": len(m.get("references", [])),
-        "sources_found": [s for s in ("s2", "openalex", "crossref")
+        "sources_found": [s for s in ("s2", "openalex", "crossref", "pubmed")
                           if r["parts"].get(s, {}).get("found")],
     }
     # promote stable IDs the APIs resolved (only if the bib didn't already set them)

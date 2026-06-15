@@ -293,7 +293,11 @@ evidence, real transcripts:
 - [x] 2026-06-15 — H implemented on `refactor/operations-rename`; structural
       PR ready after review/commit. Validation: `scripts/test.sh check`,
       focused pytest, `scripts/test.sh all`, and `bash scripts/e2e-smoke.sh`.
-- [ ] (next) A/F — ingest (#438/#437) + golden upgrade (#339, amend ADR-55).
+- [x] 2026-06-15 — A ingest #438/#437 implemented on
+      `feat/alpha4-ingest-sources`: Unpaywall OA PDF lookup is the first extract
+      option, and PubMed/NCBI is the fourth resolve/merge source. Validation:
+      focused ingest/classify pytest and `scripts/test.sh all`.
+- [ ] (next) F — golden upgrade (#339, amend ADR-55).
 - [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
 - [ ] (next) D — PI surface incl. #443 producers, incrementally.
@@ -325,6 +329,11 @@ evidence, real transcripts:
   for stale deployed `.memoria/engines/`. Runtime smoke caught and fixed two
   standalone-path misses (`precommit_check.py` schema loader and
   `board_export.py` Inbox writer).
+- 2026-06-15 — A ingest branch prepared for #438/#437: `extract.py` now tries
+  Unpaywall with the `NCBI_EMAIL` contact before PMC/local PDF and runs OA PDFs
+  through the same coherence gate; `resolve_merge.py` now fetches PubMed via
+  E-utilities, merges PMID/PMCID/publication types/MeSH terms, and includes
+  PubMed in identity-agreement diagnostics. Offline tests cover both paths.
 
 ## 9. Surprises & discoveries
 

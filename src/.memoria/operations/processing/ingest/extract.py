@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """extract.py — Tier-1 full-text extraction (ADR-30).
 
-Pre-extracted-first, parse-last. For a capture you always hold the local PDF, so
-the tiers are tried in order:
+Open-access-first, local-last. For a capture you often hold the local PDF, but an
+OA copy may have a better text layer than a scanned attachment, so the tiers are
+tried in order:
 
-    PMC (PMCID -> JATS full text, pre-extracted, no key)
+    Unpaywall (DOI -> OA PDF -> pymupdf4llm)
+    -> PMC (PMCID -> JATS full text, pre-extracted, no key)
     -> local Zotero PDF -> pymupdf4llm (markdown)
-    -> [OCR / CORE / Unpaywall — follow-ups]
+    -> [OCR / CORE — follow-ups]
 
 The OCR/usability decision is the **script's**, not the LLM's: a deterministic
 text-layer + coherence check (chars/page, replacement-char ratio, word ratio)
@@ -20,18 +22,22 @@ self-tests) without it.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
 import tempfile
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
 PMC_EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+UNPAYWALL = "https://api.unpaywall.org/v2"
 MIN_CHARS_PER_PAGE = 200       # below this a "PDF" is likely scanned / no text layer
 MIN_WORD_RATIO = 0.55          # fraction of tokens that look like words
 MAX_REPLACEMENT_RATIO = 0.02   # U+FFFD / control-char soup => garbled
+MAX_PDF_BYTES = 64 * 1024 * 1024
 
 
 def coherence(text: str, pages: int = 1) -> dict:
@@ -64,6 +70,17 @@ def _get(url: str, timeout: int = 25) -> str | None:
         return None
 
 
+def _get_json(url: str, timeout: int = 25):
+    raw = _get(url, timeout)
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"[extract] JSON {url}: {exc}", file=sys.stderr)
+        return None
+
+
 def from_pmc(pmcid: str, email: str = "", api_key: str = "") -> str | None:
     """PMCID -> JATS XML -> body text (open-access subset only)."""
     pid = pmcid.upper().replace("PMC", "")
@@ -82,6 +99,67 @@ def from_pmc(pmcid: str, email: str = "", api_key: str = "") -> str | None:
     text = re.sub(r"<[^>]+>", " ", m.group(0))
     text = re.sub(r"\s+", " ", text).strip()
     return text or None
+
+
+def _best_unpaywall_pdf(payload: dict) -> str:
+    locs = []
+    best = payload.get("best_oa_location") or {}
+    if best:
+        locs.append(best)
+    locs.extend(payload.get("oa_locations") or [])
+    for loc in locs:
+        url = loc.get("url_for_pdf") or ""
+        if url:
+            return url
+    return ""
+
+
+def _download_pdf(url: str) -> tuple[Path | None, str]:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return None, "unpaywall-pdf-bad-url"
+    fd, tmp = tempfile.mkstemp(prefix="memoria-unpaywall-", suffix=".pdf")
+    os.close(fd)
+    path = Path(tmp)
+    total = 0
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r, path.open("wb") as f:
+            while True:
+                chunk = r.read(1024 * 256)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_PDF_BYTES:
+                    path.unlink(missing_ok=True)
+                    return None, "unpaywall-pdf-too-large"
+                f.write(chunk)
+        return path, "unpaywall-pdf"
+    except (OSError, urllib.error.URLError) as exc:
+        path.unlink(missing_ok=True)
+        return None, f"unpaywall-pdf-download:{type(exc).__name__}"
+
+
+def from_unpaywall(ids: dict, email: str = "") -> tuple[str | None, str, str]:
+    """DOI -> best OA PDF -> markdown via the normal PDF parser."""
+    doi = (ids.get("doi") or "").strip()
+    if not doi:
+        return None, "unpaywall-no-doi", ""
+    params = {"email": email}
+    url = f"{UNPAYWALL}/{urllib.parse.quote(doi, safe='')}?{urllib.parse.urlencode(params)}"
+    payload = _get_json(url)
+    if not isinstance(payload, dict):
+        return None, "unpaywall-not-found", ""
+    pdf_url = _best_unpaywall_pdf(payload)
+    if not pdf_url:
+        return None, "unpaywall-no-pdf", ""
+    pdf, note = _download_pdf(pdf_url)
+    if not pdf:
+        return None, note, pdf_url
+    try:
+        text, parse_note = from_pdf(pdf)
+        return text, parse_note, pdf_url
+    finally:
+        pdf.unlink(missing_ok=True)
 
 
 # PDF parsing runs in a resource-limited subprocess (ADR-30): a malformed or
@@ -137,23 +215,34 @@ def from_pdf(path: Path) -> tuple[str | None, str]:
 
 def extract(ids: dict, pdf_path: str | None = None, email: str = "", api_key: str = "") -> dict:
     """Try the tiers in order; return the first usable extract + provenance."""
-    # 1. PMC (pre-extracted)
+    # 1. Unpaywall OA PDF -> pymupdf4llm. This is deliberately first lookup, but
+    # still must pass the same deterministic coherence gate as a local PDF.
+    t, note, pdf_url = from_unpaywall(ids, email)
+    if t:
+        c = coherence(t, pages=max(1, t.count("\f") + 1))
+        if c["ok"]:
+            return {"text": t, "source": "unpaywall", "chars": c["chars"],
+                    "degraded": False, "coherence": c, "note": note,
+                    "pdf_url": pdf_url}
+    unpaywall_note = note
+
+    # 2. PMC (pre-extracted)
     if ids.get("pmcid"):
         t = from_pmc(ids["pmcid"], email, api_key)
         if t:
             c = coherence(t, pages=max(1, len(t) // 3000))
             if c["ok"]:
                 return {"text": t, "source": "pmc", "chars": c["chars"], "degraded": False, "coherence": c}
-    # 2. local Zotero PDF -> pymupdf4llm
+    # 3. local Zotero PDF -> pymupdf4llm
     if pdf_path:
         t, note = from_pdf(Path(pdf_path))
         if t:
             c = coherence(t, pages=max(1, t.count("\f") + 1))
             return {"text": t if c["ok"] else "", "source": "pymupdf4llm" if c["ok"] else "needs-ocr",
                     "chars": c["chars"], "degraded": not c["ok"], "coherence": c, "note": note}
-    # 3. nothing usable -> degraded (abstract-only ingest downstream)
+    # 4. nothing usable -> degraded (abstract-only ingest downstream)
     return {"text": "", "source": "none", "chars": 0, "degraded": True,
-            "coherence": {"ok": False, "reason": "no-source"}}
+            "coherence": {"ok": False, "reason": "no-source"}, "note": unpaywall_note}
 
 
 # --------------------------------------------------------------------------- #
@@ -161,11 +250,12 @@ def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="Tier-1 full-text extraction (ADR-30)")
     ap.add_argument("--pmcid", default="")
+    ap.add_argument("--doi", default="")
     ap.add_argument("--pdf")
     ap.add_argument("--email", default="")
     ap.add_argument("--api-key", default="", help="NCBI E-utilities key (10 req/s vs 3)")
     a = ap.parse_args()
-    r = extract({"pmcid": a.pmcid}, a.pdf, a.email, a.api_key)
+    r = extract({"pmcid": a.pmcid, "doi": a.doi}, a.pdf, a.email, a.api_key)
     r_preview = {**r, "text": (r["text"][:300] + "...") if len(r.get("text", "")) > 300 else r.get("text", "")}
     print(json.dumps(r_preview, ensure_ascii=False, indent=2))
     return 0

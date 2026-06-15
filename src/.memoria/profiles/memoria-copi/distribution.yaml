@@ -26,10 +26,10 @@ env_requires:
     required: false
     default: ""
   - name: OPENALEX_API_KEY
-    description: "OpenAlex key (optional; polite-pool email works too) — ingest MCP enrichment reads."
+    description: "OpenAlex key (required for full ingest enrichment) — ingest MCP enrichment reads."
     required: false
     default: ""
   - name: NCBI_EMAIL
-    description: "Contact email for NCBI/PMC requests (ingest MCP extract path)."
+    description: "Contact email for PubMed/PMC and Unpaywall requests through the ingest MCP read/compute path."
     required: false
     default: ""
