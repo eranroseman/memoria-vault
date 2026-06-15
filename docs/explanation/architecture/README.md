@@ -52,5 +52,5 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 
 - **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../rationale/why-three-layers.md)
 - **The agents that occupy L3 and L4** → [Profiles](../profiles/README.md)
-- **The deterministic L6 apps** → [Engines](../engines/README.md)
+- **The deterministic L6 operations** → [Operations](../operations/README.md)
 - **The board state machine** under the Tasks layer → [Kanban board](../kanban-board/README.md)

@@ -15,17 +15,17 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
 
-**Engine** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Engines compute and propose; agents judge; the PI decides. The five engines are listed in [Engines — the deterministic layer](../explanation/engines/README.md).
+**Operation** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Operations compute and propose; agents judge; the PI decides. The shipped operations are listed in [Operations — the deterministic layer](../explanation/operations/README.md).
 
 **Hermes** — the Nous Research agent runtime Memoria runs on: Kanban, profile management, MCP server connections, skills, cron, and the gateway process.
 
-**Memoria** — the whole system: the vault, the Co-PI + four background agents, the five engines, the policy gate, the board, and the tooling layer (`.memoria/`).
+**Memoria** — the whole system: the vault, the Co-PI + four background agents, the Operations layer, the policy gate, the board, and the tooling layer (`.memoria/`).
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
 **Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. See [Profile capabilities](profiles.md).
 
-**Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
+**Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
 **Vault** — the Obsidian folder tree where durable knowledge lives, organized into five type-first categories: `catalog`, `notes`, `projects`, `inbox`, `system` ([ADR-47](../adr/47-type-first-category-folders.md)).
 
@@ -95,7 +95,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 | Retired | Replaced by |
 | --- | --- |
-| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps engine (Verifier), the Engineer (Coder), and the Linter **engine** (no longer an agent). |
+| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps operation (Verifier), the Engineer (Coder), and the Linter **engine** (no longer an agent). |
 | **Reference note** (`reference-note`, `30-synthesis/02-reference/`) | Dropped ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)) — it double-encoded maturity; an `evergreen` claim is the settled unit. |
 | **MOC** (`moc`, `30-synthesis/03-moc/`) | The `hub` type in `notes/hubs/`. |
 | **`99-system`** (and the numbered folders `00-` … `95-`) | The five type-first categories ([ADR-47](../adr/47-type-first-category-folders.md)); system infrastructure now lives at `system/`. |

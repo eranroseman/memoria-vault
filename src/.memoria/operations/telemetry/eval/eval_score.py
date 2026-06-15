@@ -90,7 +90,7 @@ def catalog_citekeys(vault: Path) -> set[str]:
 def superseded_claims(vault: Path) -> set[str]:
     """Claim-note stems that are superseded — `lifecycle: archived` or carrying
     `superseded_by` (ADR-10/17). Mirrors the classification in the Linter's
-    engines/linter/detectors.py::fama_exposure; tests assert the parity."""
+    operations/integrity/linter/detectors.py::fama_exposure; tests assert the parity."""
     out: set[str] = set()
     for p in (vault / "notes" / "claims").glob("*.md"):
         fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))

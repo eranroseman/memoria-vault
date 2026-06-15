@@ -6,10 +6,10 @@ globals().update({k: getattr(_m, k) for k in dir(_m) if not k.startswith("__")})
 def test_ingest_mcp():
     def _run():
         """Offline: the module imports the pipeline and runs a Tier-0 fixture through it."""
-        import pipeline
+        import runner
         fixture = ("@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"
                    "  year = {2024},\n  doi = {10.1/x},\n  journal = {J Tests},\n}\n")
-        b = pipeline.run("x2024Test", fixture, enrich=False)
+        b = runner.run("x2024Test", fixture, enrich=False)
 
         # capture-intake anchor: appended once, idempotent on a second call
         import tempfile

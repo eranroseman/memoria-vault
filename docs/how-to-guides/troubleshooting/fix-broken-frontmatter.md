@@ -22,7 +22,7 @@ nav_order: 3
 Run the Linter engine — report-only, zero-LLM — to confirm and identify the specific error ([Run the Linter](../operate/run-the-linter.md)):
 
 ```bash
-python3 .memoria/engines/linter/detectors.py --vault .
+python3 .memoria/operations/integrity/linter/detectors.py --vault .
 ```
 
 Common YAML errors:
@@ -70,7 +70,7 @@ WHERE file.name = "<citekey>"
 The note should appear. Then confirm with the Linter engine:
 
 ```bash
-python3 .memoria/engines/linter/detectors.py --vault .
+python3 .memoria/operations/integrity/linter/detectors.py --vault .
 ```
 
 No YAML or schema findings reported for this note.

@@ -45,7 +45,7 @@ def test_untyped_infra_and_outside_paths_exempt(tmp_path):
 
 
 def test_hook_script_ships_executable():
-    hook = Path(__file__).resolve().parent.parent / "src/.memoria/engines/linter/pre-commit"
+    hook = Path(__file__).resolve().parent.parent / "src/.memoria/operations/integrity/linter/pre-commit"
     assert hook.is_file()
     assert hook.stat().st_mode & 0o111, "pre-commit hook must be executable"
 

@@ -9,6 +9,6 @@
 # to ~/.hermes/scripts/memoria-eval.sh.
 set -u
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/eval_score.py" --vault "{{VAULT_PATH}}" --quarter previous >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/telemetry/eval/eval_score.py" --vault "{{VAULT_PATH}}" --quarter previous >/dev/null || true
 # shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/eval_dispatch.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/telemetry/eval/eval_dispatch.py" --vault "{{VAULT_PATH}}" >/dev/null || true

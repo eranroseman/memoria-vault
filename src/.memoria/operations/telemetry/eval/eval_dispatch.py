@@ -178,7 +178,7 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
     lines = [
         "# vault-eval — last dispatch",
         "",
-        "Written by `.memoria/engines/sweeps/eval_dispatch.py` (ADR-11). Do not edit;",
+        "Written by `.memoria/operations/telemetry/eval/eval_dispatch.py` (ADR-11). Do not edit;",
         "the next dispatch overwrites this file.",
         "",
         f"- **When:** {now}",

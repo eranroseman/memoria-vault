@@ -27,8 +27,8 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 
 | File | What it covers |
 | --- | --- |
-| [System actions](system-actions.md) | Every action the system performs — engines, MCP servers, crons, the 25 skills, PI palette — with performer and purpose |
-| [Engines](engines.md) | Deterministic engine entry points, facades, direct callers, and responsibilities |
+| [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, the 25 skills, PI palette — with performer and purpose |
+| [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities |
 | [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |

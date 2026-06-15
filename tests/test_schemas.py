@@ -113,7 +113,7 @@ def test_calibration_loads_with_confidence_floor():
 
 def test_gated_prefix_fallbacks_match_folders_yaml():
     """Every dependency-free fallback for the review-gated zones must stay in sync
-    with the schema home (folders.yaml). The MCPs run standalone (no engines/lib
+    with the schema home (folders.yaml). The MCPs run standalone (no operations/lib
     on their path, PyYAML optional), so they each carry the tuple hardcoded;
     schema.load_gated_prefixes is the one loader for in-repo consumers."""
     import patterns_mcp

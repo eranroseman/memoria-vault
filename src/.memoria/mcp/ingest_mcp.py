@@ -2,9 +2,9 @@
 """ingest_mcp.py — the deterministic ingest pipeline, exposed as an MCP tool.
 
 The Librarian's capability allowlist (ADR-27) disables code_execution / terminal /
-file, so the worker agent cannot run `pipeline.py` as a CLI. The deterministic
+file, so the worker agent cannot run `runner.py` as a CLI. The deterministic
 spine therefore reaches the agent the same way vault access and the policy gate
-do — over **MCP**. This thin server wraps `pipeline.run()` as a single tool:
+do — over **MCP**. This thin server wraps `runner.run()` as a single tool:
 
     ingest_pipeline(citekey, enrich=True) -> the draft bundle (with two holes)
 
@@ -26,11 +26,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# pipeline.py (and the modules it imports) live in the ingest engine dir, which
+# runner.py (and the modules it imports) live in the ingest processing operation dir, which
 # sits beside this mcp/ dir under .memoria/. Resolve it relative to __file__ so the
 # import works identically in the repo and in a deployed vault.
 SCRIPTS_DIR = (Path(__file__).resolve().parent.parent
-               / "engines/ingest")
+               / "operations/processing/ingest")
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -64,7 +64,7 @@ def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
 def build_server(vault: Path):
     """Wrap the pipeline as an MCP server. Imported lazily so the self-test
     doesn't require the `mcp` package."""
-    import pipeline  # from the ingest engine dir
+    import runner  # from the ingest processing operation dir
     from mcp.server.fastmcp import FastMCP  # type: ignore
 
     server = FastMCP("memoria-ingest")
@@ -83,11 +83,11 @@ def build_server(vault: Path):
             return {"error": "bib-not-found", "bib": str(bib_path)}
         bib_text = bib_path.read_text(encoding="utf-8", errors="ignore")
         try:
-            bundle = pipeline.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
+            bundle = runner.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
         except Exception as exc:
-            print(f"[ingest_mcp] pipeline.run failed for {citekey}: "
+            print(f"[ingest_mcp] runner.run failed for {citekey}: "
                   f"{type(exc).__name__}: {exc}", file=sys.stderr)
             return {"error": "pipeline-error",
                     "citekey": citekey,
@@ -99,7 +99,7 @@ def build_server(vault: Path):
                              bundle.pop("classify_flag_needed", None)) if f]
         if flags:
             try:
-                sys.path.insert(0, str(SCRIPTS_DIR.parent / "lib"))
+                sys.path.insert(0, str(SCRIPTS_DIR.parents[1] / "lib"))
                 import inbox as inbox_writer
                 for flag in flags:
                     inbox_writer.write_finding(

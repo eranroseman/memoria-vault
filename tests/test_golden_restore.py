@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import golden
+import golden_restore as golden
 
 
 def _seed(v: Path) -> None:

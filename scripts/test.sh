@@ -52,15 +52,15 @@ l0() {
   run python3 scripts/ruleset-doctor.py
   if [ -f scripts/check-test-refs.py ]; then run python3 scripts/check-test-refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P/engines/lib/schema.py" "$P/engines/lib/inbox.py" "$P/engines/linter/detectors.py" "$P/engines/linter/golden.py" "$P/engines/linter/session_summary.py" "$P/engines/linter/precommit_check.py" "$P"/engines/ingest/*.py "$P"/engines/sweeps/*.py
+  run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P"/operations/lib/schema.py "$P"/operations/lib/inbox.py "$P"/operations/integrity/linter/detectors.py "$P"/operations/integrity/linter/golden_restore.py "$P"/operations/integrity/linter/session_summary.py "$P"/operations/integrity/linter/precommit_check.py "$P"/operations/processing/ingest/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh
   if command -v shellcheck >/dev/null 2>&1; then
-    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/engines/linter/pre-commit "$P"/scripts/*.sh
+    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
   # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
   # querying a field no template emits is a silent failure — CI gates it too);
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/engines/linter/detectors.py" --vault src --gate dashboard-field-drift
+  run python3 "$P/operations/integrity/linter/detectors.py" --vault src --gate dashboard-field-drift
 }
 
 case "${1:-all}" in

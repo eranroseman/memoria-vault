@@ -29,7 +29,7 @@ Everything below follows from **un-conflating those two concerns**: a normal imp
 | Deploy | `scripts/install.sh` rsyncs `src/.memoria/` → `<vault>/.memoria/` (two-phase, see §1); creates `<vault>/.memoria/.venv`; `pip install`s **deps only**, never the code | [scripts/install.sh](../../../../scripts/install.sh) |
 | Runtime launch | MCP host runs absolute paths: `command: <vault>/.memoria/.venv/bin/python`, `args: [<vault>/.memoria/mcp/policy_mcp.py, --vault, <vault>]` | rendered `config.yaml` |
 | Vault resolution | already explicit: `_shared.resolve_vault()` is pure arg→env (`--vault` → `MEMORIA_VAULT_PATH` → `OBSIDIAN_VAULT_PATH`), **no `__file__` fallback** | `mcp/_shared.py:39` |
-| Code integrity | **Not golden.** Code is protected by the **MCP-only sandbox** (agents cannot write files; [[mcp-only-agent-sandbox]]) + **git** as source of truth. ADR-55 golden covers *vault system files only* — `golden.py` manifest = `system/{templates,dashboards,patterns,eval,scripts}/` + `home.md`/`system/vocabulary.md`/`AGENTS.md` + 3 `.obsidian` config files; **no `.memoria/` prefix** (not code, not `schemas/`, not `lane-overrides/`) | `golden.py:30-50`, [ADR-55](../../../adr/55-src-scaffold-populate-golden-copy.md) |
+| Code integrity | **Not golden.** Code is protected by the **MCP-only sandbox** (agents cannot write files; [[mcp-only-agent-sandbox]]) + **git** as source of truth. ADR-55 golden covers *vault system files only* — `golden_restore.py` manifest = `system/{templates,dashboards,patterns,eval,scripts}/` + `home.md`/`system/vocabulary.md`/`AGENTS.md` + 3 `.obsidian` config files; **no `.memoria/` prefix** (not code, not `schemas/`, not `lane-overrides/`) | `golden_restore.py:30-50`, [ADR-55](../../../adr/55-src-scaffold-populate-golden-copy.md) |
 | Deps, three files | `requirements-dev.txt`, `src/.memoria/mcp/requirements.txt`, `…/requirements-cluster.txt` | repo scan |
 | Pending rename | `engines → operations` **accepted**; code-tree rename *sequenced* after [ADR-73](../../../adr/73-docs-reference-conventions.md) (not "deferred" — the decision is settled, only execution waits) | [ADR-69](../../../adr/69-operations-layer-naming.md) |
 
@@ -81,12 +81,12 @@ scripts/                       ← repo-dev tooling (doctors); see §3.4
 Imports become explicit and stable everywhere:
 
 ```python
-from memoria.operations.processing.ingest import pipeline
+from memoria.operations.processing.ingest import runner
 from memoria.runtime.policy import MUTATING_ACTIONS
 from memoria.lib import inbox
 ```
 
-No bare `import pipeline`, no `import classify` sibling magic, no `sys.path.insert`.
+No bare `import runner`, no `import classify` sibling magic, no `sys.path.insert`.
 
 ### 3.2 `pyproject.toml` — one source of truth
 
@@ -137,7 +137,7 @@ addopts = "-q"
 This **names** the three dependency worlds the issue worried would blur — runtime / dev / cluster — in one file, and replaces three `requirements*.txt`.
 
 The `[project.scripts]` targets above are the **post-rename** module names; today's files are `policy_mcp.py`, `ingest_mcp.py`, `tasks_mcp.py`, `patterns_mcp.py`, `cluster_mcp.py`, and `metrics_aggregate.py` / `board_export.py`. Each already exposes a zero-arg `main()` (verified), so the entry points wire up with no signature changes — one caveat: `reconcile.main()` returns an `int` exit code, which `[project.scripts]` handles correctly (the return value becomes the process exit status). **Every notional script's `main()` must be audited as part of the move**, and **two are "pick one canonical entry" decisions, not just `main()` confirmations**, because they're multiple files behind a single planned script:
-- `memoria-lint` → `…linter.cli:main` doesn't exist yet; the linter's `main()` lives in `detectors.py`, alongside `golden.py`/`session_summary.py`/`precommit_check.py` mains — pick one canonical linter entry.
+- `memoria-lint` → `…linter.cli:main` doesn't exist yet; the linter's `main()` lives in `detectors.py`, alongside `golden_restore.py`/`session_summary.py`/`precommit_check.py` mains — pick one canonical linter entry.
 - `memoria-eval` → **two** files (`eval_dispatch.py`, `eval_score.py`) for one planned eval script — same "pick one canonical entry" call as the linter.
 
 The remainder (`board-export`, `metrics`, `retraction`) are single oddly-named files (`board_export.py`, `metrics_aggregate.py`, `retraction.py`) whose `main()` presence, signature, and return type just need confirming before they become declared console scripts.
@@ -213,7 +213,7 @@ So packaging changes the *import* mechanism, not vault resolution. Hardcoded *da
 
 ### 4.4 Upgrades and integrity (golden never covered code — the real delta is small)
 
-**Integrity is mostly a non-issue — correcting an earlier draft.** A prior version of this note claimed moving code to site-packages takes it "out of golden's coverage" and framed it as an integrity model swap. **That was wrong, and it's worth stating plainly so it isn't re-introduced.** Verified against `golden.py:30-50`: the ADR-55 manifest is `system/{templates,dashboards,patterns,eval,scripts}/`, the files `home.md`/`system/vocabulary.md`/`AGENTS.md`, and three `.obsidian` config files. **No `.memoria/` prefix appears in the covered set** — the runtime code (`mcp/`, `engines/`, `memoria_runtime/`) and even `schemas/`/`lane-overrides/` were **never** in golden. (The lone `.memoria/` string in `golden.py` is `GOLDEN_RELDIR = ".memoria/golden"` — the *store* path where the manifest is written, not a covered prefix.) ADR-55 exists for the #179 template-protection problem (system-file drift / accidental human overwrite), not code.
+**Integrity is mostly a non-issue — correcting an earlier draft.** A prior version of this note claimed moving code to site-packages takes it "out of golden's coverage" and framed it as an integrity model swap. **That was wrong, and it's worth stating plainly so it isn't re-introduced.** Verified against `golden_restore.py:30-50`: the ADR-55 manifest is `system/{templates,dashboards,patterns,eval,scripts}/`, the files `home.md`/`system/vocabulary.md`/`AGENTS.md`, and three `.obsidian` config files. **No `.memoria/` prefix appears in the covered set** — the runtime code (`mcp/`, `engines/`, `memoria_runtime/`) and even `schemas/`/`lane-overrides/` were **never** in golden. (The lone `.memoria/` string in `golden_restore.py` is `GOLDEN_RELDIR = ".memoria/golden"` — the *store* path where the manifest is written, not a covered prefix.) ADR-55 exists for the #179 template-protection problem (system-file drift / accidental human overwrite), not code.
 
 So the actual code-integrity story today, unchanged by packaging:
 

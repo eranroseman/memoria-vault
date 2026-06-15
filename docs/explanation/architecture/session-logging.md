@@ -19,7 +19,7 @@ These are different artifacts written by different components with different lif
 | Log | Path | Writer | Lifecycle |
 | --- | --- | --- | --- |
 | **Policy MCP audit log** | `system/logs/audit.jsonl` | Policy MCP | Append-only **forever** — never rotated ([ADR-25](../../adr/25-session-logging-two-logs.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
-| **Per-session summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`engines/linter/session_summary.py`, daily cron) | One file per session; never rotated; accumulate indefinitely |
+| **Per-session summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`operations/integrity/linter/session_summary.py`, daily cron) | One file per session; never rotated; accumulate indefinitely |
 
 The audit log is what the audit-log and fleet-health [dashboards](../dashboards/README.md) read. The per-session summaries are **deterministic digests** of what happened in a session — the Linter is zero-LLM, so the digest is derived from the audit trail, not narrated: a header (task, profiles, start/end, counts by action and decision) plus one record per touched path (actions, final decision, final `after_hash`). The writer is idempotent (a digested session is never rewritten) and only digests sessions quiet for 24 h, so in-flight work is never summarized early.
 
@@ -41,6 +41,6 @@ Per-session files are named by `YYYY-MM-DD-HHMM`, so files from different machin
 
 ## Related
 
-- The Linter engine (reads `system/logs/`; runs the integrity checks; writes the session digests): [Engines](../engines/README.md)
+- The Linter engine (reads `system/logs/`; runs the integrity checks; writes the session digests): [Operations](../operations/README.md)
 - Session-log granularity (per-session files, not per-action): [Memory substrates](../../reference/memory.md)
 - Audit log (the other log): [Policy MCP](../../reference/policy-mcp.md)

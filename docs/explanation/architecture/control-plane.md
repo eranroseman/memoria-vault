@@ -15,7 +15,7 @@ Every unit of **agent** work is a card on the kanban board — the Tasks layer o
 The board's lanes are exactly the background agents ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): **Librarian · Writer · Peer-reviewer · Engineer** (`assignee = memoria-<name>`). Two lanes that might seem missing are absent by design:
 
 - **No Co-PI lane.** The Co-PI converses at the desk (the ACP pane) and never appears on the board. It is read-only — when the conversation produces work that writes, the Co-PI **delegates** it: the tasks MCP's `delegate_route_task` creates a card on the board, assigned to the right lane. Delegation through the board is the Co-PI's *only* write path.
-- **No engine lanes.** Engines are deterministic and have no posture; they run on cron/CI or are invoked directly, never claimed as cards — the roster is in [Engines — the deterministic layer](../engines/README.md).
+- **No operation lanes.** Operations are deterministic and have no posture; they run on cron/CI or are invoked directly, never claimed as cards — the roster is in [Operations — the deterministic layer](../operations/README.md).
 
 ## Hidden mechanic vs PI-facing state
 

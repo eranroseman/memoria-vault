@@ -24,7 +24,7 @@ G10 is `in-progress`, not awaiting-verify: part of it is unbuilt. The honest dec
 | Step | Mechanism | State |
 | --- | --- | --- |
 | Capture **trigger** (Zotero selection / QuickAdd front-end) | designed; the rich front-end is **OUT of the first slice** | **missing** — operable path is a citekey against `.memoria/memoria.bib` (or Zotero read via `curl`) carried on a board card |
-| Tier-0 capture + Tier-1 enrich/extract/link | `ingest_pipeline` MCP tool (`pipeline.py`, delivered #110; `ingest_paper`/`resolve_merge`/`extract`/`link`) | **shipped** — component tests green (`tests/`); assembles the bundle, **writes nothing** |
+| Tier-0 capture + Tier-1 enrich/extract/link | `ingest_pipeline` MCP tool (`runner.py`, delivered #110; `ingest_paper`/`resolve_merge`/`extract`/`link`) | **shipped** — component tests green (`tests/`); assembles the bundle, **writes nothing** |
 | Classify (LLM #1) → `_proposed_classification` (audited metadata; entity stays `current`) | SKILL.md procedure, schema-constrained to `vocabulary.md` (#101) | **designed, never run live** |
 | Comparative `[!brief]` (LLM #2) via `qmd` top-5 | SKILL.md procedure | **designed, never run live** |
 | Entity linking → person/org notes at `current` | `link.py` + worker gated write | **designed, never run live** |

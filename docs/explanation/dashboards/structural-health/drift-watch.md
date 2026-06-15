@@ -33,7 +33,7 @@ Until the daily lint cron and the sweeps have run, this dashboard is empty — w
 
 ## Related
 
-- [Engines](../../engines/README.md) — the Linter and the sweeps, and what each catches
+- [Operations](../../operations/README.md) — the Linter and the sweeps, and what each catches
 - [audit-log dashboard](../operational-health/audit-log.md) — per-decision forensics layer below structural drift
 - [The honesty card](../../kanban-board/card-schema.md) — the `flag`/`alert` card format and loudness levels
 - [Linter: detectors and auto-fix](../../../reference/linter.md) — detector severity reference

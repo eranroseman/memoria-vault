@@ -8,7 +8,7 @@
 set -euo pipefail
 
 VAULT_ROOT="$(git rev-parse --show-toplevel)"
-ENGINE="$VAULT_ROOT/.memoria/engines/linter/precommit_check.py"
+ENGINE="$VAULT_ROOT/.memoria/operations/integrity/linter/precommit_check.py"
 [ -f "$ENGINE" ] || exit 0   # not a Memoria vault checkout — no gate
 
 staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.md' || true)

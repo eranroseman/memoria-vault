@@ -12,7 +12,7 @@ stubbed with fixture payloads — no network.
 import json
 
 import classify
-import pipeline
+import runner
 
 # --------------------------------------------------------------------------- #
 # fixtures (the test_classify.py shapes)
@@ -53,13 +53,13 @@ def _topic(name, score, subfield=""):
 
 def _run_pipeline(monkeypatch, vault, merged):
     """Run the enriched pipeline offline: stub the network stages."""
-    monkeypatch.setattr(pipeline.resolve_merge, "resolve", lambda ck, bib: {
+    monkeypatch.setattr(runner.resolve_merge, "resolve", lambda ck, bib: {
         "citekey": ck, "ids": {}, "merged": merged,
         "parts": {"s2": {"found": True}, "openalex": {"found": True},
                   "crossref": {"found": False}}})
-    monkeypatch.setattr(pipeline.extract, "extract", lambda ids, pdf, email, api_key="": {
+    monkeypatch.setattr(runner.extract, "extract", lambda ids, pdf, email, api_key="": {
         "source": "none", "chars": 0, "degraded": True, "text": ""})
-    return pipeline.run("x2024Test", BIB, vault, enrich=True)
+    return runner.run("x2024Test", BIB, vault, enrich=True)
 
 
 def _write_hints(vault, text=HINTS_YAML):

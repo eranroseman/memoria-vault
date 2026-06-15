@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""pipeline.py — the deterministic ingest orchestrator (ADR-30).
+"""runner.py — the deterministic ingest orchestrator (ADR-30).
 
 Chains the four deterministic stages into a single **draft bundle** that the
 Librarian worker completes (the two LLM judgments) and writes (gated):

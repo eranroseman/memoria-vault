@@ -99,7 +99,7 @@ API spend and token counts, captured once, at the transition into `status: done`
 
 ## lint-findings.jsonl
 
-One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `src/.memoria/engines/linter/detectors.py`; serialized as:
+One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `src/.memoria/operations/integrity/linter/detectors.py`; serialized as:
 
 ```json
 {"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "projects/draft-x/notes/n.md", "message": "cites superseded claim [[oldclaim]]"}

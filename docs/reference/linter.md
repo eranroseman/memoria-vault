@@ -5,13 +5,13 @@ parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under `src/.memoria/engines/linter`. Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
+The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
 
 ---
 
 ## The detectors
 
-`src/.memoria/engines/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the engine running without dependencies.
+`src/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the engine running without dependencies.
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ The Linter is an **engine, not an agent** ([ADR-49](../adr/49-catalog-in-bases-l
 CLI entry point:
 
 ```bash
-python3 .memoria/engines/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift]
+python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift]
 ```
 
 `--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
@@ -44,22 +44,22 @@ python3 .memoria/engines/linter/detectors.py --vault <vault> [--json] [--gate da
 
 ## The pre-commit gate
 
-The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/engines/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/engines/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/engines/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
 ## The golden copy
 
-`src/.memoria/engines/linter/golden.py` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+`src/.memoria/operations/integrity/linter/golden_restore.py` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
 This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
 | Command | Effect |
 | --- | --- |
-| `golden.py --vault V stage` | Stage/refresh the golden copy from the live system files (installer runs this). |
-| `golden.py --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
-| `golden.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
-| `golden.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
+| `golden_restore.py --vault V stage` | Stage/refresh the golden copy from the live system files (installer runs this). |
+| `golden_restore.py --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
+| `golden_restore.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
+| `golden_restore.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
 
 The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` snippet. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
 
@@ -67,23 +67,23 @@ The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../ad
 
 ## Per-session digests
 
-`src/.memoria/engines/linter/session_summary.py` writes the second of [ADR-25](../adr/25-session-logging-two-logs.md)'s two logs: a **deterministic digest** of each session's audit activity (the Linter is zero-LLM — no narrative). It groups `audit.jsonl` entries by `task_id` and writes one `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` per finished session (named from the session's first timestamp; a deterministic `-2` suffix disambiguates a shared start minute): a header record (task, profiles, start/end, counts by action and decision) plus one record per touched path (actions, final decision, final `after_hash`). Idempotent — an already-digested `task_id` is never rewritten — and sessions active within the last **24 h** (`--quiet-hours`) are left for a later run so in-flight work isn't summarized early.
+`src/.memoria/operations/integrity/linter/session_summary.py` writes the second of [ADR-25](../adr/25-session-logging-two-logs.md)'s two logs: a **deterministic digest** of each session's audit activity (the Linter is zero-LLM — no narrative). It groups `audit.jsonl` entries by `task_id` and writes one `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` per finished session (named from the session's first timestamp; a deterministic `-2` suffix disambiguates a shared start minute): a header record (task, profiles, start/end, counts by action and decision) plus one record per touched path (actions, final decision, final `after_hash`). Idempotent — an already-digested `task_id` is never rewritten — and sessions active within the last **24 h** (`--quiet-hours`) are left for a later run so in-flight work isn't summarized early.
 
 ```bash
-python3 .memoria/engines/linter/session_summary.py --vault <vault> [--quiet-hours H]
+python3 .memoria/operations/integrity/linter/session_summary.py --vault <vault> [--quiet-hours H]
 ```
 
 ---
 
 ## The daily cron
 
-The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden.py check`, and the per-session digests over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
+The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden_restore.py check`, and the per-session digests over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
 
 ---
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden.py restore --apply`, which is the one shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the one shipped repair path.
 
 ---
 

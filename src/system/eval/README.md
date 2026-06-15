@@ -9,20 +9,20 @@ machinery, not a benchmark and not a gate.
 ## How it runs
 
 - **Dispatch.** A quarterly cron (`memoria-eval`, wired by the installer) runs
-  `.memoria/engines/sweeps/eval_dispatch.py`, which fans each `lifecycle: current`
+  `.memoria/operations/telemetry/eval/eval_dispatch.py`, which fans each `lifecycle: current`
   gold task out as one Hermes kanban card on the lane its frontmatter names
   (`catalog`/`extract`/`link`/`map` → the Librarian, `draft` → the Writer,
   `verify` → the Peer-reviewer, `code` → the Engineer). Cards carry an
   idempotency key per (task, quarter), so re-runs within a quarter dedup on the
   board. Run it on demand with
-  `python .memoria/engines/sweeps/eval_dispatch.py --vault <vault>` (add
+  `python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault>` (add
   `--dry-run` to print the card set without creating it).
 - **Execution.** Eval-context work is **non-committing**: the card body instructs
   the lane to write only to scratch and report results back on the card — a run
   never mutates the vault.
 - **Scoring.** Each card ends its report with a machine-readable result block
   (the card body shows the exact JSON template). The deterministic scorer —
-  `python .memoria/engines/sweeps/eval_score.py --vault <vault>` — reads those
+  `python .memoria/operations/telemetry/eval/eval_score.py --vault <vault>` — reads those
   blocks off the board (`hermes kanban list --json`) and computes recall@k,
   support-rate, and the FAMA check against vault state, appending one line per
   run to `system/metrics/eval/runs.jsonl`. A task whose card reported no result

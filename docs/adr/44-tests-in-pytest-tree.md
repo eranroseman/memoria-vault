@@ -27,7 +27,7 @@ vault — not the installer, not any runtime or troubleshooting path. The tests 
 user machines purely as a side effect of being inline, and are never exercised there.
 The two things a post-install check would actually want are better served otherwise —
 **corruption** by a checksum (the golden copy already carries a SHA-256 manifest, and
-`golden.py check` flags any drifted system file), and **environment** (wrong Python, missing deps) by the
+`golden_restore.py check` flags any drifted system file), and **environment** (wrong Python, missing deps) by the
 installer's existing `pip install` plus a one-line import check. Neither needs the unit
 tests to ship. Meanwhile the inline blocks bloat the modules, ship dead code to users,
 and reinvent a test runner (`scripts/test.sh`'s hand-rolled `check()`).

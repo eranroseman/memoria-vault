@@ -63,7 +63,7 @@ pip install "pyzotero[mcp]"           # Librarian + Peer-reviewer: read-only Zot
 The Peer-reviewer's retraction check indexes a local Retraction Watch CSV; a monthly cron wrapper (`retraction-refresh-cron.sh`) keeps it fresh thereafter. Seed it now:
 
 ```bash
-python3 .memoria/engines/sweeps/retraction.py --refresh
+python3 .memoria/operations/integrity/retraction/retraction.py --refresh
 ```
 
 Until the CSV is present, retraction checks degrade to the live CrossRef + Open Retractions sources.

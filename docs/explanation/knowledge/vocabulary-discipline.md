@@ -34,7 +34,7 @@ This is the class of failure the Linter's `lint:check-schema` pass is designed t
 
 ## Related
 
-- The engine that validates the vocabulary: [Engines](../engines/README.md)
+- The operation that validates the vocabulary: [Operations](../operations/README.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
 - The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/curate/manage-vocabulary.md)
 - Field definitions: [Frontmatter fields](../../reference/frontmatter.md)

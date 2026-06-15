@@ -290,7 +290,9 @@ evidence, real transcripts:
       added ADR-69 rename, #414, #439, #443.
 - [x] 2026-06-15 — Versioning carry-over labels fixed (#532); packaging note
       copied to `0.1.0-alpha.5/tmp/` (#533); plan readiness pass — execution can start.
-- [ ] (next) H — `engines → operations` rename (ADR-69), structural PR first.
+- [x] 2026-06-15 — H implemented on `refactor/operations-rename`; structural
+      PR ready after review/commit. Validation: `scripts/test.sh check`,
+      focused pytest, `scripts/test.sh all`, and `bash scripts/e2e-smoke.sh`.
 - [ ] (next) A/F — ingest (#438/#437) + golden upgrade (#339, amend ADR-55).
 - [ ] (next) C — defects/quality (#493, #472, #443 retired-page re-scope).
 - [ ] (next) E step 1 — tooling `pyproject.toml`.
@@ -316,6 +318,13 @@ evidence, real transcripts:
   the packaging note now also in alpha.5/tmp), removed the deferred-#527
   validation claim, added acceptance for the rename (H), #439, and #414, and
   corrected the retired-design-doc count. The plan is executable as written.
+- 2026-06-15 — H implementation branch prepared: moved
+  `src/.memoria/engines/` to `src/.memoria/operations/` by ADR-69 category,
+  renamed `pipeline.py` → `runner.py` and `golden.py` → `golden_restore.py`,
+  repointed installer/cron/test/CI/docs references, and added installer pruning
+  for stale deployed `.memoria/engines/`. Runtime smoke caught and fixed two
+  standalone-path misses (`precommit_check.py` schema loader and
+  `board_export.py` Inbox writer).
 
 ## 9. Surprises & discoveries
 
@@ -331,7 +340,7 @@ evidence, real transcripts:
 
 ## 10. Interfaces & dependencies
 
-- **Ingest:** `src/.memoria/engines/ingest/extract.py` (ADR-30 tier order; #438)
+- **Ingest:** `src/.memoria/operations/processing/ingest/extract.py` (ADR-30 tier order; #438)
   and `…/ingest/resolve_merge.py` (`fetch_*`; #437) — these move under
   `operations/` once Workstream H lands, so sequence H first. NCBI/Unpaywall keys
   already provisioned in profile `.env`.
@@ -346,7 +355,7 @@ evidence, real transcripts:
   analysis-stack wheels. Verify Hermes native support against `~/.hermes` first.
 - **Mapper Tier 2 (#439, ADR-19):** a fired hub-threshold finding → a drafted hub
   note, review-gated; `notes/hubs/` stays approved.
-- **Upgrade:** `golden.py` manifest + ADR-55 (#339).
+- **Upgrade:** `golden_restore.py` manifest + ADR-55 (#339).
 - **Packaging:** full design + the policy-gate version-skew options (i/ii/iii)
   are in [the packaging design note](install-a-real-package.md); the wheel
   carries `assumes: [44, 46, 69, 73]` (not 55 — golden never covered code).

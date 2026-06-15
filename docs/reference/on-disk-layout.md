@@ -45,7 +45,7 @@ The five vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `system
 
 ## `.memoria/` — the runtime tooling layer
 
-Hidden from Obsidian; everything agents and engines need, shipped in `src/.memoria`:
+Hidden from Obsidian; everything agents and operations need, shipped in `src/.memoria`:
 
 ```text
 .memoria/
@@ -53,11 +53,13 @@ Hidden from Obsidian; everything agents and engines need, shipped in `src/.memor
 │   ├── types/<type>.yaml      18 per-type frontmatter schemas
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution floor, cluster params)
-├── engines/                 the five engines' deterministic cores
+├── operations/              the deterministic operation cores
 │   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer)
-│   ├── linter/                detectors.py, precommit_check.py, pre-commit, golden.py
-│   ├── ingest/                pipeline.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
-│   └── sweeps/                reconcile.py, retraction.py
+│   ├── processing/ingest/     runner.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
+│   ├── integrity/linter/      detectors.py, precommit_check.py, pre-commit, golden_restore.py
+│   ├── integrity/retraction/  retraction.py
+│   ├── cleanup/               reconcile.py, archive_inbox.py
+│   └── telemetry/eval/        eval_dispatch.py, eval_score.py
 ├── mcp/                     the MCP servers (Layer 5)
 │   ├── policy_mcp.py + policy_hook.py     the write gate
 │   ├── ingest_mcp.py · cluster_mcp.py · tasks_mcp.py · patterns_mcp.py
@@ -78,7 +80,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
 | --- | --- | --- |
-| `.memoria/golden/` | installer (`golden.py stage`) | The restorable golden copy of every system file + `manifest.json` (SHA-256). |
+| `.memoria/golden/` | installer (`golden_restore.py stage`) | The restorable golden copy of every system file + `manifest.json` (SHA-256). |
 | `.memoria/data/extracts/` | ingest MCP | Full-text extracts per citekey — outside the Librarian's write lane. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python the MCP servers run on. |

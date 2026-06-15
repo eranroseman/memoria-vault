@@ -19,6 +19,6 @@
 # The installer substitutes {{PYTHON}} (the vault venv interpreter) and
 # {{VAULT_PATH}} when it copies this to ~/.hermes/scripts/memoria-sweeps.sh.
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/reconcile.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/cleanup/reconcile.py" --vault "{{VAULT_PATH}}" >/dev/null || true
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/engines/sweeps/archive_inbox.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/cleanup/archive_inbox.py" --vault "{{VAULT_PATH}}" >/dev/null || true

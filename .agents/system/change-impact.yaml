@@ -45,10 +45,10 @@ areas:
       - Tasks delegation semantics
     checks:
       - python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_schemas.py
-  - area: Ingest or linter engine
+  - area: Ingest or linter operation
     paths:
-      - src/.memoria/engines/ingest/**
-      - src/.memoria/engines/linter/**
+      - src/.memoria/operations/processing/ingest/**
+      - src/.memoria/operations/integrity/linter/**
       - src/.memoria/mcp/ingest_mcp.py
     inspect:
       - Calibration and schemas

@@ -66,6 +66,6 @@ Dividing by posture still has its price: the same *technique* can live in severa
 ## Related
 
 - The five agents described: [Profiles](../profiles/README.md)
-- The deterministic actors that left the set: [Engines](../engines/README.md)
+- The deterministic actors that left the set: [Operations](../operations/README.md)
 - Why the layers separate concerns: [Why the architecture is layered](why-three-layers.md)
 - Why the review gate is human-owned: [Why the review gate is structural](why-human-gate.md)
