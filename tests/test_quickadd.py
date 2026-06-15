@@ -47,6 +47,12 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: draft section",
         "Memoria: verify draft",
         "Memoria: run pattern",
+        "Memoria: assist find",
+        "Memoria: assist search",
+        "Memoria: assist patterns",
+        "Memoria: assist ask",
+        "Memoria: assist draft",
+        "Memoria: assist explore",
         "Memoria: resolve inbox card",
         "Memoria: create linked claim note",
         "Memoria: write claim note",
@@ -120,6 +126,43 @@ def test_lane_scripts_match_lane_profile_and_skills():
     assert seen_lanes == set(lane_profile) - {"code"}, (
         f"lane scripts cover {sorted(seen_lanes)}, expected every non-code lane")
 
+
+def test_assist_surface_commands_are_staged_and_skill_backed():
+    verbs = {"find", "search", "patterns", "ask", "draft", "explore"}
+    choices = {c["name"]: c for c in _choices()}
+    for verb in verbs:
+        name = f"Memoria: assist {verb}"
+        choice = choices[name]
+        assert choice["type"] == "Macro"
+        [cmd] = choice["macro"]["commands"]
+        assert cmd["type"] == "UserScript"
+        assert cmd["path"] == "system/scripts/assist.js"
+        assert cmd["settings"] == {"Verb": verb}
+
+    script = (SCRIPTS / "assist.js").read_text(encoding="utf-8")
+    assert "module.exports = {" in script
+    assert "entry," in script
+    assert "settings:" in script
+    assert "getSelection" in script
+    assert "RESULTS_STAGE" in script
+    assert "Do not write directly to canonical/current notes" in script
+    for marker in (
+        "catalog-find-source",
+        "map-report-coverage",
+        "ask-question-source",
+        "explore-framings",
+        "draft-write-section",
+        "patterns_run",
+    ):
+        assert marker in script
+    for assignee, skill in (
+        ("memoria-librarian", "catalog-find-source"),
+        ("memoria-librarian", "map-report-coverage"),
+        ("memoria-copi", "ask-question-source"),
+        ("memoria-copi", "explore-framings"),
+        ("memoria-writer", "draft-write-section"),
+    ):
+        assert (PROFILES / assignee / "skills" / skill).is_dir()
 
 def test_zotero_capture_writes_intake_log_where_readers_look():
     """capture-from-zotero.js must append its durability anchor to the same

@@ -222,6 +222,132 @@
       }
     },
     {
+      "id": "1b9db6d6-765d-473c-ab1e-c0835870135e",
+      "name": "Memoria: assist find",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist find",
+        "id": "20fd8ef4-3dfb-4d2e-9d09-da3b473b9c9a",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "439dfab8-a886-4076-8fc7-ec90a0aa07c1",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "find"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "08ad9999-61c9-4ca8-8f35-1bd7e01ea0eb",
+      "name": "Memoria: assist search",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist search",
+        "id": "bfd2c459-d242-479a-a94a-97ce972be200",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "e9b61f3e-653c-4b48-aef1-81a2e3acd503",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "search"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "6c884206-aa6d-40e0-a9f4-63b7b527258e",
+      "name": "Memoria: assist patterns",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist patterns",
+        "id": "a813a906-c9de-4817-a492-1d5fa9778899",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "2e60e468-ba93-4718-8424-1cb269cfafc8",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "patterns"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "e6f89e8d-6986-4d48-9e76-222c69c80896",
+      "name": "Memoria: assist ask",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist ask",
+        "id": "0fb15071-7b99-4abc-b5e8-57b80257512e",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "a48ee784-fc8f-4c4d-8f4d-cac69df0f237",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "ask"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "d884318f-3fc3-4490-b23f-ff31d5bc9508",
+      "name": "Memoria: assist draft",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist draft",
+        "id": "8169db28-e8ec-4599-8945-106e66e9181b",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "74452e40-7bc6-4fbd-a1e8-2300398a0900",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "draft"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "92fbf11a-7486-4219-822a-9725ddac9412",
+      "name": "Memoria: assist explore",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: assist explore",
+        "id": "3b818fb1-8e00-4be5-8db7-42b19d7bb7eb",
+        "commands": [
+          {
+            "name": "assist",
+            "type": "UserScript",
+            "id": "a236e57f-e37e-4cff-84e7-c0edf2a68be3",
+            "path": "system/scripts/assist.js",
+            "settings": {
+              "Verb": "explore"
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "a7f04d28-31b5-49ce-bd62-0e95c8a7f413",
       "name": "Memoria: resolve inbox card",
       "type": "Macro",
