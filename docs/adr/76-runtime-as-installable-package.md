@@ -21,7 +21,7 @@ nav_order: 76
 The repo's source tree and the deployment location are **the same dotted directory**: `src/.memoria` is both "the code we author" and "the thing rsynced into `<vault>/.memoria/`." Conflating them forces three standing costs:
 
 - a **dotted, un-importable** top-level name (`.memoria` — a leading dot is a syntax error in `import`, and the name can't be a wheel distribution); only `memoria_runtime/` (and the policy-gate plugin) are real packages, the rest are loose script dirs;
-- **two parallel import mechanisms that must agree**: 8 `sys.path` entries in `tests/conftest.py`, and **11** per-entry-point `Path(__file__)…` bootstraps in the deployed runtime (a 12th `sys.path` insert in the policy-gate plugin, via `{{VAULT_PATH}}`);
+- **two parallel import mechanisms that must agree**: 10 pytest `pythonpath` entries in `pyproject.toml`, and **11** per-entry-point `Path(__file__)…` bootstraps in the deployed runtime (a 12th `sys.path` insert in the policy-gate plugin, via `{{VAULT_PATH}}`);
 - a **two-phase rsync** deploy that mirrors a source tree (bulk copy, then a `--delete` pass scoped to 7 infra subtrees to prune renamed files), and dependencies split across three `requirements*.txt`.
 
 This makes imports fragile, complicates static analysis, blocks reliable console entry points, and makes moves like the `engines → operations` rename ([operations-layer naming](69-operations-layer-naming.md)) harder. Issue [#494](https://github.com/eranroseman/memoria-vault/issues/494) asked whether `src/.memoria` should become an installable package; the full analysis is in the design note [install a real package](../releasing/0.1.0-alpha.4/tmp/install-a-real-package.md).
@@ -43,7 +43,7 @@ Make the Python runtime a normal, single-rooted, installed package named `memori
 
 **Migration is staged and ordered:**
 
-1. **Now (issue work, no ADR):** a repo-root `pyproject.toml` scoped strictly to tooling — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only; **keep `requirements-dev.txt`**, add no `[project]` table. Deletes the `conftest.py` `sys.path` block. Independent of everything else.
+1. **Landed in alpha.4 (issue work, no ADR):** a repo-root `pyproject.toml` scoped strictly to tooling — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only; **`requirements-dev.txt` stayed in place**, and no `[project]` table was added. This moved the repo-side import path declaration out of `conftest.py`; it did not start the wheel migration or reduce the runtime import-root count.
 2. **With the `engines → operations` rename:** fold the tree into `src/memoria/operations/…` in that pass rather than renaming loose dirs twice.
 3. **Then (this ADR):** flip deployment to wheel-install + console scripts, delete the runtime `__file__` bootstraps, make `.memoria/` data-only — after the policy-gate skew decision is locked.
 
@@ -68,13 +68,13 @@ Context for the cadence review, not a gate — pick this up when **any** holds:
 - **Support burden:** the `sys.path`/`__file__` bootstrapping (11 sites) or the three-way `requirements*.txt` split becomes a recurring source of import/CI breakage.
 - **Prerequisite cleared:** the policy-gate version-skew resolution is locked (until then, do not start step 3).
 
-**Guard:** the step-1 tooling `pyproject.toml` is safe to land anytime, but do **not** add a `[project]` table or change the deployment mechanism early — that drags target-stage risk forward with no benefit.
+**Guard:** the alpha.4 tooling-only `pyproject.toml` does not authorize the target migration. Do **not** add a `[project]` table or change the deployment mechanism early — that drags target-stage risk forward with no benefit.
 
 ## Related
 
 - **Tracking issue:** [#521](https://github.com/eranroseman/memoria-vault/issues/521) — revisit at each release cadence.
 - **Origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) (research); full analysis in the design note [install a real package](../releasing/0.1.0-alpha.4/tmp/install-a-real-package.md).
-- **Depends on:** [L1 component tests live in the pytest tree](44-tests-in-pytest-tree.md) (the conftest `sys.path` block this deletes); [seven-layer architecture](46-seven-layer-architecture.md) (the MCP-only sandbox that *is* the code-integrity story); [operations-layer naming](69-operations-layer-naming.md) (sequence packaging with the rename); [docs reference conventions](73-docs-reference-conventions.md) (land before path-pinned links move).
+- **Depends on:** [L1 component tests live in the pytest tree](44-tests-in-pytest-tree.md) (the repo-side pytest import roots now declared in `pyproject.toml`); [seven-layer architecture](46-seven-layer-architecture.md) (the MCP-only sandbox that *is* the code-integrity story); [operations-layer naming](69-operations-layer-naming.md) (sequence packaging with the rename); [docs reference conventions](73-docs-reference-conventions.md) (land before path-pinned links move).
 - **In tension with:** [repo as install unit](26-repo-as-install-unit.md) (install unit becomes a wheel).
 - **Explicitly untouched:** [src scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md) — golden never covered `.memoria/` code; this design does not change its scope.
 - **Strengthens:** [multi-machine deployment](63-multi-machine-deployment.md) — build-once/install-on-N is more multi-machine-friendly than rsync-from-checkout.

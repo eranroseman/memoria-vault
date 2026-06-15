@@ -12,7 +12,7 @@
 The source tree and the deployment location are **the same dotted directory**: `src/.memoria` is simultaneously "the code we author" and "the thing rsynced into `<vault>/.memoria/`." Conflating them forces:
 
 - a **dotted, un-importable** top-level name (`.memoria` — a leading dot is a syntax error in `import`, and the name can't be a PyPI/wheel distribution),
-- **two parallel import mechanisms** that must agree: 8 `sys.path` entries in `tests/conftest.py` for the repo, and **11** per-entry-point `Path(__file__).resolve().parent…` bootstraps for the deployed vault (a 12th `sys.path` insert, in the policy-gate plugin, is anchored on `{{VAULT_PATH}}`, not `__file__`),
+- **two parallel import mechanisms** that must agree: 10 pytest `pythonpath` entries in `pyproject.toml` for the repo, and **11** per-entry-point `Path(__file__).resolve().parent…` bootstraps for the deployed vault (a 12th `sys.path` insert, in the policy-gate plugin, is anchored on `{{VAULT_PATH}}`, not `__file__`),
 - a **two-phase rsync** deploy that mirrors a source tree: a bulk copy (excluding `.git`, **without** `--delete`), then a `--delete` pass scoped to 7 named infra subtrees (`.env` excluded) to prune renamed files — instead of installing a versioned artifact. (The installer also stages the ADR-55 golden copy, but that covers vault *system files*, not the runtime code — see §1.1.)
 
 Everything below follows from **un-conflating those two concerns**: a normal importable package that gets *installed*, and a vault data directory that holds *state + a venv*, never source.
@@ -23,7 +23,7 @@ Everything below follows from **un-conflating those two concerns**: a normal imp
 |---|---|---|
 | Real packages | **3** `__init__.py`: `src/.memoria/memoria_runtime/` (+ `policy/`) **and** `plugins/memoria-policy-gate/` (the sandbox boundary; hyphenated → un-importable dir name) | repo scan |
 | Loose script dirs | `engines/{ingest,lib,linter,sweeps}`, `mcp/` — **no** `__init__.py`; reached via `sys.path` | repo scan |
-| Repo import root | 8 dirs inserted in `tests/conftest.py`; pytest run as `python -m pytest tests/ -q` (no `pyproject`/`pytest.ini`) | `tests/conftest.py` |
+| Repo import root | 10 dirs declared in `pyproject.toml` `tool.pytest.ini_options.pythonpath`; pytest run as `python -m pytest tests/ -q` | `tests/conftest.py` |
 | Runtime import root | **11** files self-bootstrap `sys.path` from `__file__` (e.g. `_RUNTIME_ROOT = Path(__file__).resolve().parent.parent`); the policy-gate plugin adds a 12th insert via `{{VAULT_PATH}}`, not `__file__` | `mcp/policy_mcp.py`, `mcp/ingest_mcp.py`, … |
 | Code count | 30 `.py` under `src/.memoria`; 7 repo-tooling scripts in `scripts/`; 1 in `.github/scripts/` | repo scan |
 | Deploy | `scripts/install.sh` rsyncs `src/.memoria/` → `<vault>/.memoria/` (two-phase, see §1); creates `<vault>/.memoria/.venv`; `pip install`s **deps only**, never the code | [scripts/install.sh](../../../../scripts/install.sh) |
@@ -44,7 +44,7 @@ memoria            ← importable package name (no dot, no hyphen, ONE import ro
 <vault>/.memoria   ← data dir: venv, rendered config, lane-overrides, logs, golden  (NOT code)
 ```
 
-This single change dissolves the dotted-package problem, the conftest path block, and the 11 `__file__` bootstraps at once — because there is exactly **one import root in both worlds**, and it is a properly installed package, so it is location-independent by construction.
+This single change dissolves the dotted-package problem, the pytest `pythonpath` list, and the 11 `__file__` bootstraps at once — because there is exactly **one import root in both worlds**, and it is a properly installed package, so it is location-independent by construction.
 
 The `.memoria` directory **stays in the vault** (Obsidian and plugins expect it there) — but it stops being source. Crucially, moving code out of the vault costs **no integrity property**: code is *not* golden-covered today (ADR-55's golden copy protects vault *system files* — templates, dashboards, `.obsidian` config — never `.memoria/` code). Code integrity is the MCP-only sandbox (agents can't write files) + git, and packaging changes neither. The only real delta is that code moves from plainly-inspectable files in the vault to `site-packages/` — a transparency/debuggability change (§6.2), not an integrity one. §4.4 makes this precise.
 
@@ -73,7 +73,7 @@ src/
       policy/                  ← the current memoria_runtime.policy (shared decision core)
     lib/                       ← inbox, schema (shared helpers)
 tests/
-  conftest.py                  ← FIXTURES ONLY (no sys.path surgery)
+  conftest.py                  ← optional fixtures only (no sys.path surgery)
   test_pipeline.py …
 scripts/                       ← repo-dev tooling (doctors); see §3.4
 ```
@@ -131,7 +131,7 @@ addopts = "-q"
 # no pythonpath needed: the package is installed (editable); tests import `memoria.*`
 
 [tool.ruff]
-# moved verbatim from ruff.toml (linter-only policy preserved)
+# linter-only policy preserved from the tooling-only pyproject
 ```
 
 This **names** the three dependency worlds the issue worried would blur — runtime / dev / cluster — in one file, and replaces three `requirements*.txt`.
@@ -151,7 +151,7 @@ ruff check .
 ```
 
 - **Tests run against one import root, not divergent `sys.path` ordering.** Editable install means `import memoria.x` resolves through the installed package, killing the conftest path-ordering fragility. *Caveat (don't overclaim):* an editable install imports the **working tree**, not the built wheel — so it does **not** catch packaging errors (missing `__init__.py`, undeclared package data, MANIFEST gaps). The "works-in-tests-breaks-in-vault" gap for *packaging* is exactly what editable installs leave open.
-- **`conftest.py` shrinks to fixtures.** The 8-entry `sys.path` block is deleted.
+- **`conftest.py` stays out of import bootstrapping.** The temporary pytest `pythonpath` list lives in `pyproject.toml` until the package migration replaces it.
 - **CI must build the wheel and smoke-import it — required, not optional.** Packaging is a *new* failure surface (it doesn't exist today — there's no wheel to mis-build), and editable installs don't exercise it. A CI step that `pip install`s the *built wheel* into a clean venv and imports every entry point (`memoria-policy-mcp --help`, etc.) is the only thing that catches packaging gaps (missing `__init__.py`, undeclared package data) before they reach a vault. Run alongside `pip install -e ".[dev]"` + pytest/ruff.
 
 ### 3.4 Repo tooling (`scripts/`, `.github/scripts/`)
@@ -246,7 +246,7 @@ Note the **real import chain is not a thin core**: `policy_hook → policy_mcp �
 
 | Concern | Today | This design |
 |---|---|---|
-| Import roots | 8 (conftest) + 11 `__file__` inserts | **1** (installed package) |
+| Import roots | 10 (pytest `pythonpath`) + 11 `__file__` inserts | **1** (installed package) |
 | Top-level name | `.memoria` (un-importable) | `memoria` |
 | Test import root | divergent `sys.path` ordering | single root (editable install) — but a **required CI wheel-smoke** catches packaging gaps editable installs miss (§3.3) |
 | `engines → operations` (ADR-69) | cross-cuts conftest, install.sh, tests, docs | **subpackage move** inside `memoria/` |
@@ -289,7 +289,7 @@ This note describes the **target**, not an immediate migration. Reaching it chan
 
 So the staged path stays as in the #494 research:
 
-1. **Now (issue work, no ADR):** add a repo-root `pyproject.toml` scoped **strictly to tooling** — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath` listing the same dirs) and `[tool.ruff]` only. **Keep `requirements-dev.txt` as-is** — do *not* add a `[project]`/`[project.optional-dependencies]` table, since that declares the `memoria` distribution, which belongs to the target. This lets us delete the `conftest.py` `sys.path` block (the path declaration **moves** into `pyproject`; it does *not* reduce the import-root count — that drops to 1 only at the target). **Does not** touch runtime `__file__` bootstraps (still load-bearing while we rsync source). Independent of ADR-69 — can land anytime.
+1. **Landed in alpha.4 (issue work, no ADR):** repo-root `pyproject.toml` scoped **strictly to tooling** — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only. **`requirements-dev.txt` stayed as-is** and no `[project]`/`[project.optional-dependencies]` table was added, since declaring the `memoria` distribution belongs to the target. The path declaration **moved** from `conftest.py` into `pyproject`; it does *not* reduce the import-root count — that drops to 1 only at the target. **Does not** touch runtime `__file__` bootstraps (still load-bearing while we rsync source).
 2. **After `engines → operations` executes** ([ADR-69](../../../adr/69-operations-layer-naming.md) — **accepted**; only the code-tree rename is *sequenced* after the docs→source link convention / [ADR-73](../../../adr/73-docs-reference-conventions.md)): the tree is already being moved — fold it into `src/memoria/operations/…` in the same pass rather than renaming loose dirs.
 3. **Then (this design):** flip deployment to wheel-install + console scripts; delete the runtime `__file__` bootstraps; vault becomes data-only `.memoria/` + venv; resolve §4.5 (policy-gate version-skew) first.
 
@@ -308,7 +308,7 @@ Sequencing rule: **never repackage runtime before the operations rename lands** 
 The ADR should then:
 
 - record the target (this note's §2–§5),
-- carry **`assumes: [44, 46, 69, 73]`** — ADR-44 (the conftest L1-test layout whose `sys.path` block we delete), ADR-46 (seven-layer architecture incl. the MCP-only sandbox that *is* the code-integrity story), ADR-69 (operations naming), ADR-73 (docs-reference conventions). **Not** ADR-55 — this design leaves golden's scope untouched,
+- carry **`assumes: [44, 46, 69, 73]`** — ADR-44 (the repo-side pytest layout whose import roots now live in the tooling-only `pyproject.toml`), ADR-46 (seven-layer architecture incl. the MCP-only sandbox that *is* the code-integrity story), ADR-69 (operations naming), ADR-73 (docs-reference conventions). **Not** ADR-55 — this design leaves golden's scope untouched,
 - set **`nav_exclude: true`** in the frontmatter (required for deferred/proposed ADRs per `_template.md`); use **[ADR-63](../../../adr/63-multi-machine-deployment.md)** (deferred, deployment-adjacent) as the format template — and note the **substantive synergy**, not just the format: a wheel (build once, install on N machines, version-pinned) is materially more multi-machine-friendly than rsync-from-a-checkout, so this design strengthens ADR-63's case,
 - sit at `status: deferred` with a *When this matters* section and per-release re-judgement (per the [ADR-only decision model](../../../adr/)),
 - explicitly mark **Option 3 of #494 ("package all + console scripts") as the eventual direction**, with the deployment-mechanism change as its precondition — so it isn't re-litigated as "rejected" when #494's *incremental* answer was only "not now."
@@ -320,15 +320,15 @@ Pre-drafted ***When this matters*** trigger (so the deferred-ADR review has a co
 - **support burden:** the `sys.path`/`__file__` bootstrapping (11 sites) or three-way `requirements*.txt` split becomes a recurring source of import/CI breakage;
 - **prerequisites cleared:** the §4.5 policy-gate resolution is answered (until then, don't start).
 
-The step-1 tooling `pyproject.toml` (tooling-only, `requirements-dev.txt` retained) remains **issue work, no ADR**.
+The step-1 tooling `pyproject.toml` (tooling-only, `requirements-dev.txt` retained) landed as **issue work, no ADR**.
 
 ---
 
 ## 9. Validation commands (for whichever step ships)
 
 ```bash
-# Step 1 (tooling-only pyproject; requirements-dev.txt retained):
-# tests still green without the conftest sys.path block
+# Step 1 (tooling-only pyproject; requirements-dev.txt retained) is landed.
+# Target-stage validation still requires:
 python -m pytest -q
 ruff check .
 scripts/test.sh all

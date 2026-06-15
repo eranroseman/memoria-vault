@@ -111,8 +111,8 @@ Several triggers do not hold up when challenged.
 
 ### 2.3 Cheap, safe, author-blessed slices sitting undone — pick up now
 
-- **ADR-76 step-1** — the ADR labels the tooling-only `pyproject.toml` (+ delete
-  the `conftest.py` `sys.path` block) "safe to land anytime"; still undone. [S]
+- **ADR-76 step-1** — the tooling-only `pyproject.toml` landed in alpha.4;
+  the full wheel/deployment migration remains deferred. [S]
   (Full wheel stays deferred behind the ADR-69 rename + policy-gate decision.)
 - **ADR-41 stamping sliver** — stamp `review_mode: blocking` + bump
   `schema_version` now (attribution is non-backfillable); advisory *behavior*
@@ -248,7 +248,7 @@ feature waits — without them the trigger can never self-detect.
 
 ### 4.2 Now-implementable (small PRs)
 
-- ADR-76 step-1 tooling `pyproject.toml` + delete conftest `sys.path` block [S]
+- ADR-76 step-1 tooling `pyproject.toml` landed; full wheel migration still deferred [S]
 - ADR-41 stamp `review_mode: blocking` + `schema_version` bump [S]
 - ADR-74 static plugin provenance manifest (12 vendored plugins) [S]
 - ADR-39 mechanical checklist as a Linter flag [S]

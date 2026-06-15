@@ -36,9 +36,9 @@ and reinvent a test runner (`scripts/test.sh`'s hand-rolled `check()`).
 
 L1 component tests move to a conventional **repo-side `tests/` pytest tree** and are
 **removed from the modules**. Each former `_self_test()` becomes `tests/test_<name>.py`;
-a `conftest.py` wires the module directories onto `sys.path` (the hyphenated `scripts/`
-tools load via `importlib`). `python-selftest.yml`, `scripts/test.sh`, and the
-pre-commit hook run `pytest`. The deployed vault carries **zero test code**.
+the repo-root `pyproject.toml` declares pytest `pythonpath` for the loose runtime
+module directories and repo tooling scripts. `python-selftest.yml`,
+`scripts/test.sh`, and the pre-commit hook run `pytest`. The deployed vault carries **zero test code**.
 
 This **amends ADR-29's L1 implementation only** — the pyramid (L0–L5), the coverage
 matrix, drift control, and gate mapping are unchanged. The installer-side **checksum +
@@ -50,8 +50,11 @@ alpha.2**, when the installer is being reworked anyway.
 - Test code stops shipping in `vault/.memoria/`; modules shrink to production code.
 - `pytest` becomes a dev/CI dependency (it is **not** added to the vault runtime
   `requirements.txt` — the shipped runtime stays dependency-light).
-- Standard tooling is available: fixtures, `pytest -k`, assertion introspection, and
+- Standard tooling is available: `pytest -k`, assertion introspection, and
   `coverage.py` can now measure the matrix instead of asserting it by hand.
+- The current loose-module import roots live in `pyproject.toml`; the full ADR-76
+  wheel migration later replaces those `pythonpath` entries with one installed
+  package root.
 - Until the alpha.2 installer work lands, a deployed install has **no** post-install
   self-check. This is the status quo (it never had one) — not a regression.
 
