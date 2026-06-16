@@ -6,7 +6,7 @@ nav_order: 5
 
 # The Engineer
 
-The Engineer runs the **code** lane as a documentary front for an external coding agent. Its posture is **delegating** — the defining trait is the **two-agent boundary**: Memoria treats the external coding agent as an opaque peer it hands off to, never executes itself. Like every Memoria agent, the Engineer is **MCP-only** — no terminal, no file access, no code execution ([ADR-46](../../adr/46-seven-layer-architecture.md)); it scaffolds the `code` handoff into `projects/<project>/code/` through the gated obsidian MCP, records provenance, and owns the commit/revert gate. The substantive coding — generating, debugging, restructuring — happens in the external agent, which executes nothing inside Memoria's runtime ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)). It ships fully with the deferred Project workflow.
+The Engineer runs the **code** lane as a documentary front for an external coding agent. Its posture is **delegating** — the defining trait is the **two-agent boundary**: Memoria treats the external coding agent as an opaque peer it hands off to, never executes itself. Like every Memoria agent, the Engineer is **MCP-only** — no terminal, no file access, no code execution ([ADR-46](../../adr/46-seven-layer-architecture.md)); it scaffolds the `code` handoff into `projects/<project>/code/` through the gated obsidian MCP, records provenance, and owns the commit/revert gate. The substantive coding — generating, debugging, restructuring — happens in the external agent, which executes nothing inside Memoria's runtime ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)). Project folders now exist through the Project gate; the autonomous code-experiment loop remains deferred.
 
 ---
 

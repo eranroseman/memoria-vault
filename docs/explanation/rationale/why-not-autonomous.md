@@ -58,7 +58,7 @@ All three hold for code work, so in principle an autonomous experiment loop — 
 
 **But no autonomy exception exists anywhere in the current system** ([ADR-21](../../adr/21-l3-autonomy-ceiling.md)). The old Coder-lane exception is retired: the Coder profile is gone ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)) and its successor, the Engineer, is **MCP-only with no terminal, file, or execution capability**. The Engineer cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and owns the per-task commit gate while the substantive coding happens in an external agent the PI reviews. No lane carries an autonomous keep/revert loop.
 
-The synthesis gate remains structurally untouched. The policy MCP's review-gated-zone deny rule still blocks writes to `notes/claims/` and `notes/hubs/`. Whether to admit a bounded code-experiment loop will be revisited only when the code lane / external-coding-agent path is defined and built with the deferred Project workflow — and reopening it requires a superseding decision, not an incremental relaxation.
+The synthesis gate remains structurally untouched. The policy MCP's review-gated-zone deny rule still blocks writes to `notes/claims/` and `notes/hubs/`. Whether to admit a bounded code-experiment loop will be revisited only when the code lane / external-coding-agent path is defined beyond the current Project gate handoff — and reopening it requires a superseding decision, not an incremental relaxation.
 
 ---
 

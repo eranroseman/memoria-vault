@@ -152,7 +152,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and open Desk/Library/Studio workspace. | The always-visible ribbon carries the commands needed for the alpha.3 capture → triage → navigate loop. |
+| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and open Desk/Library/Studio workspace. | The always-visible ribbon carries the commands needed for the capture → triage → navigate loop. |
 | `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 

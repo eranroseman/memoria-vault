@@ -25,7 +25,7 @@ Memoria runs **one conversational agent — the Co-PI — and four background ag
 | **[The Peer-reviewer](peer-reviewer.md)** | skeptical, independent | verify | The formal review gate: judgment checks and the conceptual red-team. Flags, never fixes. |
 | **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit gate. Writes no code itself. |
 
-**v0.1.0-alpha.2 ships all five profiles**; the Writer, Peer-reviewer, and Engineer run today as background lanes, and their full Project-workspace workflows arrive with v0.1.0-alpha.3. Deterministic work — ingest, search, clustering, the verification sweeps, and the Linter — is [Operations](../operations/README.md), not agents: no posture, no board lane.
+**v0.1.0-alpha.2 shipped all five profiles**; the Writer, Peer-reviewer, and Engineer run as background lanes. alpha.5 adds the Project gate surface those lanes write around: project folders, active theses, and structural-impact cache. Deterministic work — ingest, search, clustering, the Project gate operation, verification sweeps, and the Linter — is [Operations](../operations/README.md), not agents: no posture, no board lane.
 
 The tables above orient by posture; the canonical lane→profile map, write-scope ceilings, and bundled-skills counts live in [Profile capabilities](../../reference/profiles.md).
 
