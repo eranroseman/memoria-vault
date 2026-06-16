@@ -156,7 +156,7 @@ function Resolve-HermesExe {
     $uv = Get-CommandPath @((Join-Path $HermesHome 'bin/uv.exe'), 'uv.exe')
     $project = Join-Path $HermesHome 'hermes-agent'
     if ($uv -and (Test-Path (Join-Path $project 'pyproject.toml'))) {
-        $script:HermesArgsPrefix = @('run', '--project', $project, 'hermes')
+        $script:HermesArgsPrefix = @('run', '--project', $project, '--extra', 'mcp', 'hermes')
         return $uv
     }
 

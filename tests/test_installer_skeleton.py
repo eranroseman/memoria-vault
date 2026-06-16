@@ -88,6 +88,10 @@ def test_installer_preserves_user_appearance_on_refresh():
     text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     assert "--exclude '.obsidian/appearance.json'" in text
 
+def test_windows_installer_uv_fallback_enables_mcp_extra():
+    text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "'--extra', 'mcp', 'hermes'" in text
+
 def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
     text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
     assert "function Assert-ObsidianMcpEnv" in text
