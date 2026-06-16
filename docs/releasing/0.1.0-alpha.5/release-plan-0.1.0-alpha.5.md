@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.5
-status: draft        # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan — v0.1.0-alpha.5
 parent: Releasing
@@ -9,14 +9,27 @@ nav_order: 2
 
 # Release plan — v0.1.0-alpha.5
 
-**Current status: pre-release (design locked, build not started).** This is an internal
-checkpoint, not a tagged GitHub Release. The headline deliverable is the **Project gate** — the
+**Current status: alpha.5 is complete as an internal checkpoint.** This is not a tagged GitHub
+Release. The headline deliverable is the **Project gate** — the
 fourth navigation gate (ADR-70's deferred slot), shipped as the *expanded v1 cut* of the design
-note `tmp/project-starter.md`. The single biggest thing standing between here and cut is the
-**§D3 `registerBasesView` spike** ([#576](https://github.com/eranroseman/memoria-vault/issues/576)):
-the dashboard surface depends on it, so it is the first gate. `released:` flips to `true` only for a
-tagged release; this checkpoint closes at `status: complete`, `released: false` when
-[Release v0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is closed.
+note `tmp/project-starter.md`. The dashboard-risk spike, deterministic Project-gate spine, PI
+surface, instrumentation, thin deny-assertion slice, and live Obsidian E2E validation are complete.
+The deferred backlog behavior slices were removed from the alpha.5 milestone rather than treated as
+blockers. `released:` flips to `true` only for a tagged release; this checkpoint closes at
+`status: complete`, `released: false`.
+
+As of 2026-06-16, every alpha.5 gate/stage issue under
+[Release v0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is closed:
+G1-G6 and S0-S5. The remaining open issues that were once considered for alpha.5 are explicitly
+rolled forward as deferred/superseded follow-ups, including
+[#154](https://github.com/eranroseman/memoria-vault/issues/154),
+[#381](https://github.com/eranroseman/memoria-vault/issues/381),
+[#344](https://github.com/eranroseman/memoria-vault/issues/344),
+[#370](https://github.com/eranroseman/memoria-vault/issues/370),
+[#372](https://github.com/eranroseman/memoria-vault/issues/372),
+[#374](https://github.com/eranroseman/memoria-vault/issues/374),
+[#415](https://github.com/eranroseman/memoria-vault/issues/415), and
+[#611](https://github.com/eranroseman/memoria-vault/issues/611).
 
 ## 1. Scope — what this release is
 
@@ -43,9 +56,9 @@ Definitions:
 | G1 | Decisions are recorded: gate-trio ADRs + adr-update housekeeping/retirements; the §13.1 conservative maturity default is set; the §D3 spike is resolved (native view or fallback). | S0 + ADR index | Gate [#588](https://github.com/eranroseman/memoria-vault/issues/588); implementation [#577](https://github.com/eranroseman/memoria-vault/issues/577), [#576](https://github.com/eranroseman/memoria-vault/issues/576) |
 | G2 | Spine artifacts exist: `thesis` + `project` note types, templates, `projects/<slug>/` scaffold, gated lifecycle. | S1/S2 | Gate [#589](https://github.com/eranroseman/memoria-vault/issues/589); implementation [#578](https://github.com/eranroseman/memoria-vault/issues/578) |
 | G3 | The deterministic engine works and is safe: structural-impact Operation with write-only-on-change materialization + maturity gate; five gap kinds; saturation conditions 1–2 + refutation stamp; survey mode. | S1 | Gate [#590](https://github.com/eranroseman/memoria-vault/issues/590); implementation [#579](https://github.com/eranroseman/memoria-vault/issues/579), [#580](https://github.com/eranroseman/memoria-vault/issues/580) |
-| G4 | A PI can drive a project end-to-end from Obsidian: start-a-project on-ramp, dashboards rendered, writing-emits-gaps, thesis supersession. | S3/S5 | Gate [#591](https://github.com/eranroseman/memoria-vault/issues/591); implementation [#581](https://github.com/eranroseman/memoria-vault/issues/581), [#154](https://github.com/eranroseman/memoria-vault/issues/154), [#381](https://github.com/eranroseman/memoria-vault/issues/381) |
+| G4 | A PI can drive a project end-to-end from Obsidian: start-a-project on-ramp, dashboards rendered, writing-emits-gaps, thesis supersession. | S3/S5 | Gate [#591](https://github.com/eranroseman/memoria-vault/issues/591); implementation [#581](https://github.com/eranroseman/memoria-vault/issues/581). Older broad follow-ups [#154](https://github.com/eranroseman/memoria-vault/issues/154) and [#381](https://github.com/eranroseman/memoria-vault/issues/381) are not alpha.5 blockers. |
 | G5 | The gate is measurable: attention instrumentation emits PI-touch metrics into fleet-health (instrument-as-gate, the safety valve for the expanded cut). | S4 | Gate [#592](https://github.com/eranroseman/memoria-vault/issues/592); implementation [#337](https://github.com/eranroseman/memoria-vault/issues/337) |
-| G6 | The cheap unblocked slices land: `review_mode` stamp, mechanical checklist, diversity reserve, shadow ratchet, ADR-65 doc-fix + start-now logs. | S0/S1 | Gate [#593](https://github.com/eranroseman/memoria-vault/issues/593); implementation [#374](https://github.com/eranroseman/memoria-vault/issues/374), [#372](https://github.com/eranroseman/memoria-vault/issues/372), [#344](https://github.com/eranroseman/memoria-vault/issues/344), [#370](https://github.com/eranroseman/memoria-vault/issues/370), [#415](https://github.com/eranroseman/memoria-vault/issues/415), [#583](https://github.com/eranroseman/memoria-vault/issues/583) |
+| G6 | The cheap unblocked trigger-log slice lands; deferred behavior slices stay out of alpha.5. | S0/S1 | Gate [#593](https://github.com/eranroseman/memoria-vault/issues/593); implementation [#583](https://github.com/eranroseman/memoria-vault/issues/583), [#609](https://github.com/eranroseman/memoria-vault/pull/609). Deferred follow-ups [#344](https://github.com/eranroseman/memoria-vault/issues/344), [#370](https://github.com/eranroseman/memoria-vault/issues/370), [#372](https://github.com/eranroseman/memoria-vault/issues/372), [#374](https://github.com/eranroseman/memoria-vault/issues/374), [#415](https://github.com/eranroseman/memoria-vault/issues/415), and [#611](https://github.com/eranroseman/memoria-vault/issues/611) are later-checkpoint work. |
 
 ## 3. Validation — stages
 
@@ -118,7 +131,7 @@ Deliberately later, each for a named reason (per-artifact deferred set lives in 
 
 1. **Every gate + stage sub-issue closed** under [#584](https://github.com/eranroseman/memoria-vault/issues/584); required CI green on `main`; no open High-priority blocker.
 2. **Re-run all stages from a fresh clone** on a disposable vault (`~/Memoria-test`) → all green; record evidence in the sub-issues / Actions artifacts.
-3. **Retire-sweep the ADRs** — the WS-A retirements (ADR-17/34/40) land as their own small PR before the cut.
+3. **Retire-sweep the ADRs** — already completed in WS-A; no follow-up ADR-retirement PR remains for alpha.5.
 4. **Merge the release-please "Release v0.1.0" PR** (folding §6 known-limitations into the notes) — or, for this internal checkpoint, skip the tag.
 5. **Set frontmatter** — internal checkpoint: `status: complete`, `released: false`.
 6. **Delete `tmp/`** design notes (`project-starter.md`, `install-a-real-package.md`, `adr-update.md`, `test-env.md`, `exec-plan-0.1.0-alpha.5.md`) — promote anything durable into ADRs first.

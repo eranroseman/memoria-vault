@@ -154,17 +154,17 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 
 ## 7. Progress
 
-- [ ] 2026-06-15 — ExecPlan + release-plan authored; milestone #6 + parent #584 + workstream issues
-      #576–583 created; in-scope issues assigned. Execution can start at WS-0.
+- [x] 2026-06-15 — ExecPlan + release-plan authored; milestone #6 + parent #584 + workstream issues
+      #576–583 created; in-scope issues assigned. Execution started at WS-0.
 - [x] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved in `tmp/ws-0-spikes.md`
 - [x] WS-A ADR pass (#577)
 - [x] WS-B schema + templates (#578)
 - [x] WS-C structural-impact Operation (#579)
 - [x] WS-D gap taxonomy + saturation (#580)
-- [x] WS-E PI surface (#581, #154, #381)
+- [x] WS-E PI surface (#581) — core surface merged; #154 and #381 remain open/deferred follow-ups
 - [x] WS-F instrumentation (#337)
-- [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583) — trigger-log slice complete;
-      deferred-behavior slices still need explicit close/roll decisions
+- [x] WS-G cheap slices (#374, #372, #344, #370, #415, #583) — trigger-log slice complete;
+      remaining deferred-behavior slices rolled forward out of the alpha.5 milestone
 - [x] WS-H thin test-env slice (#582)
 
 ## 8. Execution log
@@ -210,6 +210,23 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   `memoria-policy-gate` plugin, drives a known-deny `mcp_obsidian_vault_write` into
   `notes/claims/`, and asserts both a plugin block and a deny audit row; the new Project-gate
   QuickAdd/Modal Forms commands remain covered by the existing palette/form tests.
+- 2026-06-16 — Merged the remaining alpha.5 validation slices on main (`b3a5474`): WS-F PR #608,
+  WS-G trigger-log slice PR #609, and WS-H PR #610. Closed the S0/S1/S2/S4 validation stages and
+  the G1/G2/G3/G5 gates; the then-open G4/G6/S3/S5 work was resolved in the later live-validation
+  and backlog-split entries below.
+- 2026-06-16 — S3 live Obsidian integration passed on `~/Memoria-test`: `Memoria: start project`
+  scaffolded `projects/slug-bug/`, `Memoria: refresh project gate` refreshed
+  `project-gate-index.md`, and `system/dashboards/project-gate.md` rendered Bases rows for the
+  Project note and active thesis. S3 (#597) closed; G4 then waited only on S5 E2E (#599), which the
+  next entry resolves.
+- 2026-06-16 — S5 live Obsidian E2E passed on `~/Memoria-test`: a seeded `slug-bug` project moved
+  from question/thesis through an argument graph with shown gap findings, closed its open
+  high-impact gap, stamped `refutation_sufficiency: true`, recomputed `saturation_state: saturated`,
+  and produced `projects/slug-bug/drafts/saturated-outline.md`. S5 (#599) and G4 (#591) are closed.
+- 2026-06-16 — G6 closed after splitting the backlog honestly. The shipped alpha.5 scope is the
+  trigger-log slice from #583/#609. Deferred/superseded behavior work was removed from the milestone:
+  #154, #381, #344, #370, #372, #374, and #415. The remaining ADR-65 shadow-proposer row was split to
+  #611 for a later checkpoint. No gate/stage blocker remains under #584.
 
 ## 9. Surprises & discoveries
 
@@ -249,8 +266,14 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 
 ## 12. Outcomes & retrospective
 
-- **Shipped:** (fill as workstreams close — each maps to a merged PR.)
-- **Still open:** (remaining gaps → keep their GitHub issues open; roll to the next checkpoint.)
+- **Shipped:** WS-0, WS-A, WS-B, WS-C, WS-D, WS-E core surface, WS-F, WS-H, and the WS-G trigger-log
+  slice. Merged PRs: #603, #604, #605, #606, #607, #608, #609, #610.
+- **Still open:** no alpha.5 gate/stage blockers. Deferred/superseded follow-ups intentionally left
+  out of the checkpoint remain open outside the milestone (#154, #381, #344, #370, #372, #374, #415,
+  #611).
 - **Routed to:** decisions → the WS-A ADRs; readiness/scope → milestone #6 + #584; this plan holds no
   durable record of its own.
-- **Lessons:** (fill at checkpoint close, before deleting this `tmp/` note.)
+- **Lessons:** the Project gate works best as a deterministic Obsidian-visible cache: the tricky
+  runtime failures were deployment/config drift (Modal Forms field shape, missing copied operations),
+  not the structural-impact algorithm itself. Future checkpoint plans should include an explicit
+  disposable-vault refresh step before live UI validation.

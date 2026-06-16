@@ -41,11 +41,11 @@ def test_source_capture_form_uses_vocabulary_options():
 
     assert fields["research_area"]["input"]["type"] == "multiselect"
     assert fields["research_area"]["input"]["source"] == "fixed"
-    assert fields["research_area"]["input"]["options"] == _terms("research_area")
+    assert fields["research_area"]["input"]["multi_select_options"] == _terms("research_area")
 
     assert fields["methodology"]["input"]["type"] == "multiselect"
     assert fields["methodology"]["input"]["source"] == "fixed"
-    assert fields["methodology"]["input"]["options"] == _terms("methodology")
+    assert fields["methodology"]["input"]["multi_select_options"] == _terms("methodology")
 
 
 
@@ -61,7 +61,7 @@ def test_project_start_form_is_available_for_later_automation():
     for required in ("title", "slug", "scope_topics", "inquiry_population",
                      "inquiry_outcome", "output_mode"):
         assert fields[required]["isRequired"] is True
-    assert fields["scope_topics"]["input"]["options"] == _terms("research_area")
+    assert fields["scope_topics"]["input"]["multi_select_options"] == _terms("research_area")
     assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
 
 
