@@ -39,16 +39,16 @@ measure), or anything gated on real-corpus calibration or always-on infrastructu
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.6 ships when **every gate sub-issue under the `Release v0.1.0-alpha.6`
-parent issue is closed.** Definitions (state lives in the sub-issues, never in this
-table):
+v0.1.0-alpha.6 ships when **every gate sub-issue under
+[Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
+is closed.** Definitions (state lives in the sub-issues, never in this table):
 
 | Gate | Proves | Verified by | Issues |
 | --- | --- | --- | --- |
-| G1 | **Correctness & security conformance.** The three `bug`-labeled accepted-ADR gaps no longer hold: ADR-31 — the runtime serves the Obsidian MCP over verified HTTPS, the bearer token no longer travels plain loopback; ADR-78 — the schema rejects a born-`current` thesis and the promotion to `current` is review-gated; ADR-10 — `query`/`write` exclude superseded claims by default, with the claim `schema_version` bump. | S1 + S4 | [#620](https://github.com/eranroseman/memoria-vault/issues/620), [#621](https://github.com/eranroseman/memoria-vault/issues/621), [#624](https://github.com/eranroseman/memoria-vault/issues/624) |
-| G2 | **Project-gate navigation surface.** ADR-70/77 — Project is registered as the fourth switchable top-level workspace and is reachable as a gate from Obsidian (not link-only), finishing alpha.5's headline. The `registerBasesView` pilot stays deferred (ADR-77). | S3 + S5 | [#622](https://github.com/eranroseman/memoria-vault/issues/622) |
-| G3 | **Docs, template & supply-chain conformance.** ADR-07 — `system/templates/code-note.md` exists (or the stale reference is dropped); ADR-73 — the bare-`(ADR-NN)` rule is enforced in `docs-doctor` or the offending reference pages are fixed; ADR-74 — a static plugin provenance lock manifest (pinned version/commit/SHA-256 + license for the 12 vendored plugins) lands. | S0 | [#627](https://github.com/eranroseman/memoria-vault/issues/627), [#626](https://github.com/eranroseman/memoria-vault/issues/626), [#585](https://github.com/eranroseman/memoria-vault/issues/585) |
-| G4 | **Ephemeral test-env harness — Phase 1 (ADR-80).** The model-free L0–L4 golden path runs from seed→cassette (record/replay cassettes + the g9 zero-LLM spine + a seeded L4 path on `e2e-smoke.sh`); ADR-80's model-availability smoke check passes. The model is needed at record time, not run time. | S3 + S5 | [#586](https://github.com/eranroseman/memoria-vault/issues/586) |
+| G1 | **Correctness & security conformance.** The three `bug`-labeled accepted-ADR gaps no longer hold: ADR-31 — the runtime serves the Obsidian MCP over verified HTTPS, the bearer token no longer travels plain loopback; ADR-78 — the schema rejects a born-`current` thesis and the promotion to `current` is review-gated; ADR-10 — `query`/`write` exclude superseded claims by default, with the claim `schema_version` bump. | S1 + S4 | Gate [#636](https://github.com/eranroseman/memoria-vault/issues/636); impl [#620](https://github.com/eranroseman/memoria-vault/issues/620), [#621](https://github.com/eranroseman/memoria-vault/issues/621), [#624](https://github.com/eranroseman/memoria-vault/issues/624) |
+| G2 | **Project-gate navigation surface.** ADR-70/77 — Project is registered as the fourth switchable top-level workspace and is reachable as a gate from Obsidian (not link-only), finishing alpha.5's headline. The `registerBasesView` pilot stays deferred (ADR-77). | S3 + S5 | Gate [#637](https://github.com/eranroseman/memoria-vault/issues/637); impl [#622](https://github.com/eranroseman/memoria-vault/issues/622) |
+| G3 | **Docs, template & supply-chain conformance.** ADR-07 — `system/templates/code-note.md` exists (or the stale reference is dropped); ADR-73 — the bare-`(ADR-NN)` rule is enforced in `docs-doctor` or the offending reference pages are fixed; ADR-74 — a static plugin provenance lock manifest (pinned version/commit/SHA-256 + license for the 12 vendored plugins) lands. | S0 | Gate [#638](https://github.com/eranroseman/memoria-vault/issues/638); impl [#627](https://github.com/eranroseman/memoria-vault/issues/627), [#626](https://github.com/eranroseman/memoria-vault/issues/626), [#585](https://github.com/eranroseman/memoria-vault/issues/585) |
+| G4 | **Ephemeral test-env harness — Phase 1 (ADR-80).** The model-free L0–L4 golden path runs from seed→cassette (record/replay cassettes + the g9 zero-LLM spine + a seeded L4 path on `e2e-smoke.sh`); ADR-80's model-availability smoke check passes. The model is needed at record time, not run time. | S3 + S5 | Gate [#639](https://github.com/eranroseman/memoria-vault/issues/639); impl [#586](https://github.com/eranroseman/memoria-vault/issues/586) |
 
 [#625](https://github.com/eranroseman/memoria-vault/issues/625) (ADR-20 capture
 signals) is **documented as an upstream-Hermes known-limitation** (§6) and is **not** a
@@ -59,7 +59,9 @@ overlay appears.
 
 The staged plan that turns `shipped` into `approved`; a release candidate re-runs **all
 stages green from a fresh clone on a disposable vault** (`~/Memoria-test`, never
-`~/Memoria`). Stage state lives in the sub-issues under the release parent issue.
+`~/Memoria`). Stage state lives in the stage sub-issues (S0–S5 =
+[#640](https://github.com/eranroseman/memoria-vault/issues/640)–[#645](https://github.com/eranroseman/memoria-vault/issues/645))
+under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635).
 
 | Stage | Proves |
 | --- | --- |
@@ -73,7 +75,7 @@ stages green from a fresh clone on a disposable vault** (`~/Memoria-test`, never
 ## 4. Blockers
 
 Not enumerated here — a second list would drift. **By definition the blockers are** any
-open gate/stage sub-issue under the `Release v0.1.0-alpha.6` parent issue, plus any open
+open gate/stage sub-issue under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635), plus any open
 High-priority blocker in the
 [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1). Two hard facts
 this release: **[#620](https://github.com/eranroseman/memoria-vault/issues/620) is the
@@ -135,8 +137,8 @@ deferred-status ADRs):
 
 ## 7. Cut procedure
 
-1. **Every gate + stage sub-issue closed** under the `Release v0.1.0-alpha.6` parent
-   issue; required CI green on `main`; no open High-priority blocker (notably
+1. **Every gate + stage sub-issue closed** under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635);
+   required CI green on `main`; no open High-priority blocker (notably
    [#620](https://github.com/eranroseman/memoria-vault/issues/620)).
 2. **Re-run all stages from a fresh clone** on a disposable vault (`~/Memoria-test`) →
    all green; record evidence in the sub-issues / Actions artifacts.
@@ -150,7 +152,7 @@ deferred-status ADRs):
 5. **Set frontmatter** — internal checkpoint: `status: complete`, `released: false`.
 6. **Delete `tmp/`** design notes (the exec plan and the three audit scratch files) —
    promote anything durable into ADRs first.
-7. **Close the milestone and the release parent issue**, rolling unfinished issues to
+7. **Close the milestone and [#635](https://github.com/eranroseman/memoria-vault/issues/635)**, rolling unfinished issues to
    the next checkpoint.
 
 ## 8. Roadmap after this release

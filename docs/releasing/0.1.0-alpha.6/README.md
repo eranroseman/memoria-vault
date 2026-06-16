@@ -19,8 +19,9 @@ GitHub.
 | `tmp/deferred-adr-cadence-review.md` | Audit scratch — which deferred ADRs are buildable now (source of B1 + the alpha.7 harvest) |
 | `tmp/deferred-adr-implementability-verification.md` | Independent re-verification of the cadence review |
 
-- **Scope / readiness:** milestone `0.1.0-alpha.6` (#7) + `Release v0.1.0-alpha.6`
-  (parent issue + gate/stage sub-issues — to be opened).
+- **Scope / readiness:** milestone `0.1.0-alpha.6` (#7) +
+  [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
+  (gate sub-issues #636–#639, stage sub-issues #640–#645).
 - **Build workstreams (Track A — conformance, "re-implement approved goals"):**
   WS-1 correctness/security (#620, #621, #624), WS-2 Project-gate surface (#622),
   WS-3 docs/template/supply-chain (#627, #626, #585; #625 documented).

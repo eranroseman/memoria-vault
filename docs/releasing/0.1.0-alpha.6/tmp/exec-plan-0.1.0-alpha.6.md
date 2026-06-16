@@ -124,14 +124,15 @@ and 3 (~5-min smoke) are resolved per the cadence review.
 | S4 live | HTTPS+ssl_verify; thesis deny | — | — | — |
 | S5 E2E | — | Project gate from Obsidian | — | golden path fresh clone |
 
-## GitHub setup (next, on go-ahead)
+## GitHub setup (done)
 
-1. Assign #620, #621, #622, #624, #626, #627, #585, #586 to milestone `0.1.0-alpha.6`
-   (#7). Leave #625 out of the milestone — it is an upstream-Hermes-blocked
-   known-limitation (plan §6), not actionable in alpha.6.
-2. Open `Release v0.1.0-alpha.6` (label `release`, milestone #7) with one sub-issue per
-   gate (G1–G4) and per stage (S0–S5); link the implementation issues above.
-3. Mark #620 High priority (the one security blocker) in the Memoria Issue Tracker.
+- Milestone `0.1.0-alpha.6` (#7) assigned to #620, #621, #622, #624, #626, #627, #585,
+  #586. #625 left out (upstream-Hermes-blocked known-limitation, plan §6).
+- Parent [#635](https://github.com/eranroseman/memoria-vault/issues/635)
+  (`Release v0.1.0-alpha.6`, label `release`) opened with gate sub-issues #636 (G1),
+  #637 (G2), #638 (G3), #639 (G4) and stage sub-issues #640–#645 (S0–S5), all linked.
+- **Pending:** mark #620 High priority — it is a Project field (Memoria Issue Tracker),
+  not a label; set it in the board (the `gh` token lacks the `project` scope).
 
 ## Open questions
 
