@@ -93,5 +93,6 @@ def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
     assert "function Assert-ObsidianMcpEnv" in text
     assert "OBSIDIAN_MCP_PORT" in text
     assert "OBSIDIAN_MCP_SSL_VERIFY" in text
+    assert "OBSIDIAN_API_KEY', 'OBSIDIAN_MCP_PORT', 'OBSIDIAN_MCP_SSL_VERIFY" in text
     assert "Test-PlaceholderValue" in text
     assert "rerun -ProfilesOnly" in text

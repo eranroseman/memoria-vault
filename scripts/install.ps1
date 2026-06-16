@@ -324,8 +324,9 @@ function Copy-EnvValues {
         if ($_ -match '^([A-Za-z_][A-Za-z0-9_]*)=') { $declared += $Matches[1] }
     }
     $global = Read-DotEnv -Path $globalEnv
+    $seedKeys = @($declared + @('OBSIDIAN_API_KEY', 'OBSIDIAN_MCP_PORT', 'OBSIDIAN_MCP_SSL_VERIFY')) | Select-Object -Unique
     $toAdd = @()
-    foreach ($key in $declared) {
+    foreach ($key in $seedKeys) {
         if (-not $existing.ContainsKey($key) -and $global.ContainsKey($key) -and -not (Test-PlaceholderValue -Value $global[$key])) {
             $toAdd += "$key=$($global[$key])"
         }
