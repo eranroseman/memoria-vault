@@ -553,6 +553,18 @@ deploy_policy_plugin() {
   say "    deployed write-gate plugin (memoria-policy-gate)"
 }
 
+verify_profile_obsidian_mcp() {
+  local cfg="$1" prof="$2"
+  [ -f "$cfg" ] || die "$prof config.yaml missing after staging."
+  if grep -q 'url: "http://127\.0\.0\.1' "$cfg"; then
+    die "$prof config.yaml uses plain HTTP for the Obsidian MCP; expected verified HTTPS."
+  fi
+  grep -q 'url: "https://127\.0\.0\.1:${OBSIDIAN_MCP_PORT}/mcp"' "$cfg" \
+    || die "$prof config.yaml must use https://127.0.0.1:\${OBSIDIAN_MCP_PORT}/mcp for the Obsidian MCP."
+  grep -q 'ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"' "$cfg" \
+    || die "$prof config.yaml must set obsidian ssl_verify to \${OBSIDIAN_MCP_SSL_VERIFY}."
+}
+
 # =============================================================================
 # Step 6 — deploy the five profiles  (the original profile-installer logic)
 # =============================================================================
@@ -615,6 +627,7 @@ install_profiles() {
                   -e 's|{{VAULT_PATH}}|$vault_esc|g' \
                   -e 's|{{QMD}}|$qmd_esc|g' \
                   \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
+      verify_profile_obsidian_mcp "$dst/config.yaml" "$p"
     fi
 
     say "  installing $p"

@@ -64,6 +64,10 @@ def test_detectors():
             dft = v / "projects/proj/draft.md"
             dft.parent.mkdir(parents=True, exist_ok=True)
             dft.write_text("---\ntype: draft\n---\nWe still rely on [[oldclaim]] here.\n", encoding="utf-8")
+            # current thesis without promotion provenance -> schema finding
+            (v / "projects/proj/thesis.md").write_text(
+                "---\ntype: thesis\nlifecycle: current\ntitle: T\nproject: '[[proj]]'\nsources: []\n---\n",
+                encoding="utf-8")
             # template + dashboard referencing an unknown field -> dashboard finding.
             # The template body carries a placeholder [[link]] (templates are raw notes):
             # broken-wikilink must ignore it now that templates live in system/.
@@ -129,6 +133,9 @@ def test_detectors():
             check("stale-answer-drafts fires on 100d draft", any("old-answer.md" in x.path for x in by("stale-answer-drafts")))
             check("extract-path-broken fires", any("p.md" in x.path for x in by("extract-path-broken")))
             check("schema-check flags missing maturity", any("bad.md" in x.path for x in by("schema-check")))
+            check("schema-check flags unstamped current thesis",
+                  any("thesis.md" in x.path and "promoted_at" in x.message
+                      for x in by("schema-check")))
             check("schema-check clean note not flagged", not any("good.md" in x.path for x in by("schema-check")))
             check("broken-wikilink flags [[ghost]]", any("ghost" in x.message for x in by("broken-wikilink")))
             check("broken-wikilink ignores valid [[good]]", not any("[[good]]" in x.message for x in by("broken-wikilink")))

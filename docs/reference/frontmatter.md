@@ -40,6 +40,7 @@ required:
   maturity: enum:maturity
   sources: list
 optional:
+  schema_version: int
   links: map
   topics: list
   superseded_by: str
@@ -82,7 +83,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
 | `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index` |
 
-`proposed` always means _awaiting the PI_. `retracted` is a state, not a deletion — supersession keeps the lineage (`superseded_by`). This lifecycle is the **PI-facing state**; the board's `status` enum is a separate, hidden execution mechanic (see [Kanban board reference](kanban-board.md)).
+`proposed` always means _awaiting the PI_. `retracted` is a state, not a deletion — supersession keeps the lineage (`superseded_by`). Claim queries and write-assist surfaces exclude claims with a non-empty `superseded_by` by default; include them only for lineage, audit, or supersession-history work. This lifecycle is the **PI-facing state**; the board's `status` enum is a separate, hidden execution mechanic (see [Kanban board reference](kanban-board.md)).
 
 ## `maturity` — a claim property, never a gate
 
@@ -127,6 +128,7 @@ cache ([ADR-77](../adr/77-project-gate.md), [ADR-78](../adr/78-thesis-note-type.
 | `graph_maturity` | `enum` | `cold-start`, `immature`, or `mature`. |
 | `computed_at` | `date` | Timestamp for the derived cache; stale values are shown as stale, not silently current. |
 | `refutation_sufficiency` / `refutation_sufficiency_at` | `bool` / `date` | PI stamp that the active thesis has faced its strongest available rebuttal; the Project operation treats this as saturation condition 3, not as a deterministic judgment. |
+| `promoted_at` / `promoted_by` | `date` / `str` | Promotion provenance for a thesis. A `thesis` at `lifecycle: current` must carry `promoted_at`; proposed and provisional theses do not. |
 
 Source notes also carry optional `evidence_level`, a CEBM-style enum
 (`cebm-1` … `cebm-5`, `ungraded`) used when source appraisal becomes relevant to

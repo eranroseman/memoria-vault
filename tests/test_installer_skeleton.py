@@ -58,6 +58,20 @@ def test_installer_escapes_template_replacements():
     assert "s|{{PYTHON}}|$pybin|g" not in text
     assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text
 
+def test_installers_verify_generated_profiles_use_https_ssl_verify():
+    sh = INSTALL.read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    for text, function_name in (
+        (sh, "verify_profile_obsidian_mcp"),
+        (ps, "Assert-ProfileObsidianMcpHttps"),
+    ):
+        assert function_name in text
+        assert "https://127.0.0.1:" in text
+        assert "OBSIDIAN_MCP_PORT" in text
+        assert "/mcp" in text
+        assert "OBSIDIAN_MCP_SSL_VERIFY" in text
+        assert "http://127" in text
+
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
     assert "python_install_guidance()" in text

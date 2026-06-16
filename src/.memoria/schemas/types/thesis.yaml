@@ -23,4 +23,6 @@ optional:
   computed_at: date
   refutation_sufficiency: bool
   refutation_sufficiency_at: date
+  promoted_at: date
+  promoted_by: str
   created: date

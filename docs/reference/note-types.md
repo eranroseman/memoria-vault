@@ -5,7 +5,7 @@ parent: Reference
 
 # Note types
 
-The 21 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 22 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
 The 22 types group into five categories: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
 
@@ -33,10 +33,10 @@ Project records live under `projects/` and anchor the Project gate ([ADR-77](../
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
 | `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
-| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `promoted_at`, `promoted_by`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
 | `code-note` | `projects/` | `proposed → current → archived` | `title`, `project`, `agent`, `task`, `acceptance` | `motivating_claims`, `inputs`, `outputs`, `run_command`, `dependencies`, `repository`, `created` |
 
-`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.
+`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default. Current theses must carry `promoted_at` so the promotion is visible to the Linter and pre-commit gate. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.
 
 ---
 
@@ -48,11 +48,11 @@ The PI's knowledge, carrying **authored** `links:` edges (the field contract is 
 | --- | --- | --- | --- | --- | --- |
 | `fleeting` | `notes/fleeting/` | no | `proposed → archived` | `origin` (`human` / `agent` / `chat`) | `title` |
 | `source` | `notes/sources/` | no | `proposed → provisional → current → retracted → archived` (the full chain) | `title`, `entity` (wikilink to the Catalog entity it is about) | `source_type`, `research_area`, `methodology`, `links` |
-| `claim` | `notes/claims/` | **yes** | `current → retracted → archived` | `title`, `maturity`, `sources` (every claim → a citekey) | `links` (supports / contradicts / …), `topics`, `superseded_by` |
+| `claim` | `notes/claims/` | **yes** | `current → retracted → archived` | `title`, `maturity`, `sources` (every claim → a citekey) | `schema_version`, `links` (supports / contradicts / …), `topics`, `superseded_by` |
 | `hub` | `notes/hubs/` | **yes** | `current → archived` | `title`, `topic` | `members`, `links` |
 | `index` | `notes/indexes/` | no | `current → archived` | `title` | — |
 
-`maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). `hub` is the renamed MOC; the `reference` type was dropped in the same decision ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
+`maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). Claim template version 2 includes `schema_version: 2`; query and write-assist surfaces exclude claims with non-empty `superseded_by` unless the task is explicitly about supersession history. `hub` is the renamed MOC; the `reference` type was dropped in the same decision ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
 
 ---
 

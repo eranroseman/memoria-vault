@@ -9,6 +9,7 @@ links:
   supports: []
   contradicts: []
 superseded_by: ""
+schema_version: 2
 created: {{DATE:YYYY-MM-DD}}
 ---
 
