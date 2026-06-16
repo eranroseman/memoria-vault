@@ -32,8 +32,8 @@ Project records live under `projects/` and anchor the Project gate ([ADR-77](../
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
-| `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
-| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
 
 `project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default.
 

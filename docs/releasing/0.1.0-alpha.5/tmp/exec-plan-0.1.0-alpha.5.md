@@ -160,7 +160,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-A ADR pass (#577)
 - [x] WS-B schema + templates (#578)
 - [x] WS-C structural-impact Operation (#579)
-- [ ] WS-D gap taxonomy + saturation (#580)
+- [x] WS-D gap taxonomy + saturation (#580)
 - [ ] WS-E PI surface (#581, #154, #381)
 - [ ] WS-F instrumentation (#337)
 - [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583)
@@ -189,6 +189,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   thesis-rooted `supports`/`contradicts` graph, computes impact/on-path/maturity/saturation values,
   applies the conservative maturity threshold plus the scope-overlap cold-start floor, and writes a
   single generated Project gate index note only when derived values change.
+- 2026-06-16 — WS-D extended the Project cache with gap taxonomy and saturation semantics: shown
+  additive/conflict/fragility findings, maturity-gated structural/refutation advisories, the
+  one-click PI `refutation_sufficiency` stamp for saturation condition 3, and survey-mode
+  coverage-relative saturation.
 
 ## 9. Surprises & discoveries
 

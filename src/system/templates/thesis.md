@@ -8,6 +8,7 @@ links:
   supports: []
   contradicts: []
 superseded_by: ""
+refutation_sufficiency: false
 created: {{DATE:YYYY-MM-DD}}
 ---
 
