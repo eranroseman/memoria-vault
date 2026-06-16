@@ -135,7 +135,7 @@ need.
 
 | # | Tracks | Disposition |
 |---|---|---|
-| #414 | ADR-64 native Windows support | **added → in** — build this checkpoint ⇒ accept ADR-64 + supersede the WSL2-only rule (#296). Large roadmap change (see §2.2) |
+| #414 | ADR-64 native Windows support | **blocked/deferred:** primary Hermes docs still label native Windows early beta; ADR-64 remains deferred and the WSL2-only rule stays in force |
 | #439 | ADR-19 Tier 2 Mapper handoff | **done:** `hub_handoff.py` delegates fired `hub-threshold` findings to the `map` lane with staging-only allowed paths; ADR-19 updated |
 | #412 | ADR-62 measurement/verification harnesses | **deferred** — instrument once more behavior ships |
 | #370 | ADR-38 pre-file similarity ratchet | **deferred** — depends on the deferred calibration discipline (#379) |
@@ -160,17 +160,13 @@ reserve — need real-data shadow calibration); #412 (ADR-62 harnesses); #370
 **Added to alpha.4 (over the original deferred disposition):**
 
 - **ADR-69 rename** — execute `engines → operations` now (Workstream H).
-- **#414 native Windows (ADR-64) — major change.** Building it means *accepting
-  ADR-64* and *superseding the WSL2-only rule* (the AGENTS.md "work inside WSL2"
-  constraint and #296). It collapses the two-OS topology and has wide blast
-  radius — the installer, AGENTS.md, the ADR-31 WSL2↔Windows bridge, and the
-  analysis-stack wheels. Native Windows was **intended for alpha.3** (ADR-64's
-  *When this matters*: "revisit after v0.1.0-alpha.3"); it slipped, so alpha.4
-  picks it up as the **overdue carry-over**, not a scope-up. (#296's body carried
-  a "v0.3 / v0.2" label — the versioning carry-over where v0.3 = alpha.3 and
-  v0.2 = alpha.2; corrected at source.) **Verify Hermes' native-Windows
-  support against the primary `~/.hermes` docs first** — it is the load-bearing
-  assumption in #296 — and record the supersession as an ADR before the port.
+- **#414 native Windows (ADR-64) — cadence verdict: blocked/deferred.** The
+  primary local Hermes docs (the local Hermes Windows Native guide
+  and Installation guide) confirm native CLI/cron/gateway/MCP,
+  but still label native Windows **early beta** and recommend WSL2 for the most
+  battle-tested Windows setup. That fails ADR-64's GA revisit criterion, so this
+  checkpoint does **not** accept ADR-64, does **not** supersede the WSL2-only
+  rule, and leaves #414/#296 open for a future attended native-Windows pass.
 - **#439 Mapper Tier 2 (ADR-19)** — build the hub-threshold → agent-drafted
   hub/MOC handoff (review-gated; `notes/hubs/` stays approved); update ADR-19's
   status from "Tier 2 deferred" to built.
@@ -184,8 +180,8 @@ full ADR-76 wheel migration **deferred**; #378 bundles supercharged-links under
 the current ADR-26/55 baseline (ADR-74 not required).
 
 **ADR actions this scope implies** (ADR edits the plan links to, not recorded
-here): accept ADR-64 + supersede the WSL2-only rule (#414); update ADR-19 (#439);
-amend ADR-55 with the upgrade reconcile (#339).
+here): keep ADR-64 deferred after the 2026-06-16 cadence review (#414); update
+ADR-19 (#439); amend ADR-55 with the upgrade reconcile (#339).
 
 ## 3. Plan of work
 
@@ -209,10 +205,9 @@ surface; deferred items (§2.2) are not built this checkpoint.
    supercharged-links under the current baseline). User-skipped for this run:
    #154 and #329.
 6. **Mapper Tier 2 (#439, ADR-19).** Build the hub/MOC handoff; update ADR-19.
-7. **Native Windows (#414, ADR-64) — its own track, last.** First land the ADR:
-   accept ADR-64 + supersede the WSL2-only rule (verify Hermes native support
-   against the `~/.hermes` docs). Then the port (installer, ADR-31 bridge,
-   analysis stack). Largest blast radius — isolate it.
+7. **Native Windows (#414, ADR-64) — blocked/deferred.** The primary Hermes docs
+   still label native Windows early beta, so ADR-64 remains deferred; no
+   installer/ADR-31/AGENTS port starts in alpha.4.
 
 ## 4. Concrete steps
 
@@ -269,10 +264,9 @@ evidence, real transcripts:
   the Mapper, then a hub proposal is staged under `notes/fleeting/maps/` plus
   `inbox/` and `notes/hubs/` stays PI-approved. *Prove with:* focused
   `hub_handoff.py` tests and the operation self-test on a seeded vault.
-- **#414 (native Windows):** Given a native-Windows host (no WSL2), when installed,
-  then Hermes + the MCP servers run and a capture→file round-trip works. *Prove
-  with:* an attended native-Windows install — **gated on** accepting ADR-64 and
-  verifying Hermes native support first (§2.2).
+- **#414 (native Windows):** Blocked before the port: primary Hermes docs still
+  call native Windows early beta. *Prove with:* local doc excerpts in ADR-64 and
+  a future attended native-Windows install before accepting the ADR.
 - **Deferred (#412, #370):** confirm each ADR is `status: deferred` with a current
   *When this matters*; record the cadence verdict in §8 — do **not** build.
 
@@ -360,7 +354,7 @@ evidence, real transcripts:
 - [x] 2026-06-15 — D #336 batch worklists implemented on `feat/alpha4-batch-worklists`: file-backed `worklist-item` rows live under `system/worklists/`, `worklists.base` groups them by worklist/decision/group, and `worklists.py` emits one aggregate Inbox prompt per report.
 - [x] 2026-06-15 — D #378 design-system enforcement implemented on `feat/alpha4-design-enforcement`: `design-system-drift` reports off-palette colors, font-scale drift, emoji titles, ad-hoc callouts, and terminology/capitalization drift; `memoria-link-colors.css` ships lifecycle link accents.
 - [x] 2026-06-16 — G #439 Mapper Tier 2 implemented on `feat/alpha4-mapper-tier2`: `hub_handoff.py` reads `hub-threshold` findings and creates idempotent Librarian `map` cards constrained to `notes/fleeting/maps/` and `inbox/`; ADR-19 now records Tier 2 as built and `notes/hubs/` remains PI-approved.
-- [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port. Skipped by user for this run: #154, #329. #521 remains deferred packaging.
+- [x] 2026-06-16 — G #414 cadence review completed on `feat/alpha4-native-windows`: primary Hermes docs confirm native Windows exists but remains early beta, so ADR-64 stays deferred, #414/#296 stay open, and the WSL2-only rule is not superseded. Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 
 ## 8. Execution log
 
@@ -512,3 +506,7 @@ evidence, real transcripts:
 ## Execution log — #439 Mapper Tier 2
 
 - 2026-06-16: Started #439 in `feat/alpha4-mapper-tier2`; implementing ADR-19 Tier 2 as a deterministic Linter handoff into the Librarian `map` lane, with staged proposal paths only (`notes/fleeting/maps/`, `inbox/`) and no `notes/hubs/` write permission.
+
+## Execution log — #414 native Windows cadence review
+
+- 2026-06-16: Started #414 in `feat/alpha4-native-windows`; read issue #414/#296, ADR-64/ADR-31, and the local primary Hermes docs. Verdict: blocked/deferred because Hermes native Windows is still documented as early beta, not GA. Recording the verdict without starting the installer/PowerShell/QuickAdd port.
