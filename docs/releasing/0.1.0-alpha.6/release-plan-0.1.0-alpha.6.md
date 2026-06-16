@@ -11,7 +11,7 @@ nav_order: 2
 
 **Current status: pre-release (draft).** alpha.6 turns the alpha.6 ADR audit's
 findings into a checkpoint: make the **accepted** decisions that silently don't hold
-actually hold, finish alpha.5's Project-gate navigation surface, and deliver the
+actually hold, finish alpha.5's Project-gate navigation surface inside Studio, and deliver the
 roadmap's committed-next **ephemeral test-env harness (ADR-80, Phase 1)**. The single
 biggest thing between here and cut is the harness build (the long pole); the
 conformance fixes are small and mostly independent. `released:` in the frontmatter
@@ -28,7 +28,7 @@ accepted decision does not actually hold. alpha.6 closes the material ones — a
 security regression (the Obsidian-MCP bearer token rides plain-HTTP loopback,
 contradicting ADR-31), two unenforced schema/query invariants (ADR-78 born-`current`
 thesis, ADR-10 superseded-claim exclusion), the missing Project-gate **navigation
-surface** that finishes alpha.5's headline (ADR-70/77), and the cheap docs/template/
+surface** that finishes alpha.5's headline without adding a fourth saved workspace (ADR-70/77), and the cheap docs/template/
 supply-chain cleanups (ADR-07, ADR-73, ADR-74). **Pillar two (Track B — net-new):** the
 model-free **Phase 1 test-env harness** (ADR-80) — the L0–L4 golden path via
 seed→cassette that makes every future release re-runnable from a fresh clone. It
@@ -45,9 +45,9 @@ is closed.** Definitions (state lives in the sub-issues, never in this table):
 
 | Gate | Proves | Verified by | Issues |
 | --- | --- | --- | --- |
-| G1 | **Correctness & security conformance.** The three `bug`-labeled accepted-ADR gaps no longer hold: ADR-31 — the runtime serves the Obsidian MCP over verified HTTPS, the bearer token no longer travels plain loopback; ADR-78 — the schema rejects a born-`current` thesis and the promotion to `current` is review-gated; ADR-10 — `query`/`write` exclude superseded claims by default, with the claim `schema_version` bump. | S1 + S4 | Gate [#636](https://github.com/eranroseman/memoria-vault/issues/636); impl [#620](https://github.com/eranroseman/memoria-vault/issues/620), [#621](https://github.com/eranroseman/memoria-vault/issues/621), [#624](https://github.com/eranroseman/memoria-vault/issues/624) |
-| G2 | **Project-gate navigation surface.** ADR-70/77 — Project is registered as the fourth switchable top-level workspace and is reachable as a gate from Obsidian (not link-only), finishing alpha.5's headline. The `registerBasesView` pilot stays deferred (ADR-77). | S3 + S5 | Gate [#637](https://github.com/eranroseman/memoria-vault/issues/637); impl [#622](https://github.com/eranroseman/memoria-vault/issues/622) |
-| G3 | **Docs, template & supply-chain conformance.** ADR-07 — `system/templates/code-note.md` exists (or the stale reference is dropped); ADR-73 — the bare-`(ADR-NN)` rule is enforced in `docs-doctor` or the offending reference pages are fixed; ADR-74 — a static plugin provenance lock manifest (pinned version/commit/SHA-256 + license for the 12 vendored plugins) lands. | S0 | Gate [#638](https://github.com/eranroseman/memoria-vault/issues/638); impl [#627](https://github.com/eranroseman/memoria-vault/issues/627), [#626](https://github.com/eranroseman/memoria-vault/issues/626), [#585](https://github.com/eranroseman/memoria-vault/issues/585) |
+| G1 | **Correctness & security conformance.** The three `bug`-labeled accepted-ADR gaps no longer hold: ADR-31 — fresh installer/profile deployment proves Obsidian MCP uses verified HTTPS (`https://…/mcp` + `ssl_verify`) and the live sandbox smoke confirms the bearer token no longer travels plain loopback; ADR-78 — the schema rejects a born-`current` thesis and the promotion to `current` is review-gated; ADR-10 — `query`/`write` exclude superseded claims by default, with the claim `schema_version` bump. | S1 + S4 | Gate [#636](https://github.com/eranroseman/memoria-vault/issues/636); impl [#620](https://github.com/eranroseman/memoria-vault/issues/620), [#621](https://github.com/eranroseman/memoria-vault/issues/621), [#624](https://github.com/eranroseman/memoria-vault/issues/624) |
+| G2 | **Project-gate navigation surface.** ADR-70/77 — Studio and Project are two names for the same workspace: Studio remains the saved workspace shell, while Project becomes a first-class gate surface inside it (Home/Studio/palette entry points plus `project-gate.md` / `project-gate.base`), finishing alpha.5's headline without reviving a fourth saved workspace. The `registerBasesView` pilot stays deferred (ADR-77). | S3 + S5 | Gate [#637](https://github.com/eranroseman/memoria-vault/issues/637); impl [#622](https://github.com/eranroseman/memoria-vault/issues/622) |
+| G3 | **Docs, template & supply-chain conformance.** ADR-07 — `system/templates/code-note.md` exists (or the stale reference is dropped); ADR-73 — the bare-`(ADR-NN)` rule is enforced in `docs-doctor` or the offending reference pages are fixed; ADR-74 — a static plugin provenance lock manifest (pinned version/commit/SHA-256 + license for the 12 vendored plugins) lands as an interim artifact while ADR-74 remains deferred. | S0 | Gate [#638](https://github.com/eranroseman/memoria-vault/issues/638); impl [#627](https://github.com/eranroseman/memoria-vault/issues/627), [#626](https://github.com/eranroseman/memoria-vault/issues/626), [#585](https://github.com/eranroseman/memoria-vault/issues/585) |
 | G4 | **Ephemeral test-env harness — Phase 1 (ADR-80).** The model-free L0–L4 golden path runs from seed→cassette (record/replay cassettes + the g9 zero-LLM spine + a seeded L4 path on `e2e-smoke.sh`); ADR-80's model-availability smoke check passes. The model is needed at record time, not run time. | S3 + S5 | Gate [#639](https://github.com/eranroseman/memoria-vault/issues/639); impl [#586](https://github.com/eranroseman/memoria-vault/issues/586) |
 
 [#625](https://github.com/eranroseman/memoria-vault/issues/625) (ADR-20 capture
@@ -67,9 +67,9 @@ under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vau
 | --- | --- |
 | S0 | static: the new `code-note.md` template parses; the provenance lock manifest validates; `docs-doctor` green (including the new bare-code rule if added); `gen_adr_index` + adr-index hook fresh |
 | S1 | component pytest: born-`current` thesis rejection + gated promotion; superseded-claim default filter in `query`/`write`; harness spine units (cassette record/replay, the g9 zero-LLM path) |
-| S2 | dry-run: installer substitution incl. the new template + the Project workspace registration; cassette replay on a disposable vault |
-| S3 | integration: Project workspace switches in Obsidian and Bases render; the harness L0–L4 cassette replay runs green |
-| S4 | live/enforcement: the runtime serves the Obsidian MCP over HTTPS with `ssl_verify` (sandbox `~/.hermes` / memoria-test only) so the bearer token no longer rides plain loopback (#620). The born-`current` thesis rule is **content-aware** — enforced at schema/Linter time (S1), not via the path-based policy plugin |
+| S2 | dry-run: installer substitution incl. the new template + Project gate entry points inside Studio; cassette replay on a disposable vault |
+| S3 | integration: Studio/Project entry points open the Project gate surface in Obsidian and Bases render; the harness L0–L4 cassette replay runs green |
+| S4 | live/enforcement: fresh installer/profile verification proves generated profiles use HTTPS + `ssl_verify`, then the sandbox runtime serves the Obsidian MCP over verified HTTPS (`~/.hermes` / memoria-test only) so the bearer token no longer rides plain loopback (#620). The born-`current` thesis rule is **content-aware** — enforced at schema/Linter time (S1), not via the path-based policy plugin |
 | S5 | E2E: the harness golden path L0–L4 from a fresh clone; the Project gate driven end-to-end from Obsidian |
 
 ## 4. Blockers
@@ -132,8 +132,9 @@ deferred-status ADRs):
 - **ADR-20 `disposition.jsonl` / `cost.jsonl` stay empty** pending the Hermes
   card-`metadata` overlay (upstream limitation, `docs/reference/telemetry.md`); the
   exporter emits the moment it appears.
-- The Project gate is now a switchable workspace, but its custom `registerBasesView`
-  pilot remains deferred (ADR-77) — it renders through the standard surface.
+- The Project gate is now a first-class surface inside the Studio workspace; its custom
+  `registerBasesView` pilot remains deferred (ADR-77) — it renders through the standard
+  surface.
 
 ## 7. Cut procedure
 
@@ -143,8 +144,9 @@ deferred-status ADRs):
 2. **Re-run all stages from a fresh clone** on a disposable vault (`~/Memoria-test`) →
    all green; record evidence in the sub-issues / Actions artifacts.
 3. **ADR status maintenance.** The accepted-ADR gaps move PARTIAL→implemented (ADR-31,
-   -78, -10, -70, -77, -07, -73); ADR-80 (Phase 1) and ADR-74 (static-manifest slice)
-   move `deferred`→`accepted` with their remaining phases/slices noted. **Retire-sweep:**
+   -78, -10, -70, -77, -07, -73); ADR-80 (Phase 1) moves `deferred`→`accepted` with
+   remaining phases noted. ADR-74 remains `deferred`; alpha.6 ships a static manifest
+   precursor and records the remaining updater/CI-doctor work. **Retire-sweep:**
    no question is dissolved by alpha.6, so the sweep is expected to be a no-op — confirm
    before cut.
 4. **Merge the release-please PR** (folding §6 known-limitations into the notes) — or,

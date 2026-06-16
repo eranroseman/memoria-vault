@@ -23,7 +23,7 @@ GitHub.
   [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
   (gate sub-issues #636–#639, stage sub-issues #640–#645).
 - **Build workstreams (Track A — conformance, "re-implement approved goals"):**
-  WS-1 correctness/security (#620, #621, #624), WS-2 Project-gate surface (#622),
+  WS-1 correctness/security (#620, #621, #624), WS-2 Project-gate surface inside Studio (#622),
   WS-3 docs/template/supply-chain (#627, #626, #585; #625 documented).
 - **Build workstream (Track B — net-new):** WS-4 test-env harness Phase 1 (#586).
 - The tracked `tmp/` scratch folder is retained while alpha.6 is being designed;

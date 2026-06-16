@@ -33,7 +33,7 @@ Workstream _n_ maps 1:1 to gate G_n_.
 | WS | Gate | Issues | One-line deliverable | Stage proof |
 |---|---|---|---|---|
 | WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 |
-| WS-2 | G2 | #622 | Project = 4th switchable workspace | S3 + S5 |
+| WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 |
 | WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 |
 | WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 |
 
@@ -44,20 +44,23 @@ already compliant (`src/.memoria/profiles/*/config.yaml` use `https://` + `ssl_v
 ${OBSIDIAN_MCP_SSL_VERIFY}`); the **runtime contradicts it** — all five
 `~/.hermes/profiles/*/config.yaml` serve `http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp`,
 `OBSIDIAN_MCP_SSL_VERIFY` unset in `~/.hermes/.env`.
-- **Resolved — config fix, not an upstream gap. No code change** (repo source is already
-  compliant; runtime config only). Hermes passes `ssl_verify` straight to httpx's
+- **Resolved — source config is correct, but alpha.6 still needs durable deployment
+  verification.** Hermes passes `ssl_verify` straight to httpx's
   `verify` (`~/.hermes/hermes-agent/tools/mcp_tool.py:1355,1443`), and httpx `verify`
   accepts a CA-bundle path — so the exported self-signed PEM verifies cleanly. The old
   "Hermes can't skip TLS verify" comment was wrong: Hermes doesn't skip verification, it
   verifies against the PEM.
-- Steps (sandbox `~/.hermes` only): export the cert from the Local REST API plugin → set
-  `OBSIDIAN_MCP_SSL_VERIFY` to its path in `~/.hermes/.env` → flip the deployed profiles
-  to `https://` (a redeploy from repo source does this). One check: the cert's
+- Steps: add installer/profile verification so a fresh deploy proves every generated
+  profile uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` and carries
+  `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`; then, in sandbox `~/.hermes` only, export
+  the cert from the Local REST API plugin → set `OBSIDIAN_MCP_SSL_VERIFY` to its path
+  in `~/.hermes/.env` → redeploy profiles from repo source. One check: the cert's
   `subjectAltName` must include `127.0.0.1` (httpx verifies hostname). Minor: if the
   installed httpx (≥0.28) rejects a string path, wrap it as
   `ssl.create_default_context(cafile=…)`.
-- **Proof:** S4 — observe the bearer token no longer on plain loopback (HTTPS handshake
-  on `${OBSIDIAN_MCP_PORT}`; `ssl_verify` on).
+- **Proof:** S1/S2 installer/profile tests assert HTTPS + `ssl_verify` in generated
+  profiles; S4 live smoke observes the sandbox runtime over verified HTTPS and confirms
+  the bearer token no longer rides plain loopback.
 
 **#621 · ADR-78 — reject a born-`current` thesis + gate promotion.** Today
 `validate_frontmatter` only checks enum membership and `current` is a legal value, so a
@@ -97,13 +100,18 @@ claim-template `schema_version` bump.
 
 ### WS-2 — Project-gate navigation surface (#622)
 
-`src/.obsidian/workspaces.json` registers only `Desk` / `Library` / `Studio` (verified).
-The deterministic gate logic + `project-gate.{md,base}` already exist (alpha.5); only the
-**surface** is missing.
-- Register `Project` as the fourth switchable top-level workspace in `workspaces.json`.
+`src/.obsidian/workspaces.json` registers `Desk` / `Library` / `Studio` (ADR-68). Studio
+and Project are two names for the same workspace: Studio is the saved workspace shell,
+and Project is the bounded-inquiry gate surface opened inside it. The deterministic gate
+logic + `project-gate.{md,base}` already exist (alpha.5); the missing surface is the
+first-class entry point, not a fourth saved workspace.
+- Keep `Desk` / `Library` / `Studio` as the saved workspace set.
+- Add Home/Studio/palette entry points that open the Project gate surface
+  (`system/dashboards/project-gate.md` / `project-gate.base`) inside Studio.
 - Keep the `registerBasesView` pilot deferred (ADR-77) — render through the standard
   surface.
-- **Proof:** S3 (workspace switches, Bases render) + S5 (driven from Obsidian).
+- **Proof:** S3 (Studio/Project entry points open and Bases render) + S5 (driven from
+  Obsidian).
 
 ### WS-3 — Docs / template / supply-chain (#627, #626, #585)
 
@@ -116,8 +124,8 @@ obsidian-command-palette,obsidian-plugins}.md`). Recommend enforce-in-doctor so 
 regress. Pre-check: `python scripts/docs-doctor.py docs`.
 **#585 · ADR-74 — static provenance lock manifest.** Compute pinned version/commit +
 SHA-256 + license for the 12 vendored plugins under `src/.obsidian/plugins/` and land a
-static lock manifest. Updater + CI provenance-doctor stay deferred (ADR-74 multi-signal
-trigger). Mechanical, zero external dep.
+static lock manifest as an interim artifact. ADR-74 remains deferred; updater + CI
+provenance-doctor stay recorded as later work. Mechanical, zero external dep.
 - **Proof:** S0 — template parses, manifest validates, `docs-doctor` green.
 
 ### WS-4 — Test-env harness Phase 1 (#586, ADR-80)
@@ -136,10 +144,10 @@ and 3 (~5-min smoke) are resolved per the cadence review.
 | Stage | WS-1 | WS-2 | WS-3 | WS-4 |
 |---|---|---|---|---|
 | S0 static | — | — | template/manifest/docs-doctor | — |
-| S1 pytest | thesis reject + promotion-gate, superseded filter | — | — | cassette/g9 units |
-| S2 dry-run | — | workspace in installer | template in installer | cassette replay |
-| S3 integration | — | workspace switch + Bases | — | L0–L4 replay |
-| S4 live | HTTPS+ssl_verify (#620) | — | — | — |
+| S1 pytest | HTTPS+ssl_verify profile assertions; thesis reject + promotion-gate, superseded filter | — | — | cassette/g9 units |
+| S2 dry-run | fresh generated profiles prove HTTPS+ssl_verify | Project gate entry points in installer | template in installer | cassette replay |
+| S3 integration | — | Studio/Project entry points + Bases | — | L0–L4 replay |
+| S4 live | HTTPS+ssl_verify live smoke (#620) | — | — | — |
 | S5 E2E | — | Project gate from Obsidian | — | golden path fresh clone |
 
 ## GitHub setup (done)
@@ -154,9 +162,10 @@ and 3 (~5-min smoke) are resolved per the cadence review.
 
 ## Resolved design decisions
 
-- **#620 — config fix, not an upstream gap.** Hermes feeds `ssl_verify` to httpx `verify`
-  (`mcp_tool.py:1355,1443`), which takes a CA-bundle path → the exported PEM verifies. See
-  the WS-1 #620 entry for steps. No code change; runtime config only.
+- **#620 — source config is correct; deployment verification is the work.** Hermes feeds
+  `ssl_verify` to httpx `verify` (`mcp_tool.py:1355,1443`), which takes a CA-bundle path →
+  the exported PEM verifies. Add installer/profile tests for fresh generated profiles and
+  keep S4 as the live sandbox smoke.
 - **#621 — enforce in the Linter/schema layer, not the policy gate** (content-blind,
   path-based) — born-`current` rejection + a promotion-stamp gate, leaving `gated_prefixes`
   untouched. The deterministic gate bypasses the policy gate (direct `write_text`), so
