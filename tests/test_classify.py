@@ -127,6 +127,8 @@ def test_near_tie_flags_audits_and_leaves_unset(monkeypatch, tmp_path):
     lines = _audit_lines(tmp_path)
     assert len(lines) == 1 and lines[0]["decision"] == "ambiguous"
     assert lines[0]["research_area"] == []
+    assert lines[0]["classify_miss"] is True
+    assert lines[0]["miss_kind"] == "near_tie"
 
 
 def test_calibration_thresholds_read_from_vault(tmp_path):

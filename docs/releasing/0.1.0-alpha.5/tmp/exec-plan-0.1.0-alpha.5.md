@@ -163,7 +163,8 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-D gap taxonomy + saturation (#580)
 - [x] WS-E PI surface (#581, #154, #381)
 - [x] WS-F instrumentation (#337)
-- [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583)
+- [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583) — trigger-log slice complete;
+      deferred-behavior slices still need explicit close/roll decisions
 - [ ] WS-H thin test-env slice (#582)
 
 ## 8. Execution log
@@ -201,6 +202,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   re-review samples, the Obsidian resolve command appends `attention.jsonl` timing rows, the metrics
   aggregator writes time-on-gate / expand-to-accept / card-open-to-resolve / blind-sample fields into
   lane metric notes, and fleet-health renders those fields from `system/metrics/`.
+- 2026-06-16 — WS-G trigger-log slice landed the cheap self-detecting signals without starting the deferred
+  behavior: policy audit rows stamp `schema_version: 2` and `review_mode: blocking`, Inbox resolves
+  append `triage.jsonl`, ambiguous classify rows mark `classify_miss`, ID-missing linker names append
+  `linkage.jsonl`, and cron wrappers append `cron-heartbeat.jsonl` only after successful runs.
 
 ## 9. Surprises & discoveries
 

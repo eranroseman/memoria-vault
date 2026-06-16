@@ -14,6 +14,12 @@
 #
 # The installer substitutes {{PYTHON}} (the vault venv interpreter) and {{VAULT_PATH}}
 # when it copies this to ~/.hermes/scripts/memoria-retraction-refresh.sh.
+status=0
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/retraction/retraction.py" --refresh >/dev/null || true
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/retraction/retraction.py" --sweep --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/retraction/retraction.py" --refresh >/dev/null || status=1
+# shellcheck disable=SC2288
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/retraction/retraction.py" --sweep --vault "{{VAULT_PATH}}" >/dev/null || status=1
+if [ "$status" -eq 0 ]; then
+  # shellcheck disable=SC2288
+  "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/cron_heartbeat.py" --vault "{{VAULT_PATH}}" --job memoria-retraction-refresh >/dev/null || true
+fi

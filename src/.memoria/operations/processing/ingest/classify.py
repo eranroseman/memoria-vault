@@ -165,6 +165,12 @@ def append_audit(vault: Path, citekey: str, decision: dict,
         "confidence_floor": floor, "near_tie_margin": margin,
         "source": "openalex.topics",
     }
+    if decision["status"] == "ambiguous":
+        record["classify_miss"] = True
+        record["miss_kind"] = (
+            "below_floor" if "below the confidence floor" in decision["reason"]
+            else "near_tie"
+        )
     log = Path(vault) / AUDIT_RELPATH
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as f:

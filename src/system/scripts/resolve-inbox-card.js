@@ -16,6 +16,7 @@ const VERDICTS = {
 };
 
 const ATTENTION_LOG = "system/logs/attention.jsonl";
+const TRIAGE_LOG = "system/logs/triage.jsonl";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -51,12 +52,12 @@ async function ensureFolder(app, folder) {
   }
 }
 
-async function appendAttentionRow(app, row) {
+async function appendJsonl(app, path, row) {
   await ensureFolder(app, "system/logs");
   const line = JSON.stringify(row) + "\n";
-  const exists = await app.vault.adapter.exists(ATTENTION_LOG);
-  const current = exists ? await app.vault.adapter.read(ATTENTION_LOG) : "";
-  await app.vault.adapter.write(ATTENTION_LOG, current + line);
+  const exists = await app.vault.adapter.exists(path);
+  const current = exists ? await app.vault.adapter.read(path) : "";
+  await app.vault.adapter.write(path, current + line);
 }
 
 module.exports = async (params) => {
@@ -84,6 +85,7 @@ module.exports = async (params) => {
   const today = todayIsoDate();
   const resolvedAt = nowIso();
   let attentionRow = null;
+  let triageRow = null;
   try {
     await app.fileManager.processFrontMatter(file, (fm) => {
       const openedAt = frontmatterDate(fm, "attention_opened_at")
@@ -103,11 +105,26 @@ module.exports = async (params) => {
         resolved_at: resolvedAt,
         duration_minutes: durationMinutes(openedAt, resolvedAt),
       };
+      triageRow = {
+        timestamp: resolvedAt,
+        event: "inbox_card_resolved",
+        path: file.path,
+        card_type: fm.type || "",
+        lane: fm.lane || fm.assignee || "unknown",
+        task_id: fm.task_id || "",
+        outcome: verdict,
+        lifecycle_from: fm.lifecycle || "",
+        lifecycle_to: lifecycle,
+        source: "quickadd.resolve-inbox-card",
+      };
       fm.lifecycle = lifecycle;
       fm.resolved = today;
     });
     if (attentionRow) {
-      await appendAttentionRow(app, attentionRow);
+      await appendJsonl(app, ATTENTION_LOG, attentionRow);
+    }
+    if (triageRow) {
+      await appendJsonl(app, TRIAGE_LOG, triageRow);
     }
     new Notice("✓ Resolved " + file.basename + " → lifecycle: " + lifecycle + ", resolved: " + today + ".", 6000);
   } catch (e) {

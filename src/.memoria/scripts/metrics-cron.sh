@@ -6,4 +6,7 @@
 # to ~/.hermes/scripts/memoria-metrics.sh.
 set -u
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/metrics_aggregate.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+if "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/metrics_aggregate.py" --vault "{{VAULT_PATH}}" >/dev/null; then
+  # shellcheck disable=SC2288
+  "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/cron_heartbeat.py" --vault "{{VAULT_PATH}}" --job memoria-metrics >/dev/null || true
+fi

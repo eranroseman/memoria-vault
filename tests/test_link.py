@@ -1,9 +1,13 @@
 """L1 component tests for link (ADR-44)."""
 
+import json
+
 import link as _m
 
+append_by_name_audit = _m.append_by_name_audit
 plan_cites = _m.plan_cites
 plan_entities = _m.plan_entities
+plan_links = _m.plan_links
 
 
 MERGED = {
@@ -71,3 +75,16 @@ def test_plan_cites_matches_and_dedupes_doi_and_arxiv_edges():
     assert len(cites) == 2
     assert {c["via"] for c in cites} == {"doi", "arxiv"}
     assert {c["to"] for c in cites} == {"smith2020Paper", "lee2024Pre"}
+
+
+def test_recorded_by_name_audit_logs_collision_counter(tmp_path):
+    plan = plan_links(MERGED, tmp_path)
+
+    rec = append_by_name_audit(tmp_path, "x2024Test", plan)
+    rows = (tmp_path / "system" / "logs" / "linkage.jsonl").read_text(encoding="utf-8").splitlines()
+    logged = json.loads(rows[0])
+
+    assert rec["event"] == "recorded_by_name"
+    assert rec["total"] == 2
+    assert rec["counts"] == {"authors": 1, "venues": 0, "orgs": 1}
+    assert logged["citekey"] == "x2024Test"

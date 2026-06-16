@@ -6,9 +6,14 @@
 # The installer substitutes {{PYTHON}} and {{VAULT_PATH}} when it copies this
 # to ~/.hermes/scripts/memoria-lint.sh.
 set -u
+status=0
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/detectors.py" --vault "{{VAULT_PATH}}" --jsonl-out "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/detectors.py" --vault "{{VAULT_PATH}}" --jsonl-out "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" >/dev/null || status=1
 # shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/golden_restore.py" --vault "{{VAULT_PATH}}" check >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/golden_restore.py" --vault "{{VAULT_PATH}}" check >/dev/null || status=1
 # shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/session_summary.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/integrity/linter/session_summary.py" --vault "{{VAULT_PATH}}" >/dev/null || status=1
+if [ "$status" -eq 0 ]; then
+  # shellcheck disable=SC2288
+  "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/cron_heartbeat.py" --vault "{{VAULT_PATH}}" --job memoria-lint >/dev/null || true
+fi
