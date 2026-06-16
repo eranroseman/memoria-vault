@@ -15,7 +15,7 @@ deferred slot), shipped as the expanded v1 cut. Live state lives in GitHub.
 | `tmp/exec-plan-0.1.0-alpha.5.md` | Living build doc retained for closeout audit |
 | `tmp/project-starter.md` | Design scratch for the gate (expanded v1 cut); durable decisions live in ADR-77/78/79 |
 | `tmp/adr-update.md` | ADR audit scratch for WS-A housekeeping/retirement |
-| `tmp/test-env.md` | Test-env design scratch; durable decisions live in ADR-77/78 |
+| `tmp/test-env.md` | Test-env design scratch; durable decisions live in ADR-80 (harness) over the ADR-64 installer split |
 | `tmp/install-a-real-package.md` | Packaging design scratch; durable decision lives in ADR-76 |
 
 - **Scope / readiness:** milestone `0.1.0-alpha.5` (#6) +
