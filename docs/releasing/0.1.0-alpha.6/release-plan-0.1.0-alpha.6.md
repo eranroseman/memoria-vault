@@ -18,6 +18,10 @@ conformance fixes are small and mostly independent. `released:` in the frontmatt
 flips to `true` only for a tagged GitHub Release — this internal checkpoint closes at
 `status: complete`, `released: false`.
 
+**Landed so far:** G3 / WS-3 (docs, template, and static plugin-provenance precursor)
+merged in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649). Gate and
+stage state still close through the linked GitHub issues.
+
 ## 1. Scope — what this release is
 
 alpha.6 is a **conformance-and-verification checkpoint** built on two pillars. **Pillar
