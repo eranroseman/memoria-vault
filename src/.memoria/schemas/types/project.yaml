@@ -1,0 +1,28 @@
+type: project
+category: projects
+gated: false
+initial_lifecycle: current
+enums:
+  lifecycle: [current, archived]
+  output_mode: [thesis, survey]
+  saturation_state: [unknown, unsaturated, saturated, stale]
+  graph_maturity: [cold-start, immature, mature]
+required:
+  type: literal:project
+  lifecycle: enum:lifecycle
+  title: str
+  slug: str
+  scope_topics: list
+  inquiry: map
+  finer: map
+  output_mode: enum:output_mode
+  question_version: int
+  question_log: list
+optional:
+  active_thesis: str
+  impact: int
+  on_path: bool
+  saturation_state: enum:saturation_state
+  graph_maturity: enum:graph_maturity
+  computed_at: date
+  created: date

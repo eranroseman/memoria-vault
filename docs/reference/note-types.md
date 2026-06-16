@@ -5,9 +5,9 @@ parent: Reference
 
 # Note types
 
-The 19 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 21 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
-The 19 types group into four categories: **6 entities** (catalog), **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
+The 21 types group into five categories: **6 entities** (catalog), **2 project types**, **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
 
 ---
 
@@ -23,6 +23,19 @@ Bibliographic / world records, keyed on stable IDs and carrying **given** `relat
 | `venue` | `catalog/venues/` | `current → archived` | `name` | `subtype` (journal · conference · publisher …), `issn`, `relationships` |
 | `dataset` | `catalog/datasets/` | `current → retracted → archived` | `name` | `doi`, `url`, `license`, `relationships` |
 | `repository` | `catalog/repositories/` | `current → archived` | `name` | `url`, `language`, `license`, `relationships` |
+
+---
+
+## Projects (2)
+
+Project records live under `projects/` and anchor the Project gate ([ADR-77](../adr/77-project-gate.md)). They are not review-gated folders; the gated transition is the thesis promotion to `current`.
+
+| Type | Folder | Lifecycle subset | Required fields | Key optional fields |
+| --- | --- | --- | --- | --- |
+| `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+
+`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default.
 
 ---
 
@@ -51,7 +64,7 @@ The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-
 | Type | Required fields | Notes |
 | --- | --- | --- |
 | `candidate` | `title`, `action`, `argument_for`, `argument_against`, `what_tipped_it`, `certainty` | A proposed acceptance (e.g. a discovered paper). `certainty` is the 3-level calibrated enum `confident` / `likely` / `unsure`. Optional: `citekey`, `url`. |
-| `gap` | same honesty fields as `candidate` | A proposed missing piece (coverage gap, missing link). |
+| `gap` | same honesty fields as `candidate` | A proposed missing piece (coverage gap, missing link). Optional `gap_type` classifies Project-gate gaps. |
 
 **Verification cards** lead with the finding and carry the verdict:
 
@@ -96,7 +109,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 
 ## Templates
 
-Human-facing starter notes for 17 of the 19 types ship in `src/system/templates` (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+Human-facing starter notes for 19 of the 21 types ship in `src/system/templates` (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
 
 ---
 

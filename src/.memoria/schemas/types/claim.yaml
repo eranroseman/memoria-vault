@@ -11,7 +11,7 @@ required:
   maturity: enum:maturity
   sources: list # every claim → a citekey (provenance guardrail)
 optional:
-  links: map # supports / contradicts / … (ADR-52)
+  links: map # supports / contradicts / … (ADR-52); supports entries may carry an optional warrant
   topics: list
   superseded_by: str
   created: date

@@ -1,0 +1,24 @@
+type: thesis
+category: projects
+gated: false
+initial_lifecycle: proposed
+promotion_gate: current
+enums:
+  lifecycle: [proposed, provisional, current, retracted, archived]
+  saturation_state: [unknown, unsaturated, saturated, stale]
+  graph_maturity: [cold-start, immature, mature]
+required:
+  type: literal:thesis
+  lifecycle: enum:lifecycle
+  title: str
+  project: str
+  sources: list
+optional:
+  links: map # supports / contradicts; supports entries may carry an optional warrant
+  superseded_by: str
+  impact: int
+  on_path: bool
+  saturation_state: enum:saturation_state
+  graph_maturity: enum:graph_maturity
+  computed_at: date
+  created: date

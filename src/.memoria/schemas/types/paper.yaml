@@ -3,12 +3,14 @@ category: catalog
 gated: false
 enums:
   lifecycle: [current, retracted, archived]
+  ingest_status: [tier0, enriched, complete, needs-human]
 required:
   type: literal:paper
   lifecycle: enum:lifecycle
   citekey: str
   title: str
 optional:
+  ingest_status: enum:ingest_status
   doi: str
   authors: list
   year: int

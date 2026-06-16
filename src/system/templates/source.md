@@ -4,6 +4,7 @@ type: source
 lifecycle: proposed
 entity: "[[{{VALUE:catalog entity}}]]"
 source_type: paper
+evidence_level: ungraded
 research_area: []
 methodology: []
 links: {}

@@ -173,26 +173,10 @@
           }
         },
         {
-          "name": "goal",
-          "label": "Project goal",
-          "description": "One-paragraph goal or research question.",
+          "name": "scope_topics",
+          "label": "Scope topics",
+          "description": "Controlled topic terms that bound the project map.",
           "isRequired": true,
-          "input": {
-            "type": "textarea"
-          }
-        },
-        {
-          "name": "seed_sources",
-          "label": "Seed sources",
-          "description": "Optional citekeys, source paths, or URLs to seed the future mapper handoff.",
-          "input": {
-            "type": "textarea"
-          }
-        },
-        {
-          "name": "research_area",
-          "label": "Research area",
-          "description": "Controlled terms from system/vocabulary.md.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -228,45 +212,80 @@
           }
         },
         {
-          "name": "methodology",
-          "label": "Methodology",
-          "description": "Controlled terms from system/vocabulary.md.",
+          "name": "inquiry_population",
+          "label": "Population",
+          "description": "Who or what the inquiry is about.",
+          "isRequired": true,
           "input": {
-            "type": "multiselect",
+            "type": "text"
+          }
+        },
+        {
+          "name": "inquiry_intervention",
+          "label": "Intervention",
+          "description": "The exposure, intervention, or phenomenon under study.",
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "inquiry_comparison",
+          "label": "Comparison",
+          "description": "The comparator or contrast case, if any.",
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "inquiry_outcome",
+          "label": "Outcome",
+          "description": "What the inquiry must be able to answer.",
+          "isRequired": true,
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "finer_feasible",
+          "label": "FINER feasible",
+          "description": "Why this project is feasible enough to start.",
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "finer_novel",
+          "label": "FINER novel",
+          "description": "What this project could add beyond the current map.",
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "finer_relevant",
+          "label": "FINER relevant",
+          "description": "Why the answer matters to the program.",
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "output_mode",
+          "label": "Output mode",
+          "description": "Default to thesis-driven; choose survey only when no thesis is appropriate yet.",
+          "isRequired": true,
+          "input": {
+            "type": "select",
             "source": "fixed",
             "options": [
-              "rct",
-              "quasi-experiment",
-              "observational",
-              "field-study",
-              "lab-experiment",
-              "survey-study",
-              "qualitative",
-              "design-science",
-              "formative-study",
-              "case-study",
-              "systematic-review",
-              "meta-analysis",
-              "secondary-analysis",
-              "semi-structured-interview",
-              "thematic-analysis",
-              "grounded-theory",
-              "contextual-inquiry",
-              "experience-sampling",
-              "ecological-momentary-assessment",
-              "diary-study",
-              "co-design",
-              "usability-testing",
-              "think-aloud",
-              "survey",
-              "regression",
-              "mixed-effects-model",
-              "log-analysis",
-              "machine-learning",
-              "nlp",
-              "content-analysis",
-              "participant-observation",
-              "ab-test"
+              {
+                "label": "Thesis",
+                "value": "thesis"
+              },
+              {
+                "label": "Survey",
+                "value": "survey"
+              }
             ]
           }
         }

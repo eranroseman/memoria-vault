@@ -58,7 +58,25 @@ def test_project_start_form_is_available_for_later_automation():
     form = _forms_by_name()["memoria-project-start"]
     assert form["version"] == "1"
     fields = {field["name"]: field for field in form["fields"]}
-    for required in ("title", "slug", "goal"):
+    for required in ("title", "slug", "scope_topics", "inquiry_population",
+                     "inquiry_outcome", "output_mode"):
         assert fields[required]["isRequired"] is True
-    assert fields["research_area"]["input"]["options"] == _terms("research_area")
-    assert fields["methodology"]["input"]["options"] == _terms("methodology")
+    assert fields["scope_topics"]["input"]["options"] == _terms("research_area")
+    assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
+
+
+def test_project_start_form_covers_project_schema_fields():
+    fields = {field["name"] for field in _forms_by_name()["memoria-project-start"]["fields"]}
+    assert {
+        "title",
+        "slug",
+        "scope_topics",
+        "inquiry_population",
+        "inquiry_intervention",
+        "inquiry_comparison",
+        "inquiry_outcome",
+        "finer_feasible",
+        "finer_novel",
+        "finer_relevant",
+        "output_mode",
+    } <= fields
