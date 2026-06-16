@@ -1,5 +1,7 @@
 # ADR review — gap analysis, trigger re-verification, and Memoria-way defaults
 
+> Point-in-time audit; superseded by the alpha.6 ADR audits in ../0.1.0-alpha.6/tmp/.
+
 Working note (alpha.5 `tmp/`). Consolidates a full ADR audit done 2026-06-15:
 a status-vs-implementation gap analysis across all 76 ADRs, a skeptical
 re-verification of every deferral trigger ("don't assume the author was right"),

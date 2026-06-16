@@ -24,7 +24,7 @@ The same pass appends a compact snapshot line to `system/logs/board-state.jsonl`
 
 ## The two layers meet at `done`
 
-The layers are not parallel feeds the PI has to watch separately — they are unified at the moment a lane finishes. When the export pass observes a worker card transition into `done`, it raises **one `work-prompt` card in the Inbox**: which lane finished, the card's goal, where the output landed, and the action (review, then accept or archive). So a finished work product never waits silently in the mechanic's view — it surfaces in the same "Needs me" queue as every other agent→human signal, written through the shared card writer under the honesty rules ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)): action + what happened + where to look, never a verdict. The emit is idempotent — the export diffs against its state cache and names the prompt after the card id, so a done card raises exactly one prompt, once.
+The layers are not parallel feeds the PI has to watch separately — they are unified at the moment a lane finishes. When the export pass observes a worker card transition into `done`, it raises **one `work-prompt` card in the Inbox** — the verdict-free "a lane finished, here's where to look" shape owned by [The honesty card](card-schema.md). So a finished work product never waits silently in the mechanic's view: it surfaces in the same "Needs me" queue as every other agent→human signal, written through the shared card writer. The emit is idempotent — the export diffs against its state cache and names the prompt after the card id, so a done card raises exactly one prompt, once.
 
 ---
 

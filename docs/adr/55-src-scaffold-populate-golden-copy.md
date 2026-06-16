@@ -83,3 +83,8 @@ install; `src/` populate + golden staging keeps authoring (repo) and restoring
 
 - **Related decisions / Depends on:** amends [ADR-26](26-repo-as-install-unit.md);
   [ADR-49](49-catalog-in-bases-linter-monitor.md), [ADR-47](47-type-first-category-folders.md)
+- **Extended by (deferred):** [ADR-76: Distribute Memoria as a versioned vault release;
+  deploy via a source-agnostic reconciling
+  installer](76-versioned-vault-release-reconciling-installer.md) proposes extending this
+  ADR's golden manifest to cover the code and authored-content layers; if accepted, its
+  manifest supersedes this one.

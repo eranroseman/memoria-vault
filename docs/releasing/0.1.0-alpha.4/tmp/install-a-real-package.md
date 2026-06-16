@@ -1,5 +1,7 @@
 # Install a real package — runtime packaging & deployment design
 
+> Superseded by the alpha.5 version of this note (and finalised in ADR-76).
+
 **Issue:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) — *Research packaging `src/.memoria` as an installable Python package*
 **Status:** design note (greenfield target + migration sketch) — input for a deferred ADR, not yet a decision
 **Date:** 2026-06-14

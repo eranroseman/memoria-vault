@@ -74,7 +74,7 @@ python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault> --dry
 | --- | --- | --- |
 | `recall_at_k` | Fraction of the task's gold citekeys (frontmatter `references`) in the top-*k* of `retrieved` (default k=3, the rubrics' "top 3" window; `--k`). | `retrieved` reported and the task has `references`. |
 | `support_rate` | Fraction of `cited` citekeys resolving to a real catalog record (note stem or `citekey:` frontmatter under `catalog/`). | `cited` reported, non-empty. |
-| `fama_clean` | 1.0 if no note in `claims` is a superseded/archived claim, else 0.0 — the FAMA check, same classification as the Linter's `fama-exposure` detector (a test guards the parity); offenders are named in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
+| `fama_clean` | 1.0 if no note in `claims` is a superseded/archived claim, else 0.0 — the same superseded-reuse check the Linter's detector enforces (a test guards the parity, see [Linter: detectors and auto-fix](linter.md#the-detectors)); offenders are named in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
 
 The lane's rubric `self_score` is recorded per task for comparison but never aggregated — only the machine metrics trend.
 

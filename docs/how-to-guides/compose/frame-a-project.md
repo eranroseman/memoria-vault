@@ -8,6 +8,8 @@ nav_order: 3
 
 Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft:outline-argument`, `draft:score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names)); the choice is yours.
 
+> This is the primary path to `projects/<slug>/chosen-framing.md` — framing from scored outlines. [Use canvas for argument mapping](use-canvas-for-argument-mapping.md) is an optional refinement that refines or replaces that file after you map the claims spatially.
+
 > Start the project first ([Start a writing project](start-a-writing-project.md)), then frame against its active thesis and `project-gate-index.md`. Outline scoring remains advisory; the deterministic gate is the structural-impact cache.
 
 ## Prerequisites

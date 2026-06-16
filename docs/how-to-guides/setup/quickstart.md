@@ -33,15 +33,7 @@ The installer provisions Hermes, scaffolds your runtime vault (default `~/Memori
 
 **2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. The required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
-**3. Fill the secrets.** Copy the `apiKey` from Settings → Local REST API, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2):
-
-```bash
-KILOCODE_API_KEY=...      # model access
-OBSIDIAN_API_KEY=...      # 64-char hex from the Local REST API plugin
-OBSIDIAN_MCP_PORT=27124
-OBSIDIAN_MCP_SSL_VERIFY=/absolute/path/to/obsidian-local-rest-api.pem
-OPENALEX_API_KEY=...      # enrichment + discovery
-```
+**3. Fill the secrets.** Copy the `apiKey` from Settings → Local REST API, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2). At minimum you need `KILOCODE_API_KEY` (model access), the `OBSIDIAN_*` keys (the REST API key, port, and cert path), and `OPENALEX_API_KEY` — the full annotated list is in [Set up Hermes](set-up-hermes.md).
 
 Propagate them into every profile (profile runs read only their own `.env`):
 

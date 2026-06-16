@@ -17,10 +17,13 @@ nav_order: 17
 
 > **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `99-system/templates/candidate-note.md`, registered in `note-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
 >
-> **Superseded 2026-06-16.** [ADR-50](50-universal-lifecycle-and-maturity.md)
-> now owns the universal lifecycle chain, and
-> [ADR-51](51-inbox-category-and-honesty-card.md) owns Inbox categories and gap-card
-> honesty. This record remains as the historical candidate-note design.
+> **Superseded 2026-06-16 on two axes — read both.**
+> [ADR-50: One lifecycle chain for everything; maturity is a claim property; reference
+> dropped; MOC renamed hub](50-universal-lifecycle-and-maturity.md) replaces the
+> **lifecycle vocabulary** (it now owns the universal lifecycle chain), and
+> [ADR-51: The Inbox category and the honesty card](51-inbox-category-and-honesty-card.md)
+> replaces the **candidate-note routing** (Inbox categories and gap-card honesty). This
+> record remains as the historical candidate-note design.
 
 ## Context
 

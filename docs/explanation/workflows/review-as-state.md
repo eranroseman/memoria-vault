@@ -24,19 +24,11 @@ More critically: comments and tags cannot be used as preconditions by the dispat
 
 ---
 
-## Three dimensions, one card
+## The review_status dimension
 
-A card in `done` state carries three simultaneous assessments that are kept separate:
+A card in `done` state carries three orthogonal assessments that are kept separate — execution `status`, `review_status`, and `agent_recommendation` — and they can disagree; why all three are split is argued in [The control plane](../architecture/control-plane.md). This page focuses on the middle one, `review_status` — the field that records the human's accept/reject decision and gates promotion.
 
-**Execution state** (`status: done`) says: "The worker has finished executing the task."
-
-**Review state** (`review_status: requested`) says: "The human has not yet decided whether to accept the output."
-
-**Agent recommendation** (`agent_recommendation`) says: "The checking agent assessed the output as clean/issues-found/inconclusive."
-
-These three can disagree, and they frequently do. A worker finishes (`status: done`); the Peer-reviewer finds no issues (`agent_recommendation: clean`; the other values are `issues-found` and `inconclusive`); the human reads the draft and rejects it (`review_status: rejected`). All three are correct — they describe three different assessments at three different times.
-
-Keeping them separate makes each one useful. If `agent_recommendation` folded into `review_status`, you couldn't ask "how often does a clean agent verdict correlate with human approval?" If `status` and `review_status` were collapsed, "worker finished" and "human approved" would be the same event — which is exactly the collapse that makes the system unreliable.
+**Review state** (`review_status: requested`) says: "The human has not yet decided whether to accept the output" — distinct from `status: done` ("the worker finished") and from `agent_recommendation` (the checker's soft verdict, defined in [The Peer-reviewer](../profiles/peer-reviewer.md)). Collapsing `status` and `review_status` would make "worker finished" and "human approved" the same event — exactly the collapse that makes the system unreliable.
 
 ---
 
@@ -54,7 +46,7 @@ The back-pressure mechanism is sometimes misread as a problem (the system slows 
 
 ## Post-rejection paths
 
-A rejected card is not "returned to the queue." The human has judged the work wrong, and what happens next is a fresh human decision:
+A rejected card is never reopened — rejection spawns a new card, because each card is one attempt (the principle is [The control plane](../architecture/control-plane.md)'s). The human has judged the work wrong, and what happens next is a fresh human decision:
 
 **Supersede**: The human creates a new card on the same lane with a revised specification. The new card carries a reference back to the rejected one. The old card is archived with `archive_reason: superseded`. This is the standard path: the original task spec was wrong, not just the execution.
 

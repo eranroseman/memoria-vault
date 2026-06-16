@@ -15,7 +15,7 @@ The daily health view is the always-on system glance. The budget is 30 seconds �
 
 ## What it shows
 
-Home's status strip is a one-line rollup read from the telemetry feeds in `system/logs/`: pending reviews and blocked cards (from the board-state snapshot) and HIGH/CRITICAL lint findings. In the Desk workspace, the **"Needs me"** view of the Inbox board lists the cards in `proposed` — the things actually waiting on a decision. Each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
+What populates the glance — the one-line status strip and the Desk "Needs me" view — is detailed where it now lives, [Home — the vault front door](../../obsidian/home.md). The framing that survives the move: each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ---
 

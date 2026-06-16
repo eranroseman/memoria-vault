@@ -63,14 +63,7 @@ hermes profile list
 
 Exactly the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`) show as registered — no retired names, none missing.
 
-If you suspect the deployed copies still don't match the vault source, compare them directly:
-
-```bash
-diff -r <vault>/.memoria/profiles/memoria-librarian ~/.hermes/profiles/memoria-librarian \
-  --exclude .env   # config.yaml will differ by the substituted placeholders
-```
-
-See [Fix profile drift](../troubleshooting/fix-profile-drift.md) for the full procedure.
+If you suspect the deployed copies still don't match the vault source, compare them directly and reconcile per the full procedure in [Fix profile drift](../troubleshooting/fix-profile-drift.md).
 
 ## Related
 

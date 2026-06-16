@@ -46,15 +46,11 @@ The three questions a hub body should answer — what is this area about, what b
 
 ---
 
-## The epistemic separation between note types
+## How the body sections honor the epistemic separation
 
-The note types enforce a separation that is easy to violate under time pressure:
+The body structures above only work if the underlying separation holds: a source note records what a source says from an external perspective, a claim records what the PI thinks in their own words, and a hub is a navigational surface rather than a synthesis destination. Why that separation exists, why mixing it breaks citation tracing, and why it lets agent permissions be cleanly scoped are developed in [Note types and epistemic roles](note-types.md).
 
-A source note records what a source says, from an external perspective. A claim note records what the PI thinks, in their own words. A hub is a navigational and planning surface, not a synthesis destination.
-
-Mixing these produces notes that serve neither purpose well. A source note that contains the PI's claims makes citation tracing ambiguous — did the citekey in a draft point to what the source says, or to what the PI concluded? A claim that summarizes a paper rather than asserting the PI's own position is not a claim; it is a misplaced source note.
-
-The separation is what allows agent permissions to be cleanly scoped — recording what a source says is delegable bookkeeping, while asserting the PI's synthesis is not, which is why `notes/claims/` and `notes/hubs/` are gated. That bookkeeping-vs-synthesis boundary is developed in [Note types and epistemic roles](note-types.md).
+Taking the separation as given, the body sections are what enforce it concretely. The source note's external-perspective Summary and Critique keep the PI's conclusions out of the record of what the paper argues; the claim note's Claim-plus-Evidence shape forces an asserted position rather than a paraphrase; the hub's three questions keep it a framing-and-planning surface rather than a place synthesis accidentally lands.
 
 ---
 

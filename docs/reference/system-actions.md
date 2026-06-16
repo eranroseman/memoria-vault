@@ -25,7 +25,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 
 ### Linter (`operations/integrity/linter/`)
 
-The detector table with severities lives in [Linter: detectors and auto-fix](linter.md); every detector is report-only. The seventeen registered detectors: orphan-working-files, stale-fleeting, stale-answer-drafts, extract-path-broken, frontmatter-schema-check, frontmatter-link-check, broken-wikilink, dashboard-field-drift, design-system-drift, graph-analyze, fama-exposure, misplaced-note, audit-unpaired-writes, vault-hash-drift, audit-log-size, hub-threshold, skeleton-drift.
+The seventeen registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](linter.md#the-detectors); every detector is report-only.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -82,16 +82,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 
 ## Scheduled crons (`.memoria/scripts/`)
 
-| Cadence | Script | What it runs |
-| --- | --- | --- |
-| Every 60 s | `board-export-cron.sh` | Board export + telemetry append. |
-| Every 15 min | `sweeps-cron.sh` | Reconcile, retry, stamp-chats, and inbox-archival sweeps. |
-| Daily 06:00 | `lint-cron.sh` | Detectors, golden check, session digests. |
-| Weekly | `metrics-cron.sh` | Per-lane metrics aggregation. |
-| Monthly | `retraction-refresh-cron.sh` | Refreshes the Retraction Watch CSV under `.memoria/data/` (`0 3 1 * *`), then runs a sweep. |
-| Quarterly | `eval-cron.sh` | Scores the previous quarter's eval run, then dispatches the new one. |
-
-These are the repo source wrappers under `.memoria/scripts/`. The installer copies each `<job>-cron.sh` to `~/.hermes/scripts/` renamed **`memoria-<job>.sh`** — that `memoria-*` form is the cron-job name `hermes cron list` shows.
+The deterministic cron jobs (board export, sweeps, lint, metrics, retraction refresh, eval) and their schedules are owned by [Installer (bootstrap)](installer.md#the-crons-it-wires). They run from the repo source wrappers under `.memoria/scripts/`: the installer copies each `<job>-cron.sh` to `~/.hermes/scripts/` renamed **`memoria-<job>.sh`** — that `memoria-*` form is the cron-job name `hermes cron list` shows.
 
 ## Agent skills (per lane)
 

@@ -61,7 +61,7 @@ Maturity (`seedling → budding → evergreen`) tracks development, never trust 
 
 **7. Add typed links if applicable.**
 
-If the claim supports or contradicts an existing claim, say so in `links:` — the contradictions are the valuable ones. If it *replaces* an existing claim, set `superseded_by` on the **old** note instead. Details: [Link related claims](link-related-claims.md).
+If the claim supports or contradicts an existing claim, say so in `links:` — the contradictions are the valuable ones ([Link related claims](link-related-claims.md)). If it *replaces* an existing claim, that is supersession, not a link: set `superseded_by` on the **old** note instead ([Advance a claim to evergreen](promote-a-claim.md)).
 
 **8. Close the loop on the source.**
 

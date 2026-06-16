@@ -30,13 +30,13 @@ Rule of thumb: converse when *you* should do the synthesizing; delegate a draft 
 
 **1. Ask in natural language.**
 
-Open the Agent Client pane and ask the question, not keywords:
+Open the Co-PI pane (see [Agent-client pane](../using-obsidian/use-the-acp-pane.md)) and ask the question, not keywords:
 
 > "What predicts JITAI receptivity?"
 > "Which of my claims would the 2024 papers contradict?"
 > "What methods have my sources used to measure EMA compliance?"
 
-The active note auto-attaches; attach others via the paperclip when the question is about a specific cluster.
+The active note auto-attaches; attach others when the question is about a specific cluster ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
 
 **2. Interrogate the answer.**
 
@@ -46,7 +46,7 @@ The Co-PI reads the vault directly and never writes (hybrid keyword + vector sea
 
 - A genuine new synthesis → distill it properly: [Write a claim note](../compile/write-a-claim-note.md).
 - Context for a writing project → copy into your `projects/<slug>/` scratch.
-- A one-off answer → close the pane. The transcript auto-exports to `system/exports/`; promote anything durable yourself instead of letting the raw transcript become a canonical note.
+- A one-off answer → close the pane. The transcript auto-exports for review ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)); promote anything durable yourself instead of letting the raw transcript become a canonical note.
 
 ## Verify
 

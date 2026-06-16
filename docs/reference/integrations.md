@@ -95,7 +95,7 @@ Tools evaluated and not in the current design:
 
 | Tool | Why not |
 |---|---|
-| **ZotLit** | Obsidian-native Zotero integration — evaluated, held as a future migration target. See [ADR-05](../adr/05-zotero-as-bibliographic-backbone.md) and the [connector comparison](zotero-plugins.md). |
+| **ZotLit** | Obsidian-native Zotero integration — not the shipped connector. Its evaluation, status, and how it compares to the bundled `obsidian-citation-plugin` are in [Zotero plugins](zotero-plugins.md). |
 
 ---
 

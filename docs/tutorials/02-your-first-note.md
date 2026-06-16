@@ -59,12 +59,9 @@ For this tutorial, make the call now. If you distill, write the durable version 
 
 ## Step 4 — See where fleeting notes surface
 
-You won't re-find fleeting notes by browsing. Two surfaces track them:
+You won't re-find fleeting notes by browsing. They surface on two tracking surfaces — `system/dashboards/fleeting.base` and the Friday weekly review — so unprocessed captures can't silently pile up; how the two work together as a triage queue is covered in [Triage fleeting notes](../how-to-guides/compile/triage-fleeting-notes.md).
 
-1. **`system/dashboards/fleeting.base`** — the "To process" view: every fleeting note still in `proposed`, oldest first.
-2. **The weekly review** (`system/dashboards/weekly-review.md`) — aggregates the backlog every Friday so unprocessed captures can't silently pile up.
-
-Open `fleeting.base` now. If you archived your note in Step 3, the view is empty — and *empty is the goal state*. A fleeting queue that converges to zero means the discipline is working.
+Open `fleeting.base` now (its "To process" view). If you archived your note in Step 3, the view is empty — and *empty is the goal state*. A fleeting queue that converges to zero means the discipline is working.
 
 ---
 

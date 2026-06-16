@@ -53,7 +53,7 @@ The Library workspace (Tutorial 01) opens the reading pipeline in its left tabs 
 
 ## Step 4 — Work the queue
 
-For each source, the Tutorial 03 loop: read from the paper/PDF with `catalog/papers/<citekey>.md` open for the visible metadata, then fill the source note — **In my words**, **Worth distilling**, **Tensions**. As you finish each, advance its `lifecycle` off `proposed` so it drops off the "To read & distill" view — the queue converging to empty is the success signal.
+For each source in your batch, repeat the read-and-write steps from [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — read with the Catalog entity open, then fill the source note. What's new at batch scale: as you finish each, advance its `lifecycle` off `proposed` so it drops off the "To read & distill" view — the queue converging to empty is the success signal.
 
 Don't try to finish the batch in one session. The queue is durable; that's what it's for.
 

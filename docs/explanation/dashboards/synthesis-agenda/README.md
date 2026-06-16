@@ -9,7 +9,7 @@ permalink: /explanation/dashboards/synthesis-agenda/
 
 # Synthesis agenda
 
-Dashboards that surface what to read, discuss, and reconcile — the queue of synthesis work. These are the *PI's* unfinished thinking (the structural-health group is the Linter's debt; the split is by actor).
+Dashboards that surface what to read, discuss, and reconcile — the queue of synthesis work. These are the *PI's* unfinished thinking; the structural-health group is the Linter's structural debt, and the actor-split rationale is in [Dashboards](../README.md).
 
 | Dashboard | Question it answers |
 |---|---|

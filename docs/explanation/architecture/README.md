@@ -30,7 +30,7 @@ Three kinds of actor work across the structural layers:
 | **Agents** | the Co-PI (L3) + the Task lanes (L4) | posture + LLM judgment; propose, never dispose |
 | **Engines** | ingest · search · clustering · sweeps · Linter (L6) | deterministic, no posture; never on the board |
 
-The "is it an agent or an engine?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane.
+The "is it an agent or an engine?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane. Agents propose and only the PI disposes; why that gate is structural rather than a convention is [Why the review gate is structural](../rationale/why-human-gate.md).
 
 ## The layering binds the agent write-path only
 

@@ -33,11 +33,11 @@ The tables above orient by posture; the canonical lane→profile map, write-scop
 
 Each agent is a **shared** layer (the vault's `AGENTS.md` house rules, one copy for all) plus a **unique** layer (its own posture, skills, model, and connections). How those layers are packaged and shipped is owned by [Distribution model](../deployment/distribution-model.md); what matters here is the consequence — the agents share the house rules but each brings its own stance and toolset.
 
-The Co-PI is the sole memory carrier, and two affordances are Co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The Co-PI](co-pi.md)). The specialists' postures are fixed by design — stable traits, not per-run knobs — and the lanes stay stateless propose-then-dispose executors.
+The Co-PI is the sole memory carrier while the background lanes stay stateless propose-then-dispose executors — the substrate split behind that is [The memory model](../architecture/memory-model.md). Two affordances are Co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The Co-PI](co-pi.md)) — and the specialists' postures are fixed by design, stable traits rather than per-run knobs.
 
 ## The bounded rule
 
-All five agents **propose**; the **PI disposes**. Promotions, the `retracted` decision, and gated-zone writes are PI-only, enforced by the policy MCP. How far each agent may hand support work onward is its [Delegation posture](delegation-posture.md).
+All five agents **propose**; the **PI disposes** — promotions, the `retracted` decision, and gated-zone writes are PI-only, enforced by the policy MCP. Why that gate is structural rather than a convention is [Why the review gate is structural](../rationale/why-human-gate.md); how far each agent may hand support work onward is its [Delegation posture](delegation-posture.md).
 
 ## Where to go next
 

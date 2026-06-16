@@ -77,7 +77,7 @@ No YAML or schema findings reported for this note.
 
 ## If the fix doesn't hold
 
-If Obsidian re-introduces the error after saving, a plugin or Obsidian's Properties panel is auto-formatting the YAML. Check which plugins have "format on save" behavior and disable it for this file type. The frontend Obsidian Linter plugin is the most common culprit — it is incompatible with Memoria and should be uninstalled (see [ADR-12](../../adr/12-obsidian-linter-reference-only.md)), not merely excluded from folders.
+If Obsidian re-introduces the error after saving, a plugin or Obsidian's Properties panel is auto-formatting the YAML. Check which plugins have "format on save" behavior and disable it for this file type. The frontend `obsidian-linter` plugin is the likely cause — it must be uninstalled, not merely excluded from folders; see [Set up Obsidian](../setup/set-up-obsidian.md).
 
 ## Related
 

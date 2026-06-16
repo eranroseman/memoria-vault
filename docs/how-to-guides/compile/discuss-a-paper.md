@@ -25,7 +25,7 @@ Re-read your **In my words** and **Worth distilling** sections, and keep `catalo
 
 **3. Open the Co-PI pane.**
 
-`Cmd/Ctrl-P` → **Agent Client: Open chat view** (or the ribbon icon). The active note auto-attaches as context. Ask it to discuss the source.
+Open the Co-PI pane (see [Agent-client pane](../using-obsidian/use-the-acp-pane.md)) with the source note active so it auto-attaches, then ask it to discuss the source.
 
 **4. Work the standard questions.**
 
@@ -47,7 +47,7 @@ Don't treat the questions as a checklist. When a question feels too abstract, as
 - **The paper yields one or more claims** → proceed to [write a claim note](write-a-claim-note.md), then advance the source note to `lifecycle: current`.
 - **No standalone claim right now** → add one line to the source note's **Worth distilling** section saying why ("confirms existing claims, adds no new argument"), and advance the lifecycle anyway — the discuss queue reads `provisional`, and the decision is the work.
 
-Closing the pane exports the transcript to `system/exports/` for later review. If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
+Closing the pane exports the transcript for later review ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
 
 ## Verify
 

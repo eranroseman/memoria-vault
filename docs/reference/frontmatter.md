@@ -91,14 +91,9 @@ Claims only: `seedling → budding → evergreen`. It describes how settled a cl
 
 ---
 
-## `links:` vs `relationships` — two kinds of connection
+## `links:` vs `relationships` — field presence
 
-[ADR-52](../adr/52-links-vs-relationships.md) splits connections by who asserts them:
-
-| Field | Carried by | Asserted by | Examples |
-| --- | --- | --- | --- |
-| `links:` (map) | **notes** (`source`, `claim`, `hub`) | **Authored** — the PI's thinking | `supports:`, `contradicts:`, `extends:` … values are wikilinks |
-| `relationships` (map) | **catalog entities** | **Given** — facts from the bibliographic record, written by the ingest engine | `cited_by:`, `authored_by:`, `published_in:` … |
+Notes (`source`, `claim`, `hub`) carry the authored `links:` map; catalog entities carry the given `relationships` map. Why the split exists and who asserts each — the authored-vs-given distinction — is owned by [Wikilink and link conventions](linking.md).
 
 Two related fields: a `source` note's required `entity` field is a wikilink to the Catalog entity the note is about, and a `claim`'s required `sources` list holds citekeys (bibliographic provenance, not note links). The Linter's `frontmatter-link` detector checks that every wikilink in `links:` and `entity` resolves to a real note; citekeys are checked by the sweeps instead.
 

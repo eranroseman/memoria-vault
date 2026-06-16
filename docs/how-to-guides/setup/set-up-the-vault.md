@@ -44,7 +44,7 @@ bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 - Calls `hermes profile install` to register the profile
 - Copies `.env.EXAMPLE` to `.env` for each profile (only on first install — existing `.env` files are never overwritten)
 
-It is idempotent. To re-deploy only the profiles after editing the vault source, run `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
+It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash scripts/install.sh --profiles-only` on Linux/WSL2 (`.\scripts\install.ps1 -ProfilesOnly` on Windows) — what that flag re-deploys is in [Redeploy profiles](../operate/redeploy-profiles.md).
 
 **3. Set up your own git in the vault** (recommended).
 

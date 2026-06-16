@@ -48,27 +48,9 @@ Memoria's vault is the Memex made operational: the graph of wikilinks, typed rel
 
 ## AI-research systems survey
 
-A broad survey of ~47 contemporary agent-driven research systems, which was conducted in May 2026, grounds the design in what the field has actually tried.
+A broad survey of ~47 contemporary agent-driven research systems, conducted in May 2026, grounds the design in what the field has actually tried. The patterns Memoria borrows — stage-gated pipelines, thin control over thick state, explicit agent roles, structured outputs at handoffs, persistent knowledge graphs — recur across nearly every end-to-end system surveyed, and Memoria's layered split is the structural form of them. The survey also fixes what Memoria *declines*: the advisory-only LLM review, scalar-metric keep/revert, and tree-search-over-synthesis postures that most autonomous systems layer on top.
 
-Key patterns adopted by Memoria include the following:
-
-**Stage-gated pipelines** appear across nearly every end-to-end system surveyed ([LitSearch](../../reference/bibliography.md#ajith2024litsearch), [ResearchArena](../../reference/bibliography.md#kang2024researcharena), [MLR-Copilot](../../reference/bibliography.md#li2025mlrcopilot), [Agent Laboratory](../../reference/bibliography.md#schmidgall2025agentlaboratory)). Distinct stages with distinct outputs and validation points at each boundary are the dominant structural shape.
-
-**Thin control over thick state** ([Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous), [Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv), [Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) is the finding that agents fail when state lives in chat and succeed when state lives in files. Three independent systems reach the same conclusion. Memoria's layered split is the structural form of that finding.
-
-**Explicit agent roles** ([AI co-scientist](../../reference/bibliography.md#gottweis2025aicoscientist), [MetaGPT](../../reference/bibliography.md#hong2024metagpt), [Agent Laboratory](../../reference/bibliography.md#schmidgall2025agentlaboratory)) — separate specialists over a generalist — reduce permission ambiguity and make quality responsibility traceable.
-
-**Structured outputs at handoffs** ([MetaGPT](../../reference/bibliography.md#hong2024metagpt), [PARNESS](../../reference/bibliography.md#wang2026parness)) — agents produce typed outputs at inter-agent boundaries, not free text. Memoria's frontmatter schema and handoff payload.
-
-**Persistent knowledge graphs** ([AI co-scientist](../../reference/bibliography.md#gottweis2025aicoscientist)'s Memory module, AI-Supervisor's Research World Model, OmegaWiki) — typed relationships as primary memory, not RAG-only.
-
-What the survey revealed about the field's dominant approach that Memoria declines:
-
-**Advisory-only LLM review** — most surveyed systems use LLM-based reviewers that advise but do not gate promotion. Memoria makes the human gate structural instead; the confident-wrong argument for that choice is in [Why the review gate is structural](../rationale/why-human-gate.md).
-
-**Scalar-metric keep/revert** — every autonomous research system optimizes one number. None of those numbers is plausible for "is this synthesis a faithful, well-cited, non-redundant addition to a research vault."
-
-**Tree-search over synthesis** — applicable to ML benchmarking, not knowledge work.
+The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused — is the [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md) table; the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](../rationale/why-human-gate.md).
 
 ---
 
