@@ -110,7 +110,7 @@ Tick each plugin that is enabled and validated:
 **B2. Key matches.** Settings → Local REST API → copy `apiKey` (64-char hex). In WSL2: `grep OBSIDIAN_API_KEY ~/.hermes/profiles/memoria-librarian/.env`.
 
 - ✓ Pass: the two match.
-- ✗ Fails: paste the Obsidian key into the global `~/.hermes/.env`, then re-run `install.sh --profiles-only` to re-seed each profile `.env`.
+- ✗ Fails: paste the Obsidian key into the shared Hermes env (`~/.hermes/.env` on Linux/WSL2, `%LOCALAPPDATA%\hermes\.env` on Windows). Confirm `OBSIDIAN_MCP_PORT` matches the Local REST API HTTPS port and `OBSIDIAN_MCP_SSL_VERIFY` points at the exported certificate, then re-run `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` on Linux/WSL2 or `.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria-test"` on Windows to re-seed each profile `.env`.
 - [ ] **B2 Pass**
 
 **B3. Reachable from WSL2.** A fresh WSL2 shell has no `$OBSIDIAN_API_KEY` — **export it first** (from the profile `.env`), then call:

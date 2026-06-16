@@ -82,14 +82,19 @@ Note the tool side of the equation: `<vault>/.memoria/tool-registry.yaml` is the
 
 ## Update API credentials
 
-Put keys in the **global** `~/.hermes/.env`, then propagate — profile runs read only their own `.env`:
+Put keys in the shared Hermes env file, then propagate — profile runs read only their own `.env`:
 
 ```bash
 # edit ~/.hermes/.env, then:
 bash scripts/install.sh --profiles-only --vault <vault>
 ```
 
-Always edit the global `~/.hermes/.env` and re-run `--profiles-only` — hand-editing the installer-managed per-profile `.env` files drifts from the global source. The seed semantics (never overwrites an existing value; `.env` is never committed) are the installer's: [Installer (bootstrap)](../../reference/installer.md); for the how-to see [Redeploy profiles](../operate/redeploy-profiles.md).
+```powershell
+# edit %LOCALAPPDATA%\hermes\.env, then:
+.\scripts\install.ps1 -ProfilesOnly -Vault <vault>
+```
+
+Always edit the shared Hermes env file and re-run `--profiles-only` — hand-editing the installer-managed per-profile `.env` files drifts from the shared source. The seed semantics (never overwrites an existing value; `.env` is never committed) are the installer's: [Installer (bootstrap)](../../reference/installer.md); for the how-to see [Redeploy profiles](../operate/redeploy-profiles.md).
 
 ## Verify a configuration change
 

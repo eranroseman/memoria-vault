@@ -25,7 +25,17 @@ You do **not** need Zotero for setup. It is an optional bibliographic backbone, 
 
 ## Step 1 — Run the installer
 
-Download the installer, read it, then run it:
+Download the installer for your platform, read it, then run it.
+
+For Windows production:
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 -OutFile install.ps1
+Get-Content .\install.ps1     # read what it will do
+.\install.ps1
+```
+
+For Linux/WSL testing:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -43,12 +53,16 @@ Full flag and step reference (the convenience one-liner, `--dry-run`, and adding
 
 ## Step 2 — Add your API keys
 
-Open `~/.hermes/.env` and fill in your keys — model access, the Obsidian Local REST API key (Step 3 below), and the discovery key. The canonical key names and where each comes from are in [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
+Open the shared Hermes env file and fill in your keys — model access, the Obsidian Local REST API key (Step 3 below), the Local REST API HTTPS port and certificate path, and the discovery key. On Windows the file is `%LOCALAPPDATA%\hermes\.env`; on Linux/WSL2 it is `~/.hermes/.env`. The canonical key names and where each comes from are in [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
 
 Then propagate them into every profile (profile runs read only their own `.env` — there is no global fallback):
 
+```powershell
+.\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria"
+```
+
 ```bash
-bash scripts/install.sh --profiles-only --vault ~/Memoria
+bash install.sh --profiles-only --vault ~/Memoria
 ```
 
 Re-run that command any time you add or rotate a key.
@@ -59,7 +73,7 @@ Re-run that command any time you add or rotate a key.
 
 1. Open Obsidian → **Open folder as vault** → choose the folder the installer reported (default `~/Memoria`).
 2. Turn off Restricted mode when prompted (**Settings → Community plugins**) so the bundled plugins load — they ship pre-installed and pre-configured.
-3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in `~/.hermes/.env` (then re-run the `--profiles-only` command from Step 2).
+3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in the shared Hermes env file. Also set `OBSIDIAN_MCP_PORT` to the plugin's HTTPS port and `OBSIDIAN_MCP_SSL_VERIFY` to the exported certificate path, then re-run the `--profiles-only` command from Step 2.
 4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
 `home.md` opens as the front door — the control panel: the one-line status strip, the action and workspace buttons, and the dashboard index. The Inbox queue itself lives in the **Desk** workspace's first left tab.
