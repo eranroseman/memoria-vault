@@ -172,7 +172,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - 2026-06-15 — Scope set with the PI: the **expanded v1 cut** (5 gap kinds, optional `warrant`, survey
   mode, CEBM enum, writing loop, start-now logs), cutting on the inference/structural fault line, not on
   a labor budget. Architectural calls go to the WS-A ADRs, not here. Test-env harness held out of scope
-  (ADR-77/78, separate); only the deny-assertion slice rides alpha.5.
+  (ADR-80 over the ADR-64 installer split, separate); only the deny-assertion slice rides alpha.5.
 - 2026-06-15 — Three open decisions carried as in-plan gates (WS-0): §D3 spike first; §13.1 conservative
   default in the gate ADR; §13.4 index-note default was pending §D3.
 - 2026-06-16 — WS-0 resolved. `obsidian@1.13.1` exposes `Plugin#registerBasesView`, so WS-E can

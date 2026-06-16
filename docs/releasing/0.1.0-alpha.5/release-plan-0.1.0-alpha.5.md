@@ -42,7 +42,7 @@ by review. This release ships the **expanded v1 cut** — everything that is det
 optional-and-free, drawing the line on the architecture's real fault line (inference and structural
 assumptions), not on a labor budget. It also clears a set of cheap, unblocked backlog slices and
 folds one coordinated ADR housekeeping pass. It explicitly does **not** build the full ephemeral
-test-env harness (its own effort, ADR-77/78), the inference tier, or anything gated on real-corpus
+test-env harness (its own effort, ADR-80 over the ADR-64 installer split), the inference tier, or anything gated on real-corpus
 calibration or always-on infrastructure (§5).
 
 ## 2. Definition of done — gates
@@ -87,7 +87,7 @@ The one hard sequencing fact: **[#576](https://github.com/eranroseman/memoria-va
 
 Deliberately later, each for a named reason (per-artifact deferred set lives in the deferred-status ADRs):
 
-- **The full ephemeral test-env harness** (ADR-77 / ADR-78) — its own effort, carrying the external
+- **The full ephemeral test-env harness** (ADR-80, building on the ADR-64 two-installer split) — its own effort, carrying the external
   local-model spike (G2/G3 there). alpha.5 ships only the thin validation slice
   ([#582](https://github.com/eranroseman/memoria-vault/issues/582)).
 - **The inference tier** — tier-3 semantic impact; any LLM judging the gate. Breaks the auditability the
@@ -141,7 +141,7 @@ Deliberately later, each for a named reason (per-artifact deferred set lives in 
 
 | Phase | When | Goal |
 | --- | --- | --- |
-| Test-env harness | next | The ephemeral containerized harness (ADR-77/78) + local-model spike; automates L3/recovery/security/perf |
+| Test-env harness | next | The ephemeral containerized harness (ADR-80, on the ADR-64 installer split) + local-model spike; automates L3/recovery/security/perf |
 | Gate expansion | after one real project under PI-touch budget | Unlock authored gap kinds, tier-3 impact, PICO/FINER + CRAAP lenses |
 | Packaging | trigger-gated | ADR-76 versioned-release + reconciling installer (deferred) |
 

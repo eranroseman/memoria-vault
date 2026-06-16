@@ -36,6 +36,7 @@ budding
 CACM
 CAYW
 Chatbots
+checksummed
 chokepoint
 citekey
 citekeys
@@ -52,6 +53,7 @@ copi
 Covidence
 CRAAP
 cron
+crond
 Crossref
 CSCW
 cscw
@@ -207,6 +209,7 @@ numba
 Obsidian
 obsidian
 oldclaim
+Ollama
 Omnisearch
 oneline
 oneshot
@@ -247,6 +250,7 @@ pytest
 pyzotero
 qmd
 QuickAdd
+Qwen
 Rayyan
 recalibrated
 reconstructable
