@@ -50,6 +50,7 @@ conftest
 Consolas
 copi
 Covidence
+CRAAP
 cron
 Crossref
 CSCW
@@ -356,6 +357,8 @@ workbench
 Worklist
 worklist
 worklists
+workstream
+workstreams
 worktree
 worktrees
 writability
