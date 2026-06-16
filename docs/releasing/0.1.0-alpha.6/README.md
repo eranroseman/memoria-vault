@@ -31,6 +31,9 @@ GitHub.
   Obsidian drive-through still tracked in the release issues; WS-3
   docs/template/supply-chain (#627, #626, #585; #625 documented) — landed in
   [PR #649](https://github.com/eranroseman/memoria-vault/pull/649).
-- **Build workstream (Track B — net-new):** WS-4 test-env harness Phase 1 (#586).
+- **Build workstream (Track B — net-new):** WS-4 test-env harness Phase 1 (#586) —
+  model-free implementation landed in
+  [PR #655](https://github.com/eranroseman/memoria-vault/pull/655), with the optional
+  live Gemma/`llama.cpp` tool-call smoke still tracked in the release issues.
 - The tracked `tmp/` scratch folder is retained while alpha.6 is being designed;
   promote durable decisions into ADRs and delete `tmp/` at cut.
