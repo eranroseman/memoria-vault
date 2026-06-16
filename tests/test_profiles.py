@@ -54,6 +54,24 @@ def test_obsidian_mcp_uses_verified_https():
         assert "OBSIDIAN_MCP_SSL_VERIFY" in env_names
 
 
+def test_installer_generated_profile_configs_keep_verified_https():
+    """WS-1/#620: placeholder substitution must not degrade Obsidian MCP TLS."""
+    replacements = {
+        "{{PYTHON}}": "/tmp/Memoria-test/.memoria/.venv/bin/python",
+        "{{VAULT_PATH}}": "/tmp/Memoria-test",
+        "{{QMD}}": "qmd",
+        "{{PROFILE}}": "memoria-test",
+    }
+    for name in EXPECTED:
+        text = (PROFILES / name / "config.yaml").read_text(encoding="utf-8")
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        cfg = yaml.safe_load(text)
+        obsidian = cfg["mcp_servers"]["obsidian"]
+        assert obsidian["url"] == "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+        assert obsidian["ssl_verify"] == "${OBSIDIAN_MCP_SSL_VERIFY}"
+
+
 def test_every_agent_has_a_lane_override():
     for name in EXPECTED:
         short = name.removeprefix("memoria-")

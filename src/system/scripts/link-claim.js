@@ -85,6 +85,7 @@ async function rankLinkSuggestions(app, claim, claimText) {
   const scored = [];
   for (const file of files) {
     const text = await app.vault.cachedRead(file);
+    if (file.path.startsWith("notes/claims/") && isSupersededClaim(text)) continue;
     const terms = termSet(text);
     const shared = [...targetTerms].filter((term) => terms.has(term));
     if (!shared.length) continue;
@@ -94,6 +95,15 @@ async function rankLinkSuggestions(app, claim, claimText) {
   return scored
     .sort((a, b) => b.score - a.score || a.file.path.localeCompare(b.file.path))
     .slice(0, SUGGESTION_LIMIT);
+}
+
+function isSupersededClaim(text) {
+  const fm = String(text).match(/^---\n([\s\S]*?)\n---/);
+  if (!fm) return false;
+  const line = fm[1].split(/\r?\n/).find((l) => /^superseded_by:\s*/.test(l));
+  if (!line) return false;
+  const value = line.replace(/^superseded_by:\s*/, "").trim();
+  return Boolean(value && value !== '""' && value !== "''" && value.toLowerCase() !== "null");
 }
 
 function buildSuggestionsCallout(candidates) {

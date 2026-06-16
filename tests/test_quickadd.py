@@ -265,6 +265,7 @@ def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     assert '"notes/claims/" + slug(claim) + ".md"' in script
     for field in (
         "type: claim",
+        "schema_version: 2",
         "lifecycle: current",
         "maturity: seedling",
         "sources:",
@@ -294,6 +295,13 @@ def test_link_claim_writes_suggestions_callout_before_delegating():
     assert "app.vault.modify(file," in script
     assert "optional LLM one-line explanations" in script
     assert "hermes kanban create" in script
+
+
+def test_link_claim_excludes_superseded_claims_by_default():
+    script = (SCRIPTS / "link-claim.js").read_text(encoding="utf-8")
+    assert "isSupersededClaim(text)" in script
+    assert 'file.path.startsWith("notes/claims/") && isSupersededClaim(text)' in script
+    assert "superseded_by" in script
 
 
 def test_verify_draft_writes_verification_callout_before_delegating():

@@ -37,6 +37,7 @@ module.exports = async (params) => {
     "---",
     "title: " + yamlString(claim),
     "type: claim",
+    "schema_version: 2",
     "lifecycle: current",
     "maturity: seedling",
     "sources:",

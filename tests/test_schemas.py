@@ -109,6 +109,13 @@ def test_project_and_thesis_schema_contracts():
         "sources": [],
     }
     assert schema.validate_frontmatter(thesis_note, thesis) == []
+    current_without_stamp = dict(thesis_note, lifecycle="current")
+    assert any(
+        "promoted_at" in e
+        for e in schema.validate_frontmatter(current_without_stamp, thesis)
+    )
+    current_with_stamp = dict(current_without_stamp, promoted_at="2026-06-16")
+    assert schema.validate_frontmatter(current_with_stamp, thesis) == []
     assert any(
         "lifecycle" in e
         for e in schema.validate_frontmatter(dict(thesis_note, lifecycle="banana"), thesis)

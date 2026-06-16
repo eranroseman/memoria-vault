@@ -7,6 +7,7 @@ import precommit_check
 
 def _vault(tmp_path: Path) -> Path:
     (tmp_path / "notes/claims").mkdir(parents=True)
+    (tmp_path / "projects/p").mkdir(parents=True)
     (tmp_path / "system").mkdir()
     return tmp_path
 
@@ -48,6 +49,25 @@ def test_hook_script_ships_executable():
     hook = Path(__file__).resolve().parent.parent / "src/.memoria/operations/integrity/linter/pre-commit"
     assert hook.is_file()
     assert hook.stat().st_mode & 0o111, "pre-commit hook must be executable"
+
+
+def test_current_thesis_requires_promotion_stamp(tmp_path):
+    v = _vault(tmp_path)
+    thesis = v / "projects/p/thesis.md"
+    thesis.write_text(
+        "---\ntype: thesis\nlifecycle: current\ntitle: T\n"
+        "project: '[[p]]'\nsources: []\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    errors = precommit_check.check_paths(v, ["projects/p/thesis.md"])
+    assert any("promoted_at" in e for e in errors)
+
+    thesis.write_text(
+        "---\ntype: thesis\nlifecycle: current\ntitle: T\n"
+        "project: '[[p]]'\nsources: []\npromoted_at: 2026-06-16\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    assert precommit_check.check_paths(v, ["projects/p/thesis.md"]) == []
 
 
 def test_hidden_runtime_exempt(tmp_path):

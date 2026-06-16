@@ -132,6 +132,9 @@ def validate_frontmatter(fm: dict, schema: dict) -> list[str]:
     any_of = schema.get("required_any") or []
     if any_of and not any(fm.get(f) not in (None, "") for f in any_of):
         errors.append(f"at least one of {any_of} is required")
+    gate = schema.get("promotion_gate")
+    if gate and fm.get("lifecycle") == gate and fm.get("promoted_at") in (None, ""):
+        errors.append(f"lifecycle {gate!r} requires promoted_at promotion provenance")
     return errors
 
 

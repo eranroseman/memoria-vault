@@ -41,6 +41,10 @@ batch decision — write the worklist, raise one work-prompt.
 never author them. `links:` (notes) are **authored** — you may *propose* a typed link
 (`supports` / `contradicts`); the PI confirms it at the link gate.
 
+When querying or writing from claim notes, exclude claims with non-empty
+`superseded_by` by default. Include superseded claims only when the task explicitly
+asks for lineage, audit, or supersession history; do not use them as current support.
+
 ## Provenance
 
 Every claim traces to a citekey in `sources`. Every gated write goes through the

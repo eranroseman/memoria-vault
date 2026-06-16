@@ -257,6 +257,20 @@ function Set-TemplateValues {
     Set-Content -Path $Path -Value $text -NoNewline -Encoding UTF8
 }
 
+function Assert-ProfileObsidianMcpHttps {
+    param([string]$ConfigPath, [string]$ProfileName)
+    $text = Get-Content -Raw -Path $ConfigPath
+    if ($text -match 'url:\s*"http://127\.0\.0\.1') {
+        Stop-Install "$ProfileName config.yaml uses plain HTTP for the Obsidian MCP; expected verified HTTPS."
+    }
+    if ($text -notmatch 'url:\s*"https://127\.0\.0\.1:\$\{OBSIDIAN_MCP_PORT\}/mcp"') {
+        Stop-Install "$ProfileName config.yaml must use https://127.0.0.1:`${OBSIDIAN_MCP_PORT}/mcp for the Obsidian MCP."
+    }
+    if ($text -notmatch 'ssl_verify:\s*"\$\{OBSIDIAN_MCP_SSL_VERIFY\}"') {
+        Stop-Install "$ProfileName config.yaml must set obsidian ssl_verify to `${OBSIDIAN_MCP_SSL_VERIFY}."
+    }
+}
+
 function Read-DotEnv {
     param([string]$Path)
     $values = @{}
@@ -381,6 +395,7 @@ function Install-Profiles {
         $dst = Join-Path $staging $profileName
         Copy-Item $src $dst -Recurse -Force
         Set-TemplateValues -Path (Join-Path $dst 'config.yaml')
+        Assert-ProfileObsidianMcpHttps -ConfigPath (Join-Path $dst 'config.yaml') -ProfileName $profileName
         Invoke-Logged -FilePath $script:HermesExe -ArgumentList ($script:HermesArgsPrefix + @('profile', 'install', $dst, '--name', $profileName, '--alias', '--force', '--yes'))
         $deployed = Join-Path $HermesProfilesDir $profileName
         Copy-EnvValues -ProfileDir $deployed
