@@ -530,4 +530,5 @@ evidence, real transcripts:
   plugin. After exporting the live Local REST API certificate to a PEM bundle,
   `hermes -p memoria-librarian mcp test obsidian` connected to
   `https://127.0.0.1:27124/mcp` over verified HTTPS and discovered 16 native
-  Obsidian tools.
+  Obsidian tools. Final smoke wrote `inbox/windows-https-mcp-smoke.md` through
+  the Obsidian MCP with body `windows https mcp smoke`.
