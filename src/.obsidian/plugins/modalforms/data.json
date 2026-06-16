@@ -65,7 +65,7 @@
           "input": {
             "type": "multiselect",
             "source": "fixed",
-            "options": [
+            "multi_select_options": [
               "personal-informatics",
               "mobile-health",
               "digital-mental-health",
@@ -103,7 +103,7 @@
           "input": {
             "type": "multiselect",
             "source": "fixed",
-            "options": [
+            "multi_select_options": [
               "rct",
               "quasi-experiment",
               "observational",
@@ -180,7 +180,7 @@
           "input": {
             "type": "multiselect",
             "source": "fixed",
-            "options": [
+            "multi_select_options": [
               "personal-informatics",
               "mobile-health",
               "digital-mental-health",
