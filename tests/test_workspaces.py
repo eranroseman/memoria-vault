@@ -132,7 +132,7 @@ def _assert_buttons_dispatch_registered_commands(path):
 def test_home_status_line_reads_linter_verdict_and_board_queue_depths():
     text = HOME.read_text(encoding="utf-8")
 
-    assert "> [!info] Status line" in text
+    assert "> [!brief] Status line" in text
     assert "dv.pages(" in text
     assert "system/metrics" in text
     assert 'page.type === "lint-verdict"' in text
@@ -236,3 +236,17 @@ def test_starter_vault_enables_memoria_snippets():
         "memoria-link-colors",
         "memoria-property-badges",
     }
+
+
+def test_link_color_snippet_ships_lifecycle_accents():
+    snippet = SRC / ".obsidian" / "snippets" / "memoria-link-colors.css"
+    css = snippet.read_text(encoding="utf-8")
+    for marker in (
+        'data-link-lifecycle="proposed"',
+        'data-link-lifecycle="provisional"',
+        'data-link-lifecycle="current"',
+        'data-link-lifecycle="retracted"',
+        'data-link-lifecycle="archived"',
+        '--memoria-link-proposed-color',
+    ):
+        assert marker in css

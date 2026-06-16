@@ -100,7 +100,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Snippet | Required value | Constraint |
 | --- | --- | --- |
-| `memoria-link-colors.css` | Enabled in the starter `appearance.json`; user can toggle | Colors wikilinks by folder/type when supercharged-links exposes link attributes. |
+| `memoria-link-colors.css` | Enabled in the starter `appearance.json`; user can toggle | Colors wikilinks by folder/type and adds lifecycle accents when Supercharged Links exposes `data-link-*` attributes. |
 | `memoria-property-badges.css` | Enabled in the starter `appearance.json`; user can toggle | Accents scan-critical Properties rows: `lifecycle`, `ingest_status`, `loudness`, and verification status. This is the visual layer for the property display order in [Frontmatter fields](frontmatter.md). |
 
 ### obsidian-git

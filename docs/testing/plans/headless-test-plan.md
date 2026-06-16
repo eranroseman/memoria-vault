@@ -83,8 +83,8 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against the repo source tree (`src/`) and, when validating an installed candidate, the rebuilt test vault.
 
-**D1. dashboard-field-drift on the repo source.** `python src/.memoria/operations/integrity/linter/detectors.py --vault src --gate dashboard-field-drift`
-- ✓ Pass: no `dashboard-field-drift` findings — every field a dashboard queries **over a note folder** exists in some template.
+**D1. dashboard-field-drift + design-system-drift on the repo source.** `python src/.memoria/operations/integrity/linter/detectors.py --vault src --gate dashboard-field-drift,design-system-drift`
+- ✓ Pass: no `dashboard-field-drift` or `design-system-drift` findings — dashboard fields resolve to templates, and shipped visual consumers stay inside `.memoria/design-system.md`.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 
 **D2. Dashboard ↔ writer-schema audit (non-note sources).** For every dashboard query over `system/board`, `system/metrics`, or a `system/logs/*.jsonl`, confirm each field it reads is produced by the writer. Derive the schemas from the code (don't trust prose):
@@ -145,7 +145,7 @@ Caveats it can't fully cover on its own: Part **C2** (PSScriptAnalyzer) needs Po
 | B2 | `check-vault-links` | ☐ |
 | C1 | shellcheck (installers) | ☐ |
 | C2 | PSScriptAnalyzer (`install.ps1`) | ☐ |
-| D1 | dashboard-field-drift (`--vault`) | ☐ |
+| D1 | dashboard-field-drift + design-system-drift (`--vault`) | ☐ |
 | D2 | dashboard ↔ writer-schema audit | ☐ |
 | E1/E2 | Python + shell syntax | ☐ |
 
