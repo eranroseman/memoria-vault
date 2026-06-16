@@ -7,7 +7,7 @@ parent: Reference
 
 The 21 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
-The 21 types group into five categories: **6 entities** (catalog), **2 project types**, **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
+The 22 types group into five categories: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
 
 ---
 
@@ -26,7 +26,7 @@ Bibliographic / world records, keyed on stable IDs and carrying **given** `relat
 
 ---
 
-## Projects (2)
+## Projects (3)
 
 Project records live under `projects/` and anchor the Project gate ([ADR-77](../adr/77-project-gate.md)). They are not review-gated folders; the gated transition is the thesis promotion to `current`.
 
@@ -34,8 +34,9 @@ Project records live under `projects/` and anchor the Project gate ([ADR-77](../
 | --- | --- | --- | --- | --- |
 | `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
 | `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `code-note` | `projects/` | `proposed → current → archived` | `title`, `project`, `agent`, `task`, `acceptance` | `motivating_claims`, `inputs`, `outputs`, `run_command`, `dependencies`, `repository`, `created` |
 
-`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default.
+`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.
 
 ---
 
@@ -109,7 +110,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 
 ## Templates
 
-Human-facing starter notes for 19 of the 21 types ship in `src/system/templates` (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+Human-facing starter notes for 20 of the 22 types ship in `src/system/templates` (patterns and eval tasks are authored directly in `system/patterns/` and `system/eval/`). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
 
 ---
 

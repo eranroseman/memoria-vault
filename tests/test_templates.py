@@ -108,3 +108,15 @@ def test_project_templates_start_in_schema_valid_states():
     assert project["question_version"] == 1
     assert thesis["lifecycle"] == "proposed"
     assert thesis["project"] == "[[PLACEHOLDER]]"
+
+
+def test_code_note_template_scaffolds_external_agent_handoff():
+    fm = _frontmatter(TEMPLATES / "code-note.md")
+    body = (TEMPLATES / "code-note.md").read_text(encoding="utf-8")
+
+    assert fm["type"] == "code-note"
+    assert fm["lifecycle"] == "proposed"
+    assert fm["agent"] == "codex"
+    assert fm["acceptance"] == []
+    for heading in ("# Purpose", "# Handoff", "# Acceptance", "# Runbook"):
+        assert heading in body

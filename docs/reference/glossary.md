@@ -59,7 +59,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Links vs relationships** — the two kinds of connection ([ADR-52](../adr/52-links-vs-relationships.md)): `links:` are **authored** edges on notes (the PI's thinking); `relationships` are **given** edges on catalog entities (facts from the record), written by the ingest engine. The field contract is specified in [Frontmatter fields](frontmatter.md).
 
-**Note type** — one of the 21 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
+**Note type** — one of the 22 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
 
 **Pattern** — a curated prompt-transformation stored as data in `system/patterns/` ([ADR-53](../adr/53-pattern-library.md)), typed and lifecycle-gated, executed only through the patterns MCP runner (one audited chokepoint; gated output targets degrade to dry-run).
 

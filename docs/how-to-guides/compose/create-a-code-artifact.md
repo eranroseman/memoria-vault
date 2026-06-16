@@ -25,7 +25,7 @@ The Co-PI delegates a **`code`** task to the Engineer. (Palette twin: **Memoria:
 
 **2. Let the Engineer scaffold.**
 
-The Engineer prepares the handoff in `projects/<slug>/code/` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. Like every Memoria agent it is MCP-only — no `terminal`, no `file` toolset — so it writes the scaffold through the gated vault MCP, confined to the narrowest write scope of any lane (`projects/*/code/`).
+The Engineer prepares the handoff in `projects/<slug>/code/` from `system/templates/code-note.md` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. Like every Memoria agent it is MCP-only — no `terminal`, no `file` toolset — so it writes the scaffold through the gated vault MCP, confined to the narrowest write scope of any lane (`projects/*/code/`).
 
 **3. State the purpose yourself.**
 

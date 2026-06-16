@@ -13,6 +13,7 @@ homes:
   repository: catalog/repositories
   project: projects
   thesis: projects
+  code-note: projects
   fleeting: notes/fleeting
   source: notes/sources
   claim: notes/claims

@@ -24,7 +24,7 @@ Sorted by severity, then topic.
 
 | Symptom | Severity | Cause | Fix |
 | --- | --- | --- | --- |
-| **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it is incompatible with Memoria (ADR-12) | Uninstall it. It reorders/rewrites the agent-owned `_proposed_classification` / `_enrichment` frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
+| **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it is incompatible with Memoria ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Uninstall it. It reorders/rewrites the agent-owned `_proposed_classification` / `_enrichment` frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
 | **`_proposed_classification` or `_enrichment` overwritten** | CRITICAL | A frontend formatter reordered or stripped agent-owned frontmatter namespaces on save | Exclude agent-maintained folders from any frontend formatter; let the Memoria Linter own frontmatter. |
 | Enrichment block empty after ingest | HIGH | `OPENALEX_API_KEY` missing in per-profile `.env` (silent — ingest "succeeded" with degraded data; OpenAlex requires a key since 2026-02) | Check `echo $OPENALEX_API_KEY`; populate the per-profile `.env`. |
 | Dataview queries returning nothing | HIGH | `methodology` or `topics` field value doesn't match the controlled vocabulary exactly — looks like "nothing to do" | Check values in notes match [Vocabulary](vocabulary.md) exactly. |
