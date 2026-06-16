@@ -22,6 +22,8 @@ Checks:
   6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
                         vault note (an aliased link to a missing note is otherwise
                         silent).
+  7. ADR code links   — current published docs must link ADR mentions instead of
+                        leaving bare `(ADR-NN)` codes.
 
 Exit 0 if clean, 1 if any error.
 Usage: python scripts/docs_doctor.py [docs_root]   (default: docs)
@@ -74,6 +76,7 @@ FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
+BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
 
 
 def read(path: Path) -> str:
@@ -304,6 +307,21 @@ def check_site_local_links(md: Path, root: Path, errors: list[str]) -> None:
             )
 
 
+def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
+    # Current public docs should link ADR references so readers can jump to the decision
+    # record. ADR files themselves and repo-internal release/testing/contributing docs keep
+    # historical prose and are excluded by _published().
+    if not _published(md, root) or "adr" in md.relative_to(root).parts:
+        return
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for line_no, line in enumerate(text.splitlines(), start=1):
+        match = BARE_ADR_CODE_RE.search(line)
+        if match:
+            errors.append(
+                f"{md}:{line_no}: bare ADR code {match.group(0)} — link it to the ADR page"
+            )
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -323,6 +341,7 @@ def main() -> int:
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_site_local_links(md, root, errors)
+        check_bare_adr_codes(md, root, errors)
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)
 

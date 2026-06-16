@@ -13,6 +13,12 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 Memoria breaks without these. The starter vault **ships all twelve bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
+The static provenance precursor for the bundled artifacts is
+`src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
+upstream repository, pinned local version, artifact SHA-256 digests, license assertion,
+and local patch status. It is a manual-audit lock for now; the updater and CI
+provenance-doctor remain deferred by [ADR-74](../adr/74-pinned-obsidian-plugin-supply-chain.md).
+
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
 | obsidian-local-rest-api | `obsidian-local-rest-api` | Exposes the vault to Hermes via its native MCP over verified loopback HTTPS (default port 27124). Required for the control plane. |
@@ -62,7 +68,7 @@ Documented but not in the install set. Obsidian-side evaluated alternatives. (Zo
 | Plugin | Status | Notes |
 | --- | --- | --- |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
-| obsidian-linter | **Incompatible — do not install** (ADR-12) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
+| obsidian-linter | **Incompatible — do not install** ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
 
 ---
 
@@ -93,7 +99,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 | --- | --- | --- |
 | BibTeX file (`citationExportPath`) | `.memoria/memoria.bib` | Single source of bib data; Better BibTeX auto-exports here. |
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
-| Literature note folder (`literatureNoteFolder`) | `catalog/papers` | Notes must land in the canonical papers home (ADR-47). |
+| Literature note folder (`literatureNoteFolder`) | `catalog/papers` | Notes must land in the canonical papers home ([ADR-47](../adr/47-type-first-category-folders.md)). |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |
 | Template (`literatureNoteContentTemplate`) | **Inline, in `data.json`** | This plugin has no external-template-file setting — the full paper-note body is stored inline in `literatureNoteContentTemplate`. Kept **structurally aligned** with `system/templates/paper.md` (the human-facing copy): both follow the `paper` schema in `.memoria/schemas/types/paper.yaml`. They are not identical field-for-field (the citation copy carries Zotero `{{vars}}`); edit both together when the shared structure changes. |
 

@@ -77,7 +77,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | Subset | Types |
 | --- | --- |
 | full chain | `source`, `thesis` |
-| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern`, `eval-task`, `worklist-item` |
+| `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `code-note`, `pattern`, `eval-task`, `worklist-item` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
 | `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index` |

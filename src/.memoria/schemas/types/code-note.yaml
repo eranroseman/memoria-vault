@@ -1,0 +1,23 @@
+type: code-note
+category: projects
+gated: false
+initial_lifecycle: proposed
+enums:
+  lifecycle: [proposed, current, archived]
+  agent: [codex, claude-code, other]
+required:
+  type: literal:code-note
+  lifecycle: enum:lifecycle
+  title: str
+  project: str
+  agent: enum:agent
+  task: str
+  acceptance: list
+optional:
+  motivating_claims: list
+  inputs: list
+  outputs: list
+  run_command: str
+  dependencies: list
+  repository: str
+  created: date

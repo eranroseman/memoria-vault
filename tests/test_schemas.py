@@ -5,10 +5,10 @@ import schema
 
 def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 21
+    assert len(types) == 22
     expected = {
         "paper", "person", "organization", "venue", "dataset", "repository",
-        "project", "thesis",
+        "project", "thesis", "code-note",
         "fleeting", "source", "claim", "hub", "index",
         "candidate", "gap", "flag", "alert", "work-prompt", "pattern", "eval-task",
         "worklist-item",
@@ -112,6 +112,27 @@ def test_project_and_thesis_schema_contracts():
     assert any(
         "lifecycle" in e
         for e in schema.validate_frontmatter(dict(thesis_note, lifecycle="banana"), thesis)
+    )
+
+
+def test_code_note_schema_contract():
+    types = schema.load_types()
+    code_note = types["code-note"]
+
+    assert code_note["initial_lifecycle"] == "proposed"
+    good = {
+        "type": "code-note",
+        "lifecycle": "proposed",
+        "title": "Figure 3 receptivity curve",
+        "project": "[[slug-bug]]",
+        "agent": "codex",
+        "task": "Implement the plotting script.",
+        "acceptance": ["Script runs from a fresh checkout."],
+    }
+    assert schema.validate_frontmatter(good, code_note) == []
+    assert any(
+        "agent" in e
+        for e in schema.validate_frontmatter(dict(good, agent="terminal-bot"), code_note)
     )
 
 

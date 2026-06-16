@@ -18,7 +18,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 | Resolve | ingest operation (`resolve_merge.py`) | Queries Semantic Scholar, OpenAlex, Crossref, and PubMed/NCBI to resolve identity, authors, citations, biomedical identifiers, and enrichment metadata. |
 | Merge | ingest operation (`resolve_merge.py`) | Merges per-field best-source-wins across the four sources with provenance, and scores identity disagreement. |
 | Classify | ingest operation (`classify.py`) | Proposes `research_area` / `methodology` from OpenAlex topics, with a confidence floor and near-tie flagging; audited to `system/logs/classify.jsonl`. |
-| Project-hints proposal | ingest operation (`classify.py`) | Scores topic overlap against `.memoria/project-hints.yaml` and proposes `projects` membership for human confirmation (ADR-15). |
+| Project-hints proposal | ingest operation (`classify.py`) | Scores topic overlap against `.memoria/project-hints.yaml` and proposes `projects` membership for human confirmation ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). |
 | Extract | ingest operation (`extract.py`) | Pulls full text — Unpaywall OA PDF first, then PMC JATS, then the local PDF via sandboxed pymupdf4llm — behind a deterministic coherence gate; marks `degraded` otherwise. |
 | Link entities | ingest operation (`link.py`) | Plans idempotent find-or-create venue / person / organization entities from merged metadata. |
 | Link citations | ingest operation (`link.py`) | Plans cited-by / cites edges by matching the reference union against the vault by DOI / arXiv id. |
@@ -35,7 +35,7 @@ The detector table with severities lives in [Linter: detectors and auto-fix](lin
 | Golden upgrade | Linter (`golden_restore.py upgrade`) | Three-way reconciles old golden, new source, and live system files; applies clean release changes and preserves PI-customized conflicts. |
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
-| Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log (ADR-25). |
+| Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent Librarian `map` cards that stage proposals under `notes/fleeting/maps/` and `inbox/`; `notes/hubs/` stays PI-approved. |
 
 ### Sweeps (`operations/`)

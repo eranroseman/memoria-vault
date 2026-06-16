@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "generated_from": "vendored plugin files in src/.obsidian/plugins",
+  "generated_at": "2026-06-16",
+  "notes": "Static ADR-74 precursor. Updater and CI provenance-doctor remain deferred; this lock pins the checked-in artifact hashes for manual audit.",
+  "plugins": [
+    {
+      "id": "agent-client",
+      "name": "Agent Client",
+      "version": "0.10.6",
+      "upstream": "https://github.com/rait-09/obsidian-agent-client",
+      "pinned_ref": "0.10.6",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/agent-client/data.json.example": "a58640b4e72bb74a93bb1a325957753e730bd0a9bdc950698aa26431773413d3",
+        "plugins/agent-client/main.js": "839b7bb7a70739c753cbbb349fc9e4be73efe36d3aa102c05cf558225ab2cc08",
+        "plugins/agent-client/manifest.json": "758708104f3c159f91003ad8b3968acfc06a610d96f68f08edfbd8b55ff0cb29",
+        "plugins/agent-client/styles.css": "1e44cbcee201c966a8eb845e5d4a0ecdbe8846ce23066a8a07e25d527831bf70"
+      }
+    },
+    {
+      "id": "buttons",
+      "name": "Buttons",
+      "version": "0.9.13",
+      "upstream": "https://github.com/shabegom/buttons",
+      "pinned_ref": "0.9.13",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/buttons/main.js": "4ac28dcc5809e6366e1f9d7cfdd352c919a4c60cd07a7f309e33bb6ed0f3558c",
+        "plugins/buttons/manifest.json": "9fcf65830600f7d0e2ca774b27302958726d2228a9277d0c46b90bd6afb8e24c",
+        "plugins/buttons/styles.css": "2c4c187cdfc37ad4de5b4a1a46724a65deb0a5136dad69a83e4d36cbcea57162"
+      }
+    },
+    {
+      "id": "callout-manager",
+      "name": "Callout Manager",
+      "version": "1.1.1",
+      "upstream": "https://github.com/eth-p/obsidian-callout-manager",
+      "pinned_ref": "1.1.1",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/callout-manager/data.json": "e0c62783cd58f584766b56d55b4cf9a6ba1958d36b9ad44651096f7af1793ddf",
+        "plugins/callout-manager/main.js": "d7a14e4ac1a02939bfd8c70d0958fab2c421e531355517e5f0ef29ae3bd0d3a1",
+        "plugins/callout-manager/manifest.json": "6b642b20558f53f67ad40f79fc2f4cbc2212e98e5a66184884852da30c466cb2",
+        "plugins/callout-manager/styles.css": "093c0b2b390f071615f662bdb8e3a5726efc1eb57c8d6f6d1d9eb799cdc8ae1b"
+      }
+    },
+    {
+      "id": "cmdr",
+      "name": "Commander",
+      "version": "0.5.5",
+      "upstream": "https://github.com/jsmorabito/obsidian-commander",
+      "pinned_ref": "0.5.5",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/cmdr/data.json": "26d2c89de51bba25a749ba5283b18432cddcbddf0051dfed12c48b41e42a9e62",
+        "plugins/cmdr/main.js": "ebfce0b5dbaac7dd46c8b51cd397a811020d079ab0bf931a64e20049d7510637",
+        "plugins/cmdr/manifest.json": "c6df5e0aa6d389695a87850eeeaf836775e2cd01579f4e277d82bc7a99fbe5e8",
+        "plugins/cmdr/styles.css": "91765c55d9cddfbd3a62dc06bf18dc3ea6ecb879c89f939a1e50cebd3c31c28c"
+      }
+    },
+    {
+      "id": "dataview",
+      "name": "Dataview",
+      "version": "0.5.68",
+      "upstream": "https://github.com/blacksmithgu/obsidian-dataview",
+      "pinned_ref": "0.5.68",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/dataview/data.json": "ff94f18a42ed02f14ba01f98789a4d5e83266d0f3f8fecf2577fab821c6968b7",
+        "plugins/dataview/main.js": "bcdb7a7882051a30427a3fa370533c1052019591e7551bcc12611bb9a726bbb3",
+        "plugins/dataview/manifest.json": "9235db47112da81b85591c79ecb9ae2574e5e72207056e976472f90616286185",
+        "plugins/dataview/styles.css": "3306dd9032e00f989ba7233a37fd255bc4d3f4340cee661762e952f3f6aa1de9"
+      }
+    },
+    {
+      "id": "homepage",
+      "name": "Homepage",
+      "version": "4.4.2",
+      "upstream": "https://github.com/mirnovov/obsidian-homepage",
+      "pinned_ref": "4.4.2",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/homepage/data.json": "d8590324df841faade8a2dd22d4ad9cb78721ed01a40eb5e4e87e80fc4c7034b",
+        "plugins/homepage/main.js": "ac86db78709143fb95ac9fe3dfc59b771eb7a43c28b120420b8a0c96e3bfe964",
+        "plugins/homepage/manifest.json": "3f81933c9b1f5b6f29fc90d63b983fc4d5dd39a6c5783fbf702d484724d31cee",
+        "plugins/homepage/styles.css": "96e102d93f2463bea8d4a5fa4e4537965eebb11fcd61ece96eda1d2301c64f38"
+      }
+    },
+    {
+      "id": "modalforms",
+      "name": "Modal forms",
+      "version": "1.66.1",
+      "upstream": "https://github.com/danielo515/obsidian-modal-form",
+      "pinned_ref": "1.66.1",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/modalforms/data.json": "91fa76372cf34e049b32936b57058693f836dd921536fc060e3260e59c985012",
+        "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
+        "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
+        "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"
+      }
+    },
+    {
+      "id": "obsidian-citation-plugin",
+      "name": "Citations",
+      "version": "0.4.5",
+      "upstream": "https://github.com/hans/obsidian-citation-plugin",
+      "pinned_ref": "0.4.5",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/obsidian-citation-plugin/data.json": "1de04c7ac3cdbe5de42218481e9c28aed8a2993f42c2eb5635b6dcd0f4151897",
+        "plugins/obsidian-citation-plugin/main.js": "68ddf8f2d6d7566a131976dd2247722f259910fc1a54a2acdc37d044c5e03622",
+        "plugins/obsidian-citation-plugin/manifest.json": "1422061978419d0184883c8c6dc8747a25f23d7e414d9af99911ec93dae0f601",
+        "plugins/obsidian-citation-plugin/styles.css": "6b8e77d3f8136633bac089fc38da5f5a50f94b2a93f85838073d2014f168960f"
+      }
+    },
+    {
+      "id": "obsidian-git",
+      "name": "Git",
+      "version": "2.38.3",
+      "upstream": "https://github.com/vinzent03/obsidian-git",
+      "pinned_ref": "2.38.3",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/obsidian-git/data.json": "a67512f4f835585907820839d966d151ebc91ea523812c9922c84f8a3367e17b",
+        "plugins/obsidian-git/main.js": "d1bcc50f05646aed708330b80251de755894e3b3bdf7f81e231a03b88212bbb5",
+        "plugins/obsidian-git/manifest.json": "26f0ef6849027ee315989f539a846a42bd3a88112f025ceee6e303ff2f64be85",
+        "plugins/obsidian-git/styles.css": "f5ab93f4d5b4dd1bd1e577864c5c79087f7adfd448ac346e0489e5847ce6922d"
+      }
+    },
+    {
+      "id": "obsidian-local-rest-api",
+      "name": "Local REST API with MCP",
+      "version": "4.1.2",
+      "upstream": "https://github.com/coddingtonbear/obsidian-local-rest-api",
+      "pinned_ref": "4.1.2",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/obsidian-local-rest-api/data.json.example": "d327b34cd4c1e8786b96592941f719caf0963241ae2ec86c517999bb6ee99172",
+        "plugins/obsidian-local-rest-api/main.js": "7ccfbda2a8664c823deab8f345b8e6cdbeb8166a43c029901d44558305e3ff9f",
+        "plugins/obsidian-local-rest-api/manifest.json": "c2abc7e944b1be0ad5c8548df55da7c2a595338575f6d03e2fc5ada66d6536b3",
+        "plugins/obsidian-local-rest-api/styles.css": "497944ed33ba2acbc574b0138ab379396ec3a84c521935e882b3734ce1062c05"
+      }
+    },
+    {
+      "id": "quickadd",
+      "name": "QuickAdd",
+      "version": "2.12.3",
+      "upstream": "https://github.com/chhoumann/quickadd",
+      "pinned_ref": "2.12.3",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/quickadd/data.json": "bf58de3f77229fe99a1d7170bc798aa92bb5fa769b062ebb670d218937dfad5d",
+        "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
+        "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
+        "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"
+      }
+    },
+    {
+      "id": "templater-obsidian",
+      "name": "Templater",
+      "version": "2.20.5",
+      "upstream": "https://github.com/silentvoid13/Templater",
+      "pinned_ref": "2.20.5",
+      "pinned_commit": "NOASSERTION",
+      "license": "NOASSERTION",
+      "local_patch_status": "unmodified-vendored-build",
+      "sha256": {
+        "plugins/templater-obsidian/data.json": "9ad8d0c478e31165e86ee4a6dd4f422aacb5b1af11bbb876fdf97b15dceff2f4",
+        "plugins/templater-obsidian/main.js": "804536468672c6cd1a1d8a2f418a94e0a15e8e4af1a07236f147dccf311a4431",
+        "plugins/templater-obsidian/manifest.json": "5df1451e29cabdeca445ddf346e51fac0a93f007bf0f8d100924d35d7a3a03d8",
+        "plugins/templater-obsidian/styles.css": "7d85bcd129e9f38a8932455bdf05c9629ce466ab1236dc933b7b7aea55350c04"
+      }
+    }
+  ]
+}

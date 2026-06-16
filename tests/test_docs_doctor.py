@@ -3,6 +3,7 @@
 import docs_doctor as _m
 
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
+check_bare_adr_codes = _m.check_bare_adr_codes
 check_frontmatter = _m.check_frontmatter
 check_link_text = _m.check_link_text
 check_links = _m.check_links
@@ -278,6 +279,39 @@ def test_check_site_local_links_allows_in_site_excluded_and_inline_code_links(tm
     assert doc_errs == []
     assert code_errs == []
     assert excluded_errs == []
+
+
+def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):
+    root = tmp_path / "docs"
+    ref = root / "reference"
+    adr = root / "adr"
+    releasing = root / "releasing"
+    ref.mkdir(parents=True)
+    adr.mkdir()
+    releasing.mkdir()
+
+    bad = ref / "bad.md"
+    bad.write_text("This mentions (ADR-12) bare.\n")
+    good = ref / "good.md"
+    good.write_text("This links [ADR-12](../adr/12-no-frontend-linter.md).\n")
+    historical = adr / "12-no-frontend-linter.md"
+    historical.write_text("Historical prose can say (ADR-12).\n")
+    internal = releasing / "plan.md"
+    internal.write_text("Release scratch can say (ADR-12).\n")
+
+    bad_errs: list[str] = []
+    good_errs: list[str] = []
+    historical_errs: list[str] = []
+    internal_errs: list[str] = []
+    check_bare_adr_codes(bad, root, bad_errs)
+    check_bare_adr_codes(good, root, good_errs)
+    check_bare_adr_codes(historical, root, historical_errs)
+    check_bare_adr_codes(internal, root, internal_errs)
+
+    assert len(bad_errs) == 1
+    assert good_errs == []
+    assert historical_errs == []
+    assert internal_errs == []
 
 
 def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
