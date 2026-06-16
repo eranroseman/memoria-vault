@@ -46,11 +46,14 @@ module.exports = async (params) => {
 
   const draftText = await params.app.vault.read(draft);
   const trace = traceDraftMarkers(draftText);
+  const ungrounded = detectUngroundedAssertions(draftText);
   await appendCallout(params.app, draft, buildVerificationCallout(trace));
+  const gapCards = await writeKnowledgeGapCards(params.app, ref, ungrounded);
 
   const body =
     "delegate:" + LANE + " — from the palette. Verify the draft " + ref + ". " +
     "The deterministic [!verification] preflight callout has been written to the draft. " +
+    gapCards.length + " visible knowledge-gap card(s) were staged for ungrounded assertions. " +
     "Use the " + SKILL + " skill: trace every substantive claim back to its claim note or " +
     "citekey, report traced and untraced claims, then kanban_complete with " +
     "review_status: requested.";
@@ -64,7 +67,7 @@ module.exports = async (params) => {
       " --idempotency-key " + shq(idemKey) +
       " --body " + shq(body)
     );
-    new Notice("✓ Verification callout written; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
+    new Notice("✓ Verification callout written; " + gapCards.length + " gap card(s) staged; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 7000);
   } catch (e) {
     new Notice(("Verify delegation failed after writing callout: " + e.message).slice(0, 250), 10000);
   }
@@ -76,6 +79,52 @@ function traceDraftMarkers(text) {
     .filter((link) => link.includes("notes/claims/") || !link.includes("/")));
   const citekeys = unique([...String(text).matchAll(/@([A-Za-z][A-Za-z0-9_:-]+)/g)].map((m) => m[1]));
   return { claimLinks, citekeys };
+}
+
+function detectUngroundedAssertions(text) {
+  const lines = String(text).split(/\n+/);
+  const assertions = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#") || line.startsWith(">") || line.startsWith("```")) continue;
+    if (line.includes("[[") || /@[A-Za-z][A-Za-z0-9_:-]+/.test(line)) continue;
+    const sentenceLike = /[.!?]$/.test(line) && line.split(/\s+/).length >= 8;
+    if (sentenceLike) assertions.push(line.replace(/^[-*]\s+/, ""));
+  }
+  return unique(assertions).slice(0, 12);
+}
+
+async function writeKnowledgeGapCards(app, draftPath, assertions) {
+  const cards = [];
+  for (const assertion of assertions) {
+    const path = await uniquePath(app.vault.adapter, "inbox/gap-draft-" + fnv1a(draftPath + assertion) + ".md");
+    const today = new Date().toISOString().slice(0, 10);
+    const text = [
+      "---",
+      "title: " + yamlString("Ground draft assertion"),
+      "type: gap",
+      "lifecycle: proposed",
+      "gap_type: additive",
+      "action: " + yamlString("Link or create support for an ungrounded assertion in " + draftPath),
+      "argument_for: " + yamlString(assertion),
+      "argument_against: " + yamlString("The assertion has no claim link or citekey in the deterministic preflight."),
+      "what_tipped_it: " + yamlString("Writer draft verification found a sentence-like assertion without grounding markers."),
+      "certainty: likely",
+      "raised_by: quickadd-verify-draft",
+      "loudness: notice",
+      "target: " + yamlString(draftPath),
+      "created: " + today,
+      "---",
+      "",
+      "# Assertion",
+      "",
+      assertion,
+      "",
+    ].join("\n");
+    await app.vault.adapter.write(path, text);
+    cards.push(path);
+  }
+  return cards;
 }
 
 function buildVerificationCallout(trace) {
@@ -103,8 +152,33 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))].sort();
 }
 
+async function uniquePath(adapter, firstPath) {
+  const dot = firstPath.lastIndexOf(".");
+  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
+  const ext = dot === -1 ? "" : firstPath.slice(dot);
+  let path = firstPath;
+  for (let i = 2; await exists(adapter, path); i += 1) {
+    path = base + "-" + i + ext;
+  }
+  return path;
+}
+
+async function exists(adapter, path) {
+  if (typeof adapter.exists === "function") return adapter.exists(path);
+  try {
+    await adapter.read(path);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function shq(s) {
   return "'" + String(s).replace(/'/g, "'\\''") + "'";
+}
+
+function yamlString(s) {
+  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }
 
 function fnv1a(s) {

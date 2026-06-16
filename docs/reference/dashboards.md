@@ -22,6 +22,7 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
 | Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
+| Project | Project gate | `project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state. |
 | Studio | Studio gate | `studio.md` | Synthesis landing surface: `research-focus.md`, claims by maturity, and the pattern library. Project workflow stays deferred. |
 | Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
 | Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
@@ -46,6 +47,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and workspa
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |
+| `project-gate.base` | `system/dashboards/` | Project notes by output mode, refutation stamp, maturity, saturation, and cache timestamp. |
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
 | `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 

@@ -21,7 +21,7 @@ Memoria breaks without these. The starter vault **ships all twelve bundled and c
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
 | cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, resolution, and workspace switching do not require a palette round trip. |
-| modalforms | `modalforms` | Provides structured in-Obsidian forms for capture flows, including controlled `research_area` and `methodology` fields sourced from `system/vocabulary.md`. |
+| modalforms | `modalforms` | Provides structured in-Obsidian forms for capture and Project flows, including controlled `research_area`, `methodology`, and `scope_topics` fields sourced from `system/vocabulary.md`. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
@@ -160,7 +160,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `formDefinitions[].name` | `memoria-source-capture`, `memoria-project-start` | Structured source capture is active now; project-start carries the schema-shaped Project fields used by the alpha.5 on-ramp. |
+| `formDefinitions[].name` | `memoria-source-capture`, `memoria-project-start` | Structured source capture and the Project start on-ramp are active PI-facing Modal Forms flows. |
 | `research_area` / `methodology` / `scope_topics` fields | Fixed multiselect options matching `system/vocabulary.md`. | `system/vocabulary.md` is the source of truth; `tests/test_modalforms.py` fails if the committed form options drift. |
 | `globalNamespace` | `MF` | Keeps the plugin API available at the default namespace used by Modal Forms examples. |
 

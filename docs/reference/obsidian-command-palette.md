@@ -17,6 +17,7 @@ The `Memoria:` command-palette surface — the in-Obsidian commands, registered 
 | `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
 | `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
 | `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
+| `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `src/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: capture from Zotero selection` | A capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX CAYW) → `hermes kanban create` |
 | `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your outcome (`current` = accept, `archived` = reject / done) and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
 
@@ -80,6 +81,8 @@ not create board cards.
 | --- | --- | --- |
 | `Memoria: write claim note` | Create a standalone claim note from `system/templates/claim.md`. | QuickAdd Template |
 | `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
+| `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `src/system/scripts/refresh-project-gate.js` |
+| `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `src/system/scripts/supersede-thesis.js` |
 
 ---
 
@@ -90,7 +93,7 @@ not create board cards.
 | `Memoria: lint this note` | **Removed** | The Linter is an operation, not an agent — the daily cron and the pre-commit gate cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
 | `Memoria: verify this draft` | Replaced | `Memoria: verify draft` (above), or ask the Co-PI. |
 | `Memoria: frame this section` | Replaced | `Memoria: draft section` (above), or ask the Co-PI. |
-| `Memoria: new project` / `Memoria: scope this project` | Retired | Project scaffolding and scoping return after alpha.3 with the deferred Project workflow; meanwhile `Memoria: map corpus` or the Co-PI covers `map` lane work. |
+| `Memoria: new project` / `Memoria: scope this project` | Replaced | `Memoria: start project` opens the Project gate on-ramp; `Memoria: refresh project gate` recomputes the deterministic cache. |
 
 ---
 

@@ -110,6 +110,17 @@ def test_reading_pipeline_embeds_source_and_claim_bases():
     assert "![[claims.base#By maturity]]" in text
     assert "```dataview" not in text
 
+
+def test_project_gate_dashboard_embeds_project_base():
+    text = (SRC / "system" / "dashboards" / "project-gate.md").read_text(encoding="utf-8")
+    assert "![[project-gate.base#Active projects]]" in text
+    assert "![[project-gate.base#Needs refutation stamp]]" in text
+    base = yaml.safe_load((SRC / "system" / "dashboards" / "project-gate.base").read_text(encoding="utf-8"))
+    views = {v.get("name"): v for v in base.get("views", [])}
+    assert {"Active projects", "Needs refutation stamp"} <= set(views)
+    assert views["Active projects"]["groupBy"]["property"] == "output_mode"
+    assert "refutation_sufficiency" in views["Active projects"]["order"]
+
 def test_fleeting_base_matches_capture_template_home():
     quickadd = yaml.safe_load((SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8"))
     text = (SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8")
