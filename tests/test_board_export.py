@@ -8,6 +8,7 @@ import yaml
 from _util import CheckHarness
 
 BOARD_RELDIR = _m.BOARD_RELDIR
+BLIND_REVIEW_RELPATH = _m.BLIND_REVIEW_RELPATH
 COST_RELPATH = _m.COST_RELPATH
 DISPOSITION_RELPATH = _m.DISPOSITION_RELPATH
 Path = _m.Path
@@ -22,6 +23,7 @@ load_state_cache = _m.load_state_cache
 normalize = _m.normalize
 run_export = _m.run_export
 save_state_cache = _m.save_state_cache
+should_sample_blind_review = _m.should_sample_blind_review
 
 
 def test_board_export():
@@ -63,8 +65,12 @@ def test_board_export():
               normalize({"updated_at": 1700000000000})["last_updated"] == "2023-11-14T22:13:20Z")
         check("normalize passes an ISO last_updated through unchanged",
               normalize(sample[0])["last_updated"] == "2026-05-31T10:00:00Z")
+        check("normalize passes an ISO created_at through unchanged",
+              normalize(sample[1])["created_at"] == "2026-05-30T09:00:00Z")
         check("normalize leaves last_updated empty when no timestamp",
               normalize(sample[2])["last_updated"] == "")
+        check("blind review sampling is deterministic",
+              should_sample_blind_review("same-card") == should_sample_blind_review("same-card"))
 
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
@@ -104,7 +110,7 @@ def test_board_export():
             ev1 = export_events(vault, load_state_cache(vault), run1)
             save_state_cache(vault, run1)
             check("first run seeds cache, emits no events",
-                  ev1 == {"transitions": 0, "dispositions": 0, "costs": 0})
+                  ev1 == {"transitions": 0, "dispositions": 0, "costs": 0, "blind_reviews": 0})
 
             run2 = [
                 # e1: ready -> done, with cost + tokens
@@ -112,7 +118,8 @@ def test_board_export():
                  "metadata": {"review_status": "unreviewed", "cost": 0.42, "tokens_in": 800, "tokens_out": 1200}},
                 # e2: requested -> approved => accepted
                 {"task_id": "e2", "title": "y", "status": "done", "assignee": "memoria-writer",
-                 "metadata": {"review_status": "approved", "agent_recommendation": "clean"}},
+                 "metadata": {"review_status": "approved", "agent_recommendation": "clean",
+                              "blind_rereview": True}},
                 # e3: requested -> approved but human edited first => edited (explicit override)
                 {"task_id": "e3", "title": "z", "status": "done", "assignee": "memoria-verifier",
                  "metadata": {"review_status": "approved", "disposition": "edited"}},
@@ -122,6 +129,7 @@ def test_board_export():
             check("second run logs three transitions (e1 status, e2/e3 review)", ev2["transitions"] == 3)
             check("second run logs cost on completion", ev2["costs"] == 1)
             check("second run logs two dispositions", ev2["dispositions"] == 2)
+            check("second run samples one blind re-review", ev2["blind_reviews"] == 1)
 
             disp = [json.loads(ln) for ln in (vault / DISPOSITION_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
             by_id = {d["task_id"]: d for d in disp}
@@ -129,11 +137,14 @@ def test_board_export():
             check("explicit edited overrides accepted", by_id["e3"]["disposition"] == "edited")
             cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
             check("cost row carries spend + tokens", cost["cost"] == 0.42 and cost["tokens_out"] == 1200)
+            blind = json.loads((vault / BLIND_REVIEW_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
+            check("blind re-review row carries terminal review context",
+                  blind["task_id"] == "e2" and blind["sample_reason"] == "blind-rereview")
             tr = [json.loads(ln) for ln in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
             check("transition records status change e1 ready->done",
                   any(t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr))
             check("no spurious events on an unchanged re-run", export_events(vault, load_state_cache(vault), run2) ==
-                  {"transitions": 0, "dispositions": 0, "costs": 0})
+                  {"transitions": 0, "dispositions": 0, "costs": 0, "blind_reviews": 0})
 
         return t.summary()
     assert _run() == 0

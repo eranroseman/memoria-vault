@@ -11,7 +11,7 @@ Tracks whether the Hermes agent fleet is performing well over time. This dashboa
 
 ## What it shows
 
-Operational health per lane over time: cost per task, success rate, retry frequency, latency, and the headline **trust score** (0–100). The trust score is the number to read first; the rest are the signals it rolls up.
+Operational health per lane over time: cost per task, success rate, retry frequency, review latency, PI attention timing, blind re-review sample counts, and the headline **trust score** (0–100). The trust score is the number to read first; the rest are the signals it rolls up or reports alongside it.
 
 The point of a composite is that no single signal dominates: a lane can have a perfect citation-check record yet a low score if its proposal accept rate signals rubber-stamping, and a high accept rate paired with a low success rate still scores low. That is what makes the number a summary of overall lane health rather than a measure of any one metric. The inputs, the band thresholds, and the accept-ratio extremes (both too-high and too-low down-weight the lane) are specified in the [Dashboards](../../../reference/dashboards.md#trust-score-fleet-health) reference.
 
@@ -23,7 +23,7 @@ The point of a composite is that no single signal dominates: a lane can have a p
 
 ## When it shows real data
 
-The dashboard and its metrics aggregator ship in `src/` and deploy with the vault. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are meaningless. Until volume builds up, board-state and audit-log catch issues directly. Its dashboard-specific empty state: rather than a misleading small-sample table, it shows explanatory text until there is enough volume to trust the numbers (the general [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
+The dashboard and its metrics aggregator ship in `src/` and deploy with the vault. It reads `system/metrics/lane-*-<week>.md`, which the `memoria-metrics` cron computes from `system/logs/`. It shows meaningful data only once weekly fleet volume accumulates — a vault with two runs per week produces statistics that are directional at best. Until volume builds up, board-state and audit-log catch issues directly. Low-volume lane notes are marked `insufficient-data` so the table remains backed by real emitted data without pretending the sample is actionable.
 
 ## Related
 

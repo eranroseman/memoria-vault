@@ -25,6 +25,8 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
 | `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
+| `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |
+| `blind-review-samples.jsonl` | `board_export.py` | per export run | one terminal review selected for blind re-review |
 | `lint-findings.jsonl` | `memoria-lint` cron | per Linter run | one detector finding |
 
 > **Per-session summaries (`sessions/YYYY-MM-DD-HHMM.jsonl`).** The Linter's `session_summary.py` writes one deterministic digest file per session into `system/logs/sessions/` on the daily lint cron — a header (task, profiles, start/end, action/decision counts) plus one record per touched path. The decision is [ADR-25 (two session logs)](../adr/25-session-logging-two-logs.md); the raw record of session activity remains `audit.jsonl` (below).
@@ -97,6 +99,32 @@ API spend and token counts, captured once, at the transition into `status: done`
 
 `cost` is USD (float); `tokens_in` / `tokens_out` are integers. Any field may be `""` (empty string) if the card never carried it — consumers must tolerate missing values rather than assume zero.
 
+## attention.jsonl
+
+The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` QuickAdd command appends one row when the active Inbox card is resolved. This is the only signal emitted from the actual human action surface rather than from the board exporter.
+
+```json
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "current (accept)", "lifecycle_from": "proposed", "lifecycle_to": "current", "opened_at": "2026-06-01T11:00:00Z", "resolved_at": "2026-06-01T11:30:00Z", "duration_minutes": 30.0}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `event` | currently `inbox_card_resolved` |
+| `path` | vault-relative Inbox card path |
+| `lane` / `task_id` | copied from card frontmatter when present; otherwise `lane` is `unknown` and `task_id` is blank |
+| `outcome` | the visible resolve choice the PI selected |
+| `lifecycle_from` / `lifecycle_to` | card lifecycle before and after the resolve command |
+| `opened_at` / `resolved_at` | the open marker and resolve timestamp; `opened_at` uses `attention_opened_at`, `opened_at`, then `created` if present |
+| `duration_minutes` | rounded wall-clock minutes from `opened_at` to `resolved_at`; `null` when no usable open marker exists |
+
+## blind-review-samples.jsonl
+
+The deterministic blind re-review sampler. When `board_export.py` observes a card's `review_status` reach a terminal outcome, it hashes the card id and samples a stable small fraction for a second pass. `metadata.blind_rereview: true` on a card forces a sample for an intentional spot-check or a test fixture.
+
+```json
+{"timestamp": "2026-06-01T11:30:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "accepted", "review_status": "approved", "sample_reason": "blind-rereview", "agent_recommendation": "clean"}
+```
+
 ## lint-findings.jsonl
 
 One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `src/.memoria/operations/integrity/linter/detectors.py`; serialized as:
@@ -125,6 +153,10 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 | `accepted` / `edited` / `rejected` | `disposition.jsonl` | three-way disposition counts |
 | `accept_ratio` | derived | `accepted / (accepted + edited + rejected)` |
 | `decision_time_min` | `board-transitions.jsonl` | median human review latency, minutes |
+| `time_on_gate_min` | board card timestamps | median time from card creation to terminal `done` / `blocked`, minutes |
+| `expand_then_accept_min` | `attention.jsonl` / board metadata | median PI expansion-to-accepted resolution latency, minutes |
+| `card_open_resolve_min` | `attention.jsonl` | median open-marker-to-resolve latency, minutes |
+| `blind_rereview_samples` | `blind-review-samples.jsonl` | count of terminal reviews sampled for blind re-review |
 | `cost` / `tokens_in` / `tokens_out` | `cost.jsonl` | period totals |
 | `consistency_passk` | reserved | placeholder (`null`) for a future pass^k harness |
 

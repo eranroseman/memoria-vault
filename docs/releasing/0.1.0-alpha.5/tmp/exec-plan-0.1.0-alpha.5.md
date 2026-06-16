@@ -162,7 +162,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-C structural-impact Operation (#579)
 - [x] WS-D gap taxonomy + saturation (#580)
 - [x] WS-E PI surface (#581, #154, #381)
-- [ ] WS-F instrumentation (#337)
+- [x] WS-F instrumentation (#337)
 - [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583)
 - [ ] WS-H thin test-env slice (#582)
 
@@ -197,6 +197,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   Project gate cache refresh, thesis supersession with a lazy re-confirmation alert, a Project gate
   Bases dashboard, and Writer draft verification that stages visible knowledge-gap cards for
   ungrounded assertions.
+- 2026-06-16 — WS-F made the review gate measurable: board export now emits deterministic blind
+  re-review samples, the Obsidian resolve command appends `attention.jsonl` timing rows, the metrics
+  aggregator writes time-on-gate / expand-to-accept / card-open-to-resolve / blind-sample fields into
+  lane metric notes, and fleet-health renders those fields from `system/metrics/`.
 
 ## 9. Surprises & discoveries
 
