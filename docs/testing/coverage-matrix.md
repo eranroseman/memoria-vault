@@ -34,7 +34,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |
 | 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
 | 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](plans/installer-test-plan.md) | manual | 🟡 (plan new; lint-only before) |
-| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) | manual | 🟡 (plan new) |
+| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) for attended runtime; [test-env harness](plans/test-env-harness-plan.md) for ADR-80 Phase 1 cassette replay wired into `scripts/e2e-smoke.sh` | semi | 🟡 (model-free path automated; live model/GUI tail manual) |
 | 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../adr/11-vault-eval-maintenance.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
@@ -50,11 +50,12 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr
 
 1. **L5 eval (#20)** — the only layer that tests *quality*; owned by ADR-11, gold tasks unbuilt. Highest long-term value.
 2. **Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
-3. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
-4. **Security (#22)**, **Performance (#23)**, **Deployment (#24)** — stand up as the system hardens.
+3. **Golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; live model/GUI proof remains attended.
+4. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
+5. **Security (#22)**, **Performance (#23)**, **Deployment (#24)** — stand up as the system hardens.
 
 ## Related
 
 - Framework + layer definitions: [ADR-29](../adr/29-testing-framework.md)
-- Plans: [headless](plans/headless-test-plan.md) · [hermes-cli](plans/hermes-cli-test-plan.md) · [GUI](plans/gui-test-plan.md) · [installer](plans/installer-test-plan.md) · [e2e-golden-path](plans/e2e-golden-path-plan.md)
+- Plans: [headless](plans/headless-test-plan.md) · [hermes-cli](plans/hermes-cli-test-plan.md) · [GUI](plans/gui-test-plan.md) · [installer](plans/installer-test-plan.md) · [e2e-golden-path](plans/e2e-golden-path-plan.md) · [test-env harness](plans/test-env-harness-plan.md)
 - Shared template: [{{Subject}} test plan](test-plan-template.md)

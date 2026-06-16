@@ -92,7 +92,12 @@ assert g["nodes"], "graph collected no nodes"
 print(f"   graph: {len(g['nodes'])} nodes / {len(g['edges'])} edges")
 PYEOF
 
-echo "== 7. final lint over the worked vault =="
+echo "== 7. ADR-80 Phase 1 test-env harness replay =="
+"$PY" "$ROOT/scripts/test_env_harness.py" replay --root "$ROOT" --vault "$V" >/dev/null \
+  || fail "test-env harness replay failed"
+echo "   cassette replay reached the model-free L4 path"
+
+echo "== 8. final lint over the worked vault =="
 verdict=$("$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1)
 echo "   $verdict"
 echo "$verdict" | grep -qE "PASS|REVIEW" || fail "worked vault verdict: $verdict"
