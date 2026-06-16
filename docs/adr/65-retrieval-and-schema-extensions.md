@@ -32,8 +32,10 @@ fires.
 
 Memoria keeps three retrieval/schema extensions **deferred**:
 
-- **Relation-vocabulary expansion.** Extend the typed-relation vocabulary beyond
-  `supports` / `contradicts` to `similar` (structural resemblance, not evidential
+- **Relation-vocabulary expansion.** Extend the typed-relation vocabulary (the
+  deployed `link-suggest-claim` skill already proposes `supports` / `contradicts` /
+  `extends`; the vocabulary is documentary — the Linter validates that targets
+  resolve, not the relation key) to `similar` (structural resemblance, not evidential
   support), then `cross-domain` and `uses-method` (a methodological-provenance
   relation pointing a claim-note at the method-note it operationalizes — composing
   with `_aspects.method` below, which says *what* method a paper used while the
@@ -49,9 +51,11 @@ Memoria keeps three retrieval/schema extensions **deferred**:
   human-correctable at review, Dataview-queryable. The other two MASSW fields are
   skipped: `context` overlaps `topic:` and the summary; `projected_impact` needs
   post-publication evidence ingest lacks. For papers whose method or outcome lives in
-  a figure or table, Hermes's `vision_analyze` reads it directly, making the aspects
-  figure-informed rather than abstract-only; this ADR is where that available-but-unwired
-  extraction path is adopted into the ingest pipeline.
+  a figure or table, a vision extraction path could read it directly, making the
+  aspects figure-informed rather than abstract-only. No such `vision_analyze` path
+  exists in the ingest pipeline today (the figure-informed variant is blocked on
+  building/importing it, not merely on wiring an available one); the abstract-only
+  `_aspects` slice is independent of it and can land first.
 - **Exploration-trace capture.** When the Librarian's map lane produces a scope or gap report, also
   capture the *rejected directions* and *dead ends* as a structured artifact beside
   the corpus map (never in canonical knowledge layers), preventing re-exploration of
@@ -74,7 +78,7 @@ coexist with the expanded `links:` vocabulary.
 - Exploration-trace capture adds an artifact-management obligation to the map lane's output
   contract and risks over-recording if every negative result is captured.
 - Recording these as the settled home keeps ADR-08's deferred future-work pointer
-  resolvable and the ingest reference's `vision_analyze` note anchored.
+  resolvable and anchors the (not-yet-built) figure-reading extraction path.
 
 ## When this matters
 
