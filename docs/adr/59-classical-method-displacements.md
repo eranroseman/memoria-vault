@@ -49,7 +49,7 @@ Per-item conditions that raise priority at the cadence review:
 - **Classical prose metrics** — the LLM-judge export gate is live and recurring false alarms on structural issues are dominating the report.
 - **Discovery relevance scoring** — the discovery loop is live and morning triage time exceeds 15 minutes because candidates aren't pre-sorted by relevance.
 - **Keyphrase extraction** — the classifier has been active ≥ 3 months and the human notices recurrent vocabulary gaps (terms that should appear in `topic:` but don't because the training set didn't see them).
-- **Record linkage** — entity notes accumulate duplicate person or venue entries the human notices while cleaning up the graph.
+- **Record linkage** — entity notes accumulate duplicate person or venue entries the human notices while cleaning up the graph. (The deterministic **ID-first pass already ships** in `link.py` — ORCID/OpenAlex first; only the no-ID string-similarity dedup of by-name collisions remains, and `recorded_by_name` now logs the collision data that would trigger it.)
 
 ## Related
 
