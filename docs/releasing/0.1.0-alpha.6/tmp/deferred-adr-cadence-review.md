@@ -56,6 +56,15 @@ ADR-59, ADR-76** (see the cadence-review PR).
   skills). Buildable now in **shadow mode** (log neighbours, never block); the
   retrospective `find-duplicates` sweep must be built first, and confident gating
   (the 0.8 threshold) is corpus-gated.
+- **ADR-80 (ephemeral test-env harness) — Phase 1 buildable now.** Gate 2 is
+  resolved (Gemma 4 12B is GA — multimodal-input/text-output, official GGUF, served
+  by `llama-server --jinja` over `/v1`) and gate 3 is a ~5-min smoke test, so
+  **Phase 1 (L0–L4 + cross-cutting) is model-free and implementable** — built on
+  `scripts/e2e-smoke.sh` + record/replay cassettes + the g9 zero-LLM spine + a
+  seeded L4 golden path (the model is needed at record time, not run time). A
+  moderate build, not a cheap slice, but unblocked. **Phase 2** (live-model L5 +
+  visual golden-diffs + chaos/perf) stays gated — see ADR-80's phased-adoption
+  section.
 
 ## Tier C — genuinely blocked (real, verified prerequisite) — not for alpha.6
 
@@ -65,11 +74,3 @@ ADR-59, ADR-76** (see the cadence-review PR).
   maintained ≥4 weeks, written `screening-plan.md`, an always-on machine).
 - **ADR-60 / ADR-63** cross-vault / multi-machine — need a real 2nd vault / 2nd
   device / ≥3 projects; dormant by design under single-researcher scope.
-- **ADR-80** ephemeral test-env harness — **only Phase 2 is blocked now** (the
-  live-model L5 + visual golden-diffs + chaos/perf tail). Gate 2 is **resolved**
-  (Gemma 4 12B is GA — multimodal-input/text-output, official GGUF, served by
-  `llama-server --jinja` over `/v1`) and gate 3 is a ~5-min smoke test, so
-  **Phase 1 (L0–L4 + cross-cutting) is model-free and implementable now** — built on
-  `scripts/e2e-smoke.sh` + record/replay cassettes + the g9 zero-LLM spine + a
-  seeded L4 golden path (the model is needed at record time, not run time). See
-  ADR-80's phased-adoption section.
