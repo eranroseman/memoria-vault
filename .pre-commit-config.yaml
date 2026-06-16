@@ -124,7 +124,7 @@ repos:
         name: adr-index
         language: system
         entry: python scripts/gen_adr_index.py --check
-        files: ^docs/adr/.*\.md$|^scripts/gen-adr-index\.py$
+        files: ^docs/adr/.*\.md$|^scripts/gen_adr_index\.py$
         pass_filenames: false
 
       # Block 11: status-doctor
