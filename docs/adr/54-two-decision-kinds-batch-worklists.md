@@ -27,6 +27,9 @@ and the no-auto-accept rule).
 
 Every place the PI acts is one of **two kinds**, and each gets a different Inbox item:
 
+The worklist shape is aggregate-first: a fleeting note plus one batch card that
+summarizes the work, not one toggle or one Bases row per candidate item.
+
 - **Approval gate** — the PI reviews *agent-produced output* and accepts/rejects. The
   item must carry the honesty card ([ADR-51](51-inbox-category-and-honesty-card.md)) —
   never a bare "OK?".

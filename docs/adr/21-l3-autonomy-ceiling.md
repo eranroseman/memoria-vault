@@ -41,5 +41,8 @@ Memoria targets **L3 on the [Chen et al. 2026](../reference/bibliography.md#chen
 
 - **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../explanation/rationale/why-not-autonomous.md) (the preconditions argument and the Coder exception), [Why the review gate is structural](../explanation/rationale/why-human-gate.md), [What Memoria is](../explanation/overview/what-memoria-is.md) (autonomy-spectrum positioning, "vibe researching").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the mechanism that enforces this ceiling); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (the Coder lane this ADR carves the exception for).
-- **Proposals bounded by this ADR:** [Code-artifact autopilot](34-code-artifact-autopilot.md) (the keep/revert loop, admissible only within the Coder exception); [Configurable review-gate mode (blocking | advisory) for comparison studies](41-configurable-review-gate-mode.md) (advisory-mode comparison arm).
+- **Proposals bounded by this ADR:** the code-lane keep/revert experiment loop
+  tracked in [ADR-61](61-nightly-discovery-loop.md); [Configurable review-gate mode
+  (blocking | advisory) for comparison studies](41-configurable-review-gate-mode.md)
+  (advisory-mode comparison arm).
 - **Source discussion:** retroactively records a decision long embedded in `why-not-autonomous.md` and `what-memoria-is.md`. The reasoning lives in those `why-*` docs and may evolve; the ceiling recorded here does not move without a superseding ADR.

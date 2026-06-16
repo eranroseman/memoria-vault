@@ -49,8 +49,10 @@ The shared contract, in every workspace:
 | **Studio** | Drafting | `research-focus.md` (projects/ ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base`, `system/patterns/patterns.base` |
 
 Studio's right sidebar carries a second tab — the core backlink view — behind the
-Co-PI tab: backlinks finally live where there is an active note. **Studio replaces
-the planned "Project" workspace.** `.base` leaves serialize as view type `bases`
+Co-PI tab: backlinks finally live where there is an active note. **Studio replaced
+the original empty "Project" workspace promise for alpha.3; the later
+[Project gate](77-project-gate.md) uses the same workspace machinery for bounded
+inquiry rather than reviving that empty workspace.** `.base` leaves serialize as view type `bases`
 (the core Bases view registered for the `base` extension), fixing the previous
 `markdown` mis-serialization.
 
@@ -88,9 +90,9 @@ Two mechanisms support the panel:
 - The three QuickAdd workspace choices and the loader script are shipped config —
   covered by the existing QuickAdd consistency tests plus new workspace-layout
   tests.
-- Docs that described the Home/Library pair or the promised Project workspace are
-  rewritten; the "Project workspace (v0.1.0-alpha.3)" promise is superseded by
-  Studio.
+- Docs that described the Home/Library pair or the promised alpha.3 Project
+  workspace are rewritten; Studio supersedes that workspace promise, while
+  [ADR-77](77-project-gate.md) owns the later Project gate.
 
 ## Alternatives considered
 
@@ -124,6 +126,7 @@ minimal writing-free mechanism.
   unchanged; its note is now the control panel), [ADR-48](48-copi-and-agent-consolidation.md)
   (the Co-PI the right pane pins), [ADR-49](49-catalog-in-bases-linter-monitor.md)
   (catalog in Bases), [ADR-55](55-src-scaffold-populate-golden-copy.md) (golden copy
-  covers the shipped plugin files).
+  covers the shipped plugin files), [ADR-77](77-project-gate.md) (bounded inquiry
+  surface).
 - **Reference:** [Obsidian workspaces](../reference/obsidian-workspaces.md),
   [Obsidian plugins](../reference/obsidian-plugins.md).

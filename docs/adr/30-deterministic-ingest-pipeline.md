@@ -16,6 +16,11 @@ nav_order: 30
 # ADR-30: Tiered ingest pipeline
 
 > *Terminology note (v0.1.0-alpha.2): `captured` is now the `ingest_status: tier0` floor, **not** a lifecycle value — paper entities are `lifecycle: current` from creation ([ADR-50](50-universal-lifecycle-and-maturity.md); `paper` enum `current → retracted → archived`), and the retry sweep keys on `ingest_status`. The lifecycle chain is `proposed → provisional → current → retracted → archived` (`dormant` retired). Numbered folders (`20-sources/`, `99-system/`) are now type-first ([ADR-47](47-type-first-category-folders.md)): `catalog/`, `system/`. The pipeline decision below is unchanged.*
+>
+> **Schema note (2026-06-16).** `ingest_status` is a paper-scoped enum, not an
+> implicit pipeline scratch field. The schema owns the legal values
+> (`tier0`, `tier1`, `tier2`, `needs-human`) and Operations must write only those
+> values.
 
 > **Implemented and validated live (#100–#116).** The deterministic spine ships as
 > six scripts (`ingest_paper` / `resolve_merge` / `extract` / `link` / `pipeline` /
@@ -89,7 +94,7 @@ Adds one value, **`captured`** (today `lifecycle` is `proposed · current · dor
 
 ### Reliability, re-ingest, serialization
 
-The capture-intake log + the `captured` stub mean a failure anywhere in Tiers 1–2 **leaves the note at `captured`** — recoverable, nothing lost. This **supersedes ADR-17's** "materialise a `capture-timeout` candidate" for the *deliberate-capture* path (the candidate-note remains for *discovery* leads). There are **two distinct backstops, with distinct owners**:
+The capture-intake log + the `captured` stub mean a failure anywhere in Tiers 1–2 **leaves the note at `captured`** — recoverable, nothing lost. This supersedes the old "materialise a `capture-timeout` candidate" idea for the *deliberate-capture* path. There are **two distinct backstops, with distinct owners**:
 
 - **(a) log-reconciliation** — a pass that reconciles `capture-intake.jsonl` against created notes and re-drives any entry whose **Tier-0 stub never landed** (the durability anchor for a failed first write).
 - **(b) captured retry-sweep** — re-runs **Tier 1** on `captured` notes whose enrichment failed, with backoff and the `needs-human` floor.
@@ -117,7 +122,7 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 - **Domain-agnostic tagging.** Embedding/zero-shot over the user's defined tag set works across biomedical + CS, where a MeSH-only crosswalk would be empty for most papers.
 - **Nothing lost, everything gated** (un-gated capture-intake log as the anchor; every note write audited); honest determinism (idempotent writes + board-serialized re-ingest, not identical output).
 - **Cost — a real rewrite.** `obsidian-paper-note` slims to "run the script, judge, write"; `ingest_paper.py` must be built and tested, with the merge logic, structured-output contracts, and explicit edge-case branches (type routing, no-DOI/PDF, OCR fallback, no-ID entities, non-English text).
-- **Constraint — lifecycle + ADR-17.** Adds `captured` (+ `ingest_status: needs-human`) and changes the deliberate-capture dead-letter to "stays `captured`"; docs describing the LLM-orchestrated ingest must be updated.
+- **Constraint — lifecycle.** Adds `captured` (+ `ingest_status: needs-human`) and changes the deliberate-capture dead-letter to "stays `captured`"; docs describing the LLM-orchestrated ingest must be updated.
 
 ## Alternatives considered
 
@@ -136,5 +141,5 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 - **Files affected:** `obsidian-paper-note/SKILL.md` (slims to *call the ingest tool* + judgments + gated write), a new `ingest_paper.py` (source of truth for API field lists, chain order, and merge rules — kept out of the ADR so it can change without re-deciding), [Ingest routing](../reference/ingest.md) (type routing, fallback chains, extraction tiers, S2-not-GROBID), [Frontmatter fields](../reference/frontmatter.md) / [Note types](../reference/note-types.md) (`captured` + `ingest_status`), `capture-from-zotero.js` (`curl` not `requestUrl`; the capture-intake log), the seed-tag vocabulary format (tags carry definitions).
 - **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist (ADR-27) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
 - **Related decisions / Depends on:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).
-- **Partially supersedes:** [ADR-17](17-shared-candidate-frontmatter.md) — deliberate-capture dead-letter (stays `captured` rather than materialising a `capture-timeout` candidate); ADR-17's candidate-note remains for discovery leads.
+- **Supersession note:** deliberate-capture dead-letters stay `captured` rather than materialising a `capture-timeout` candidate.
 - **Source discussion:** design conversation + two red-team rounds + an 867-paper API merge spike, 2026-06-03.

@@ -15,7 +15,13 @@ nav_order: 18
 
 # ADR-18: Rename `agent_verdict` → `agent_recommendation`
 
-> **Accepted / implemented in v0.1 (2026-06-01).** Renamed across the card schema, dashboards, the Linter SOUL.md, and the docs in one coordinated pass (verified by grep — only this ADR retains the old name as historical reference).
+> **Accepted / implemented in v0.1 (2026-06-01).** Renamed across the card schema,
+> dashboards, the Linter SOUL.md, and the docs in one coordinated pass. The old
+> name remains only in historical references and runtime compatibility readers.
+>
+> **Compatibility note (2026-06-16).** Runtime readers may retain a narrow
+> `agent_verdict` fallback while old board cards age out; new writes and public
+> schema/docs use `agent_recommendation`.
 
 ## What
 

@@ -157,7 +157,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [ ] 2026-06-15 — ExecPlan + release-plan authored; milestone #6 + parent #584 + workstream issues
       #576–583 created; in-scope issues assigned. Execution can start at WS-0.
 - [x] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved in `tmp/ws-0-spikes.md`
-- [ ] WS-A ADR pass (#577)
+- [x] WS-A ADR pass (#577)
 - [ ] WS-B schema + templates (#578)
 - [ ] WS-C structural-impact Operation (#579)
 - [ ] WS-D gap taxonomy + saturation (#580)
@@ -178,11 +178,17 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   build the dashboard as a custom Bases view. Set the conservative maturity default to a connected
   thesis-rooted component with at least 5 addressed relations, including at least 1 `supports` and
   1 `contradicts` edge. Choose the single generated index-note as the default materialization shape.
+- 2026-06-16 — WS-A resolved in the ADR layer: added ADR-77/78/79 for the Project gate, thesis note
+  type, and argument graph + optional `warrant`; retired ADR-17/34/40; amended the stale
+  dependencies and doc-integrity notes called out in `adr-update.md`; regenerated the ADR index.
 
 ## 9. Surprises & discoveries
 
 - WS-0: the custom Bases view path is viable in the published Obsidian API, but it must be treated as
   a version-pinned pilot in WS-E rather than an untyped QuickAdd script surface.
+- WS-A: ADR-62 was partly stale rather than wholly deferred. Fleet observability is already built via
+  `metrics_aggregate.py` and `memoria-metrics`, so the ADR now records the harness family as accepted
+  with only the remaining harnesses still waiting on cadence-review context.
 
 ## 10. Interfaces & dependencies
 
@@ -201,6 +207,8 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 ## 11. Artifacts & notes
 
 - WS-0 spike result: `docs/releasing/0.1.0-alpha.5/tmp/ws-0-spikes.md`.
+- WS-A decision records: `docs/adr/77-project-gate.md`,
+  `docs/adr/78-thesis-note-type.md`, `docs/adr/79-argument-graph-and-warrant.md`.
 
 ## 12. Outcomes & retrospective
 

@@ -6,7 +6,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [47]
-supersedes: []
+supersedes: [17]
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation

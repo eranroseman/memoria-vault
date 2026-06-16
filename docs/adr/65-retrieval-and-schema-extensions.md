@@ -6,7 +6,7 @@ status: deferred
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
-assumes: [8, 52, 30]
+assumes: [52, 30]
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -18,10 +18,10 @@ nav_order: 65
 
 ## Context
 
-The typed-relation base is adopted — [ADR-08](08-typed-relations-frontmatter.md)
-added `supports` and `contradicts` as first-class frontmatter, and the contradictions
-dashboard consumes them — and ADR-08 names this note as the home for the richer
-vocabulary and the structured paper aspects it leaves as future work. The
+The typed-relation base is adopted through
+[ADR-52](52-links-vs-relationships.md): relationships are typed, queryable facts
+distinct from ordinary wikilinks, and the contradictions dashboard consumes the
+first `supports` / `contradicts` vocabulary. The
 question is not whether these extensions are well-shaped but when they earn the typing
 and ingest discipline they each demand: a half-populated typed field returns
 incomplete answers and erodes trust, and aspect extraction adds an LLM call per paper.
@@ -59,7 +59,8 @@ Memoria keeps three retrieval/schema extensions **deferred**:
   end for one project may be productive for another — and never auto-promoted into
   canonical layers.
 
-These build on the typed-link base of [ADR-08](08-typed-relations-frontmatter.md) and
+These build on the typed-relationship base of
+[ADR-52](52-links-vs-relationships.md) and
 respect the links-vs-relationships split of
 [ADR-52](52-links-vs-relationships.md): untyped wikilinks remain first-class and
 coexist with the expanded `links:` vocabulary.
@@ -90,5 +91,5 @@ Per-release context, not gates:
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-08 (typed relations frontmatter)](08-typed-relations-frontmatter.md) (the base this extends and which names this note its home), [ADR-52 (links vs relationships)](52-links-vs-relationships.md) (the split this respects), [ADR-30 (ingest pipeline)](30-deterministic-ingest-pipeline.md) (where `_aspects` are populated)
+- **Related decisions / Depends on:** [ADR-52 (links vs relationships)](52-links-vs-relationships.md) (the typed-relationship base this extends and the split this respects), [ADR-30 (ingest pipeline)](30-deterministic-ingest-pipeline.md) (where `_aspects` are populated)
 - **Tracking issue:** [#415](https://github.com/eranroseman/memoria-vault/issues/415) — revisit at each release cadence.
