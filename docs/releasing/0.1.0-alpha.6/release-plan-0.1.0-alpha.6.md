@@ -19,8 +19,12 @@ flips to `true` only for a tagged GitHub Release — this internal checkpoint cl
 `status: complete`, `released: false`.
 
 **Landed so far:** G3 / WS-3 (docs, template, and static plugin-provenance precursor)
-merged in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649). Gate and
-stage state still close through the linked GitHub issues.
+merged in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649). G1 / WS-1
+implementation (generated-profile HTTPS+`ssl_verify` checks, stamped thesis promotion,
+claim supersession defaults) merged in
+[PR #651](https://github.com/eranroseman/memoria-vault/pull/651); its S4 live sandbox
+HTTPS smoke remains tracked in the release issues. Gate and stage state still close
+through the linked GitHub issues.
 
 ## 1. Scope — what this release is
 
