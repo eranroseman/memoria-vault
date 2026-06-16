@@ -156,7 +156,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 
 - [ ] 2026-06-15 — ExecPlan + release-plan authored; milestone #6 + parent #584 + workstream issues
       #576–583 created; in-scope issues assigned. Execution can start at WS-0.
-- [ ] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved
+- [x] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved in `tmp/ws-0-spikes.md`
 - [ ] WS-A ADR pass (#577)
 - [ ] WS-B schema + templates (#578)
 - [ ] WS-C structural-impact Operation (#579)
@@ -173,11 +173,16 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   a labor budget. Architectural calls go to the WS-A ADRs, not here. Test-env harness held out of scope
   (ADR-77/78, separate); only the deny-assertion slice rides alpha.5.
 - 2026-06-15 — Three open decisions carried as in-plan gates (WS-0): §D3 spike first; §13.1 conservative
-  default in the gate ADR; §13.4 index-note default pending §D3.
+  default in the gate ADR; §13.4 index-note default was pending §D3.
+- 2026-06-16 — WS-0 resolved. `obsidian@1.13.1` exposes `Plugin#registerBasesView`, so WS-E can
+  build the dashboard as a custom Bases view. Set the conservative maturity default to a connected
+  thesis-rooted component with at least 5 addressed relations, including at least 1 `supports` and
+  1 `contradicts` edge. Choose the single generated index-note as the default materialization shape.
 
 ## 9. Surprises & discoveries
 
-- (fill as workstreams land — e.g. the §D3 spike outcome, since the whole dashboard surface depends on it.)
+- WS-0: the custom Bases view path is viable in the published Obsidian API, but it must be treated as
+  a version-pinned pilot in WS-E rather than an untyped QuickAdd script surface.
 
 ## 10. Interfaces & dependencies
 
@@ -195,8 +200,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 
 ## 11. Artifacts & notes
 
-- (per-workstream transcripts pasted here as each lands — the §D3 spike result, the Operation pytest, the
-  Obsidian attended-check for start-a-project, the deny-assertion transcript.)
+- WS-0 spike result: `docs/releasing/0.1.0-alpha.5/tmp/ws-0-spikes.md`.
 
 ## 12. Outcomes & retrospective
 

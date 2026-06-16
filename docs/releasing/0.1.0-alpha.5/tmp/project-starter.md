@@ -641,11 +641,10 @@ graphs:
 - Ship the map / argument-graph / impact dashboards as a **custom Bases view via the Bases API**
   (`registerBasesView`). Native, composable, and aligned with kepano's framing of Bases as "a
   visualization layer in service of editing Markdown" — Memoria's files-first philosophy exactly.
-  **Verify before committing (§D3):** the dates and the API's existence/stability here are from
-  web research, not the repo or first-hand knowledge, and the whole surface plan depends on
-  `registerBasesView` being real and stable. Treat it like ADR-70's version-pinned pilot — pin and
-  test the API before building on it. (The *data model* survives even if the view tech differs;
-  only the rendering layer is at risk.)
+  **WS-0 verdict (§D3):** the published `obsidian@1.13.1` TypeScript API exposes
+  `Plugin#registerBasesView`, `BasesView`, and `BasesViewRegistration`; build the dashboard as a
+  version-pinned pilot and keep a compile check around the custom view. (The *data model* still
+  survives if the view tech is later cut; only the rendering layer is at risk.)
 - Use a **base-board–style Kanban** (Kanban-on-Bases) for **gap triage** (non-canonical cards by
   `impact` / status) — *not* for the thesis lifecycle (see the gating caveat).
 - A **generated JSON Canvas** is a good *read-only* human-facing render of the argument map
@@ -678,18 +677,15 @@ An earlier draft claimed "no architecture decision left open" with the maturity 
 minor tuning knob. That was wrong on both counts. There are now **five** open decisions; the first
 is **safety-critical**, and 13.4/13.5 are the two the reviewers left explicitly open.
 
-**13.1 — The maturity threshold is the gate's trust switch.** It governs the transition from
+**13.1 — The maturity threshold is the gate's trust switch — RESOLVED in WS-0.** It governs the transition from
 "advisory, low-confidence" to "load-bearing" for *every* structural signal (§8 says so
 explicitly). Set it too low and the gate asserts confidence on a sparse graph — *the
 automation-bias failure the whole design exists to prevent*. Set it too high and the gate is
 permanently advisory and never terminates. This is the parameter the gate's safety rests on, not
-a knob to tune after launch. Candidates for the measure:
-
-- count of `addressed` `supports` / `contradicts` relations on the thesis's component, or
-- the component reaching connectedness (every claim reachable from the thesis).
-
-Propose a *conservative* default (err toward advisory) and treat raising it as a safety change,
-not a preference.
+a knob to tune after launch. The conservative alpha.5 default is: a thesis-rooted argument component
+is load-bearing only when it is connected and has at least **5 addressed relations**, including at
+least **1 `supports`** and **1 `contradicts`** edge. Below that, impact/gap/saturation output is
+advisory and visibly low-confidence. Lowering this threshold is a safety change, not a preference.
 
 **13.2 — Is `warrant` worth its cost? Recommendation: NOT in v1.** Net-new vocabulary against
 ADR-8/52's deliberate minimalism, with real authoring burden (§6), and its tier-2 detector is a
@@ -703,19 +699,18 @@ prerequisite. So this gate does not depend on accepting ADR-61. (The remaining A
 maintenance fix to its stale `assumes` 37→48 — is tracked separately and is *not* part of this
 design's critical path.)
 
-**13.4 — Materialization: per-note stamps vs. a single generated index-note (§12).** How the
-Operation persists `impact`/`on_path`/`saturation_state` for Bases to read. A real fork:
+**13.4 — Materialization: single generated index-note by default — RESOLVED in WS-0.** How the
+Operation persists `impact`/`on_path`/`saturation_state` for the custom Bases view to read. The fork:
 
 | | **Per-note stamps** (props on each claim/thesis note) | **Single index-note** (one generated file: claim → values) |
 |---|---|---|
 | **Pro** | Bases filters/sorts claims *natively* by `impact`/`on_path` — the whole reason §12 wanted write-back. | Honors "write notes once"; one file to write and stamp; near-zero write amplification; clean audit (§D4). |
 | **Con** | Violates write-once; write amplification across the component per recompute (mitigated, not removed, by write-only-on-change); churns the ADR-25 audit. | Bases **cannot join** index→notes (no relations/rollups), so native per-claim filtering is **lost** — you must build a custom `registerBasesView` that reads the index. |
 
-The catch: the index-note's con (needs a custom view) is **already paid** if you build the custom
-Bases view §12 proposes for the map/argument-graph dashboards anyway. **Recommendation: index-note
-*if* the custom view is being built regardless** (likely true) — you get clean writes for free;
-fall back to per-note stamps only if you decide to lean entirely on stock Bases tables with no
-custom view. Either way, **write-only-on-change** is mandatory.
+Because §D3 verified the custom view API, alpha.5 takes the index-note path: write one generated
+Project gate index note with `computed_at`, `stale`, and per-note derived values, then let the custom
+view render/filter from that cache. Fall back to per-note stamps only if the custom view is cut.
+Either way, **write-only-on-change** is mandatory.
 
 **13.5 — How many gap kinds in v1? Recommendation: three, not two and not six.** The reviewers
 proposed stripping to two (additive, conflict); §6 defined six (additive, fragility, conflict,
@@ -920,10 +915,9 @@ property fields.
 - **§D2 — citations.** Pin author/year/venue before anything enters `bibliography.md`:
   linked/convergent = Beardsley/Freeman (not van Gelder); confirm the Miles handout and
   Müller-Bloch; Toulmin / Dey / Saunders / Popper / PICO / FINER check out (§6, appendix).
-- **§D3 — Bases facts.** `registerBasesView`, the core/GA dates, and plugin states are from web
-  research, unverifiable from the repo and near the knowledge boundary. Verify the API exists and
-  is stable before building the surface layer (mirror ADR-70's version-pinned pilot); the data
-  model survives even if the view tech differs (§12).
+- **§D3 — Bases facts.** Resolved by WS-0: `obsidian@1.13.1` exposes `Plugin#registerBasesView`,
+  `BasesView`, and `BasesViewRegistration`. Build the surface layer as a version-pinned pilot; the
+  data model survives even if the view tech differs (§12).
 - **§D4 — git churn.** ADR-25's append-only, hash-paired audit makes naïve per-component re-stamps
   real write amplification — the reason write-only-on-change (or the index-note, §13.4) is
   mandatory (§12).
