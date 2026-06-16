@@ -37,18 +37,18 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `src/` (default `~/Memoria`, off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the five profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`):
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `src/` (default `%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux/WSL2; keep it off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the five profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`):
 
 - Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`
 - Substitutes `{{VAULT_PATH}}` in `config.yaml` with the runtime vault's absolute path
 - Calls `hermes profile install` to register the profile
 - Copies `.env.EXAMPLE` to `.env` for each profile (only on first install — existing `.env` files are never overwritten)
 
-It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
+It is idempotent. To re-deploy only the profiles after editing the vault source, run `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
 
 **3. Set up your own git in the vault** (recommended).
 
-The installer copies the vault but does **not** initialize git — the runtime vault is your repo, under your identity. From the runtime folder (default `~/Memoria`):
+The installer copies the vault but does **not** initialize git — the runtime vault is your repo, under your identity. From the runtime folder:
 
 ```bash
 git init && git add -A && git commit -m "Initial Memoria vault"
@@ -69,10 +69,10 @@ All five `memoria-*` profiles appear in the output — no retired names ([Instal
 Check that `{{VAULT_PATH}}` was substituted:
 
 ```powershell
-Get-Content "$env:USERPROFILE\.hermes\profiles\memoria-librarian\config.yaml"
+Get-Content "$env:LOCALAPPDATA\hermes\profiles\memoria-librarian\config.yaml"
 ```
 
-The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
+The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
 
 ## Related
 

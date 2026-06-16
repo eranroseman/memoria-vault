@@ -33,7 +33,7 @@ The installer provisions Hermes, scaffolds your runtime vault (default `~/Memori
 
 **2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. The required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
 
-**3. Fill the secrets.** Copy the `apiKey` from Settings → Local REST API, then put your keys in the **global** `~/.hermes/.env`:
+**3. Fill the secrets.** Copy the `apiKey` from Settings → Local REST API, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2):
 
 ```bash
 KILOCODE_API_KEY=...      # model access
@@ -44,6 +44,10 @@ OPENALEX_API_KEY=...      # enrichment + discovery
 ```
 
 Propagate them into every profile (profile runs read only their own `.env`):
+
+```powershell
+.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria"
+```
 
 ```bash
 bash scripts/install.sh --profiles-only --vault ~/Memoria

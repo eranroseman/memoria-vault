@@ -47,7 +47,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 - ✗ Fails: wrong `--vault` target, or the copy step (rsync/cp) failed.
 
 **A3. Profiles registered.** `hermes profile list`
-- ✓ Pass: all 5 `memoria-{copi,librarian,writer,peer-reviewer,engineer}` listed with an installed path under `~/.hermes/profiles/`.
+- ✓ Pass: all 5 `memoria-{copi,librarian,writer,peer-reviewer,engineer}` listed with an installed path under the Hermes profiles directory (`%LOCALAPPDATA%\hermes\profiles` on Windows, `~/.hermes/profiles` on Linux/WSL2).
 
 ---
 
@@ -58,7 +58,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 **B2. `.env` bootstrapped + shared keys seeded.** `cat ~/.hermes/profiles/memoria-librarian/.env`
 - ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_API_KEY` for the Librarian.
-- ✗ Fails: the global `~/.hermes/.env` held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md), #39).
+- ✗ Fails: the shared Hermes env file held the keys but they weren't seeded per-profile — the documented `${OBSIDIAN_API_KEY}`→empty failure ([ADR-27](../../adr/27-hermes-native-config-and-gate-enforcement.md), #39).
 
 **B3. Profile config is valid.** `hermes profile show memoria-librarian`
 - ✓ Pass: shows `SOUL.md`, the model block, `mcp_servers` (`policy`, `obsidian`) from `config.yaml`, allowed skills, and `.env` key **names** (values redacted). No parse error.

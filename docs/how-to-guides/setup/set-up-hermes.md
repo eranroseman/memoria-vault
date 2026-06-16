@@ -17,7 +17,9 @@ Fill the API secrets, propagate them into the five profiles, and verify that Her
 
 ## Steps
 
-**1. Put the shared keys in the global `~/.hermes/.env`.**
+**1. Put the shared keys in the shared Hermes env file.**
+
+Use `%LOCALAPPDATA%\hermes\.env` on Windows and `~/.hermes/.env` on Linux/WSL2.
 
 ```env
 KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
@@ -40,7 +42,11 @@ Hermes profile runs read **only the profile's own `.env`** — there is no globa
 bash scripts/install.sh --profiles-only --vault <vault>
 ```
 
-Re-run this any time you add or rotate a key in `~/.hermes/.env`. To check a single profile, open `~/.hermes/profiles/memoria-librarian/.env` — the Librarian carries the most keys (it does all enrichment and discovery).
+```powershell
+.\scripts\install.ps1 -ProfilesOnly -Vault <vault>
+```
+
+Re-run this any time you add or rotate a key in the shared Hermes env file. To check a single profile, open the deployed `memoria-librarian/.env` under the Hermes profiles directory — the Librarian carries the most keys (it does all enrichment and discovery).
 
 **3. Confirm the placeholders were substituted.**
 
@@ -48,7 +54,7 @@ Re-run this any time you add or rotate a key in `~/.hermes/.env`. To check a sin
 grep -A2 "policy" ~/.hermes/profiles/memoria-librarian/config.yaml | head
 ```
 
-The `policy` server's entry should point at the vault venv's Python and an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{PYTHON}}` or `{{VAULT_PATH}}`, re-run `bash scripts/install.sh --profiles-only --vault <vault>`.
+The `policy` server's entry should point at the vault venv's Python and an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{PYTHON}}` or `{{VAULT_PATH}}`, re-run `bash scripts/install.sh --profiles-only --vault <vault>` on Linux/WSL2 or `.\scripts\install.ps1 -ProfilesOnly -Vault <vault>` on Windows.
 
 **4. Install the upstream MCP servers (Librarian + Peer-reviewer).**
 

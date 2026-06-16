@@ -17,7 +17,7 @@ hermes --version
 hermes profile list
 ```
 
-`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy from the repo clone: `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows).
+`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy from the repo clone: `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
 
 **2. Confirm the secrets are in place.**
 
@@ -26,7 +26,14 @@ grep -c '=' ~/.hermes/.env
 cat ~/.hermes/profiles/memoria-librarian/.env | grep -E 'KILOCODE|OPENALEX|OBSIDIAN' | sed 's/=.*/=set/'
 ```
 
-`KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, and `OPENALEX_API_KEY` should all show as set. A blank key fails silently mid-task. If you rotated keys in `~/.hermes/.env`, propagate them: `bash scripts/install.sh --profiles-only`.
+```powershell
+(Get-Content "$env:LOCALAPPDATA\hermes\.env" | Where-Object { $_ -match '=' }).Count
+Get-Content "$env:LOCALAPPDATA\hermes\profiles\memoria-librarian\.env" |
+  Where-Object { $_ -match '^(KILOCODE|OPENALEX|OBSIDIAN)' } |
+  ForEach-Object { $_ -replace '=.*', '=set' }
+```
+
+`KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OPENALEX_API_KEY` should all show as set. A blank key or placeholder certificate path fails mid-task. If you rotated keys in the shared Hermes env file, propagate them with the profile redeploy command above.
 
 **3. Confirm the vault is synced.**
 

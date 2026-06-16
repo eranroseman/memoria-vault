@@ -60,7 +60,7 @@ On restart the plugin regenerates a real `apiKey` (64-char hex token) and its TL
 
 **5. Copy the API key and HTTPS certificate path.**
 
-Settings → Local REST API → copy the `apiKey` value. It goes into `OBSIDIAN_API_KEY` in `~/.hermes/.env` in [Set up Hermes](set-up-hermes.md).
+Settings → Local REST API → copy the `apiKey` value. It goes into `OBSIDIAN_API_KEY` in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2) in [Set up Hermes](set-up-hermes.md).
 
 Export or copy the plugin's HTTPS certificate/CA bundle as a PEM file and keep
 that path for `OBSIDIAN_MCP_SSL_VERIFY`. The path is machine-local; do not commit
@@ -68,7 +68,7 @@ the certificate or a real plugin `data.json`.
 
 **6. Confirm plugin settings match the shipped defaults.**
 
-- Local REST API: **HTTPS server ON, port 27124** (loopback-only) — Hermes reaches the vault over the plugin's native MCP at `https://127.0.0.1:27124/mcp` and verifies the plugin cert through `OBSIDIAN_MCP_SSL_VERIFY` ([ADR-31](../../adr/31-native-obsidian-mcp.md)). Keep `OBSIDIAN_MCP_PORT` in `~/.hermes/.env` equal to this port.
+- Local REST API: **HTTPS server ON, port 27124** (loopback-only) — Hermes reaches the vault over the plugin's native MCP at `https://127.0.0.1:27124/mcp` and verifies the plugin cert through `OBSIDIAN_MCP_SSL_VERIFY` ([ADR-31](../../adr/31-native-obsidian-mcp.md)). Keep `OBSIDIAN_MCP_PORT` in the shared Hermes env file equal to this port.
 - Obsidian Citation Plugin: bibliography path set to `.memoria/memoria.bib`
 
 **7. Do not install the frontend Obsidian Linter.**

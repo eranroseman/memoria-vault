@@ -25,10 +25,10 @@ bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2 (whe
 ```
 
 ```powershell
-.\scripts/install.ps1 -ProfilesOnly          # Windows (forwards to scripts/install.sh in WSL2)
+.\scripts/install.ps1 -ProfilesOnly -Vault <vault>           # Windows native production
 ```
 
-`--vault <dir>` names your runtime vault if it isn't the default `~/Memoria`. The script is idempotent — safe to run at any time. It:
+`--vault <dir>` / `-Vault <dir>` names your runtime vault if it isn't the platform default (`~/Memoria` on Linux/WSL2, `%USERPROFILE%\Memoria` on Windows). The script is idempotent — safe to run at any time. It:
 
 - Stages each profile's files to a temp directory
 - Substitutes `{{PYTHON}}` (the vault venv interpreter) and `{{VAULT_PATH}}` in `config.yaml`

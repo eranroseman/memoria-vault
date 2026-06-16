@@ -55,7 +55,7 @@ bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2
 ```
 
 ```powershell
-.\scripts/install.ps1 -ProfilesOnly          # Windows (forwards to WSL2)
+.\scripts/install.ps1 -ProfilesOnly -Vault <vault>           # Windows native production
 ```
 
 To fix drift on a single profile only:
