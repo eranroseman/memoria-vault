@@ -8,6 +8,7 @@ Inputs (all best-effort -- missing sources degrade gracefully):
   - system/logs/audit.jsonl          deny rate (policy-MCP decisions, this period)
   - Hermes board (`hermes kanban list --json`)   success rate + retry rate per lane
   - system/logs/lint-findings.jsonl  drift incidents (Linter), if present
+  - system/logs/attention.jsonl      Obsidian-side resolve timing
 
 Trust score (glossary "Trust score"): combines audit **deny rate**, **retry rate**,
 **success rate**, **drift incidents**, **secret hits**, and accept/reject ratios;
@@ -43,6 +44,8 @@ LINT_RELPATH = "system/logs/lint-findings.jsonl"
 DISPOSITION_RELPATH = "system/logs/disposition.jsonl"        # accept | edit | reject per review
 COST_RELPATH = "system/logs/cost.jsonl"                      # API spend + tokens per card
 TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
+ATTENTION_RELPATH = "system/logs/attention.jsonl"            # Obsidian active-card resolve timing
+BLIND_REVIEW_RELPATH = "system/logs/blind-review-samples.jsonl"
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
 LANES = ("memoria-librarian", "memoria-writer", "memoria-peer-reviewer",
@@ -94,15 +97,32 @@ def read_board(cards: list[dict]) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for raw in cards:
         c = board_export.normalize(raw)
-        rec = out.setdefault(c["assignee"], {"done": 0, "blocked": 0, "retry_total": 0})
+        rec = out.setdefault(c["assignee"],
+                             {"done": 0, "blocked": 0, "retry_total": 0,
+                              "time_on_gate": [], "expand_then_accept": []})
         if c["status"] == "done":
             rec["done"] += 1
         elif c["status"] == "blocked":
             rec["blocked"] += 1
+        if c["status"] in {"done", "blocked"}:
+            minutes = _minutes_between(c.get("created_at"), c.get("last_updated"))
+            if minutes is not None:
+                rec["time_on_gate"].append(minutes)
+        if c["review_status"] == "approved":
+            minutes = _minutes_between(c.get("expanded_at"), c.get("reviewed_at"))
+            if minutes is not None:
+                rec["expand_then_accept"].append(minutes)
         try:
             rec["retry_total"] += int(c["retry_count"])
         except (TypeError, ValueError):
             pass
+    for rec in out.values():
+        time_on_gate = _median(rec.pop("time_on_gate"))
+        expand_then_accept = _median(rec.pop("expand_then_accept"))
+        rec["time_on_gate_min"] = round(time_on_gate, 1) if time_on_gate is not None else None
+        rec["expand_then_accept_min"] = (
+            round(expand_then_accept, 1) if expand_then_accept is not None else None
+        )
     return out
 
 
@@ -205,6 +225,21 @@ def _median(xs: list[float]) -> float | None:
     return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
 
 
+def _num(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _minutes_between(start, end) -> float | None:
+    t0 = _parse_ts(str(start or ""))
+    t1 = _parse_ts(str(end or ""))
+    if t0 is None or t1 is None or t1 < t0:
+        return None
+    return (t1 - t0).total_seconds() / 60.0
+
+
 def read_decision_time(vault: Path, period: str) -> dict[str, float]:
     """Per-lane median operator decision time (minutes) — the gap between a card's
     `review -> requested` transition and its terminal review transition, read from
@@ -227,6 +262,45 @@ def read_decision_time(vault: Path, period: str) -> dict[str, float]:
     return {lane: round(_median(v), 1) for lane, v in samples.items() if v}
 
 
+def read_attention(vault: Path, period: str) -> dict[str, dict]:
+    """Per-lane PI attention timing from Obsidian-side resolve events."""
+    samples: dict[str, dict[str, list[float]]] = {}
+    for e in _iter_jsonl(vault, ATTENTION_RELPATH, period):
+        lane = e.get("lane") or "unknown"
+        rec = samples.setdefault(lane, {"card_open_resolve": [], "expand_then_accept": []})
+        duration = _num(e.get("duration_minutes"))
+        if duration is None:
+            duration = _minutes_between(e.get("opened_at"), e.get("resolved_at"))
+        if duration is None:
+            continue
+        rec["card_open_resolve"].append(duration)
+        lifecycle_to = str(e.get("lifecycle_to") or "")
+        outcome = str(e.get("outcome") or "")
+        if lifecycle_to == "current" or "accept" in outcome:
+            rec["expand_then_accept"].append(duration)
+    out: dict[str, dict] = {}
+    for lane, v in samples.items():
+        card_open = _median(v["card_open_resolve"])
+        expand_accept = _median(v["expand_then_accept"])
+        out[lane] = {
+            "card_open_resolve_min": round(card_open, 1) if card_open is not None else None,
+            "expand_then_accept_min": (
+                round(expand_accept, 1) if expand_accept is not None else None
+            ),
+            "samples": len(v["card_open_resolve"]),
+        }
+    return out
+
+
+def read_blind_reviews(vault: Path, period: str) -> dict[str, int]:
+    """Per-lane blind re-review sample counts for `period`."""
+    out: dict[str, int] = {}
+    for e in _iter_jsonl(vault, BLIND_REVIEW_RELPATH, period):
+        lane = e.get("lane") or "unknown"
+        out[lane] = out.get(lane, 0) + 1
+    return out
+
+
 def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
                 drift: int = 0, secret_hits: int = 0,
                 accept_ratio: float | None = None) -> tuple[int, str]:
@@ -247,18 +321,22 @@ def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
 
 def compute_lane(lane: str, audit: dict, board: dict, drift: int,
                  disp: dict | None = None, cost: dict | None = None,
-                 dtime: dict | None = None) -> dict | None:
+                 dtime: dict | None = None, attention: dict | None = None,
+                 blind_reviews: dict | None = None) -> dict | None:
     """Combine the inputs for one lane into a metric dict, or None if no activity."""
     a = audit.get(lane, {})
     b = board.get(lane, {})
     d = (disp or {}).get(lane, {})
     c = (cost or {}).get(lane, {})
+    att = (attention or {}).get(lane, {})
     writes = a.get("total", 0)
     denies = a.get("deny", 0)
     done, blocked = b.get("done", 0), b.get("blocked", 0)
     runs = done + blocked
     reviews = d.get("accepted", 0) + d.get("edited", 0) + d.get("rejected", 0)
-    samples = writes + runs + reviews
+    attention_samples = att.get("samples", 0)
+    blind_samples = (blind_reviews or {}).get(lane, 0)
+    samples = writes + runs + reviews + attention_samples + blind_samples
     if samples == 0:
         return None
     deny_rate = denies / writes if writes else 0.0
@@ -280,6 +358,14 @@ def compute_lane(lane: str, audit: dict, board: dict, drift: int,
         "rejected": d.get("rejected", 0),
         "accept_ratio": round(accept_ratio, 3) if accept_ratio is not None else None,
         "decision_time_min": (dtime or {}).get(lane),
+        "time_on_gate_min": b.get("time_on_gate_min"),
+        "expand_then_accept_min": (
+            att["expand_then_accept_min"]
+            if att.get("expand_then_accept_min") is not None
+            else b.get("expand_then_accept_min")
+        ),
+        "card_open_resolve_min": att.get("card_open_resolve_min"),
+        "blind_rereview_samples": blind_samples,
         "cost": round(c.get("cost", 0.0), 4),
         "tokens_in": int(c.get("tokens_in", 0)), "tokens_out": int(c.get("tokens_out", 0)),
         "consistency_passk": None,   # pass^k needs repeated-run data; harness TODO (see header)
@@ -294,6 +380,10 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
         "retry_rate": m["retry_rate"], "drift_incidents": m["drift_incidents"],
         "accepted": m["accepted"], "edited": m["edited"], "rejected": m["rejected"],
         "accept_ratio": m["accept_ratio"], "decision_time_min": m["decision_time_min"],
+        "time_on_gate_min": m["time_on_gate_min"],
+        "expand_then_accept_min": m["expand_then_accept_min"],
+        "card_open_resolve_min": m["card_open_resolve_min"],
+        "blind_rereview_samples": m["blind_rereview_samples"],
         "cost": m["cost"], "tokens_in": m["tokens_in"], "tokens_out": m["tokens_out"],
         "consistency_passk": m["consistency_passk"],
         "samples": m["samples"], "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -308,6 +398,9 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
             lines.append(f"{k}: {v}")
     ratio = f" (accept_ratio {m['accept_ratio']})" if m["accept_ratio"] is not None else ""
     dtime = f"{m['decision_time_min']} min (median)" if m["decision_time_min"] is not None else "n/a"
+    gate = f"{m['time_on_gate_min']} min (median)" if m["time_on_gate_min"] is not None else "n/a"
+    expand = f"{m['expand_then_accept_min']} min (median)" if m["expand_then_accept_min"] is not None else "n/a"
+    resolve = f"{m['card_open_resolve_min']} min (median)" if m["card_open_resolve_min"] is not None else "n/a"
     lines += ["---", "", f"# {m['lane']} — {period}", "",
               f"Trust score **{m['trust_score']}/100** ({m['band']}).", "",
               f"- writes: {m['writes']} (deny {m['denies']}, dry_run {m['dry_runs']})",
@@ -315,6 +408,8 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
               f"- deny_rate {m['deny_rate']} · success_rate {m['success_rate']} · retry_rate {m['retry_rate']}",
               f"- review: accepted {m['accepted']} / edited {m['edited']} / rejected {m['rejected']}{ratio}",
               f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['tokens_in']}/{m['tokens_out']}",
+              f"- attention: time-on-gate {gate} · expand-to-accept {expand} · card-open-to-resolve {resolve}",
+              f"- blind re-review samples: {m['blind_rereview_samples']}",
               "",
               f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
               f"same period overwrites this note.*", ""]
@@ -333,11 +428,14 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
     disp = read_disposition(vault, period)
     cost = read_cost(vault, period)
     dtime = read_decision_time(vault, period)
+    attention = read_attention(vault, period)
+    blind_reviews = read_blind_reviews(vault, period)
     outdir = vault / METRICS_RELDIR
     outdir.mkdir(parents=True, exist_ok=True)
     written = []
     for lane in LANES:
-        m = compute_lane(lane, audit, board, drift.get(lane, 0), disp, cost, dtime)
+        m = compute_lane(lane, audit, board, drift.get(lane, 0), disp, cost, dtime,
+                         attention, blind_reviews)
         if m is None:
             continue
         (outdir / f"lane-{lane.replace('memoria-', '')}-{period}.md").write_text(

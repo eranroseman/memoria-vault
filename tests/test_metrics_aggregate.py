@@ -3,6 +3,8 @@
 import metrics_aggregate as _m
 
 AUDIT_RELPATH = _m.AUDIT_RELPATH
+ATTENTION_RELPATH = _m.ATTENTION_RELPATH
+BLIND_REVIEW_RELPATH = _m.BLIND_REVIEW_RELPATH
 METRICS_RELDIR = _m.METRICS_RELDIR
 accept_ratio_of = _m.accept_ratio_of
 aggregate = _m.aggregate
@@ -12,6 +14,8 @@ json = _m.json
 read_cost = _m.read_cost
 read_decision_time = _m.read_decision_time
 read_disposition = _m.read_disposition
+read_attention = _m.read_attention
+read_blind_reviews = _m.read_blind_reviews
 read_lint_verdict = _m.read_lint_verdict
 timezone = _m.timezone
 trust_score = _m.trust_score
@@ -119,6 +123,79 @@ def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
     assert "decision_time_min: 30.0" in note
     assert "cost: 0.4" in note
     assert "consistency_passk: null" in note
+
+
+def test_attention_and_blind_review_metrics_feed_lane_notes(tmp_path):
+    logs = tmp_path / "system" / "logs"
+    logs.mkdir(parents=True)
+    (tmp_path / ATTENTION_RELPATH).write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
+                {
+                    "timestamp": "2026-05-28T10:30:00Z",
+                    "event": "inbox_card_resolved",
+                    "path": "inbox/work-prompt-review-x.md",
+                    "lane": "memoria-writer",
+                    "task_id": "x",
+                    "outcome": "current (accept)",
+                    "lifecycle_to": "current",
+                    "opened_at": "2026-05-28T10:00:00Z",
+                    "resolved_at": "2026-05-28T10:30:00Z",
+                    "duration_minutes": 30.0,
+                },
+                {
+                    "timestamp": "2026-05-28T11:45:00Z",
+                    "event": "inbox_card_resolved",
+                    "path": "inbox/work-prompt-review-y.md",
+                    "lane": "memoria-writer",
+                    "task_id": "y",
+                    "outcome": "archived (reject)",
+                    "lifecycle_to": "archived",
+                    "opened_at": "2026-05-28T11:00:00Z",
+                    "resolved_at": "2026-05-28T11:45:00Z",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / BLIND_REVIEW_RELPATH).write_text(
+        "\n".join(
+            json.dumps(r)
+            for r in [
+                {"timestamp": "2026-05-28T12:00:00Z", "task_id": "x", "lane": "memoria-writer"},
+                {"timestamp": "2026-01-01T12:00:00Z", "task_id": "old", "lane": "memoria-writer"},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    cards = [
+        {
+            "task_id": "x",
+            "status": "done",
+            "assignee": "memoria-writer",
+            "created_at": "2026-05-28T09:00:00Z",
+            "updated_at": "2026-05-28T12:00:00Z",
+            "metadata": {
+                "review_status": "approved",
+                "expanded_at": "2026-05-28T10:00:00Z",
+                "reviewed_at": "2026-05-28T10:20:00Z",
+            },
+        }
+    ]
+
+    attention = read_attention(tmp_path, PERIOD)
+    blind = read_blind_reviews(tmp_path, PERIOD)
+    aggregate(tmp_path, cards, now=NOW)
+    note = (tmp_path / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
+
+    assert attention["memoria-writer"]["card_open_resolve_min"] == 37.5
+    assert attention["memoria-writer"]["expand_then_accept_min"] == 30.0
+    assert blind["memoria-writer"] == 1
+    assert "time_on_gate_min: 180.0" in note
+    assert "expand_then_accept_min: 30.0" in note
+    assert "card_open_resolve_min: 37.5" in note
+    assert "blind_rereview_samples: 1" in note
 
 
 def test_lint_verdict_rollup_writes_periodized_verdict_note(tmp_path):

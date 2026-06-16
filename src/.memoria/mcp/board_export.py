@@ -12,6 +12,7 @@ aggregator and any publication analysis read (see docs/reference/telemetry.md):
   system/logs/board-transitions.jsonl  per-card state/review transitions (time-series)
   system/logs/disposition.jsonl   accept | edit | reject per review decision (UN-BACKFILLABLE)
   system/logs/cost.jsonl          API spend + token counts per card at completion
+  system/logs/blind-review-samples.jsonl  deterministic sample requests for blind re-review
   inbox/work-prompt-review-*.md   ONE review prompt per card that reaches `done`
                                   (the Inbox is the PI's slice of the board, ADR-51)
 
@@ -27,6 +28,7 @@ owns rotation/cleanup of the projected files and logs.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -46,6 +48,7 @@ SNAPSHOT_RELPATH = "system/logs/board-state.jsonl"
 TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # per-card status/review changes
 DISPOSITION_RELPATH = "system/logs/disposition.jsonl"        # accept | edit | reject (un-backfillable)
 COST_RELPATH = "system/logs/cost.jsonl"                      # API spend + tokens per card at completion
+BLIND_REVIEW_RELPATH = "system/logs/blind-review-samples.jsonl"  # sampled terminal reviews
 STATE_CACHE_RELPATH = "system/logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
 LIVE_STATUSES = ("triage", "todo", "ready", "running", "blocked", "done")  # not archived
 REVIEW_QUEUE_STATES = ("requested",)   # done cards handed off for human review (review_status: requested)
@@ -139,13 +142,16 @@ def normalize(card: dict) -> dict:
         "review_status": md.get("review_status", "unreviewed"),
         "retry_count": md.get("retry_count", 0),
         "reason": _first(card, "reason") or md.get("blocked_reason", ""),
+        "created_at": _iso_ts(_first(card, "created_at", default="")),
         "last_updated": _iso_ts(_first(card, "updated_at", "modified_at", "created_at")),
         "summary": summary,
         # --- telemetry overlay (all best-effort; empty when Hermes doesn't supply them) ---
         "agent_recommendation": md.get("agent_recommendation", md.get("agent_verdict", "")),
         "disposition": md.get("disposition", ""),       # explicit "edited" wins over the derived accept/reject
+        "expanded_at": md.get("expanded_at", ""),
         "review_requested_at": md.get("review_requested_at", ""),
         "reviewed_at": md.get("reviewed_at", ""),
+        "blind_rereview": md.get("blind_rereview", False),
         "cost": md.get("cost", card.get("cost", "")),   # API spend for the card ($)
         "tokens_in": md.get("tokens_in", card.get("tokens_in", "")),
         "tokens_out": md.get("tokens_out", card.get("tokens_out", "")),
@@ -265,6 +271,7 @@ def compute_events(prev: dict, cards: list[dict]) -> dict:
     transitions: list[dict] = []
     dispositions: list[dict] = []
     costs: list[dict] = []
+    blind_reviews: list[dict] = []
     for raw in cards:
         c = normalize(raw)
         tid, lane = c["task_id"], c["assignee"]
@@ -291,7 +298,27 @@ def compute_events(prev: dict, cards: list[dict]) -> dict:
                 dispositions.append({"timestamp": ts, "task_id": tid, "lane": lane,
                                      "disposition": disp,
                                      "agent_recommendation": c["agent_recommendation"]})
-    return {"transitions": transitions, "dispositions": dispositions, "costs": costs}
+                if c["blind_rereview"] or should_sample_blind_review(tid):
+                    blind_reviews.append({"timestamp": ts, "task_id": tid, "lane": lane,
+                                          "disposition": disp,
+                                          "review_status": c["review_status"],
+                                          "sample_reason": "blind-rereview",
+                                          "agent_recommendation": c["agent_recommendation"]})
+    return {"transitions": transitions, "dispositions": dispositions, "costs": costs,
+            "blind_reviews": blind_reviews}
+
+
+def should_sample_blind_review(task_id: str, rate: float = 0.05) -> bool:
+    """Deterministically sample terminal reviews for a second blind pass.
+
+    The card id is hashed so repeated exports make the same choice without a
+    mutable sampler state. `metadata.blind_rereview: true` on a card forces the
+    sample path for tests or an intentional spot-check.
+    """
+    if not task_id or rate <= 0:
+        return False
+    bucket = int(hashlib.sha256(task_id.encode("utf-8")).hexdigest()[:8], 16) / 0xFFFFFFFF
+    return bucket < rate
 
 
 _append_jsonl = append_jsonl
@@ -302,6 +329,7 @@ def export_events(vault: Path, prev: dict, cards: list[dict]) -> dict:
     append_jsonl(vault / TRANSITIONS_RELPATH, ev["transitions"])
     append_jsonl(vault / DISPOSITION_RELPATH, ev["dispositions"])
     append_jsonl(vault / COST_RELPATH, ev["costs"])
+    append_jsonl(vault / BLIND_REVIEW_RELPATH, ev["blind_reviews"])
     return {k: len(v) for k, v in ev.items()}
 
 

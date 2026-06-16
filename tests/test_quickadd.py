@@ -323,6 +323,10 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     assert '"current (accept)": "current"' in script
     assert '"archived (reject)": "archived"' in script
     assert '"archived (done / no action)": "archived"' in script
+    assert 'ATTENTION_LOG = "system/logs/attention.jsonl"' in script
+    assert 'event: "inbox_card_resolved"' in script
+    assert 'duration_minutes: durationMinutes(openedAt, resolvedAt)' in script
+    assert 'appendAttentionRow(app, attentionRow)' in script
 
 
 def test_delegate_task_picker_uses_work_labels_not_profile_ids():
