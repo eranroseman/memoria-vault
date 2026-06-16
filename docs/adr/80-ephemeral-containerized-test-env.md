@@ -47,11 +47,13 @@ shape / frontmatter, gate decision + audit row, board transition, dashboard
 re-render (injected JS), and a screenshot golden-image diff.
 
 The local model is **served by `llama.cpp`** (already vended via `qmd`'s
-`node-llama-cpp`, GPU path solved on the test box; GGUF Q4_K_M fits the 16 GB
-card). `gemma4_unified` (~12B) is the target **only once its existence and an
-OpenAI-style text+tool endpoint are confirmed first-party**; **Qwen3-MoE is the
-verified fallback** and the choice of Gemma-over-Qwen3 must be justified on
-evidence, not VRAM math. The model is selected per environment through a
+`node-llama-cpp`, GPU path solved on the test box). The target is **Gemma 4 12B**,
+confirmed GA (Google, 2026-06-03, Apache 2.0): it is **multimodal-input /
+text-output**, so it serves cleanly through a standard OpenAI text+tool endpoint —
+dissolving the earlier "any-to-any won't serve" worry — with an official GGUF
+(`unsloth/gemma-4-12b-it-GGUF`, `UD-Q4_K_XL` ≈ 7–8 GB, fitting the 16 GB card) run
+via `llama-server … --jinja`, exposing `/v1`. **Qwen3-MoE remains an optional
+fallback, no longer load-bearing.** The model is selected per environment through a
 `MEMORIA_ENV=test|prod` overlay that extends the installer's existing
 `{{PYTHON}}`/`{{VAULT_PATH}}`/`{{QMD}}` substitution with `{{MODEL_PROVIDER}}` /
 `{{MODEL_BASE_URL}}` / `{{MODEL_DEFAULT}}` — flipping the Hermes provider
@@ -70,13 +72,47 @@ then):
    superseded `re.fullmatch("obsidian.*")` shell-hook never matched the real
    `mcp_obsidian_*` tool names; the plugin's substring match does, so the shim must
    route through the plugin. (Shipped as the alpha.5 thin slice.)
-2. **Verify the local model exists and is text+tool-servable** before any sizing is
-   load-bearing — `gemma4_unified` / "any-to-any" is unconfirmed; Qwen3-MoE is the
-   verified fallback.
-3. **Verify tool-call emission.** Confirm the serving runtime (`llama.cpp --jinja`)
-   emits OpenAI-format `tool_calls` Hermes can consume, and that an
-   `openai-compatible` Hermes provider exists and carries them; otherwise a
-   parser/shim is required, not a `base_url` swap.
+2. **Model exists and is text+tool-servable — RESOLVED (2026-06-16).** Gemma 4 12B
+   is GA with an official GGUF and `llama.cpp` / Ollama / vLLM support; it is
+   multimodal-input / text-output, so a standard OpenAI text+tool endpoint fits. No
+   longer a blocker; Qwen3-MoE is a kept-in-reserve fallback.
+3. **Tool-call emission — narrowed to a smoke test.** Model, GGUF, `--jinja`, the
+   `/v1` endpoint, and headline tool-use are all confirmed; the one unverified
+   detail is whether `llama.cpp --jinja` parses Gemma 4's chat template into
+   OpenAI-format `tool_calls` Hermes can consume (Gemma 3 lacked native tool tokens,
+   so it is worth a local check). A ~5-minute `llama-server` smoke test settles it;
+   only if it fails is a parser/shim needed, not a `base_url` swap.
+
+## Phased adoption — the minimal viable harness (80/20)
+
+The full harness is a large build, but most of its release-blocking value does
+**not** need the costly parts. Memoria's load-bearing logic is deterministic
+(Operations, the policy gate, ingest, schemas), so the **model layer** and the
+**visual layer** — the two most expensive pieces — buy the *last* increment of
+confidence, not the first.
+
+**Phase 1 — deterministic integration harness (~20% of the cost, ~80% of the
+value).** No GPU, no live model, no screenshots. Containerize the *existing*
+offline stack — `scripts/e2e-smoke.sh` already builds a vault installer-equivalently
+and walks scaffold → golden → commit gate → offline ingest → honesty card → lint
+with no network — and add: (a) **headless Obsidian driven over the command palette
+with data-layer asserts** (artifact / frontmatter, gate decision + audit row, board
+transition, dashboard re-render) — *not* pixel diffs; (b) **record/replay cassettes**
+for the agent-wiring loops, matched on tool-call structure, so the L2b layer is
+exercised with **no live model**; (c) the **deny-assertion** (already shipped) plus
+the **installer / recovery** smoke. Deterministic, runs per-PR, and closes the
+L3-integration, recovery, and safety gaps that actually block releases.
+
+**Phase 2 — the live-model + visual + chaos/perf tail (~80% of the cost).** The
+`--gpus all` sibling container + Gemma 4 + nightly real-quality L5 eval, the
+screenshot golden-image diffs, and the chaos / security / performance suites. Its
+*model* risk is now low (gate 2 resolved), but its *cost* — GPU infra,
+nondeterminism, and flaky visual baselines — is what makes it the expensive tail.
+Build it only once Phase 1's coverage proves insufficient.
+
+This phasing is already latent in the design's cadence (per-PR fs-shim + cassettes
+with no live model; nightly full stack on Gemma); Phase 1 simply makes the
+no-model tier the shippable unit and defers the rest.
 
 ## Consequences
 
@@ -106,8 +142,9 @@ then):
 Raise this from `deferred` when any holds: the manual L3 surface or an uncovered
 cross-cutting suite (recovery / security / performance) becomes a recurring
 release-blocking gap; a real project's PI-touch budget needs L5 regression
-automated rather than hand-run; or a confirmed local tool-calling model (Gemma-4
-or Qwen3-MoE) is in hand so gate 2/3 can close. The `assumes:` list pins the
+automated rather than hand-run. **Phase 1 (above) needs no model work at all** — its
+trigger is simply that recurring L3 / recovery gap — so it can start now; gate 2 is
+already resolved and Phase 2 carries the remaining model / visual cost. The `assumes:` list pins the
 mechanisms it rests on — if the two-installer split (ADR-64), the write gate
 (ADR-28), or the reconciling installer (ADR-76) change shape, re-judge this.
 
@@ -121,10 +158,12 @@ ADR-64 already deleted on the production side.
 as the *whole* env, kept as the per-PR cheap tier: a filesystem shim cannot
 exercise real plugins, REST, dashboards, Zotero, or the visual surface.
 
-**Serve the model with vLLM.** Rejected: no usable GGUF path for the new
-`gemma4_unified` arch, and BF16/AWQ won't fit the 16 GB card; `llama.cpp` is
-already vended and GPU-solved. Ollama is acceptable only as a thin wrapper over the
-same `llama.cpp` engine, not a separate stack.
+**Serve the model with vLLM.** vLLM *is* in fact supported for Gemma 4 (Google
+lists it), so this is a preference, not a constraint: `llama.cpp` is still chosen
+because it is already vended via `qmd`, its GGUF (`UD-Q4_K_XL` ≈ 7–8 GB) fits the
+16 GB card with headroom, and the GPU path is already solved on the test box. Ollama
+is acceptable only as a thin wrapper over the same `llama.cpp` engine, not a
+separate stack.
 
 ## Related
 
