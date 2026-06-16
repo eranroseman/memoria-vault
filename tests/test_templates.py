@@ -97,3 +97,14 @@ def test_templates_surface_identity_type_lifecycle_first():
             assert keys[:4] == ["title", "type", "lifecycle", "maturity"]
         if tpl.name == "fleeting.md":
             assert keys[:4] == ["title", "type", "lifecycle", "origin"]
+
+
+def test_project_templates_start_in_schema_valid_states():
+    project = _frontmatter(TEMPLATES / "project.md")
+    thesis = _frontmatter(TEMPLATES / "thesis.md")
+
+    assert project["lifecycle"] == "current"
+    assert project["output_mode"] == "thesis"
+    assert project["question_version"] == 1
+    assert thesis["lifecycle"] == "proposed"
+    assert thesis["project"] == "[[PLACEHOLDER]]"

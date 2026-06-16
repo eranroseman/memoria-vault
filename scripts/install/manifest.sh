@@ -23,6 +23,10 @@ SKELETON_DIRS=(
   notes/hubs
   notes/indexes
   projects
+  projects/_template
+  projects/_template/code
+  projects/_template/drafts
+  projects/_template/exports
   inbox
   system/board
   system/exports

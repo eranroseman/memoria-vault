@@ -76,11 +76,11 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 
 | Subset | Types |
 | --- | --- |
-| full chain | `source` |
+| full chain | `source`, `thesis` |
 | `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `pattern`, `eval-task`, `worklist-item` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
-| `current → archived` | `person`, `organization`, `venue`, `repository`, `hub`, `index` |
+| `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index` |
 
 `proposed` always means _awaiting the PI_. `retracted` is a state, not a deletion — supersession keeps the lineage (`superseded_by`). This lifecycle is the **PI-facing state**; the board's `status` enum is a separate, hidden execution mechanic (see [Kanban board reference](kanban-board.md)).
 
@@ -100,6 +100,36 @@ Claims only: `seedling → budding → evergreen`. It describes how settled a cl
 | `relationships` (map) | **catalog entities** | **Given** — facts from the bibliographic record, written by the ingest engine | `cited_by:`, `authored_by:`, `published_in:` … |
 
 Two related fields: a `source` note's required `entity` field is a wikilink to the Catalog entity the note is about, and a `claim`'s required `sources` list holds citekeys (bibliographic provenance, not note links). The Linter's `frontmatter-link` detector checks that every wikilink in `links:` and `entity` resolves to a real note; citekeys are checked by the sweeps instead.
+
+Project-gate argument edges may carry an optional `warrant` attribute on a
+`supports` relation when the author wants to state the grounds-to-claim inference
+explicitly ([ADR-79](../adr/79-argument-graph-and-warrant.md)). The schema keeps
+`links:` as a map because older string-list relations and newer edge objects must
+coexist during the alpha.5 transition.
+
+---
+
+## Project-gate fields
+
+`project` and `thesis` notes add the Project gate's authored state and operation
+cache ([ADR-77](../adr/77-project-gate.md), [ADR-78](../adr/78-thesis-note-type.md)):
+
+| Field | Kind | Notes |
+| --- | --- | --- |
+| `scope_topics` | `list` | Topic boundary for the project map. |
+| `inquiry` | `map` | PICO block: `population`, `intervention`, `comparison`, `outcome`. |
+| `finer` | `map` | Answerability lens: `feasible`, `novel`, `relevant`. |
+| `output_mode` | `enum` | `thesis` or `survey`. |
+| `question_version` / `question_log` | `int` / `list` | Version and rationale log for question changes. |
+| `gap_type` | `enum` | Project gap kind: `additive`, `conflict`, `fragility`, `structural`, `unstated-warrant`, or `refutation`. |
+| `impact` / `on_path` | `int` / `bool` | Materialized structural-impact cache for Project dashboards. |
+| `saturation_state` | `enum` | `unknown`, `unsaturated`, `saturated`, or `stale`. |
+| `graph_maturity` | `enum` | `cold-start`, `immature`, or `mature`. |
+| `computed_at` | `date` | Timestamp for the derived cache; stale values are shown as stale, not silently current. |
+
+Source notes also carry optional `evidence_level`, a CEBM-style enum
+(`cebm-1` … `cebm-5`, `ungraded`) used when source appraisal becomes relevant to
+Project work.
 
 ---
 
@@ -123,6 +153,7 @@ Worklist rows are `worklist-item` notes under `system/worklists/`. Their `lifecy
 | `title` / `name` | `str` | Notes and cards use `title`; catalog entities use `name` (papers carry both `citekey` and `title`). |
 | `created` | `date` | Optional everywhere. |
 | `research_area`, `methodology`, `topics` | `list` | Controlled-vocabulary classification (papers, sources, claims); values live in [Vocabulary](vocabulary.md). |
+| `ingest_status` | `enum` | Paper ingest floor/progress: `tier0`, `enriched`, `complete`, or `needs-human`. |
 
 ---
 

@@ -5,9 +5,10 @@ import schema
 
 def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 19
+    assert len(types) == 21
     expected = {
         "paper", "person", "organization", "venue", "dataset", "repository",
+        "project", "thesis",
         "fleeting", "source", "claim", "hub", "index",
         "candidate", "gap", "flag", "alert", "work-prompt", "pattern", "eval-task",
         "worklist-item",
@@ -75,6 +76,43 @@ def test_validate_frontmatter_round_trip():
     # bad literal
     errs = schema.validate_frontmatter(dict(good, type="hub"), claim)
     assert any("literal" in e for e in errs)
+
+
+def test_project_and_thesis_schema_contracts():
+    types = schema.load_types()
+    project = types["project"]
+    thesis = types["thesis"]
+
+    assert project["initial_lifecycle"] == "current"
+    assert thesis["initial_lifecycle"] == "proposed"
+    assert thesis["promotion_gate"] == "current"
+
+    project_note = {
+        "type": "project",
+        "lifecycle": "current",
+        "title": "Does X improve Y?",
+        "slug": "x-improves-y",
+        "scope_topics": ["mobile-health"],
+        "inquiry": {"population": "patients", "outcome": "adherence"},
+        "finer": {"feasible": "small corpus", "novel": "yes", "relevant": "program"},
+        "output_mode": "thesis",
+        "question_version": 1,
+        "question_log": [],
+    }
+    assert schema.validate_frontmatter(project_note, project) == []
+
+    thesis_note = {
+        "type": "thesis",
+        "lifecycle": "proposed",
+        "title": "X improves Y.",
+        "project": "[[x-improves-y]]",
+        "sources": [],
+    }
+    assert schema.validate_frontmatter(thesis_note, thesis) == []
+    assert any(
+        "lifecycle" in e
+        for e in schema.validate_frontmatter(dict(thesis_note, lifecycle="banana"), thesis)
+    )
 
 
 def test_required_any_on_flag_cards():

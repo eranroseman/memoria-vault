@@ -158,7 +158,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
       #576–583 created; in-scope issues assigned. Execution can start at WS-0.
 - [x] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved in `tmp/ws-0-spikes.md`
 - [x] WS-A ADR pass (#577)
-- [ ] WS-B schema + templates (#578)
+- [x] WS-B schema + templates (#578)
 - [ ] WS-C structural-impact Operation (#579)
 - [ ] WS-D gap taxonomy + saturation (#580)
 - [ ] WS-E PI surface (#581, #154, #381)
@@ -181,6 +181,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - 2026-06-16 — WS-A resolved in the ADR layer: added ADR-77/78/79 for the Project gate, thesis note
   type, and argument graph + optional `warrant`; retired ADR-17/34/40; amended the stale
   dependencies and doc-integrity notes called out in `adr-update.md`; regenerated the ADR index.
+- 2026-06-16 — WS-B resolved the schema/template spine: added `project` and `thesis` schemas and
+  templates, Project scaffold directories, Project-derived cache fields, `gap_type`, optional
+  evidence level on sources, `ingest_status` on papers, and schema-shaped Modal Forms project-start
+  fields with parity tests.
 
 ## 9. Surprises & discoveries
 
@@ -189,6 +193,9 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - WS-A: ADR-62 was partly stale rather than wholly deferred. Fleet observability is already built via
   `metrics_aggregate.py` and `memoria-metrics`, so the ADR now records the harness family as accepted
   with only the remaining harnesses still waiting on cadence-review context.
+- WS-B: the live ingest code already writes `ingest_status: enriched` and existing docs/tests reference
+  `complete`, so the paper schema enum uses the shipped values (`tier0`, `enriched`, `complete`,
+  `needs-human`) rather than the earlier tier1/tier2 wording.
 
 ## 10. Interfaces & dependencies
 
@@ -209,6 +216,9 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - WS-0 spike result: `docs/releasing/0.1.0-alpha.5/tmp/ws-0-spikes.md`.
 - WS-A decision records: `docs/adr/77-project-gate.md`,
   `docs/adr/78-thesis-note-type.md`, `docs/adr/79-argument-graph-and-warrant.md`.
+- WS-B schema/template artifacts: `src/.memoria/schemas/types/project.yaml`,
+  `src/.memoria/schemas/types/thesis.yaml`, `src/system/templates/project.md`,
+  `src/system/templates/thesis.md`, `src/projects/_template/`.
 
 ## 12. Outcomes & retrospective
 

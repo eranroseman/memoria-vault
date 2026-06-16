@@ -24,7 +24,8 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   ├── fleeting/  sources/  indexes/
 │   ├── claims/                review-gated
 │   └── hubs/                  review-gated
-├── projects/                project scratch (drafts, code) — Writer/Engineer lanes
+├── projects/                project records, theses, drafts, code, exports
+│   └── _template/             starter project scaffold copied by the Project on-ramp
 ├── inbox/                   the action queue — candidate/gap/flag/alert cards
 │   └── inbox.base             the Inbox board view
 └── system/                  infrastructure (untyped, except patterns/)
@@ -51,7 +52,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      19 per-type frontmatter schemas
+│   ├── types/<type>.yaml      21 per-type frontmatter schemas
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution floor, cluster params)
 ├── operations/              the deterministic operation cores

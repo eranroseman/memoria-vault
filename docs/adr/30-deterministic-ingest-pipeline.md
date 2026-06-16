@@ -19,7 +19,7 @@ nav_order: 30
 >
 > **Schema note (2026-06-16).** `ingest_status` is a paper-scoped enum, not an
 > implicit pipeline scratch field. The schema owns the legal values
-> (`tier0`, `tier1`, `tier2`, `needs-human`) and Operations must write only those
+> (`tier0`, `enriched`, `complete`, `needs-human`) and Operations must write only those
 > values.
 
 > **Implemented and validated live (#100–#116).** The deterministic spine ships as

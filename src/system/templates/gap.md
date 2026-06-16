@@ -2,6 +2,7 @@
 title: "{{VALUE:what's missing}}"
 type: gap
 lifecycle: proposed
+gap_type: additive
 action: "Search for a source to fill this gap"
 argument_for: ""
 argument_against: ""
@@ -9,6 +10,8 @@ what_tipped_it: ""
 certainty: likely
 raised_by: librarian
 loudness: notice
+impact: 0
+on_path: false
 created: {{DATE:YYYY-MM-DD}}
 ---
 

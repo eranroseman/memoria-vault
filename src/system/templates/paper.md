@@ -3,6 +3,7 @@ title: "{{VALUE:paper title}}"
 type: paper
 lifecycle: current
 citekey: "{{VALUE:citekey}}"
+ingest_status: tier0
 doi: ""
 authors: []
 year:

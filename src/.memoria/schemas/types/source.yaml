@@ -3,6 +3,7 @@ category: notes
 gated: false
 enums:
   lifecycle: [proposed, provisional, current, retracted, archived]
+  evidence_level: [cebm-1, cebm-2, cebm-3, cebm-4, cebm-5, ungraded]
 required:
   type: literal:source
   lifecycle: enum:lifecycle
@@ -10,6 +11,7 @@ required:
   entity: str # wikilink to the Catalog entity this note is about
 optional:
   source_type: str
+  evidence_level: enum:evidence_level
   research_area: list
   methodology: list
   links: map # authored, typed note-links (ADR-52)

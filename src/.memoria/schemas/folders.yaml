@@ -11,6 +11,8 @@ homes:
   venue: catalog/venues
   dataset: catalog/datasets
   repository: catalog/repositories
+  project: projects
+  thesis: projects
   fleeting: notes/fleeting
   source: notes/sources
   claim: notes/claims
@@ -50,6 +52,10 @@ skeleton:
   - notes/hubs
   - notes/indexes
   - projects
+  - projects/_template
+  - projects/_template/code
+  - projects/_template/drafts
+  - projects/_template/exports
   - inbox
   - system/board
   - system/exports

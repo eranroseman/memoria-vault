@@ -5,6 +5,9 @@ enums:
   lifecycle: [proposed, current, archived]
   certainty: [confident, likely, unsure]
   loudness: [quiet, notice, alert, block]
+  gap_type: [additive, conflict, fragility, structural, unstated-warrant, refutation]
+  saturation_state: [unknown, unsaturated, saturated, stale]
+  graph_maturity: [cold-start, immature, mature]
 required:
   type: literal:gap
   lifecycle: enum:lifecycle
@@ -15,6 +18,12 @@ required:
   what_tipped_it: str
   certainty: enum:certainty
 optional:
+  gap_type: enum:gap_type
   raised_by: str
   loudness: enum:loudness
+  impact: int
+  on_path: bool
+  saturation_state: enum:saturation_state
+  graph_maturity: enum:graph_maturity
+  computed_at: date
   created: date

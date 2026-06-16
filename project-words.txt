@@ -394,6 +394,8 @@ pyproject
 testpaths
 pythonpath
 CUDA
+CEBM
+cebm
 libcudart
 libcublas
 
