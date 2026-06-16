@@ -105,7 +105,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | deferred |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
-| [76](76-runtime-as-installable-package.md) | Package the Python runtime as an installable wheel; vault holds data, not source | deferred |
+| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | deferred |
 
 <!-- ADR-INDEX:END -->
 
