@@ -2,12 +2,12 @@
 topic: decisions
 id: 17
 title: Shared candidate frontmatter format
-status: accepted
+status: superseded
 date_proposed: 2026-05-15
-date_resolved: 2026-06-01
+date_resolved: 2026-06-16
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [50, 51]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 17
@@ -16,6 +16,11 @@ nav_order: 17
 # ADR-17: Shared candidate frontmatter format
 
 > **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `99-system/templates/candidate-note.md`, registered in `note-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
+>
+> **Superseded 2026-06-16.** [ADR-50](50-universal-lifecycle-and-maturity.md)
+> now owns the universal lifecycle chain, and
+> [ADR-51](51-inbox-category-and-honesty-card.md) owns Inbox categories and gap-card
+> honesty. This record remains as the historical candidate-note design.
 
 ## Context
 

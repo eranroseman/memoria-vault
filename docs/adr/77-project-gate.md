@@ -1,0 +1,88 @@
+---
+topic: decisions
+id: 77
+title: Project gate
+status: accepted
+date_proposed: 2026-06-16
+date_resolved: 2026-06-16
+assumes: [68, 70, 48, 49, 51, 69]
+supersedes: []
+superseded_by: []
+parent: Decisions
+grand_parent: Explanation
+nav_order: 77
+---
+
+# ADR-77: Project gate
+
+## Context
+
+[ADR-70](70-navigation-gates-dashboards.md) reserved the fourth top-level gate for
+Project work, and [ADR-68](68-workspaces-desk-library-studio.md) left `projects/`
+empty while Studio carried drafting. alpha.5 is the first checkpoint where that
+slot has a concrete job: bounded inquiry that turns catalog/source work into a
+defended or falsified thesis. The gate must preserve Memoria's deepest boundary:
+agents propose, deterministic Operations derive views, and the PI promotes.
+
+## Decision
+
+Memoria adopts a **Project gate** as the fourth intent-named gate. A project is a
+bounded research inquiry rooted in a project note and one thesis target. The gate
+surfaces the project question, thesis, descriptive map, argument graph, ranked
+gaps, saturation signal, and outline path from Obsidian, using the existing
+workspace machinery and a custom Bases view where the Obsidian API permits it.
+
+All load-bearing Project logic is deterministic: map traversal, structural
+impact, graph maturity, saturation, and index-note materialization are Operations
+over vault state. Agents may discover sources, propose gaps, and draft outlines,
+but the gate never asks an LLM to judge truth, infer maturity, or promote a
+thesis. The PI remains the author of the question and thesis and the only actor
+who can promote the thesis to `current`.
+
+The conservative graph-maturity default is a connected thesis-rooted component
+with at least five addressed relations, including at least one `supports` edge
+and at least one `contradicts` edge. The default materialization shape is a
+single generated project index note read by the custom Bases view; per-note
+stamps are reserved for cases where a later implementation cannot use the view.
+
+## Consequences
+
+- Project becomes a first-class navigation destination rather than a promise
+  hidden behind Studio.
+- The gate can argue for stopping when the argument is saturated, but only over
+  relations the PI or gated proposals have actually supplied. Determinism makes
+  the computation repeatable, not the conclusion true.
+- Falsifying a thesis is a finished project result: a `retracted` thesis plus the
+  argument subgraph that refuted it is preserved rather than treated as failure.
+- The implementation sequence is structural-first: schemas and templates, then
+  graph/impact Operations, then gap/saturation logic, then the Obsidian surface.
+- The custom Bases view is a version-pinned pilot because `registerBasesView`
+  exists in the published Obsidian API but remains a narrower extension surface
+  than ordinary Markdown dashboards.
+
+## Alternatives considered
+
+**Keep Project as Studio-only drafting.** Rejected: Studio answers "what am I
+writing?", while Project answers "what bounded inquiry am I driving to an
+answer?" Merging them keeps the missing middle between map and outline.
+
+**Use agent judgment for maturity and saturation.** Rejected: it would turn a
+navigation gate into a hidden inference layer. The gate's value is that its logic
+is inspectable and repeatable even when the graph inputs are incomplete.
+
+**Materialize derived state onto every note by default.** Rejected: it creates
+write amplification and stale frontmatter risk. A generated project index is the
+default; per-note stamps need a specific rendering constraint to justify them.
+
+## Related
+
+- **Files affected:** `src/projects/`, `src/system/templates/`,
+  `src/.memoria/schemas/types/`, `src/.memoria/operations/`, workspace/dashboard
+  files.
+- **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md),
+  [ADR-70](70-navigation-gates-dashboards.md),
+  [ADR-78](78-thesis-note-type.md),
+  [ADR-79](79-argument-graph-and-warrant.md).
+- **Source discussion:** [alpha.5 project-starter](../releasing/0.1.0-alpha.5/tmp/project-starter.md),
+  [WS-0 spikes](../releasing/0.1.0-alpha.5/tmp/ws-0-spikes.md),
+  [#577](https://github.com/eranroseman/memoria-vault/issues/577).

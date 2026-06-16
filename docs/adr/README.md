@@ -46,7 +46,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | accepted |
 | [15](15-project-membership-from-topic-hint.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | accepted |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | accepted |
-| [17](17-shared-candidate-frontmatter.md) | Shared candidate frontmatter format | accepted |
+| [17](17-shared-candidate-frontmatter.md) | Shared candidate frontmatter format | superseded → ADR-50, ADR-51 |
 | [18](18-rename-agent-verdict.md) | Rename `agent_verdict` → `agent_recommendation` | accepted |
 | [19](19-moc-threshold-alert.md) | Agent-proposed hubs (threshold alert and Mapper handoff) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
@@ -63,13 +63,13 @@ condition. See [the template](_template.md) for the required fields per status.
 | [31](31-native-obsidian-mcp.md) | Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian | accepted |
 | [32](32-external-access-over-mcp.md) | Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted | accepted |
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
-| [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | deferred |
+| [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | rejected |
 | [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | deferred |
 | [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded → ADR-51 |
 | [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded → ADR-48 |
 | [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | deferred |
 | [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
-| [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt | deferred |
+| [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) | rejected |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
 | [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded → ADR-48 |
 | [43](43-skill-governance.md) | Skill governance and lifecycle | accepted |
@@ -91,7 +91,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | deferred |
 | [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | deferred |
 | [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | deferred |
-| [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | deferred |
+| [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
 | [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | deferred |
 | [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
 | [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
@@ -106,6 +106,9 @@ condition. See [the template](_template.md) for the required fields per status.
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | deferred |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | deferred |
+| [77](77-project-gate.md) | Project gate | accepted |
+| [78](78-thesis-note-type.md) | Thesis note type | accepted |
+| [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 
 <!-- ADR-INDEX:END -->
 

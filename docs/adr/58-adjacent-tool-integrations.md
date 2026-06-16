@@ -6,7 +6,7 @@ status: deferred
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
-assumes: [40, 32]
+assumes: [32]
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -27,14 +27,17 @@ convenience the existing surfaces already approximate. This ADR records the
 forward-looking ones together so the felt need is detectable per release rather
 than re-discovered. The read-only Obsidian Inspector idea — a sidebar pane exposing
 board counts, WIP depth, recent audit entries, and the Linter verdict band from
-inside Obsidian — is recorded under [ADR-40](40-admin-gui-surface.md) as an adjacent
-GUI surface and is not duplicated here.
+inside Obsidian — belongs here as a future adjacent surface because it stays inside
+Obsidian and is read-only.
 
 ## Decision
 
 Memoria keeps these four integrations **deferred** — shape settled, scheduling parked —
 and adopts none until its own trigger fires:
 
+- **Read-only Obsidian Inspector.** A sidebar pane inside Obsidian exposing board
+  counts, WIP depth, recent audit entries, and the Linter verdict band. It reads
+  existing dashboards/logs and adds no write path.
 - **Todoist gap-card mirroring.** When the Peer-reviewer creates a gap card in
   `inbox/` (a failed claim-trace for Librarian to fill), mirror it
   as a Todoist task so it surfaces in the human's existing task surface. Adds an
@@ -77,6 +80,9 @@ External access for any of these flows over the policy MCP per
 
 Per-release context, not gates:
 
+- **Read-only Obsidian Inspector:** routine debugging needs a compact "what's
+  loaded / what happened / what is unhealthy" view and the existing CLI plus
+  dashboards are slowing resolution.
 - **Todoist mirroring:** the human uses Todoist as their primary task surface *and*
   gap cards regularly sit unactioned for more than two weeks.
 - **Open-design rendering:** the human needs a deliverable format (presentation,
@@ -90,5 +96,5 @@ Per-release context, not gates:
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-40 (admin/forensic GUI surface)](40-admin-gui-surface.md) (records the read-only Obsidian Inspector idea), [ADR-32 (external access over MCP)](32-external-access-over-mcp.md) (the gated path any external integration takes)
+- **Related decisions / Depends on:** [ADR-32 (external access over MCP)](32-external-access-over-mcp.md) (the gated path any external integration takes)
 - **Tracking issue:** [#408](https://github.com/eranroseman/memoria-vault/issues/408) — revisit at each release cadence.

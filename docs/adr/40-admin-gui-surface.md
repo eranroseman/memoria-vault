@@ -1,11 +1,11 @@
 ---
 topic: decisions
 id: 40
-title: Admin/forensic GUI surface (hermes-workspace) — deferred, tool too immature to adopt
-status: deferred
+title: Admin/forensic GUI surface (hermes-workspace)
+status: rejected
 assumes: []
 date_proposed: 2026-05-30
-date_resolved:
+date_resolved: 2026-06-16
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -15,6 +15,11 @@ nav_exclude: true
 ---
 
 # ADR-40: Admin/forensic GUI surface (`hermes-workspace`)
+
+> **Rejected 2026-06-16.** The forensic need is covered by the CLI and
+> dashboards now, with a possible read-only Obsidian Inspector recorded in
+> [ADR-58](58-adjacent-tool-integrations.md). An external admin GUI would add a
+> second, immature surface with too much write capability for too little benefit.
 
 ## What
 
@@ -29,9 +34,12 @@ The admin/forensic views above are CLI-only today — fine for command-line nati
 - `hermes-workspace` is v0.1.0, ~9 stars, single contributor — a hackathon project, not a mature product. Documenting it in canonical docs is a stale-doc liability for near-zero benefit while the CLI fills the gap.
 - Any such surface risks becoming a second, un-gated place to act on content if scoped wrong.
 
-## When this matters
+## Rejection rationale
 
-The tool matures: stable releases, more than one maintainer, sustained activity.
+Memoria will not adopt `hermes-workspace`. It is a broad administrative GUI over
+profile memory, files, terminal access, and sessions; even local-only, it expands
+the action surface outside the vault's existing policy-gated flows. The durable
+need is forensic visibility, not another write-capable workspace.
 
 
 ## Alternatives considered
@@ -47,4 +55,6 @@ The tool matures: stable releases, more than one maintainer, sustained activity.
 - **Tracking issue:** [#373](https://github.com/eranroseman/memoria-vault/issues/373) — revisit each release cadence.
 - **Existing surfaces:** CLI (forensic), dashboards (state), Telegram (push) — see [Interaction channels](../explanation/architecture/human-channels.md)
 - **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../reference/policy-mcp.md)
-- **Adjacent future idea:** the read-only Memoria Inspector Obsidian plugin from [Adjacent tool integrations](58-adjacent-tool-integrations.md) covers part of the same forensic need from inside Obsidian
+- **Adjacent future idea:** the read-only Memoria Inspector Obsidian plugin from
+  [Adjacent tool integrations](58-adjacent-tool-integrations.md) covers part of
+  the same forensic need from inside Obsidian.

@@ -5,7 +5,7 @@ title: Navigation — intent-named gates, ambient maintenance, JTBD dashboards
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14
-assumes: [68, 69]
+assumes: [68, 69, 77]
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -29,8 +29,8 @@ Navigation is a set of **intent-named gates** implemented on the existing worksp
 machinery. Switching a gate changes only the left-nav, the main dashboard, and where
 the Co-PI is pointed — **never what an action does** (these are views/spaces, not
 modes). There are **three core gates now** (an Action/"what needs me" gate, a
-Sources/Library gate, a Knowledge gate), with the **Project gate deferred to
-alpha.4**; the top level never exceeds five.
+Sources/Library gate, a Knowledge gate), plus the **Project gate accepted in
+[ADR-77](77-project-gate.md)**; the top level never exceeds five.
 
 **System health is ambient, not a gate.** A status-bar indicator carries the ambient
 signal; anything *actionable* surfaces as a card in the Action queue (point-of-action,
@@ -51,13 +51,14 @@ object-first for browsing.
   **Processing** → the knowledge itself.
 - Base Board (kanban over Bases) is adopted only as a **version-pinned sandbox pilot**,
   not a committed dependency — native Bases has no board view yet.
-- Extends ADR-68 rather than replacing it; the Studio shell becomes the Project gate in
-  alpha.4.
+- Extends ADR-68 rather than replacing it; Studio remains the drafting shell, and
+  [ADR-77](77-project-gate.md) owns the Project gate's bounded-inquiry surface.
 
 ## When this matters
 
-alpha.3 (the UI build). The Project gate and deep Knowledge/ZK functionality are
-alpha.4; revisit the gate count when the Project gate lands.
+alpha.3 (the UI build). The Project gate is now accepted by
+[ADR-77](77-project-gate.md); revisit the gate count only if a fifth top-level
+intent earns a concrete job.
 
 ## Alternatives considered
 
@@ -65,8 +66,8 @@ alpha.4; revisit the gate count when the Project gate lands.
   Technology) treats unconditional "everything not-green" surfacing as the cause of
   alert fatigue; VS Code/GitHub/Datadog all decline to promote "problems" to a forced
   destination.
-- **Four or five gates now.** Rejected — sits at the upper bound before the Project gate
-  even arrives; spend the slot on Project.
+- **Five gates now.** Rejected — sits at the upper bound after the Project gate;
+  spend the remaining cognitive budget on depth within the four gates.
 - **A single unified home dashboard across gates.** Rejected — violates "show only what
   this job needs" and tends to overcrowd.
 
@@ -74,7 +75,7 @@ alpha.4; revisit the gate count when the Project gate lands.
 
 - **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md)
   (the shells), [ADR-69](69-operations-layer-naming.md) (the categories the dashboards
-  map onto)
+  map onto), [ADR-77](77-project-gate.md) (the fourth gate)
 - **Implementing issues:** #467 (JTBD dashboards + intent-named gates), #375 (status-bar
   ambient indicator), #380 (assist surface), #145 (property display)
 - **Source discussion:** the alpha.3 research notes (`open-issues-research` Issue 1,

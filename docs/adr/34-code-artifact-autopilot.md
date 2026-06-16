@@ -2,10 +2,10 @@
 topic: decisions
 id: 34
 title: Code-artifact autopilot
-status: deferred
+status: rejected
 assumes: []
 date_proposed: 2026-05-15
-date_resolved:
+date_resolved: 2026-06-16
 supersedes: []
 superseded_by: []
 parent: Decisions
@@ -15,6 +15,12 @@ nav_exclude: true
 ---
 
 # ADR-34: Code-artifact autopilot
+
+> **Rejected 2026-06-16.** The proposed scheduled-script autopilot is
+> structurally precluded by [ADR-21](21-l3-autonomy-ceiling.md)'s L3 autonomy
+> ceiling. Code-lane execution remains human-bounded; future work belongs to the
+> explicit keep/revert experiment loop tracked in #369, not a per-note unattended
+> script flag.
 
 ## What
 
@@ -30,9 +36,13 @@ Recurring analyses currently need a manual trigger every time. For a genuinely r
 - A failed scheduled run can leave stale metric data downstream; autopilot needs a fail-loud path, not silent staleness.
 - Adds a card/note field and dispatch wiring for scheduled code runs.
 
-## When this matters
+## Rejection rationale
 
-A specific recurring analysis (e.g. a weekly metric refresh) has been run manually on a regular cadence and the manual kickoff is the felt friction — not a hypothetical "might be useful."
+Memoria will not adopt this shape. A per-`code-note` `autopilot: true` flag creates
+unattended code execution from vault content, adds a second execution trigger, and
+weakens the L3 ceiling. If repeated code experimentation becomes valuable, it must
+use the lane-bounded keep/revert experiment loop: explicit metric, budget, output
+path, audit trail, and human promotion.
 
 ## Alternatives considered
 
@@ -42,7 +52,8 @@ A specific recurring analysis (e.g. a weekly metric refresh) has been run manual
 
 ## Related
 
-- **Tracking issue:** [#369](https://github.com/eranroseman/memoria-vault/issues/369) — revisit each release cadence.
+- **Tracking issue:** [#369](https://github.com/eranroseman/memoria-vault/issues/369)
+  tracks the replacement code-experiment loop shape.
 - **Workflows:** [Code](../how-to-guides/compose/create-a-code-artifact.md)
 - **Files:** [The Coder](../explanation/profiles/engineer.md), `99-system/templates/code-note.md`
 - **Related proposal:** [Nightly discovery loop](61-nightly-discovery-loop.md) §2 (Coder experiment loop) — the keep/revert variant of the same Coder-lane autonomy; this proposal is the *scheduled-script* variant.

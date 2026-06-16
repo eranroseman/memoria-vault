@@ -36,9 +36,14 @@ The reasoning is identical across all four:
 | **Pre-ingest screening** | A separate pre-ingest PRISMA + ASReview screening pipeline (200–5000 candidates) | Starting a formal scoping or systematic review |
 | **Dual-rater workflow** | Dual-rater fields (`rater_1`, `rater_2`, `rater_agreement`) for inter-rater reliability | The chapter or paper requires reported agreement *and* a second human rater exists |
 
-## Relationship to ADR-17
+## Relationship to the candidate-note baseline
 
-[ADR-17 (shared candidate frontmatter)](17-shared-candidate-frontmatter.md) is adjacent but **not** part of this deferred cluster — it was **adopted into baseline v0.1** (independent of any formal review), because the shared `type: candidate-note` schema pays off for everyday `find` on its own. The `candidate-note` template ships and the type is registered. This cluster's pre-ingest screening pipeline consumes that schema once *it* activates.
+The candidate-note baseline is adjacent but **not** part of this deferred cluster — it was
+adopted into baseline v0.1 independent of any formal review, because the shared
+candidate schema pays off for everyday `find` on its own. The later
+[ADR-51](51-inbox-category-and-honesty-card.md) Inbox contract supersedes the old
+candidate-note routing shape. This cluster's pre-ingest screening pipeline consumes
+the current Inbox/candidate schema once *it* activates.
 
 ## See also
 
