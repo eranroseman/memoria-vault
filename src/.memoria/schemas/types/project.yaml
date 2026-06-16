@@ -25,4 +25,6 @@ optional:
   saturation_state: enum:saturation_state
   graph_maturity: enum:graph_maturity
   computed_at: date
+  refutation_sufficiency: bool
+  refutation_sufficiency_at: date
   created: date

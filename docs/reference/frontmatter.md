@@ -126,6 +126,7 @@ cache ([ADR-77](../adr/77-project-gate.md), [ADR-78](../adr/78-thesis-note-type.
 | `saturation_state` | `enum` | `unknown`, `unsaturated`, `saturated`, or `stale`. |
 | `graph_maturity` | `enum` | `cold-start`, `immature`, or `mature`. |
 | `computed_at` | `date` | Timestamp for the derived cache; stale values are shown as stale, not silently current. |
+| `refutation_sufficiency` / `refutation_sufficiency_at` | `bool` / `date` | PI stamp that the active thesis has faced its strongest available rebuttal; the Project operation treats this as saturation condition 3, not as a deterministic judgment. |
 
 Source notes also carry optional `evidence_level`, a CEBM-style enum
 (`cebm-1` … `cebm-5`, `ungraded`) used when source appraisal becomes relevant to

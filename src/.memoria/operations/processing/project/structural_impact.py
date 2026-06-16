@@ -19,6 +19,8 @@ from typing import Any
 
 SKIP_DIRS = {".git", ".memoria", ".obsidian", "node_modules"}
 RELATIONS = ("supports", "contradicts")
+CONFIDENT_GAP_KINDS = {"additive", "conflict", "fragility"}
+ADVISORY_GAP_KINDS = {"structural", "refutation"}
 MATURITY_RELATION_THRESHOLD = 5
 HIGH_IMPACT_THRESHOLD = 2
 JSON_START = "<!-- memoria-structural-impact:json -->"
@@ -173,6 +175,26 @@ def build_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
     return edges
 
 
+def build_descriptive_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
+    edges: list[Edge] = []
+    for source, note in notes.items():
+        links = note.frontmatter.get("links")
+        if not isinstance(links, dict):
+            continue
+        for relation, values in links.items():
+            if not isinstance(values, list):
+                values = [values]
+            for raw in values:
+                normalized = normalize_target(raw)
+                if normalized is None:
+                    continue
+                target_raw, addressed = normalized
+                target = resolver.get(target_raw)
+                if target and target != source:
+                    edges.append(Edge(source=source, target=target, relation=str(relation), addressed=addressed))
+    return edges
+
+
 def normalize_link(raw: Any) -> str:
     normalized = normalize_target(raw)
     return normalized[0] if normalized else ""
@@ -288,10 +310,18 @@ def scope_terms(note: Note) -> set[str]:
     return terms
 
 
+def truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "yes", "true", "y", "done", "sufficient"}
+
+
 def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     notes = read_notes(vault)
     resolver = build_resolver(notes)
     project = find_project(notes, project_arg)
+    if str(project.frontmatter.get("output_mode") or "") == "survey":
+        return analyze_survey(notes, resolver, project)
     thesis = find_thesis(notes, project, resolver)
     if thesis is None:
         payload = base_payload(project, None)
@@ -327,6 +357,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
 
     points = articulation_points(on_path_nodes, graph)
     rows = []
+    rows_by_key: dict[str, dict[str, Any]] = {}
     high_open_gaps = 0
     for note in sorted(notes.values(), key=lambda n: n.path):
         if note.note_type not in {"claim", "gap", "thesis", "source", "hub"}:
@@ -342,8 +373,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
         open_gap = note.note_type == "gap" and note.lifecycle != "archived"
         if open_gap and on_path and impact >= HIGH_IMPACT_THRESHOLD:
             high_open_gaps += 1
-        rows.append(
-            {
+        row = {
                 "path": note.path,
                 "type": note.note_type,
                 "title": note.title,
@@ -354,14 +384,35 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
                 "articulation": note.key in points,
                 "scope_overlap": bool(project_scope and (scope_terms(note) & project_scope)),
                 "open_gap": open_gap,
-            }
-        )
+        }
+        rows.append(row)
+        rows_by_key[note.key] = row
 
-    saturation = "unknown"
-    if maturity == "mature":
-        saturation = "saturated" if high_open_gaps == 0 else "unsaturated"
-    elif maturity == "immature":
-        saturation = "unsaturated"
+    refutation_floor_met = any(
+        edge.relation == "contradicts" and thesis.key in {edge.source, edge.target}
+        for edge in component_edges
+    )
+    refutation_sufficiency = truthy(
+        project.frontmatter.get("refutation_sufficiency")
+        or thesis.frontmatter.get("refutation_sufficiency")
+    )
+    condition_1 = maturity == "mature"
+    condition_2 = high_open_gaps == 0
+    condition_3 = refutation_floor_met and refutation_sufficiency
+    saturation = "saturated" if condition_1 and condition_2 and condition_3 else "unsaturated"
+    if maturity == "cold-start":
+        saturation = "unknown"
+
+    gap_findings, advisories = gap_taxonomy(
+        notes=notes,
+        component_edges=component_edges,
+        on_path_nodes=on_path_nodes,
+        articulation=points,
+        rows_by_key=rows_by_key,
+        thesis=thesis,
+        maturity=maturity,
+        refutation_floor_met=refutation_floor_met,
+    )
 
     payload = base_payload(project, thesis)
     payload.update(
@@ -375,6 +426,184 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
             "scope_overlap_count": scope_overlap,
             "open_high_impact_gaps": high_open_gaps,
             "impact_threshold": HIGH_IMPACT_THRESHOLD,
+            "refutation_floor_met": refutation_floor_met,
+            "refutation_sufficiency": refutation_sufficiency,
+            "saturation_conditions": {
+                "mature_graph": condition_1,
+                "no_high_impact_open_gaps": condition_2,
+                "refutation_sufficiency": condition_3,
+            },
+            "gap_findings": gap_findings,
+            "advisories": advisories,
+            "nodes": rows,
+        }
+    )
+    return payload
+
+
+def gap_taxonomy(
+    *,
+    notes: dict[str, Note],
+    component_edges: list[Edge],
+    on_path_nodes: set[str],
+    articulation: set[str],
+    rows_by_key: dict[str, dict[str, Any]],
+    thesis: Note,
+    maturity: str,
+    refutation_floor_met: bool,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if maturity != "mature":
+        return [], []
+    findings: list[dict[str, Any]] = []
+    advisories: list[dict[str, Any]] = []
+
+    for key in sorted(on_path_nodes):
+        note = notes[key]
+        row = rows_by_key.get(key, {})
+        if note.note_type == "gap" and note.lifecycle != "archived":
+            kind = str(note.frontmatter.get("gap_type") or "additive")
+            target = advisories if kind in ADVISORY_GAP_KINDS else findings
+            if kind in CONFIDENT_GAP_KINDS or kind in ADVISORY_GAP_KINDS:
+                target.append(
+                    {
+                        "kind": kind,
+                        "visibility": "advisory" if target is advisories else "shown",
+                        "path": note.path,
+                        "title": note.title,
+                        "impact": row.get("impact", 0),
+                    }
+                )
+        if note.note_type == "claim":
+            sources = note.frontmatter.get("sources") or []
+            source_count = len(sources) if isinstance(sources, list) else 1 if sources else 0
+            support_degree = sum(
+                1 for edge in component_edges
+                if edge.relation == "supports" and key in {edge.source, edge.target}
+            )
+            if source_count == 1 or (source_count == 0 and support_degree <= 1):
+                findings.append(
+                    {
+                        "kind": "fragility",
+                        "visibility": "shown",
+                        "path": note.path,
+                        "title": note.title,
+                        "impact": row.get("impact", 0),
+                        "reason": "single-source or single-support on the thesis path",
+                    }
+                )
+        if key in articulation and key != thesis.key:
+            advisories.append(
+                {
+                    "kind": "structural",
+                    "visibility": "advisory",
+                    "path": note.path,
+                    "title": note.title,
+                    "impact": row.get("impact", 0),
+                    "reason": "articulation point in the thesis-rooted argument graph",
+                }
+            )
+
+    for edge in component_edges:
+        if edge.relation == "contradicts":
+            source = notes[edge.source]
+            target = notes[edge.target]
+            findings.append(
+                {
+                    "kind": "conflict",
+                    "visibility": "shown",
+                    "path": source.path,
+                    "target": target.path,
+                    "title": f"{source.title} contradicts {target.title}",
+                    "impact": max(
+                        rows_by_key.get(edge.source, {}).get("impact", 0),
+                        rows_by_key.get(edge.target, {}).get("impact", 0),
+                    ),
+                }
+            )
+
+    if not refutation_floor_met:
+        advisories.append(
+            {
+                "kind": "refutation",
+                "visibility": "advisory",
+                "path": thesis.path,
+                "title": "No addressed contradicts edge touches the active thesis",
+                "impact": rows_by_key.get(thesis.key, {}).get("impact", 0),
+            }
+        )
+
+    ordered = lambda rows: sorted(rows, key=lambda r: (-int(r.get("impact", 0)), r["kind"], r["path"]))
+    return ordered(findings), ordered(advisories)
+
+
+def analyze_survey(notes: dict[str, Note], resolver: dict[str, str], project: Note) -> dict[str, Any]:
+    edges = [edge for edge in build_descriptive_edges(notes, resolver) if edge.addressed]
+    graph = adjacency(edges)
+    project_scope = values_as_set(project.frontmatter.get("scope_topics"))
+    scoped = {
+        key for key, note in notes.items()
+        if key != project.key and (not project_scope or scope_terms(note) & project_scope)
+    }
+    high_degree = {key for key in scoped if len(graph.get(key, set()) & scoped) >= 2}
+    open_scope_gaps = [
+        note for key, note in notes.items()
+        if key in scoped and note.note_type == "gap" and note.lifecycle != "archived"
+    ]
+    maturity = "cold-start"
+    if len(scoped) >= MATURITY_RELATION_THRESHOLD and high_degree:
+        maturity = "mature"
+    elif scoped:
+        maturity = "immature"
+    saturation = "unknown"
+    if maturity == "mature":
+        saturation = "saturated" if not open_scope_gaps else "unsaturated"
+    elif maturity == "immature":
+        saturation = "unsaturated"
+    rows = []
+    for key in sorted(scoped):
+        note = notes[key]
+        degree = len(graph.get(key, set()) & scoped)
+        rows.append(
+            {
+                "path": note.path,
+                "type": note.note_type,
+                "title": note.title,
+                "lifecycle": note.lifecycle,
+                "on_path": False,
+                "impact": degree,
+                "degree": degree,
+                "articulation": False,
+                "scope_overlap": bool(project_scope and (scope_terms(note) & project_scope)),
+                "open_gap": note.note_type == "gap" and note.lifecycle != "archived",
+            }
+        )
+    payload = base_payload(project, None)
+    payload.update(
+        {
+            "mode": "survey",
+            "graph_maturity": maturity,
+            "saturation_state": saturation,
+            "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
+            "relation_count": len(edges),
+            "scope_overlap_count": len(scoped),
+            "open_high_impact_gaps": len(open_scope_gaps),
+            "survey_high_degree_count": len(high_degree),
+            "saturation_conditions": {
+                "mature_graph": maturity == "mature",
+                "no_open_scope_gaps": not open_scope_gaps,
+            },
+            "gap_findings": [] if maturity != "mature" else [
+                {
+                    "kind": str(note.frontmatter.get("gap_type") or "additive"),
+                    "visibility": "shown",
+                    "path": note.path,
+                    "title": note.title,
+                    "impact": len(graph.get(note.key, set()) & scoped),
+                }
+                for note in open_scope_gaps
+                if str(note.frontmatter.get("gap_type") or "additive") in CONFIDENT_GAP_KINDS
+            ],
+            "advisories": [],
             "nodes": rows,
         }
     )
@@ -383,6 +612,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
 
 def base_payload(project: Note, thesis: Note | None) -> dict[str, Any]:
     return {
+        "mode": str(project.frontmatter.get("output_mode") or "thesis"),
         "project": project.path,
         "project_slug": str(project.frontmatter.get("slug") or project.stem),
         "active_thesis": thesis.path if thesis else "",
@@ -397,6 +627,11 @@ def base_payload(project: Note, thesis: Note | None) -> dict[str, Any]:
         "scope_overlap_count": 0,
         "open_high_impact_gaps": 0,
         "impact_threshold": HIGH_IMPACT_THRESHOLD,
+        "refutation_floor_met": False,
+        "refutation_sufficiency": False,
+        "saturation_conditions": {},
+        "gap_findings": [],
+        "advisories": [],
         "nodes": [],
     }
 
@@ -441,6 +676,8 @@ def render(payload: dict[str, Any]) -> str:
         "displayed_confidence": payload["displayed_confidence"],
         "relation_count": payload["relation_count"],
         "open_high_impact_gaps": payload["open_high_impact_gaps"],
+        "gap_findings": len(payload["gap_findings"]),
+        "advisories": len(payload["advisories"]),
     }
     body = [
         "---",
@@ -460,6 +697,24 @@ def render(payload: dict[str, Any]) -> str:
         )
     body.extend(
         [
+            "",
+            "## Gap Findings",
+            "",
+            "| Kind | Visibility | Path | Impact |",
+            "| --- | --- | --- | ---: |",
+            *[
+                f"| {row['kind']} | {row['visibility']} | `{row['path']}` | {row['impact']} |"
+                for row in payload["gap_findings"]
+            ],
+            "",
+            "## Advisories",
+            "",
+            "| Kind | Path | Impact |",
+            "| --- | --- | ---: |",
+            *[
+                f"| {row['kind']} | `{row['path']}` | {row['impact']} |"
+                for row in payload["advisories"]
+            ],
             "",
             JSON_START,
             json.dumps(payload, indent=2, sort_keys=True),

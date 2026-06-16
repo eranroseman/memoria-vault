@@ -17,6 +17,7 @@ output_mode: thesis
 question_version: 1
 question_log: []
 active_thesis: ""
+refutation_sufficiency: false
 created: {{DATE:YYYY-MM-DD}}
 ---
 
