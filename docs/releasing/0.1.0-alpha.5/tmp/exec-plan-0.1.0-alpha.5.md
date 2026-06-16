@@ -159,7 +159,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-0 spikes (#576) — §D3 / §13.1 / §13.4 resolved in `tmp/ws-0-spikes.md`
 - [x] WS-A ADR pass (#577)
 - [x] WS-B schema + templates (#578)
-- [ ] WS-C structural-impact Operation (#579)
+- [x] WS-C structural-impact Operation (#579)
 - [ ] WS-D gap taxonomy + saturation (#580)
 - [ ] WS-E PI surface (#581, #154, #381)
 - [ ] WS-F instrumentation (#337)
@@ -185,6 +185,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   templates, Project scaffold directories, Project-derived cache fields, `gap_type`, optional
   evidence level on sources, `ingest_status` on papers, and schema-shaped Modal Forms project-start
   fields with parity tests.
+- 2026-06-16 — WS-C added the deterministic Project structural-impact Operation. It traverses the
+  thesis-rooted `supports`/`contradicts` graph, computes impact/on-path/maturity/saturation values,
+  applies the conservative maturity threshold plus the scope-overlap cold-start floor, and writes a
+  single generated Project gate index note only when derived values change.
 
 ## 9. Surprises & discoveries
 
@@ -219,6 +223,8 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - WS-B schema/template artifacts: `src/.memoria/schemas/types/project.yaml`,
   `src/.memoria/schemas/types/thesis.yaml`, `src/system/templates/project.md`,
   `src/system/templates/thesis.md`, `src/projects/_template/`.
+- WS-C operation artifact: `src/.memoria/operations/processing/project/structural_impact.py`;
+  focused coverage in `tests/test_project_structural_impact.py`.
 
 ## 12. Outcomes & retrospective
 
