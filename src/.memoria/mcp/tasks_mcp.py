@@ -121,7 +121,8 @@ def create_card(
 
 def delegate(vault: Path, lane: str, goal: str, context: str = "",
              allowed_paths: list[str] | None = None, expected_outputs: str = "",
-             review_checks: str = "", idempotency_key: str = "") -> dict:
+             review_checks: str = "", idempotency_key: str = "",
+             card_runner=subprocess.run) -> dict:
     """Validate the handoff payload against the lane ceiling, then create the card."""
     blockers = loudness.open_blockers(vault)
     if blockers:
@@ -140,7 +141,7 @@ def delegate(vault: Path, lane: str, goal: str, context: str = "",
         body_parts.append(f"## Expected outputs\n{expected_outputs}")
     if review_checks:
         body_parts.append(f"## Review checks\n{review_checks}")
-    return create_card(lane, goal, "\n\n".join(body_parts), idempotency_key)
+    return create_card(lane, goal, "\n\n".join(body_parts), idempotency_key, runner=card_runner)
 
 
 def build_server(vault: Path):
