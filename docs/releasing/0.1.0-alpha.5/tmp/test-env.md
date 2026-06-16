@@ -3,10 +3,10 @@
 Status: draft (scratch under `tmp/`)
 Author: PI + Claude
 > **Process risk:** this scratch note **supersedes a recorded decision** (the prior
-> Haiku-via-Kilocode test-model default in the `test-env-hardware-and-model` memory)
-> but the superseding `MEMORIA_ENV` / two-installer **ADR does not exist yet**. Until
-> it does, the override lives only here + in memory; if this `tmp/` file is cleaned
-> up, the decision evaporates with no ADR trail. **Write the ADR before cleanup.**
+> Haiku-via-Kilocode test-model default in the `test-env-hardware-and-model` memory).
+> Copy-ready **ADR drafts are now in §10** — but they still live under `tmp/` until
+> promoted to `docs/adr/`. Promote them before this file is cleaned up, or the
+> decision evaporates with no ADR trail.
 Context: design the **best and most complete** testing environment and procedure
 for Memoria, with **no inherited constraints**. Two single-OS installers replace
 the old split-OS bridge:
@@ -309,4 +309,134 @@ Next steps:
 - [ ] Author the **chaos**, **security**, and **performance** suites (§6).
 - [ ] Keep **fs-shim smoke** + **record/replay** as the per-PR cheap tiers.
 - [ ] Define the **production-acceptance** pass (absolute L5 + Windows OS surface).
-- [ ] **ADR** capturing the two-installer model + harness + ADR-29/31/64 revisits.
+- [ ] **ADR** capturing the two-installer model + harness + ADR-29/31/64 revisits → **drafted in §10**; promote to `docs/adr/`.
+
+---
+
+## 10. ADR drafts (copy-ready for `docs/adr/`)
+
+Two decisions here need ADRs (per the process-risk banner). The drafts below are
+copy-ready — promote to `docs/adr/NN-*.md`, confirm the proposed ids, and convert
+the yaml block to real frontmatter. Cross-ADR references are plain text to keep the
+docs link-checker green.
+
+### 10.1 ADR draft — Two single-OS installers (all-Windows production, all-Linux test)
+
+```yaml
+topic: decisions
+id: 77            # PROPOSED — next free after ADR-76; confirm at landing
+title: Two single-OS installers — all-Windows production, all-Linux test
+status: proposed
+date_proposed: 2026-06-16
+assumes: [29, 31, 64, 76]
+supersedes: []
+superseded_by: []
+parent: Decisions
+grand_parent: Explanation
+```
+
+**Context.** The shipped posture splits one environment across two OSes — Obsidian/
+Zotero on Windows, Hermes in WSL2 — bridged by the Local REST API over
+mirrored-networking loopback (ADR-31). That bridge needs `.wslconfig` tuning and
+breaks silently; it blocks HTTPS (Hermes can't trust the cross-OS self-signed cert
+— issue #527); and it forces L3/GUI testing to be manual and Windows-only (ADR-29).
+It existed only because Hermes wasn't native on Windows (ADR-64, deferred) and there
+was no Linux GUI stack. Both have changed.
+
+**Decision.** Ship two single-OS installers, each an OS realization of the ADR-76
+reconciling installer `install(release_root, vault_path)` — same versioned release,
+same manifest, same layer-by-lifecycle reconciliation:
+- **`install.ps1` — all-Windows = production.** Native Windows Hermes + Obsidian +
+  Zotero, localhost only.
+- **`install.sh` — all-Linux = test.** Native everything; containerizable/ephemeral
+  (ADR-78).
+A single `MEMORIA_ENV=test|prod` overlay extends the installer's existing
+`{{PYTHON}}`/`{{VAULT_PATH}}`/`{{QMD}}` substitution with `{{MODEL_PROVIDER}}` /
+`{{MODEL_BASE_URL}}` / `{{MODEL_DEFAULT}}`.
+
+**Why.** Deletes the cross-OS bridge and its whole fragility class; co-locates REST
++ Hermes on one OS so HTTPS is trivial (closes #527); makes the test env fully
+scriptable; each installer is simpler than the entangled split.
+
+**Consequences / preconditions.**
+- **Un-defers ADR-64 for production:** the all-Windows path requires native Windows
+  Hermes; ADR-64's load-bearing rationale ("Hermes is WSL2-only on Windows") no
+  longer holds. This ADR is in tension with the current ADR-64 deferral and must
+  resolve it.
+- **Revisits ADR-31:** transport is same-host localhost; HTTPS REST becomes default
+  (issue #527).
+- **Revisits ADR-29:** L3 moves from manual/Windows to automated headless-Linux
+  (ADR-78).
+- **`MEMORIA_ENV` non-goal:** the overlay flattens prod's per-profile model tiering
+  — **both** Opus lanes (copi *and* peer-reviewer) go dark under test, and
+  per-profile config-shape divergence is untestable locally. Absolute quality + the
+  Windows-OS surface are validated on the production env.
+- **New residual:** OS portability (test=Linux, prod=Windows) replaces the bridge
+  residual — bounded cross-platform hygiene, checked by each installer on its own OS
+  plus a production-acceptance pass.
+
+**Alternatives.** Keep the split-OS bridge (rejected — fragility, no HTTPS, manual
+L3). All-WSL2 for both (rejected — production is the PI's real Windows daily-driver;
+testing wants Linux containerization).
+
+### 10.2 ADR draft — A complete, ephemeral, containerized test environment on Linux
+
+```yaml
+topic: decisions
+id: 78            # PROPOSED
+title: A complete, ephemeral, containerized test environment on Linux
+status: proposed
+date_proposed: 2026-06-16
+assumes: [11, 28, 29, 46, 76, 77]
+supersedes: []
+superseded_by: []
+parent: Decisions
+grand_parent: Explanation
+```
+
+**Context.** ADR-29 placed L3 as manual/Windows, the cross-cutting suites
+(installer/recovery/security/performance) as uncovered gaps, and quality (L5)
+per-release. With the all-Linux test env (ADR-77) the full stack runs headless and
+scriptable, so most of that becomes automatable for the first time.
+
+**Decision.** The all-Linux test env is a version-controlled golden image
+(Dockerfile) holding the full real stack — headless Obsidian (`xvfb-run
+--no-sandbox`), Zotero/fixture `.bib`, Hermes, plugins, REST/MCP, qmd — with the
+local model as a `--gpus all` sibling container, recreated clean per run from
+checksummed fixtures. A pytest orchestrator drives the Obsidian CLI over all 16
+command-palette commands with JS assertions + screenshot golden-image diffs.
+Coverage = **L0–L4 + cross-cutting + partial/mechanical L5**, all on the local
+model; production owns absolute L5 + the Windows-OS surface. (Full design: §1–§8.)
+
+**Must-resolve gates — the harness does not ship until each is resolved.**
+- **G1 — prove the gate fires (safety).** The harness MUST include a **negative deny
+  assertion**: a known-deny write, routed through the live ADR-28 plugin
+  (`src/.memoria/plugins/memoria-policy-gate/`), must be **blocked** with a deny
+  audit row. The gate-fires property is proven, never inferred. The superseded
+  `re.fullmatch("obsidian.*")` shell-hook never matched the real `mcp_obsidian_*`
+  names; the live plugin's substring match does — so the Option-B shim must route
+  through the plugin, and the deny test is what proves it.
+- **G2 — verify the model (foundation).** Confirm the local model exists and is
+  text+tool-servable **before** any sizing/serving is load-bearing
+  (`gemma4_unified` / any-to-any is unconfirmed). **Qwen3-MoE** is the verified
+  fallback.
+- **G3 — verify tool-call emission.** Confirm the serving runtime (llama.cpp
+  `--jinja`) emits OpenAI-format `tool_calls` Hermes can consume; otherwise a
+  parser/shim is needed — not a `base_url` swap — and the `openai-compatible` Hermes
+  provider must exist and carry tool-calls.
+
+**Why / how.** Three-bucket assertion (no-call / wrong-call / expected) so a weak
+model's misbehaviour isn't misread as a wiring break (§3). Cassettes match on
+tool-call structure, not prompt bytes, or they no-op on real refactors (§7). Nightly
+is triggered by a Windows Task Scheduler → `wsl.exe` job, not WSL2 cron (§7).
+Runtime = llama.cpp (already vended via qmd; GGUF Q4_K_M fits 16 GB; vLLM is out —
+§4).
+
+**Consequences.** Closes the L3 manual/Windows gap and the
+recovery/security/performance gaps; introduces a golden image + fixtures + the
+Obsidian-CLI harness as new maintained artifacts; the absolute-quality and
+Windows-OS residuals stay on production (ADR-77).
+
+**Alternatives.** The fs-shim-only smoke (ADR-29 Option B) — kept, but demoted to
+the per-PR cheap tier, not the whole env. Manual Windows L3 (status quo) — rejected;
+automatable now.
