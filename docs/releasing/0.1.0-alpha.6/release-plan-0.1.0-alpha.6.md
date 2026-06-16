@@ -69,7 +69,7 @@ under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vau
 | S1 | component pytest: born-`current` thesis rejection + gated promotion; superseded-claim default filter in `query`/`write`; harness spine units (cassette record/replay, the g9 zero-LLM path) |
 | S2 | dry-run: installer substitution incl. the new template + the Project workspace registration; cassette replay on a disposable vault |
 | S3 | integration: Project workspace switches in Obsidian and Bases render; the harness L0–L4 cassette replay runs green |
-| S4 | live/enforcement: the runtime serves the Obsidian MCP over HTTPS with `ssl_verify` (sandbox `~/.hermes` / memoria-test only); the **born-`current` thesis deny-assertion** routes through the ADR-28 policy plugin |
+| S4 | live/enforcement: the runtime serves the Obsidian MCP over HTTPS with `ssl_verify` (sandbox `~/.hermes` / memoria-test only) so the bearer token no longer rides plain loopback (#620). The born-`current` thesis rule is **content-aware** — enforced at schema/Linter time (S1), not via the path-based policy plugin |
 | S5 | E2E: the harness golden path L0–L4 from a fresh clone; the Project gate driven end-to-end from Obsidian |
 
 ## 4. Blockers
