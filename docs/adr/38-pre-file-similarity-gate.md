@@ -3,7 +3,7 @@ topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 status: deferred
-assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against — its original trigger (live qmd index + dense synthesis corpus) still governs
+assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against. Trigger (a) "live qmd index in retrieval" is now MET (qmd is wired into the Librarian/Writer/Peer-reviewer skills); only (b) dense-corpus tuning + building the find-duplicates sweep remain
 date_proposed: 2026-05-30
 date_resolved:
 supersedes: []
@@ -34,7 +34,7 @@ Memoria catches duplicates **retrospectively**: `find-duplicates` runs on a cade
 
 ## When this matters
 
-Both hold: (a) a live `qmd` index in the agent retrieval path, and (b) a synthesis corpus dense enough that filing a duplicate is a real risk — the point at which the similarity threshold and false-positive rate can be tuned against real notes.
+**(a) is now satisfied** — `qmd` is live in the agent retrieval path (wired into the Librarian/Writer/Peer-reviewer skills as of alpha.5). What remains is **(b)** a synthesis corpus dense enough that filing a duplicate is a real risk — the point at which the 0.8 threshold and false-positive rate can be tuned against real notes — plus building the retrospective `find-duplicates` sweep, which does not yet exist. The gate primitive can ship in **shadow mode** first (log neighbours, never block) and harden once the corpus is dense.
 
 ## Proposed mechanism (for when the trigger fires)
 

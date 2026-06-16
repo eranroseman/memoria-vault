@@ -40,7 +40,7 @@ Memoria is designed **blocking-only**, and that is correct as the operating post
 
 ## When this matters
 
-Committing to the Path 2/3 comparison study. `advisory` mode is not part of the day-1 instrument and is not exercised in ordinary use.
+Committing to the Path 2/3 comparison study. The non-backfillable **attribution sliver already shipped** (alpha.5): the policy audit stamps `review_mode: blocking` and `schema_version: 2` (`policy_mcp.py`). What remains is the `advisory` *behavior* itself — a configurable gate mode — which is not part of the day-1 instrument and is not exercised in ordinary use. Building it is a small deterministic change gated only on wanting the study, not on any missing mechanism.
 
 
 ## Alternatives considered

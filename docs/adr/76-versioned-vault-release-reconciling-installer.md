@@ -56,7 +56,7 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
 
 **Migration is staged and ordered:**
 
-1. **Now (issue work, no ADR):** a repo-root `pyproject.toml` scoped strictly to tooling — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only; **keep `requirements-dev.txt`**, add no `[project]` table. Deletes the `conftest.py` `sys.path` block. Independent of everything else.
+1. **Landed (alpha.4) ✅:** a repo-root `pyproject.toml` scoped strictly to tooling — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only; `requirements-dev.txt` retained, no `[project]` table. The `conftest.py` `sys.path` block is gone (the `pythonpath` now lives in `pyproject.toml`).
 2. **Packaging:** add the `[project]` table and `src/`-layout, install editable, delete the 11 runtime `__file__` bootstraps, wire console scripts. This half stands on its own import-hygiene merits, independent of the delivery change.
 3. **Then (the spine):** flip deployment to the reconciling installer over a versioned release; extract the policy core (decision 2) before the gate drops its `sys.path` reach-through; introduce the release manifest.
 

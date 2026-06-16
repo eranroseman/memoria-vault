@@ -31,7 +31,7 @@ Today Hermes treats every project as fresh — there is no compounding learning 
 
 ## When this matters
 
-A concrete cross-project pattern recurs often enough to be worth capturing — ideally scoped narrowly first (e.g. classifier mis-firings only) rather than a general meta-memory.
+A concrete cross-project pattern recurs often enough to be worth capturing — ideally scoped narrowly first (e.g. classifier mis-firings only) rather than a general meta-memory. The detection prerequisite **now exists**: alpha.5 added the classify-miss instrumentation, so a recurrence sweep over the logs can surface "trigger ready" instead of relying on the operator noticing — the narrow slice (sweep → Inbox card → `skill-insights/`) is buildable now; only the *volume* of recurrences is usage-gated.
 
 
 ## Alternatives considered
