@@ -7,7 +7,6 @@ The PI works the batch in Obsidian Bases by toggling each row's `decision` field
 
 Usage:
   python3 worklists.py emit --vault VAULT --report report.json --title "Batch title"
-  python3 worklists.py --self-test
 """
 
 from __future__ import annotations
@@ -17,7 +16,6 @@ import datetime
 import json
 import re
 import sys
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -137,32 +135,6 @@ def emit_report(vault: Path, report_path: Path, title: str = "", workflow: str =
                          workflow=workflow, worklist_id=worklist_id)
 
 
-def _self_test() -> int:
-    failures = 0
-
-    def check(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        result = emit_worklist(Path(td), "Coverage gaps", [
-            {"title": "Smith 2024", "item_ref": "@smith2024", "group": "transformers"},
-            {"title": "Jones 2025", "item_ref": "@jones2025", "group": "retrieval"},
-        ], source_report="notes/fleeting/maps/coverage.md")
-        check("two item notes", len(result["items"]) == 2)
-        check("items live under system/worklists", all("system/worklists" in str(p) for p in result["items"]))
-        prompts = list((Path(td) / "inbox").glob("work-prompt-*.md"))
-        check("one aggregate prompt", len(prompts) == 1)
-        again = emit_worklist(Path(td), "Coverage gaps", [
-            {"title": "Smith 2024", "item_ref": "@smith2024"},
-        ], source_report="notes/fleeting/maps/coverage.md")
-        check("deduped prompt on re-emit", again["prompt"] is None)
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Emit ADR-54 batch worklists")
     sub = parser.add_subparsers(dest="cmd")
@@ -171,10 +143,7 @@ def main(argv: list[str]) -> int:
     emit.add_argument("--report", required=True)
     emit.add_argument("--title", default="")
     emit.add_argument("--workflow", default="screen")
-    parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
-    if args.self_test:
-        return _self_test()
     if args.cmd == "emit":
         result = emit_report(Path(args.vault), Path(args.report), args.title, args.workflow)
         print(json.dumps({

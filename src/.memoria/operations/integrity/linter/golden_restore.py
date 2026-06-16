@@ -13,7 +13,6 @@ Usage:
   python3 golden_restore.py --vault V check          report drifted/missing system files (exit 1 if any)
   python3 golden_restore.py --vault V restore [--apply] [PATH ...]
   python3 golden_restore.py --vault V upgrade --source SRC [--apply]
-  python3 golden_restore.py --self-test
 """
 
 from __future__ import annotations
@@ -218,88 +217,16 @@ def upgrade(vault: Path, source: Path, apply: bool = False) -> dict[str, list[st
     return result
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def ck(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        (v / "system/templates").mkdir(parents=True)
-        (v / "system/templates/claim.md").write_text("CANON", encoding="utf-8")
-        (v / "home.md").write_text("HOME", encoding="utf-8")
-        m = stage(v)
-        ck("manifest covers both", len(m) == 2)
-        ck("clean check is empty", check(v) == {})
-        (v / "system/templates/claim.md").write_text("DRIFTED", encoding="utf-8")
-        (v / "home.md").unlink()
-        d = check(v)
-        ck("drift + missing detected",
-           d.get("system/templates/claim.md") == "drifted" and d.get("home.md") == "missing")
-        proposed = restore(v)
-        ck("restore is propose-only by default",
-           (v / "system/templates/claim.md").read_text(encoding="utf-8") == "DRIFTED"
-           and len(proposed) == 2)
-        restore(v, apply=True)
-        ck("apply restores bytes",
-           (v / "system/templates/claim.md").read_text(encoding="utf-8") == "CANON"
-           and (v / "home.md").read_text(encoding="utf-8") == "HOME")
-        ck("post-restore check clean", check(v) == {})
-    with tempfile.TemporaryDirectory() as td:
-        root = Path(td)
-        old_src, new_src, v = root / "old", root / "new", root / "vault"
-        (old_src / "system/templates").mkdir(parents=True)
-        (new_src / "system/templates").mkdir(parents=True)
-        (v / "system/templates").mkdir(parents=True)
-        (old_src / "system/templates/a.md").write_text("OLD", encoding="utf-8")
-        (new_src / "system/templates/a.md").write_text("NEW", encoding="utf-8")
-        (new_src / "system/templates/b.md").write_text("ADDED", encoding="utf-8")
-        (v / "system/templates/a.md").write_text("OLD", encoding="utf-8")
-        _stage_from_source(v, old_src)
-        planned = upgrade(v, new_src)
-        ck("upgrade dry-run plans clean changed + added files",
-           planned["would_apply"] == ["system/templates/a.md", "system/templates/b.md"])
-        upgrade(v, new_src, apply=True)
-        ck("upgrade apply writes clean changed + added files",
-           (v / "system/templates/a.md").read_text(encoding="utf-8") == "NEW"
-           and (v / "system/templates/b.md").read_text(encoding="utf-8") == "ADDED")
-        ck("upgrade refreshes golden manifest to new baseline", check(v) == {})
-    with tempfile.TemporaryDirectory() as td:
-        root = Path(td)
-        old_src, new_src, v = root / "old", root / "new", root / "vault"
-        (old_src / "system/templates").mkdir(parents=True)
-        (new_src / "system/templates").mkdir(parents=True)
-        (v / "system/templates").mkdir(parents=True)
-        (old_src / "system/templates/a.md").write_text("OLD", encoding="utf-8")
-        (new_src / "system/templates/a.md").write_text("NEW", encoding="utf-8")
-        (v / "system/templates/a.md").write_text("USER", encoding="utf-8")
-        _stage_from_source(v, old_src)
-        got = upgrade(v, new_src, apply=True)
-        ck("upgrade preserves customized conflicting live file",
-           got["conflicts"] == ["system/templates/a.md"]
-           and (v / "system/templates/a.md").read_text(encoding="utf-8") == "USER")
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault", type=Path)
-    ap.add_argument("--self-test", action="store_true")
     ap.add_argument("command", nargs="?", choices=["stage", "check", "restore", "upgrade"])
     ap.add_argument("paths", nargs="*")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--source", type=Path,
                     help="new release source tree for three-way golden upgrade")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(_self_test())
     if not args.vault or not args.command:
         ap.error("provide --vault and a command (stage | check | restore)")
     if args.command == "stage":

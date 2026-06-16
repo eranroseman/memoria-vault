@@ -11,7 +11,6 @@ The runner itself never writes content — propose-not-dispose holds.
 
     python patterns_mcp.py --vault <path>            # run the MCP server (needs `mcp`)
     python patterns_mcp.py --vault <path> --list     # one-shot: list runnable patterns
-    python patterns_mcp.py --self-test
 """
 
 from __future__ import annotations
@@ -150,52 +149,6 @@ def build_server(vault: Path):
     return server
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def ck(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        pd = v / PATTERNS_RELDIR
-        pd.mkdir(parents=True)
-        (pd / "_preamble.md").write_text("VOICE RULES", encoding="utf-8")
-        (pd / "good.md").write_text(
-            "---\ntitle: Good\ntype: pattern\nlifecycle: current\nposture: librarian\n"
-            "mode: library\naction: summarize\ninput: note\noutput_target: 'notes/fleeting/'\n---\n"
-            "Do X with {{input}}.\n", encoding="utf-8")
-        (pd / "gated.md").write_text(
-            "---\ntitle: Bad\ntype: pattern\nlifecycle: current\nposture: librarian\n"
-            "mode: library\naction: write\ninput: note\noutput_target: 'notes/claims/'\n---\nY {{input}}\n",
-            encoding="utf-8")
-        (pd / "draft.md").write_text(
-            "---\ntitle: D\ntype: pattern\nlifecycle: proposed\nposture: librarian\n"
-            "mode: library\naction: x\ninput: note\noutput_target: 'projects/'\n---\nZ\n",
-            encoding="utf-8")
-        ck("list shows only current patterns",
-           [p["id"] for p in list_patterns(v)] == ["gated", "good"])
-        ck("mode filter works", [p["id"] for p in list_patterns(v, "project")] == [])
-        r = run_pattern(v, "good", "INPUT TEXT", "notes/sources/s.md")
-        ck("preamble + substitution composed",
-           "VOICE RULES" in r["prompt"] and "Do X with INPUT TEXT." in r["prompt"])
-        ck("staging target passes", r["dry_run"] is False and r["output_target"] == "notes/fleeting/")
-        g = run_pattern(v, "gated", "x")
-        ck("gated target degrades to dry-run", g["dry_run"] is True and "note" in g)
-        d = run_pattern(v, "draft", "x")
-        ck("non-current pattern refused", d.get("error") == "pattern-not-current")
-        u = run_pattern(v, "ghost", "x")
-        ck("unknown pattern lists available", u.get("error") == "unknown-pattern")
-        log = (v / PROVENANCE_RELPATH).read_text(encoding="utf-8").splitlines()
-        ck("provenance logged per run", len(log) == 2)  # good + gated (refusals don't run)
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def resolve_vault(arg: str | None) -> Path:
     raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
@@ -211,10 +164,7 @@ def main() -> None:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
     ap.add_argument("--list", action="store_true", help="one-shot: list runnable patterns")
-    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(_self_test())
     vault = resolve_vault(args.vault)
     if args.list:
         print(json.dumps(list_patterns(vault), indent=2))

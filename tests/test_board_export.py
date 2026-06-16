@@ -57,8 +57,8 @@ def test_board_export():
         check("normalize reads block reason", normalize(sample[3])["reason"] == "needs human input")
         check("normalize reads renamed agent_recommendation",
               normalize({"metadata": {"agent_recommendation": "clean"}})["agent_recommendation"] == "clean")
-        check("normalize falls back to legacy agent_verdict",
-              normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"] == "issues-found")
+        check("normalize ignores the legacy agent_verdict (ADR-18: the rename is one-way)",
+              normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"] == "")
         check("normalize converts epoch-seconds last_updated to ISO",
               normalize({"updated_at": 1700000000})["last_updated"] == "2023-11-14T22:13:20Z")
         check("normalize converts epoch-millis last_updated to ISO",
