@@ -6,7 +6,7 @@ nav_order: 3
 
 # The Writer
 
-The Writer turns evidence into structured prose — section drafts with bound citations, and competing outlines. It runs the **draft** lane, and its posture is **generative, draft-only**: every output is a proposal in project scratch (`projects/<project>/`), and nothing it writes lands in `notes/claims/` or a deliverable without the PI's review. The PI owns canonical synthesis; the Writer is the composer whose work the PI reviews, edits, and either promotes or discards. It ships fully with the deferred Project workflow.
+The Writer turns evidence into structured prose — section drafts with bound citations, and competing outlines. It runs the **draft** lane, and its posture is **generative, draft-only**: every output is a proposal in project scratch (`projects/<project>/`), and nothing it writes lands in `notes/claims/` or a deliverable without the PI's review. The PI owns canonical synthesis; the Writer is the composer whose work the PI reviews, edits, and either promotes or discards. In the Project gate, Writer drafts can expose gaps, but promotion remains the PI's move.
 
 ---
 

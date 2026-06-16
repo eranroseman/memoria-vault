@@ -82,7 +82,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Surface area** is still nontrivial (WSL2 orchestration, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **The golden-copy update path** (how a later release refreshes `.memoria/golden/` without clobbering user customizations) is the known open question, to resolve when v0.1.0-alpha.3 ships ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
+- **The golden-copy update path** (how a later release refreshes `.memoria/golden/` without clobbering user customizations) is the known open question tracked by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
 
 ## Related
 

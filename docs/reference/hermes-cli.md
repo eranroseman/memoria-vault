@@ -37,7 +37,7 @@ The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the
 | **Sweeps** engine | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
 | **Linter** engine | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
 
-Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Four map-lane entries from the design's full registry are **deferred, not shipped**: `map:score-writability` / `map:score-readiness` need the v0.1.0-alpha.3 project workflow, and `map:graph-claims` / `map:canvas-hub` belong to the graph-visualization exploration.
+Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Four map-lane entries from the design's full registry are **deferred, not shipped**: `map:score-writability` / `map:score-readiness` remain later Project-gate expansion work, and `map:graph-claims` / `map:canvas-hub` belong to the graph-visualization exploration.
 
 Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`src/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
 

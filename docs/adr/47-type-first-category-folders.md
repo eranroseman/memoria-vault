@@ -31,7 +31,7 @@ lifecycle numbers:
 catalog/    structured entity records (Obsidian Bases) — papers, people,
             organizations, venues, datasets, repositories
 notes/      prose (Zettelkasten) — fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
-projects/   work artifacts, project-scoped (deferred Project workflow; ships empty for now)
+projects/   work artifacts, project-scoped — Project gate notes, drafts, code, exports
 inbox/      agent→human messages (the kanban board and queue dashboards are views of it)
 system/     visible infrastructure — logs · templates · patterns · dashboards
 .memoria/   hidden runtime (MCP, profiles, schemas, golden copy)

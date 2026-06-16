@@ -8,13 +8,11 @@ permalink: /how-to-guides/compose/
 
 # Compose
 
-Day-to-day tasks for turning accumulated knowledge into written output. Performed inside Obsidian via the Co-PI pane and the Inbox; export runs in the terminal.
-
-> The full project workflow ships after alpha.3 with the deferred Project workflow — see [Start a writing project](start-a-writing-project.md) for what to do meanwhile.
+Day-to-day tasks for turning accumulated knowledge into written output. Performed inside Obsidian via the Co-PI pane and the Inbox; export runs in the terminal. The Project gate now gives writing work a bounded project folder, active thesis, structural-impact cache, and saturation signal.
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
-| [Start a writing project](start-a-writing-project.md) | v0.1.0-alpha.3 scope, and the v0.1.0-alpha.2 path meanwhile | — |
+| [Start a writing project](start-a-writing-project.md) | Scaffold a Project gate workspace and active thesis | — |
 | [Assess your corpus](assess-your-corpus.md) | Delegate a `map` task: dense clusters, thin coverage, gap cards | Assess |
 | [Frame a project](frame-a-project.md) | Competing outlines from the `draft` lane; choose one framing | Frame |
 | [Use canvas for argument mapping](use-canvas-for-argument-mapping.md) | Arrange claims spatially to find structure before prose | Sketch |

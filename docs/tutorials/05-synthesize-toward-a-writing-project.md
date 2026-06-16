@@ -77,7 +77,7 @@ Read the coverage view and decide: is any cluster dense enough to write from (a 
 - A hub in `notes/hubs/` gathering the cluster
 - A corpus/coverage read from the `map` lane, and gap cards marking the thin spots
 
-> **Coming in v0.1.0-alpha.3:** the project workflow inside `projects/` — a brief, a relevance scan, a canvas for argument-mapping, and outlines drafted by the Writer. The claims and hubs you just built are exactly its inputs; until then, draft from your hub in any editor.
+> **Next step when this becomes a bounded inquiry:** run `Memoria: start project` to scaffold `projects/<slug>/`, create the active thesis, and refresh the Project gate. The claims and hubs you just built are exactly its inputs.
 
 ---
 

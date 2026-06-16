@@ -16,7 +16,7 @@ Open a canvas when you have 8–15 relevant claim notes on a topic and need to s
 
 **1. Create the canvas file.**
 
-Create a `.canvas` file in your project scratch folder, `projects/<slug>/` (your own making until the deferred Project workflow scaffolds it — [Start a writing project](start-a-writing-project.md)). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
+Create a `.canvas` file in your Project gate folder, `projects/<slug>/` ([Start a writing project](start-a-writing-project.md)). Name it after the argument section: `chapter-2-receptivity-argument.canvas`.
 
 **2. Collect the notes.**
 
