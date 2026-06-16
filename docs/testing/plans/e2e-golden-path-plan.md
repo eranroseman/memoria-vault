@@ -13,6 +13,13 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 
 **Where to run.** The integrated stack: Obsidian open (REST bridge up) + Hermes in WSL2 + a **disposable** vault seeded with the CLI plan's fixtures (F1–F8). Run it after the CLI and GUI plans pass — this is the capstone.
 
+**Automated Phase 1 slice.** The [test-env harness](test-env-harness-plan.md) replays
+the model-free ADR-80 cassette for the same source → classify → discuss → claim →
+Project gate → draft → verify → export shape and is wired into
+[`scripts/e2e-smoke.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/e2e-smoke.sh).
+Use this page for the attended runtime path; use the harness for per-PR deterministic
+coverage.
+
 **How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Each stage's output is the next stage's input; a stage failing **blocks** the rest — record where the chain broke.
 
 ---

@@ -52,6 +52,7 @@ l0() {
   run python3 scripts/ruleset_doctor.py
   if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
+  run python3 -m py_compile scripts/test_env_harness.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P"/operations/lib/schema.py "$P"/operations/lib/inbox.py "$P"/operations/lib/loudness.py "$P"/operations/lib/worklists.py "$P"/operations/integrity/linter/detectors.py "$P"/operations/integrity/linter/hub_handoff.py "$P"/operations/integrity/linter/golden_restore.py "$P"/operations/integrity/linter/session_summary.py "$P"/operations/integrity/linter/precommit_check.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh
   if command -v shellcheck >/dev/null 2>&1; then

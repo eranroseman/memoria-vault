@@ -25,6 +25,7 @@ is worth preserving after the GitHub trail.
 | [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release gate/stage sub-issues |
 | [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + the L1 `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
+| [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline installer-equivalent smoke; includes the ADR-80 Phase 1 cassette replay for the model-free L4 path. |
 
 ## Why plans and runs stay separate
 
@@ -58,13 +59,16 @@ wait for a ratcheting baseline so legacy gaps do not block unrelated fixes.
 
 ```
 headless ─▶ installer ─▶ cli ─┐
-                        gui ─┴─▶ e2e ─▶ g9-spine ─▶ g10-ingest
+                        gui ─┴─▶ e2e ─▶ test-env harness ─▶ g9-spine ─▶ g10-ingest
 ```
 
 `headless` (static + Python pytest component suite, CI-enforced) must be green first; `installer`
 stands up a throwaway vault; `cli` and `gui` validate the wired system; `e2e` runs one
-source through the full lifecycle; `g9`/`g10` prove the deterministic spine and ingest
-value-loop. Per-release orchestration + sign-off: the [Release-candidate runbook](plans/release-candidate-runbook.md) — record state/evidence in the release gate/stage sub-issues and preserve only curated summaries in `validation-log.md`.
+source through the full lifecycle; the [test-env harness](plans/test-env-harness-plan.md)
+replays the model-free ADR-80 Phase 1 cassette; `g9`/`g10` prove the deterministic spine
+and ingest value-loop. Per-release orchestration + sign-off: the [Release-candidate
+runbook](plans/release-candidate-runbook.md) — record state/evidence in the release
+gate/stage sub-issues and preserve only curated summaries in `validation-log.md`.
 
 ## Adding or changing a plan
 
