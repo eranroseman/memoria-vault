@@ -26,21 +26,22 @@ Every workspace follows the same shape:
 | --- | --- | --- | --- | --- |
 | **Desk** (default) | "What needs me?" | `system/dashboards/desk.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | Co-PI chat |
 | **Library** | Reading & synthesis | `system/dashboards/library.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | Co-PI chat |
-| **Studio** | Drafting | `system/dashboards/studio.md` (`projects/` ships empty — the priorities note remains the drafting anchor) | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
+| **Studio** | Drafting + Project gate shell | `system/dashboards/studio.md` | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
 
-Studio's right sidebar carries a second tab — the core backlink view — behind the Co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)).
+Studio's right sidebar carries a second tab — the core backlink view — behind the Co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)); the Project gate is a first-class surface inside Studio, opened from Home or `Memoria: open Project gate`, not a fourth saved workspace.
 
 ## Palette commands
 
-Three QuickAdd choices give one-click switching (also wired to the workspace buttons on `home.md`):
+Three QuickAdd choices give one-click switching (also wired to the workspace buttons on `home.md`), plus one Project-gate entry point that opens inside Studio:
 
 | Palette entry | Loads |
 | --- | --- |
 | `QuickAdd: Memoria: open Desk workspace` | Desk |
 | `QuickAdd: Memoria: open Library workspace` | Library |
 | `QuickAdd: Memoria: open Studio workspace` | Studio |
+| `QuickAdd: Memoria: open Project gate` | Studio, then `system/dashboards/project-gate.md` |
 
-All three run `system/scripts/load-workspace.js`, which loads the named layout through the core Workspaces plugin (the plugin has no per-workspace commands of its own).
+The three workspace commands run `system/scripts/load-workspace.js`, which loads the named layout through the core Workspaces plugin (the plugin has no per-workspace commands of its own). The Project gate command runs `system/scripts/open-project-gate.js`: it loads Studio and then opens the Project gate dashboard in the active leaf.
 
 ## Layout storage
 

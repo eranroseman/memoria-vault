@@ -12,7 +12,7 @@ nav_order: 1
 
 ## What it shows
 
-Four blocks, in order ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)): a one-line **status strip** (the absorbed Daily Health — reviews pending, blocked cards, HIGH/CRITICAL findings, read from the agent-written status feeds); an **action row** of command buttons (capture, delegate, resolve, talk to the Co-PI); a **workspace row** (Desk · Library · Studio); and the collapsed **drill-down index** of dashboards plus the research focus and troubleshooting links. The buttons dispatch existing palette commands — Home adds no mechanism of its own — and the "what needs me?" queue itself lives in the Desk workspace's Inbox tab, not on Home.
+Four blocks, in order ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)): a one-line **status strip** (the absorbed Daily Health — reviews pending, blocked cards, HIGH/CRITICAL findings, read from the agent-written status feeds); an **action row** of command buttons (capture, delegate, resolve, talk to the Co-PI); a **navigation row** (Desk · Library · Studio · Project gate); and the collapsed **drill-down index** of dashboards plus the research focus and troubleshooting links. The buttons dispatch existing palette commands — Home adds no mechanism of its own — and the "what needs me?" queue itself lives in the Desk workspace's Inbox tab, not on Home. Project gate is an entry point inside Studio, not a fourth saved workspace.
 
 ---
 

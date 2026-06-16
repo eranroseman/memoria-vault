@@ -5,7 +5,7 @@ parent: Reference
 
 # Dashboards
 
-The dashboards shipped in `system/dashboards/` (`src/system/dashboards`) and the Bases views behind them. The three gate dashboards — Desk, Library, and Studio — are workspace landing surfaces; the rest are drill-down health or object views. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows action queues near-empty.
+The dashboards shipped in `system/dashboards/` (`src/system/dashboards`) and the Bases views behind them. Desk, Library, and Studio are workspace landing surfaces; Project gate opens inside Studio; the rest are drill-down health or object views. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows action queues near-empty.
 
 Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
@@ -22,8 +22,8 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
 | Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
-| Project | Project gate | `project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state. |
-| Studio | Studio gate | `studio.md` | Synthesis landing surface: `research-focus.md`, claims by maturity, and the pattern library. Project-gate state lives in `project-gate.md`. |
+| Project / Studio | Project gate | `project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state; opened inside Studio. |
+| Studio | Studio gate | `studio.md` | Synthesis landing surface: `research-focus.md`, claims by maturity, Project gate state, and the pattern library. |
 | Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
 | Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
 | Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |

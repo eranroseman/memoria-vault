@@ -16,9 +16,11 @@ The three shipped workspaces pre-load the highest-frequency views ([Workspaces](
 | --- | --- |
 | **Desk** (default) | Board State in the main pane; `inbox.base`, Drift Watch, Weekly Review as left tabs |
 | **Library** | Reading Pipeline in the main pane; `catalog.base`, Discuss Queue, Open Questions, Contradictions as left tabs |
-| **Studio** | `system/dashboards/studio.md` in the main pane; `claims.base`, `patterns.base` as left tabs |
+| **Studio** | `system/dashboards/studio.md` in the main pane, including the Project gate section; `claims.base`, `patterns.base` as left tabs |
 
 Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
+For project work, `Memoria: open Project gate` loads Studio and opens `project-gate.md`
+directly.
 
 ---
 
@@ -59,6 +61,13 @@ Review during the weekly review or when starting a new topic cluster — connect
 **Contradictions** — Library workspace, left tab.
 
 Check before advancing a claim to `evergreen` or submitting a draft — unresolved contradictions mean the argument isn't settled.
+
+### "Is this project ready to draft?"
+
+**Project Gate** — `Memoria: open Project gate`, inside Studio.
+
+Refresh the gate from a project file, then read the active thesis, refutation stamp,
+graph maturity, saturation state, and gap findings.
 
 ### "Something seems wrong but I can't see why"
 

@@ -96,7 +96,17 @@ type command
 action QuickAdd: Memoria: open Studio workspace
 ```
 
+```button
+name Project gate
+type command
+action QuickAdd: Memoria: open Project gate
+```
+
 ## Dashboards
+
+> [!suggestions]- Project — bounded inquiry
+> - [[project-gate|Project Gate]] — active projects, thesis state, refutation stamp, and saturation cache
+> - [[studio|Studio]] — the drafting workspace shell where the Project gate opens
 
 > [!suggestions]- Library — reading & synthesis
 > - [[library|Library]] — source, Catalog, and claim objects in one gate
@@ -115,7 +125,6 @@ action QuickAdd: Memoria: open Studio workspace
 > - [[weekly-review|Weekly Review]] — the Friday aggregator
 
 > [!suggestions]- Agent ops
-> - [[studio|Studio]] — focus, claim corpus, and pattern library for synthesis
 > - [[audit-log|Audit Log]] — the provenance trail
 > - [[fleet-health|Fleet Health]] — agent operational rollup
 > - [[eval-trend|Eval Trend]] — quarterly vault-eval capability scores

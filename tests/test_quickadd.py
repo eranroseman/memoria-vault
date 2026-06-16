@@ -63,6 +63,7 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: open Desk workspace",
         "Memoria: open Library workspace",
         "Memoria: open Studio workspace",
+        "Memoria: open Project gate",
     }
     commands = {c["name"] for c in _choices() if c.get("command")}
     assert commands == expected
@@ -369,6 +370,7 @@ def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
         "start-project.js",
         "refresh-project-gate.js",
         "supersede-thesis.js",
+        "open-project-gate.js",
     ]:
         assert f"system/scripts/{fname}" in wired, f"{fname} not wired into quickadd data.json"
 

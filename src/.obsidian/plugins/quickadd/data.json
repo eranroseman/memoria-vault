@@ -554,6 +554,25 @@
           }
         ]
       }
+    },
+    {
+      "id": "0a21068c-3655-45e9-8eaf-4cdef52afa74",
+      "name": "Memoria: open Project gate",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: open Project gate",
+        "id": "85c2fca3-df78-4888-b6e8-17e2ac51080d",
+        "commands": [
+          {
+            "name": "open-project-gate",
+            "type": "UserScript",
+            "id": "eff4d379-3d5a-43d6-ac75-8ba5bbd92dd5",
+            "path": "system/scripts/open-project-gate.js",
+            "settings": {}
+          }
+        ]
+      }
     }
   ],
   "inputPrompt": "single-line",
