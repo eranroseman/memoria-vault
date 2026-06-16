@@ -69,5 +69,6 @@ necessary escape valves.
   `src/projects/`.
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-77](77-project-gate.md).
-- **Source discussion:** [alpha.5 project-starter](../releasing/0.1.0-alpha.5/tmp/project-starter.md),
-  [#578](https://github.com/eranroseman/memoria-vault/issues/578).
+- **Source discussion:** alpha.5 schema workstream
+  [#578](https://github.com/eranroseman/memoria-vault/issues/578) and merged implementation
+  PR [#604](https://github.com/eranroseman/memoria-vault/pull/604).

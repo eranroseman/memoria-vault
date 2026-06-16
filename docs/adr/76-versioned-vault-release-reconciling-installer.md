@@ -90,7 +90,8 @@ Context for the cadence review, not a gate — pick this up when **any** holds:
 ## Related
 
 - **Tracking issue:** [#521](https://github.com/eranroseman/memoria-vault/issues/521) — revisit at each release cadence.
-- **Origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) (research); full analysis and red-team in the design note [install a real package](../releasing/0.1.0-alpha.5/tmp/install-a-real-package.md).
+- **Origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) (research) and
+  deferred implementation tracker [#521](https://github.com/eranroseman/memoria-vault/issues/521).
 - **Depends on:** [ADR-44](44-tests-in-pytest-tree.md) (the conftest `sys.path` block the package work deletes); [ADR-46](46-seven-layer-architecture.md) (the MCP-only sandbox that *is* integrity protection); [ADR-55](55-src-scaffold-populate-golden-copy.md) (the golden manifest this generalizes into the release manifest); [ADR-69](69-operations-layer-naming.md) (operations layout, now landed); [ADR-73](73-docs-reference-conventions.md) (reference conventions for moved paths).
 - **In tension with:** [ADR-26](26-repo-as-install-unit.md) (install unit becomes a versioned release, not the repo subtree).
 - **Strengthens:** [ADR-63](63-multi-machine-deployment.md) — one versioned release across N vaults is the natural multi-machine substrate.

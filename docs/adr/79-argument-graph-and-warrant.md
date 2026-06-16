@@ -74,5 +74,6 @@ coverage.
   [ADR-52](52-links-vs-relationships.md),
   [ADR-77](77-project-gate.md),
   [ADR-78](78-thesis-note-type.md).
-- **Source discussion:** [alpha.5 project-starter](../releasing/0.1.0-alpha.5/tmp/project-starter.md),
-  [#579](https://github.com/eranroseman/memoria-vault/issues/579).
+- **Source discussion:** alpha.5 structural-impact workstream
+  [#579](https://github.com/eranroseman/memoria-vault/issues/579) and merged implementation
+  PR [#605](https://github.com/eranroseman/memoria-vault/pull/605).

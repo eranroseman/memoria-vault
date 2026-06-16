@@ -62,11 +62,11 @@ For a reader new to this repo:
   **alpha.2** and `v0.3`/`v0.1.2` meant **alpha.3**; treat those as alpha labels.
   (#198 "Decide v0.2 scope" is the genuine future 0.2.0 — not a mislabel.)
 - **Release housekeeping (already landed).** `project-starter.md` and
-  `test-env.md` — not alpha.4 work — were moved to
-  `docs/releasing/0.1.0-alpha.5/tmp/` (#530). The packaging note
-  (`install-a-real-package.md`) stays here (Workstream E references it) and was
-  also **copied** to `0.1.0-alpha.5/tmp/` (#533) where the deferred wheel
-  migration will land; the alpha.4 copy is deleted when this checkpoint closes.
+  `test-env.md` — not alpha.4 work — were moved forward for alpha.5 planning
+  (#530). The packaging note (`install-a-real-package.md`) stays here
+  (Workstream E references it) and was also copied forward for the deferred
+  wheel migration (#533). The alpha.5 scratch copies are retained for closeout
+  audit; durable decisions now live in ADRs/issues.
 
 ### 2.1 Scope — the 25 open alpha.4 issues, grouped
 
@@ -283,11 +283,11 @@ evidence, real transcripts:
 ## 7. Progress
 
 - [x] 2026-06-15 — ExecPlan authored; `project-starter.md` + `test-env.md` moved
-      to `docs/releasing/0.1.0-alpha.5/tmp/`; 25 issues inventoried + grouped.
+      forward for alpha.5 planning; 25 issues inventoried + grouped.
 - [x] 2026-06-15 — Scope finalized (§2.2): deferred #527/#379/#381/#344/#412/#370;
       added ADR-69 rename, #414, #439, #443.
 - [x] 2026-06-15 — Versioning carry-over labels fixed (#532); packaging note
-      copied to `0.1.0-alpha.5/tmp/` (#533); plan readiness pass — execution can start.
+      copied forward for alpha.5 planning (#533); plan readiness pass — execution can start.
 - [x] 2026-06-15 — H implemented on `refactor/operations-rename`; structural
       PR ready after review/commit. Validation: `scripts/test.sh check`,
       focused pytest, `scripts/test.sh all`, and `bash scripts/e2e-smoke.sh`.
@@ -473,8 +473,9 @@ evidence, real transcripts:
 
 ## 11. Artifacts & notes
 
-- Release-scratch moves: `project-starter.md` + `test-env.md` renamed into
-  `0.1.0-alpha.5/tmp/` (#530); `install-a-real-package.md` copied there (#533).
+- Release-scratch moves: `project-starter.md` + `test-env.md` moved forward for
+  alpha.5 planning (#530); `install-a-real-package.md` copied forward (#533).
+  The alpha.5 scratch copies are retained for closeout audit.
 - Per-issue transcripts to be pasted here as each workstream lands.
 
 ## 12. Outcomes & retrospective

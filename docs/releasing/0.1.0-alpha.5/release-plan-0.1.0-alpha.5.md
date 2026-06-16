@@ -11,12 +11,12 @@ nav_order: 2
 
 **Current status: alpha.5 is complete as an internal checkpoint.** This is not a tagged GitHub
 Release. The headline deliverable is the **Project gate** — the
-fourth navigation gate (ADR-70's deferred slot), shipped as the *expanded v1 cut* of the design
-note `tmp/project-starter.md`. The dashboard-risk spike, deterministic Project-gate spine, PI
-surface, instrumentation, thin deny-assertion slice, and live Obsidian E2E validation are complete.
-The deferred backlog behavior slices were removed from the alpha.5 milestone rather than treated as
-blockers. `released:` flips to `true` only for a tagged release; this checkpoint closes at
-`status: complete`, `released: false`.
+fourth navigation gate (ADR-70's deferred slot), shipped as the *expanded v1 cut* now captured in
+ADR-77, ADR-78, and ADR-79. The dashboard-risk spike, deterministic Project-gate spine, PI surface,
+instrumentation, thin deny-assertion slice, and live Obsidian E2E validation are complete. The
+deferred backlog behavior slices were removed from the alpha.5 milestone rather than treated as
+blockers. `released:` flips to `true` only for a tagged release; this checkpoint closes at `status:
+complete`, `released: false`.
 
 As of 2026-06-16, every alpha.5 gate/stage issue under
 [Release v0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is closed:
@@ -149,6 +149,6 @@ Full phase steps and investigation detail belong in `release-plan-v0.1.0-alpha.5
 
 ## 9. Appendix — what does NOT belong in this file
 
-Detailed build steps live in the ExecPlan (`tmp/exec-plan-0.1.0-alpha.5.md`, deleted at checkpoint close);
-the design rationale lives in `tmp/project-starter.md`; long-tail phase/migration detail would go in
-`release-plan-v0.1.0-alpha.5-appendix.md`. This plan summarizes and links rather than absorbing them.
+Detailed build steps and scratch design notes are retained under `tmp/` for closeout audit. Durable
+decisions live in the ADRs; issue/PR evidence remains on GitHub. Long-tail phase/migration detail
+would go in `release-plan-v0.1.0-alpha.5-appendix.md` if it becomes worth preserving.

@@ -83,6 +83,11 @@ default; per-note stamps need a specific rendering constraint to justify them.
   [ADR-70](70-navigation-gates-dashboards.md),
   [ADR-78](78-thesis-note-type.md),
   [ADR-79](79-argument-graph-and-warrant.md).
-- **Source discussion:** [alpha.5 project-starter](../releasing/0.1.0-alpha.5/tmp/project-starter.md),
-  [WS-0 spikes](../releasing/0.1.0-alpha.5/tmp/ws-0-spikes.md),
-  [#577](https://github.com/eranroseman/memoria-vault/issues/577).
+- **Source discussion:** alpha.5 workstream
+  [#577](https://github.com/eranroseman/memoria-vault/issues/577), spike workstream
+  [#576](https://github.com/eranroseman/memoria-vault/issues/576), and merged implementation
+  PRs [#603](https://github.com/eranroseman/memoria-vault/pull/603),
+  [#604](https://github.com/eranroseman/memoria-vault/pull/604),
+  [#605](https://github.com/eranroseman/memoria-vault/pull/605),
+  [#606](https://github.com/eranroseman/memoria-vault/pull/606),
+  [#607](https://github.com/eranroseman/memoria-vault/pull/607).
