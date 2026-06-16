@@ -19,9 +19,9 @@ alpha.5 `tmp/`, deleted before the checkpoint closes (durable decisions route in
   ADR-68/70/61/23/62; retires ADR-17/34/40; reuses ADR-8/52 (relations), ADR-9 (contradictions),
   ADR-10 (supersession), ADR-48 (Librarian find), ADR-49 (Bases), ADR-50 (lifecycle), ADR-51 (gap
   card), ADR-25 (audit), ADR-28 (write gate), ADR-62 (measurement).
-- **Issues:** WS-0 #576, WS-A #577, WS-B #578, WS-C #579, WS-D #580, WS-E #581, WS-H #582,
-  WS-G #583; folds #154 #337 #381 #374 #372 #344 #370 #415.
-- **Started:** 2026-06-15 · **Last updated:** 2026-06-15
+- **Issues:** WS-0 #576, WS-A #577, WS-B #578, WS-C #579, WS-D #580, WS-E #581, WS-F #337,
+  WS-H #582, WS-G #583; folds #154 #381 #374 #372 #344 #370 #415.
+- **Started:** 2026-06-15 · **Last updated:** 2026-06-16
 
 ## 1. Purpose / big picture
 
@@ -39,9 +39,10 @@ goes through PI review. The cost the gate relocates onto the PI is **measured** 
 
 For a reader new to this repo:
 
-- **Vault / runtime split.** The Python runtime lives in `src/.memoria/` and is rsynced into a vault's
-  `.memoria/` by `scripts/install.sh`. Vault data is the Obsidian vault (`~/Memoria` runtime;
-  `~/Memoria-test` sandbox — **never test against `~/Memoria`**).
+- **Vault / runtime split.** The Python runtime lives in `src/.memoria/` and is copied into a vault's
+  `.memoria/` by the platform installer. Windows production uses native `scripts/install.ps1` with a
+  native Hermes home and vault; Linux/WSL testing uses `scripts/install.sh`. Vault tests run on a
+  disposable sandbox (`~/Memoria-test` or `%USERPROFILE%\Memoria-test`), **never the production vault**.
 - **PI** = the human owner. **PI direct-access rule:** every feature is reachable from the Obsidian UI
   directly, not only via CLI.
 - **Lanes / gate.** Agents act only through MCP servers; the policy-gate plugin
