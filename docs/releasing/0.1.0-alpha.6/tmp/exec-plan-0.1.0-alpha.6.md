@@ -44,12 +44,18 @@ already compliant (`src/.memoria/profiles/*/config.yaml` use `https://` + `ssl_v
 ${OBSIDIAN_MCP_SSL_VERIFY}`); the **runtime contradicts it** — all five
 `~/.hermes/profiles/*/config.yaml` serve `http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp`,
 `OBSIDIAN_MCP_SSL_VERIFY` unset in `~/.hermes/.env`.
-- Get Hermes to trust the plugin's exported PEM via `OBSIDIAN_MCP_SSL_VERIFY`, then flip
-  the live profiles back to `https://`. Sandbox `~/.hermes` only.
-- **Risk / open question:** the profiles' own comments claim "Hermes can't skip TLS
-  verify for the self-signed HTTPS port." Confirm whether Hermes can be pointed at a
-  trusted PEM (then this is config) or genuinely cannot (then it's an upstream-Hermes
-  capability gap and #620 narrows to "track + document" — escalate early).
+- **Resolved — config fix, not an upstream gap. No code change** (repo source is already
+  compliant; runtime config only). Hermes passes `ssl_verify` straight to httpx's
+  `verify` (`~/.hermes/hermes-agent/tools/mcp_tool.py:1355,1443`), and httpx `verify`
+  accepts a CA-bundle path — so the exported self-signed PEM verifies cleanly. The old
+  "Hermes can't skip TLS verify" comment was wrong: Hermes doesn't skip verification, it
+  verifies against the PEM.
+- Steps (sandbox `~/.hermes` only): export the cert from the Local REST API plugin → set
+  `OBSIDIAN_MCP_SSL_VERIFY` to its path in `~/.hermes/.env` → flip the deployed profiles
+  to `https://` (a redeploy from repo source does this). One check: the cert's
+  `subjectAltName` must include `127.0.0.1` (httpx verifies hostname). Minor: if the
+  installed httpx (≥0.28) rejects a string path, wrap it as
+  `ssl.create_default_context(cafile=…)`.
 - **Proof:** S4 — observe the bearer token no longer on plain loopback (HTTPS handshake
   on `${OBSIDIAN_MCP_PORT}`; `ssl_verify` on).
 
@@ -58,14 +64,26 @@ ${OBSIDIAN_MCP_SSL_VERIFY}`); the **runtime contradicts it** — all five
 thesis authored at `lifecycle: current` validates clean; `projects/` is absent from
 `gated_prefixes` ([folders.yaml:31-33](../../../../src/.memoria/schemas/folders.yaml)),
 so the policy MCP doesn't gate the promotion either.
-- Enforce `initial_lifecycle: proposed` for `thesis` at schema-validation time (reject
-  born-`current`).
-- Review-gate the promotion to `current`.
-- **Design sub-question:** gating is **type-specific, not a blanket `projects/`
-  prefix** — adding `projects/` to `gated_prefixes` would also deny the deterministic
-  Project-gate's own materialization writes. Gate the thesis lifecycle transition, not
-  the whole folder. Settle this in the PR.
-- **Proof:** S1 (rejection unit) + S4 (deny-assertion through the ADR-28 plugin).
+- **Resolved — enforce in the content-aware Linter/schema layer, NOT the policy gate.**
+  The policy gate is path-based and **content-blind** (`is_review_gated` is just
+  `path.startswith(prefixes)`; `check_permission` never sees the note body —
+  `policy_mcp.py:101`), so it can't tell *create-proposed* from *promote-to-current*, and
+  it only intercepts agent `mcp_obsidian_*` writes (it misses PI promotions typed
+  directly in Obsidian). So `gated_prefixes` is the wrong tool: a `projects/` prefix would
+  dry-run all `proposed`/`provisional` agent work too — which ADR-78 says to allow.
+- **Born-`current` rejection:** a `thesis` detector + the pre-commit schema check reject
+  a thesis at `lifecycle: current` lacking promotion provenance. `validate_frontmatter`
+  is stateless, so key on a marker, not history.
+- **Promotion-to-`current` gate:** the human review/promotion step writes the provenance
+  stamp (e.g. `promoted_at`); `current`-without-stamp fails the Linter/pre-commit. Leaves
+  `proposed`/`provisional` free. Leave `gated_prefixes` untouched for theses.
+- **No regression to the deterministic gate** (open question retired):
+  `structural_impact.py:743` writes `project-gate-index.md` via direct `write_text` (zero
+  obsidian-MCP), so it bypasses the policy gate entirely — `gated_prefixes` can't touch
+  it. (`initial_lifecycle` / `promotion_gate` / type-level `gated:` are read by nothing
+  today — purely declarative.)
+- **Proof:** S0/S1 (schema + Linter rejection unit) + S5 (a live PI promotion attempt is
+  flagged E2E). Not the path-based ADR-28 policy plugin.
 
 **#624 · ADR-10 — exclude superseded claims by default.** The FAMA detector is done
 (`detectors.py fama_exposure()`); the missing half is "`query`/`write` exclude
@@ -118,10 +136,10 @@ and 3 (~5-min smoke) are resolved per the cadence review.
 | Stage | WS-1 | WS-2 | WS-3 | WS-4 |
 |---|---|---|---|---|
 | S0 static | — | — | template/manifest/docs-doctor | — |
-| S1 pytest | thesis reject, superseded filter | — | — | cassette/g9 units |
+| S1 pytest | thesis reject + promotion-gate, superseded filter | — | — | cassette/g9 units |
 | S2 dry-run | — | workspace in installer | template in installer | cassette replay |
 | S3 integration | — | workspace switch + Bases | — | L0–L4 replay |
-| S4 live | HTTPS+ssl_verify; thesis deny | — | — | — |
+| S4 live | HTTPS+ssl_verify (#620) | — | — | — |
 | S5 E2E | — | Project gate from Obsidian | — | golden path fresh clone |
 
 ## GitHub setup (done)
@@ -134,11 +152,17 @@ and 3 (~5-min smoke) are resolved per the cadence review.
 - **Pending:** mark #620 High priority — it is a Project field (Memoria Issue Tracker),
   not a label; set it in the board (the `gh` token lacks the `project` scope).
 
+## Resolved design decisions
+
+- **#620 — config fix, not an upstream gap.** Hermes feeds `ssl_verify` to httpx `verify`
+  (`mcp_tool.py:1355,1443`), which takes a CA-bundle path → the exported PEM verifies. See
+  the WS-1 #620 entry for steps. No code change; runtime config only.
+- **#621 — enforce in the Linter/schema layer, not the policy gate** (content-blind,
+  path-based) — born-`current` rejection + a promotion-stamp gate, leaving `gated_prefixes`
+  untouched. The deterministic gate bypasses the policy gate (direct `write_text`), so
+  there is no materialization regression. See the WS-1 #621 entry.
+
 ## Open questions
 
-- **#620:** is the Hermes self-signed-PEM trust achievable as config, or an upstream gap?
-  (Decides whether #620 is a fix or a tracked limitation — resolve before committing G1.)
-- **#621:** confirm the type-specific thesis-lifecycle gate (not a blanket `projects/`
-  prefix) does not regress the deterministic gate's materialization writes.
 - **#626 / #627:** enforce-vs-fix and create-vs-drop — both lean to the durable option
   (enforce; create), confirm in PR.
