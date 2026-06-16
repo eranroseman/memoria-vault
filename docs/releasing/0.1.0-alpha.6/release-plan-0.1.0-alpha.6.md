@@ -26,7 +26,11 @@ claim supersession defaults) merged in
 HTTPS smoke remains tracked in the release issues. G2 / WS-2 implementation (Home,
 Studio, and palette Project-gate entry points inside Studio, with no fourth saved
 workspace) merged in [PR #653](https://github.com/eranroseman/memoria-vault/pull/653);
-its S5 live Obsidian drive-through remains tracked in the release issues. Gate and stage
+its S5 live Obsidian drive-through remains tracked in the release issues. G4 / WS-4
+model-free Phase 1 harness implementation (record/replay cassette, L4 replay wired into
+`scripts/e2e-smoke.sh`, pytest coverage, and an opt-in `model-smoke` command) merged in
+[PR #655](https://github.com/eranroseman/memoria-vault/pull/655); the attended
+Gemma/`llama.cpp` tool-call smoke remains tracked in the release issues. Gate and stage
 state still close through the linked GitHub issues.
 
 ## 1. Scope — what this release is

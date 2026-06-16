@@ -35,7 +35,7 @@ Workstream _n_ maps 1:1 to gate G_n_.
 | WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 | merged in [#651](https://github.com/eranroseman/memoria-vault/pull/651); S4 live smoke pending |
 | WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 | merged in [#653](https://github.com/eranroseman/memoria-vault/pull/653); S5 live drive-through pending |
 | WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 | merged in [#649](https://github.com/eranroseman/memoria-vault/pull/649) |
-| WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 | pending |
+| WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 | merged in [#655](https://github.com/eranroseman/memoria-vault/pull/655); live model-smoke pending |
 
 ### WS-1 — Correctness & security (#620, #621, #624)
 
@@ -155,6 +155,16 @@ provenance-doctor stay recorded as later work. Mechanical, zero external dep.
 - **Proof:** S0 — template parses, manifest validates, `docs-doctor` green.
 
 ### WS-4 — Test-env harness Phase 1 (#586, ADR-80)
+
+**Status:** model-free implementation merged in
+[PR #655](https://github.com/eranroseman/memoria-vault/pull/655) (`26c5e48`). Proof:
+`scripts/test.sh all`, `bash scripts/e2e-smoke.sh`, focused harness/policy/project
+pytest, direct `scripts/test_env_harness.py replay --json`, `docs-doctor`,
+`status-doctor`, `check-test-refs`, `cspell`, and CI all green. Merged artifacts include
+`scripts/test_env_harness.py`, the versioned
+`fixtures/test-env/cassettes/alpha6-l4-golden-path.json` cassette, pytest coverage, the
+`e2e-smoke.sh` replay hook, and the reusable testing docs. Remaining G4 proof is the
+attended Gemma/`llama.cpp` `model-smoke` run against a local OpenAI-compatible endpoint.
 
 Model-free L0–L4 golden path: built on `scripts/e2e-smoke.sh` + record/replay cassettes
 + the g9 zero-LLM spine + a seeded L4 golden path. The model is needed at **record**
