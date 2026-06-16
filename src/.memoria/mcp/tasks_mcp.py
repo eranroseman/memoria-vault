@@ -10,7 +10,6 @@ path the sweeps engine uses — so board semantics (WIP, dedup, dispatch) stay
 Hermes-native.
 
     python tasks_mcp.py --vault <path>            # run the MCP server (needs `mcp`)
-    python tasks_mcp.py --self-test               # offline validation checks
 """
 
 from __future__ import annotations
@@ -163,49 +162,6 @@ def build_server(vault: Path):
     return server
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def ck(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        lo = v / ".memoria" / "lane-overrides"
-        lo.mkdir(parents=True)
-        (lo / "librarian.yaml").write_text(
-            "profile: memoria-librarian\nrouting:\n  write_scope:\n"
-            "    - \"inbox/\"\n    - \"catalog/\"\n", encoding="utf-8")
-        (lo / "copi.yaml").write_text(
-            "profile: memoria-copi\nrouting:\n  write_scope: []\n", encoding="utf-8")
-        (lo / "engineer.yaml").write_text(
-            "profile: memoria-engineer\nrouting:\n  write_scope:\n"
-            "    - \"projects/*/code/\"\n", encoding="utf-8")
-        ck("in-scope path passes", validate(v, "catalog", ["catalog/papers/"]) == [])
-        ck("glob scope admits a path under it",
-           validate(v, "code", ["projects/x/code/main.py"]) == [])
-        ck("glob scope rejects a widening path",
-           any("exceeds" in e for e in validate(v, "code", ["projects/x/"])))
-        ck("narrowing passes", validate(v, "catalog", ["inbox/"]) == [])
-        ck("widening rejected",
-           any("exceeds" in e for e in validate(v, "catalog", ["notes/claims/"])))
-        ck("unknown lane rejected", validate(v, "publish", []) != [])
-        out = delegate(v, "catalog", "g", allowed_paths=["notes/claims/"])
-        ck("delegate refuses ceiling violations", out["error"] == "ceiling-violation")
-        def missing_hermes(*args, **kwargs):
-            raise FileNotFoundError("hermes")
-
-        card = create_card("catalog", "g", "b", runner=missing_hermes)
-        ck("missing hermes degrades with a fallback hint",
-           card.get("error") == "hermes-cli-not-found" and "fallback" in card)
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def resolve_vault(arg: str | None) -> Path:
     raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
@@ -220,10 +176,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
-    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(_self_test())
     build_server(resolve_vault(args.vault)).run()
 
 

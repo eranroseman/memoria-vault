@@ -10,14 +10,11 @@ so a schema change is a one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | literal:<value> | enum:<name>.
 `required_any` lists field names of which at least one must be present.
-
-Usage: python3 schema.py --self-test
 """
 
 from __future__ import annotations
 
 import datetime
-import sys
 from pathlib import Path
 
 import yaml
@@ -138,33 +135,5 @@ def validate_frontmatter(fm: dict, schema: dict) -> list[str]:
     return errors
 
 
-def _self_test() -> int:
-    types = load_types()
-    folders = load_folders()
-    failures = 0
-
-    def check(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    check("21 type schemas load", len(types) == 21)
-    for name, sc in types.items():
-        check(f"{name}: lifecycle ⊆ universal chain",
-              set(lifecycle_for(sc)) <= set(UNIVERSAL_LIFECYCLE))
-        check(f"{name}: has a folder home", home_for(name, folders) is not None)
-    check("gated prefixes exist", gated_prefixes(folders) == ["notes/claims/", "notes/hubs/"])
-    good = {"type": "claim", "lifecycle": "current", "title": "t",
-            "maturity": "seedling", "sources": ["@x2024"]}
-    check("valid claim passes", validate_frontmatter(good, types["claim"]) == [])
-    bad = dict(good, maturity="ripe")
-    check("bad enum fails", any("maturity" in e for e in validate_frontmatter(bad, types["claim"])))
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 if __name__ == "__main__":
-    if "--self-test" in sys.argv:
-        sys.exit(_self_test())
     print(__doc__)

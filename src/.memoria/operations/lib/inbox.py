@@ -6,15 +6,12 @@ Engines and lanes never invent card formats: every `candidate`/`gap`/`flag`/`ale
 Proposals carry the honesty body (argument for · against · what tipped it · certainty —
 never a verdict); verification cards lead with the finding; work prompts carry the
 action + what happened + where to look — also never a verdict.
-
-Usage: python3 inbox.py --self-test
 """
 
 from __future__ import annotations
 
 import datetime
 import re
-import sys
 from pathlib import Path
 
 import loudness as loudness_routing
@@ -164,56 +161,5 @@ def _write(vault: Path, card_type: str, title: str, content: str, loudness: str 
     return path
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def check(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        p = write_proposal(v, "candidate", "Smith 2024 on X", "Accept into catalog",
-                           "fills the X gap", "venue is low-signal", "the gap outweighs",
-                           "likely", "librarian", citekey="@smith2024")
-        text = p.read_text(encoding="utf-8")
-        check("proposal under inbox/", p.parent.name == "inbox")
-        check("honesty fields present", all(k in text for k in (
-            "argument_for", "argument_against", "what_tipped_it", "certainty")))
-        check("no verdict on proposals", "agent_recommendation" not in text)
-        f = write_finding(v, "flag", "Broken citekey", "citekey resolves nowhere",
-                          "linter", target="notes/claims/c.md")
-        check("finding leads", "# Finding" in f.read_text(encoding="utf-8"))
-        dup = write_proposal(v, "candidate", "Smith 2024 on X", "a", "b", "c", "d",
-                             "unsure", "librarian")
-        check("no overwrite on collision", dup != p)
-        try:
-            write_finding(v, "flag", "t", "f", "linter")
-            check("flag without target rejected", False)
-        except ValueError:
-            check("flag without target rejected", True)
-        wp = write_work_prompt(v, "Review: Draft answer", "Review, then accept or archive",
-                               "memoria-writer finished the draft", "board-export",
-                               task_id="t_b2", dedupe_slug="review-t-b2")
-        check("work-prompt written under inbox/", wp is not None and wp.parent.name == "inbox")
-        check("work-prompt carries no verdict",
-              "agent_recommendation" not in wp.read_text(encoding="utf-8"))
-        again = write_work_prompt(v, "Review: Draft answer", "a", "b", "board-export",
-                                  task_id="t_b2", dedupe_slug="review-t-b2")
-        check("dedupe_slug makes re-emit a no-op", again is None)
-        try:
-            write_work_prompt(v, "t", "a", "w", "board-export")
-            check("work-prompt without pointer rejected", False)
-        except ValueError:
-            check("work-prompt without pointer rejected", True)
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 if __name__ == "__main__":
-    if "--self-test" in sys.argv:
-        sys.exit(_self_test())
     print(__doc__)

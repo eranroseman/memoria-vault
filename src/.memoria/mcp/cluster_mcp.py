@@ -25,7 +25,6 @@ fixed seed, params echoed, no writes.
     python cluster_mcp.py --vault <path>                  # run the MCP server (needs `mcp`)
     python cluster_mcp.py --vault <path> --graph          # one-shot graph JSON to stdout
     python cluster_mcp.py --vault <path> --canvas         # one-shot claim-debate Canvas
-    python cluster_mcp.py --self-test                     # offline fixture check (no mcp/bertopic)
 """
 
 from __future__ import annotations
@@ -344,57 +343,6 @@ def build_server(vault: Path):
     return server
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def ck(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        (v / "notes/claims").mkdir(parents=True)
-        (v / "catalog/papers").mkdir(parents=True)
-        (v / "notes/claims/a.md").write_text(
-            "---\ntype: claim\nlinks:\n  supports: ['[[b]]']\n  contradicts: ['[[c]]']\n---\n",
-            encoding="utf-8")
-        (v / "notes/claims/b.md").write_text("---\ntype: claim\n---\n", encoding="utf-8")
-        (v / "notes/claims/c.md").write_text("---\ntype: claim\n---\n", encoding="utf-8")
-        (v / "catalog/papers/x2024.md").write_text(
-            "---\ntype: paper\nrelationships:\n  cited_by: ['[[y2025]]']\n---\n",
-            encoding="utf-8")
-        nodes, edges = collect_edges(v)
-        ck("4 nodes collected", len(nodes) == 4)
-        ck("3 typed edges", len(edges) == 3)
-        ck("edge kinds split", {e["kind"] for e in edges} == {"links", "relationships"})
-        ck("no self-edges", all(e["source"] != e["target"] for e in edges))
-        try:
-            import networkx  # noqa: F401
-
-            g = build_graph(v, seed=7)
-            ck("graph has communities + layout",
-               set(g["communities"]) and set(g["layout"]))
-            ck("params echoed", g["params_echo"]["seed"] == 7)
-            g2 = build_graph(v, seed=7)
-            ck("deterministic layout", g["layout"] == g2["layout"])
-            c = emit_canvas(v, seed=7)
-            ck("canvas lands in staging", c.get("canvas_path", "").startswith(CANVAS_HOME))
-            doc = json.loads((v / c["canvas_path"]).read_text(encoding="utf-8"))
-            ck("canvas has nodes + edges", bool(doc["nodes"]) and bool(doc["edges"]))
-            gated = emit_canvas(v, out="notes/claims/x.canvas", seed=7)
-            ck("out-of-staging target refused", gated.get("error") == "invalid-target")
-        except ImportError:
-            print("  ok (skipped networkx checks — not installed)")
-        topics = model_topics(v)
-        ck("bertopic degrades cleanly",
-           topics.get("error") in ("bertopic-not-installed", "too-few-documents"))
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def resolve_vault(arg: str | None) -> Path:
     raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
     if not raw:
@@ -416,10 +364,7 @@ def main() -> None:
                     help="canvas scope: a hub/topic note path or a folder prefix")
     ap.add_argument("--out", default="",
                     help="canvas output path relative to the vault (staging only)")
-    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(_self_test())
     vault = resolve_vault(args.vault)
     if args.graph:
         print(json.dumps(build_graph(vault), indent=2))

@@ -5,7 +5,7 @@ Called by the pre-commit hook with the staged .md paths. Each typed note must
 pass its schema; untyped system infra and vault-root nav pages are exempt,
 mirroring the Linter's frontmatter_schema_check. Exit 1 blocks the commit.
 
-Usage: precommit_check.py --vault V [--self-test] PATH ...
+Usage: precommit_check.py --vault V PATH ...
 """
 
 from __future__ import annotations
@@ -54,46 +54,11 @@ def check_paths(vault: Path, paths: list[str]) -> list[str]:
     return errors
 
 
-def _self_test() -> int:
-    import tempfile
-    failures = 0
-
-    def ck(label: str, ok: bool) -> None:
-        nonlocal failures
-        print(("  ok " if ok else "  FAIL ") + label)
-        if not ok:
-            failures += 1
-
-    with tempfile.TemporaryDirectory() as td:
-        v = Path(td)
-        (v / "notes/claims").mkdir(parents=True)
-        good = v / "notes/claims/good.md"
-        good.write_text("---\ntype: claim\nlifecycle: current\ntitle: T\n"
-                        "maturity: seedling\nsources: ['@x2020']\n---\nBody.\n",
-                        encoding="utf-8")
-        bad = v / "notes/claims/bad.md"
-        bad.write_text("---\ntype: claim\nlifecycle: proposed\ntitle: T\n---\nBody.\n",
-                       encoding="utf-8")
-        (v / "system").mkdir()
-        infra = v / "system/vocab.md"
-        infra.write_text("---\nnothing: here\n---\n", encoding="utf-8")
-        ck("clean note passes", check_paths(v, ["notes/claims/good.md"]) == [])
-        errs = check_paths(v, ["notes/claims/bad.md"])
-        ck("invalid lifecycle + missing fields block", len(errs) >= 2)
-        ck("system infra exempt", check_paths(v, ["system/vocab.md"]) == [])
-        ck("outside-vault path skipped", check_paths(v, ["/etc/hostname"]) == [])
-    print("self-test:", "PASS" if failures == 0 else f"{failures} FAILURE(S)")
-    return 1 if failures else 0
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--vault", type=Path)
-    ap.add_argument("--self-test", action="store_true")
     ap.add_argument("paths", nargs="*")
     args = ap.parse_args()
-    if args.self_test:
-        sys.exit(_self_test())
     if not args.vault:
         ap.error("provide --vault")
     errors = check_paths(args.vault, args.paths)

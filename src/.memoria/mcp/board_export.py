@@ -146,7 +146,7 @@ def normalize(card: dict) -> dict:
         "last_updated": _iso_ts(_first(card, "updated_at", "modified_at", "created_at")),
         "summary": summary,
         # --- telemetry overlay (all best-effort; empty when Hermes doesn't supply them) ---
-        "agent_recommendation": md.get("agent_recommendation", md.get("agent_verdict", "")),
+        "agent_recommendation": md.get("agent_recommendation", ""),
         "disposition": md.get("disposition", ""),       # explicit "edited" wins over the derived accept/reject
         "expanded_at": md.get("expanded_at", ""),
         "review_requested_at": md.get("review_requested_at", ""),

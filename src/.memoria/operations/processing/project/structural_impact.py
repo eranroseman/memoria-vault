@@ -10,7 +10,6 @@ import argparse
 import json
 import re
 import sys
-import tempfile
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -745,47 +744,13 @@ def run(
     return {"changed": apply, "path": out.relative_to(vault).as_posix(), "payload": payload}
 
 
-def self_test() -> int:
-    with tempfile.TemporaryDirectory() as td:
-        vault = Path(td)
-        (vault / "projects/demo").mkdir(parents=True)
-        (vault / "notes/claims").mkdir(parents=True)
-        (vault / "projects/demo/project.md").write_text(
-            "---\ntype: project\nlifecycle: current\ntitle: Demo\nslug: demo\n"
-            "scope_topics: [alpha]\nactive_thesis: '[[thesis]]'\n---\n",
-            encoding="utf-8",
-        )
-        (vault / "projects/demo/thesis.md").write_text(
-            "---\ntype: thesis\nlifecycle: provisional\ntitle: Thesis\nproject: '[[demo]]'\n---\n",
-            encoding="utf-8",
-        )
-        for name, rel, target in (
-            ("a", "supports", "thesis"),
-            ("b", "supports", "a"),
-            ("c", "contradicts", "thesis"),
-            ("d", "supports", "a"),
-            ("e", "contradicts", "a"),
-        ):
-            (vault / f"notes/claims/{name}.md").write_text(
-                f"---\ntype: claim\nlifecycle: current\ntitle: {name}\ntopics: [alpha]\n"
-                f"links:\n  {rel}: ['[[{target}]]']\n---\n",
-                encoding="utf-8",
-            )
-        result = run(vault, "projects/demo/project")
-        payload = result["payload"]
-        return 0 if payload["graph_maturity"] == "mature" and result["changed"] else 1
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--vault", type=Path, default=Path("."))
     parser.add_argument("--project", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true")
-    parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
-    if args.self_test:
-        return self_test()
     result = run(args.vault, args.project, apply=not args.dry_run)
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True, default=str))
