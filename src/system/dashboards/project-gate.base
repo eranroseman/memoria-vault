@@ -1,0 +1,33 @@
+# Project gate — project notes plus the generated cache timestamp fields.
+filters:
+  and:
+    - file.inFolder("projects")
+    - 'type == "project"'
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "Active projects"
+    groupBy:
+      property: output_mode
+      direction: ASC
+    order:
+      - file.name
+      - lifecycle
+      - output_mode
+      - active_thesis
+      - refutation_sufficiency
+      - graph_maturity
+      - saturation_state
+      - computed_at
+  - type: table
+    name: "Needs refutation stamp"
+    filters:
+      and:
+        - 'output_mode == "thesis"'
+        - 'refutation_sufficiency != true'
+    order:
+      - file.name
+      - active_thesis
+      - graph_maturity
+      - saturation_state
+      - computed_at

@@ -161,7 +161,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-B schema + templates (#578)
 - [x] WS-C structural-impact Operation (#579)
 - [x] WS-D gap taxonomy + saturation (#580)
-- [ ] WS-E PI surface (#581, #154, #381)
+- [x] WS-E PI surface (#581, #154, #381)
 - [ ] WS-F instrumentation (#337)
 - [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583)
 - [ ] WS-H thin test-env slice (#582)
@@ -193,6 +193,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   additive/conflict/fragility findings, maturity-gated structural/refutation advisories, the
   one-click PI `refutation_sufficiency` stamp for saturation condition 3, and survey-mode
   coverage-relative saturation.
+- 2026-06-16 — WS-E added the PI-facing Project surface: QuickAdd/Modal Forms project scaffolding,
+  Project gate cache refresh, thesis supersession with a lazy re-confirmation alert, a Project gate
+  Bases dashboard, and Writer draft verification that stages visible knowledge-gap cards for
+  ungrounded assertions.
 
 ## 9. Surprises & discoveries
 

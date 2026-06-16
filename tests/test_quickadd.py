@@ -57,6 +57,9 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: resolve inbox card",
         "Memoria: create linked claim note",
         "Memoria: write claim note",
+        "Memoria: start project",
+        "Memoria: refresh project gate",
+        "Memoria: supersede thesis",
         "Memoria: open Desk workspace",
         "Memoria: open Library workspace",
         "Memoria: open Studio workspace",
@@ -345,5 +348,67 @@ def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
         for c in _choices() if c["type"] == "Macro"
         for cmd in c["macro"]["commands"] if cmd["type"] == "UserScript"
     }
-    for fname in [*LANE_SCRIPTS, "run-pattern.js", "delegate-task.js"]:
+    for fname in [
+        *LANE_SCRIPTS,
+        "run-pattern.js",
+        "delegate-task.js",
+        "start-project.js",
+        "refresh-project-gate.js",
+        "supersede-thesis.js",
+    ]:
         assert f"system/scripts/{fname}" in wired, f"{fname} not wired into quickadd data.json"
+
+
+def test_start_project_scaffolds_project_gate_workspace():
+    script = (SCRIPTS / "start-project.js").read_text(encoding="utf-8")
+    for marker in (
+        'FORM_NAME = "memoria-project-start"',
+        'openForm(FORM_NAME)',
+        '"projects/" + data.slug',
+        'root + "/project.md"',
+        'root + "/thesis.md"',
+        '"code"',
+        '"drafts"',
+        '"exports"',
+        "refutation_sufficiency: false",
+        "QuickAdd: Memoria: refresh project gate",
+    ):
+        assert marker in script
+
+
+def test_refresh_project_gate_runs_structural_impact_operation():
+    script = (SCRIPTS / "refresh-project-gate.js").read_text(encoding="utf-8")
+    assert "structural_impact.py" in script
+    assert "--project" in script
+    assert "cp.execFile(python, args" in script
+    assert ".memoria/.venv/Scripts/python.exe" in script
+    assert ".memoria/.venv/bin/python" in script
+
+
+def test_supersede_thesis_marks_old_and_raises_reconfirm_alert():
+    script = (SCRIPTS / "supersede-thesis.js").read_text(encoding="utf-8")
+    for marker in (
+        "type: thesis",
+        "superseded_by",
+        "supersedes:",
+        "active_thesis",
+        "inbox/alert-thesis-pivot-",
+        "type: alert",
+        "Refresh the Project gate and re-confirm",
+        "lifecycle: proposed",
+    ):
+        assert marker in script
+
+
+def test_verify_draft_emits_visible_knowledge_gap_cards():
+    script = (SCRIPTS / "verify-draft.js").read_text(encoding="utf-8")
+    for marker in (
+        "detectUngroundedAssertions(draftText)",
+        "writeKnowledgeGapCards(params.app, ref, ungrounded)",
+        "inbox/gap-draft-",
+        "type: gap",
+        "gap_type: additive",
+        "raised_by: quickadd-verify-draft",
+        "knowledge-gap card(s) were staged",
+    ):
+        assert marker in script

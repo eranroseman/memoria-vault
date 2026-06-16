@@ -17,7 +17,7 @@ The fixed palette also applies to shipped navigation surfaces: `home.md` uses `[
 | --- | --- | --- | --- |
 | `[!brief]` | Top of every source note in `notes/sources/` | Librarian (composed during ingest by `catalog-enrich-record`) | Comparative read — what this source overlaps with, what it may contradict, what new constructs it introduces |
 | `[!suggestions]` | Claim notes in `notes/claims/` | QuickAdd `Memoria: link claim` preflight, followed by Librarian `link-suggest-claim` | Bounded deterministic candidate links (5 forward + 5 backward, hard cap) |
-| `[!verification]` | Drafts in `projects/` | QuickAdd `Memoria: verify draft` preflight, followed by Peer-reviewer `verify-check-citation` | Deterministic claim-link/citekey trace scaffold; the lane performs support judgment |
+| `[!verification]` | Drafts in `projects/` | QuickAdd `Memoria: verify draft` preflight, followed by Peer-reviewer `verify-check-citation` | Deterministic claim-link/citekey trace scaffold plus visible `gap` cards for ungrounded assertions; the lane performs support judgment |
 
 ---
 
