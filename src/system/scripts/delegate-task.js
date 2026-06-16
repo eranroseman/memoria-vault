@@ -5,8 +5,7 @@
  * (`hermes kanban create`) — the palette twin of the Co-PI's
  * `delegate_route_task`. The lane → profile mapping mirrors LANE_PROFILE in
  * `.memoria/mcp/tasks_mcp.py`. Mirrors capture-from-url.js: the card-create
- * goes through `bash -lc` (wrapped in wsl.exe on Windows) so it reaches
- * hermes in WSL.
+ * goes through `bash -lc` so it reaches the native Hermes CLI.
  */
 
 // Lane → assignee profile (keep in sync with LANE_PROFILE in tasks_mcp.py).
@@ -35,12 +34,10 @@ const LANE_LABELS = {
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const onWindows = process.platform === "win32";
-
   const run = (sh) =>
     new Promise((resolve, reject) => {
-      const file = onWindows ? "wsl.exe" : "bash";
-      const args = onWindows ? ["bash", "-lc", sh] : ["-lc", sh];
+      const file = "bash";
+      const args = ["-lc", sh];
       cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
         if (err) return reject(new Error(String(stderr || err.message || "").trim()));
         resolve(stdout);

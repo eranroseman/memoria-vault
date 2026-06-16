@@ -18,9 +18,12 @@ env_requires:
     description: "Obsidian Local REST API key (64-char hex) — vault read via the `obsidian` MCP server (read tools only; the copi lane denies all writes)."
     required: true
   - name: OBSIDIAN_MCP_PORT
-    description: "Port of the Local REST API plugin's insecure HTTP server, where its native MCP is served (http://127.0.0.1:<port>/mcp). Must match insecurePort in the plugin's data.json (default 27123). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
+    description: "Port of the Local REST API plugin's HTTPS server, where its native MCP is served (https://127.0.0.1:<port>/mcp). Must match the plugin's HTTPS port (default 27124). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
     required: false
-    default: "27123"
+    default: "27124"
+  - name: OBSIDIAN_MCP_SSL_VERIFY
+    description: "Path to the Local REST API plugin's exported PEM certificate/CA bundle; passed to Hermes mcp_servers.obsidian.ssl_verify so HTTPS stays verified."
+    required: true
   - name: S2_API_KEY
     description: "Semantic Scholar API key — used by the ingest MCP's read/compute path when discussing a citekey."
     required: false

@@ -55,16 +55,20 @@ Three folders to **never** point `exportSettings.defaultFolder` at:
 
 Auto-export is enabled for both new-chat and close-chat events (`autoExportOnNewChat: true`, `autoExportOnCloseChat: true`) so a pane session has a visible transcript even if Obsidian closes unexpectedly.
 
-## If the pane won't connect (Windows + WSL)
+## If the pane won't connect
 
-On Windows, Obsidian runs natively while hermes lives in WSL, so the ACP commands must resolve **through `wsl.exe`**. Two settings make that work (Settings → **Agent Client**):
+On production Windows, Obsidian and Hermes both run natively. The shipped Agent
+Client config should use:
 
-- **WSL mode on.** `windowsWslMode: true` — the plugin then runs each agent as `wsl.exe … sh -c "<command> …"`. Without it, Obsidian tries to launch the WSL binary as a Windows process and can't find it.
-- **Command = the WSL absolute path** to hermes, e.g. `/home/<you>/.local/bin/hermes` — **not** a Windows path and **not** the `{{HOME}}` placeholder. The quickest way to fill it is the **Auto-detect** button next to each agent (it runs `which hermes` inside WSL).
+- **WSL mode off.** `windowsWslMode: false`.
+- **Command = `hermes`** when the native Hermes installer has placed Hermes on
+  your User PATH. If Obsidian was already open during install, fully restart it
+  so it sees the updated PATH.
 
-The installer (`scripts/install.sh`, run under WSL) seeds these automatically — it substitutes `{{HOME}}` with your WSL home and sets `windowsWslMode: true`. If you instead see a **"Command Not Found: `{{HOME}}/.local/bin/hermes`"** error, the substitution didn't run (an older installer, or a hand-copied `data.json.example`): set the path via **Auto-detect**, confirm WSL mode is on, then **fully restart Obsidian** so the plugin re-reads the config.
-
-On native Linux (Obsidian and hermes on one filesystem) leave WSL mode **off** and point the command at the plain hermes path.
+For the Linux/WSL test path where Obsidian runs on Windows and Hermes runs
+inside WSL, turn `windowsWslMode` on and point the command at the WSL absolute
+Hermes path, for example `/home/<you>/.local/bin/hermes`. That is a test-path
+exception, not the production Windows default.
 
 ## Verify
 

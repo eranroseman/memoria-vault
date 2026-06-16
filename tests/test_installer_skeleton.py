@@ -87,3 +87,11 @@ def test_mcp_deps_fail_loudly_without_python():
 def test_installer_preserves_user_appearance_on_refresh():
     text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     assert "--exclude '.obsidian/appearance.json'" in text
+
+def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
+    text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "function Assert-ObsidianMcpEnv" in text
+    assert "OBSIDIAN_MCP_PORT" in text
+    assert "OBSIDIAN_MCP_SSL_VERIFY" in text
+    assert "Test-PlaceholderValue" in text
+    assert "rerun -ProfilesOnly" in text

@@ -9,9 +9,9 @@ nav_order: 18
 
 # Installer test plan — v0.1 (S0–S3)
 
-The clean-install end-to-end the other plans *assume has already happened*: `scripts/install.sh` (and the `install.ps1` launcher) deploying the five profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **S0–S3**. Installer *lint* is covered headless ([Headless test plan](headless-test-plan.md) §C); agent behaviour after install is the [Hermes CLI plan](hermes-cli-test-plan.md); this plan is *the install itself*.
+The clean-install end-to-end the other plans *assume has already happened*: `scripts/install.ps1` for native Windows production and `scripts/install.sh` for Linux/WSL testing, deploying the five profiles, substituting `{{VAULT_PATH}}`, seeding `.env`, copying plugins, registering profiles with Hermes, and surviving a re-run. Backs **S0-S3**. Installer *lint* is covered headless ([Headless test plan](headless-test-plan.md) §C); agent behaviour after install is the [Hermes CLI plan](hermes-cli-test-plan.md); this plan is *the install itself*.
 
-**Where to run.** A **throwaway target** — never the real `~/Memoria`. Ubuntu/WSL2 for `install.sh`; a Windows machine (WSL2 behind it) for the `install.ps1` path (Part F). Use `--vault ~/Memoria-test` and discard it after (Part G).
+**Where to run.** A **throwaway target** — never the real production vault. Windows production uses `install.ps1` against a disposable Windows folder such as `$env:USERPROFILE\Memoria-test`. Linux/WSL testing uses `install.sh --vault ~/Memoria-test`. Discard the target after Part G.
 
 **How to read each step.** **Action** → **✓ Pass** → **✗ If it fails**. Confirm exact flag names / output strings against `scripts/install.sh` source if one drifts — this plan names behaviour, the script is canonical.
 
@@ -93,10 +93,13 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ---
 
-## Part F — Windows launcher + bootstrap (S2–S3, Windows)
+## Part F — Native Windows production bootstrap (S2-S3, Windows)
 
-**F1. `install.ps1` hands off to WSL2.** From PowerShell: `./scripts/install.ps1 -ProfilesOnly`
-- ✓ Pass: `wslpath`-converts the Windows vault path and runs `install.sh` inside WSL2; profiles deploy. (Gate: WSL2 present.)
+**F1. `install.ps1` deploys profiles natively.** From PowerShell:
+```
+.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria-test"
+```
+- ✓ Pass: no WSL invocation; profiles deploy under `$env:LOCALAPPDATA\hermes\profiles`, `config.yaml` contains Windows vault paths, and the policy-gate plugin is present under each deployed profile.
 
 **F2. Full bootstrap (optional, heavy).** The one-line bootstrap installs Obsidian, Hermes, Zotero.
 - ✓ Pass: the three apps install; then A–C hold. (Run only on a genuinely disposable Windows box.)
@@ -119,6 +122,6 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | C | 8 plugins copied; MCP venv wired | | |
 | D | re-run idempotent; `.env` preserved | | |
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
-| F | `install.ps1` WSL2 handoff (+ bootstrap) | | |
+| F | native Windows `install.ps1` (+ bootstrap) | | |
 
-**S0–S3 green** when A–E pass on Linux/WSL2 and F1 passes on Windows. Record the result in the relevant gate/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.
+**S0-S3 green** when A-E pass on Linux/WSL testing and F1 passes on native Windows production. Record the result in the relevant gate/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.

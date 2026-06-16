@@ -40,7 +40,7 @@ Hermes fails open on hook errors, so a broken hook or unregistered MCP can let a
 
 - Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
 - Smoke-test the gate live: `python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'`. It must return `"decision": "deny"` — `notes/claims/` is review-gated. If it errors or allows, the gate logic is broken. (The full component test suite is `scripts/test.sh l1` from the repo clone.)
-- Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's insecure HTTP server is on and its port matches `OBSIDIAN_MCP_PORT` ([Set up Obsidian](../setup/set-up-obsidian.md)).
+- Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's HTTPS server is on, its port matches `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` points at the exported PEM certificate/CA bundle ([Set up Obsidian](../setup/set-up-obsidian.md)).
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.
 

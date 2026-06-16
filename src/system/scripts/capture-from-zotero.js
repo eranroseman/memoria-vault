@@ -5,12 +5,11 @@
  * creates an `intake:source` card on the Librarian lane (Hermes kanban). The
  * gateway's embedded dispatcher then ingests the citekey into catalog/papers/.
  *
- * Both the Zotero read and the card-create go through `bash -lc` (wrapped in
- * wsl.exe on Windows). We deliberately use `curl`, NOT Obsidian's requestUrl:
+ * Both the Zotero read and the card-create go through `bash -lc`. We
+ * deliberately use `curl`, NOT Obsidian's requestUrl:
  * Zotero's local server refuses any request carrying an Origin header (which
  * requestUrl always sends), so a browser-style fetch gets HTTP 000. curl sends
- * no Origin and is accepted. On Windows this also reuses WSL2 mirrored
- * networking to reach Zotero on 127.0.0.1:23119.
+ * no Origin and is accepted.
  */
 
 const BBT_RPC = "http://127.0.0.1:23119/better-bibtex/json-rpc";
@@ -20,12 +19,10 @@ const SELECTED_CITEKEY_REQUEST =
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const onWindows = process.platform === "win32";
-
   const run = (sh) =>
     new Promise((resolve, reject) => {
-      const file = onWindows ? "wsl.exe" : "bash";
-      const args = onWindows ? ["bash", "-lc", sh] : ["-lc", sh];
+      const file = "bash";
+      const args = ["-lc", sh];
       cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
         if (err) return reject(new Error(String(stderr || err.message || "").trim()));
         resolve(stdout);
@@ -39,8 +36,7 @@ module.exports = async (params) => {
       `curl -s --max-time 8 -H 'Content-Type: application/json' --data ${shq(SELECTED_CITEKEY_REQUEST)} '${BBT_RPC}'`
     )).trim();
   } catch (e) {
-    new Notice("Zotero not reachable — is it running with Better BibTeX? " +
-               "(On Windows, WSL2 mirrored networking must be on.) " + e.message, 9000);
+    new Notice("Zotero not reachable — is it running with Better BibTeX? " + e.message, 9000);
     return;
   }
   if (!raw) {

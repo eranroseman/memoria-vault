@@ -1,11 +1,11 @@
 {
-  "_comment": "Example agent-client config. Replace {{...}} placeholders with absolute paths on your machine before copying to vault/.obsidian/plugins/agent-client/data.json. After first launch, the plugin appends savedSessions[] \u2014 that's normal and safe to commit. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md",
+  "_comment": "Example agent-client config. The production Windows path calls native hermes on PATH. After first launch, the plugin appends savedSessions[] \u2014 that's normal and safe to commit. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md",
   "_customAgents_note": "Memoria configures ONE interactive agent \u2014 the Co-PI (ADR-48): the only agent the PI converses with. It questions (the old Socratic role), explains the system, and DELEGATES tasks to the background lanes (Librarian, Writer, Peer-reviewer, Engineer) via the tasks MCP \u2014 those lanes run on Kanban dispatch, never in this pane. See https://github.com/eranroseman/memoria-vault/blob/main/docs/how-to-guides/using-obsidian/use-the-acp-pane.md",
   "customAgents": [
     {
       "id": "memoria-copi",
       "displayName": "Memoria Co-PI",
-      "command": "{{HOME}}/.local/bin/hermes",
+      "command": "hermes",
       "args": [
         "-p",
         "memoria-copi",
@@ -32,7 +32,7 @@
     "imageCustomFolder": "system/exports/assets",
     "frontmatterTag": "agent-client"
   },
-  "_wsl_note": "Set windowsWslMode: true if the agent commands above resolve through WSL on Windows. The plugin will translate Windows paths to /mnt/c/... format for the subprocess.",
+  "_wsl_note": "Production Windows uses native hermes with windowsWslMode false. Set true only for the Linux/WSL test path where Obsidian is on Windows but hermes is inside WSL.",
   "windowsWslMode": false,
   "sendMessageShortcut": "enter",
   "chatViewLocation": "right-tab",

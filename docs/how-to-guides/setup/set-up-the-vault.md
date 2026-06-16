@@ -12,7 +12,7 @@ Run the bootstrap installer to provision the runtime, lay the vault down, and re
 ## Prerequisites
 
 - Git on your `PATH`
-- Ubuntu/Debian, or **Windows with WSL2** enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — macOS is not supported
+- Windows PowerShell 5.1+ for production, or Ubuntu/Debian/WSL for the Linux test path — macOS is not supported
 - The installer provisions Hermes itself (+ the ACP extra); you don't need it beforehand
 
 ## Steps
@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 ```
 
 ```powershell
-# Windows (PowerShell): gates WSL2, installs the GUI apps, then runs scripts/install.sh in WSL2
+# Windows production (PowerShell): native Hermes, native profiles, native vault
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 

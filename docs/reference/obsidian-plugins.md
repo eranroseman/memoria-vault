@@ -15,7 +15,7 @@ Memoria breaks without these. The starter vault **ships all twelve bundled and c
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |
-| obsidian-local-rest-api | `obsidian-local-rest-api` | Exposes the vault to Hermes via its native MCP over loopback HTTP (port 27123). Required for the control plane. |
+| obsidian-local-rest-api | `obsidian-local-rest-api` | Exposes the vault to Hermes via its native MCP over verified loopback HTTPS (default port 27124). Required for the control plane. |
 | agent-client | `agent-client` | ACP inside Obsidian — routes human conversations with Hermes through a chat pane. |
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
@@ -74,8 +74,9 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| HTTP (insecure) server | **on**, port `27123` | Serves the plugin's native MCP at `http://127.0.0.1:27123/mcp` — Hermes's vault path ([ADR-31](../adr/31-native-obsidian-mcp.md)). Loopback-only. Each profile's `OBSIDIAN_MCP_PORT` must match; use distinct ports per vault to run a sandbox + production at once. |
-| HTTPS port | `27124` | The plugin's HTTPS REST endpoint. **Not** the Hermes vault path — Hermes can't verify the self-signed cert, so it uses the HTTP MCP above. |
+| HTTPS server | **on**, port `27124` | Serves the plugin's native MCP at `https://127.0.0.1:27124/mcp` — Hermes's vault path ([ADR-31](../adr/31-native-obsidian-mcp.md)). Loopback-only. Each profile's `OBSIDIAN_MCP_PORT` must match; use distinct ports per vault to run a sandbox + production at once. |
+| HTTPS certificate | Exported PEM path in `OBSIDIAN_MCP_SSL_VERIFY` | Hermes passes this path to `mcp_servers.obsidian.ssl_verify`, keeping certificate verification enabled for the plugin's self-signed/local cert. |
+| HTTP (insecure) server | off unless debugging | Plain HTTP is no longer the shipped Hermes path. Do not use it for normal profile runs. |
 | `data.json` | **gitignored** | Contains API key secrets. Ships as `.example`; never commit the real file. |
 
 ### templater-obsidian

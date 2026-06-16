@@ -36,7 +36,7 @@ end (the boxes are clickable in Obsidian).
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **5** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
 - [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY` (Librarian; OpenAlex requires a key since 2026-02).
-- [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API at `127.0.0.1:27123`).
+- [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API HTTPS listener at `127.0.0.1:27124`).
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
 - [ ] The vault folder is **outside OneDrive**.
 
@@ -67,7 +67,7 @@ end (the boxes are clickable in Obsidian).
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Homepage` | Opens `home.md` on startup | `home.md` opens as the startup surface |
-| `Local REST API with MCP` | Exposes the vault to Hermes (HTTP 27123) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
+| `Local REST API with MCP` | Exposes the vault to Hermes (verified HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
@@ -103,7 +103,7 @@ Tick each plugin that is enabled and validated:
 
 ## Part B — Local REST API bridge (the write-gate's lifeline)
 
-**B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows insecure HTTP on **27123**, loopback only.
+**B1. Plugin running.** ✓ Pass: status bar shows **"Local REST API: started"**; Settings → Local REST API shows HTTPS on **27124**, loopback only, with the exported PEM path recorded in `OBSIDIAN_MCP_SSL_VERIFY`.
 
 - [ ] **B1 Pass**
 
@@ -117,11 +117,11 @@ Tick each plugin that is enabled and validated:
 
 ```
 export OBSIDIAN_API_KEY="$(grep -m1 '^OBSIDIAN_API_KEY=' ~/.hermes/profiles/memoria-librarian/.env | cut -d= -f2-)"
-curl -s http://127.0.0.1:27123/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
+curl --cacert "$OBSIDIAN_MCP_SSL_VERIFY" -s https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"
 ```
 
 - ✓ Pass: JSON with `"authenticated": true`.
-- ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). `000`/no response → WSL2 mirrored networking is off (fix `.wslconfig`, `wsl --shutdown`, reopen).
+- ✗ Fails: `200` + `"authenticated": false` → the bearer token was empty/wrong; run the `export` above (a fresh shell has no `$OBSIDIAN_API_KEY`). If it persists, the key genuinely mismatches the Obsidian plugin's `apiKey` (B2). Certificate errors → `OBSIDIAN_MCP_SSL_VERIFY` does not point at the plugin's exported PEM. `000`/no response → the plugin is not listening on the configured HTTPS port.
 - [ ] **B3 Pass**
 
 **B4. Round-trip (write appears live).** In WSL2:

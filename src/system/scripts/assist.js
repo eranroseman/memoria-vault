@@ -77,13 +77,12 @@ const VERBS = {
 async function entry(params, settings = {}) {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const onWindows = process.platform === "win32";
   const verb = String(settings.Verb || "").toLowerCase();
 
   const run = (sh) =>
     new Promise((resolve, reject) => {
-      const file = onWindows ? "wsl.exe" : "bash";
-      const args = onWindows ? ["bash", "-lc", sh] : ["-lc", sh];
+      const file = "bash";
+      const args = ["-lc", sh];
       cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
         if (err) return reject(new Error(String(stderr || err.message || "").trim()));
         resolve(stdout);

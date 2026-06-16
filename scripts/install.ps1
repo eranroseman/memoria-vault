@@ -1,182 +1,467 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Memoria bootstrap -- thin Windows launcher.
+    Memoria bootstrap -- native Windows production installer.
 
 .DESCRIPTION
-    Windows is only the editing surface; the Hermes runtime lives in WSL2. This
-    launcher does the three Windows-only things, then hands all real work to
-    install.sh running inside WSL2:
+    Production Windows installs run Hermes natively on Windows. The Linux
+    installer (scripts/install.sh) remains the testing/WSL path.
 
-      1. Gate on WSL2 (no WSL2 -> Microsoft how-to link + exit; install nothing).
-      2. Install the GUI apps (Obsidian, Zotero) + Git for Windows via winget -- guided.
-      3. Run install.sh inside WSL2 (with --no-apps; the vault path translated to
-         a /mnt/c path so both Windows-Obsidian and WSL-Hermes can reach it).
-
-    There is intentionally NO install logic here -- install.sh is the single
-    source of truth. Inspect it first:
-      https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh
+    This script:
+      1. Guides Windows GUI app installation with winget.
+      2. Runs the official native Hermes installer.
+      3. Copies src/ into the runtime vault.
+      4. Creates the vault-local MCP venv.
+      5. Installs the five Hermes profiles with native Windows paths.
+      6. Deploys the fail-closed policy-gate plugin per profile.
+      7. Wires the deterministic Hermes cron wrappers.
 
 .PARAMETER Vault
     Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
-    (deliberately OUTSIDE OneDrive -- OneDrive corrupts the .obsidian DB and
-    fights Hermes file locks).
+    (deliberately outside OneDrive).
 
 .PARAMETER ProfilesOnly
-    Skip the bootstrap; just (re)deploy profiles from an existing vault.
+    Skip repo/vault/bootstrap work; just redeploy profile config, profile .env
+    values, the policy plugin, and cron wrappers from an existing vault.
 
 .PARAMETER Only
-    Restrict the profile step to these profiles (e.g. -Only memoria-linter).
-    Pairs with -ProfilesOnly. Forwarded to install.sh as --only.
+    Restrict the profile step to these profiles. Pairs with -ProfilesOnly.
+
+.PARAMETER NoApps
+    Skip Obsidian/Zotero/Git winget guidance.
 
 .PARAMETER DryRun
-    Forward --dry-run to install.sh (print commands, change nothing).
+    Print commands without changing the machine where practical.
 
 .PARAMETER Yes
-    Non-interactive: accept defaults, no prompts.
-
-.EXAMPLE
-    irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
-
-.EXAMPLE
-    .\install.ps1 -Vault D:\Memoria
+    Non-interactive: accept defaults and run guided installs.
 #>
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', '')]
 [CmdletBinding()]
 param(
     [string]$Vault = (Join-Path $env:USERPROFILE 'Memoria'),
     [string[]]$Only,
     [switch]$ProfilesOnly,
+    [switch]$NoApps,
     [switch]$DryRun,
     [switch]$Yes
 )
 
 $ErrorActionPreference = 'Stop'
-$RawUrl  = 'https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh'
-$WslDoc  = 'https://learn.microsoft.com/windows/wsl/install'
 
-function Say  { param($m) Write-Host $m }
-function Hdr  { param($m) Write-Host "`n== $m ==" -ForegroundColor Cyan }
-function Ok   { param($m) Write-Host "[OK] $m" -ForegroundColor Green }
-function Warn { param($m) Write-Host "[!] $m" -ForegroundColor Yellow }
-function Die  { param($m) Write-Host "[X] $m" -ForegroundColor Red; exit 1 }
+$RepoUrl = 'https://github.com/eranroseman/memoria-vault.git'
+$RawHermesInstall = 'https://hermes-agent.nousresearch.com/install.ps1'
+$HermesHome = if ($env:HERMES_HOME) { $env:HERMES_HOME } else { Join-Path $env:LOCALAPPDATA 'hermes' }
+$HermesProfilesDir = Join-Path $HermesHome 'profiles'
+$HermesScriptsDir = Join-Path $HermesHome 'scripts'
+$HermesExe = $null
+$HermesArgsPrefix = @()
+$AllProfiles = @('memoria-copi', 'memoria-librarian', 'memoria-writer', 'memoria-peer-reviewer', 'memoria-engineer')
+$RequiredFiles = @('SOUL.md', 'config.yaml', 'distribution.yaml')
+$VenvPython = $null
 
-# ============================================================================
-# 1. WSL2 gate -- no WSL2 means we install nothing on Windows.
-# ============================================================================
-Hdr 'WSL2 check'
-if (-not (Get-Command wsl.exe -ErrorAction SilentlyContinue)) {
-    Say "WSL is not installed. Memoria's runtime (Hermes) requires WSL2."
-    Say "Follow the official Microsoft guide, reboot, then re-run this installer:"
-    Say "    $WslDoc"
-    Die 'No WSL -- nothing installed.'
-}
+function Write-Line { param([string]$Message) Write-Host $Message }
+function Write-Header { param([string]$Message) Write-Host "`n== $Message ==" -ForegroundColor Cyan }
+function Write-Ok { param([string]$Message) Write-Host "[OK] $Message" -ForegroundColor Green }
+function Write-Warn { param([string]$Message) Write-Host "[!] $Message" -ForegroundColor Yellow }
+function Stop-Install { param([string]$Message) Write-Host "[X] $Message" -ForegroundColor Red; exit 1 }
 
-# A working default distro? (`wsl uname -r` succeeds and reports a WSL2 kernel.)
-$kernel = ''
-try { $kernel = (& wsl.exe -e uname -r) 2>$null } catch { $kernel = '' }
-if (-not $kernel) {
-    Say "WSL is present but no Linux distro is ready. Install Ubuntu and set WSL2:"
-    Say "    wsl --install -d Ubuntu"
-    Say "    (full guide: $WslDoc)"
-    Die 'No usable WSL2 distro -- nothing installed.'
-}
-if ($kernel -notmatch 'WSL2|microsoft-standard') {
-    Warn "Your default distro may be WSL1 (kernel: $kernel)."
-    Warn "Memoria needs WSL2. Convert it:  wsl --set-version <distro> 2   (guide: $WslDoc)"
-    if (-not $Yes) {
-        $ans = Read-Host 'Continue anyway? [y/N]'
-        if ($ans -notmatch '^[Yy]') { Die 'Stopped -- convert the distro to WSL2 and re-run.' }
+function Invoke-Logged {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [string[]]$ArgumentList = @()
+    )
+    Write-Line ("  + {0} {1}" -f $FilePath, ($ArgumentList -join ' '))
+    if ($DryRun) { return }
+    & $FilePath @ArgumentList
+    if ($LASTEXITCODE -ne 0) {
+        Stop-Install "$FilePath exited with code $LASTEXITCODE."
     }
 }
-Ok "WSL2 ready (kernel: $kernel)"
 
-# ============================================================================
-# 2. Windows GUI apps via winget (guided). install.sh runs with --no-apps.
-# ============================================================================
+function Invoke-Robocopy {
+    param(
+        [Parameter(Mandatory=$true)][string]$Source,
+        [Parameter(Mandatory=$true)][string]$Destination,
+        [string[]]$ExtraArgs = @()
+    )
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+    $copyArgs = @($Source, $Destination, '/E', '/NFL', '/NDL', '/NJH', '/NJS', '/NP') + $ExtraArgs
+    Write-Line ("  + robocopy {0}" -f ($copyArgs -join ' '))
+    if ($DryRun) { return }
+    & robocopy @copyArgs | Out-Null
+    if ($LASTEXITCODE -gt 7) {
+        Stop-Install "robocopy failed with code $LASTEXITCODE."
+    }
+}
+
 function Install-WingetApp {
     param([string]$Id, [string]$Name, [string]$Fallback)
+    if ($NoApps) { return }
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Warn "winget not found -- install $Name manually: $Fallback"
+        Write-Warn "winget not found -- install $Name manually: $Fallback"
         return
     }
     $present = (& winget list --id $Id -e) | Select-String -SimpleMatch $Id -Quiet
-    if ($present) { Ok "$Name present"; return }
-    Say "$Name is not installed. Command:  winget install --id $Id -e"
+    if ($present) { Write-Ok "$Name present"; return }
+    Write-Line "$Name is not installed. Command: winget install --id $Id -e"
     $go = $Yes
     if (-not $Yes) { $go = ((Read-Host "Install $Name now via winget? [y/N]") -match '^[Yy]') }
     if ($go) {
-        if ($DryRun) { Say "  + winget install --id $Id -e --source winget" }
-        else { & winget install --id $Id -e --source winget --accept-package-agreements --accept-source-agreements }
+        $wingetArgs = @('install', '--id', $Id, '-e', '--source', 'winget', '--accept-package-agreements', '--accept-source-agreements')
+        Write-Line ("  + winget {0}" -f ($wingetArgs -join ' '))
+        if (-not $DryRun) {
+            & winget @wingetArgs
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warn "winget could not install $Name (exit $LASTEXITCODE). Continue, then install manually if you need it: $Fallback"
+            }
+        }
     } else {
-        Say "  Skipped. Install later: $Fallback"
+        Write-Line "  Skipped. Install later: $Fallback"
     }
 }
 
-if (-not $ProfilesOnly) {
-    Hdr 'Windows GUI apps'
-    Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
-    Install-WingetApp -Id 'Zotero.Zotero'     -Name 'Zotero'   -Fallback 'https://www.zotero.org/download/'
-    # Git for Windows -- the obsidian-git plugin shells out to it; without a Windows
-    # git binary the Source Control view shows "git not found". (WSL2 git is separate.)
-    Install-WingetApp -Id 'Git.Git'           -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
-    Say ''
-    Say 'Zotero add-ons (install from Zotero -> Tools -> Add-ons -> Install From File):'
-    Say '  - Better BibTeX (REQUIRED): https://github.com/retorquere/zotero-better-bibtex/releases/latest'
-    Say '  - MarkDB-Connect (recommended): https://github.com/daeh/zotero-markdb-connect/releases/latest'
-    Say 'On first Obsidian launch: turn off Restricted mode so the bundled plugins load.'
+function Get-RepoRoot {
+    if ($PSCommandPath) {
+        $scriptRoot = Split-Path -Parent $PSCommandPath
+        $localRoot = Split-Path -Parent $scriptRoot
+        if (Test-Path (Join-Path $localRoot 'src/.memoria/profiles')) {
+            return $localRoot
+        }
+    }
+    $work = Join-Path $env:TEMP ('memoria-vault-' + [guid]::NewGuid().ToString('N'))
+    Invoke-Logged -FilePath 'git' -ArgumentList @('clone', '--depth', '1', $RepoUrl, $work)
+    return $work
 }
 
-# ============================================================================
-# 3. Translate the vault path and hand off to install.sh inside WSL2.
-# ============================================================================
-Hdr 'Handing off to WSL2'
-
-# Confirm or override the target folder (unless -Vault was given, or -Yes).
-# Default %USERPROFILE%\Memoria is deliberately OUTSIDE OneDrive.
-if (-not $PSBoundParameters.ContainsKey('Vault') -and -not $Yes) {
-    Say 'Pick a folder OUTSIDE OneDrive (it corrupts the Obsidian index and fights Hermes file locks).'
-    $ans = Read-Host "Vault folder [$Vault]"
-    if ($ans) { $Vault = $ans }
+function Get-CommandPath {
+    param([string[]]$Candidates)
+    foreach ($candidate in $Candidates) {
+        $cmd = Get-Command $candidate -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd.Source }
+        if (Test-Path $candidate) { return (Resolve-Path $candidate).Path }
+    }
+    return $null
 }
 
-# Windows path -> /mnt/c/... so Windows-Obsidian and WSL-Hermes share one vault.
-New-Item -ItemType Directory -Path $Vault -Force | Out-Null
-# Pass a forward-slash path to wslpath: when a backslash Windows path is marshalled
-# to wsl.exe the backslashes are eaten (C:\Users\x -> C:Usersx), so wslpath fails.
-# wslpath accepts C:/Users/x and returns /mnt/c/Users/x correctly.
-$wslVault = (& wsl.exe wslpath -a ($Vault -replace '\\','/')).Trim()
-Ok "Vault (Windows): $Vault"
-Ok "Vault (WSL):     $wslVault"
+function Resolve-HermesExe {
+    $script:HermesArgsPrefix = @()
+    $hermes = Get-CommandPath @('hermes.exe', 'hermes.cmd', 'hermes', (Join-Path $HermesHome 'bin/hermes.exe'), (Join-Path $HermesHome 'bin/hermes.cmd'))
+    if ($hermes) {
+        return $hermes
+    }
 
-# Forwarded flags. Always --no-apps (Windows handled the GUI apps above).
-$fwd = @('--no-apps', '--vault', $wslVault)
-if ($ProfilesOnly) { $fwd += '--profiles-only' }
-if ($Only)         { $fwd += @('--only', ($Only -join ',')) }
-if ($DryRun)       { $fwd += '--dry-run' }
-if ($Yes)          { $fwd += '--yes' }
-$fwdStr = ($fwd -join ' ')
+    $uv = Get-CommandPath @((Join-Path $HermesHome 'bin/uv.exe'), 'uv.exe')
+    $project = Join-Path $HermesHome 'hermes-agent'
+    if ($uv -and (Test-Path (Join-Path $project 'pyproject.toml'))) {
+        $script:HermesArgsPrefix = @('run', '--project', $project, 'hermes')
+        return $uv
+    }
 
-# Prefer a local install.sh (running from a clone); else curl it in WSL.
-$localSh = Join-Path $PSScriptRoot 'install.sh'
-# install.sh writes its progress (warn/hdr) to stderr. Under the script's
-# ErrorActionPreference='Stop', PowerShell 5.1 wraps each native-exe stderr line
-# as a terminating error and would abort here even though wsl.exe returned 0.
-# Relax to 'Continue' just around the handoff, then restore + check the real code.
-$savedEAP = $ErrorActionPreference
-$ErrorActionPreference = 'Continue'
-if (Test-Path $localSh) {
-    $wslSh = (& wsl.exe wslpath -a ($localSh -replace '\\','/')).Trim()
-    Say "Running: wsl bash $wslSh $fwdStr"
-    & wsl.exe -e bash "$wslSh" @fwd
-} else {
-    Say "Running (piped): wsl bash <(curl $RawUrl) $fwdStr"
-    & wsl.exe -e bash -c "curl -fsSL '$RawUrl' | bash -s -- $fwdStr"
+    return $null
 }
-$code = $LASTEXITCODE
-$ErrorActionPreference = $savedEAP
 
-if ($code -ne 0) { Die "install.sh exited with code $code." }
+function Install-Hermes {
+    Write-Header 'Hermes native Windows runtime'
+    $script:HermesExe = Resolve-HermesExe
+    if ($script:HermesExe) {
+        Write-Ok "Hermes command resolved via $script:HermesExe"
+        return
+    }
+    $ps = @(
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-Command',
+        "& ([scriptblock]::Create((irm '$RawHermesInstall'))) -SkipSetup"
+    )
+    Invoke-Logged -FilePath 'powershell.exe' -ArgumentList $ps
+    $script:HermesExe = Resolve-HermesExe
+    if ($script:HermesExe) {
+        Write-Ok "Hermes command resolved via $script:HermesExe"
+    } else {
+        Write-Warn 'Open a new PowerShell if hermes is still not on PATH; User PATH changes do not affect existing shells.'
+    }
+}
 
-Hdr 'Done'
-Say "Open this folder in Obsidian as your vault:  $Vault"
-Say "Hermes runs inside WSL2 -- open a WSL shell for 'hermes ...' commands."
+function Get-PythonForVenv {
+    $uv = Get-CommandPath @((Join-Path $HermesHome 'bin/uv.exe'), 'uv.exe')
+    if ($uv) {
+        Invoke-Logged -FilePath $uv -ArgumentList @('python', 'install', '3.11')
+        return [pscustomobject]@{ Exe = $uv; Prefix = @('run', '--python', '3.11', 'python') }
+    }
+
+    $python = Get-CommandPath @('py.exe', 'python.exe', 'python3.exe')
+    if (-not $python) {
+        Stop-Install 'No uv or Python launcher found. Rerun the Hermes installer or install Python 3.11+, then retry.'
+    }
+    if ((Split-Path -Leaf $python) -ieq 'py.exe') {
+        return [pscustomobject]@{ Exe = $python; Prefix = @('-3.11') }
+    }
+    return [pscustomobject]@{ Exe = $python; Prefix = @() }
+}
+
+function Invoke-Python {
+    param([pscustomobject]$PythonSpec, [string[]]$ArgumentList)
+    $exe = $PythonSpec.Exe
+    $prefix = @($PythonSpec.Prefix)
+    Invoke-Logged -FilePath $exe -ArgumentList ($prefix + $ArgumentList)
+}
+
+function Copy-VaultSource {
+    param([string]$RepoRoot)
+    Write-Header 'Scaffold and populate vault'
+    $src = Join-Path $RepoRoot 'src'
+    if (-not (Test-Path $src)) { Stop-Install "Missing src tree at $src." }
+    New-Item -ItemType Directory -Path $Vault -Force | Out-Null
+    Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json')
+    Write-Ok "Vault populated at $Vault"
+}
+
+function Install-McpDeps {
+    Write-Header 'MCP server dependencies'
+    $reqs = Join-Path $Vault '.memoria/mcp/requirements.txt'
+    $venv = Join-Path $Vault '.memoria/.venv'
+    $script:VenvPython = Join-Path $venv 'Scripts/python.exe'
+    if ($DryRun) {
+        Write-Line "  + would create venv $venv and install $reqs"
+        return
+    }
+    if (-not (Test-Path $reqs)) { Write-Warn "No requirements file at $reqs"; return }
+    if (-not (Test-Path $script:VenvPython)) {
+        $py = Get-PythonForVenv
+        Invoke-Python -PythonSpec $py -ArgumentList @('-m', 'venv', $venv)
+    }
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip')
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $reqs)
+    Write-Ok "MCP deps installed in $venv"
+}
+
+function ConvertTo-ForwardPath {
+    param([string]$Path)
+    return ($Path -replace '\\', '/')
+}
+
+function Set-TemplateValues {
+    param([string]$Path, [string]$ProfileName = '')
+    $text = Get-Content -Raw -Path $Path
+    $py = if ($script:VenvPython) { ConvertTo-ForwardPath $script:VenvPython } else { 'python' }
+    $vaultPath = ConvertTo-ForwardPath (Resolve-Path $Vault).Path
+    $qmd = Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')
+    if (-not $qmd) { $qmd = 'qmd' }
+    $text = $text.Replace('{{PYTHON}}', $py)
+    $text = $text.Replace('{{VAULT_PATH}}', $vaultPath)
+    $text = $text.Replace('{{QMD}}', (ConvertTo-ForwardPath $qmd))
+    $text = $text.Replace('{{PROFILE}}', $ProfileName)
+    Set-Content -Path $Path -Value $text -NoNewline -Encoding UTF8
+}
+
+function Read-DotEnv {
+    param([string]$Path)
+    $values = @{}
+    if (-not (Test-Path $Path)) { return $values }
+    Get-Content $Path | ForEach-Object {
+        if ($_ -match '^([A-Za-z_][A-Za-z0-9_]*)=(.*)$') {
+            $values[$Matches[1]] = $Matches[2].Trim()
+        }
+    }
+    return $values
+}
+
+function Test-PlaceholderValue {
+    param([string]$Value)
+    if (-not $Value) { return $true }
+    return ($Value -match '<[^>]+>' -or $Value -match '\\path\\to\\' -or $Value -match '(^|/)path/to/' -or $Value -match '^\.\.\.$')
+}
+
+function Assert-ObsidianMcpEnv {
+    param([string]$ProfileDir)
+    $envFile = Join-Path $ProfileDir '.env'
+    $values = Read-DotEnv -Path $envFile
+    $missing = @()
+    foreach ($key in @('OBSIDIAN_API_KEY', 'OBSIDIAN_MCP_PORT', 'OBSIDIAN_MCP_SSL_VERIFY')) {
+        if (-not $values.ContainsKey($key) -or (Test-PlaceholderValue -Value $values[$key])) {
+            $missing += $key
+        }
+    }
+    if ($values.ContainsKey('OBSIDIAN_MCP_SSL_VERIFY') -and -not (Test-PlaceholderValue -Value $values['OBSIDIAN_MCP_SSL_VERIFY'])) {
+        if (-not (Test-Path $values['OBSIDIAN_MCP_SSL_VERIFY'])) {
+            $missing += 'OBSIDIAN_MCP_SSL_VERIFY file'
+        }
+    }
+    if ($values.ContainsKey('OBSIDIAN_MCP_PORT') -and -not (Test-PlaceholderValue -Value $values['OBSIDIAN_MCP_PORT'])) {
+        if ($values['OBSIDIAN_MCP_PORT'] -notmatch '^[0-9]+$') {
+            $missing += 'OBSIDIAN_MCP_PORT numeric value'
+        }
+    }
+    if ($missing.Count -gt 0) {
+        $globalEnv = Join-Path $HermesHome '.env'
+        Stop-Install ("Obsidian HTTPS MCP settings are missing or placeholders in {0}: {1}. Put real values in {2}, then rerun -ProfilesOnly." -f $envFile, (($missing | Sort-Object -Unique) -join ', '), $globalEnv)
+    }
+}
+
+function Copy-EnvValues {
+    param([string]$ProfileDir)
+    $example = Join-Path $ProfileDir '.env.EXAMPLE'
+    $envFile = Join-Path $ProfileDir '.env'
+    $globalEnv = Join-Path $HermesHome '.env'
+    if (-not (Test-Path $example)) { return }
+    if (-not (Test-Path $envFile)) {
+        if (-not $DryRun) {
+            Get-Content $example | Where-Object { $_ -notmatch '^[A-Za-z_][A-Za-z0-9_]*=\s*$' } | Set-Content -Path $envFile -Encoding UTF8
+        }
+        Write-Line '    created .env from .env.EXAMPLE'
+    }
+    $existing = @{}
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match '^([A-Za-z_][A-Za-z0-9_]*)=') { $existing[$Matches[1]] = $true }
+        }
+    }
+    $declared = @()
+    Get-Content $example | ForEach-Object {
+        if ($_ -match '^([A-Za-z_][A-Za-z0-9_]*)=') { $declared += $Matches[1] }
+    }
+    $global = Read-DotEnv -Path $globalEnv
+    $toAdd = @()
+    foreach ($key in $declared) {
+        if (-not $existing.ContainsKey($key) -and $global.ContainsKey($key) -and -not (Test-PlaceholderValue -Value $global[$key])) {
+            $toAdd += "$key=$($global[$key])"
+        }
+    }
+    if ($toAdd.Count -gt 0 -and -not $DryRun) {
+        Add-Content -Path $envFile -Value $toAdd -Encoding UTF8
+    }
+    if ($toAdd.Count -gt 0) { Write-Line "    seeded $($toAdd.Count) shared key(s) from $globalEnv" }
+    Assert-ObsidianMcpEnv -ProfileDir $ProfileDir
+}
+
+function Deploy-PolicyPlugin {
+    param([string]$ProfileDir, [string]$ProfileName)
+    $src = Join-Path $Vault '.memoria/plugins/memoria-policy-gate'
+    if (-not (Test-Path $src)) {
+        Write-Warn "policy-gate plugin source missing at $src - WRITE GATE not deployed for $ProfileName"
+        return
+    }
+    $dst = Join-Path $ProfileDir 'plugins/memoria-policy-gate'
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path $dst -Force | Out-Null
+        Copy-Item (Join-Path $src 'plugin.yaml') (Join-Path $dst 'plugin.yaml') -Force
+        Copy-Item (Join-Path $src '__init__.py') (Join-Path $dst '__init__.py') -Force
+        Set-TemplateValues -Path (Join-Path $dst '__init__.py') -ProfileName $ProfileName
+    }
+    Write-Line '    deployed write-gate plugin (memoria-policy-gate)'
+}
+
+function Install-Profiles {
+    Write-Header 'Hermes profiles'
+    $profilesSrc = Join-Path $Vault '.memoria/profiles'
+    if (-not (Test-Path $profilesSrc)) { Stop-Install "No profiles at $profilesSrc." }
+    if (-not $script:HermesExe) { $script:HermesExe = Resolve-HermesExe }
+    if (-not $script:HermesExe) {
+        Write-Warn 'Hermes not on PATH - install Hermes or open a new PowerShell, then rerun -ProfilesOnly.'
+        return
+    }
+    $targets = if ($Only) { $Only } else { $AllProfiles }
+    $targets = $targets | Where-Object {
+        if ($AllProfiles -contains $_) { $true } else { Write-Warn "Unknown profile in -Only: $_"; $false }
+    }
+    if (-not $targets) { Stop-Install '-Only matched no shipped profiles.' }
+
+    $staging = Join-Path $env:TEMP ('memoria-profiles-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    foreach ($profileName in $targets) {
+        $src = Join-Path $profilesSrc $profileName
+        foreach ($file in $RequiredFiles) {
+            if (-not (Test-Path (Join-Path $src $file))) { Stop-Install "$profileName missing $file." }
+        }
+        Write-Line "  staging $profileName"
+        $dst = Join-Path $staging $profileName
+        Copy-Item $src $dst -Recurse -Force
+        Set-TemplateValues -Path (Join-Path $dst 'config.yaml')
+        Invoke-Logged -FilePath $script:HermesExe -ArgumentList ($script:HermesArgsPrefix + @('profile', 'install', $dst, '--name', $profileName, '--alias', '--force', '--yes'))
+        $deployed = Join-Path $HermesProfilesDir $profileName
+        Copy-EnvValues -ProfileDir $deployed
+        Deploy-PolicyPlugin -ProfileDir $deployed -ProfileName $profileName
+    }
+    Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Ok "Profiles installed: $($targets.Count)"
+}
+
+function Install-Cron {
+    param([string]$SourceName, [string]$DestName, [string]$Schedule, [string]$JobName)
+    if (-not $script:HermesExe) { $script:HermesExe = Resolve-HermesExe }
+    if (-not $script:HermesExe) {
+        Write-Warn "Hermes not on PATH - skipping $JobName cron."
+        return
+    }
+    $src = Join-Path $Vault ".memoria/scripts/$SourceName"
+    if (-not (Test-Path $src)) {
+        Write-Warn "cron wrapper missing at $src"
+        return
+    }
+    New-Item -ItemType Directory -Path $HermesScriptsDir -Force | Out-Null
+    $dst = Join-Path $HermesScriptsDir $DestName
+    Copy-Item $src $dst -Force
+    Set-TemplateValues -Path $dst
+    $list = if ($DryRun) { '' } else { (& $script:HermesExe @script:HermesArgsPrefix cron list 2>$null | Out-String) }
+    if ($list -match [regex]::Escape($JobName)) {
+        Write-Line "  $JobName cron already present - wrapper refreshed"
+        return
+    }
+    Invoke-Logged -FilePath $script:HermesExe -ArgumentList ($script:HermesArgsPrefix + @('cron', 'create', $Schedule, '--script', $DestName, '--no-agent', '--name', $JobName, '--deliver', 'local'))
+}
+
+function Install-Crons {
+    Write-Header 'Hermes cron wrappers'
+    Install-Cron -SourceName 'board-export-cron.sh' -DestName 'memoria-board-export.sh' -Schedule '* * * * *' -JobName 'memoria-board-export'
+    Install-Cron -SourceName 'sweeps-cron.sh' -DestName 'memoria-sweeps.sh' -Schedule '*/15 * * * *' -JobName 'memoria-sweeps'
+    Install-Cron -SourceName 'lint-cron.sh' -DestName 'memoria-lint.sh' -Schedule '0 6 * * *' -JobName 'memoria-lint'
+    Install-Cron -SourceName 'metrics-cron.sh' -DestName 'memoria-metrics.sh' -Schedule '30 6 * * 1' -JobName 'memoria-metrics'
+    Install-Cron -SourceName 'eval-cron.sh' -DestName 'memoria-eval.sh' -Schedule '0 7 1 */3 *' -JobName 'memoria-eval'
+}
+
+function Write-SecretsGuidance {
+    Write-Header 'API keys'
+    Write-Line "Put shared values in $HermesHome\.env, then rerun:"
+    Write-Line "  .\scripts\install.ps1 -ProfilesOnly -Vault `"$Vault`""
+    Write-Line ''
+    Write-Line 'Required core values:'
+    Write-Line '  KILOCODE_API_KEY=...'
+    Write-Line '  OBSIDIAN_API_KEY=...'
+    Write-Line '  OBSIDIAN_MCP_PORT=27124'
+    Write-Line '  OBSIDIAN_MCP_SSL_VERIFY=C:\path\to\obsidian-local-rest-api.pem'
+    Write-Line '  OPENALEX_API_KEY=...'
+}
+
+function Invoke-Main {
+    Write-Header 'Memoria Windows installer'
+    Write-Line 'Production Windows path: native Hermes, native Obsidian, native vault.'
+    Write-Line 'Linux/WSL install.sh remains the testing path.'
+
+    if (-not $ProfilesOnly) {
+        if (-not $NoApps) {
+            Write-Header 'Windows apps'
+            Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
+            Install-WingetApp -Id 'Zotero.Zotero' -Name 'Zotero' -Fallback 'https://www.zotero.org/download/'
+            Install-WingetApp -Id 'Git.Git' -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
+        }
+        Install-Hermes
+        $repoRoot = Get-RepoRoot
+        Copy-VaultSource -RepoRoot $repoRoot
+        Install-McpDeps
+    } else {
+        $script:VenvPython = Join-Path $Vault '.memoria/.venv/Scripts/python.exe'
+    }
+
+    Install-Profiles
+    Install-Crons
+    Write-SecretsGuidance
+
+    Write-Header 'Done'
+    Write-Line "Open this folder in Obsidian as your production vault: $Vault"
+    Write-Line 'Then enable community plugins and configure the Local REST API HTTPS cert path.'
+}
+
+Invoke-Main

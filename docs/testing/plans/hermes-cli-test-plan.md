@@ -77,7 +77,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | Prereq | Check |
 |---|---|
 | Hermes ≥ 0.12 installed; 5 `memoria-*` profiles registered | `hermes profile list` shows all five |
-| Obsidian open with Local REST API on `127.0.0.1:27123`, `OBSIDIAN_API_KEY` set | `curl -s http://127.0.0.1:27123/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
+| Obsidian open with Local REST API HTTPS on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` and `OBSIDIAN_MCP_SSL_VERIFY` set | `curl --cacert "$OBSIDIAN_MCP_SSL_VERIFY" -s https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
 | Hermes gateway on `:8642` (needed for `kanban dispatch`) | `hermes gateway status` |
 | Zotero running with Better BibTeX; `.memoria/memoria.bib` present | file exists, contains the F1 citekeys |
 | `KILOCODE_API_KEY`, `OPENALEX_API_KEY` set per profile `.env` | `hermes profile show memoria-librarian` lists the keys (values redacted) |

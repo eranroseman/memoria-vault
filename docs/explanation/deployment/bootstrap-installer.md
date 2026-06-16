@@ -6,7 +6,7 @@ nav_order: 2
 
 # Bootstrap installer
 
-The bootstrap installer — [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) at the repo root, with [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) as a thin WSL2 launcher — takes a user from nothing to a runnable Memoria install in one command: it scaffolds and populates the vault from `src/`, stages the golden copy, provisions the Hermes runtime and the five agent profiles, wires the crons, and installs Obsidian if absent.
+The bootstrap installers — [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) for native Windows production and [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) for Linux/WSL testing — take a user from nothing to a runnable Memoria install in one command: they scaffold and populate the vault from `src/`, stage the golden copy, provision the Hermes runtime and the five agent profiles, wire the crons, and guide Obsidian setup.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../reference/installer.md).
 
@@ -24,7 +24,7 @@ The design choices worth calling out here are why the flow is shaped this way. S
 
 **Goals**
 
-- One command from zero to a runnable vault on Linux (Ubuntu/Debian) and Windows.
+- One command from zero to a runnable vault on native Windows production and Linux/WSL testing.
 - Idempotent: safe to re-run after a `git pull` (the per-profile redeploy path survives as `scripts/install.sh --profiles-only`).
 - Detect-then-install; never clobber existing apps, credentials, or user content.
 - Honest about what it cannot do (secrets, GUI steps) — explain, don't fake.
@@ -33,32 +33,38 @@ The design choices worth calling out here are why the flow is shaped this way. S
 
 - macOS, and Linux distros other than Ubuntu/Debian.
 - Writing the user's API keys for them.
-- Auto-enabling WSL2 (needs a reboot/admin; the installer links Microsoft's guide instead).
+- Supporting macOS or non-Debian Linux distributions as first-class install targets.
 - In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
 
 ## Entry point and safety model
 
 The installer is offered two ways, with **inspect-first as the documented primary** (download, read, then run) and the `curl | bash` / `irm | iex` one-liner shown only as the convenience option. The standard precautions for a piped installer are applied: the entire script body is wrapped in a `main` function invoked on the last line, so a truncated download cannot execute a half-command; it prints a numbered plan and prompts for consent (skippable with `--yes` for CI); `--dry-run` prints every action without executing; and it never silently elevates — if a step needs `sudo`/admin it stops and prints the exact command. These rails are cheap insurance for a script that installs system software, and `--dry-run` doubles as the WSL command transcript (below).
 
-## Windows and WSL2: the decided rule
+## Production Windows and Linux testing
 
-Per Memoria's runtime model, **Hermes runs only on Linux/WSL2; Windows is the editing surface**. WSL2 is therefore a **hard prerequisite for the entire Windows install**, checked first:
+Per [ADR-64](../../adr/64-native-windows-support.md), Memoria now uses a
+two-script platform split:
 
-> **Reevaluation (2026-06-16):** the two rationales for this rule have weakened, but not enough to replace it in alpha.4. Hermes now has a native Windows installer and supports native CLI, cron, gateway, and MCP, but the primary Hermes docs still label native Windows **early beta** and recommend WSL2 for the most battle-tested Windows setup. Native Windows remains the planned direction once that support is GA and Memoria has an attended native-Windows verification pass; see [Native Windows vs WSL2 — platform reevaluation](../../adr/64-native-windows-support.md). **This rule remains in force for the v0.1.x releases.**
+- **Windows production:** `scripts/install.ps1` is the native Windows installer. It runs the official Hermes Windows installer, copies `src/` into the production vault, creates the vault-local MCP venv, deploys profiles and the policy-gate plugin, and wires Hermes crons.
+- **Linux/WSL testing:** `scripts/install.sh` remains the Linux/WSL test installer and CI/disposable-vault path.
 
-- **No WSL2 → the installer does nothing.** It explains that Memoria on Windows requires WSL2, links Microsoft's guide, and exits without installing anything (enabling WSL2 needs admin + a reboot, so the installer won't attempt it).
-- **WSL2 present → proceed.** The thin `scripts/install.ps1` ensures Obsidian on the Windows side, then hands the entire rest of the flow to `bash scripts/install.sh` inside WSL2.
+This removes the old production WSL bridge: no `/mnt/c` vault path, no WSL2
+gate in the PowerShell installer, and no `windowsWslMode` requirement for the
+ACP pane on production Windows. WSL-specific docs still use mirrored networking
+when validating the Linux/WSL test path against Windows Obsidian.
 
-**One WSL2 path, not two.** The installer always attempts the automatic in-WSL invocation and **echoes each WSL command before running it**; if a step fails (or under `--dry-run`), those printed commands are the manual fallback. "Manual" is the transparency/recovery output of the single automatic path, not a separate mode — which keeps the one-line promise while staying debuggable.
+## Architecture: two installers, one source tree
 
-## Architecture: one bash implementation, a thin PowerShell launcher
+There are two installers because production and testing deliberately run on
+different operating systems:
 
-There are two files but **one implementation**:
+- **`scripts/install.ps1` (PowerShell)** is the native Windows production installer. It owns Windows app guidance, Hermes native install, vault population, MCP deps, profile deployment, policy plugin deployment, and cron wiring.
+- **`scripts/install.sh` (bash)** is the Linux/WSL testing installer. It keeps the same vault/profile contracts so CI and disposable Linux validation exercise the same authored source under `src/`.
 
-- **`scripts/install.sh` (bash)** is the single real script. It holds the whole bootstrap flow *and* the profile-install logic. `--profiles-only` exposes just that path for the "re-run after `git pull`" redeploy; `--only NAME[,NAME]` restricts it to named profiles.
-- **`scripts/install.ps1` (PowerShell)** is a **thin launcher only**: gate on WSL2 → ensure Obsidian Windows-side → `wsl bash scripts/install.sh` (forwarding flags). It contains no install logic.
-
-This is correctness, not just simplification: Hermes is WSL2-only on Windows, so profiles must be installed *inside* WSL — a native PowerShell `hermes profile install` could never work end-to-end. The real logic has to live in bash; PowerShell can only be a doorway into the Linux side. Both files live at the repo root because the bootstrap is the clone/entry point, not a vault-internal artifact.
+Both files live at the repo root because the bootstrap is the clone/entry point,
+not a vault-internal artifact. The duplication is intentional at the shell
+boundary; shared behavior stays in the deployed vault source and deterministic
+Python operations.
 
 ## Simplifying decisions
 
@@ -68,7 +74,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Presence checks, not version gates.** Check a tool is there; let `pip`/Hermes surface a clear error if it is too old.
 - **Don't install language runtimes.** The Hermes installer provisions uv, Python, Node, ripgrep, and ffmpeg; the bootstrap adds only **Git** (pre-Hermes) and **Pandoc** (not provisioned by Hermes).
 - **Assume `local-only` deployment.** No Syncthing/VPS/sync logic — multi-device is a later phase.
-- **Default the vault off OneDrive** (`%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux; prompt to override) — OneDrive fights Hermes's WSL writes across `/mnt/c`, and Git is the backup, so losing OneDrive sync of the vault is fine.
+- **Default the vault off OneDrive** (`%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux; prompt to override) — OneDrive fights Obsidian indexes and file locks, and Git is the backup, so losing OneDrive sync of the vault is fine.
 - **The vault's git repo is the user's own.** The installer never `git init`s under a synthetic author; it prints the commands and the user commits with their own identity.
 
 ## Trade-offs

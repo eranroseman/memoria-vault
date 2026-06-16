@@ -15,10 +15,12 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
   obsidian:
-    # Native MCP from the Local REST API plugin over loopback HTTP (ADR-31). The
-    # Co-PI uses it for READS; its lane-override has write_scope: [] so any write
-    # attempt is denied by the gate.
-    url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    # Native MCP from the Local REST API plugin over loopback HTTPS (ADR-31).
+    # OBSIDIAN_MCP_SSL_VERIFY points Hermes at the plugin's exported PEM cert/CA
+    # bundle. The Co-PI uses it for READS; its lane-override has write_scope: []
+    # so any write attempt is denied by the gate.
+    url: "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"

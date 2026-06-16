@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Memoria bootstrap installer  (Ubuntu/Debian, or WSL2 on Windows via install.ps1)
+# Memoria bootstrap installer  (Linux/WSL testing path; Windows production uses install.ps1)
 # =============================================================================
-# One command sets up the whole system: clones the vault, installs Hermes + the
+# One command sets up the Linux/WSL test system: clones the vault, installs Hermes + the
 # ACP extra, deploys the five memoria-* profiles, provisions skills, and guides
 # the GUI app (Obsidian). macOS is not supported. (Zotero: see the tutorial.)
 #
@@ -402,11 +402,10 @@ copy_vault() {
   # Seed the per-machine Obsidian plugin config that does NOT self-generate.
   # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
   # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
-  # it from the example, substituting {{HOME}} with this machine's home so the ACP
-  # commands resolve. First-install only; never clobber an edited one.
-  # `windowsWslMode`: Obsidian runs on Windows while hermes lives in WSL, so the ACP
-  # commands must resolve through wsl.exe. Under WSL we set it true; on native Linux
-  # (Obsidian and hermes share one filesystem) it stays false.
+  # it from the example. First-install only; never clobber an edited one.
+  # `windowsWslMode` is only for the Linux/WSL test path where Obsidian is on
+  # Windows but Hermes runs inside WSL. Production Windows uses install.ps1 and
+  # leaves the shipped native-Hermes default alone.
   local acp_dir="$VAULT_PATH/.obsidian/plugins/agent-client"
   if [ -f "$acp_dir/data.json.example" ] && [ ! -f "$acp_dir/data.json" ]; then
     local wsl_mode=false

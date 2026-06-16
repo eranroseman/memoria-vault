@@ -1,7 +1,7 @@
 ---
 topic: decisions
 id: 31
-title: Vault access via the Local REST API plugin's native MCP (HTTP), not uvx mcp-obsidian
+title: Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04
@@ -13,7 +13,7 @@ grand_parent: Explanation
 nav_order: 31
 ---
 
-# ADR-31: Native obsidian MCP over HTTP
+# ADR-31: Native obsidian MCP over HTTPS
 
 ## Context
 
@@ -23,16 +23,17 @@ The **Local REST API plugin (v4.1.2, "with MCP")** now ships its **own native MC
 
 ## Decision
 
-Point every profile's `obsidian` `mcp_servers` entry at the plugin's **native MCP over plain HTTP on loopback**, dropping uvx `mcp-obsidian`:
+Point every profile's `obsidian` `mcp_servers` entry at the plugin's **native MCP over verified HTTPS on loopback**, dropping uvx `mcp-obsidian`:
 
 ```yaml
 obsidian:
-  url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+  url: "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+  ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"
   headers:
     Authorization: "Bearer ${OBSIDIAN_API_KEY}"
 ```
 
-- **HTTP, not HTTPS** — Hermes has no flag to skip TLS verification or trust a CA for URL MCP servers, and the plugin's HTTPS uses a self-signed cert (Hermes errored `CERTIFICATE_VERIFY_FAILED`). The plugin's HTTP server (loopback only) is the transport Hermes accepts. The bearer key travels over **unencrypted 127.0.0.1** — acceptable for a single-user local box; revisit if Hermes adds CA/insecure support.
+- **Verified HTTPS, not plain HTTP** — Hermes supports `mcp_servers.<name>.ssl_verify` as either a bool or a path to a PEM CA bundle for HTTP/SSE MCP servers. `OBSIDIAN_MCP_SSL_VERIFY` points at the Local REST API plugin's exported certificate/CA bundle, so the bearer key no longer travels over unencrypted loopback and verification remains on.
 - **Port via `OBSIDIAN_MCP_PORT`** (`~/.hermes/.env`) so sandbox + production coexist on different ports — no more "keep production closed."
 - **Explicit `Authorization: Bearer`** header — `hermes mcp add --auth header` sent a form the plugin 401'd; the exact bearer header works.
 
@@ -46,7 +47,7 @@ The native server exposes 16 tools with **different names** (`vault_write`/`appe
 
 - **Sandbox + production coexist** on different ports; the uvx dependency is gone.
 - **Validated live:** read + a full ingest end-to-end through the native MCP (note written via `vault_write`/`append`, gated); `policy_hook --self-test` covers native tool names + the hard-denies.
-- **Setup cost:** enable the plugin's HTTP server on `OBSIDIAN_MCP_PORT` (a documented step). **All profiles** *(v0.1.0-alpha.2: the fleet is the five profiles of [ADR-48](48-copi-and-agent-consolidation.md); originally seven)* are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
-- **Residual:** loopback HTTP is unencrypted; the self-signed-HTTPS path reopens once Hermes supports CA/insecure URL MCP.
+- **Setup cost:** enable the plugin's HTTPS endpoint on `OBSIDIAN_MCP_PORT` and set `OBSIDIAN_MCP_SSL_VERIFY` to the exported PEM certificate/CA bundle path. **All profiles** *(v0.1.0-alpha.2: the fleet is the five profiles of [ADR-48](48-copi-and-agent-consolidation.md); originally seven)* are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
+- **Residual:** the certificate file is per-machine plugin state, so it stays in `.env` / gitignored plugin state rather than repository source.
 
 - **Related:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate this preserves).
