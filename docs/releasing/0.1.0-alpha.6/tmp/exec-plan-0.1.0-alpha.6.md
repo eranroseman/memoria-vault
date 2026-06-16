@@ -32,12 +32,22 @@ Workstream _n_ maps 1:1 to gate G_n_.
 
 | WS | Gate | Issues | One-line deliverable | Stage proof | Status |
 |---|---|---|---|---|---|
-| WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 | pending |
+| WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 | merged in [#651](https://github.com/eranroseman/memoria-vault/pull/651); S4 live smoke pending |
 | WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 | pending |
 | WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 | merged in [#649](https://github.com/eranroseman/memoria-vault/pull/649) |
 | WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 | pending |
 
 ### WS-1 — Correctness & security (#620, #621, #624)
+
+**Status:** implementation merged in
+[PR #651](https://github.com/eranroseman/memoria-vault/pull/651) (`f216a95`). Proof:
+`scripts/test.sh all`, focused pytest, `docs-doctor`, `status-doctor`,
+PSScriptAnalyzer, `bash -n`, `cspell`, and CI all green. Merged artifacts include
+installer-generated profile HTTPS+`ssl_verify` verification in both installers, a
+generic `promotion_gate`/`promoted_at` schema rule for current theses, claim
+`schema_version: 2`, deterministic link suggestions excluding superseded claims by
+default, and matching reference docs. Remaining G1/S4 proof is the attended sandbox
+runtime smoke over verified HTTPS.
 
 **#620 · ADR-31 — runtime serves Obsidian MCP over verified HTTPS.** The repo source is
 already compliant (`src/.memoria/profiles/*/config.yaml` use `https://` + `ssl_verify:
