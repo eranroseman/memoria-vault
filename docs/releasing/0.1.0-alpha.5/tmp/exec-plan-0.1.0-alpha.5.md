@@ -165,7 +165,7 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
 - [x] WS-F instrumentation (#337)
 - [ ] WS-G cheap slices (#374, #372, #344, #370, #415, #583) — trigger-log slice complete;
       deferred-behavior slices still need explicit close/roll decisions
-- [ ] WS-H thin test-env slice (#582)
+- [x] WS-H thin test-env slice (#582)
 
 ## 8. Execution log
 
@@ -206,6 +206,10 @@ All vault tests run on `~/Memoria-test`, never `~/Memoria`.
   behavior: policy audit rows stamp `schema_version: 2` and `review_mode: blocking`, Inbox resolves
   append `triage.jsonl`, ambiguous classify rows mark `classify_miss`, ID-missing linker names append
   `linkage.jsonl`, and cron wrappers append `cron-heartbeat.jsonl` only after successful runs.
+- 2026-06-16 — WS-H added the alpha.5 test-env safety slice: a component test loads the live
+  `memoria-policy-gate` plugin, drives a known-deny `mcp_obsidian_vault_write` into
+  `notes/claims/`, and asserts both a plugin block and a deny audit row; the new Project-gate
+  QuickAdd/Modal Forms commands remain covered by the existing palette/form tests.
 
 ## 9. Surprises & discoveries
 
