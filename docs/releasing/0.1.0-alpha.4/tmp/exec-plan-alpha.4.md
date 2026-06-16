@@ -23,7 +23,7 @@ deleted before the alpha.4 checkpoint closes.
   tooling only).
 - **Design inputs:** [the packaging design note](install-a-real-package.md)
   (ADR-76 / #494 / #521).
-- **Started:** 2026-06-15 · **Last updated:** 2026-06-15
+- **Started:** 2026-06-15 · **Last updated:** 2026-06-16
 
 ## 1. Purpose / big picture
 
@@ -136,7 +136,7 @@ need.
 | # | Tracks | Disposition |
 |---|---|---|
 | #414 | ADR-64 native Windows support | **added → in** — build this checkpoint ⇒ accept ADR-64 + supersede the WSL2-only rule (#296). Large roadmap change (see §2.2) |
-| #439 | ADR-19 Tier 2 Mapper handoff | **added → in** — build the hub/MOC handoff (review-gated; hubs stay approved) ⇒ update ADR-19 status |
+| #439 | ADR-19 Tier 2 Mapper handoff | **done:** `hub_handoff.py` delegates fired `hub-threshold` findings to the `map` lane with staging-only allowed paths; ADR-19 updated |
 | #412 | ADR-62 measurement/verification harnesses | **deferred** — instrument once more behavior ships |
 | #370 | ADR-38 pre-file similarity ratchet | **deferred** — depends on the deferred calibration discipline (#379) |
 | #296 | Migrate Windows WSL2 → native | folds into #414's WSL2-rule supersession; track the broader migration here |
@@ -266,8 +266,9 @@ evidence, real transcripts:
   without the `conftest.py` `sys.path` block, then `python -m pytest` and
   `ruff check .` stay green. *Prove with:* `scripts/test.sh all`.
 - **#439 (Mapper Tier 2):** Given a fired `hub-threshold` finding, when handed to
-  the Mapper, then a hub/MOC note is drafted as a review-gated proposal and
-  `notes/hubs/` stays PI-approved. *Prove with:* a runtime test on a seeded vault.
+  the Mapper, then a hub proposal is staged under `notes/fleeting/maps/` plus
+  `inbox/` and `notes/hubs/` stays PI-approved. *Prove with:* focused
+  `hub_handoff.py` tests and the operation self-test on a seeded vault.
 - **#414 (native Windows):** Given a native-Windows host (no WSL2), when installed,
   then Hermes + the MCP servers run and a capture→file round-trip works. *Prove
   with:* an attended native-Windows install — **gated on** accepting ADR-64 and
@@ -358,8 +359,8 @@ evidence, real transcripts:
 - [x] 2026-06-15 — D #183 structured capture forms implemented on `feat/alpha4-structured-forms`: Modal Forms source capture writes proposed source notes + Inbox candidates; project-start form is available for #154 without implementing #154.
 - [x] 2026-06-15 — D #336 batch worklists implemented on `feat/alpha4-batch-worklists`: file-backed `worklist-item` rows live under `system/worklists/`, `worklists.base` groups them by worklist/decision/group, and `worklists.py` emits one aggregate Inbox prompt per report.
 - [x] 2026-06-15 — D #378 design-system enforcement implemented on `feat/alpha4-design-enforcement`: `design-system-drift` reports off-palette colors, font-scale drift, emoji titles, ad-hoc callouts, and terminology/capitalization drift; `memoria-link-colors.css` ships lifecycle link accents.
-- [ ] (next) #439 Mapper Tier 2 (update ADR-19). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
-- [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
+- [x] 2026-06-16 — G #439 Mapper Tier 2 implemented on `feat/alpha4-mapper-tier2`: `hub_handoff.py` reads `hub-threshold` findings and creates idempotent Librarian `map` cards constrained to `notes/fleeting/maps/` and `inbox/`; ADR-19 now records Tier 2 as built and `notes/hubs/` remains PI-approved.
+- [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port. Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 
 ## 8. Execution log
 
@@ -507,3 +508,7 @@ evidence, real transcripts:
 ## Execution log — #378 design-system enforcement
 
 - 2026-06-15: Started #378 in `feat/alpha4-design-enforcement`; adding `design-system-drift` to the Linter and extending the shipped Supercharged Links CSS selectors for lifecycle state accents.
+
+## Execution log — #439 Mapper Tier 2
+
+- 2026-06-16: Started #439 in `feat/alpha4-mapper-tier2`; implementing ADR-19 Tier 2 as a deterministic Linter handoff into the Librarian `map` lane, with staged proposal paths only (`notes/fleeting/maps/`, `inbox/`) and no `notes/hubs/` write permission.

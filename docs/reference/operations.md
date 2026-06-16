@@ -15,7 +15,7 @@ Deterministic mechanisms that agents, cron, CI, and the PI can invoke. Agents re
 | Integrity retraction | `src/.memoria/operations/integrity/retraction/retraction.py` | None | Cron, CI, PI | Runs retraction lookups, surfacing findings as Inbox cards. |
 | Cleanup sweeps | `src/.memoria/operations/cleanup/*.py` | None | Cron, CI, PI | Reconciles capture gaps and archives resolved Inbox cards. |
 | Eval telemetry | `src/.memoria/operations/telemetry/eval/*.py` | None | Cron, CI, PI | Dispatches and scores vault-eval runs. |
-| Linter | `src/.memoria/operations/integrity/linter/detectors.py` | None | Cron, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, golden-copy drift, and session digests. |
+| Linter | `src/.memoria/operations/integrity/linter/detectors.py`; `hub_handoff.py` | None | Cron, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, golden-copy drift, session digests, and opt-in hub-threshold handoffs. |
 | Batch worklists | `src/.memoria/operations/lib/worklists.py` | None | Reports, tests, PI | Emits ADR-54 `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
 
 ## Related

@@ -48,7 +48,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | accepted |
 | [17](17-shared-candidate-frontmatter.md) | Shared candidate frontmatter format | accepted |
 | [18](18-rename-agent-verdict.md) | Rename `agent_verdict` → `agent_recommendation` | accepted |
-| [19](19-moc-threshold-alert.md) | Agent-proposed MOCs (threshold alert; Mapper stub deferred) | accepted |
+| [19](19-moc-threshold-alert.md) | Agent-proposed hubs (threshold alert and Mapper handoff) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired) | accepted |
 | [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | accepted |

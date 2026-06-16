@@ -57,7 +57,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ├── operations/              the deterministic operation cores
 │   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer) + loudness.py (alert/block routing)
 │   ├── processing/ingest/     runner.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
-│   ├── integrity/linter/      detectors.py, precommit_check.py, pre-commit, golden_restore.py
+│   ├── integrity/linter/      detectors.py, hub_handoff.py, precommit_check.py, pre-commit, golden_restore.py
 │   ├── integrity/retraction/  retraction.py
 │   ├── cleanup/               reconcile.py, archive_inbox.py
 │   └── telemetry/eval/        eval_dispatch.py, eval_score.py

@@ -83,7 +83,7 @@ def test_card_creation_degrades_with_fallback_hint(tmp_path, monkeypatch):
     monkeypatch.setattr(
         tasks_mcp,
         "create_card",
-        lambda lane, goal, body, idempotency_key="": {
+        lambda lane, goal, body, idempotency_key="", **kwargs: {
             "created": False,
             "error": "hermes-cli-not-found",
             "fallback": "manual",

@@ -22,7 +22,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `src/` ships no empty dirs. |
-| `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
+| `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). Tier 2 is the separate `hub_handoff.py` operation, which delegates a staged proposal to the `map` lane without widening into `notes/hubs/`. |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
@@ -37,9 +37,10 @@ CLI entry point:
 
 ```bash
 python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
+python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--threshold 15] [--json]
 ```
 
-`--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
+`--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. `hub_handoff.py` is opt-in: it reads current `hub-threshold` findings and creates idempotent Librarian `map` cards whose allowed paths are only `notes/fleeting/maps/` and `inbox/`. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
 
 ---
 
