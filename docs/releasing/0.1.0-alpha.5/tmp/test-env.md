@@ -96,25 +96,57 @@ re-render** (via injected JS), and a **screenshot golden-image diff** for visual
 correctness. The headless display makes the visual check automatable — the human
 sliver shrinks to reviewing diffs, not running the app.
 
-**Two-stage assertion** (keeps the signal honest with a weak model): first assert
-a well-formed tool call was emitted (model-capability gate → else classify a
-**Gemma flake**, not a wiring regression); only then assert system state. **Caveat:**
-stage 1 alone can't separate *model emitted nothing* from *model emitted a malformed
-call the runtime parser silently dropped* (the §4 tool-call-parser risk) — to tell
-those apart, inspect the **raw model output below the parser**, not just the
-OpenAI-format transcript. Relatedly, the policy gate matches tool names by **naive
-substring** (`"obsidian"` + a write keyword), so it over-approximates
-(`putative`→`put`, `appendix`→`append`, `movement`→`move`); when naming the
-Option-B shim's tools, **avoid embedding write-keyword substrings in *read*-tool
-names** or they'll be spuriously gated.
+**Prove the gate fires — don't infer it (the false-green trap).** The write gate
+is Option B's whole reason to exist, so the harness must include a **negative
+assertion**: drive a *known-deny* write and assert it is **blocked** with a deny
+audit row — not just that allowed writes land. A silently-disengaged gate passes
+every positive assertion while writing freely; only a deny test catches it. This
+is not hypothetical: the **live enforcement is the ADR-28 plugin**
+(`src/.memoria/plugins/memoria-policy-gate/__init__.py`),
+which matches by substring (`"obsidian"` in the name) and therefore *does* catch
+the real `mcp_obsidian_*` tool names. Its predecessor — the `hooks:` shell matcher
+`re.fullmatch("obsidian.*", …)` — **never matched `mcp_obsidian_*` and never
+fired** (that bug is *why* the plugin exists). So the Option-B shim must route
+writes through the **plugin** path, and the deny assertion is what proves it did.
+
+**Three-bucket assertion** (a binary pass/fail misclassifies a weak model). Classify
+each run into:
+1. **No tool call emitted** → model-capability flake (not a wiring regression). But
+   note stage 1 alone can't separate *emitted nothing* from *emitted a malformed
+   call the runtime parser silently dropped* (the §4 parser risk) — to tell those
+   apart, inspect the **raw model output below the parser**, not just the
+   OpenAI-format transcript.
+2. **A tool call emitted, but the wrong (tool, path) shape** → model *behaviour*,
+   not wiring. A binary "did it call a tool?" wrongly buckets this as a wiring
+   break. Worse, a wrong call that still contains `obsidian` + a write keyword can
+   satisfy a naive gate assertion *for the wrong reason* — which is exactly why the
+   gate check must be the **deny assertion above**, keyed on the expected decision,
+   not "a gated tool was touched."
+3. **The expected (tool, path) shape** → only now assert artifact / gate decision /
+   audit / board / dashboard state.
+
+(Practical shim note: the gate over-approximates on substring — `putative`→`put`,
+`appendix`→`append` — so don't embed write-keyword substrings in *read*-tool names.)
 
 ---
 
 ## 4. Local model — Gemma 4 12B served by llama.cpp (containerized, GPU)
 
-- **Model & quant:** `google/gemma-4-12B-it` (`gemma4_unified`, ~12B), **GGUF
-  Q4_K_M ≈ 6.9 GB** — fits the 16 GB 4060 Ti with room. (BF16 weights are ~24 GB,
-  so an *unquantized* server can't fit this card at all.)
+- **⚠️ Verify the model exists and is text+tool-servable — before any sizing below
+  is load-bearing.** `google/gemma-4-12B-it` is described as a `gemma4_unified`
+  *any-to-any* multimodal model; that characterization is **unconfirmed against a
+  first-party source**, and "any-to-any" is a yellow flag — such models are often
+  *not* served through a standard OpenAI text+tool endpoint at all. The entire
+  net-new L2b loop has no engine if the model doesn't exist under this name, isn't
+  text-servable, or doesn't tool-call. Confirm existence + a GGUF build + an
+  OpenAI-style tool path **first**; the VRAM math is moot until then.
+- **Verified fallback — Qwen3-MoE.** If Gemma 4 doesn't pan out, **Qwen3-MoE** is a
+  *known* strong tool-caller with real GGUF/AWQ quants that fits the 4060 Ti — the
+  prior recorded choice. The ADR must justify Gemma-over-Qwen3 on evidence, not swap
+  a verified option for an unverified one on VRAM alone.
+- **Model & quant (if Gemma verifies):** `gemma4_unified` ~12B, **GGUF Q4_K_M ≈
+  6.9 GB** — fits the 16 GB 4060 Ti with room. (BF16 weights are ~24 GB, so an
+  *unquantized* server can't fit this card at all.)
 - **Runtime — llama.cpp, not vLLM, not a new daemon.** The stack **already vends
   llama.cpp** via `qmd` (`node-llama-cpp`), and its GPU path is already solved on
   this box (CUDA-13 runtime — see the qmd GPU note). So serve Gemma with a
@@ -143,8 +175,11 @@ names** or they'll be spuriously gated.
   (`kilocode` → `openai-compatible`), which must (a) exist in Hermes and (b) carry
   tool-calls correctly — unverified, and it compounds the tool-call risk above; it
   is *not* a one-variable change. Non-goal: the overlay flattens prod's per-profile
-  model tiering (posture-defined, ADR-48) to one Gemma, so tier-dependent reasoning
-  depth is out of scope locally.
+  model tiering (posture-defined, ADR-48) to one Gemma — so **both** the Opus lanes
+  (copi *and* peer-reviewer, per their `config.yaml`) go dark under green L2b, not
+  one, and per-profile **config-shape** divergence (not just reasoning depth) is
+  untestable locally. The Windows production-acceptance pass (§7) is the only place
+  the real per-profile model wiring runs.
 
 ---
 
@@ -205,6 +240,18 @@ component → layer → automated? → gate; **drift control** (`check-test-refs
 plans honest; **determinism** — below L5 assert artifact shape + gate decision,
 never prose.
 
+**Two operational caveats that decide whether this works at all:**
+- **Cassette match granularity (or record/replay is a no-op on real refactors).**
+  The value claim is "catches a refactor that broke the MCP wiring" — but most
+  wiring refactors change prompt/system text, so a cassette keyed on full request
+  bytes just *misses* and you can't tell "broke wiring" from "needs re-record."
+  **Match on tool-call structure (tool name + arg shape), not raw prompt bytes**, or
+  the harness no-ops on exactly the failure class it's sold to catch.
+- **Nightly trigger — not WSL2 cron.** WSL2 has no persistent init, so a distro
+  `crond` silently won't run when no shell is open. Pin the trigger as a **Windows
+  Task Scheduler job invoking `wsl.exe -d <distro> -e …`** (or, less reliably,
+  `systemd=true` + a systemd timer + keepalive). "Nightly" is aspirational otherwise.
+
 **Operating a nightly run:** (1) build/pull the pinned golden image; (2)
 `docker compose up` the stack; (3) idempotent fixture seed; (4) pytest orchestrator
 drives Obsidian CLI + `hermes chat -q`, collecting assertions; (5) gather artifacts
@@ -249,7 +296,9 @@ Large enough to be ADR-owned (supersedes/amends several):
   on production.
 
 Next steps:
-- [ ] **Verify the serving runtime emits OpenAI `tool_calls` for gemma4** (model card already confirms native FC; the open risk is llama.cpp `--jinja` → OpenAI format, else a parser/shim — gates the whole driver).
+- [ ] **Verify the model exists and is text+tool-servable** (`gemma4_unified` / any-to-any is unconfirmed; the L2b loop has no engine otherwise — keep **Qwen3-MoE** as the verified fallback). **Gate everything below on this.**
+- [ ] **Add the negative gate assertion to the L2b/golden harness** — a known-deny write must be *blocked* (deny audit row), routed through the ADR-28 plugin, so a disengaged gate fails loud instead of green.
+- [ ] **Verify the serving runtime emits OpenAI `tool_calls` for gemma4** (model card confirms native FC; the open risk is llama.cpp `--jinja` → OpenAI format, else a parser/shim — gates the whole driver).
 - [ ] **Confirm Hermes has an `openai-compatible` provider that carries tool-calls** (the overlay flips the provider, not just the endpoint).
 - [ ] **Compute & pin `--ctx-size`** against the 16 GB KV budget (don't default to 256K).
 - [ ] Author `install.sh` (all-Linux): Obsidian + Zotero + Xvfb + Hermes + plugins + MCP venv + qmd + `{{MODEL_*}}`.
