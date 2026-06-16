@@ -314,6 +314,18 @@ def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):
     assert internal_errs == []
 
 
+def test_check_bare_adr_codes_treats_site_excluded_subroots_as_internal(tmp_path):
+    root = tmp_path / "docs" / "releasing" / "0.1.0-alpha.6"
+    root.mkdir(parents=True)
+    plan = root / "plan.md"
+    plan.write_text("Release prose can say (ADR-80) when scanned as a subroot.\n")
+
+    errs: list[str] = []
+    check_bare_adr_codes(plan, root, errs)
+
+    assert errs == []
+
+
 def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
     md = tmp_path / "h.md"
     md.write_text("# Top Level\n## Sub Heading\n<a id=\"custom-anchor\"></a>\n")

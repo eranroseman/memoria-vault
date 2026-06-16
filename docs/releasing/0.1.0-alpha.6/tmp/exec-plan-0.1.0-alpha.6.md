@@ -30,12 +30,12 @@ telemetry has no corpus to chew on until the Phase-1 harness can seed one. #521
 
 Workstream _n_ maps 1:1 to gate G_n_.
 
-| WS | Gate | Issues | One-line deliverable | Stage proof |
-|---|---|---|---|---|
-| WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 |
-| WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 |
-| WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 |
-| WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 |
+| WS | Gate | Issues | One-line deliverable | Stage proof | Status |
+|---|---|---|---|---|---|
+| WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 | pending |
+| WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 | pending |
+| WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 | merged in [#649](https://github.com/eranroseman/memoria-vault/pull/649) |
+| WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 | pending |
 
 ### WS-1 — Correctness & security (#620, #621, #624)
 
@@ -114,6 +114,13 @@ first-class entry point, not a fourth saved workspace.
   Obsidian).
 
 ### WS-3 — Docs / template / supply-chain (#627, #626, #585)
+
+**Status:** merged in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649)
+(`c79f659`). Proof: `scripts/test.sh all`, CI green, and the merged artifacts include
+`src/system/templates/code-note.md`, the `code-note` schema/folder mapping,
+`scripts/docs_doctor.py` bare-ADR enforcement, fixed current-doc ADR links,
+`src/.obsidian/plugin-provenance-lock.json`, and
+`tests/test_plugin_provenance.py`.
 
 **#627 · ADR-07 — `system/templates/code-note.md`.** Confirmed absent. Either create the
 starter template or drop the stale "Files affected" reference in ADR-07. (Recommend

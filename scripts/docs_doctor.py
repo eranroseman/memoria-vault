@@ -58,6 +58,8 @@ def _scratch(p: Path, base: Path) -> bool:
 
 
 def _site_excluded(p: Path, base: Path) -> bool:
+    if set(base.parts) & SITE_EXCLUDED_DIRS:
+        return True
     return bool(set(p.relative_to(base).parts) & SITE_EXCLUDED_DIRS)
 
 
