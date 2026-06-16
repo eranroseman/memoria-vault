@@ -13,4 +13,7 @@
 # The installer substitutes {{PYTHON}} (the vault venv interpreter) and
 # {{VAULT_PATH}} when it copies this to ~/.hermes/scripts/memoria-board-export.sh.
 # shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/board_export.py" --vault "{{VAULT_PATH}}" >/dev/null || true
+if "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/board_export.py" --vault "{{VAULT_PATH}}" >/dev/null; then
+  # shellcheck disable=SC2288
+  "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/cron_heartbeat.py" --vault "{{VAULT_PATH}}" --job memoria-board-export >/dev/null || true
+fi

@@ -93,6 +93,8 @@ AUTO_FIX_DENY_CLASSES = frozenset({"review-gated-edit"})
 EMPTY_SHA256 = "sha256:" + hashlib.sha256(b"").hexdigest()
 
 AUDIT_RELPATH = "system/logs/audit.jsonl"
+AUDIT_SCHEMA_VERSION = 2
+REVIEW_MODE = "blocking"
 LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 
 
@@ -351,7 +353,12 @@ def sha256_file(path: Path) -> str:
 def append_audit(vault: Path, entry: dict) -> None:
     """Append one JSON object (one line) to system/logs/audit.jsonl. The
     append-only JSONL format survives crashes and is grep-friendly."""
-    append_jsonl(vault / AUDIT_RELPATH, [entry])
+    stamped = {
+        "schema_version": AUDIT_SCHEMA_VERSION,
+        "review_mode": REVIEW_MODE,
+        **entry,
+    }
+    append_jsonl(vault / AUDIT_RELPATH, [stamped])
 
 
 # --------------------------------------------------------------------------- #

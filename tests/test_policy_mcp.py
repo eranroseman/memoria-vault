@@ -228,6 +228,9 @@ def test_policy_mcp():
                 lines = (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
                 check("audit has one line per decision", len(lines) == 2)
                 check("audit lines are valid JSON", all(json.loads(ln) for ln in lines))
+                first = json.loads(lines[0])
+                check("audit stamps review-mode study arm",
+                      first["schema_version"] == 2 and first["review_mode"] == "blocking")
                 # B5d: complete_write validates the caller's before_hash against the
                 # pre-decision audit record — a different hash is logged, not trusted.
                 done = engine.complete_write("memoria-coder", "write",

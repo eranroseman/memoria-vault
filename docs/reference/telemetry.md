@@ -26,7 +26,10 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 | `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
 | `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
 | `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |
+| `triage.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI triage decision over an Inbox card |
 | `blind-review-samples.jsonl` | `board_export.py` | per export run | one terminal review selected for blind re-review |
+| `linkage.jsonl` | ingest `link.py` | per ingest with ID-missing names | by-name entity collision counters the linker refused to merge |
+| `cron-heartbeat.jsonl` | cron wrappers | per successful cron job | last-successful-run heartbeat for always-on trigger detection |
 | `lint-findings.jsonl` | `memoria-lint` cron | per Linter run | one detector finding |
 
 > **Per-session summaries (`sessions/YYYY-MM-DD-HHMM.jsonl`).** The Linter's `session_summary.py` writes one deterministic digest file per session into `system/logs/sessions/` on the daily lint cron — a header (task, profiles, start/end, action/decision counts) plus one record per touched path. The decision is [ADR-25 (two session logs)](../adr/25-session-logging-two-logs.md); the raw record of session activity remains `audit.jsonl` (below).
@@ -40,6 +43,8 @@ Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* 
 The write-gate's decision trail. Its full schema — the field table, the JSON example, the `decision` enum, and the per-write SHA-256 hash-pairing rules — is owned by [Policy MCP](policy-mcp.md#audit-log-format).
 
 Every gated decision is logged when the lane requires `audit_log` (all shipped Memoria lanes do), and `allow_with_log` / `deny` / `dry_run` are logged unconditionally. So for the shipped lanes every decision — `allow`, `allow_with_log`, `deny`, and `dry_run` — appends a row. Only a plain `allow` on a lane that does *not* require `audit_log` would write nothing.
+
+Every row is stamped with `schema_version: 2` and `review_mode: "blocking"`. The latter is deliberately non-backfillable: it records the live review-gate arm for future blocking-vs-advisory studies while keeping production behavior blocking-only.
 
 ## board-state.jsonl
 
@@ -117,6 +122,14 @@ The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` QuickAd
 | `opened_at` / `resolved_at` | the open marker and resolve timestamp; `opened_at` uses `attention_opened_at`, `opened_at`, then `created` if present |
 | `duration_minutes` | rounded wall-clock minutes from `opened_at` to `resolved_at`; `null` when no usable open marker exists |
 
+## triage.jsonl
+
+The PI's Inbox decision stream. The same `Memoria: resolve inbox card` action that writes `attention.jsonl` also appends one triage row with the selected outcome and lifecycle transition.
+
+```json
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "current (accept)", "lifecycle_from": "proposed", "lifecycle_to": "current", "source": "quickadd.resolve-inbox-card"}
+```
+
 ## blind-review-samples.jsonl
 
 The deterministic blind re-review sampler. When `board_export.py` observes a card's `review_status` reach a terminal outcome, it hashes the card id and samples a stable small fraction for a second pass. `metadata.blind_rereview: true` on a card forces a sample for an intentional spot-check or a test fixture.
@@ -124,6 +137,26 @@ The deterministic blind re-review sampler. When `board_export.py` observes a car
 ```json
 {"timestamp": "2026-06-01T11:30:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "accepted", "review_status": "approved", "sample_reason": "blind-rereview", "agent_recommendation": "clean"}
 ```
+
+## linkage.jsonl
+
+The deterministic linker refuses to create or merge entity notes by name alone. When an ingest run encounters authors, venues, or organizations without stable IDs, it records the count and names here.
+
+```json
+{"timestamp": "2026-06-01T09:15:00Z", "stage": "link", "citekey": "smith2026test", "event": "recorded_by_name", "counts": {"authors": 1, "venues": 0, "orgs": 1}, "total": 2, "recorded_by_name": {"authors": ["Bob B"], "venues": [], "orgs": ["Acme Lab"]}, "source": "link.py"}
+```
+
+This log feeds the ADR-59 record-linkage trigger. It is a counter, not a merge proposal: ID-keyed linking remains the only automatic entity creation path.
+
+## cron-heartbeat.jsonl
+
+Successful scheduled operations append a heartbeat row after their operation chain exits cleanly.
+
+```json
+{"timestamp": "2026-06-01T06:30:00Z", "job": "memoria-metrics", "status": "success", "source": "cron-wrapper"}
+```
+
+The wrappers do not write a success heartbeat after a failed command. Missing or stale heartbeats are therefore the evidence used by always-on / sleep / scheduler-trigger checks.
 
 ## lint-findings.jsonl
 

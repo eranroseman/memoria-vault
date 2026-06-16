@@ -19,9 +19,12 @@ Reads (only) are local and un-gated.
 """
 from __future__ import annotations
 
+import datetime
 import json
 import sys
 from pathlib import Path
+
+LINKAGE_RELPATH = "system/logs/linkage.jsonl"
 
 
 def _bare(uri: str) -> str:
@@ -139,6 +142,36 @@ def plan_links(merged: dict, vault: Path) -> dict:
         "summary": {"entities": len(ent["entities"]), "cites": len(cites),
                     "by_name_authors": len(ent["recorded_by_name"]["authors"])},
     }
+
+
+def append_by_name_audit(vault: Path, citekey: str, plan: dict) -> dict | None:
+    """Record the no-stable-ID names the linker refused to merge.
+
+    This is the cheap ADR-59 trigger signal: by-name clusters are not merged or
+    blocked here, only counted so a later Fellegi-Sunter-style dedup slice can
+    know when enough collisions have accumulated.
+    """
+    by_name = plan.get("recorded_by_name") or {}
+    counts = {k: len(v or []) for k, v in by_name.items()}
+    total = sum(counts.values())
+    if total == 0:
+        return None
+    record = {
+        "timestamp": datetime.datetime.now(datetime.timezone.utc)
+                     .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "stage": "link",
+        "citekey": citekey,
+        "event": "recorded_by_name",
+        "counts": counts,
+        "total": total,
+        "recorded_by_name": by_name,
+        "source": "link.py",
+    }
+    log = Path(vault) / LINKAGE_RELPATH
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
 
 
 # --------------------------------------------------------------------------- #

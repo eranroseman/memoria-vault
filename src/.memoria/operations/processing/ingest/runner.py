@@ -204,6 +204,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     # link plan (entities + cites) — needs the vault for cites matching
     if vault is not None:
         bundle["link_plan"] = link.plan_links(m, vault)
+        link.append_by_name_audit(vault, citekey, bundle["link_plan"])
 
     # neighbours for the brief are selected downstream (qmd); leave the hole.
     bundle["body_abstract"] = m.get("tldr", "")
