@@ -2,6 +2,11 @@
 
 Status: draft (scratch under `tmp/`)
 Author: PI + Claude
+> **Process risk:** this scratch note **supersedes a recorded decision** (the prior
+> Haiku-via-Kilocode test-model default in the `test-env-hardware-and-model` memory)
+> but the superseding `MEMORIA_ENV` / two-installer **ADR does not exist yet**. Until
+> it does, the override lives only here + in memory; if this `tmp/` file is cleaned
+> up, the decision evaporates with no ADR trail. **Write the ADR before cleanup.**
 Context: design the **best and most complete** testing environment and procedure
 for Memoria, with **no inherited constraints**. Two single-OS installers replace
 the old split-OS bridge:
@@ -45,10 +50,10 @@ holds the entire real stack; `docker compose` brings it up clean per run.
 ```
 ┌─ docker compose (ephemeral, recreated per run) ───────────────────────┐
 │  service: memoria-stack            service: model                      │
-│  ├─ Hermes (native Linux)          ├─ Ollama + Gemma 4 12B             │
-│  ├─ 5 memoria-* profiles + MCP     │  (--gpus all via                  │
-│  ├─ Obsidian (headless: xvfb-run   │   nvidia-container-toolkit)       │
-│  │   --no-sandbox) + all plugins   │  OpenAI-compatible :11434/v1      │
+│  ├─ Hermes (native Linux)          ├─ llama.cpp server + Gemma 4 12B   │
+│  ├─ 5 memoria-* profiles + MCP     │  (GGUF Q4_K_M, --jinja, --gpus    │
+│  ├─ Obsidian (headless: xvfb-run   │   all via nvidia-container-toolkit)│
+│  │   --no-sandbox) + all plugins   │  OpenAI-compatible endpoint       │
 │  ├─ Local REST API + native MCP    └───────────────────────────────────│
 │  ├─ Zotero (headless) or fixture memoria.bib                          │
 │  ├─ qmd (hybrid search)                                                │
@@ -64,8 +69,8 @@ Principles (recognized ephemeral-env best practice):
   state leakage, failures trace to logic not residue.
 - **Parallel & isolated** — multiple stacks at once (e.g. scale fixtures vs golden
   path) on separate compose projects.
-- **Persistent only where intended** — Ollama model cache on a named volume so the
-  12B isn't re-pulled each run; everything else disposable.
+- **Persistent only where intended** — the GGUF weights cache on a named volume so
+  the 12B isn't re-fetched each run; everything else disposable.
 
 Host: the Linux is WSL2-Linux on the RTX 4060 Ti box (GPU passthrough into the
 container via `nvidia-ctk runtime configure`); the design is host-agnostic and
@@ -93,24 +98,53 @@ sliver shrinks to reviewing diffs, not running the app.
 
 **Two-stage assertion** (keeps the signal honest with a weak model): first assert
 a well-formed tool call was emitted (model-capability gate → else classify a
-**Gemma flake**, not a wiring regression); only then assert system state.
+**Gemma flake**, not a wiring regression); only then assert system state. **Caveat:**
+stage 1 alone can't separate *model emitted nothing* from *model emitted a malformed
+call the runtime parser silently dropped* (the §4 tool-call-parser risk) — to tell
+those apart, inspect the **raw model output below the parser**, not just the
+OpenAI-format transcript. Relatedly, the policy gate matches tool names by **naive
+substring** (`"obsidian"` + a write keyword), so it over-approximates
+(`putative`→`put`, `appendix`→`append`, `movement`→`move`); when naming the
+Option-B shim's tools, **avoid embedding write-keyword substrings in *read*-tool
+names** or they'll be spuriously gated.
 
 ---
 
-## 4. Local model — Gemma 4 12B via Ollama (containerized, GPU)
+## 4. Local model — Gemma 4 12B served by llama.cpp (containerized, GPU)
 
-- `google/gemma-4-12B-it`, ~7–8 GB at Q4 on the 16 GB 4060 Ti.
-- **Ollama** container, `--gpus all`, OpenAI-compatible at `:11434/v1`; day-0 Gemma
-  4 + native tool-calling (llama.cpp = perf/MCP alt; vLLM only if concurrent lanes
-  saturate). Model cache on a named volume.
-- **⚠️ Verify Gemma 4 tool-calling against the model card** — load-bearing for the
-  whole CLI driver.
-- **Model overlay:** `base_url` is a literal duplicated across all five profiles
-  (Hermes has no global config layer — ADR-27). The installer already substitutes
-  `{{PYTHON}}`/`{{VAULT_PATH}}`/`{{QMD}}`; add `{{MODEL_BASE_URL}}` +
-  `{{MODEL_DEFAULT}}` so `install.sh` points at Ollama and `install.ps1` at
-  Kilocode. Non-goal recorded: the overlay flattens prod's Opus/Sonnet/Haiku
-  tiering to one Gemma, so tier-dependent reasoning depth is out of scope locally.
+- **Model & quant:** `google/gemma-4-12B-it` (`gemma4_unified`, ~12B), **GGUF
+  Q4_K_M ≈ 6.9 GB** — fits the 16 GB 4060 Ti with room. (BF16 weights are ~24 GB,
+  so an *unquantized* server can't fit this card at all.)
+- **Runtime — llama.cpp, not vLLM, not a new daemon.** The stack **already vends
+  llama.cpp** via `qmd` (`node-llama-cpp`), and its GPU path is already solved on
+  this box (CUDA-13 runtime — see the qmd GPU note). So serve Gemma with a
+  **llama.cpp server**: zero new serving dependency, native GGUF Q4_K_M, and
+  `--jinja` to render Gemma 4's tool-call chat template. **vLLM is out** — no usable
+  GGUF path for a ~2-week-old `gemma4_unified` arch, and BF16/AWQ won't fit 16 GB.
+  Ollama is acceptable only as a thin wrapper over the *same* llama.cpp engine, not
+  a separate stack.
+- **Tool-calling — the ⚠️, re-aimed.** Native function calling is **confirmed by the
+  Gemma 4 model card** (structured tool use via special tokens) — that question is
+  resolved *yes*. The real, unverified, load-bearing risk is **whether the serving
+  runtime emits OpenAI-format `tool_calls`** from those special tokens that Hermes
+  can consume. The official path is special-tokens + jinja template + a regex parse;
+  **verify llama.cpp's `--jinja` yields OpenAI `tool_calls` for gemma4 — if not, you
+  need a parser/shim, not just a `base_url` swap.**
+- **Context budget — pin it (don't assume the headroom).** Gemma 4 12B advertises a
+  256K window; KV cache at long context is multiple GB, and with ~7 GB of weights
+  the ~8 GB headroom on a 16 GB card is eaten fast — exactly on the longer Librarian
+  lanes. **Pin `--ctx-size` to a budget-computed length** (size KV against the 16 GB
+  budget; do *not* default to 256K) or risk OOM mid-lane.
+- **Model overlay — flips the provider adapter, not just the endpoint.** `base_url`
+  is a literal duplicated across all five profiles (Hermes has no global config
+  layer — ADR-27). The installer already substitutes
+  `{{PYTHON}}`/`{{VAULT_PATH}}`/`{{QMD}}`; add `{{MODEL_PROVIDER}}` +
+  `{{MODEL_BASE_URL}}` + `{{MODEL_DEFAULT}}`. This **changes the Hermes provider**
+  (`kilocode` → `openai-compatible`), which must (a) exist in Hermes and (b) carry
+  tool-calls correctly — unverified, and it compounds the tool-call risk above; it
+  is *not* a one-variable change. Non-goal: the overlay flattens prod's per-profile
+  model tiering (posture-defined, ADR-48) to one Gemma, so tier-dependent reasoning
+  depth is out of scope locally.
 
 ---
 
@@ -161,7 +195,7 @@ throw it away.
 | Cadence | What runs | Where | Cost |
 |---|---|---|---|
 | **Per-commit** | L0 + L1 + L2a | base container, no GPU | seconds, free |
-| **Per-PR** | L2b fs-shim smoke + record/replay cassettes (model id+quant pinned) | base container, no live model | minutes, free, deterministic |
+| **Per-PR** | L2b fs-shim smoke + record/replay cassettes (pin model id+quant **and** the serving stack — llama.cpp build + jinja template + parser — since they shape the tool-call format) | base container, no live model | minutes, free, deterministic |
 | **Nightly** | full ephemeral stack: L2b real + L3 + L4 + chaos + partial L5, all 16 commands on Gemma, screenshot diffs | compose stack + GPU | tens of min, free |
 | **Per-release** | performance/scale + security/adversarial + full L3 matrix | compose stack + GPU | longer |
 | **Per-release (prod)** | **production acceptance** on all-Windows: absolute L5 quality (real models), Windows installer + native-OS runtime, HTTPS REST | Windows box | manual/attended |
@@ -215,10 +249,12 @@ Large enough to be ADR-owned (supersedes/amends several):
   on production.
 
 Next steps:
-- [ ] **Verify Gemma 4 tool-calling against the model card** (gates the driver).
+- [ ] **Verify the serving runtime emits OpenAI `tool_calls` for gemma4** (model card already confirms native FC; the open risk is llama.cpp `--jinja` → OpenAI format, else a parser/shim — gates the whole driver).
+- [ ] **Confirm Hermes has an `openai-compatible` provider that carries tool-calls** (the overlay flips the provider, not just the endpoint).
+- [ ] **Compute & pin `--ctx-size`** against the 16 GB KV budget (don't default to 256K).
 - [ ] Author `install.sh` (all-Linux): Obsidian + Zotero + Xvfb + Hermes + plugins + MCP venv + qmd + `{{MODEL_*}}`.
 - [ ] Author `install.ps1` (all-Windows, native): Hermes + Obsidian + Zotero, localhost, HTTPS REST.
-- [ ] Build the **golden image** (Dockerfile) + `docker compose` (stack + Ollama/GPU); pin & hash.
+- [ ] Build the **golden image** (Dockerfile) + `docker compose` (stack + llama.cpp/GPU); pin & hash.
 - [ ] Wire the **Obsidian CLI** driver over the 16 commands; add JS asserts + screenshot golden diffs.
 - [ ] Build **fixture data** (scaled vaults, `.bib`, seeded states, golden screenshots), checksummed + idempotent seed.
 - [ ] Author the **chaos**, **security**, and **performance** suites (§6).
