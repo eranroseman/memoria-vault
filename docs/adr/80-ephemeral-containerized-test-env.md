@@ -91,21 +91,43 @@ The full harness is a large build, but most of its release-blocking value does
 **visual layer** — the two most expensive pieces — buy the *last* increment of
 confidence, not the first.
 
-**Phase 1 — deterministic integration harness (~20% of the cost, ~80% of the
-value).** No GPU, no live model, no screenshots. Containerize the *existing*
-offline stack — `scripts/e2e-smoke.sh` already builds a vault installer-equivalently
-and walks scaffold → golden → commit gate → offline ingest → honesty card → lint
-with no network — and add: (a) **headless Obsidian driven over the command palette
-with data-layer asserts** (artifact / frontmatter, gate decision + audit row, board
-transition, dashboard re-render) — *not* pixel diffs; (b) **record/replay cassettes**
-for the agent-wiring loops, matched on tool-call structure, so the L2b layer is
-exercised with **no live model**; (c) the **deny-assertion** (already shipped) plus
-the **installer / recovery** smoke. Deterministic, runs per-PR, and closes the
-L3-integration, recovery, and safety gaps that actually block releases.
+**Phase 1 — deterministic integration + golden-path harness (~20% of the cost,
+~80% of the value), covering L0–L4 + cross-cutting.** No GPU, no live model, no
+screenshots. The framework's own cheap/expensive line is the **L4/L5 boundary**
+([ADR-29](29-testing-framework.md)): L0–L4 are *wiring* (does the lifecycle produce
+the right artifacts and transitions), L5 is *quality* (judgement). So **L4 belongs
+in this tier** — the agent steps need a model only to emit a structurally-valid
+output, which a recording or a seed supplies, so **the model is needed at record
+time, not run time.** Containerize the *existing* offline stack —
+`scripts/e2e-smoke.sh` already builds a vault installer-equivalently and walks
+scaffold → golden → commit gate → offline ingest → honesty card → lint with no
+network — and add:
+
+- (a) **headless Obsidian over the command palette with data-layer asserts**
+  (artifact / frontmatter, gate decision + audit row, board transition, dashboard
+  re-render) — *not* pixel diffs;
+- (b) **record/replay cassettes** for the agent-wiring loops, matched on tool-call
+  structure, so L2b runs with **no live model**;
+- (c) the **deny-assertion** (already shipped) plus the **installer / recovery**
+  smoke;
+- (d) the **L4 golden-path** (source → ingest → classify → discuss → claim → draft →
+  verify → export), model-free, by two means that compose. **Seed** fixture
+  artifacts at the generative steps and drive the deterministic stages live —
+  reusing `e2e-smoke.sh` for ingest, the **g9 zero-LLM spine**
+  (dispatch → claim → run → gated write → audit → `done`), and the alpha.5 **seeded
+  structural-impact path** — for partial L4 immediately from existing parts; then
+  **upgrade each seeded step to a cassette** as cassettes are recorded, ratcheting
+  to full L4 *inside* Phase 1 with no jump to Phase 2.
+
+Deterministic, runs per-PR, and closes the L3-integration, **L4 golden-path**,
+recovery, and safety gaps that actually block releases. The only L4 piece held back
+is the path driven by a *live* model — the L4/L5 seam — which stays on the Windows
+production-acceptance pass and Phase 2.
 
 **Phase 2 — the live-model + visual + chaos/perf tail (~80% of the cost).** The
-`--gpus all` sibling container + Gemma 4 + nightly real-quality L5 eval, the
-screenshot golden-image diffs, and the chaos / security / performance suites. Its
+`--gpus all` sibling container + Gemma 4 + nightly real-quality L5 eval (and the
+live-model golden-path run — the L4/L5 seam), the screenshot golden-image diffs,
+and the chaos / security / performance suites. Its
 *model* risk is now low (gate 2 resolved), but its *cost* — GPU infra,
 nondeterminism, and flaky visual baselines — is what makes it the expensive tail.
 Build it only once Phase 1's coverage proves insufficient.
