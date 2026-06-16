@@ -23,8 +23,11 @@ merged in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649). G1 /
 implementation (generated-profile HTTPS+`ssl_verify` checks, stamped thesis promotion,
 claim supersession defaults) merged in
 [PR #651](https://github.com/eranroseman/memoria-vault/pull/651); its S4 live sandbox
-HTTPS smoke remains tracked in the release issues. Gate and stage state still close
-through the linked GitHub issues.
+HTTPS smoke remains tracked in the release issues. G2 / WS-2 implementation (Home,
+Studio, and palette Project-gate entry points inside Studio, with no fourth saved
+workspace) merged in [PR #653](https://github.com/eranroseman/memoria-vault/pull/653);
+its S5 live Obsidian drive-through remains tracked in the release issues. Gate and stage
+state still close through the linked GitHub issues.
 
 ## 1. Scope — what this release is
 

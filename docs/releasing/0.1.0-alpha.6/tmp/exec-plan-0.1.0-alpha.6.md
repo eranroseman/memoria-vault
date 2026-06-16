@@ -33,7 +33,7 @@ Workstream _n_ maps 1:1 to gate G_n_.
 | WS | Gate | Issues | One-line deliverable | Stage proof | Status |
 |---|---|---|---|---|---|
 | WS-1 | G1 | #620, #621, #624 | the 3 `bug` accepted-ADR invariants hold | S1 + S4 | merged in [#651](https://github.com/eranroseman/memoria-vault/pull/651); S4 live smoke pending |
-| WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 | pending |
+| WS-2 | G2 | #622 | Project = first-class gate surface inside Studio | S3 + S5 | merged in [#653](https://github.com/eranroseman/memoria-vault/pull/653); S5 live drive-through pending |
 | WS-3 | G3 | #627, #626, #585 | docs/template/supply-chain conformance | S0 | merged in [#649](https://github.com/eranroseman/memoria-vault/pull/649) |
 | WS-4 | G4 | #586 | model-free L0–L4 harness (ADR-80 Ph1) | S3 + S5 | pending |
 
@@ -109,6 +109,15 @@ claim-template `schema_version` bump.
   opt-in).
 
 ### WS-2 — Project-gate navigation surface (#622)
+
+**Status:** implementation merged in
+[PR #653](https://github.com/eranroseman/memoria-vault/pull/653) (`8afe816`). Proof:
+`scripts/test.sh all`, focused workspace/QuickAdd/Bases/provenance tests,
+`docs-doctor`, `status-doctor`, `cspell`, and CI all green. Merged artifacts include
+the `Memoria: open Project gate` command, `open-project-gate.js`, the Home Project gate
+button/callout, the Studio Project gate section, current docs/ADR wording, and the
+updated QuickAdd provenance hash. Remaining G2/S5 proof is the attended Obsidian
+drive-through that opens/renders the Project gate from the UI.
 
 `src/.obsidian/workspaces.json` registers `Desk` / `Library` / `Studio` (ADR-68). Studio
 and Project are two names for the same workspace: Studio is the saved workspace shell,

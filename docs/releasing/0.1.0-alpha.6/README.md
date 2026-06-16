@@ -26,8 +26,11 @@ GitHub.
   WS-1 correctness/security (#620, #621, #624) — implementation landed in
   [PR #651](https://github.com/eranroseman/memoria-vault/pull/651), with the S4 live
   sandbox HTTPS smoke still tracked in the release issues; WS-2 Project-gate surface
-  inside Studio (#622); WS-3 docs/template/supply-chain (#627, #626, #585; #625
-  documented) — landed in [PR #649](https://github.com/eranroseman/memoria-vault/pull/649).
+  inside Studio (#622) — implementation landed in
+  [PR #653](https://github.com/eranroseman/memoria-vault/pull/653), with the S5 live
+  Obsidian drive-through still tracked in the release issues; WS-3
+  docs/template/supply-chain (#627, #626, #585; #625 documented) — landed in
+  [PR #649](https://github.com/eranroseman/memoria-vault/pull/649).
 - **Build workstream (Track B — net-new):** WS-4 test-env harness Phase 1 (#586).
 - The tracked `tmp/` scratch folder is retained while alpha.6 is being designed;
   promote durable decisions into ADRs and delete `tmp/` at cut.
