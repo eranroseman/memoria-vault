@@ -57,7 +57,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (the PI-facing state of any item); `maturity` is a claim **property** describing how settled it is — never a gate. Both chains and their values are specified in [Frontmatter fields](frontmatter.md).
 
-**Links vs relationships** — the two kinds of connection ([ADR-52](../adr/52-links-vs-relationships.md)): `links:` are **authored** edges on notes (the PI's thinking); `relationships` are **given** edges on catalog entities (facts from the record), written by the ingest engine. The field contract is specified in [Frontmatter fields](frontmatter.md).
+**Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](linking.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
 
 **Note type** — one of the 22 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Note types](note-types.md).
 

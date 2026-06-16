@@ -60,27 +60,13 @@ The PI's knowledge, carrying **authored** `links:` edges (the field contract is 
 
 The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). All five live flat in `inbox/`, start at `lifecycle: proposed` (awaiting the PI), and converge to `archived`. Three shapes:
 
-**Proposals** carry the honesty body — arguments, never a verdict:
-
-| Type | Required fields | Notes |
+| Shape | Types | What it carries |
 | --- | --- | --- |
-| `candidate` | `title`, `action`, `argument_for`, `argument_against`, `what_tipped_it`, `certainty` | A proposed acceptance (e.g. a discovered paper). `certainty` is the 3-level calibrated enum `confident` / `likely` / `unsure`. Optional: `citekey`, `url`. |
-| `gap` | same honesty fields as `candidate` | A proposed missing piece (coverage gap, missing link). Optional `gap_type` classifies Project-gate gaps. |
+| **Proposals** | `candidate`, `gap` | The honesty body — arguments, never a verdict. A `candidate` proposes an acceptance (e.g. a discovered paper); a `gap` proposes a missing piece (coverage gap, missing link). |
+| **Verification cards** | `flag`, `alert` | Lead with the finding and carry the verdict. A `flag` is a pointed finding (e.g. a retraction); an `alert` is a standing system warning. |
+| **Work prompts** | `work-prompt` | An action and a pointer, never a verdict — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). |
 
-**Verification cards** lead with the finding and carry the verdict:
-
-| Type | Required fields | Notes |
-| --- | --- | --- |
-| `flag` | `title`, `finding`, `agent_recommendation`, and at least one of `target` / `citekey` (`required_any`) | A pointed verification finding (e.g. a retraction, an identity disagreement). |
-| `alert` | `title`, `finding` | A standing system warning. `agent_recommendation` is optional here. |
-
-**Work prompts** carry an action and a pointer — never a verdict:
-
-| Type | Required fields | Notes |
-| --- | --- | --- |
-| `work-prompt` | `title`, `action`, `what_happened`, and at least one of `target` / `task_id` (`required_any`) | Work waiting on the PI — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). Optional: `lane`. |
-
-All cards share the optional `raised_by` and `loudness` fields (the `loudness` enum and the honesty-card field contract are specified in [Frontmatter fields](frontmatter.md)). Operations and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
+See [Inbox card fields](inbox-card-fields.md) for the complete per-type field contract (required, `required_any`, optional, and the shared `raised_by` / `loudness` fields). Operations and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
 
 ---
 

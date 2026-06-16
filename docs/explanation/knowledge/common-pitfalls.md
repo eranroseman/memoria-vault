@@ -24,9 +24,7 @@ The root cause is that Better BibTeX treats citekeys as derived from metadata, n
 
 ## Vocabulary drift
 
-You classify claim A with `topics: receptivity-detection` and claim B with `topics: opportune-moments`, not noticing they name the same concept. The query for `receptivity-detection` returns half the corpus on the topic. You conclude coverage is thin; it isn't.
-
-The failure is invisible because it produces no errors — just incomplete query results. Research directions get shaped by a false gap signal. The Linter's `lint:check-schema` pass can catch drift from a defined vocabulary, but only after the vocabulary is defined. Drift before that point is entirely silent. See [Vocabulary discipline](vocabulary-discipline.md) for the reasoning behind deferred vocabulary consolidation.
+The same concept gets two names across notes — `topics: receptivity-detection` on one claim, `topics: opportune-moments` on another — so a query returns half the corpus and the PI infers thin coverage that isn't real. The failure is invisible because it produces no errors, only incomplete results, and the Linter cannot catch it until a canonical vocabulary exists. The full scenario, why consolidation is deliberately deferred, and how the failure compounds are in [Vocabulary discipline](vocabulary-discipline.md).
 
 ## Summary without synthesis
 

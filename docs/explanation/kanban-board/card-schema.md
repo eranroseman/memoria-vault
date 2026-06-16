@@ -18,7 +18,7 @@ A `candidate` (a *found* source proposed for intake) and a `gap` (a *missing*-so
 
 ## Verification cards: flag and alert
 
-A `flag` (a verification or integrity issue) and an `alert` (a drift or retraction notice) are different: here the verdict is *not* a given — the whole point is what the check found. So these cards are **finding-first**: `finding` leads the card, and `agent_recommendation` carries the verdict the proposal cards deliberately omit. The full field list is in [Inbox card fields](../../reference/inbox-card-fields.md#verification-cards). `agent_recommendation` is the soft 3-tier verdict ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) — meaningful here precisely because it is *not* implied, and still never a gate: a `clean` flag closes nothing on its own.
+A `flag` (a verification or integrity issue) and an `alert` (a drift or retraction notice) are different: here the verdict is *not* a given — the whole point is what the check found. So these cards are **finding-first**: `finding` leads the card, and `agent_recommendation` carries the verdict the proposal cards deliberately omit. The full field list is in [Inbox card fields](../../reference/inbox-card-fields.md#verification-cards). `agent_recommendation` — the soft, agent-set verdict whose 3-tier enum and never-a-gate rule are defined in [Board states and the review gate](states.md) — is meaningful here precisely because it is *not* implied; still, a `clean` flag closes nothing on its own.
 
 ## Work prompts: work-prompt
 

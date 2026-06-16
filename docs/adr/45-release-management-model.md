@@ -35,7 +35,11 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
 
 - **Readiness state** lives in the **"Release vX.Y" tracking issue** — a gate checklist
   GitHub renders as a progress bar — retiring the hand-maintained §2/§3 markdown tables
-  (the main drift source).
+  (the main drift source). *(Tracking shape amended by
+  [ADR-75: Use GitHub Project fields and release sub-issues for live work
+  state](75-github-project-fields-and-release-sub-issues.md): the single-checklist
+  tracking issue is replaced by a parent issue plus one sub-issue per gate; the
+  milestone-for-scope and release-please-for-versioning decisions here stand.)*
 - **Scope** is the GitHub **milestone** (`vX.Y`).
 - **Version + CHANGELOG + GitHub Release** are owned by **release-please** (manifest mode)
   from Conventional Commits, replacing the tag-only `release.yml`. Don't hand-edit
@@ -83,3 +87,6 @@ this decision is only about *where release state and versioning live*.
 
 - **Live process:** [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md); the `/release` skill scaffolds it.
 - **Gate/stage model:** [ADR-29](29-testing-framework.md) (the layers/matrix the gates map to).
+- **Amended by:** [ADR-75: Use GitHub Project fields and release sub-issues for live
+  work state](75-github-project-fields-and-release-sub-issues.md) — replaces the
+  single-checklist tracking shape with a parent issue plus one sub-issue per gate.

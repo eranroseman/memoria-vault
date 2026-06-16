@@ -36,7 +36,7 @@ NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the
 
 **2. Propagate the keys into every profile.**
 
-Hermes profile runs read **only the profile's own `.env`** — there is no global fallback. The installer seeds each profile's `.env` from the global file ([Installer (bootstrap)](../../reference/installer.md) for the seed semantics):
+Hermes profile runs read **only the profile's own `.env`** — there is no global fallback, so the keys must be seeded into each profile:
 
 ```bash
 bash scripts/install.sh --profiles-only --vault <vault>
@@ -46,7 +46,7 @@ bash scripts/install.sh --profiles-only --vault <vault>
 .\scripts\install.ps1 -ProfilesOnly -Vault <vault>
 ```
 
-Re-run this any time you add or rotate a key in the shared Hermes env file. To check a single profile, open the deployed `memoria-librarian/.env` under the Hermes profiles directory — the Librarian carries the most keys (it does all enrichment and discovery).
+What `--profiles-only` re-deploys, and how it seeds each profile's `.env` from the shared file without overwriting existing values, is in [Redeploy profiles](../operate/redeploy-profiles.md). Re-run this any time you add or rotate a key in the shared Hermes env file. To check a single profile, open the deployed `memoria-librarian/.env` under the Hermes profiles directory — the Librarian carries the most keys (it does all enrichment and discovery).
 
 **3. Confirm the placeholders were substituted.**
 

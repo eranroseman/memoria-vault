@@ -30,15 +30,7 @@ For each callout row or proposed link card, ask: *would I want this edge to exis
 
 **3. Approve by writing the link yourself.**
 
-Accepting a proposal means *you* open the claim and add the entry to its `links:` map:
-
-```yaml
-links:
-  contradicts:
-    - "[[the-other-claim]]"
-```
-
-Then resolve the card to `current` → `archived` ([Work the review queue](../compose/work-the-review-queue.md)). The agent proposed; your hand on the file is the approval.
+Accepting a proposal means *you* open the claim and add the entry to its `links:` map, exactly as you would type one by hand ([Link related claims](link-related-claims.md)). Then resolve the card to `current` → `archived` ([Work the review queue](../compose/work-the-review-queue.md)). The agent proposed; your hand on the file is the approval.
 
 **4. Reject the rest — don't leave them pending.**
 

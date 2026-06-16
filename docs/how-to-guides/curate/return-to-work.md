@@ -17,7 +17,7 @@ hermes --version
 hermes profile list
 ```
 
-`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy from the repo clone: `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
+`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy with the `--profiles-only` redeploy from the repo clone ([Set up Hermes](../setup/set-up-hermes.md)).
 
 **2. Confirm the secrets are in place.**
 
@@ -33,7 +33,7 @@ Get-Content "$env:LOCALAPPDATA\hermes\profiles\memoria-librarian\.env" |
   ForEach-Object { $_ -replace '=.*', '=set' }
 ```
 
-`KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OPENALEX_API_KEY` should all show as set. A blank key or placeholder certificate path fails mid-task. If you rotated keys in the shared Hermes env file, propagate them with the profile redeploy command above.
+The five keys checked here should all show as set — see [Set up Hermes](../setup/set-up-hermes.md) for what each one is and where it comes from. A blank key or placeholder certificate path fails mid-task. If you rotated keys in the shared Hermes env file, propagate them with the `--profiles-only` redeploy above.
 
 **3. Confirm the vault is synced.**
 

@@ -31,7 +31,7 @@ The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits 
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), one per proposed source, each carrying the honesty body — an argument, not a verdict. A real one reads like:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), one per proposed source. Judge these candidate cards exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — read `argument_against` and `certainty` first, then keep (set `lifecycle: current`) or skip (set `lifecycle: archived`). A discovery card reads like:
 
 ```yaml
 action: "Catalog this paper and queue it for reading"
@@ -41,10 +41,7 @@ what_tipped_it: "It's the only experimental test of the assumption in your corpu
 certainty: likely
 ```
 
-Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md); the exact field set: [Frontmatter fields](../reference/frontmatter.md). There is no verdict field — the card existing *is* the recommendation, so the verdict would be noise. Read `argument_against` and `certainty` first; they're what make this a real decision instead of a rubber stamp. Then, as one batch sitting (Tutorial 04's discipline):
-
-- **Keep:** the ingest engine builds the Catalog entity and the paper joins your reading queue — the Tutorial 03 flow from here.
-- **Skip:** set the card to `lifecycle: archived`. Skipping generously offered candidates is the system working, not failing.
+Work the whole discovery queue in one batch sitting, not card by card — the discipline (and why) is in [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md). Kept papers join your reading queue via the ingest engine; skipping generously offered candidates is the system working, not failing.
 
 Run discovery again whenever synthesis stalls — a hub that won't grow, a claim with one lonely source — and from any `gap` card you agree with. For the habit and keeping your research focus current, see [Find new sources](../how-to-guides/compile/find-new-sources.md).
 

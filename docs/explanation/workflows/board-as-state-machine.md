@@ -6,7 +6,7 @@ nav_order: 2
 
 # The board as a state machine (the control plane)
 
-The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until a human approves it into the vault or archives it.
+The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until the PI approves it into the vault or archives it: agents propose, only the PI disposes, and the policy MCP enforces that wall — see [Why the review gate is structural](../rationale/why-human-gate.md).
 
 ---
 
@@ -44,11 +44,11 @@ A card is not just a task title. It carries:
 
 **Agent recommendation** — `agent_recommendation` (optional, from the Peer-reviewer or an engine such as the Linter). This answers "what does the checking pass advise?" — separate from the human's decision.
 
-**Handoff payload** — `summary`, `metadata.allowed_paths`, `metadata.expected_outputs`, `metadata.promote_target`. The context the next worker needs to continue without re-reading the conversation.
+**Handoff payload** — `summary`, `metadata.allowed_paths`, `metadata.expected_outputs`, `metadata.promote_target`. The context the next worker needs to continue; why the receiver inherits this structured payload and never the sender's session context is [The control plane](../architecture/control-plane.md)'s design point.
 
 **History** — retry count, blocked reason, who worked on it. The card survives retries without losing its identity.
 
-These three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree; why that separation matters is treated in [Review as a first-class state](review-as-state.md).
+These three dimensions — execution, review, agent recommendation — are intentionally separate because they can disagree; the full rationale for the orthogonality is owned by [The control plane](../architecture/control-plane.md), and what the review dimension means in practice is [Review as a first-class state](review-as-state.md).
 
 ---
 

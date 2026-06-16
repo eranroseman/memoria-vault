@@ -8,6 +8,8 @@ nav_order: 4
 
 Arrange claim notes spatially in an Obsidian Canvas to find the argument structure before drafting — the cycle's *sketch* phase, engaged by judgment when the argument is tangled, not run on every section.
 
+> This is an optional refinement of the framing produced by [Frame a project](frame-a-project.md), which is the primary path to `projects/<slug>/chosen-framing.md`. The canvas refines or replaces that file once the spatial arrangement is stable.
+
 ## When to use it
 
 Open a canvas when you have 8–15 relevant claim notes on a topic and need to see how they fit together before writing. Below 8 notes the argument isn't ready; above 15, split into sections and do one at a time.

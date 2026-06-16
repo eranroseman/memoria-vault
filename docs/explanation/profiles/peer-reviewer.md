@@ -14,7 +14,7 @@ It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-a
 
 ## Why it's designed this way
 
-**Independence is the design, not a staffing detail.** The agent that synthesizes must not also grade its own work — separation of duties, the anti-rubber-stamp principle. That is why the Peer-reviewer was never merged into the Librarian, however much tooling they share: a checker that inherits the proposer's stance waves through exactly what the gate exists to catch.
+**Independence is the design, not a staffing detail.** The agent that synthesizes must not also grade its own work — which is why the Peer-reviewer was never merged into the Librarian, however much tooling they share. The separation-of-duties / anti-rubber-stamp argument behind that is [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).
 
 **Judgment checks vs engine sweeps.** A retraction lookup gives the same answer on every run — that's an engine. "Does this prose claim actually follow from this source?" requires reading — that's this agent. Splitting by determinism keeps the reproducible checks cheap and auditable while spending LLM judgment only where a verdict requires it.
 
@@ -26,7 +26,7 @@ It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-a
 
 **Not a truth oracle.** It judges whether a claim *traces* and whether an argument *holds*, and says so with calibrated certainty. Truth stays the PI's domain.
 
-**Not the Co-PI's sparring.** The Co-PI questions continuously and informally, inside the conversation; the Peer-reviewer is the formal, independent pass over a finished artifact. The first sharpens thinking; the second certifies work.
+**Not the Co-PI's sparring.** The Peer-reviewer is the formal, independent pass over a finished artifact — it certifies work, where [The Co-PI](co-pi.md)'s continuous in-conversation questioning sharpens thinking.
 
 **Not the sweeps.** If a check is reproducible without judgment, it belongs to an engine, and findings reach the PI the same way — as Inbox cards.
 

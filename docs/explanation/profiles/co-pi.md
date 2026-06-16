@@ -24,7 +24,7 @@ Concentrating every conversation in one agent lets it run Hermes' self-improving
 
 **Not a lane.** It never appears on the board; it converses at the desk and creates cards for others.
 
-**Not a router-only shell.** Delegation is one verb of three. The informal, continuous sparring — questioning a source, branching framings, explaining a decision — is the Co-PI's own work, distinct from the Peer-reviewer's *formal, independent* review pass.
+**Not a router-only shell.** Delegation is one verb of three. The informal, continuous sparring — questioning a source, branching framings, explaining a decision — is the Co-PI's own work, distinct from the formal artifact-level pass run by [The Peer-reviewer](peer-reviewer.md).
 
 **Not an author.** It never writes canonical content, drafts, or even staging artifacts. When the conversation produces something worth keeping, the keeping is delegated or done by the PI.
 

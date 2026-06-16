@@ -24,7 +24,7 @@ The hook calls `hermes kanban create` to create the verify card — it does not 
 
 ## What the automatic trigger is not
 
-The automatic card creation is not automatic verification completion. The card enters the Peer-reviewer's queue; the Peer-reviewer processes it within its normal dispatch window. The result is a recommendation (`agent_recommendation`: `clean`, `issues-found`, `inconclusive`), not an automatic gate. The human still reviews the verification report and decides whether to address gaps or proceed to export.
+The automatic card creation is not automatic verification completion. The card enters the Peer-reviewer's queue; the Peer-reviewer processes it within its normal dispatch window. The result is an `agent_recommendation` — a soft signal, never an automatic gate (the enum and that constraint are owned by [The Peer-reviewer](../profiles/peer-reviewer.md)). The human still reviews the verification report and decides whether to address gaps or proceed to export.
 
 This is consistent with the rest of the system's posture: agents produce recommendations; humans make decisions. The automation eliminates the "forget to trigger verification" failure mode without removing the "read and decide on the findings" step.
 

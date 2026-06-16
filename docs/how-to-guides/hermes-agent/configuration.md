@@ -94,7 +94,7 @@ bash scripts/install.sh --profiles-only --vault <vault>
 .\scripts\install.ps1 -ProfilesOnly -Vault <vault>
 ```
 
-Always edit the shared Hermes env file and re-run `--profiles-only` — hand-editing the installer-managed per-profile `.env` files drifts from the shared source. The seed semantics (never overwrites an existing value; `.env` is never committed) are the installer's: [Installer (bootstrap)](../../reference/installer.md); for the how-to see [Redeploy profiles](../operate/redeploy-profiles.md).
+Always edit the shared Hermes env file and re-run `--profiles-only` — hand-editing the installer-managed per-profile `.env` files drifts from the shared source. How `--profiles-only` seeds each profile's `.env` is in [Redeploy profiles](../operate/redeploy-profiles.md).
 
 ## Verify a configuration change
 
