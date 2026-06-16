@@ -63,7 +63,7 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 
 | Item | Where |
 | --- | --- |
-| `KILOCODE_API_KEY` (model access), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
+| `KILOCODE_API_KEY` (model access), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
 | Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
 | git in the vault | `git init && git add -A && git commit` — obsidian-git, the pre-commit gate, and verify-on-commit need a repo |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
