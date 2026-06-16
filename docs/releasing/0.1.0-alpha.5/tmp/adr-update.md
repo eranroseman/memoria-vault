@@ -72,13 +72,16 @@ by design.
 
 ### 1.4 Accepted-but-partial — by design, already tracked
 
-ADR-69 (engines→operations rename — **CORRECTION: now executed** via #541/#542;
-code lives under `src/.memoria/operations/` and `golden.py`→`golden_restore.py`.
-This supersedes the earlier "not executed" read and the stale `engines/` paths
-in §1.1; confirm only residual `install.sh`/docs references remain),
 ADR-70 (Knowledge-gate dashboard + status-bar indicator #375), ADR-71
 (schema↔form parity test + per-type forms). Open work inside in-progress alpha
 ADRs, not status drift.
+
+(ADR-69 engines→operations rename — **CORRECTION: now fully executed** via
+#541/#542; code lives under `src/.memoria/operations/` and
+`golden.py`→`golden_restore.py`. This supersedes the earlier "not executed" read
+and the stale `engines/` paths in §1.1. It is no longer accepted-but-partial; the
+only residual `engines/` references are doc-only — release plans and ADR-69
+itself — not code.)
 
 ---
 
@@ -201,7 +204,10 @@ feature waits — without them the trigger can never self-detect.
   `[8, 52, 30]` → **drop `8`** (keep 52 and 30); not "[8]→[52]". [M / M–L / S–M]
 - **ADR-16 — systematic-review tooling.** PRISMA 2020 is a *reporting* guideline
   (it flags single-screening as higher-risk rather than "permitting" a method);
-  single-screen-with-verification is accepted by **Cochrane MECIR**. κ **≥0.6**
+  single-screen-with-verification is the **Cochrane Rapid Reviews** recommendation
+  (Garritty et al., J Clin Epidemiol 2021) — note full Cochrane **MECIR (C40)**
+  *mandates* two independent screeners, so this is a rapid-review allowance, not a
+  MECIR one. κ **≥0.6**
   substantial (Landis & Koch); ASReview **SAFE** uses a fixed "last 50
   irrelevant" heuristic (the ~95% recall target comes from other studies, not
   SAFE itself); RoB 2 (Cochrane Handbook **Ch. 8**), ROBINS-I (Ch. 25), GRADE
@@ -274,7 +280,8 @@ feature waits — without them the trigger can never self-detect.
 
 ### 4.2 Now-implementable (small PRs)
 
-- ADR-76 step-1 tooling `pyproject.toml` landed; full wheel migration still deferred [S]
+- ADR-76 step-1 tooling `pyproject.toml` — **done** (landed alpha.4); only the full
+  wheel/deployment migration remains deferred (not a now-item)
 - ADR-41 stamp `review_mode: blocking` + `schema_version` bump [S]
 - ADR-74 static plugin provenance manifest (12 vendored plugins) [S]
 - ADR-39 mechanical checklist as a Linter flag [S]
@@ -380,7 +387,8 @@ or miscited. Corrections applied inline above; logged here for traceability.
 - **arXiv 2501.00274 (LLM-Rubric) dropped** for "binary > Likert" — it is itself
   Likert-based and gives no 30–100 figure. (§3.2 ADR-39)
 - **PRISMA 2020 is a reporting guideline**, it does not "permit" single-screening;
-  Cochrane MECIR is the source for single-screen-with-verification. (§3.2 ADR-16)
+  the source for single-screen-with-verification is **Cochrane Rapid Reviews**
+  (Garritty et al. 2021), *not* MECIR — MECIR C40 mandates dual screening. (§3.2 ADR-16)
 - **ASReview SAFE** = fixed "last 50 irrelevant"; the ~95% recall figure is from
   other studies, not SAFE. RoB 2 = Handbook Ch. 8, ROBINS-I Ch. 25, GRADE Ch. 14
   (not all "Ch. 8"). (§3.2 ADR-16)
