@@ -10,7 +10,7 @@ Memoria ships as a single repo (`memoria-vault`), version **0.1.0-alpha.2**. **T
 
 | Path | Contents | Audience |
 | --- | --- | --- |
-| `scripts/install.sh` / `scripts/install.ps1` (repo root) | The **bootstrap installer**: provisions the stack and derives the vault. `scripts/install.sh` is the real implementation; `scripts/install.ps1` is a thin WSL2 launcher. | End users (run once). |
+| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows production via PowerShell, Linux/WSL testing via bash. Both derive the vault from `src/` and deploy the same profile/runtime source. | End users (run once). |
 | `src/` | **Source files only — never a live vault**: templates, profiles, skills, schemas, dashboards, patterns, and `.obsidian` config. The installer *scaffolds* the vault tree and *populates* it from here. | The installer (and contributors). |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
@@ -53,7 +53,7 @@ Nothing in the distribution model is single-vault by design — you can fork the
 
 | Resource | What collides if shared | Isolation |
 |---|---|---|
-| **Obsidian REST API port** | Both Local REST API plugins bind the same insecure HTTP port; the second to start can't bind, so its `OBSIDIAN_MCP_PORT` serves nothing (or points Hermes at the wrong vault). | A distinct `insecurePort` per vault, with each vault's profiles' `OBSIDIAN_MCP_PORT` matching. |
+| **Obsidian REST API port** | Both Local REST API plugins bind the same HTTPS port; the second to start can't bind, so its `OBSIDIAN_MCP_PORT` serves nothing (or points Hermes at the wrong vault). | A distinct HTTPS port per vault, with each vault's profiles' `OBSIDIAN_MCP_PORT` and `OBSIDIAN_MCP_SSL_VERIFY` matching that instance. |
 | **Hermes profiles** | Profiles substitute one `VAULT_PATH` at install; a shared `HERMES_HOME` points `memoria-*` at whichever vault was installed last, so the other vault's agents read and write the wrong tree. | Unique per-vault aliases (`project2-*`) **or** a separate `HERMES_HOME` per vault. |
 | **Kanban queue** | The board/queue (`hermes kanban`) is Hermes runtime state under `HERMES_HOME`, **not** a file in the vault — so a shared `HERMES_HOME` is one shared queue: cards from both vaults intermix and cron fires against the wrong vault. | A separate `HERMES_HOME` per vault gives each its own independent queue. |
 

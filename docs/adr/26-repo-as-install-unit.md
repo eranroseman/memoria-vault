@@ -25,7 +25,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 ## Decision
 
-**The repo (`memoria-vault`) is the install unit.** A user clones it (or runs the one-line bootstrap that clones it), and the bootstrap installer at the repo root (`scripts/install.sh`, with `scripts/install.ps1` as a thin WSL2 launcher) deploys everything. The repo has three parts with distinct audiences: `scripts/install.sh`/`scripts/install.ps1` (bootstrap), `vault/` (the runtime artifact deployed to a working location off OneDrive on Windows), and `docs/` (developer-facing, not deployed). Consequences that follow as rules:
+**The repo (`memoria-vault`) is the install unit.** A user clones it (or runs the one-line bootstrap that clones it), and the bootstrap installers at the repo root deploy everything: `scripts/install.ps1` for native Windows production and `scripts/install.sh` for Linux/WSL testing. The repo has three parts with distinct audiences: `scripts/install.sh`/`scripts/install.ps1` (bootstrap), `src/` (the runtime artifact source deployed to a working vault), and `docs/` (developer-facing, not deployed). Consequences that follow as rules:
 
 - **`vault/` is not independently installable** — installing requires the whole repo, and any reference from a vault-resident file to `docs/` is a **GitHub URL, never a relative path**, because the deployed vault does not carry them.
 - **Profiles are hand-authored**, not compiled. The seven profile directories under `.memoria/profiles/` are maintained by hand; a profile compiler is **deferred** ([Profile compilation from a shared base](42-profile-compilation.md)) because seven-profile scale does not yet justify the complexity.
@@ -37,7 +37,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 - A `profile-install-drift` detector was once planned to *catch* deployed copies diverging from source; it is **retired** ([ADR-67](67-drift-procedures-keep-or-retire.md)) — the vault-side Linter cannot see `~/.hermes`, and the idempotent re-run is both the detection and the fix.
 - Hand-authoring accepts a known cost: common content (audit behavior, policy invariants, MCP connections) is duplicated across seven `SOUL.md` files kept in lockstep by human review. When that lockstep becomes painful, the deferred compiler proposal is the planned response — and adopting it would supersede the hand-authored clause here.
 - The deployed-vault-carries-no-`docs/` rule is load-bearing: a relative cross-reference from a vault file silently breaks after deployment, so vault→docs links must be GitHub URLs.
-- Windows installs must deploy off OneDrive (the `/mnt/c` OneDrive seam), which the bootstrap handles by copying `vault/` to a working location.
+- Windows installs must deploy off OneDrive, which the bootstrap handles by copying `src/` to a working production vault location.
 
 ## Alternatives considered
 

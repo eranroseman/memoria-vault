@@ -6,8 +6,7 @@
  * then creates a Librarian card instructing a `patterns_run` invocation
  * (ADR-53: the patterns MCP is the single audited runner) with the chosen
  * pattern id and the active note as input_ref. Mirrors delegate-task.js:
- * the card-create goes through `bash -lc` (wrapped in wsl.exe on Windows)
- * so it reaches hermes in WSL.
+ * the card-create goes through `bash -lc` so it reaches the native Hermes CLI.
  */
 
 const ASSIGNEE = "memoria-librarian";
@@ -16,12 +15,10 @@ const PATTERNS_DIR = "system/patterns/";
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const onWindows = process.platform === "win32";
-
   const run = (sh) =>
     new Promise((resolve, reject) => {
-      const file = onWindows ? "wsl.exe" : "bash";
-      const args = onWindows ? ["bash", "-lc", sh] : ["-lc", sh];
+      const file = "bash";
+      const args = ["-lc", sh];
       cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
         if (err) return reject(new Error(String(stderr || err.message || "").trim()));
         resolve(stdout);

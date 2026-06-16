@@ -15,7 +15,7 @@ parent: Tutorials
 
 ## Prerequisites
 
-- Linux or WSL2 (on Windows, `install.ps1` gates WSL2 and runs the same installer inside it)
+- Windows PowerShell 5.1+ for production, or Linux/WSL for the test installer
 - [Git](https://git-scm.com/) installed (the installer checks and tells you if anything is missing — it provisions the rest itself, including Hermes)
 - [Obsidian](https://obsidian.md/) installed, or let the installer guide you through it
 

@@ -21,9 +21,12 @@ env_requires:
   # desktop API (http://localhost:23119) — no ZOTERO_API_KEY / _LIBRARY_ID /
   # _LIBRARY_TYPE needed. Add a Web API key only if you switch to the cloud API.
   - name: OBSIDIAN_MCP_PORT
-    description: "Port of the Local REST API plugin's insecure HTTP server, where its native MCP is served (http://127.0.0.1:<port>/mcp). Must match insecurePort in the plugin's data.json (default 27123). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
+    description: "Port of the Local REST API plugin's HTTPS server, where its native MCP is served (https://127.0.0.1:<port>/mcp). Must match the plugin's HTTPS port (default 27124). Give a sandbox and a production vault distinct ports so both run at once (ADR-31)."
     required: false
-    default: "27123"
+    default: "27124"
+  - name: OBSIDIAN_MCP_SSL_VERIFY
+    description: "Path to the Local REST API plugin's exported PEM certificate/CA bundle; passed to Hermes mcp_servers.obsidian.ssl_verify so HTTPS stays verified."
+    required: true
   - name: NCBI_EMAIL
     description: "Contact email used as the Crossref `mailto` (polite pool) when cite-check / retraction-check query api.crossref.org. Crossref and Open Retractions need no API key."
     required: false

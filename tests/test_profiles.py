@@ -41,6 +41,19 @@ def test_configs_parse_and_reference_real_servers():
                     assert (SRC / rel).is_file(), f"{name}: {server} references missing {rel}"
 
 
+def test_obsidian_mcp_uses_verified_https():
+    """ADR-31/#527: vault MCP bearer traffic stays on verified loopback HTTPS."""
+    for name in EXPECTED:
+        cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
+        obsidian = cfg["mcp_servers"]["obsidian"]
+        assert obsidian["url"] == "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+        assert obsidian["ssl_verify"] == "${OBSIDIAN_MCP_SSL_VERIFY}"
+
+        dist = yaml.safe_load((PROFILES / name / "distribution.yaml").read_text(encoding="utf-8"))
+        env_names = {item["name"] for item in dist["env_requires"]}
+        assert "OBSIDIAN_MCP_SSL_VERIFY" in env_names
+
+
 def test_every_agent_has_a_lane_override():
     for name in EXPECTED:
         short = name.removeprefix("memoria-")

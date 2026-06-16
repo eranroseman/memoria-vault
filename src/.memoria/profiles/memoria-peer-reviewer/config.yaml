@@ -16,13 +16,14 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
   obsidian:
-    # Native MCP from the Local REST API plugin over HTTP (loopback). Replaces uvx
+    # Native MCP from the Local REST API plugin over HTTPS (loopback). Replaces uvx
     # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
     # (~/.hermes/.env) so a sandbox + a production vault can serve different ports
-    # and coexist. Requires the plugin's HTTP server enabled on that port. Hermes
-    # can't skip TLS verify for the self-signed HTTPS port, hence plain HTTP on
-    # loopback. The exact `Authorization: Bearer` header is required by the plugin.
-    url: "http://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    # and coexist. OBSIDIAN_MCP_SSL_VERIFY points Hermes at the plugin's exported
+    # PEM cert/CA bundle. The exact `Authorization: Bearer` header is required by
+    # the plugin.
+    url: "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
+    ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"
     timeout: 30
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"

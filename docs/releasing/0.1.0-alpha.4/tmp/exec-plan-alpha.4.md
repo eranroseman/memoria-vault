@@ -80,11 +80,11 @@ from the original disposition.
 | #438 | Unpaywall OA lookup FIRST in extraction | add an Unpaywall tier ahead of PMC + local PDF; OA PDF goes through the same detect path |
 | #437 | PubMed/NCBI as a 4th metadata source | add `fetch_pubmed` to resolve/merge cross-check (MeSH, PMID/PMCID, pub types) |
 
-**B. Security / transport — deferred out (2026-06-15)**
+**B. Security / transport — in after 2026-06-16 revalidation**
 
 | # | Title | One-line scope |
 |---|---|---|
-| #527 | HTTPS for Obsidian Local REST API + native MCP | **deferred:** keep ADR-31's documented loopback-HTTP residual; revisit later via OS/Python trust-store or mkcert (not a Hermes-only blocker) |
+| #527 | HTTPS for Obsidian Local REST API + native MCP | implement Hermes `ssl_verify` with the plugin's exported PEM cert/CA bundle; retire loopback HTTP as the shipped path |
 
 **C. Defects / quality / contradictions**
 
@@ -108,7 +108,7 @@ from the original disposition.
 | #183 | Obsidian forms for structured capture | **done:** Modal Forms source capture writes proposed source notes + Inbox candidates; project-start form reserved for #154 |
 | #154 | Automate start-a-writing-project | form → script scaffolds `40-workbench/<project>/` + Mapper scope card |
 | #336 | Batch worklists (Bases) | ADR-54 worklist surface; per-row `decision`; one aggregate prompt |
-| #381 | Remaining map skills | **deferred** (with #379/#344): score-* gated on the calibration spec (needs real-data shadow calibration); graph-claims/canvas-hub revisit later |
+| #381 | Map graph/canvas skills | split: graph-claims + canvas-hub stay alpha.4; score-* moved to #559 behind #379 |
 | #329 | Obsidian project-management research | survey PM plugins/methods → adopt/borrow/reject; feeds the project workspace |
 
 **E. Runtime packaging (the `install-a-real-package.md` workstream)**
@@ -135,11 +135,11 @@ need.
 
 | # | Tracks | Disposition |
 |---|---|---|
-| #414 | ADR-64 native Windows support | **blocked/deferred:** primary Hermes docs still label native Windows early beta; ADR-64 remains deferred and the WSL2-only rule stays in force |
+| #414 | ADR-64 native Windows support | accepted after live Hermes-doc revalidation; production Windows is native |
 | #439 | ADR-19 Tier 2 Mapper handoff | **done:** `hub_handoff.py` delegates fired `hub-threshold` findings to the `map` lane with staging-only allowed paths; ADR-19 updated |
-| #412 | ADR-62 measurement/verification harnesses | **deferred** — instrument once more behavior ships |
-| #370 | ADR-38 pre-file similarity ratchet | **deferred** — depends on the deferred calibration discipline (#379) |
-| #296 | Migrate Windows WSL2 → native | folds into #414's WSL2-rule supersession; track the broader migration here |
+| #412 | ADR-62 measurement/verification harnesses | split out of alpha.4 to #560/#561; no blocked omnibus remains in the milestone |
+| #370 | ADR-38 pre-file similarity ratchet | split: alpha.4 is shadow/report-only; tuning/enforcement moved to #562 |
+| #296 | Migrate Windows WSL2 → native | implement two-script split: Windows production via native `install.ps1`, Linux/WSL testing via `install.sh` |
 
 **H. Structural — `engines → operations` rename (ADR-69) — added → in**
 
@@ -152,21 +152,20 @@ decisions are made.
 
 ### 2.2 Scope decisions (2026-06-15)
 
-**Deferred out of alpha.4:** #527 (HTTPS transport — keep ADR-31's documented
-residual); #379 + #381 + #344 (calibration spec, score-* map skills, diversity
-reserve — need real-data shadow calibration); #412 (ADR-62 harnesses); #370
-(ADR-38 ratchet — depends on the deferred calibration). Their issues stay open.
+**Split/deferred out of alpha.4 after 2026-06-16 revalidation:** #379 + #559
+(calibration spec and score-* map skills), #344 (diversity reserve), #560/#561
+(ADR-62 harnesses), and #562 (calibrated/enforcing ADR-38 ratchet). #412 is now
+the split record with no alpha.4 milestone. #381 and #370 retain only their
+unblocked alpha.4 slices.
 
 **Added to alpha.4 (over the original deferred disposition):**
 
 - **ADR-69 rename** — execute `engines → operations` now (Workstream H).
-- **#414 native Windows (ADR-64) — cadence verdict: blocked/deferred.** The
-  primary local Hermes docs (the local Hermes Windows Native guide
-  and Installation guide) confirm native CLI/cron/gateway/MCP,
-  but still label native Windows **early beta** and recommend WSL2 for the most
-  battle-tested Windows setup. That fails ADR-64's GA revisit criterion, so this
-  checkpoint does **not** accept ADR-64, does **not** supersede the WSL2-only
-  rule, and leaves #414/#296 open for a future attended native-Windows pass.
+- **#414/#296 native Windows (ADR-64).** Live Hermes docs now document native
+  Windows support for the runtime surfaces Memoria uses. Accept ADR-64, supersede
+  the production WSL2-only rule, and implement the two-script split: native
+  PowerShell installer for Windows production; bash installer for Linux/WSL
+  testing.
 - **#439 Mapper Tier 2 (ADR-19)** — build the hub-threshold → agent-drafted
   hub/MOC handoff (review-gated; `notes/hubs/` stays approved); update ADR-19's
   status from "Tier 2 deferred" to built.
@@ -205,9 +204,10 @@ surface; deferred items (§2.2) are not built this checkpoint.
    supercharged-links under the current baseline). User-skipped for this run:
    #154 and #329.
 6. **Mapper Tier 2 (#439, ADR-19).** Build the hub/MOC handoff; update ADR-19.
-7. **Native Windows (#414, ADR-64) — blocked/deferred.** The primary Hermes docs
-   still label native Windows early beta, so ADR-64 remains deferred; no
-   installer/ADR-31/AGENTS port starts in alpha.4.
+7. **Native Windows (#414/#296, ADR-64).** Accept ADR-64, replace the WSL2
+   production launcher with a native Windows `install.ps1`, keep `install.sh`
+   as the Linux/WSL testing path, and update ACP/QuickAdd/ADR-31 transport
+   assumptions.
 
 ## 4. Concrete steps
 
@@ -264,11 +264,13 @@ evidence, real transcripts:
   the Mapper, then a hub proposal is staged under `notes/fleeting/maps/` plus
   `inbox/` and `notes/hubs/` stays PI-approved. *Prove with:* focused
   `hub_handoff.py` tests and the operation self-test on a seeded vault.
-- **#414 (native Windows):** Blocked before the port: primary Hermes docs still
-  call native Windows early beta. *Prove with:* local doc excerpts in ADR-64 and
-  a future attended native-Windows install before accepting the ADR.
-- **Deferred (#412, #370):** confirm each ADR is `status: deferred` with a current
-  *When this matters*; record the cadence verdict in §8 — do **not** build.
+- **#414/#296 (native Windows):** Given native Windows production, when
+  `scripts/install.ps1` runs on a disposable Windows vault, then Hermes, the
+  profiles, policy plugin, crons, ACP, and HTTPS Obsidian MCP all use native
+  Windows paths. *Prove with:* static parse now; attended Windows install before
+  release-candidate signoff.
+- **#370/#381 splits:** alpha.4 carries only unblocked slices; deferred
+  calibration/enforcement work is tracked in #559/#562.
 
 ## 6. Idempotence and recovery
 
@@ -354,7 +356,7 @@ evidence, real transcripts:
 - [x] 2026-06-15 — D #336 batch worklists implemented on `feat/alpha4-batch-worklists`: file-backed `worklist-item` rows live under `system/worklists/`, `worklists.base` groups them by worklist/decision/group, and `worklists.py` emits one aggregate Inbox prompt per report.
 - [x] 2026-06-15 — D #378 design-system enforcement implemented on `feat/alpha4-design-enforcement`: `design-system-drift` reports off-palette colors, font-scale drift, emoji titles, ad-hoc callouts, and terminology/capitalization drift; `memoria-link-colors.css` ships lifecycle link accents.
 - [x] 2026-06-16 — G #439 Mapper Tier 2 implemented on `feat/alpha4-mapper-tier2`: `hub_handoff.py` reads `hub-threshold` findings and creates idempotent Librarian `map` cards constrained to `notes/fleeting/maps/` and `inbox/`; ADR-19 now records Tier 2 as built and `notes/hubs/` remains PI-approved.
-- [x] 2026-06-16 — G #414 cadence review completed on `feat/alpha4-native-windows`: primary Hermes docs confirm native Windows exists but remains early beta, so ADR-64 stays deferred, #414/#296 stay open, and the WSL2-only rule is not superseded. Skipped by user for this run: #154, #329. #521 remains deferred packaging.
+- [x] 2026-06-16 — G #414/#296 revalidated against live Hermes docs on `refactor/alpha4-unblocked`: ADR-64 accepted; Windows production moves to native `install.ps1`; Linux/WSL remains the testing installer. #527 unblocked by Hermes `ssl_verify`. #381/#370/#412 split so alpha.4 carries no blocked omnibus. Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 
 ## 8. Execution log
 
@@ -374,6 +376,12 @@ evidence, real transcripts:
   the packaging note now also in alpha.5/tmp), removed the deferred-#527
   validation claim, added acceptance for the rename (H), #439, and #414, and
   corrected the retired-design-doc count. The plan is executable as written.
+- 2026-06-16 — Revalidation pass: live Hermes MCP docs document `ssl_verify`
+  for HTTP/SSE MCP servers, so #527 is in scope and ADR-31 moves to verified
+  HTTPS. Live Hermes Windows docs document native Windows support for the
+  runtime surfaces Memoria uses, so ADR-64 is accepted and #296 becomes the
+  two-installer production/testing split. Split #381 -> #559, #412 -> #560/#561,
+  and #370 -> #562 to keep alpha.4 free of blocked/deferred omnibus scope.
 - 2026-06-15 — H implementation branch prepared: moved
   `src/.memoria/engines/` to `src/.memoria/operations/` by ADR-69 category,
   renamed `pipeline.py` → `runner.py` and `golden.py` → `golden_restore.py`,
@@ -431,14 +439,14 @@ evidence, real transcripts:
 ## 9. Surprises & discoveries
 
 - Several alpha.4-milestoned issues began as **deferred-ADR tracking issues**
-  (#521, #414, #412, #370, #439). The 2026-06-15 decision pulled **#414** and
-  **#439** into scope (accepting ADR-64 + superseding the WSL2-only rule, and
-  building ADR-19 Tier 2); #412, #370, and the full ADR-76 stay deferred.
+  (#521, #414, #412, #370, #439). The 2026-06-16 revalidation pulled #414/#296
+  and #527 into implementation, narrowed #370 to report-only/shadow mode, and
+  split #412 out of alpha.4.
 - Four PI-surface issues (#380, #375, #378, #343) cite **retired `docs/design/*`
   paths**. Each needs its reference repointed to the current ADR/doc before build
   — a zero-contradiction fix that travels with the feature.
-- #381 is blocked by #379 (calibration threshold spec), which is **not in the
-  alpha.4 milestone** — a cross-milestone dependency to surface.
+- #381's score-* half is blocked by #379; that half is now #559. #381 itself is
+  graph/canvas only.
 
 ## 10. Interfaces & dependencies
 
@@ -446,15 +454,14 @@ evidence, real transcripts:
   and `…/ingest/resolve_merge.py` (`fetch_*`; #437) — these move under
   `operations/` once Workstream H lands, so sequence H first. NCBI/Unpaywall keys
   already provisioned in profile `.env`.
-- **Transport:** ADR-31 native Obsidian MCP over loopback. #527 (HTTPS) is
-  **deferred** — the residual stays documented; later resolve via OS/Python
-  trust-store or mkcert (not a Hermes-only blocker).
+- **Transport:** ADR-31 native Obsidian MCP over verified loopback HTTPS.
+  #527 uses Hermes `ssl_verify` with the plugin's exported PEM cert/CA bundle.
 - **Rename (ADR-69):** `src/.memoria/engines/` → `operations/` across
   `conftest.py`, `install.sh`, tests, docs, imports — a standalone structural PR
   (Workstream H).
-- **Native Windows (#414, ADR-64):** accept ADR-64 + supersede the WSL2-only
-  rule; touches the installer, the ADR-31 WSL2↔Windows bridge, and the
-  analysis-stack wheels. Verify Hermes native support against `~/.hermes` first.
+- **Native Windows (#414/#296, ADR-64):** accept ADR-64 + supersede the
+  production WSL2-only rule; Windows production uses native `install.ps1`, while
+  Linux/WSL remains the testing installer.
 - **Mapper Tier 2 (#439, ADR-19):** a fired hub-threshold finding → a drafted hub
   note, review-gated; `notes/hubs/` stays approved.
 - **Upgrade:** `golden_restore.py` manifest + ADR-55 (#339).
@@ -507,6 +514,21 @@ evidence, real transcripts:
 
 - 2026-06-16: Started #439 in `feat/alpha4-mapper-tier2`; implementing ADR-19 Tier 2 as a deterministic Linter handoff into the Librarian `map` lane, with staged proposal paths only (`notes/fleeting/maps/`, `inbox/`) and no `notes/hubs/` write permission.
 
-## Execution log — #414 native Windows cadence review
+## Execution log — #414/#296 native Windows revalidation
 
-- 2026-06-16: Started #414 in `feat/alpha4-native-windows`; read issue #414/#296, ADR-64/ADR-31, and the local primary Hermes docs. Verdict: blocked/deferred because Hermes native Windows is still documented as early beta, not GA. Recording the verdict without starting the installer/PowerShell/QuickAdd port.
+- 2026-06-16: Earlier local-doc verdict is superseded by live Hermes docs. Started
+  `refactor/alpha4-unblocked`; accepted ADR-64, replaced the PowerShell WSL
+  launcher with a native Windows installer, removed WSL wrapping from Obsidian
+  QuickAdd scripts, and kept `install.sh` as the Linux/WSL testing path.
+- 2026-06-16: Attended native Windows validation on disposable
+  `C:\Users\eranr\Memoria-alpha4-test`: `install.ps1 -NoApps` populated the
+  vault and installed MCP deps; `install.ps1 -ProfilesOnly` resolved Hermes via
+  `uv run --project ... --extra mcp hermes`, installed all five profiles, seeded
+  shared env values including the optional-but-runtime-required
+  `OBSIDIAN_MCP_PORT`, deployed the policy-gate plugin for the Librarian, and
+  refreshed all five Memoria cron jobs without duplicates. Verified `profile list`, `cron list`, the vault venv Python, and the deployed Librarian policy
+  plugin. After exporting the live Local REST API certificate to a PEM bundle,
+  `hermes -p memoria-librarian mcp test obsidian` connected to
+  `https://127.0.0.1:27124/mcp` over verified HTTPS and discovered 16 native
+  Obsidian tools. Final smoke wrote `inbox/windows-https-mcp-smoke.md` through
+  the Obsidian MCP with body `windows https mcp smoke`.

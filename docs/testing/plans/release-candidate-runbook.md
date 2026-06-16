@@ -26,12 +26,12 @@ adds the exact commands plus the ingest/runtime setup.
 
 ## 0. Preconditions
 
-- [ ] Clean **Ubuntu / WSL2** box (Hermes runs in WSL2; Obsidian/Zotero on the Windows side).
-- [ ] WSL2 **mirrored networking** on (`networkingMode=mirrored` in `.wslconfig`) — required for the agent to reach the Obsidian Local REST API on `127.0.0.1` (the native-MCP HTTP port `OBSIDIAN_MCP_PORT`).
+- [ ] Clean **native Windows production** box for the attended production install, plus a clean **Ubuntu / WSL2** box for the Linux test installer.
+- [ ] Local REST API HTTPS configured with `OBSIDIAN_MCP_PORT` and `OBSIDIAN_MCP_SSL_VERIFY`. On the WSL test box only, mirrored networking must be on if Obsidian runs on Windows.
 - [ ] Hermes installed and on `PATH` (`hermes version`).
 - [ ] A **throwaway vault** dir for the install, e.g. `export RV=$HOME/Memoria-candidate`.
 - [ ] Fresh clone: `git clone https://github.com/eranroseman/memoria-vault.git && cd memoria-vault` — record the commit (`git rev-parse --short HEAD`).
-- [ ] `~/.hermes/.env` has the scholarly-API keys (`S2_API_KEY`, `OPENALEX_API_KEY`, `NCBI_EMAIL`) and `OBSIDIAN_API_KEY`; the installer sets `OBSIDIAN_VAULT_PATH`. **Never print key values.**
+- [ ] The Hermes global `.env` has the scholarly-API keys (`S2_API_KEY`, `OPENALEX_API_KEY`, `NCBI_EMAIL`), `OBSIDIAN_API_KEY`, `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY`; the installer propagates them per profile. **Never print key values.**
 
 ## S0–S1 — static + pytest component suite  → records G6 (partial), S0, S1
 
@@ -70,7 +70,7 @@ Detail: [Installer test plan](installer-test-plan.md).
 ## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
-- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault via the Local REST API plugin's **native MCP over HTTP** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` in `~/.hermes/.env`, enable the plugin's HTTP server on that port, reload the Obsidian window to bind it. The port lives in the URL, so the candidate and any other vault coexist on different ports — no need to close another vault.
+- [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault via the Local REST API plugin's **native MCP over verified HTTPS** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` and `OBSIDIAN_MCP_SSL_VERIFY` in `~/.hermes/.env`, enable the plugin's HTTPS server on that port, reload the Obsidian window to bind it. The port lives in the URL, so the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
 
 Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](headless-test-plan.md).

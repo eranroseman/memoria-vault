@@ -60,7 +60,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [28](28-write-gate-as-plugin.md) | The vault write gate is a Hermes Python plugin, not a shell hook | accepted |
 | [29](29-testing-framework.md) | A layered testing framework, not a pile of plans | accepted |
 | [30](30-deterministic-ingest-pipeline.md) | Tiered ingest pipeline (capture → fallback-chained enrichment → gated write) | accepted |
-| [31](31-native-obsidian-mcp.md) | Vault access via the Local REST API plugin's native MCP (HTTP), not uvx mcp-obsidian | accepted |
+| [31](31-native-obsidian-mcp.md) | Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian | accepted |
 | [32](32-external-access-over-mcp.md) | Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted | accepted |
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
 | [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | deferred |
@@ -93,7 +93,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | deferred |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | deferred |
 | [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | deferred |
-| [64](64-native-windows-support.md) | Native Windows support (deferred): the port approach | deferred |
+| [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
 | [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | deferred |
 | [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |

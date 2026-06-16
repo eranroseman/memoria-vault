@@ -11,7 +11,7 @@ Five steps from zero to a working vault with the Co-PI answering. For the full w
 
 ## Prerequisites
 
-- Git on your `PATH`; on **Windows**, WSL2 enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install))
+- Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
 - The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md))
 
@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 ```
 
 ```powershell
-# Windows (PowerShell): gates WSL2, then runs the Linux installer
+# Windows production (PowerShell): native Hermes + native vault
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
@@ -38,6 +38,8 @@ The installer provisions Hermes, scaffolds your runtime vault (default `~/Memori
 ```bash
 KILOCODE_API_KEY=...      # model access
 OBSIDIAN_API_KEY=...      # 64-char hex from the Local REST API plugin
+OBSIDIAN_MCP_PORT=27124
+OBSIDIAN_MCP_SSL_VERIFY=/absolute/path/to/obsidian-local-rest-api.pem
 OPENALEX_API_KEY=...      # enrichment + discovery
 ```
 

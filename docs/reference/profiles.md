@@ -61,7 +61,7 @@ From each profile's `config.yaml` (`mcp_servers` — the only place Hermes loads
 | Server | copi | librarian | writer | peer-reviewer | engineer |
 | --- | --- | --- | --- | --- | --- |
 | `policy` (the write gate) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `obsidian` (Local REST API native MCP, loopback HTTP) | ✓ (reads only, by lane) | ✓ | ✓ | ✓ | ✓ |
+| `obsidian` (Local REST API native MCP, verified loopback HTTPS) | ✓ (reads only, by lane) | ✓ | ✓ | ✓ | ✓ |
 | `ingest` (the deterministic pipeline) | ✓ (read/compute) | ✓ | — | — | — |
 | `cluster` (typed graph + topics, read-only) | ✓ | ✓ | — | — | — |
 | `tasks` (`delegate_route_task`) | ✓ | — | — | — | — |

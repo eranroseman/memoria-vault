@@ -4,18 +4,16 @@
  * Prompts for a URL and creates an `intake:source` card on the Librarian lane
  * (`hermes kanban create`). The Librarian resolves the URL (DOI / identifiers)
  * during ingest. Mirrors capture-from-zotero.js: the card-create goes through
- * `bash -lc` (wrapped in wsl.exe on Windows) so it reaches hermes in WSL.
+ * `bash -lc` so it reaches the native Hermes CLI.
  */
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const onWindows = process.platform === "win32";
-
   const run = (sh) =>
     new Promise((resolve, reject) => {
-      const file = onWindows ? "wsl.exe" : "bash";
-      const args = onWindows ? ["bash", "-lc", sh] : ["-lc", sh];
+      const file = "bash";
+      const args = ["-lc", sh];
       cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
         if (err) return reject(new Error(String(stderr || err.message || "").trim()));
         resolve(stdout);

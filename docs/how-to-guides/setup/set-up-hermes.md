@@ -22,7 +22,8 @@ Fill the API secrets, propagate them into the five profiles, and verify that Her
 ```env
 KILOCODE_API_KEY=...                  # model access — the shipped provider is kilocode (kilo.ai)
 OBSIDIAN_API_KEY=<64-char hex apiKey from the Local REST API plugin>
-OBSIDIAN_MCP_PORT=27123               # must equal the Local REST API insecure HTTP port ([Set up Obsidian](set-up-obsidian.md))
+OBSIDIAN_MCP_PORT=27124               # must equal the Local REST API HTTPS port ([Set up Obsidian](set-up-obsidian.md))
+OBSIDIAN_MCP_SSL_VERIFY=/absolute/path/to/obsidian-local-rest-api.pem
 OPENALEX_API_KEY=...                  # openalex.org/settings/api — required since 2026-02 (sent as ?api_key=)
 S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
 NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
