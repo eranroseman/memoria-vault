@@ -523,8 +523,11 @@ evidence, real transcripts:
 - 2026-06-16: Attended native Windows validation on disposable
   `C:\Users\eranr\Memoria-alpha4-test`: `install.ps1 -NoApps` populated the
   vault and installed MCP deps; `install.ps1 -ProfilesOnly` resolved Hermes via
-  `uv run --project ... hermes`, installed all five profiles, deployed the
-  policy-gate plugin for the Librarian, and created all five Memoria cron jobs.
-  Verified `profile list`, `cron list`, the vault venv Python, and the deployed
-  Librarian policy plugin. Remaining live check: configure Obsidian Local REST
-  API HTTPS cert/API key and smoke the `obsidian` MCP.
+  `uv run --project ... --extra mcp hermes`, installed all five profiles, seeded
+  shared env values including the optional-but-runtime-required
+  `OBSIDIAN_MCP_PORT`, deployed the policy-gate plugin for the Librarian, and
+  refreshed all five Memoria cron jobs without duplicates. Verified `profile list`, `cron list`, the vault venv Python, and the deployed Librarian policy
+  plugin. After exporting the live Local REST API certificate to a PEM bundle,
+  `hermes -p memoria-librarian mcp test obsidian` connected to
+  `https://127.0.0.1:27124/mcp` over verified HTTPS and discovered 16 native
+  Obsidian tools.
