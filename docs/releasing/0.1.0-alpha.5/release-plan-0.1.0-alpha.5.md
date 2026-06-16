@@ -40,12 +40,12 @@ Definitions:
 
 | Gate | Proves | Verified by | Issues |
 | --- | --- | --- | --- |
-| G1 | Decisions are recorded: gate-trio ADRs + adr-update housekeeping/retirements; the §13.1 conservative maturity default is set; the §D3 spike is resolved (native view or fallback). | S0 + ADR index | [#577](https://github.com/eranroseman/memoria-vault/issues/577), [#576](https://github.com/eranroseman/memoria-vault/issues/576) |
-| G2 | Spine artifacts exist: `thesis` + `project` note types, templates, `projects/<slug>/` scaffold, gated lifecycle. | S1/S2 | [#578](https://github.com/eranroseman/memoria-vault/issues/578) |
-| G3 | The deterministic engine works and is safe: structural-impact Operation with write-only-on-change materialization + maturity gate; five gap kinds; saturation conditions 1–2 + refutation stamp; survey mode. | S1 | [#579](https://github.com/eranroseman/memoria-vault/issues/579), [#580](https://github.com/eranroseman/memoria-vault/issues/580) |
-| G4 | A PI can drive a project end-to-end from Obsidian: start-a-project on-ramp, dashboards rendered, writing-emits-gaps, thesis supersession. | S3/S5 | [#581](https://github.com/eranroseman/memoria-vault/issues/581), [#154](https://github.com/eranroseman/memoria-vault/issues/154), [#381](https://github.com/eranroseman/memoria-vault/issues/381) |
-| G5 | The gate is measurable: attention instrumentation emits PI-touch metrics into fleet-health (instrument-as-gate, the safety valve for the expanded cut). | S4 | [#337](https://github.com/eranroseman/memoria-vault/issues/337) |
-| G6 | The cheap unblocked slices land: `review_mode` stamp, mechanical checklist, diversity reserve, shadow ratchet, ADR-65 doc-fix + start-now logs. | S0/S1 | [#374](https://github.com/eranroseman/memoria-vault/issues/374), [#372](https://github.com/eranroseman/memoria-vault/issues/372), [#344](https://github.com/eranroseman/memoria-vault/issues/344), [#370](https://github.com/eranroseman/memoria-vault/issues/370), [#415](https://github.com/eranroseman/memoria-vault/issues/415), [#583](https://github.com/eranroseman/memoria-vault/issues/583) |
+| G1 | Decisions are recorded: gate-trio ADRs + adr-update housekeeping/retirements; the §13.1 conservative maturity default is set; the §D3 spike is resolved (native view or fallback). | S0 + ADR index | Gate [#588](https://github.com/eranroseman/memoria-vault/issues/588); implementation [#577](https://github.com/eranroseman/memoria-vault/issues/577), [#576](https://github.com/eranroseman/memoria-vault/issues/576) |
+| G2 | Spine artifacts exist: `thesis` + `project` note types, templates, `projects/<slug>/` scaffold, gated lifecycle. | S1/S2 | Gate [#589](https://github.com/eranroseman/memoria-vault/issues/589); implementation [#578](https://github.com/eranroseman/memoria-vault/issues/578) |
+| G3 | The deterministic engine works and is safe: structural-impact Operation with write-only-on-change materialization + maturity gate; five gap kinds; saturation conditions 1–2 + refutation stamp; survey mode. | S1 | Gate [#590](https://github.com/eranroseman/memoria-vault/issues/590); implementation [#579](https://github.com/eranroseman/memoria-vault/issues/579), [#580](https://github.com/eranroseman/memoria-vault/issues/580) |
+| G4 | A PI can drive a project end-to-end from Obsidian: start-a-project on-ramp, dashboards rendered, writing-emits-gaps, thesis supersession. | S3/S5 | Gate [#591](https://github.com/eranroseman/memoria-vault/issues/591); implementation [#581](https://github.com/eranroseman/memoria-vault/issues/581), [#154](https://github.com/eranroseman/memoria-vault/issues/154), [#381](https://github.com/eranroseman/memoria-vault/issues/381) |
+| G5 | The gate is measurable: attention instrumentation emits PI-touch metrics into fleet-health (instrument-as-gate, the safety valve for the expanded cut). | S4 | Gate [#592](https://github.com/eranroseman/memoria-vault/issues/592); implementation [#337](https://github.com/eranroseman/memoria-vault/issues/337) |
+| G6 | The cheap unblocked slices land: `review_mode` stamp, mechanical checklist, diversity reserve, shadow ratchet, ADR-65 doc-fix + start-now logs. | S0/S1 | Gate [#593](https://github.com/eranroseman/memoria-vault/issues/593); implementation [#374](https://github.com/eranroseman/memoria-vault/issues/374), [#372](https://github.com/eranroseman/memoria-vault/issues/372), [#344](https://github.com/eranroseman/memoria-vault/issues/344), [#370](https://github.com/eranroseman/memoria-vault/issues/370), [#415](https://github.com/eranroseman/memoria-vault/issues/415), [#583](https://github.com/eranroseman/memoria-vault/issues/583) |
 
 ## 3. Validation — stages
 
@@ -97,10 +97,9 @@ Deliberately later, each for a named reason (per-artifact deferred set lives in 
   [#220](https://github.com/eranroseman/memoria-vault/issues/220),
   [#187](https://github.com/eranroseman/memoria-vault/issues/187).
 
-**Precondition (not alpha.5 scope):** finish the alpha.4 closeout —
-[#296](https://github.com/eranroseman/memoria-vault/issues/296),
-[#414](https://github.com/eranroseman/memoria-vault/issues/414),
-[#527](https://github.com/eranroseman/memoria-vault/issues/527) (implemented, pending merge/close).
+**Completed precondition:** alpha.4 closeout is done — [#296](https://github.com/eranroseman/memoria-vault/issues/296),
+[#414](https://github.com/eranroseman/memoria-vault/issues/414), and
+[#527](https://github.com/eranroseman/memoria-vault/issues/527) are closed, so they do not block alpha.5.
 
 ## 6. Known limitations (state in the release notes)
 
