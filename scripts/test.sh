@@ -57,10 +57,11 @@ l0() {
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
-  # Vault lint over the live tree. dashboard-field-drift is GATED (a dashboard
-  # querying a field no template emits is a silent failure — CI gates it too);
+  # Vault lint over the live tree. dashboard-field-drift and design-system-drift are
+  # GATED: dashboard field drift is a silent failure, and design drift means the
+  # shipped vault no longer matches its visual source of truth.
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/operations/integrity/linter/detectors.py" --vault src --gate dashboard-field-drift
+  run python3 "$P/operations/integrity/linter/detectors.py" --vault src --gate dashboard-field-drift,design-system-drift
 }
 
 case "${1:-all}" in

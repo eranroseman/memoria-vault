@@ -100,7 +100,7 @@ from the original disposition.
 |---|---|---|
 | #380 | Assist surface (Find/Search/Patterns/Ask/Draft/Explore) | **done:** palette/selection QuickAdd verbs + pane docs route every assist to staged proposals |
 | #375 | Status-bar ambient indicator | one indicator: Linter verdict + queue depths · cites retired design doc |
-| #378 | Design-system enforcement | Linter anti-pattern checks + lifecycle link coloring · cites retired design doc |
+| #378 | Design-system enforcement | **done:** Linter anti-pattern checks + lifecycle link coloring shipped; retired design-doc pointer resolved to current docs |
 | #376 | Callout producers `[!suggestions]` / `[!verification]` | deterministic top-K + LLM line (ADR-57 split) |
 | #377 | verify-on-commit trigger | draft commit → verify-lane card |
 | #343 | Graded-loudness routing | alert→push, block→hold until ack, quiet/notice pull-only · cites retired design doc |
@@ -357,8 +357,8 @@ evidence, real transcripts:
 - [x] 2026-06-15 — D #145 property display implemented on `feat/alpha4-property-display`: lifecycle/state order is surfaced in templates, ingest emitters, Bases, docs, and shipped property-badge CSS.
 - [x] 2026-06-15 — D #183 structured capture forms implemented on `feat/alpha4-structured-forms`: Modal Forms source capture writes proposed source notes + Inbox candidates; project-start form is available for #154 without implementing #154.
 - [x] 2026-06-15 — D #336 batch worklists implemented on `feat/alpha4-batch-worklists`: file-backed `worklist-item` rows live under `system/worklists/`, `worklists.base` groups them by worklist/decision/group, and `worklists.py` emits one aggregate Inbox prompt per report.
-- [ ] (next) D — continue PI surface (#378). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
-- [ ] (next) #439 Mapper Tier 2 (update ADR-19).
+- [x] 2026-06-15 — D #378 design-system enforcement implemented on `feat/alpha4-design-enforcement`: `design-system-drift` reports off-palette colors, font-scale drift, emoji titles, ad-hoc callouts, and terminology/capitalization drift; `memoria-link-colors.css` ships lifecycle link accents.
+- [ ] (next) #439 Mapper Tier 2 (update ADR-19). Skipped by user for this run: #154, #329. #521 remains deferred packaging.
 - [ ] (next) #414 native Windows — ADR-64 + WSL2-rule supersession first, then port.
 
 ## 8. Execution log
@@ -502,3 +502,8 @@ evidence, real transcripts:
 ## Execution log — #336 batch worklists
 
 - 2026-06-15: Started #336 in `feat/alpha4-batch-worklists`; implementing ADR-54 as file-backed Bases rows (`worklist-item`) plus a report→worklist emitter that raises exactly one aggregate work-prompt.
+
+
+## Execution log — #378 design-system enforcement
+
+- 2026-06-15: Started #378 in `feat/alpha4-design-enforcement`; adding `design-system-drift` to the Linter and extending the shipped Supercharged Links CSS selectors for lifecycle state accents.

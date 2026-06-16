@@ -7,7 +7,7 @@ cssclasses:
 
 # Memoria
 
-> [!info] Status line
+> [!brief] Status line
 > ```dataviewjs
 > async function loadJsonl(path) {
 >   const text = await dv.io.load(path);
@@ -98,23 +98,23 @@ action QuickAdd: Memoria: open Studio workspace
 
 ## Dashboards
 
-> [!example]- Library — reading & synthesis
+> [!suggestions]- Library — reading & synthesis
 > - [[library|Library]] — source, Catalog, and claim objects in one gate
 > - [[reading-pipeline|Reading Pipeline]] — sources to read & distill; claims by maturity
 > - [[discuss-queue|Discuss Queue]] — read-but-not-distilled, worth a Co-PI pass
 > - [[open-questions|Open Questions]] — unconnected claims (the synthesis backlog)
 > - [[contradictions|Contradictions]] — open tensions to resolve
 
-> [!example]- Desk — action queue
+> [!suggestions]- Desk — action queue
 > - [[desk|Desk]] — next PI actions, capture, delegation, and worker state
 > - [[board-state|Board State]] — the full Inbox board and worker cards
 
-> [!example]- Maintenance — structural health
+> [!suggestions]- Maintenance — structural health
 > - [[drift-watch|Drift Watch]] — open `flag`/`alert` findings
 > - [[loose-ends|Loose Ends]] — Notice-level debt for the weekly pass
 > - [[weekly-review|Weekly Review]] — the Friday aggregator
 
-> [!example]- Agent ops
+> [!suggestions]- Agent ops
 > - [[studio|Studio]] — focus, claim corpus, and pattern library for synthesis
 > - [[audit-log|Audit Log]] — the provenance trail
 > - [[fleet-health|Fleet Health]] — agent operational rollup

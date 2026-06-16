@@ -27,6 +27,17 @@ palette:
   text-primary: "#1F2937"
   text-muted:   "#6B7280"
   border:       "#E5E7EB"
+
+  # Link and property-state accents — consumed by Obsidian CSS snippets
+  link-source:       "#8A8A8A"
+  link-claim:        "#4A90E2"
+  link-hub:          "#E2A44A"
+  link-draft:        "#A0A0A0"
+  state-proposed:    "#C47F00"
+  state-current:     "#2F7D32"
+  state-retracted:   "#B3261E"
+  state-archived:    "#6F7782"
+  state-provisional: "#9467BD"
 ```
 
 **Discipline:** a fixed three-color palette for callouts — one stable hue per type (`[!brief]` blue, `[!suggestions]` purple, `[!verification]` orange), each reinforced by a distinct icon. The colors are bounded and semantic — a code the eye learns — never arbitrary or per-note.

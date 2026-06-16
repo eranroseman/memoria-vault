@@ -25,6 +25,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 | `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
+| `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
 | `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
@@ -35,7 +36,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 CLI entry point:
 
 ```bash
-python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift]
+python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
 ```
 
 `--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).

@@ -25,7 +25,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 
 ### Linter (`operations/integrity/linter/`)
 
-The detector table with severities lives in [Linter: detectors and auto-fix](linter.md); every detector is report-only. The sixteen registered detectors: orphan-working-files, stale-fleeting, stale-answer-drafts, extract-path-broken, frontmatter-schema-check, frontmatter-link-check, broken-wikilink, dashboard-field-drift, graph-analyze, fama-exposure, misplaced-note, audit-unpaired-writes, vault-hash-drift, audit-log-size, hub-threshold, skeleton-drift.
+The detector table with severities lives in [Linter: detectors and auto-fix](linter.md); every detector is report-only. The seventeen registered detectors: orphan-working-files, stale-fleeting, stale-answer-drafts, extract-path-broken, frontmatter-schema-check, frontmatter-link-check, broken-wikilink, dashboard-field-drift, design-system-drift, graph-analyze, fama-exposure, misplaced-note, audit-unpaired-writes, vault-hash-drift, audit-log-size, hub-threshold, skeleton-drift.
 
 | Action | Performer | What it does |
 | --- | --- | --- |

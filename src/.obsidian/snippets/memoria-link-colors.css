@@ -45,6 +45,41 @@ settings:
     type: variable-color
     format: hex
     default: '#a0a0a0'
+  -
+    id: memoria-link-proposed-color
+    title: Lifecycle proposed
+    description: Accent for links to notes awaiting PI action.
+    type: variable-color
+    format: hex
+    default: '#c47f00'
+  -
+    id: memoria-link-provisional-color
+    title: Lifecycle provisional
+    description: Accent for links to provisional source notes.
+    type: variable-color
+    format: hex
+    default: '#9467bd'
+  -
+    id: memoria-link-current-color
+    title: Lifecycle current
+    description: Accent for links to accepted/current records.
+    type: variable-color
+    format: hex
+    default: '#2f7d32'
+  -
+    id: memoria-link-retracted-color
+    title: Lifecycle retracted
+    description: Accent for links to retracted records.
+    type: variable-color
+    format: hex
+    default: '#b3261e'
+  -
+    id: memoria-link-archived-color
+    title: Lifecycle archived
+    description: Accent for links to archived records.
+    type: variable-color
+    format: hex
+    default: '#6f7782'
 */
 
 /* Source layer — neutral accent (signals "describes the world", not your thinking) */
@@ -80,4 +115,33 @@ a[data-href^="inbox/"],
 a.internal-link[data-href^="inbox/"] {
   color: var(--memoria-draft-color);
   opacity: 0.7;
+}
+
+/* Lifecycle accents — Supercharged Links exposes frontmatter as data-link-* attributes.
+ * Folder color remains the base signal; lifecycle adds a bottom border so state
+ * is visible without turning every link into a new hue.
+ */
+a[data-link-lifecycle="proposed"],
+a.internal-link[data-link-lifecycle="proposed"] {
+  border-bottom: 1px solid var(--memoria-link-proposed-color);
+}
+
+a[data-link-lifecycle="provisional"],
+a.internal-link[data-link-lifecycle="provisional"] {
+  border-bottom: 1px solid var(--memoria-link-provisional-color);
+}
+
+a[data-link-lifecycle="current"],
+a.internal-link[data-link-lifecycle="current"] {
+  border-bottom: 1px solid var(--memoria-link-current-color);
+}
+
+a[data-link-lifecycle="retracted"],
+a.internal-link[data-link-lifecycle="retracted"] {
+  border-bottom: 2px solid var(--memoria-link-retracted-color);
+}
+
+a[data-link-lifecycle="archived"],
+a.internal-link[data-link-lifecycle="archived"] {
+  border-bottom: 1px dotted var(--memoria-link-archived-color);
 }

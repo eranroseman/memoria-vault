@@ -157,6 +157,47 @@ def test_detectors():
     assert _run() == 0
 
 
+
+
+def _write_design_spec(v: _Path):
+    (v / ".memoria").mkdir(parents=True, exist_ok=True)
+    (v / ".memoria/design-system.md").write_text(
+        '```yaml\npalette:\n  primary: "#5B7EC2"\n  warning: "#C47F00"\n\n'
+        'typography:\n  scale:\n    body: 15px / 24px / 400\n    h2: 22px / 30px / 600\n```\n',
+        encoding="utf-8",
+    )
+
+
+def test_design_system_drift_detects_visual_anti_patterns(tmp_path):
+    v = tmp_path
+    _write_design_spec(v)
+    (v / ".obsidian/snippets").mkdir(parents=True, exist_ok=True)
+    (v / ".obsidian/snippets/bad.css").write_text(
+        ".x { color: #FF00FF; font-size: 18.5px; }\n",
+        encoding="utf-8",
+    )
+    (v / "notes/fleeting").mkdir(parents=True, exist_ok=True)
+    (v / "notes/fleeting/🔥-idea.md").write_text(
+        "---\ntitle: Claim Note 🔥\ntype: fleeting\nlifecycle: proposed\n---\n"
+        "> [!warning|red] Warning\n\nThis permanent note says paper note.\n",
+        encoding="utf-8",
+    )
+
+    findings = _m.design_system_drift(v)
+    messages = "\n".join(f.message for f in findings)
+    assert any(f.detector == "design-system-drift" for f in findings)
+    assert "off-palette color #ff00ff" in messages
+    assert "font-size 18.5px" in messages
+    assert "emoji in note title" in messages
+    assert "rainbow/ad-hoc callout" in messages
+    assert "terminology/capitalization drift" in messages
+
+
+def test_design_system_drift_accepts_shipped_vault_tree():
+    src = _Path(__file__).resolve().parent.parent / "src"
+    assert _m.design_system_drift(src) == []
+
+
 # --------------------------------------------------------------------------- #
 # vault-hash-drift (#392), audit-log-size (#393), hub-threshold (#426),
 # skeleton-drift (#394)

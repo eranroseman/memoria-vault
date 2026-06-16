@@ -20,7 +20,7 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
 | 3 | vault→site links + wikilink resolution | L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
 | 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
-| 5 | Dashboard ↔ writer-schema drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
+| 5 | Dashboard/schema + design-system drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift,design-system-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
 | 6 | 5 profiles — every documented CLI command | L2 | [hermes-cli](plans/hermes-cli-test-plan.md) §4 | manual | ✅ |
 | 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all lanes' write-walls covered by pytest, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
