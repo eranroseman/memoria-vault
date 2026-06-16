@@ -34,6 +34,7 @@ One command per shipped workspace layout ([ADR-68](../adr/68-workspaces-desk-lib
 | `Memoria: open Desk workspace` | Loads the **Desk** layout (the "what needs me?" look). | QuickAdd Macro → `src/system/scripts/load-workspace.js` (pure Obsidian API — no shelling) |
 | `Memoria: open Library workspace` | Loads the **Library** layout (reading & synthesis). | Same script, per-macro setting `Workspace: Library` |
 | `Memoria: open Studio workspace` | Loads the **Studio** layout (drafting). | Same script, per-macro setting `Workspace: Studio` |
+| `Memoria: open Project gate` | Loads **Studio** and opens `system/dashboards/project-gate.md` inside it. | QuickAdd Macro → `src/system/scripts/open-project-gate.js` (pure Obsidian API — no shelling) |
 
 Pane-by-pane contents of each layout: [Obsidian workspaces](obsidian-workspaces.md).
 

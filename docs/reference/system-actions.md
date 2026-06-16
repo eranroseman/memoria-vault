@@ -158,6 +158,7 @@ These are the repo source wrappers under `.memoria/scripts/`. The installer copi
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
 | Workspace Desk / Library / Studio | Loads the named workspace layout via the core Workspaces plugin (`load-workspace.js`, [ADR-68](../adr/68-workspaces-desk-library-studio.md)); also wired to the workspace buttons on `home.md`. |
+| Open Project gate | Loads Studio and opens `system/dashboards/project-gate.md` inside it (`open-project-gate.js`); also wired to the Project gate button on `home.md`. |
 
 ### Review decisions
 

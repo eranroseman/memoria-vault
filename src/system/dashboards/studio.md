@@ -1,8 +1,7 @@
 # Studio
 
-Synthesis gate: hold the current research focus, claims, and reusable patterns in
-one writing surface. Project-specific drafting stays deferred to alpha.4; this
-gate is the non-project writing and synthesis home for alpha.3.
+Synthesis gate: hold the current research focus, claims, reusable patterns, and
+Project gate state in one writing surface.
 
 ## Current focus
 
@@ -11,6 +10,12 @@ gate is the non-project writing and synthesis home for alpha.3.
 ## Claim corpus
 
 ![[claims.base#By maturity]]
+
+## Project gate
+
+![[project-gate.base#Active projects]]
+
+[[project-gate|Open Project gate]]
 
 ## Pattern library
 

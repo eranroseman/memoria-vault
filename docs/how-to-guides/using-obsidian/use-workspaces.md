@@ -22,9 +22,9 @@ All three layouts ship pre-configured in the vault's `.obsidian/workspaces.json`
 
 - `Memoria: open Desk workspace` — the "what needs me?" gate: next PI actions in the main pane, the Inbox queue on the left
 - `Memoria: open Library workspace` — reading and synthesis: sources, Catalog records, and claims in the main pane, catalog and discussion queues on the left
-- `Memoria: open Studio workspace` — drafting: research focus, claims, and patterns in the main pane, claims and patterns on the left
+- `Memoria: open Studio workspace` — drafting: research focus, claims, Project gate state, and patterns in the main pane; claims and patterns on the left
 
-The same three commands back the workspace buttons on `home.md` ([Vault homepage](use-the-vault-homepage.md)). The core plugin's own UI works too: click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**) and load by name.
+The same three commands back the workspace buttons on `home.md` ([Vault homepage](use-the-vault-homepage.md)). For bounded project work, `Memoria: open Project gate` loads Studio and opens the Project gate dashboard inside it; it is not a fourth saved workspace. The core plugin's own UI works too: click the workspaces icon in the left ribbon (or `Cmd/Ctrl-P` → **Manage workspaces**) and load by name.
 
 Switch when your cognitive mode changes — not per task within a mode. In every workspace the Co-PI chat pane is pinned on the right, so the conversation travels with you.
 
@@ -39,6 +39,7 @@ No workspace hotkeys ship by default. For one-key switching: Settings → Hotkey
 ## Verify
 
 - Loading **Desk**, then **Library**, then **Studio** swaps to three distinct pane layouts without reloading Obsidian
+- Running `Memoria: open Project gate` opens `project-gate.md` inside Studio
 - The ACP pane (the Co-PI) is present on the right in all three, and keeps its session across switches
 
 ## Related

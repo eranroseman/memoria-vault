@@ -61,7 +61,7 @@ Skip the gaps you don't buy — archive them with a clear conscience. The honest
 - The retraction sweep running on cron behind you
 - At least one gap turned back into a discovery task — one full turn of the loop
 
-> **Project-level verification:** once a cluster becomes a Project gate workspace, keep drafts in `projects/<slug>/` and verify them claim by claim against your vault before anything ships.
+> **Project-level verification:** once a cluster becomes a Project gate, keep drafts in `projects/<slug>/` and verify them claim by claim against your vault before anything ships.
 
 ---
 

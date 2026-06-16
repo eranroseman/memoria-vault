@@ -145,6 +145,9 @@ def test_home_status_line_reads_linter_verdict_and_board_queue_depths():
 
 def test_home_buttons_dispatch_registered_commands():
     _assert_buttons_dispatch_registered_commands(HOME)
+    text = HOME.read_text(encoding="utf-8")
+    assert "QuickAdd: Memoria: open Project gate" in text
+    assert "[[project-gate|Project Gate]]" in text
 
 def test_desk_dashboard_buttons_dispatch_registered_commands():
     _assert_buttons_dispatch_registered_commands(DESK_DASHBOARD)
@@ -159,6 +162,26 @@ def test_workspace_choices_reference_the_loader_script():
         cmds = choice["macro"]["commands"]
         assert len(cmds) == 1 and cmds[0]["path"] == "system/scripts/load-workspace.js"
         assert cmds[0]["settings"] == {"Workspace": ws}
+
+def test_project_gate_opens_inside_studio_not_as_a_fourth_workspace():
+    by_name = {c["name"]: c for c in _choices()}
+    choice = by_name["Memoria: open Project gate"]
+    assert choice["command"]
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/open-project-gate.js"
+    assert cmd["settings"] == {}
+
+    script = (SRC / "system" / "scripts" / "open-project-gate.js").read_text(encoding="utf-8")
+    assert 'WORKSPACE = "Studio"' in script
+    assert 'PROJECT_GATE = "system/dashboards/project-gate.md"' in script
+    assert "loadWorkspace(WORKSPACE)" in script
+    assert "openFile(file" in script
+    assert "Project" not in _data()["workspaces"]
+
+    studio = (SRC / "system" / "dashboards" / "studio.md").read_text(encoding="utf-8")
+    assert "## Project gate" in studio
+    assert "![[project-gate.base#Active projects]]" in studio
+    assert "[[project-gate|Open Project gate]]" in studio
 
 def test_loader_script_ships_and_names_all_three():
     assert LOADER.is_file()

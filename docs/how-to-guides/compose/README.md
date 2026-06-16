@@ -12,7 +12,7 @@ Day-to-day tasks for turning accumulated knowledge into written output. Performe
 
 | Guide | What it covers | Cycle phase |
 | --- | --- | --- |
-| [Start a writing project](start-a-writing-project.md) | Scaffold a Project gate workspace and active thesis | — |
+| [Start a writing project](start-a-writing-project.md) | Scaffold a Project gate surface and active thesis | — |
 | [Assess your corpus](assess-your-corpus.md) | Delegate a `map` task: dense clusters, thin coverage, gap cards | Assess |
 | [Frame a project](frame-a-project.md) | Competing outlines from the `draft` lane; choose one framing | Frame |
 | [Use canvas for argument mapping](use-canvas-for-argument-mapping.md) | Arrange claims spatially to find structure before prose | Sketch |

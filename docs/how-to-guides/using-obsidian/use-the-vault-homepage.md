@@ -6,7 +6,7 @@ nav_order: 1
 
 # Vault homepage
 
-The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../adr/13-homepage-front-door.md)). Since [ADR-68](../../adr/68-workspaces-desk-library-studio.md) it is a four-block **control panel**: a one-line status strip, an action row of command buttons, a workspace row, and the collapsed drill-down index. Glance, act, navigate — it owns no logic and duplicates no dashboard.
+The obsidian-homepage plugin opens `home.md` — the vault-root front door — on launch ([ADR-13](../../adr/13-homepage-front-door.md)). Since [ADR-68](../../adr/68-workspaces-desk-library-studio.md) it is a four-block **control panel**: a one-line status strip, an action row of command buttons, a navigation row, and the collapsed drill-down index. Glance, act, navigate — it owns no logic and duplicates no dashboard.
 
 ## Prerequisites
 
@@ -31,13 +31,13 @@ One line: reviews pending · blocked cards · HIGH/CRITICAL lint findings, with 
 
 Six command buttons (Buttons plugin, command-type only — [Obsidian plugins](../../reference/obsidian-plugins.md)): **Capture fleeting**, **Capture from Zotero**, **Capture URL**, **Delegate a task**, **Resolve card**, and **Talk to Co-PI**. Each dispatches the matching palette command — the buttons are shortcuts, not a second mechanism.
 
-**4. Switch workspaces from the workspace row.**
+**4. Navigate from the navigation row.**
 
-Three buttons — **Desk** · **Library** · **Studio** — load the matching layout ([Workspaces](use-workspaces.md)). Work happens in the workspaces; the homepage is the hallway between them.
+Three buttons — **Desk** · **Library** · **Studio** — load the matching layout ([Workspaces](use-workspaces.md)). **Project gate** loads Studio and opens the Project gate dashboard inside it. Work happens in the workspaces; the homepage is the hallway between them.
 
 **5. Drill down from the index.**
 
-Three collapsed callouts group every dashboard by how you use it — **Library** (reading & synthesis), **Maintenance** (structural health), and **Agent ops** — plus links to your research focus and the in-vault troubleshooting note. For the full dashboard roster see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
+Collapsed callouts group every dashboard by how you use it — Project, Library, Desk, Maintenance, and Agent ops — plus links to your research focus and the in-vault troubleshooting note. For the full dashboard roster see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
 
 Keep `research-focus.md` current — the Librarian reads it at the start of every session to set discovery targets. Update it at least weekly during the Friday ritual.
 
@@ -45,6 +45,7 @@ Keep `research-focus.md` current — the Librarian reads it at the start of ever
 
 - Launching Obsidian opens `home.md` with the status strip rendered (or its "feeds not wired yet" placeholder before the first agent run)
 - Clicking the **Desk** button loads the Desk workspace with the board front and center
+- Clicking **Project gate** opens the Project gate dashboard inside Studio
 - Clicking **Capture fleeting** opens the QuickAdd capture prompt
 
 ## Related

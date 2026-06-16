@@ -60,8 +60,9 @@ inquiry rather than reviving that empty workspace.** `.base` leaves serialize as
 note per ADR-13): (1) a one-line **status strip** (reviews pending · blocked ·
 HIGH/CRITICAL findings, linking board and drift-watch); (2) an **action row** of
 command buttons (capture fleeting / Zotero / URL, delegate, resolve card, talk to
-Co-PI); (3) a **workspace row** (Desk · Library · Studio); (4) the **drill-down
-index** — the three collapsed dashboard callouts plus research-focus and
+Co-PI); (3) a **navigation row** (Desk · Library · Studio · Project gate, with
+Project opening inside Studio rather than adding a fourth saved workspace); (4) the **drill-down
+index** — the collapsed dashboard callouts plus research-focus and
 troubleshooting. Everything else (prose, link-dumps, docs-site links beyond
 troubleshooting) is dropped.
 
