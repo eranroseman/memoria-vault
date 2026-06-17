@@ -27,12 +27,12 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 | Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
 | Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
 | Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
-| Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl`, current week; unhandled denies → flag. |
+| Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies → flag. |
 | Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 | Agent-ops | Eval trend | `eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 | Agent-ops | Skill lifecycle | `skill-lifecycle.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
-The **Surface** column is where a dashboard opens in the UI. The explanation site groups the same twelve by the *kind of attention* they demand — **Home glance → Daily glance**, **Library → Synthesis agenda**, **Maintenance → Structural health**, **Agent-ops → Operational health** ([Dashboards](../explanation/dashboards/README.md)). The two are the same four buckets under different lenses, not different inventories.
+The **Surface** column is where a dashboard opens in the UI. Four of the sixteen rows above — the Desk, Library, Studio, and Project gates — are workspace landing surfaces; the other twelve are the standalone health dashboards. The explanation site groups those twelve by the *kind of attention* they demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational health** ([Dashboards](../explanation/dashboards/README.md)).
 
 ---
 
