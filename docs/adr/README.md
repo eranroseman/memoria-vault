@@ -109,7 +109,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [77](77-project-gate.md) | Project gate | accepted |
 | [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
-| [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | deferred |
+| [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 
 <!-- ADR-INDEX:END -->
 

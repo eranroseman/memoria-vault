@@ -2,15 +2,14 @@
 topic: decisions
 id: 80
 title: Ephemeral containerized Linux test-env harness
-status: deferred
+status: accepted
 date_proposed: 2026-06-16
-date_resolved:
+date_resolved: 2026-06-17
 assumes: [28, 29, 64, 76]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
-nav_exclude: true
 ---
 
 # ADR-80: Ephemeral containerized Linux test-env harness
@@ -161,11 +160,13 @@ no-model tier the shippable unit and defers the rest.
 
 ## When this matters
 
-Raise this from `deferred` when any holds: the manual L3 surface or an uncovered
-cross-cutting suite (recovery / security / performance) becomes a recurring
-release-blocking gap; a real project's PI-touch budget needs L5 regression
-automated rather than hand-run. **Phase 1 (above) needs no model work at all** — its
-trigger is simply that recurring L3 / recovery gap — so it can start now; gate 2 is
+**Phase 1 shipped in v0.1.0-alpha.6** (model-free L0–L4 record/replay harness, #586;
+the G3 tool-call smoke runs against a local OpenAI-compatible endpoint, #662) — this
+ADR is `accepted` for Phase 1. **Phase 2 stays deferred**: raise it when any holds —
+the manual L3 surface or an uncovered cross-cutting suite (recovery / security /
+performance) becomes a recurring release-blocking gap; a real project's PI-touch
+budget needs L5 regression automated rather than hand-run. **Phase 1 needed no model
+work at all** — its trigger was simply that recurring L3 / recovery gap; gate 2 is
 already resolved and Phase 2 carries the remaining model / visual cost. The `assumes:` list pins the
 mechanisms it rests on — if the two-installer split (ADR-64), the write gate
 (ADR-28), or the reconciling installer (ADR-76) change shape, re-judge this.
