@@ -310,16 +310,26 @@ def run_model_smoke() -> int:
     """Opt-in ADR-80 G3 smoke for a local OpenAI-compatible tool-call endpoint."""
     base_url = os.environ.get("MEMORIA_MODEL_BASE_URL", "").rstrip("/")
     model = os.environ.get("MEMORIA_MODEL_NAME", "local-tool-smoke")
+    # Local runtimes vary: a 12B model on CPU can take ~45s for a single tool
+    # call, so the timeout is generous and overridable for slower hardware.
+    timeout = float(os.environ.get("MEMORIA_MODEL_TIMEOUT", "90"))
     if not base_url:
         print("model-smoke: skipped (set MEMORIA_MODEL_BASE_URL to run the live tool-call smoke)")
         return 0
     url = f"{base_url}/chat/completions"
     payload = {
         "model": model,
+        # tool_choice is "auto" rather than a forced function: several local
+        # OpenAI-compatible runtimes (e.g. Ollama + Gemma) return empty output
+        # when a function is forced, but emit a correct tool_call under "auto".
+        # The instruction keeps the call deterministic without forcing.
         "messages": [
             {
                 "role": "user",
-                "content": "Call the provided tool to write inbox/model-smoke.md with body ok.",
+                "content": (
+                    "Write the file inbox/model-smoke.md with body ok using the "
+                    "vault_write tool. You must call the tool."
+                ),
             }
         ],
         "tools": [
@@ -339,8 +349,8 @@ def run_model_smoke() -> int:
                 },
             }
         ],
-        "tool_choice": {"type": "function", "function": {"name": "vault_write"}},
-        "max_tokens": 64,
+        "tool_choice": "auto",
+        "max_tokens": 128,
     }
     req = request.Request(
         url,
@@ -349,7 +359,7 @@ def run_model_smoke() -> int:
         method="POST",
     )
     try:
-        with request.urlopen(req, timeout=30) as resp:
+        with request.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
         raise HarnessError(f"model-smoke request failed: {exc}") from exc
