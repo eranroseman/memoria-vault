@@ -41,7 +41,7 @@ Open the Desk workspace's Inbox tab — the **Needs me** view of `inbox.base` (o
 
 **5. Write your source note.**
 
-For a kept paper, open the proposed reading record in `notes/sources/` — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up here), then `current` once you've distilled its claims. The full loop is [Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md).
+For a kept paper, open the proposed reading record in `notes/sources/` — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up there), then `current` once you've distilled its claims (the lifecycle chain is defined in [Frontmatter fields](../../reference/frontmatter.md)). The full loop is [Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md).
 
 ## Verify
 

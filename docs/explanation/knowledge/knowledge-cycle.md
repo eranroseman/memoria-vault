@@ -55,6 +55,7 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 
 **Explanation**
 
+- The same cycle seen as a phase sequence (find → capture → … → export) rather than as delegable tasks: [Compile and compose](../workflows/compile-and-compose.md)
 - The ritual that keeps the cycle from stalling: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
 - The epistemic roles of note types: [Note types and epistemic roles](note-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)

@@ -31,15 +31,9 @@ The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits 
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), one per proposed source. Judge these candidate cards exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — read `argument_against` and `certainty` first, then keep (set `lifecycle: current`) or skip (set `lifecycle: archived`). A discovery card reads like:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, in the Desk workspace), one per proposed source. Judge them exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md): read `argument_against` and `certainty` first, then keep (`lifecycle: current`) or skip (`lifecycle: archived`). A discovery card carries the same honesty body as a captured one — `argument_against` is the information-bearing field (the full card field list is in [Inbox card fields](../reference/inbox-card-fields.md)):
 
-```yaml
-action: "Catalog this paper and queue it for reading"
-argument_for: "Directly tests the timing mechanism your three receptivity claims assume."
-argument_against: "N=23, single lab; may not generalize beyond students."
-what_tipped_it: "It's the only experimental test of the assumption in your corpus."
-certainty: likely
-```
+> "N=23, single lab; may not generalize beyond students." — `certainty: likely`
 
 Work the whole discovery queue in one batch sitting, not card by card — the discipline (and why) is in [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md). Kept papers join your reading queue via the ingest engine; skipping generously offered candidates is the system working, not failing.
 

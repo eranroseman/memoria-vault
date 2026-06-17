@@ -32,6 +32,7 @@ The flows are not sequential end-to-end — they're ongoing. The Compile flow ru
 
 ## Related
 
+- The same cycle seen as six delegable tasks/lanes rather than as phases: [The knowledge cycle](../knowledge/knowledge-cycle.md)
 - The board that coordinates both flows: [The board as a state machine (the control plane)](board-as-state-machine.md)
 - Which profile owns each phase: [Profiles](../profiles/README.md)
 - The cycle-phase definitions: [Glossary → Cycle phases](../../reference/glossary.md#notes-and-lifecycle)

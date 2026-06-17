@@ -88,7 +88,7 @@ python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarte
 
 ## Cadence
 
-The installer wires `memoria-eval` (`0 7 1 */3 *` — 07:00 on the first day of every third month) from the wrapper `src/.memoria/scripts/eval-cron.sh`, following the same pattern as the lint and metrics crons — see [Installer (bootstrap)](installer.md). The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
+The installer wires the quarterly `memoria-eval` cron (schedule and wrapper owned by [Installer (bootstrap)](installer.md#the-crons-it-wires)), following the same pattern as the lint and metrics crons. The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
 
 ---
 

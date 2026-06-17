@@ -9,8 +9,7 @@ topic: tests
 
 # Test plans
 
-The reusable, version-agnostic test **plans** (procedures). A *plan* is the steps to
-validate something; a *run* is a plan executed with results, recorded with its release
-in [Releasing](../../releasing/). Browse the directory for the full set; each is built
-from [the test-plan template](../test-plan-template.md) and indexed in the
-[coverage matrix](../coverage-matrix.md).
+The reusable, version-agnostic test **plans** (procedures) — see [Testing](../README.md)
+for the plan-vs-run distinction and where run results live. Browse the directory for the
+full set; each is built from [the test-plan template](../test-plan-template.md) and
+indexed in the [coverage matrix](../coverage-matrix.md).

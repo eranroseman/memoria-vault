@@ -90,7 +90,7 @@ The **un-backfillable** signal: what the human actually did with a finished card
 | Field | Values |
 | --- | --- |
 | `disposition` | `accepted` \| `edited` \| `rejected` — the three-way human verdict |
-| `agent_recommendation` | what the agent proposed (`inconclusive` / `issues-found` / `clean`); pairs the agent's self-assessment against the human's call |
+| `agent_recommendation` | what the agent proposed (values in the [Glossary](glossary.md) Verdicts table); pairs the agent's self-assessment against the human's call |
 
 The terminal mapping is: `review_status: approved → accepted`, `rejected → rejected`. A card may override the default by setting `metadata.disposition` explicitly — this is the only way to record `edited` (accepted-after-changes), which the board's `review_status` cannot express on its own. **Without `edited` you cannot distinguish "accepted as written" from "accepted after I fixed it," which is the core acceptance-quality measure for the paper — hence un-backfillable.**
 
