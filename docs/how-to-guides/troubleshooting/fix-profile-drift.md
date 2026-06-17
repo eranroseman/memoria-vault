@@ -48,31 +48,12 @@ If the diff shows meaningful changes in the deployed copy (not in the vault sour
 
 ## Fix
 
-Re-run the profile install after resolving Cause A or B (from the repo clone):
-
-```bash
-bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2
-```
-
-```powershell
-.\scripts/install.ps1 -ProfilesOnly -Vault <vault>           # Windows native production
-```
-
-To fix drift on a single profile only:
-
-```bash
-bash scripts/install.sh --profiles-only --only memoria-librarian
-```
-
-```powershell
-.\scripts/install.ps1 -ProfilesOnly -Only memoria-librarian
-```
+Once you've resolved Cause A or B, run the redeploy procedure — `install.sh --profiles-only` (whole fleet or `--only <profile>`) from the repo clone — per [Redeploy profiles](../operate/redeploy-profiles.md). That guide owns the install flags, the Windows variants, and the idempotency details.
 
 ## Verify
 
 - The `diff -r` above is clean for every profile (modulo `.env` and placeholders)
-- `hermes profile list` shows exactly the five `memoria-*` profiles
-- `hermes profile show memoria-<name>` reflects the edit you expected to land
+- The redeploy verification passes — `hermes profile list` shows exactly the five `memoria-*` profiles and `hermes profile show memoria-<name>` reflects the edit you expected ([Redeploy profiles](../operate/redeploy-profiles.md))
 
 ## Related
 

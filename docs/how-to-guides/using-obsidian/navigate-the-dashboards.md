@@ -10,13 +10,7 @@ Each dashboard in `system/dashboards/` answers one question about the vault, and
 
 ## Where the dashboards open
 
-The three shipped workspaces pre-load the highest-frequency views ([Workspaces](use-workspaces.md)):
-
-| Workspace | Pre-loaded |
-| --- | --- |
-| **Desk** (default) | Board State in the main pane; `inbox.base`, Drift Watch, Weekly Review as left tabs |
-| **Library** | Reading Pipeline in the main pane; `catalog.base`, Discuss Queue, Open Questions, Contradictions as left tabs |
-| **Studio** | `system/dashboards/studio.md` in the main pane, including the Project gate section; `claims.base`, `patterns.base` as left tabs |
+The three shipped workspaces — **Desk** (the board and Inbox), **Library** (the reading pipeline and catalog), and **Studio** (drafting plus the Project gate) — each pre-load the highest-frequency views for their mode. For the exact main-pane dashboard and left tabs each one loads, see the layout table in [Obsidian workspaces](../../reference/obsidian-workspaces.md); to switch between them, see [Workspaces](use-workspaces.md).
 
 Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 For project work, `Memoria: open Project gate` loads Studio and opens `project-gate.md`

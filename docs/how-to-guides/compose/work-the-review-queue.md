@@ -21,7 +21,7 @@ Sit down once and sweep the queue — high-cardinality decisions belong in one w
 **2. Read each card the right way round.**
 
 - **Proposals** (`candidate`, `gap`) carry the honesty body — read `argument_against` and `certainty` first; the card existing *is* the recommendation, so there is no verdict field.
-- **Verification cards** (`flag`, `alert`) lead with the `finding` and carry `agent_recommendation` (`clean` / `issues-found` / `inconclusive`) — a recommendation, never the decision. You can reject a `clean` and accept an `issues-found`.
+- **Verification cards** (`flag`, `alert`) lead with the `finding` and carry an `agent_recommendation` — a recommendation, never the decision ([Inbox card fields](../../reference/inbox-card-fields.md)). You can reject a `clean` and accept an `issues-found`.
 
 **3. Act, then resolve.**
 

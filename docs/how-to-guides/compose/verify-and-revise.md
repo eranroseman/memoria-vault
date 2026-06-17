@@ -24,7 +24,7 @@ The Co-PI delegates a **`verify`** task. Palette twin: **Memoria: verify draft**
 
 **2. Read the flag cards.**
 
-Findings land in the Inbox as **`flag` cards** — finding-first, with the verdict carried as `agent_recommendation` (`clean` / `issues-found` / `inconclusive`). A `clean` flag closes nothing by itself; an `issues-found` flag changes nothing by itself. You act.
+Findings land in the Inbox as **`flag` cards** — finding-first, with the verdict carried as a separate `agent_recommendation` field ([Inbox card fields](../../reference/inbox-card-fields.md)). A `clean` flag closes nothing by itself; an `issues-found` flag changes nothing by itself. You act.
 
 **3. Address each gap.**
 
