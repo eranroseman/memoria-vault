@@ -98,7 +98,13 @@ operates in exactly two modes:
 
 1. **Projected Canvas** (engine-written) — a spatial rendering *derived from*
    `links:`/`relationships` frontmatter. Regenerable, disposable, read-mostly.
-   Goes through the policy gate like any agent vault write.
+   It is an **engine write to a consumer-only zone (`system/projections/`), not an
+   agent write to a gated zone** — so it does *not* take the agent-write policy gate
+   (which exists to govern LLM writes to review-gated zones, ADR-27/28). *(Review
+   round 2 #7: the earlier "goes through the policy gate like any agent write" was
+   wrong and is corrected here — see §10. The only projection that touches a
+   non-consumer zone is the emit-bridge raising a card into `inbox/`, and that is
+   the one path that is governed.)*
 2. **Scratch Canvas** (human, Studio) — ephemeral sense-making, the spatial
    sibling of `fleeting`. Non-authoritative; *graduates* into authored
    `links:`/claims/hub when an arrangement firms up. Never linted, never queried.
@@ -161,14 +167,19 @@ finding: "orphan claim: claims/foo has zero inbound links"
    **gitignored runtime artifacts**, regenerated from the source. Editing a
    projected file does nothing — overwritten next pass (the board's
    one-way/ephemeral rule).
-2. **Reconcile by id → path — create, update, *and delete*.** The filename is the
-   source id; each pass diffs against a state cache and reconciles all three arms:
-   new id → create, changed → overwrite, **id no longer in the source → delete**.
-   One source row = exactly one file; a retired row leaves no stale file. *(Review
-   gap #1: the original draft specified only create/overwrite — a delete arm is
-   required or Bases keeps rendering dead rows as live.)* The reader race is
-   self-healing: Bases re-renders on file events, so a momentarily-absent row is
-   not corruption.
+2. **Reconcile by id → path — create, update, *and delete*.** Each pass diffs
+   against a state cache and reconciles all three arms: new id → create, changed →
+   overwrite, **id no longer in the source → delete**. One source row = exactly one
+   file; a retired row leaves no stale file. *(Review gap #1: the original draft
+   specified only create/overwrite — a delete arm is required or Bases keeps
+   rendering dead rows as live.)* The reader race is self-healing: Bases re-renders
+   on file events, so a momentarily-absent row is not corruption.
+   **The filename is a *sanitized slug/hash* of the source id, not the raw id**, and
+   the **raw `id:` lives in frontmatter as the idempotency-match key.** *(Review
+   round 2 #8.)* Raw ids (citekeys, kanban ids) can contain `/ :` unicode or differ
+   only in case, and production runs on a case-insensitive WSL/Windows filesystem
+   (ADR-64) — so two ids must never collide to one path. Match on the frontmatter
+   `id`, derive the path from a collision-safe encoding of it.
 3. **Sort on a meaningful key; `as_of` only when the source has a real event
    time.** Every file in a pass shares a generation mtime, so `file.mtime` is
    useless for ordering. Event/run sources (board, eval, audit) carry a genuine
@@ -184,13 +195,23 @@ finding: "orphan claim: claims/foo has zero inbound links"
    Linter; a dedicated **projector-output conformance test** asserts every emitted
    enum value ⊂ the schema's enum (symmetric with the `gen-forms` drift test, §4).
    *(Review gap #11.)*
-6. **Writing many files races the metadata cache.** *(Verified finding, §7.)* Bases
-   reads the metadata cache, which parses freshly-written files **asynchronously** —
-   a 300-file projection pass followed by an immediate render briefly showed
-   **0 results** until parsing caught up. A projection pass must therefore either
-   settle (await cache idle) before signalling readers, or dashboards must tolerate
-   a transient empty/partial state. This is distinct from "stale" (rule on failure
-   surfacing, §6 #14).
+6. **Dirty source data is quarantined, not passed through or silently dropped.**
+   *(Review round 2 #6.)* Sources (lint-findings, agent output) can carry
+   out-of-vocab values. A projector that conforms its output (rule 5) must define
+   what happens to a row it *can't* conform: **quarantine-and-log** — route the bad
+   row to an Integrity signal (§8) and **continue the pass with the conformant
+   rows**. Never fail the whole pass on one bad row; never silently drop it.
+7. **Bulk writes race the metadata cache — and the window scales with file count.**
+   *(Verified, §7.)* Bases reads the metadata cache, which parses freshly-written
+   files **asynchronously**: a 300-file pass briefly showed **0 results**, and a
+   **10,000-file cold parse took ~76 seconds**. So the race is not a blip — at vault
+   scale it is a multi-minute empty/partial window, and it bites **fresh deploy,
+   golden-copy restore (ADR-55), a cold engine host (§8 #3), and any bulk projection
+   pass** (steady-state incremental growth is already-parsed and unaffected). A pass
+   must **settle (await cache idle) before signalling readers**, and cold starts
+   must expect a warming period. Distinct from "stale" (failure surfacing, §8).
+   *Warm-cache render is fine:* a 7,004-row grouped + 2-key-sort + `now()`-formula
+   view rendered in ~1.4 s (§7), so the scale cost is cold-index latency, not query.
 
 ### Canvas sub-contract (the spatial target)
 
@@ -428,7 +449,7 @@ views:
 > rendered correctly and re-rendered effectively instantly. The materialized-field
 > fallback (structural rule 2) is therefore unused for this surface — kept only for
 > any *future* filter that exceeds Bases. One operational caveat surfaced: a
-> projection writing the files races the metadata-cache parse (projection rule 6).
+> projection writing the files races the metadata-cache parse (projection rule 7).
 
 **Hubs** — a view, not its own base. Fold into a `notes/hubs/` view (one "Hubs
 index": `order: [file.name, lifecycle, topic, members]`); avoid a dedicated base
@@ -512,6 +533,35 @@ projector errored (§8).
 Zotero and URL are *capture commands* that prefill `title`/`entity`/`source_type`
 from the ingest, then drop the human into the same `source` form for judgment-only
 fields. Three buttons, one form, one schema — not three schemas.
+
+### Edge authoring — the missing human write path for the system of record
+
+*(Review round 2 #1 — the largest hole in the first draft.)* The whole
+architecture pivots on **`links:` edges being the system of record**, and the entire
+Canvas/argument-graph layer only *renders* edges something else wrote. But the six
+capture forms write notes, never an edge: the `claim` form captures
+`title`/`maturity`/`sources`/`topics`/statement — **nothing writes a
+`supports`/`contradicts` edge between two claims.** Left unspecified, the most
+important object in the design has no human write path, which collides with the
+direct-access rule (the PI must be able to assert a contradiction directly, not only
+via an agent). The capture forms are the wrong shape for this — an edge relates two
+*existing* notes, it isn't created at note-capture time. So the design adds a
+distinct **edge-authoring surface** with three reconciled entry points:
+
+1. **A "relate" control (link-edit form)** — the PI picks *source note → relation
+   type (`supports`/`contradicts`/…) → target note* (both note-pickers), optionally
+   a `warrant` (ADR-79); it writes the typed entry into the source note's `links:`
+   map. This is the PI *originating* an edge directly.
+2. **Confirm an agent-proposed edge** — ADR-52's propose→confirm path: an agent
+   proposes a `links:` entry, the PI confirms it through the link gate. (Origination
+   in #1 and confirmation here are the two authoring modes ADR-52 already implies.)
+3. **Scratch-canvas graduate** — the spatial path: the PI draws edges on a scratch
+   canvas, and *graduate* writes them into `links:` (already named in §2). This is
+   the one place the spatial axis *authors* rather than renders.
+
+All three terminate in the same `links:` frontmatter, governed by the same link
+gate and Linter — so the edge has exactly one system of record with a specified
+human writer, and no canvas ever becomes authoritative.
 
 ### What forms deliberately don't cover
 
@@ -598,11 +648,27 @@ Fixtures built and torn down in the `Memoria-test` sandbox.
 - **At scale (300 notes)** — `lifecycle == "current"` → 200; contradiction filter →
   50; groupBy `maturity` + two-key sort + three formulas → correct, re-render
   effectively instant. ✅
-- **Cache-parse race** — rendering immediately after writing 300 files briefly
-  showed **0 results** until the metadata cache parsed them → §2 rule 6. ⚠
 - **Embedded canvas** `![[…canvas]]` — renders **topology (nodes + edges + layout)
   but empty node boxes (no file-node content)** → not a working surface; use
   link-open (§2 Canvas sub-contract). ⚠
+
+**Round 2 (review #2, #4):**
+
+- **Nested-map wikilink → backlink** *(review #2, the load-bearing one)* — a note
+  linking to `X` *only* via a nested frontmatter map (`links: {contradicts: [[X]]}`)
+  **does register as a backlink on `X`**: `resolvedLinks` maps it, `getBacklinksForFile`
+  includes it, and Obsidian parses the exact key path `links.contradicts.0` as a
+  `frontmatterLink`. So `file.backlinks.isEmpty()` orphan detection genuinely sees
+  typed edges, and "edges in frontmatter → the graph shows them" holds. ✅
+- **At scale (10,000 notes)** — warm-cache render of a **7,004-row** view (groupBy
+  `maturity` + 2-key sort incl. a `now()`-derived formula + 3 formulas) → **~1.4 s**,
+  correct counts, all groups; orphan filter correct (3,502). Query/render perf is
+  fine at 10k. ✅
+- **Cold-parse window scales with file count** *(review #4)* — a bulk write of
+  10,000 files took **~76 s** for the metadata cache to fully parse (300 files was a
+  sub-second blip). The scale risk is **cold-index latency, not query perf** — it
+  hits fresh deploy, golden-copy restore, cold engine hosts, and bulk projection
+  passes → §2 rule 7. ⚠
 
 ## 8. Remaining open items
 
@@ -615,7 +681,7 @@ governed. Three options weighed:
 
 | Option | What | Verdict |
 |---|---|---|
-| **A — Ephemeral-by-design** | pure generated view; positions overwritten; banner + fork-to-scratch (decoupled editable copy) | **Chosen now.** Maximal consistency, cheapest, zero new storage/sync; bets on incremental-stable auto-layout (§2) being good enough. |
+| **A — Ephemeral-by-design** | pure generated view; positions overwritten; banner + fork-to-scratch (decoupled editable copy) | **Provisional** *(review #5)* — the right default (cheapest, most consistent), but its justification *rests on* the incremental-stable auto-layout that §2 flags as hard, undesigned debt. So A is **gated on a layout feasibility spike**; if the spike fails, fall to B′. Not "settled" until the spike lands. |
 | **B′ — Persisted positions** | node x/y stored in the tracked `.memoria/projections.yaml` registry; edges still derived; projector re-applies saved positions, auto-places only new nodes | **Designed, deferred.** Promote only if PIs find the auto-layout unworkable. Governed + tracked (not an ungoverned sidecar), so not a system-of-record breach — only added sync/prune machinery. |
 | **C — Authoritative authored canvas** | PI owns the canvas; edges live there, synced to/from frontmatter | **Rejected.** Reopens the system-of-record question (§1), forces a canvas-JSON parser into ADR-79 Operations, contradicts the hub decision. |
 
@@ -629,18 +695,64 @@ Until then, fork-to-scratch is the escape hatch.
   ADR-74 provenance manifest; treat Bases views as regenerable-from-schema; add an
   upgrade smoke-test over the verified filter/sort grammar. Re-confirm §7 after any
   major Obsidian upgrade.
-- **Mobile matrix** *(gap #9)* — state per-primitive support (Bases ✓ read,
-  Modal Forms ✓, canvas view ✓ / edit limited) and whether mobile is in scope at all
-  (single-researcher, desk-primary — ADR-24).
+- **Mobile / non-engine-host matrix** *(gaps #9 r1 + #3 r2)* — the matrix needs an
+  **authored-vs-projected column**, because a projected base/canvas is **blank on any
+  host where the projector never ran** (board, fleet-health, eval-trend,
+  skill-lifecycle, argument canvases). State the **engine host-dependency**
+  explicitly, and the **sync story for projected artifacts** (they are git-ignored,
+  so they need a non-git sync channel — e.g. Obsidian Sync — to appear on a second
+  device at all). Per-primitive: Bases ✓ read (if data present), Modal Forms ✓,
+  canvas view ✓ / edit limited; scope decision pending (single-researcher,
+  desk-primary — ADR-24).
+- **Fork-to-scratch drift signal** *(review #9)* — fork is the *durable* answer to
+  lost layout, so a fork must show a **staleness badge** (count of edges the source
+  graph has gained/lost since the fork) so the PI isn't working a stale map. A diff
+  count, not auto-reconcile (that would be the B′ machinery).
+- **Day-1 empty state** *(review, "worth a line")* — the whole design is validated
+  on fixtures, but alpha.7 ships a near-empty vault where most dashboards render
+  blank. "Converges to empty" is a virtue *in steady state*; empty-on-arrival is
+  where first impressions form. Needs explicit empty-state copy / seeded starter
+  content (ties to ADR-55 golden copy).
+- **Lineage is a DAG, not a flat table** *(review, "worth a line")* — `superseded_by`
+  chains are temporal/DAG; the "Retracted (lineage)" flat table serves them poorly.
+  This does **not** break the two-axis taxonomy — a DAG *is* a graph, so lineage
+  belongs on the **spatial axis** (a projected lineage canvas) or a tree view, not a
+  flat table. Re-assign the surface; the framing holds.
+- **Self-healing reader race — scope it** *(review, "worth a line")* — the
+  "momentarily-absent row" self-heal is fine for dashboards; for the **"Needs me"**
+  human-decision queue a card blinking out mid-session is riskier. But "Needs me" is
+  *authored* `inbox/` notes, **not** a bulk projection, so it does not hit the
+  cache-race; the projected **drift-watch** view (lint flags via the emit-bridge) is
+  where the concern actually lands. Note the distinction; don't self-heal the
+  authored queue silently.
 - **Projector failure surfacing** *(gap #14)* — a failed/partial pass raises an
   **Integrity** signal (ADR-69/70 status bar + optional flag card); dashboards show
   a distinct "last refresh failed" state, not just an older "as of".
 - **Projector registry shape** — finalise `.memoria/projections.yaml` (artifact,
-  source, projector, cadence, trigger-class, reverse-index keys).
+  source, projector, cadence, trigger-class, reverse-index keys, **id→slug encoding**
+  per §2 rule 2).
 - **`gen-forms.py` + drift test** *(and the symmetric projector-output test, gap
-  #11)*.
+  #11)*; plus the **edge-authoring "relate" control / link-edit form** (review #1,
+  §4) — schema + UI surface to be specified.
 - **Home status strip** — the single remaining Dataview surface: the exact queries
   it composes (reviews pending · blocked · HIGH/CRITICAL findings).
+
+### Round 2 review — disposition summary
+
+| # | Point | Disposition |
+|---|---|---|
+| 1 | No human edge-authoring path | **Fixed (§4 Edge authoring)** — relate-form + confirm + canvas-graduate, all → `links:`. Biggest hole. |
+| 2 | Orphan + nested-map backlink untested together | **Verified ✅ (§7)** — nested-map wikilinks register as backlinks; risk retired. |
+| 3 | Projected surfaces blank on non-engine hosts | **Open (§8)** — matrix needs authored/projected column + host-dependency + sync story. |
+| 4 | "At scale" = 300 isn't scale | **Verified + refined (§2 rule 7, §7)** — warm render fine at 7k rows; cold-parse ~76 s at 10k is the cliff. |
+| 5 | Canvas decision circular | **Fixed (§8)** — Option A downgraded to *provisional, gated on a layout spike*. |
+| 6 | No behavior for dirty source data | **Fixed (§2 rule 6)** — quarantine-and-log, partial pass continues. |
+| 7 | Gate cost vs cadence; engine-vs-agent write | **Fixed (§2)** — corrected: engine writes to consumer zone are ungated; only the emit-bridge is gated. |
+| 8 | id→filename on case-insensitive FS | **Fixed (§2 rule 2)** — filename = sanitized slug/hash; raw `id` in frontmatter is the match key. |
+| 9 | Fork diverges from a moving graph | **Open (§8)** — add a fork staleness badge (edge-diff count), not auto-reconcile. |
+| — | Day-1 empty state | **Open (§8)** — needs empty-state design / seeded content. |
+| — | Self-healing race on "Needs me" | **Noted (§8)** — authored inbox doesn't hit the cache-race; concern lands on projected drift-watch. |
+| — | Taxonomy completeness (lineage) | **Noted (§8)** — lineage is a DAG → spatial axis (projected canvas), not a flat table; framing holds. |
 
 ---
 
