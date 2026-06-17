@@ -42,7 +42,7 @@ end (the boxes are clickable in Obsidian).
 
 ---
 
-## Part A — Obsidian opens and the 8 bundled plugins load (S5)
+## Part A — Obsidian opens and the 12 bundled plugins load (S5)
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
@@ -236,7 +236,7 @@ Then open `system/dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 8/8 plugins enabled, no load errors | | |
+| A | 12/12 plugins enabled, no load errors | | |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
 | C / G4 | All 12 dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |

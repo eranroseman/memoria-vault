@@ -72,12 +72,10 @@ The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becom
 ## Coding conventions
 
 - **Python:** Ruff is the Python linter for repo tooling and runtime code
-  (`scripts/`, `.github/scripts/`, `src/.memoria/`). It is intentionally **not**
+  (`scripts/`, `.github/scripts/`, `src/.memoria/`, and `tests/`). It is intentionally **not**
   used as the formatter today: `ruff format` would rewrite most Python files for
   style-only churn, and the existing code keeps some hand-shaped line breaks for
-  readability. Tests are not in the Ruff gate yet because several still use dynamic
-  `globals().update(...)` imports from their former inline self-test shape; refactor
-  those imports before widening Ruff to `tests/`.
+  readability.
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
 - **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `config.yaml` / `distribution.yaml` / `skills/` structure used by the existing five profiles (the shared `AGENTS.md` layer is vault-level, not per-profile).

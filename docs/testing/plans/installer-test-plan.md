@@ -68,7 +68,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 ## Part C — Plugins + MCP venv (S2)
 
 **C1. Bundled plugins copied.** `ls ~/Memoria-test/.obsidian/plugins/`
-- ✓ Pass: the 8 plugin folders present; secret configs shipped as `data.json.example` (not real `data.json`) for `obsidian-local-rest-api` and `agent-client`.
+- ✓ Pass: the 12 plugin folders present; secret configs shipped as `data.json.example` (not real `data.json`) for `obsidian-local-rest-api` and `agent-client`.
 
 **C2. MCP venv wired.** `ls ~/Memoria-test/.memoria/.venv` and `grep -n '\.venv' ~/.hermes/profiles/memoria-librarian/config.yaml`
 - ✓ Pass: a vault-local venv exists; the profile's `mcp_servers` points its interpreter at it.
@@ -119,7 +119,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | --- | --- | --- | --- |
 | A | clean install: vault deployed, 5 profiles registered | | |
 | B | `{{VAULT_PATH}}` substituted; `.env` seeded; config valid | | |
-| C | 8 plugins copied; MCP venv wired | | |
+| C | 12 plugins copied; MCP venv wired | | |
 | D | re-run idempotent; `.env` preserved | | |
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | native Windows `install.ps1` (+ bootstrap) | | |

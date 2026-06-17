@@ -6,7 +6,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [47, 50]
-supersedes: [17]
+supersedes: [17, 36]
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
@@ -69,4 +69,6 @@ select-all-accept.
 
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-03](03-structural-review-gate.md); supersedes
-  [ADR-17](17-shared-candidate-frontmatter.md)
+  [ADR-17](17-shared-candidate-frontmatter.md) and
+  [ADR-36](36-dedicated-review-note-type.md) (a card in `proposed` is the review
+  surface, so a dedicated review note type is no longer needed)

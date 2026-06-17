@@ -20,7 +20,7 @@ The top level is organized by **category** — one content kind per folder, no l
 ├── catalog/        ← CATALOG: structured entity records (Obsidian Bases)
 │   papers · people · organizations · venues · datasets · repositories
 ├── notes/          ← NOTES: prose (Zettelkasten)
-│   fleeting/ · source/ · claims/ 🔒 · hubs/ 🔒 · index/
+│   fleeting/ · sources/ · claims/ 🔒 · hubs/ 🔒 · indexes/
 ├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.0-alpha.2)
 ├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
 ├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
