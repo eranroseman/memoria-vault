@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.6
-status: draft        # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan — v0.1.0-alpha.6
 parent: Releasing
@@ -9,7 +9,7 @@ nav_order: 2
 
 # Release plan — v0.1.0-alpha.6
 
-**Current status: pre-release (draft).** alpha.6 turns the alpha.6 ADR audit's
+**Current status: complete (internal checkpoint, untagged).** alpha.6 turns the alpha.6 ADR audit's
 findings into a checkpoint: make the **accepted** decisions that silently don't hold
 actually hold, finish alpha.5's Project-gate navigation surface inside Studio, and deliver the
 roadmap's committed-next **ephemeral test-env harness (ADR-80, Phase 1)**. The single
