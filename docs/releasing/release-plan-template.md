@@ -20,7 +20,7 @@ nav_order: 2
   3. Create the "Release vX.Y" parent issue with one sub-issue per gate/stage.
   4. Rewrite the per-release prose (status line, scope, limitations).
   5. Start a sibling  release-plan-<version>-appendix.md  for anything too
-     detailed to belong in a crisp plan (see §9).
+     detailed to belong in a crisp plan (see §12).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
   SINGLE SOURCE OF STATE. This file holds PROSE, not state. Gate (G#) and Stage
@@ -103,34 +103,81 @@ per-artifact deferred set. }}
 
 ## 6. Known limitations (state in the release notes)
 
-<!-- PROSE bullets. Carried verbatim into the published release notes at cut. -->
+<!-- PROSE bullets. Carried verbatim into the published release notes at cut.
+     Keep each limitation user-facing and actionable; the issue/ADR remains the
+     durable state/decision record. -->
 
-- {{ limitation 1 }}
-- {{ limitation 2 }}
+- Limitation: {{ user-visible limitation }}. Impact: {{ practical impact }}. Workaround: {{ workaround or "none" }}. Tracking: {{ issue/ADR }}.
+- Limitation: {{ user-visible limitation }}. Impact: {{ practical impact }}. Workaround: {{ workaround or "none" }}. Tracking: {{ issue/ADR }}.
 
-## 7. Cut procedure
+## 7. Documentation integrity
+
+<!-- Fresh analysis, not copied-forward assumptions. This section defines the
+     release's documentation quality bar; detailed findings live in issues,
+     ADRs, docs edits, or the appendix when they are worth preserving. -->
+
+Before the release candidate is approved, complete a fresh documentation sweep:
+
+1. **Coverage:** every shipped feature, operation, profile behavior, installer path, and runtime expectation has current coverage in `docs/how-to-guides/` or `docs/reference/`, with explanatory context in `docs/explanation/` when the "why" matters.
+2. **Single source of truth:** scan the repository docs for implementation-documentation gaps, duplicate/competing authorities, contradictions, and subtle cross-document drift. Fix defects rather than recording known-bad prose as limitations.
+3. **Diataxis placement:** review `docs/explanation/`, `docs/how-to-guides/`, `docs/tutorials/`, `docs/reference/`, and their README/index pages for quadrant fit, titles, links, and index coverage.
+4. **ADR capture:** any durable decision, scope cut, or design rationale discovered during the release is captured in `docs/adr/` or folded into an existing ADR; release `tmp/` files are not the only record of a decision.
+
+## 8. Runtime readiness
+
+<!-- Target-environment checks. Adjust per release, but keep this section concrete
+     enough that "works in CI" cannot hide a broken installed runtime. -->
+
+Record runtime evidence for each target environment this release claims to support:
+
+1. **Fresh clone:** all validation stages pass from a clean checkout, not only the working branch.
+2. **Installer target:** a real install or upgrade path succeeds against a disposable vault, never the user's production vault.
+3. **WSL/Linux host:** package updates needed for the release are applied or explicitly deferred; command resolution uses the intended binaries.
+4. **Hermes profiles:** installed profile configs match the shipped templates, secrets stay in `.env`, and no placeholder values remain.
+5. **Local services:** required local endpoints are reachable, including the local LLM endpoint for test-mode releases and the Obsidian Local REST API/native MCP bridge when the release depends on them.
+6. **GUI acceptance:** any Obsidian, Bases, workspace, portal, or plugin behavior changed by the release is opened and checked in the runtime vault or a disposable vault.
+
+Evidence should include the command or manual check, date, target machine/environment,
+pass/fail summary, and a link to the issue comment, Actions artifact, or
+`validation-log.md` entry when the evidence should remain durable.
+
+## 9. Release close-out sweep
+
+<!-- Disposition before cut/checkpoint close. This keeps tracked scratch from
+     becoming either hidden state or deleted institutional memory. -->
+
+Before cutting a formal release or closing an internal checkpoint:
+
+1. **Review every tracked `docs/releasing/*/tmp/` file.** If the work was implemented, move the durable content into ADRs, system documentation, reference docs, how-to docs, explanation docs, or release notes as appropriate.
+2. **Move unfinished release scratch forward.** If a `tmp/` file still describes unimplemented or deferred work, move it to the next release folder's `tmp/` and update any links.
+3. **Delete completed-release `tmp/` folders only after disposition.** Do not delete `tmp/` as cleanup until each file has either been captured durably or moved forward.
+4. **Retire-sweep ADRs.** Delete any ADR whose question this release dissolved or whose decision it superseded, keeping the Alternatives-considered memory in the surviving ADR when needed; leave the number gap.
+5. **Clean release bookkeeping.** Close or roll forward issues, close the milestone, close the release parent issue, and make sure no release state remains only in a local note.
+6. **Git hygiene:** ensure the work is committed, merged through PR, remote branch deleted, local task worktree removed, and the dedicated main checkout fast-forwarded with a clean status.
+
+## 10. Cut procedure
 
 <!-- NUMBERED steps. The reusable checklist for cutting THIS release. -->
 
 1. **Every gate + stage sub-issue closed** under "Release vX.Y"; required CI green on `main`; no open High-priority blocker.
 2. **Re-run all stages from a fresh clone** on a clean target → all green; record evidence in the relevant sub-issues or Actions artifacts.
-3. **Merge the release-please "Release vX.Y" PR** — it bumps `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release (fold the §6 known-limitations into the notes). This replaces manual version-bump + tagging.
-4. **Flip `released: false` → `true`** in this file's frontmatter and set `status: released`.
-5. **Delete any `tmp/` design notes** from this release folder; tracked scratch is allowed only while a release is being designed.
+3. **Complete §7 documentation integrity, §8 runtime readiness, and §9 close-out sweep.**
+4. **Formal release path:** merge the release-please "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release. Fold the §6 known limitations into the notes. Then set this file's frontmatter to `status: released`, `released: true`.
+5. **Internal checkpoint path:** do not cut a tag or GitHub Release. Set this file's frontmatter to `status: complete`, `released: false` after the release parent issue is closed.
 6. **Close the milestone and the release parent issue**, rolling any unfinished issues to the next release.
 
-## 8. Roadmap after this release
+## 11. Roadmap after this release
 
 <!-- BRIEF summary only — a few rows. The full phase steps / week-by-week detail go
-     in the appendix file (§9), not here. -->
+     in the appendix file (§12), not here. -->
 
 | Phase | When | Goal |
 | --- | --- | --- |
 | {{ phase }} | {{ when }} | {{ goal in one line }} |
 
-Full phase steps and detail: see the appendix file (§9).
+Full phase steps and detail: see the appendix file (§12).
 
-## 9. Appendix — what does NOT belong in this file
+## 12. Appendix — what does NOT belong in this file
 
 <!-- The release plan stays crisp and reusable. Anything that is detailed,
      long-lived, or version-specific lives in a sibling appendix file:
