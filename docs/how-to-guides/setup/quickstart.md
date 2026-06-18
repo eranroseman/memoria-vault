@@ -11,7 +11,7 @@ Five steps from zero to a working vault with the Co-PI answering. For the full w
 
 ## Prerequisites
 
-- Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer
+- Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
 - The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md))
 
@@ -45,7 +45,7 @@ Propagate them into every profile (profile runs read only their own `.env`):
 bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git and the pre-commit schema gate need a repo:
+**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git, rollback/history, the pre-commit schema gate, and verify-on-commit need a repo:
 
 ```bash
 cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"

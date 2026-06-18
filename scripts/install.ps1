@@ -124,6 +124,12 @@ function Install-WingetApp {
     }
 }
 
+function Assert-RequiredCommands {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        Stop-Install 'Git is required on PATH. Install Git for Windows, open a new PowerShell so PATH refreshes, then rerun the installer.'
+    }
+}
+
 function Get-RepoRoot {
     if ($PSCommandPath) {
         $scriptRoot = Split-Path -Parent $PSCommandPath
@@ -135,6 +141,17 @@ function Get-RepoRoot {
     $work = Join-Path $env:TEMP ('memoria-vault-' + [guid]::NewGuid().ToString('N'))
     Invoke-Logged -FilePath 'git' -ArgumentList @('clone', '--depth', '1', $RepoUrl, $work)
     return $work
+}
+
+function Get-LocalRepoRoot {
+    if ($PSCommandPath) {
+        $scriptRoot = Split-Path -Parent $PSCommandPath
+        $localRoot = Split-Path -Parent $scriptRoot
+        if (Test-Path (Join-Path $localRoot 'src/.obsidian')) {
+            return $localRoot
+        }
+    }
+    return $null
 }
 
 function Get-CommandPath {
@@ -216,8 +233,54 @@ function Copy-VaultSource {
     $src = Join-Path $RepoRoot 'src'
     if (-not (Test-Path $src)) { Stop-Install "Missing src tree at $src." }
     New-Item -ItemType Directory -Path $Vault -Force | Out-Null
-    Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json')
+    Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json', 'appearance.json')
     Write-Ok "Vault populated at $Vault"
+}
+
+function Enable-MemoriaCssSnippets {
+    param([string]$RepoRoot)
+    Write-Header 'Obsidian CSS snippets'
+    $srcSnippets = if ($RepoRoot) { Join-Path $RepoRoot 'src/.obsidian/snippets' } else { Join-Path $Vault '.obsidian/snippets' }
+    $dstSnippets = Join-Path $Vault '.obsidian/snippets'
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path $dstSnippets -Force | Out-Null
+    }
+    foreach ($snippetFile in @('memoria-link-colors.css', 'memoria-property-badges.css')) {
+        $srcFile = Join-Path $srcSnippets $snippetFile
+        $dstFile = Join-Path $dstSnippets $snippetFile
+        if ((Test-Path $srcFile) -and -not (Test-Path $dstFile)) {
+            Write-Line "  + copy missing $snippetFile"
+            if (-not $DryRun) { Copy-Item $srcFile $dstFile -Force }
+        }
+    }
+
+    $appearance = Join-Path $Vault '.obsidian/appearance.json'
+    if ($DryRun) {
+        Write-Line "  + ensure enabledCssSnippets contains memoria-link-colors, memoria-property-badges in $appearance"
+        return
+    }
+    $data = [ordered]@{}
+    if (Test-Path $appearance) {
+        try {
+            $parsed = Get-Content -Raw -Path $appearance | ConvertFrom-Json
+            foreach ($property in $parsed.PSObject.Properties) {
+                $data[$property.Name] = $property.Value
+            }
+        } catch {
+            Stop-Install "$appearance is not valid JSON. Fix it or remove it, then rerun the installer. $($_.Exception.Message)"
+        }
+    }
+    $enabled = @()
+    if ($data.Contains('enabledCssSnippets') -and $data['enabledCssSnippets']) {
+        $enabled = @($data['enabledCssSnippets'])
+    }
+    foreach ($snippet in @('memoria-link-colors', 'memoria-property-badges')) {
+        if ($enabled -notcontains $snippet) { $enabled += $snippet }
+    }
+    $data['enabledCssSnippets'] = $enabled
+    New-Item -ItemType Directory -Path (Split-Path -Parent $appearance) -Force | Out-Null
+    $data | ConvertTo-Json -Depth 10 | Set-Content -Path $appearance -Encoding UTF8
+    Write-Ok 'Memoria CSS snippets enabled in .obsidian/appearance.json'
 }
 
 function Install-McpDeps {
@@ -509,12 +572,16 @@ function Invoke-Main {
             Install-WingetApp -Id 'Zotero.Zotero' -Name 'Zotero' -Fallback 'https://www.zotero.org/download/'
             Install-WingetApp -Id 'Git.Git' -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
         }
+        Assert-RequiredCommands
         Install-Hermes
         $repoRoot = Get-RepoRoot
         Copy-VaultSource -RepoRoot $repoRoot
+        Enable-MemoriaCssSnippets -RepoRoot $repoRoot
         Install-McpDeps
     } else {
+        Assert-RequiredCommands
         $script:VenvPython = Join-Path $Vault '.memoria/.venv/Scripts/python.exe'
+        Enable-MemoriaCssSnippets -RepoRoot (Get-LocalRepoRoot)
     }
 
     Install-Profiles

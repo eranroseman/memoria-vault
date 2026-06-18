@@ -36,11 +36,15 @@ ADR trail rather than living only in a release scratch note.
 The all-Linux test environment is a **version-controlled golden image** (a
 peer-reviewed `Dockerfile`) holding the full real stack — headless Obsidian
 (`xvfb-run --no-sandbox`) with all plugins, Zotero (headless) or a fixture
-`memoria.bib`, Hermes, the five `memoria-*` profiles + MCP, the Local REST API +
-native MCP, and `qmd` — with the local model as a `--gpus all` sibling container.
-`docker compose` brings it up clean per run; a fresh vault volume is seeded from
-checksummed, idempotent fixtures; nothing persists across runs except the cached
-model weights. A **pytest orchestrator** drives the Obsidian CLI over the
+`memoria.bib`, Git, Hermes, the five `memoria-*` profiles + MCP, the Local REST
+API + native MCP, and `qmd` — with the local model as a `--gpus all` sibling
+container. `docker compose` brings it up clean per run; a fresh vault volume is
+seeded from checksummed, idempotent fixtures; nothing persists across runs except
+the cached model weights. The image MUST include a real `git` binary and
+initialize the throwaway vault as a repository before any git-backed assertions
+run; a sandbox without Git is unsupported, because obsidian-git, the pre-commit
+schema gate, post-commit verification, rollback, and history are part of the
+system under test. A **pytest orchestrator** drives the Obsidian CLI over the
 command-palette surface (one trigger per palette command), asserting artifact
 shape / frontmatter, gate decision + audit row, board transition, dashboard
 re-render (injected JS), and a screenshot golden-image diff.
@@ -108,7 +112,7 @@ network — and add:
 - (b) **record/replay cassettes** for the agent-wiring loops, matched on tool-call
   structure, so L2b runs with **no live model**;
 - (c) the **deny-assertion** (already shipped) plus the **installer / recovery**
-  smoke;
+  smoke, including a hard preflight that fails when `git` is absent from the image;
 - (d) the **L4 golden-path** (source → ingest → classify → discuss → claim → draft →
   verify → export), model-free, by two means that compose. **Seed** fixture
   artifacts at the generative steps and drive the deterministic stages live —
@@ -145,6 +149,10 @@ no-model tier the shippable unit and defers the rest.
 - Introduces new maintained artifacts: the golden image, the fixture corpus, and
   the Obsidian-CLI harness — each version-pinned and hash-recorded per run so
   "green today = green tomorrow."
+- Git becomes an explicit image dependency, not an ambient host assumption. The
+  harness must fail early if the binary or initialized throwaway repo is missing,
+  because degraded "no git" runs do not exercise Memoria's commit hooks or
+  rollback/history contract.
 - A binary "did it call a tool?" check misclassifies a weak local model. Assertions
   use a three-bucket classification (no tool call / wrong (tool,path) / expected
   shape); only the expected bucket asserts artifact, gate, audit, board, and

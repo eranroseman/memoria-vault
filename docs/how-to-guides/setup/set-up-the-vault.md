@@ -11,7 +11,7 @@ Run the bootstrap installer to provision the runtime, lay the vault down, and re
 
 ## Prerequisites
 
-- Git on your `PATH`
+- Git on your `PATH` (required for the installer and for runtime history; sandbox images must include it too)
 - Windows PowerShell 5.1+ for production, or Ubuntu/Debian/WSL for the Linux test path — macOS is not supported
 - The installer provisions Hermes itself (+ the ACP extra); you don't need it beforehand
 
@@ -56,7 +56,7 @@ git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # opt
 git push -u origin main                                                    # if you added a remote
 ```
 
-obsidian-git needs a repo to commit into; the remote (your own, not the starter repo) enables backup, multi-machine sync, and the version history the Librarian and Linter depend on.
+obsidian-git needs a repo to commit into; the remote (your own, not the starter repo) enables backup, multi-machine sync, and the version history the Librarian and Linter depend on. A sandbox without a real `git` binary is an unsupported degraded runtime, because the commit hooks and rollback/history assumptions cannot run.
 
 ## Verify
 

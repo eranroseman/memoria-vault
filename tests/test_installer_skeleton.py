@@ -99,6 +99,20 @@ def test_installer_treats_python_as_a_hard_prerequisite():
     assert "python_install_guidance" in ensure_prereqs
     assert "sudo apt-get install -y$missing" in ensure_prereqs
 
+def test_installers_treat_git_as_a_hard_prerequisite():
+    sh = INSTALL.read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "ensure_git_available()" in sh
+    assert "Git is required on PATH" in sh
+    assert "ensure_git_available" in re.search(
+        r'if \[ "\$PROFILES_ONLY" -eq 1 \]; then(?P<body>.*?)\n  fi',
+        sh,
+        re.S,
+    ).group("body")
+    assert "function Assert-RequiredCommands" in ps
+    assert "Git is required on PATH" in ps
+    assert "Assert-RequiredCommands" in ps
+
 def test_mcp_deps_fail_loudly_without_python():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
@@ -112,8 +126,28 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "skipping MCP deps" not in install_mcp_deps
 
 def test_installer_preserves_user_appearance_on_refresh():
-    text = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    assert "--exclude '.obsidian/appearance.json'" in text
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "--exclude '.obsidian/appearance.json'" in sh
+    assert "'appearance.json'" in ps
+
+def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    for text, function_name in (
+        (sh, "ensure_memoria_css_snippets"),
+        (ps, "Enable-MemoriaCssSnippets"),
+    ):
+        assert function_name in text
+        assert "memoria-link-colors" in text
+        assert "memoria-property-badges" in text
+        assert "enabledCssSnippets" in text
+    assert "ensure_memoria_css_snippets" in re.search(
+        r'if \[ "\$PROFILES_ONLY" -eq 1 \]; then(?P<body>.*?)\n  fi',
+        sh,
+        re.S,
+    ).group("body")
+    assert "Enable-MemoriaCssSnippets -RepoRoot (Get-LocalRepoRoot)" in ps
 
 def test_windows_installer_uv_fallback_enables_mcp_extra():
     text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")

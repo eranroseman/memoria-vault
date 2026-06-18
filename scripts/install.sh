@@ -119,11 +119,68 @@ confirm() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+ensure_git_available() {
+  have git || die "Git is required on PATH. Install it (Ubuntu/WSL: sudo apt-get update && sudo apt-get install -y git), then rerun the installer."
+}
+
 python_install_guidance() {
   say "Python 3 is required for Memoria's deterministic tools and MCP servers."
   say "Ubuntu/WSL fix:"
   say "    sudo apt-get update && sudo apt-get install -y python3 python3-venv"
   say "Then re-run this installer."
+}
+
+ensure_memoria_css_snippets() {
+  local src="${REPO_DIR:-}/src"
+  if [ ! -d "$src/.obsidian" ]; then
+    local script_dir=""
+    if [ -f "${BASH_SOURCE[0]:-}" ]; then
+      script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
+    if [ -n "$script_dir" ] && [ -d "$script_dir/../src/.obsidian" ]; then
+      src="$(cd "$script_dir/.." && pwd)/src"
+    else
+      src="$VAULT_PATH"
+    fi
+  fi
+  local appearance="$VAULT_PATH/.obsidian/appearance.json"
+  local snippet_dir="$VAULT_PATH/.obsidian/snippets"
+  local snippet
+
+  run mkdir -p "$snippet_dir"
+  for snippet in memoria-link-colors.css memoria-property-badges.css; do
+    if [ -f "$src/.obsidian/snippets/$snippet" ] && [ ! -f "$snippet_dir/$snippet" ]; then
+      run cp "$src/.obsidian/snippets/$snippet" "$snippet_dir/$snippet"
+    fi
+  done
+
+  if [ "$DRY_RUN" -eq 1 ]; then
+    run "${PYTHON:-python3}" - "$appearance" memoria-link-colors memoria-property-badges
+    return
+  fi
+
+  "${PYTHON:-python3}" - "$appearance" memoria-link-colors memoria-property-badges <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+required = sys.argv[2:]
+path.parent.mkdir(parents=True, exist_ok=True)
+try:
+    data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+except json.JSONDecodeError as exc:
+    raise SystemExit(f"{path} is not valid JSON; fix it or remove it, then rerun the installer: {exc}")
+enabled = data.get("enabledCssSnippets")
+if not isinstance(enabled, list):
+    enabled = []
+for snippet in required:
+    if snippet not in enabled:
+        enabled.append(snippet)
+data["enabledCssSnippets"] = enabled
+path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+  ok "Memoria CSS snippets enabled in .obsidian/appearance.json"
 }
 
 # Remove the temp/staging clone on exit (only the one we created — never the
@@ -399,6 +456,8 @@ copy_vault() {
       || warn "golden copy not staged — run golden_restore.py stage manually (lint:restore needs it)"
   fi
   ok "Golden copy reconciled (.memoria/golden/)"
+
+  ensure_memoria_css_snippets
 
   wire_commit_gate
   wire_verify_on_commit_hook
@@ -1033,8 +1092,10 @@ main() {
 
   if [ "$PROFILES_ONLY" -eq 1 ]; then
     load_install_modules
+    ensure_git_available
     resolve_vault_for_profiles
     install_mcp_deps
+    ensure_memoria_css_snippets
     ensure_qmd
     install_profiles
     wire_telemetry_cron
