@@ -120,8 +120,17 @@ Before the release candidate is approved, complete a fresh documentation sweep:
 
 1. **Coverage:** every shipped feature, operation, profile behavior, installer path, and runtime expectation has current coverage in `docs/how-to-guides/` or `docs/reference/`, with explanatory context in `docs/explanation/` when the "why" matters.
 2. **Single source of truth:** scan the repository docs for implementation-documentation gaps, duplicate/competing authorities, contradictions, and subtle cross-document drift. Fix defects rather than recording known-bad prose as limitations.
-3. **Diataxis placement:** review `docs/explanation/`, `docs/how-to-guides/`, `docs/tutorials/`, `docs/reference/`, and their README/index pages for quadrant fit, titles, links, and index coverage.
-4. **ADR capture:** any durable decision, scope cut, or design rationale discovered during the release is captured in `docs/adr/` or folded into an existing ADR; release `tmp/` files are not the only record of a decision.
+3. **Diataxis placement and indexing:** review `docs/explanation/`, `docs/how-to-guides/`, `docs/tutorials/`, `docs/reference/`, and their README/index pages for quadrant fit, titles, links, `nav_order`, guide-map coverage, and section README shape.
+4. **Related links:** review "Related" sections for missing, stale, weak, or incorrectly ordered links. Keep only strong semantic or explicit workflow links; remove weak proximity links.
+5. **Terminology and glossary drift:** scan for overloaded terms, renamed concepts, inconsistent stage/status/profile names, and undefined terms that need `docs/reference/vocabulary.md` or another central reference entry.
+6. **Third-party and example freshness:** verify claims, commands, config keys, snippets, and examples that mention Hermes, Obsidian, Zotero, bundled plugins, skills, package managers, or external CLIs against the current implementation or upstream docs when relevant.
+7. **ADR capture:** any durable decision, scope cut, or design rationale discovered during the release is captured in `docs/adr/` or folded into an existing ADR; release `tmp/` files are not the only record of a decision.
+
+Record the sweep's output in the relevant gate/stage issue or appendix when it
+should remain durable. Findings are grouped **Critical / Major / Minor**, and each
+finding cites `file:line`, issue type, reasoning, and the recommended edit. Include
+the checker summary (`docs_doctor`, docs links, `status_doctor`, cspell, and any
+manual/subagent scan coverage) so the evidence is reproducible.
 
 ## 8. Runtime readiness
 
