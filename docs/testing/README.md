@@ -24,8 +24,8 @@ is worth preserving after the GitHub trail.
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release gate/stage sub-issues |
-| [scripts/test.sh](../../scripts/test.sh) | Local **L0/L1 runner** — static checks + the L1 `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
-| [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline installer-equivalent smoke; includes the ADR-80 Phase 1 cassette replay for the model-free L4 path. |
+| [scripts/test.sh](../../scripts/test.sh) | Local `static-contract` + `component` runner — historical L0/L1 static checks plus the `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
+| [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline `vault-assembly` + `workflow-replay` smoke; includes the ADR-80 Phase 1 cassette replay for the model-free path. |
 
 ## Why plans and runs stay separate
 
@@ -36,10 +36,20 @@ to a single version. So: reusable procedure -> `testing/plans/`; automated evide
 curated long-lived summary -> `docs/releasing/<version>/validation-log.md` only when
 the issue/Actions trail is not enough.
 
-## Coverage layers and gates
+## Coverage model
 
-- **Layers (L0–L5)** — what *kind* of coverage: L0 static, L1 pytest component suite, L2 agent
-  wiring, L3 GUI/dashboards, L4 end-to-end lifecycle, L5 output quality.
+The reader-facing test model uses behavior names; the historical layer labels remain
+as compatibility aliases for ADRs, plans, and required CI checks:
+
+| Behavior name | Historical coverage |
+| --- | --- |
+| `static-contract` | L0 static, schema, docs, and repo-contract checks |
+| `component` | L1 `pytest tests/` component suite |
+| `vault-assembly` | installer-equivalent disposable vault build and local git/hook checks |
+| `workflow-replay` | ADR-80 Phase 1 model-free cassette replay across the deterministic lifecycle |
+| `runtime-integration` | L3 live Hermes, Obsidian bridge, GUI, local services, and dashboards |
+| `release-acceptance` | S0–S5 + G-gate release evidence |
+
 - **Stages (S0–S5)** and **Gates (G1–G11)** — release-readiness checkpoints; their
   **state** lives in the per-release **"Release vX.Y" parent issue and sub-issues**,
   not in this folder and not in the release plan (which holds only the prose + gate
@@ -58,17 +68,18 @@ wait for a ratcheting baseline so legacy gaps do not block unrelated fixes.
 ## Run order
 
 ```
-headless ─▶ installer ─▶ cli ─┐
-                        gui ─┴─▶ e2e ─▶ test-env harness ─▶ g9-spine ─▶ g10-ingest
+static-contract ─▶ component ─▶ vault-assembly ─▶ workflow-replay
+                                                └▶ runtime-integration ─▶ release-acceptance
 ```
 
-`headless` (static + Python pytest component suite, CI-enforced) must be green first; `installer`
-stands up a throwaway vault; `cli` and `gui` validate the wired system; `e2e` runs one
-source through the full lifecycle; the [test-env harness](plans/test-env-harness-plan.md)
-replays the model-free ADR-80 Phase 1 cassette; `g9`/`g10` prove the deterministic spine
-and ingest value-loop. Per-release orchestration + sign-off: the [Release-candidate
-runbook](plans/release-candidate-runbook.md) — record state/evidence in the release
-gate/stage sub-issues and preserve only curated summaries in `validation-log.md`.
+`static-contract` and `component` are CI-enforced first. `vault-assembly` builds a
+throwaway vault, initializes git, wires hooks, and checks the local shipped config.
+`workflow-replay` runs the model-free ADR-80 Phase 1 cassette through the deterministic
+lifecycle. `runtime-integration` is the non-PR live surface: Hermes, Obsidian bridge,
+local services, GUI/Bases/dashboards, and model connectivity. `release-acceptance`
+is the [Release-candidate runbook](plans/release-candidate-runbook.md); record
+state/evidence in release gate/stage sub-issues and preserve only curated summaries
+in `validation-log.md`.
 
 ## Adding or changing a plan
 

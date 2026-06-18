@@ -8,19 +8,24 @@ nav_order: 10
 
 # Test coverage matrix
 
-Every design component → the layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../adr/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
+Every design component → the behavior/layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../adr/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
 
-**Layers** (see [ADR-29](../adr/29-testing-framework.md)): **L0** static+schema · **L1** pytest component suite · **L2** agent wiring + policy gate · **L3** system/GUI · **L4** golden-path E2E · **L5** quality/eval · **X** cross-cutting.
+**Behavior names** are the reader-facing contract; historical layers remain aliases:
+`static-contract` = L0, `component` = L1, `vault-assembly` = installer-equivalent
+smoke, `workflow-replay` = ADR-80 Phase 1 model-free L2-L4 replay,
+`runtime-integration` = L3 live runtime/GUI, and `release-acceptance` = S0-S5 +
+G-gate evidence. L5 output quality remains the eval layer, and X marks cross-cutting
+surfaces that still need a named plan.
 
 **Status:** ✅ covered · 🟡 partial · ⛔ gap (no coverage yet).
 
-| # | Component | Layer | Plan / where | Automated | Status |
+| # | Component | Behavior / layer | Plan / where | Automated | Status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | L1 | [headless](plans/headless-test-plan.md) §A (`pytest tests/`) · `python-selftest` CI | ✅ | ✅ |
-| 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
-| 3 | vault→site links + wikilink resolution | L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
-| 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
-| 5 | Dashboard/schema + design-system drift | L0 | headless §D · `detectors --vault --gate dashboard-field-drift,design-system-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
+| 1 | Python tooling — policy gate, hook, board export, metrics, detectors | `component` / L1 | [headless](plans/headless-test-plan.md) §A (`pytest tests/`) · `python-selftest` CI | ✅ | ✅ |
+| 2 | docs/ integrity — links, anchors, page-title text, frontmatter keys | `static-contract` / L0 | headless §B (`docs-doctor`) · CI | ✅ | ✅ |
+| 3 | vault→site links + wikilink resolution | `static-contract` / L0 | headless §B (`check-vault-links`) · CI | ✅ | ✅ |
+| 4 | Installer **lint** (shellcheck, PSScriptAnalyzer) | `static-contract` / L0 | headless §C · `lint-installers` CI | ✅ | ✅ |
+| 5 | Dashboard/schema + design-system drift | `static-contract` / L0 | headless §D · `detectors --vault --gate dashboard-field-drift,design-system-drift` gated in `python-selftest` CI; §D2 non-note audit manual | ✅ drift / 🟡 D2 | ✅ |
 | 6 | 5 profiles — every documented CLI command | L2 | [hermes-cli](plans/hermes-cli-test-plan.md) §4 | manual | ✅ |
 | 7 | Policy gate — deny path, per-lane write scope, 8 actions | L1+L2 | headless §A1 (all lanes' write-walls covered by pytest, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) · hermes-cli §5 (live invariants X4) | semi | ✅ |
 | 8 | Review gate (ADR-27) — dry_run degradation, dispatch precondition | L2 | hermes-cli §4 (W4), §5 (X3), §4.8 (B12) | manual | ✅ |
@@ -33,8 +38,8 @@ Every design component → the layer/plan that covers it → whether it's automa
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |
 | 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
-| 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | X | [installer](plans/installer-test-plan.md) | manual | 🟡 (plan new; lint-only before) |
-| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) for attended runtime; [test-env harness](plans/test-env-harness-plan.md) for ADR-80 Phase 1 cassette replay wired into `scripts/e2e-smoke.sh` | semi | 🟡 (model-free path automated; live model/GUI tail manual) |
+| 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | `vault-assembly` + `release-acceptance` / X | [installer](plans/installer-test-plan.md); PR-safe subset in `scripts/e2e-smoke.sh` | semi | 🟡 (PR subset automated; full install evidence manual) |
+| 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | `workflow-replay` / L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) for attended runtime; [test-env harness](plans/test-env-harness-plan.md) for ADR-80 Phase 1 cassette replay wired into `scripts/e2e-smoke.sh` | semi | 🟡 (model-free path automated; live model/GUI tail manual) |
 | 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../adr/11-vault-eval-maintenance.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
 | 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
@@ -50,7 +55,7 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr
 
 1. **L5 eval (#20)** — the only layer that tests *quality*; owned by ADR-11, gold tasks unbuilt. Highest long-term value.
 2. **Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
-3. **Golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; live model/GUI proof remains attended.
+3. **Runtime integration / golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; live model/GUI proof remains attended or nightly/manual.
 4. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
 5. **Security (#22)**, **Performance (#23)**, **Deployment (#24)** — stand up as the system hardens.
 

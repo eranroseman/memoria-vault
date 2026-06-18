@@ -60,6 +60,23 @@ All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/ma
 - The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
 - Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed plan.
 
+## Current implementation mapping
+
+The historical L0-L5 names remain the decision vocabulary, but the reader-facing
+testing model now names the behavior each layer proves:
+
+| Behavior name | Historical layer |
+| --- | --- |
+| `static-contract` | L0 static, schema, docs, and repo-contract checks |
+| `component` | L1 `pytest tests/` component suite |
+| `vault-assembly` | installer-equivalent disposable vault build and local git/hook checks |
+| `workflow-replay` | ADR-80 Phase 1 model-free cassette replay across the deterministic lifecycle |
+| `runtime-integration` | L3 live Hermes, Obsidian bridge, GUI, local services, and dashboards |
+| `release-acceptance` | S0-S5 + G-gate release evidence |
+
+This is an aliasing migration, not a required-check rename. CI status-check names stay
+stable until branch protection and `ruleset-doctor` are updated deliberately.
+
 ## L2 implementation note
 
 L2 ("wiring / contract") splits at the **model boundary**, and the two halves belong at different costs:
