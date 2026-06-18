@@ -122,10 +122,13 @@ network — and add:
   **upgrade each seeded step to a cassette** as cassettes are recorded, ratcheting
   to full L4 *inside* Phase 1 with no jump to Phase 2.
 
-Deterministic, runs per-PR, and closes the L3-integration, **L4 golden-path**,
-recovery, and safety gaps that actually block releases. The only L4 piece held back
-is the path driven by a *live* model — the L4/L5 seam — which stays on the Windows
-production-acceptance pass and Phase 2.
+Deterministic, runs per-PR, and narrows the L3-integration, **L4 golden-path**,
+recovery, and safety gaps that actually block releases. It proves the
+installer-equivalent vault assembly, deterministic lifecycle, known-deny gate path,
+and cassette replay without requiring a live model or GUI. It does **not** close the
+full live-runtime surface: the path driven by a *live* model, the Obsidian GUI/REST
+tail, screenshots, chaos, security, and performance remain Phase 2 / release-candidate
+runtime-integration work.
 
 **Phase 2 — the live-model + visual + chaos/perf tail (~80% of the cost).** The
 `--gpus all` sibling container + Gemma 4 + nightly real-quality L5 eval (and the
@@ -141,14 +144,17 @@ no-model tier the shippable unit and defers the rest.
 
 ## Consequences
 
-- Closes the ADR-29 L3 manual/Windows gap and the recovery / security /
-  performance cross-cutting gaps; same-host localhost on the Linux side also makes
-  HTTPS REST trivial and closes the cross-OS trust gap
+- Narrows the ADR-29 L3 manual/Windows gap and the recovery / security /
+  performance cross-cutting gaps by making the deterministic Linux side PR-safe.
+  It does not fully close those gaps until Phase 2 adds live Hermes, the Obsidian
+  GUI/REST tail, local-model runtime, screenshot baselines, chaos/security/perf
+  suites, and release-candidate runtime-integration evidence. Same-host localhost
+  on the Linux side still makes the intended HTTPS REST closure path straightforward
   ([#527](https://github.com/eranroseman/memoria-vault/issues/527),
   [ADR-31](31-native-obsidian-mcp.md)).
-- Introduces new maintained artifacts: the golden image, the fixture corpus, and
-  the Obsidian-CLI harness — each version-pinned and hash-recorded per run so
-  "green today = green tomorrow."
+- Phase 1 introduces the fixture/cassette corpus and PR-safe smoke orchestration.
+  Phase 2 is the closure path for the golden image, Obsidian-CLI/GUI harness, and
+  version-pinned per-run evidence that makes "green today = green tomorrow."
 - Git becomes an explicit image dependency, not an ambient host assumption. The
   harness must fail early if the binary or initialized throwaway repo is missing,
   because degraded "no git" runs do not exercise Memoria's commit hooks or
@@ -171,9 +177,13 @@ no-model tier the shippable unit and defers the rest.
 Phase 1 is the `workflow-replay` layer in the testing model. The compatibility
 entrypoint is still `scripts/e2e-smoke.sh`, which now names its PR-safe sections:
 `vault-assembly`, `commit-gate`, `offline-ingest`, `workflow-replay`, and
-`final-integrity`. This does not make the full containerized/headless
-Obsidian/local-LLM design a required PR gate; that remains Phase 2 / nightly /
-release-candidate `runtime-integration`.
+`final-integrity`. This layer partially replaces the old L2/L4 smoke need only for
+model-free cassette replay; it does **not** completely replace the ADR-29
+`scripts/test-l2.sh` concept, which described live Hermes agent-wiring against a
+cheap model and disposable vault. That live driver belongs under opt-in/nightly
+`runtime-integration` unless a deliberately small wrapper is added later. The full
+containerized/headless Obsidian/local-LLM design remains Phase 2 / nightly /
+release-candidate `runtime-integration`, not a required PR gate.
 
 ## When this matters
 
