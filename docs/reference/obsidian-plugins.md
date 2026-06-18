@@ -108,8 +108,8 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Snippet | Required value | Constraint |
 | --- | --- | --- |
-| `memoria-link-colors.css` | Enabled in the starter `appearance.json`; user can toggle | Colors wikilinks by folder/type and adds lifecycle accents when Supercharged Links exposes `data-link-*` attributes. |
-| `memoria-property-badges.css` | Enabled in the starter `appearance.json`; user can toggle | Accents scan-critical Properties rows: `lifecycle`, `ingest_status`, `loudness`, and verification status. This is the visual layer for the property display order in [Frontmatter fields](frontmatter.md). |
+| `memoria-link-colors.css` | Enabled by default through the installer-maintained `enabledCssSnippets` entry in `appearance.json`; user can toggle after install | Colors wikilinks by folder/type and adds lifecycle accents when Supercharged Links exposes `data-link-*` attributes. |
+| `memoria-property-badges.css` | Enabled by default through the installer-maintained `enabledCssSnippets` entry in `appearance.json`; user can toggle after install | Accents scan-critical Properties rows: `lifecycle`, `ingest_status`, `loudness`, and verification status. This is the visual layer for the property display order in [Frontmatter fields](frontmatter.md). |
 
 ### obsidian-git
 
@@ -121,6 +121,11 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `pullBeforePush` | `true` | Required; prevents conflicts on multi-machine setups. |
 | `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
 | `post-commit` hook | enabled | Load-bearing — enqueues Peer-reviewer verification for committed `projects/**/*.md` drafts. Source lives in `.githooks/`, installer copies it into `.git/hooks/`; it is not a `data.json` setting. Do not disable. |
+
+The host running Obsidian or the sandboxed test runtime must have a real `git`
+binary on `PATH`. Without it, obsidian-git, pre-commit schema validation,
+verify-on-commit, rollback, and history are degraded; the installer now fails
+clearly instead of silently skipping those paths.
 
 > **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
 

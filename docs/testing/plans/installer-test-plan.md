@@ -20,7 +20,7 @@ The clean-install end-to-end the other plans *assume has already happened*: `scr
 ## 0. Preconditions
 
 - [ ] Clean clone of the repo at a known commit, on the branch under test.
-- [ ] Hermes ≥ 0.12 on `PATH`; Python 3.11+; `uv`/`uvx` present (for `mcp-obsidian`).
+- [ ] Hermes ≥ 0.12 on `PATH`; Git on `PATH`; Python 3.11+; `uv`/`uvx` present (for `mcp-obsidian`).
 - [ ] No `~/Memoria-test` yet (start from nothing); no `memoria-*` profiles registered (`hermes profile list` empty or pre-recorded), so "newly created" is observable.
 - [ ] Headless gate green first (don't debug an install on top of a red repo).
 
@@ -73,6 +73,10 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 **C2. MCP venv wired.** `ls ~/Memoria-test/.memoria/.venv` and `grep -n '\.venv' ~/.hermes/profiles/memoria-librarian/config.yaml`
 - ✓ Pass: a vault-local venv exists; the profile's `mcp_servers` points its interpreter at it.
 
+**C3. Memoria CSS snippets default on.** Inspect `~/Memoria-test/.obsidian/appearance.json`.
+- ✓ Pass: `enabledCssSnippets` includes `memoria-link-colors` and `memoria-property-badges`; the two corresponding files exist under `.obsidian/snippets/`.
+- ✗ Fails: the visual state layer will appear off by default even though the shipped source enables it.
+
 ---
 
 ## Part D — Idempotency (S3)
@@ -119,7 +123,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | --- | --- | --- | --- |
 | A | clean install: vault deployed, 5 profiles registered | | |
 | B | `{{VAULT_PATH}}` substituted; `.env` seeded; config valid | | |
-| C | 12 plugins copied; MCP venv wired | | |
+| C | 12 plugins copied; MCP venv wired; CSS snippets enabled | | |
 | D | re-run idempotent; `.env` preserved | | |
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | native Windows `install.ps1` (+ bootstrap) | | |
