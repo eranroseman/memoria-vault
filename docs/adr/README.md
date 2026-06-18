@@ -103,7 +103,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | accepted |
 | [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | accepted |
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
-| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | deferred |
+| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | deferred |
 | [77](77-project-gate.md) | Project gate | accepted |

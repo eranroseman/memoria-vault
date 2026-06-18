@@ -2,10 +2,9 @@
 topic: decisions
 id: 74
 title: Manage bundled Obsidian plugins with a pinned provenance manifest
-status: deferred
-nav_exclude: true
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-18
 assumes: [26, 55, 67]
 supersedes: []
 superseded_by: []
@@ -22,40 +21,43 @@ Memoria commits the built files for its required Obsidian plugins under
 `src/.obsidian/plugins/` so a fresh vault works without downloading plugins at
 install time. This supports the repo-as-install-unit and offline, reproducible
 vault image chosen in [ADR-26](26-repo-as-install-unit.md) and
-[ADR-55](55-src-scaffold-populate-golden-copy.md), but the repository does not
-yet record a machine-readable upstream repository, pinned release or commit,
-artifact digest, license, or local-patch status for each bundled plugin.
-Consequently, an update requires manual discovery and review, while CI can
-verify the resulting vault image but cannot prove where a changed `main.js`,
-`manifest.json`, or `styles.css` came from.
+[ADR-55](55-src-scaffold-populate-golden-copy.md). The repository now records a
+static, machine-readable provenance precursor for those bundled artifacts in
+`src/.obsidian/plugin-provenance-lock.json`: plugin identity, upstream repository,
+pinned local version, artifact SHA-256 digests, license assertion, and local-patch
+status. That lock makes manual review auditable, but update automation is still
+future work: CI can validate the static lock against committed artifacts, while a
+repository updater that fetches and replaces upstream-owned artifacts remains a
+later increment.
 
 ## Decision
 
 Memoria keeps bundled Obsidian plugin build artifacts committed in
 `src/.obsidian/plugins/`; installation remains network-independent and does not
-download executable plugin code. The deferred supply-chain model adds:
+download executable plugin code. The accepted supply-chain model is incremental:
 
 - A versioned lock manifest beside the plugin inventory. For each bundled
   plugin it records the plugin ID, upstream repository, pinned release tag or
   commit, source/release URL, artifact SHA-256 digests, license, and whether the
   checked-in files are unmodified, patched, or Memoria-authored.
-- A repository updater that downloads into a temporary directory, verifies the
-  declared upstream identity and pinned version, computes the locked digests,
-  and replaces only upstream-owned build artifacts after an explicit review.
+- A CI provenance doctor as the next increment. It proves the lock matches committed
+  artifacts, every enabled bundled plugin is represented exactly once, declared
+  files exist, and no undeclared executable artifact has entered a plugin directory.
 - A strict ownership split: `main.js`, upstream `manifest.json`, and upstream
   `styles.css` are vendored artifacts unless the lock says otherwise;
   Memoria-authored `data.json`, `.example` files, and configuration overlays are
   maintained separately and are never overwritten by the updater.
-- A CI doctor that proves the lock matches committed artifacts, every enabled
-  bundled plugin is represented exactly once, declared files exist, and no
-  undeclared executable artifact has entered a plugin directory.
+- A repository updater as a later increment, after the CI doctor is stable. It
+  downloads into a temporary directory, verifies the declared upstream identity and
+  pinned version, computes the locked digests, and replaces only upstream-owned
+  build artifacts after explicit review.
 - Explicit patch provenance. A locally modified plugin must use a maintained
   fork or a reviewable patch recorded by the lock; editing minified build output
   without reproducible source or patch history is not allowed.
 
-This ADR records the target model only. Until it is accepted and implemented,
-the current committed plugin layout and manual update procedure remain
-unchanged.
+The lock manifest is current behavior. CI enforcement and updater automation are
+sequenced implementation work, with the CI provenance doctor first so drift is
+detectable before any automation can rewrite artifacts.
 
 ## Consequences
 
@@ -73,13 +75,25 @@ unchanged.
 - Memoria must define migration behavior for renamed plugin IDs and upstream
   manifests before automation can safely prune old plugin directories.
 
+## Current implementation mapping
+
+The static lock precursor is implemented in `src/.obsidian/plugin-provenance-lock.json`
+and validated by `tests/test_plugin_provenance.py`, which checks coverage of enabled
+plugins, manifest-version parity, declared upstream fields, and SHA-256 digests for
+the committed artifact files. This is enough for manual audit and review of vendored
+plugin changes, but it is not yet the full supply-chain automation. The next
+increment is a CI provenance doctor that runs the same class of checks in the
+required validation path and extends them to undeclared executable artifacts. Only
+after that doctor is stable should Memoria add an updater that downloads and stages
+new upstream artifacts for review.
+
 ## When this matters
 
-Revisit this at each release cadence, with higher priority when bundled plugin
-artifacts change regularly, a plugin update cannot be traced confidently to an
-upstream release, a security advisory affects a bundled plugin, local patches
-become necessary, or another maintainer needs to reproduce an update without
-private context. These are scheduling signals, not automatic adoption gates.
+Revisit the remaining increments at each release cadence, with higher priority when
+bundled plugin artifacts change regularly, a plugin update cannot be traced
+confidently to an upstream release, a security advisory affects a bundled plugin,
+local patches become necessary, or another maintainer needs to reproduce an update
+without private context. These are scheduling signals, not automatic adoption gates.
 
 ## Alternatives considered
 
@@ -114,3 +128,5 @@ the recommended long-term model.
 - **Related decisions / Depends on:** [ADR-26](26-repo-as-install-unit.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md),
   [ADR-67](67-drift-procedures-keep-or-retire.md)
+- **Tracking issue:** [#686](https://github.com/eranroseman/memoria-vault/issues/686)
+  — CI provenance doctor before updater automation.
