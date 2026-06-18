@@ -3,24 +3,61 @@ filters:
   and:
     - file.inFolder("notes/claims")
     - 'lifecycle != "archived"'
+formulas:
+  is_orphan: 'file.backlinks.isEmpty()'
+  age_days: '(now() - file.ctime).days.round(0)'
+properties:
+  formula.is_orphan:
+    displayName: "No inbound"
+  formula.age_days:
+    displayName: "Age (days)"
 views:
   - type: table
     name: "By maturity"
+    filters:
+      not:
+        - superseded_by
     groupBy:
       property: maturity
       direction: DESC
     order:
-      - file.name
-      - lifecycle
+      - title
       - maturity
       - topics
       - sources
   - type: table
-    name: "Retracted"
+    name: "Open questions"
+    filters:
+      and:
+        - 'lifecycle == "current"'
+        - formula.is_orphan
+    sort:
+      - property: file.ctime
+        direction: ASC
+    order:
+      - title
+      - topics
+      - sources
+      - formula.age_days
+  - type: table
+    name: "Contradictions"
+    filters:
+      and:
+        - 'lifecycle == "current"'
+        - '!links.contradicts.isEmpty()'
+    sort:
+      - property: file.mtime
+        direction: DESC
+    order:
+      - title
+      - links
+      - topics
+  - type: table
+    name: "Retracted (lineage)"
     filters:
       and:
         - 'lifecycle == "retracted"'
     order:
-      - file.name
+      - title
       - superseded_by
       - sources

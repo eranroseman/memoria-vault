@@ -11,7 +11,7 @@ views:
       and:
         - file.inFolder("catalog/papers")
     order:
-      - file.name
+      - title
       - lifecycle
       - citekey
       - authors
@@ -23,7 +23,7 @@ views:
       and:
         - file.inFolder("catalog/people")
     order:
-      - file.name
+      - name
       - orcid
       - affiliations
   - type: table
@@ -32,7 +32,7 @@ views:
       and:
         - file.inFolder("catalog/organizations")
     order:
-      - file.name
+      - name
       - subtype
       - location
   - type: table
@@ -41,7 +41,7 @@ views:
       and:
         - file.inFolder("catalog/venues")
     order:
-      - file.name
+      - name
       - subtype
       - issn
   - type: table
@@ -50,7 +50,7 @@ views:
       and:
         - file.inFolder("catalog/datasets")
     order:
-      - file.name
+      - name
       - lifecycle
       - doi
       - license
@@ -60,7 +60,7 @@ views:
       and:
         - file.inFolder("catalog/repositories")
     order:
-      - file.name
+      - name
       - url
       - language
       - license

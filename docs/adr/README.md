@@ -97,7 +97,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | deferred |
 | [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |
-| [68](68-workspaces-desk-library-studio.md) | Workspaces v2 — Desk / Library / Studio, home.md as control panel | accepted |
+| [68](68-workspaces-desk-library-studio.md) | Workspaces v2 — Desk / Library / Studio, home.md as control panel | superseded → ADR-81 |
 | [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | accepted |
 | [70](70-navigation-gates-dashboards.md) | Navigation — intent-named gates, ambient maintenance, JTBD dashboards | accepted |
 | [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | accepted |
@@ -110,6 +110,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
+| [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 
 <!-- ADR-INDEX:END -->
 

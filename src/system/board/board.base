@@ -1,0 +1,24 @@
+# Projected worker cards from kanban.db. Generated cards are disposable engine output.
+filters:
+  and:
+    - file.inFolder("system/board")
+    - 'type == "worker-card"'
+formulas:
+  age_min: '(now() - date(as_of)).minutes.round(0)'
+properties:
+  formula.age_min:
+    displayName: "Age (min)"
+views:
+  - type: table
+    name: "By lane"
+    groupBy:
+      property: lane
+      direction: ASC
+    sort:
+      - property: status
+        direction: ASC
+    order:
+      - title
+      - lane
+      - status
+      - formula.age_min

@@ -6,15 +6,13 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Each dashboard in `system/dashboards/` answers one question about the vault, and a healthy vault shows them near-empty. This guide maps situations to dashboards — open the right one first. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
+Each gate dashboard under `gates/` gathers the views for one working mode, and the supporting dashboards under `system/dashboards/` answer narrower operational questions. This guide maps situations to the right surface. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
 ## Where the dashboards open
 
-The three shipped workspaces — **Desk** (the board and Inbox), **Library** (the reading pipeline and catalog), and **Studio** (drafting plus the Project gate) — each pre-load the highest-frequency views for their mode. For the exact main-pane dashboard and left tabs each one loads, see the layout table in [Obsidian workspaces](../../reference/obsidian-workspaces.md); to switch between them, see [Workspaces](use-workspaces.md).
+The shipped gates — **Inbox**, **Library**, **Knowledge**, and **Project** — are dashboard notes with a nav row. The Homepage plugin opens Inbox on startup; use the nav row to move among gates. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
 
-Everything else opens manually: the grouped links on `home.md`, or `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
-For project work, `Memoria: open Project gate` loads Studio and opens `project-gate.md`
-directly.
+Everything else opens manually: follow links from a gate dashboard, or use `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
 ---
 
@@ -22,50 +20,50 @@ directly.
 
 ### "What needs attention right now?"
 
-**The homepage status strip, then the Desk workspace** — the board and the Inbox queue side by side.
+**Inbox** — `gates/inbox.md`.
 
 Glance at the start of every session. Empty means nothing urgent; under 30 seconds to read.
 
 ### "What work is in flight? What's stuck?"
 
-**Desk** — Desk workspace, main pane.
+**Inbox** — Board section.
 
 A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
 ### "What should I read and distill next?"
 
-**Library** — Library workspace, main pane.
+**Library** — `gates/library.md`.
 
 Oldest-first — clear the oldest items first. See [Classify a source](../compile/classify-a-source.md).
 
 ### "Which papers are worth a discussion pass?"
 
-**Discuss Queue** — Library workspace, left tab.
+**Discuss queue** — Library gate.
 
 Open a paper from this queue, then open the Agent Client pane — the active note auto-attaches. See [Discuss a paper](../compile/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 
-**Open Questions** — Library workspace, left tab.
+**Open questions** — Knowledge gate.
 
 Review during the weekly review or when starting a new topic cluster — connect each unconnected claim to a hub or to related claims.
 
 ### "Are any of my claims contradicted by other claims?"
 
-**Contradictions** — Library workspace, left tab.
+**Contradictions** — Knowledge gate.
 
 Check before advancing a claim to `evergreen` or submitting a draft — unresolved contradictions mean the argument isn't settled.
 
 ### "Is this project ready to draft?"
 
-**Project Gate** — `Memoria: open Project gate`, inside Studio.
+**Project** — `gates/project.md`.
 
 Refresh the gate from a project file, then read the active thesis, refutation stamp,
 graph maturity, saturation state, and gap findings.
 
 ### "Something seems wrong but I can't see why"
 
-**Drift Watch** — Desk workspace, left tab.
+**Drift watch** — Inbox gate.
 
 Open when agents behave unexpectedly or queries return wrong results. A FAIL verdict pauses scheduled work until resolved ([Run the Linter](../operate/run-the-linter.md)).
 
@@ -83,7 +81,7 @@ Open when a write didn't happen as expected ([Diagnose a denied or blocked write
 
 ### "What do I need to do this week?"
 
-**Weekly Review** — Desk workspace, left tab; open on Fridays.
+**Weekly review** — open manually on Fridays.
 
 The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks through it step by step.
 

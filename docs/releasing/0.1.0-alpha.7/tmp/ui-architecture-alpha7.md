@@ -124,7 +124,7 @@ Properties that already hold for this mirror and that alpha.7 relies on:
 ### `system/board/board.base` — projected worker cards (mechanic's view)
 
 ```yaml
-filters: { and: [ 'file.inFolder("system/board")', 'kind == "worker-card"' ] }
+filters: { and: [ 'file.inFolder("system/board")', 'type == "worker-card"' ] }
 formulas:
   age_min: '(now() - date(as_of)).minutes.round(0)'   # ← as_of, not file.ctime
 views:

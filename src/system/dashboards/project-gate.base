@@ -11,7 +11,7 @@ views:
       property: output_mode
       direction: ASC
     order:
-      - file.name
+      - title
       - lifecycle
       - output_mode
       - active_thesis
@@ -26,7 +26,7 @@ views:
         - 'output_mode == "thesis"'
         - 'refutation_sufficiency != true'
     order:
-      - file.name
+      - title
       - active_thesis
       - graph_maturity
       - saturation_state

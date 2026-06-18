@@ -1,0 +1,13 @@
+# Hub notes by topic.
+filters:
+  and:
+    - file.inFolder("notes/hubs")
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "Hubs index"
+    order:
+      - title
+      - lifecycle
+      - topic
+      - members

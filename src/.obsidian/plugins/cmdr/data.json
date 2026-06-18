@@ -34,24 +34,6 @@
       "icon": "check-circle",
       "name": "Memoria: resolve inbox card",
       "mode": "any"
-    },
-    {
-      "id": "quickadd:choice:71138de4-6029-416b-8559-fb61fde5efb1",
-      "icon": "layout-dashboard",
-      "name": "Memoria: open Desk workspace",
-      "mode": "any"
-    },
-    {
-      "id": "quickadd:choice:5f43d3c5-544c-4a38-ba5b-be3891254236",
-      "icon": "library",
-      "name": "Memoria: open Library workspace",
-      "mode": "any"
-    },
-    {
-      "id": "quickadd:choice:4a9ffb2d-0cec-4436-9b39-a41384da9670",
-      "icon": "pen-tool",
-      "name": "Memoria: open Studio workspace",
-      "mode": "any"
     }
   ],
   "rightRibbon": [],

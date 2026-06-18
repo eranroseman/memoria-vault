@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (12)
+## Required Obsidian plugins (13)
 
-Memoria breaks without these. The starter vault **ships all twelve bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all thirteen bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 The static provenance precursor for the bundled artifacts is
 `src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
@@ -26,13 +26,14 @@ provenance-doctor remain deferred by [ADR-74](../adr/74-pinned-obsidian-plugin-s
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
 | templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
-| cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, resolution, and workspace switching do not require a palette round trip. |
+| cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, and resolution do not require a palette round trip. |
 | modalforms | `modalforms` | Provides structured in-Obsidian forms for capture and Project flows, including controlled `research_area`, `methodology`, and `scope_topics` fields sourced from `system/vocabulary.md`. |
+| portals | `portals` | Replaces the raw left file tree with curated folder portals while retaining the core file explorer as fallback. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
-| homepage | `homepage` | Opens `home.md` on startup as the deterministic landing surface. |
-| buttons | `buttons` | Renders the command buttons on the `home.md` control panel ([ADR-68](../adr/68-workspaces-desk-library-studio.md)). **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
+| homepage | `homepage` | Opens `gates/inbox` on startup as the deterministic landing surface. |
+| buttons | `buttons` | Supports command-button snippets in note bodies. **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
 ---
 
@@ -158,7 +159,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and open Desk/Library/Studio workspace. | The always-visible ribbon carries the commands needed for the capture → triage → navigate loop. |
+| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; gate switching lives in dashboard nav rows. |
 | `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 
@@ -169,6 +170,16 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `formDefinitions[].name` | `memoria-source-capture`, `memoria-project-start` | Structured source capture and the Project start on-ramp are active PI-facing Modal Forms flows. |
 | `research_area` / `methodology` / `scope_topics` fields | Fixed multiselect options matching `system/vocabulary.md`. | `system/vocabulary.md` is the source of truth; `tests/test_modalforms.py` fails if the committed form options drift. |
 | `globalNamespace` | `MF` | Keeps the plugin API available at the default namespace used by Modal Forms examples. |
+
+### portals
+
+| Setting | Required value | Constraint |
+| --- | --- | --- |
+| `spaces[]` | Folder portals for `inbox`, `catalog`, `notes/sources`, `notes/claims`, `notes/hubs`, and `projects`. | Portals is reach-only folder navigation; no tag portals and no gate switching. |
+| `replaceFileExplorer` | `true` | Portals replaces the visible explorer surface through its own setting while the core `file-explorer` plugin remains enabled as fallback. |
+| `hiddenItems` | `{ "system": true, ".memoria": true }` | Runtime and generated infrastructure stay out of the PI-facing navigation pane. |
+| `tagNotesFolderPath` | `system/_tag-notes` | Keeps the plugin's tag-note folder out of the user namespace. |
+| `splitViewTabs` | `recent`, `bookmarks`, `context-notes`, `trash` | Drops journal/properties modules because Memoria does not use tag/daily-note navigation as primary structure. |
 
 ### callout-manager
 

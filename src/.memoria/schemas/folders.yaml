@@ -25,6 +25,7 @@ homes:
   alert: inbox
   work-prompt: inbox
   pattern: system/patterns
+  worker-card: system/board
   eval-task: system/eval
   worklist-item: system/worklists
 

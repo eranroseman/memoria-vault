@@ -177,11 +177,22 @@ _safe_name = safe_filename
 
 def card_markdown(card: dict) -> str:
     """One card -> a markdown note: frontmatter (queryable) + body (summary)."""
-    fm_keys = ["task_id", "status", "assignee", "review_status",
-               "retry_count", "reason", "last_updated"]
+    frontmatter = {
+        "title": card["title"],
+        "type": "worker-card",
+        "lifecycle": "current",
+        "task_id": card["task_id"],
+        "lane": card["assignee"],
+        "status": card["status"],
+        "review_status": card["review_status"],
+        "retry_count": card["retry_count"],
+        "reason": card["reason"],
+        "as_of": card["last_updated"],
+        "created": card["created_at"],
+    }
     lines = ["---"]
-    lines += [f"{k}: {_yaml_scalar(card[k])}" for k in fm_keys]
-    lines += ["type: board-card", "---", "", f"# {card['title']}", ""]
+    lines += [f"{k}: {_yaml_scalar(v)}" for k, v in frontmatter.items()]
+    lines += ["---", "", f"# {card['title']}", ""]
     if card["summary"]:
         lines += [card["summary"], ""]
     return "\n".join(lines)

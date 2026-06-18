@@ -1,1 +1,11 @@
-{}
+{
+  "showInlineTitle": false,
+  "readableLineLength": true,
+  "newLinkFormat": "absolute",
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "notes/fleeting",
+  "attachmentFolderPath": "attachments",
+  "trashOption": "local",
+  "propertiesInDocument": "visible"
+}

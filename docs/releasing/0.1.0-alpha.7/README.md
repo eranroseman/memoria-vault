@@ -9,8 +9,8 @@ has_children: true
 Internal checkpoint. Lands the buildable, sandbox-verified subset of the UI redesign:
 the **Bases view layer**, **capture forms**, the **persistent-shell gate model**
 (Inbox/Library/Knowledge/Project, switched by a nav row — retiring the ADR-68
-workspace-swap), **Portals** folder navigation, and the **Memoria-tuned Obsidian
-config + CSS**. The general projector engine, projected telemetry, the
+workspace-swap), **Portals** folder navigation with the core file explorer retained as
+fallback, and the **Memoria-tuned Obsidian config + CSS**. The general projector engine, projected telemetry, the
 Canvas/argument-graph spatial axis, and the edge-authoring "relate" control are
 **deferred**. Live state lives in GitHub.
 

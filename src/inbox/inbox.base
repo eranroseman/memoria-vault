@@ -6,9 +6,12 @@ filters:
     - 'file.ext == "md"'
 formulas:
   age_days: '(now() - file.ctime).days.round(0)'
+  loudness_rank: 'if(loudness == "block", 0, if(loudness == "alert", 1, if(loudness == "notice", 2, 3)))'
 properties:
   formula.age_days:
     displayName: "Age (days)"
+  formula.loudness_rank:
+    displayName: "Priority"
 views:
   - type: table
     name: "Needs me"
@@ -18,15 +21,44 @@ views:
     groupBy:
       property: type
       direction: ASC
+    sort:
+      - property: formula.loudness_rank
+        direction: ASC
+      - property: formula.age_days
+        direction: DESC
     order:
-      - file.name
-      - lifecycle
+      - title
       - action
       - finding
-      - type
       - certainty
       - loudness
-      - raised_by
+      - formula.age_days
+  - type: table
+    name: "Drift watch"
+    filters:
+      and:
+        - 'lifecycle == "proposed"'
+        - 'type == "flag" || type == "alert"'
+    sort:
+      - property: formula.loudness_rank
+        direction: ASC
+    order:
+      - title
+      - finding
+      - agent_recommendation
+      - loudness
+      - target
+      - citekey
+  - type: table
+    name: "Loose ends"
+    filters:
+      and:
+        - 'lifecycle == "proposed"'
+        - 'loudness == "notice"'
+        - 'type == "flag"'
+    order:
+      - title
+      - finding
       - formula.age_days
   - type: table
     name: "All cards"
@@ -37,7 +69,7 @@ views:
       property: type
       direction: ASC
     order:
-      - file.name
+      - title
       - lifecycle
       - action
       - finding
