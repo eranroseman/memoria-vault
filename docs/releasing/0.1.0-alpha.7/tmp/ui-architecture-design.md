@@ -593,6 +593,92 @@ the form is prevention-at-entry for the human lane only.
 - **Capture** — the six forms, cutting across all gates; the three quick-capture
   buttons are `fleeting`, `source(Zotero)`, `source(URL)`.
 
+### Navigation ergonomics — alpha.7 issues #659 · #665 · #667
+
+Three shipped-UI issues are really one theme — *"Bases-as-navigation is rough"* —
+and they strike at this design's central bet (Bases as the universal view layer), so
+they belong here. Two are resolved by the redesign; the third forces an explicit
+position and one new decision.
+
+**#665 — the same base shown 3–4× (Desk).** The current Desk mirrors one inbox base
+across "Needs me", "Board state", "All cards", and "Everything in flight". The
+clean-slate Action surface (§3) is **one `inbox.base` with four *non-overlapping*
+views** — Needs me (`proposed`), Drift watch (flag/alert), Loose ends
+(notice-loudness), All cards — so the triplication is an artifact of the old layout
+that the redesign deletes. **Resolved by the spec; no new decision.**
+
+**#659 — one clear title (filename slug *and* H1/title duplicated).** This is not
+cosmetic: every `.base` view here leads `order:` with `file.name`, so if the filename
+is an opaque slug, **every Bases view shows slugs as its primary column** — a direct
+cause of #667's "unintuitive". Decision:
+
+- **Keep a *stable* filename — do not make the filename the free-text `title`.** The
+  architecture depends on stable link/projection targets: `links:` wikilinks, and the
+  §2 rule 2 `id→sanitized-slug` rule. A mutable title-as-filename reintroduces exactly
+  the rename-churn and illegal-character (`/ :`) problems the slug exists to avoid, and
+  breaks raw links written by agents/API that don't get Obsidian's auto-update.
+- **Make the slug human-readable** (kebab-cased from the title) so `file.name` is
+  already legible, and **lead every Bases `order:` with the `title` property**, not
+  `file.name`, so collections read as titles while clicking still opens the note.
+- **Ship "Show inline title: off"** (with H1 already kept out of bodies, ADR-71) → one
+  title, no duplication.
+- *Open sub-decision:* if the PI wants the **tab/title bar** itself to show the prose
+  title rather than the slug, Obsidian has no native "title from frontmatter" — it
+  needs the front-matter-title plugin or `aliases`. Flagged with its plugin cost
+  rather than chosen here.
+
+**#667 — "using a base to navigate is unintuitive" (proposes Portals).** *(Corrected
+— an earlier draft mischaracterised Portals as a transclusion/embed tool; it is not.)*
+**Portals is a folder/tag *navigation* plugin** — it pins folders and tags as
+customizable tabs (icons, colors, collapsible stacks, hotkey switcher) at the top of
+the file pane and can replace the core file explorer; it has a Side Portal pane
+(Context Notes, Bookmarks, Recent, Hidden, Properties, Trash). It **explicitly does
+not touch Bases/Dataview/saved searches and does not query or modify content.**
+
+So Portals and Bases are **orthogonal layers, not competitors**: Portals is the
+*navigation chrome* (how you reach a folder/note); Bases is the *content/query* layer
+(what a collection looks like). The right use is therefore **not** to swap the view
+primitive but to **replace the raw file-explorer tab in ADR-68's left sidebar with a
+Portals navigator**:
+
+- **Curated folder portals** for the user-facing categories (`catalog`,
+  `notes/claims`, `notes/sources`, `notes/hubs`, `inbox`, `projects`) with type icons
+  — the direct fix for #667's "unintuitive": it repairs the navigation chrome the raw
+  type-first tree does poorly, *without* changing the content primitive.
+- **Route `system/` and `.memoria` to the "Hidden" module** — the clean answer to
+  **#663** ("is `system/` user-facing?"): infrastructure disappears from the explorer.
+- **Context Notes** per category give lightweight folder-level orientation.
+- Mobile-friendly, so folder navigation to *authored* notes still works on a phone
+  where projected Bases are blank (§8 #3).
+
+**Adopt narrowly, and gated.** Costs and unknowns: (a) a **fourth bundled plugin**
+(after Buttons/Modal Forms/QuickAdd) that **replaces a *core* surface** — if it breaks
+on an Obsidian upgrade, navigation breaks; needs ADR-74 pinned-provenance governance
+and the §8 version strategy. (b) **Shippability is the gate** — the same problem
+ADR-68 hit with workspaces: the tab/portal config must ship *in the vault* (a vendored,
+golden-copy-covered plugin `data.json`) to be reproducible, not be per-device UI state.
+Its README ("Export/Import settings", "auto-save configuration on reload") and standard
+Obsidian `saveData()`→`data.json` convention make this *likely*, **but it is
+unverified** — a live install/inspect was blocked by the agent's untrusted-code safety
+policy and needs explicit authorization before adoption. (c) **Taxonomy mismatch** —
+Portals pins folders and `#tags`, but our classification is *frontmatter properties*
+(`topics`, `research_area`), so Portals helps *folder* navigation only; property/
+semantic navigation stays Bases. (d) It's a **partial fix** — it improves the explorer,
+not the dashboard click-through (which the #659 title-display and #665 de-duplication
+already address).
+
+**Net:** keep Bases as the content layer unchanged; adopt Portals as the file-explorer
+replacement for folder navigation + `system/` hiding, **conditional on a shippability
+check** (vendored `data.json`) and ADR-74 governance.
+
+*Out of this design's scope (separate work):* **#666** (workspaces-plus — an ADR-68
+workspace-*switching* mechanism, not a building block) and **#668** (link/badge CSS
+on by default — an install-script default) — but #668 should be sequenced *with* these,
+since the badges/link styling materially improve Bases readability. **#664** is
+partially relevant (status-strip label clarity + button-row → §8 status-strip item and
+ADR-68). The duplicate-folder and root-`AGENTS.md` parts of #663 are runtime/golden-copy
+drift (the canonical `folders.yaml` is already all-plural), not design changes.
+
 ---
 
 ## 6. Review dispositions (15-point critique)
@@ -735,7 +821,18 @@ Until then, fork-to-scratch is the escape hatch.
   #11)*; plus the **edge-authoring "relate" control / link-edit form** (review #1,
   §4) — schema + UI surface to be specified.
 - **Home status strip** — the single remaining Dataview surface: the exact queries
-  it composes (reviews pending · blocked · HIGH/CRITICAL findings).
+  it composes (reviews pending · blocked · HIGH/CRITICAL findings); and clearer
+  link labels than "boards"/"finding" (issue #664).
+- **Tab/title display from frontmatter** *(issue #659 sub-decision, §5)* — slugs stay
+  the stable filename and Bases lead with the `title` property; whether the *tab/title
+  bar* should show the prose title (needs the front-matter-title plugin or `aliases`)
+  is deferred with its plugin cost.
+- **Portals adoption** *(issue #667, §5/§9)* — shippability **CONFIRMED**: the
+  human installed it and its tab/portal/hidden config persists to a vendorable
+  `data.json` (`spaces`, `hiddenItems`, `customIcons`). Remaining work is the
+  configuration (folder portals + `system/` hidden + a shipped `data.json`) and
+  ADR-74 provenance for a fourth bundled plugin on a core surface; it also
+  auto-creates a `_Tag Notes` folder (folder-hygiene item).
 
 ### Round 2 review — disposition summary
 
@@ -756,7 +853,185 @@ Until then, fork-to-scratch is the escape hatch.
 
 ---
 
-## 9. ADR dependencies (for traceability)
+## 9. UI-chrome tier — plugins & CSS (alpha.7)
+
+A thin **chrome tier sits on top of the building blocks** (Bases/Canvas/forms,
+unchanged): four plugins + CSS that handle gate-switching, action-surfacing, the
+front door, and state legibility. All of it **ships in-vault** (plugin `data.json` /
+`workspaces.json` / `.obsidian/snippets/`, golden-copy-coverable), and all of the
+below was verified live in the `Memoria-test` sandbox (Obsidian 1.12.7).
+
+### Workspaces + Workspaces Plus — gate switching (#666; retires an ADR-68 workaround)
+
+ADR-68 had no per-workspace load command, so it shipped a `load-workspace.js` QuickAdd
+script + 3 macros. **Workspaces Plus (0.3.3) registers native
+`workspaces-plus:Desk/Library/Studio` commands** (verified), plus a quick-switcher and
+a status-bar active-gate indicator (which also answers #667's "which gate am I in?").
+
+- **Do:** repoint Commander's 3 workspace ribbon entries to `workspaces-plus:*`; **delete
+  `load-workspace.js` + the 3 QuickAdd workspace macros**. Net simplification — the
+  workspaces stay in the shippable `workspaces.json`; nothing new ships.
+- **Auto-save is safe:** `saveOnSwitch`/`saveOnChange` default **false** (verified), so
+  WP never overwrites the golden layouts. Ship an explicit `data.json` pinning them
+  false for golden-copy reproducibility.
+- **Bonus:** `activeWorkspaceDesktop`/`activeWorkspaceMobile` give a per-platform
+  startup workspace — pairs with Homepage `separateMobile` for the #3 mobile story.
+
+### Commander — the action layer (ADR-72; #664) — and the #1 edge gap, confirmed
+
+Commander already carries ADR-72: ribbon (capture ×3, delegate, resolve, the 3
+workspaces) + page-header (create-linked-claim, write-claim, extract-claims, link-claim).
+
+- **Move *global* actions from home.md Buttons into the Commander ribbon** so they're
+  reachable from any note (not just home.md) — making "every action reachable directly"
+  truly global and fixing #664's column-of-buttons (the `advancedToolbar` does rows).
+- **Page-header = context actions**, and it is the right home for the §4 **edge-authoring
+  "relate" control**.
+- **Live finding — #1 still stands.** The existing `link-claim.js` does *not* author an
+  edge: it writes a deterministic `[!suggestions]` callout and **delegates to the
+  Librarian** to propose links (the ADR-52 propose→confirm path). `create-linked-claim.js`
+  scaffolds **empty** `links: {supports: [], contradicts: []}` and defers to the link
+  gate. So there is elaborate machinery for *agent-proposed* links but **still no control
+  for the PI to *directly originate* a typed edge** — the §4 relate-control is net-new and
+  needed (collides with [[pi-direct-access-rule]] until built). It should be added as a
+  Commander page-header command that opens a Modal Form writing `links:` directly.
+
+### Homepage — front door, projection freshness, mobile (ADR-13; §2; #3)
+
+Homepage opens `home` on launch with `refreshDataview: true`. Two unused hooks to wire:
+
+- **`commands[]` run-on-open** → put the **"rebuild projections"** command here: this is
+  the concrete mechanism for §2 Decision 2's "regenerate pull-class projections on vault
+  open."
+- **`separateMobile: true`** → a **mobile-only home** showing authored content only — the
+  direct mitigation for #3 (don't show the PI blank projected dashboards on a phone).
+
+### Obsidian CSS — state legibility (#668; #659/#667)
+
+The two shipped snippets exist but are **disabled** (`enabledCssSnippets` empty — #668).
+
+- **Enable both by default.** `memoria-property-badges` (Properties-panel state accents)
+  works standalone. `memoria-link-colors` **folder-coloring** works standalone and
+  directly serves #659/#667 — links read by type (claims blue/bold, hubs orange/italic,
+  sources neutral, inbox/projects muted), complementing Portals' folder navigation.
+- **Drop the supercharged-links dependency.** `link-colors`' *lifecycle accents* need the
+  un-installed `supercharged-links` plugin; rather than add it, keep native
+  folder-coloring and carry the lifecycle signal **in Bases** (next point).
+- **Bases state-coloring — live finding (partial).** Bases cells expose
+  `data-property="note.lifecycle"` (the **key**) but **not the value** as an attribute
+  (the value is text). So CSS can accent a **column** by key, but **value-driven row
+  color is not possible via `:has()`**. Use a **formula-glyph column** instead
+  (`if(loudness=="block","🔴", …)`) — value-driven color the Bases-native way, working
+  today. This corrects an earlier "color Bases rows via `:has()`" assumption.
+- **Style Settings** (optional, +1 plugin) makes the snippets' `@settings` colors tunable;
+  **callout-manager** (already installed) can restyle home.md's callouts (#664).
+
+### Plugin discipline (ADR-74)
+
+The bundled set is growing (Buttons, Modal Forms, QuickAdd, Commander, Homepage, Portals,
+Workspaces Plus, callout-manager). Each is supply-chain surface needing ADR-74 provenance.
+Two prunes this tier enables: **retire `load-workspace.js` + the QuickAdd workspace
+macros** (replaced by Workspaces Plus), and **reconsider the Buttons plugin** once
+Commander owns the ribbon/page-header (keep Buttons only for in-note home.md context, or
+drop it). Avoid supercharged-links and Style Settings unless they earn their place.
+
+### Live verification (this section)
+
+- Portals config persists to `data.json` (`spaces`/`hiddenItems`/icons) → **shippable**. ✅
+- Workspaces Plus registers `workspaces-plus:Desk/Library/Studio`; `saveOnSwitch`/
+  `saveOnChange` default false. ✅
+- `link-claim.js` = suggestions + Librarian delegation; `create-linked-claim.js` =
+  empty-`links:` scaffold → **no direct PI edge-authoring (#1 stands)**. ⚠
+- Bases cells carry `data-property` (key) but not the value → column-accent yes,
+  value-driven row color needs a formula-glyph, not `:has()`. ⚠
+- The two CSS snippets are present but disabled (#668). ⚠
+
+---
+
+## 10. Obsidian & plugin settings optimization (alpha.7)
+
+Audited the **shipped** golden config (`src/.obsidian/`, ADR-55) against Memoria's
+needs. Two framing facts first:
+
+- **#668 is drift, not a design gap.** Shipped `appearance.json` *already* enables
+  both snippets (`memoria-link-colors`, `memoria-property-badges`); the runtime
+  `Memoria-test` vault had `enabledCssSnippets` empty. Fix = **installer/golden-copy
+  reconciliation applies `appearance.json`**, not a settings change.
+- **Portals + Workspaces Plus are runtime-only** — enabled in the running vault but
+  absent from shipped `community-plugins.json` *and* `plugin-provenance-lock.json`
+  (which pins the 12-plugin set). Adopting them (§9) = add to both + vendor with
+  sha256.
+
+### `app.json` — ship Memoria-tuned editor settings (today it is `{}`)
+
+The shipped `app.json` is empty, so everything runs at Obsidian defaults — several
+wrong for a research/writing vault. Proposed shipped `app.json`:
+
+```json
+{
+  "showInlineTitle": false,
+  "readableLineLength": true,
+  "newLinkFormat": "absolute",
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "notes/fleeting",
+  "attachmentFolderPath": "attachments",
+  "trashOption": "local",
+  "propertiesInDocument": "visible"
+}
+```
+
+| Setting | Default | → | Why |
+|---|---|---|---|
+| `showInlineTitle` | `true` | `false` | Kills the filename+H1 title duplication — the direct **#659** fix |
+| `readableLineLength` | (runtime drifted `false`) | `true` | Prose readability; the drift-off value is wrong for a writing tool |
+| `newLinkFormat` | `shortest` | `absolute` | Links carry the folder prefix the `link-colors` snippet keys on (`data-href^="notes/claims/"`) so the shipped coloring fires *(verify vs how `links:` are authored)* |
+| `alwaysUpdateLinks` | `false` | `true` | Rename-safe — supports readable-slug filenames (#659) without breaking links |
+| `newFileLocation` / `newFileFolderPath` | `root` | `folder` → `notes/fleeting` | A raw Ctrl-N note becomes a **fleeting** (decided), not vault-root clutter; proper capture still routes through forms |
+| `attachmentFolderPath` | root | `attachments` (dedicated, decided) | Keeps PDFs/images out of the type folders; Portals-hideable |
+| `trashOption` | `system` | `local` | Recoverable deletes; feeds Portals' Trash module |
+| `propertiesInDocument` | `visible` (runtime) | keep `visible` | State (lifecycle/loudness) must show for the badge snippet — the *yes* answer to #664's "do we need properties?" |
+
+`spellcheck`, `livePreview`, `promptDelete`, wikilinks (`useMarkdownLinks:false`) —
+defaults already correct; leave them.
+
+### Core plugins (`core-plugins.json`)
+
+- **Disable core `templates`** *(decided)* — Templater (vendored) is the template
+  system; the core plugin is a redundant second "Insert template" surface. *(Verify
+  QuickAdd doesn't invoke the core command.)*
+- **Keep core `file-explorer` enabled** *(decided)* — adopt Portals by flipping its
+  own `replaceFileExplorer: true`, **not** by disabling the core plugin. Disabling it
+  risks breaking reveal-in-explorer, file context menus, drag-and-drop, and Portals'
+  own integration (the toggle implies cooperation, not replacement-by-disabling).
+- **`tag-pane`** — low value (Memoria classifies via frontmatter properties, not
+  `#tags`); keep only because Portals can pin tag-portals, else a disable candidate.
+- **`daily-notes`** — likely unused (capture is form-based `fleeting`; Portals has a
+  Journal module); lean disable unless dailies are used.
+- `graph` — heavy at 10k notes and superseded by the argument-canvas for real work;
+  leave enabled as a discovery tool, not load-bearing.
+
+### Community plugins (`community-plugins.json` + provenance lock)
+
+- **Add Portals + Workspaces Plus** to the shipped set and to
+  `plugin-provenance-lock.json` (vendored files + sha256), per §9.
+- **Keep `buttons` for now** *(decided)* — the Commander-overlap prune (§9) is a
+  later call, not now.
+
+### `appearance.json`
+
+Fine (snippets enabled). Optional: set `accentColor` to the design's claim-blue
+(`#4a90e2`) for visual identity and a default `theme`. Low priority.
+
+### Where this lands
+
+These are functional changes to the **shipped** `src/.obsidian/` config — a separate
+PR from this design doc. The #668 reconciliation (installer must apply
+`appearance.json`) is a deployment fix tracked alongside.
+
+---
+
+## 11. ADR dependencies (for traceability)
 
 47 (type-first folders) · 49 (catalog in Bases, Linter monitor) · 50 (universal
 lifecycle + maturity) · 51 (inbox cards + honesty card) · 52 (links vs
