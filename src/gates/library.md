@@ -1,5 +1,7 @@
 ---
 title: Library
+type: gate
+lifecycle: current
 dashboard: gate
 gate: library
 ---
@@ -8,7 +10,7 @@ gate: library
 
 [[gates/inbox|Inbox]] · **Library** · [[gates/knowledge|Knowledge]] · [[gates/project|Project]]
 
-> [!tip] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
+> [!brief] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
 > the same source form, so all source notes follow the same schema.
 
 ## Reading pipeline

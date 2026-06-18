@@ -1,5 +1,7 @@
 ---
 title: Inbox
+type: gate
+lifecycle: current
 dashboard: gate
 gate: inbox
 ---
@@ -8,7 +10,7 @@ gate: inbox
 
 **Inbox** · [[gates/library|Library]] · [[gates/knowledge|Knowledge]] · [[gates/project|Project]]
 
-> [!tip] Inbox empty? That's the goal. New agent proposals, integrity flags, and
+> [!brief] Inbox empty? That's the goal. New agent proposals, integrity flags, and
 > work prompts land here when they need a decision.
 
 ## Needs me

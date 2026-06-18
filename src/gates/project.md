@@ -1,5 +1,7 @@
 ---
 title: Project
+type: gate
+lifecycle: current
 dashboard: gate
 gate: project
 ---
@@ -8,7 +10,7 @@ gate: project
 
 [[gates/inbox|Inbox]] · [[gates/library|Library]] · [[gates/knowledge|Knowledge]] · **Project**
 
-> [!tip] No projects yet? Create one with the project form. A project carries its
+> [!brief] No projects yet? Create one with the project form. A project carries its
 > inquiry, FINER scope, output mode, and thesis state.
 
 ## Active projects
