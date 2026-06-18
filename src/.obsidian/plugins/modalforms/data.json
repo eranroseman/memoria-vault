@@ -4,6 +4,29 @@
   "globalNamespace": "MF",
   "formDefinitions": [
     {
+      "title": "Memoria fleeting capture",
+      "name": "memoria-fleeting-capture",
+      "version": "1",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "description": "Optional short title.",
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "body",
+          "label": "Capture",
+          "description": "The thought, quote, or idea.",
+          "input": {
+            "type": "textarea"
+          }
+        }
+      ]
+    },
+    {
       "title": "Memoria source capture",
       "name": "memoria-source-capture",
       "version": "1",
@@ -11,7 +34,6 @@
         {
           "name": "title",
           "label": "Source title",
-          "description": "Title for the proposed source note.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -20,16 +42,15 @@
         {
           "name": "entity",
           "label": "Catalog entity",
-          "description": "Wikilink target for the catalog entity this source is about.",
           "isRequired": true,
           "input": {
-            "type": "text"
+            "type": "note",
+            "folder": "catalog"
           }
         },
         {
           "name": "source_type",
           "label": "Source type",
-          "description": "Kind of source being captured.",
           "isRequired": true,
           "input": {
             "type": "select",
@@ -48,7 +69,7 @@
                 "value": "repository"
               },
               {
-                "label": "Web page",
+                "label": "Web Page",
                 "value": "web-page"
               },
               {
@@ -59,9 +80,42 @@
           }
         },
         {
+          "name": "evidence_level",
+          "label": "Evidence level",
+          "input": {
+            "type": "select",
+            "source": "fixed",
+            "options": [
+              {
+                "label": "Cebm 1",
+                "value": "cebm-1"
+              },
+              {
+                "label": "Cebm 2",
+                "value": "cebm-2"
+              },
+              {
+                "label": "Cebm 3",
+                "value": "cebm-3"
+              },
+              {
+                "label": "Cebm 4",
+                "value": "cebm-4"
+              },
+              {
+                "label": "Cebm 5",
+                "value": "cebm-5"
+              },
+              {
+                "label": "Ungraded",
+                "value": "ungraded"
+              }
+            ]
+          }
+        },
+        {
           "name": "research_area",
           "label": "Research area",
-          "description": "Controlled terms from system/vocabulary.md.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -99,7 +153,6 @@
         {
           "name": "methodology",
           "label": "Methodology",
-          "description": "Controlled terms from system/vocabulary.md.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -142,7 +195,249 @@
         {
           "name": "summary",
           "label": "In my words",
-          "description": "Short PI-authored summary for the source note body.",
+          "input": {
+            "type": "textarea"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Memoria claim capture",
+      "name": "memoria-claim-capture",
+      "version": "1",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Claim title",
+          "isRequired": true,
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "maturity",
+          "label": "Maturity",
+          "isRequired": true,
+          "input": {
+            "type": "select",
+            "source": "fixed",
+            "options": [
+              {
+                "label": "Seedling",
+                "value": "seedling"
+              },
+              {
+                "label": "Budding",
+                "value": "budding"
+              },
+              {
+                "label": "Evergreen",
+                "value": "evergreen"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sources",
+          "label": "Sources",
+          "isRequired": true,
+          "input": {
+            "type": "multiselect",
+            "source": "notes",
+            "folder": "catalog/papers"
+          }
+        },
+        {
+          "name": "topics",
+          "label": "Topics",
+          "input": {
+            "type": "multiselect",
+            "source": "fixed",
+            "multi_select_options": [
+              "personal-informatics",
+              "mobile-health",
+              "digital-mental-health",
+              "health-equity",
+              "patient-clinician-communication",
+              "engagement-sustained-use",
+              "chronic-disease-management",
+              "behavior-change",
+              "llm-generative-ai-for-health",
+              "patient-generated-data",
+              "family-caregiver-health",
+              "mobile-sensing",
+              "sociotechnical-systems",
+              "social-computing-for-health",
+              "conversational-agents",
+              "community-health",
+              "digital-therapeutics",
+              "wearable-sensing",
+              "aging",
+              "human-ai-interaction",
+              "online-health-communities",
+              "implementation-science",
+              "sensemaking",
+              "race-intersectionality",
+              "cscw-collaborative-work",
+              "jitai",
+              "ema-self-report"
+            ]
+          }
+        },
+        {
+          "name": "claim",
+          "label": "Claim statement",
+          "isRequired": true,
+          "input": {
+            "type": "textarea"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Memoria hub capture",
+      "name": "memoria-hub-capture",
+      "version": "1",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Hub title",
+          "isRequired": true,
+          "input": {
+            "type": "text"
+          }
+        },
+        {
+          "name": "topic",
+          "label": "Topic",
+          "isRequired": true,
+          "input": {
+            "type": "select",
+            "source": "fixed",
+            "options": [
+              {
+                "label": "Personal Informatics",
+                "value": "personal-informatics"
+              },
+              {
+                "label": "Mobile Health",
+                "value": "mobile-health"
+              },
+              {
+                "label": "Digital Mental Health",
+                "value": "digital-mental-health"
+              },
+              {
+                "label": "Health Equity",
+                "value": "health-equity"
+              },
+              {
+                "label": "Patient Clinician Communication",
+                "value": "patient-clinician-communication"
+              },
+              {
+                "label": "Engagement Sustained Use",
+                "value": "engagement-sustained-use"
+              },
+              {
+                "label": "Chronic Disease Management",
+                "value": "chronic-disease-management"
+              },
+              {
+                "label": "Behavior Change",
+                "value": "behavior-change"
+              },
+              {
+                "label": "Llm Generative Ai For Health",
+                "value": "llm-generative-ai-for-health"
+              },
+              {
+                "label": "Patient Generated Data",
+                "value": "patient-generated-data"
+              },
+              {
+                "label": "Family Caregiver Health",
+                "value": "family-caregiver-health"
+              },
+              {
+                "label": "Mobile Sensing",
+                "value": "mobile-sensing"
+              },
+              {
+                "label": "Sociotechnical Systems",
+                "value": "sociotechnical-systems"
+              },
+              {
+                "label": "Social Computing For Health",
+                "value": "social-computing-for-health"
+              },
+              {
+                "label": "Conversational Agents",
+                "value": "conversational-agents"
+              },
+              {
+                "label": "Community Health",
+                "value": "community-health"
+              },
+              {
+                "label": "Digital Therapeutics",
+                "value": "digital-therapeutics"
+              },
+              {
+                "label": "Wearable Sensing",
+                "value": "wearable-sensing"
+              },
+              {
+                "label": "Aging",
+                "value": "aging"
+              },
+              {
+                "label": "Human Ai Interaction",
+                "value": "human-ai-interaction"
+              },
+              {
+                "label": "Online Health Communities",
+                "value": "online-health-communities"
+              },
+              {
+                "label": "Implementation Science",
+                "value": "implementation-science"
+              },
+              {
+                "label": "Sensemaking",
+                "value": "sensemaking"
+              },
+              {
+                "label": "Race Intersectionality",
+                "value": "race-intersectionality"
+              },
+              {
+                "label": "Cscw Collaborative Work",
+                "value": "cscw-collaborative-work"
+              },
+              {
+                "label": "Jitai",
+                "value": "jitai"
+              },
+              {
+                "label": "Ema Self Report",
+                "value": "ema-self-report"
+              }
+            ]
+          }
+        },
+        {
+          "name": "members",
+          "label": "Member claims",
+          "input": {
+            "type": "multiselect",
+            "source": "notes",
+            "folder": "notes/claims"
+          }
+        },
+        {
+          "name": "body",
+          "label": "Shape of the topic",
           "input": {
             "type": "textarea"
           }
@@ -157,7 +452,6 @@
         {
           "name": "title",
           "label": "Project title",
-          "description": "Human-readable project name.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -166,7 +460,6 @@
         {
           "name": "slug",
           "label": "Project slug",
-          "description": "Folder-safe slug for the future project workspace.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -175,7 +468,6 @@
         {
           "name": "scope_topics",
           "label": "Scope topics",
-          "description": "Controlled topic terms that bound the project map.",
           "isRequired": true,
           "input": {
             "type": "multiselect",
@@ -214,7 +506,6 @@
         {
           "name": "inquiry_population",
           "label": "Population",
-          "description": "Who or what the inquiry is about.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -223,7 +514,6 @@
         {
           "name": "inquiry_intervention",
           "label": "Intervention",
-          "description": "The exposure, intervention, or phenomenon under study.",
           "input": {
             "type": "text"
           }
@@ -231,7 +521,6 @@
         {
           "name": "inquiry_comparison",
           "label": "Comparison",
-          "description": "The comparator or contrast case, if any.",
           "input": {
             "type": "text"
           }
@@ -239,7 +528,6 @@
         {
           "name": "inquiry_outcome",
           "label": "Outcome",
-          "description": "What the inquiry must be able to answer.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -247,24 +535,21 @@
         },
         {
           "name": "finer_feasible",
-          "label": "FINER feasible",
-          "description": "Why this project is feasible enough to start.",
+          "label": "Feasible",
           "input": {
             "type": "textarea"
           }
         },
         {
           "name": "finer_novel",
-          "label": "FINER novel",
-          "description": "What this project could add beyond the current map.",
+          "label": "Novel",
           "input": {
             "type": "textarea"
           }
         },
         {
           "name": "finer_relevant",
-          "label": "FINER relevant",
-          "description": "Why the answer matters to the program.",
+          "label": "Relevant",
           "input": {
             "type": "textarea"
           }
@@ -272,7 +557,6 @@
         {
           "name": "output_mode",
           "label": "Output mode",
-          "description": "Default to thesis-driven; choose survey only when no thesis is appropriate yet.",
           "isRequired": true,
           "input": {
             "type": "select",
@@ -287,6 +571,40 @@
                 "value": "survey"
               }
             ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Memoria thesis capture",
+      "name": "memoria-thesis-capture",
+      "version": "1",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Thesis",
+          "isRequired": true,
+          "input": {
+            "type": "textarea"
+          }
+        },
+        {
+          "name": "project",
+          "label": "Project",
+          "isRequired": true,
+          "input": {
+            "type": "note",
+            "folder": "projects"
+          }
+        },
+        {
+          "name": "sources",
+          "label": "Sources",
+          "isRequired": true,
+          "input": {
+            "type": "multiselect",
+            "source": "notes",
+            "folder": "catalog/papers"
           }
         }
       ]

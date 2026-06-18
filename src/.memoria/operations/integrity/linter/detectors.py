@@ -50,12 +50,13 @@ TYPE_HOME = {
     "gap": "inbox/",
     "flag": "inbox/",
     "alert": "inbox/",
+    "gate": "gates/",
     "pattern": "system/patterns/",
     "eval-task": "system/eval/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {
-    "catalog", "notes", "projects", "inbox", "system",
+    "catalog", "notes", "projects", "inbox", "gates", "system",
 }
 # Scaffolding, not authored notes: skeleton folders, assets, and the note
 # templates (raw notes full of placeholder [[links]]). Detectors that assert
@@ -91,7 +92,7 @@ DATAVIEW_KEYWORDS = {
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
-NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects")
+NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects", "gates")
 
 # --------------------------------------------------------------------------- #
 # Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
@@ -231,7 +232,7 @@ _TERM_DRIFT = re.compile(
     r"\b(?:Claim Note|claimnote|Paper Note|paper note|permanent note|knowledge base)\b")
 _DESIGN_SCAN_PREFIXES = (
     "home.md", "research-focus.md", "troubleshooting.md", "AGENTS.md",
-    "system/", "notes/", "catalog/", "inbox/", "projects/",
+    "system/", "notes/", "catalog/", "inbox/", "projects/", "gates/",
     ".obsidian/snippets/",
 )
 _DESIGN_SCAN_SUFFIXES = (".md", ".css", ".html")

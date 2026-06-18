@@ -2,12 +2,12 @@
 topic: decisions
 id: 68
 title: Workspaces v2 — Desk / Library / Studio, home.md as control panel
-status: accepted
+status: superseded
 date_proposed: 2026-06-12
 date_resolved: 2026-06-12
 assumes: [13, 48]
 supersedes: []
-superseded_by: []
+superseded_by: [81]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 68

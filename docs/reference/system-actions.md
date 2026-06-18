@@ -148,8 +148,7 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | Delegate a task | Prompts for a lane and goal — the palette twin of the Co-PI's routing skill. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
-| Workspace Desk / Library / Studio | Loads the named workspace layout via the core Workspaces plugin (`load-workspace.js`, [ADR-68](../adr/68-workspaces-desk-library-studio.md)); also wired to the workspace buttons on `home.md`. |
-| Open Project gate | Loads Studio and opens `system/dashboards/project-gate.md` inside it (`open-project-gate.js`); also wired to the Project gate button on `home.md`. |
+| Gate dashboards | Switches mode by opening `gates/inbox.md`, `gates/library.md`, `gates/knowledge.md`, or `gates/project.md` from the dashboard nav row ([ADR-81](../adr/81-persistent-gate-dashboards.md)). |
 
 ### Review decisions
 

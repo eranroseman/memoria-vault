@@ -1,0 +1,55 @@
+# Project gate - project notes plus generated cache timestamp fields.
+filters:
+  and:
+    - or:
+        - file.inFolder("projects")
+        - file.inFolder("inbox")
+    - 'lifecycle != "archived"'
+views:
+  - type: table
+    name: "Active projects"
+    filters:
+      and:
+        - 'type == "project"'
+        - 'lifecycle == "current"'
+    groupBy:
+      property: output_mode
+      direction: ASC
+    order:
+      - title
+      - lifecycle
+      - output_mode
+      - active_thesis
+      - refutation_sufficiency
+      - graph_maturity
+      - saturation_state
+      - computed_at
+  - type: table
+    name: "Saturation"
+    filters:
+      and:
+        - 'type == "project"'
+    groupBy:
+      property: saturation_state
+      direction: ASC
+    order:
+      - title
+      - saturation_state
+      - graph_maturity
+      - computed_at
+      - active_thesis
+  - type: table
+    name: "Project gaps"
+    filters:
+      and:
+        - 'type == "gap"'
+    groupBy:
+      property: gap_type
+      direction: ASC
+    order:
+      - title
+      - gap_type
+      - impact
+      - on_path
+      - saturation_state
+      - graph_maturity

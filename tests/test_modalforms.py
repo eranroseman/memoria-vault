@@ -51,7 +51,24 @@ def test_source_capture_form_uses_vocabulary_options():
 
 def test_structured_capture_forms_cover_source_and_project_setup():
     forms = _forms_by_name()
-    assert {"memoria-source-capture", "memoria-project-start"} <= set(forms)
+    assert {
+        "memoria-fleeting-capture",
+        "memoria-source-capture",
+        "memoria-claim-capture",
+        "memoria-hub-capture",
+        "memoria-project-start",
+        "memoria-thesis-capture",
+    } <= set(forms)
+
+
+def test_modal_forms_data_is_generated_from_schema():
+    import subprocess
+
+    subprocess.run(
+        ["python", "scripts/gen-forms.py", "--check"],
+        cwd=SRC.parent,
+        check=True,
+    )
 
 
 def test_project_start_form_is_available_for_later_automation():
@@ -63,6 +80,21 @@ def test_project_start_form_is_available_for_later_automation():
         assert fields[required]["isRequired"] is True
     assert fields["scope_topics"]["input"]["multi_select_options"] == _terms("research_area")
     assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
+
+
+def test_source_capture_uses_catalog_note_picker():
+    fields = {field["name"]: field for field in _forms_by_name()["memoria-source-capture"]["fields"]}
+    assert fields["entity"]["input"] == {"type": "note", "folder": "catalog"}
+
+
+def test_claim_and_thesis_sources_use_catalog_paper_picker():
+    for form_name in ("memoria-claim-capture", "memoria-thesis-capture"):
+        fields = {field["name"]: field for field in _forms_by_name()[form_name]["fields"]}
+        assert fields["sources"]["input"] == {
+            "type": "multiselect",
+            "source": "notes",
+            "folder": "catalog/papers",
+        }
 
 
 def test_project_start_form_covers_project_schema_fields():

@@ -1,12 +1,4 @@
-"""The shipped workspace layouts and the home.md control panel are internally consistent.
-
-ADR-68: three workspaces (Desk / Library / Studio) share one layout contract —
-every file a layout pins exists under src/, the Co-PI chat view is pinned in
-every right sidebar, and home.md's command buttons dispatch only commands that
-actually exist (a QuickAdd choice registered as `QuickAdd: <choice name>`, or
-the agent-client chat command). The three workspace-switch choices must point
-at the shipped loader script, which must know all three names.
-"""
+"""Alpha.7 gate dashboards replace per-gate workspace swapping."""
 
 import json
 import re
@@ -17,92 +9,30 @@ WORKSPACES = SRC / ".obsidian" / "workspaces.json"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
 HOMEPAGE = SRC / ".obsidian" / "plugins" / "homepage" / "data.json"
 COMMANDER = SRC / ".obsidian" / "plugins" / "cmdr" / "data.json"
-HOME = SRC / "home.md"
-DESK_DASHBOARD = SRC / "system" / "dashboards" / "desk.md"
-LOADER = SRC / "system" / "scripts" / "load-workspace.js"
+APP = SRC / ".obsidian" / "app.json"
+CORE = SRC / ".obsidian" / "core-plugins.json"
+COMMUNITY_PLUGINS = SRC / ".obsidian" / "community-plugins.json"
+PORTALS = SRC / ".obsidian" / "plugins" / "portals" / "data.json"
 
-WORKSPACE_NAMES = ["Desk", "Library", "Studio"]
+GATES = {
+    "inbox": "gates/inbox.md",
+    "library": "gates/library.md",
+    "knowledge": "gates/knowledge.md",
+    "project": "gates/project.md",
+}
 COPI_VIEW = "agent-client-chat-view"
-COPI_COMMAND = "Agent Client: Open chat view"
 
 
-def _data():
+def _workspace_data():
     return json.loads(WORKSPACES.read_text(encoding="utf-8"))
 
 
 def _leaves(node):
-    """Flatten a workspace split tree into its leaf states."""
     if node.get("type") == "leaf":
         yield node["state"]
         return
     for child in node.get("children", []):
         yield from _leaves(child)
-
-def test_three_workspaces_ship_and_desk_is_active():
-    data = _data()
-    assert sorted(data["workspaces"]) == sorted(WORKSPACE_NAMES)
-    assert data["active"] == "Desk"
-
-def test_homepage_replaces_saved_layout_on_startup():
-    homepage = json.loads(HOMEPAGE.read_text(encoding="utf-8"))
-    main = homepage["homepages"]["Main Homepage"]
-    assert main["kind"] == "File"
-    assert main["value"] == "home"
-    assert main["openOnStartup"] is True
-    assert main["openMode"] == "Replace all open notes"
-    assert main["view"] == "Reading view"
-
-def test_every_pinned_file_exists_under_src():
-    for name, ws in _data()["workspaces"].items():
-        for pane in ("main", "left", "right"):
-            for leaf in _leaves(ws[pane]):
-                file = leaf.get("state", {}).get("file")
-                if file is not None:
-                    assert (SRC / file).is_file(), (
-                        f"{name}/{pane}: pinned file {file} missing under src/")
-
-def test_base_files_use_the_bases_view_type():
-    for name, ws in _data()["workspaces"].items():
-        for pane in ("main", "left", "right"):
-            for leaf in _leaves(ws[pane]):
-                file = leaf.get("state", {}).get("file", "")
-                if file.endswith(".base"):
-                    assert leaf["type"] == "bases", (
-                        f"{name}/{pane}: {file} must be a 'bases' leaf, got {leaf['type']}")
-
-def test_copi_pinned_in_every_right_sidebar():
-    for name, ws in _data()["workspaces"].items():
-        types = [leaf["type"] for leaf in _leaves(ws["right"])]
-        assert COPI_VIEW in types, f"{name}: no {COPI_VIEW} leaf in the right sidebar"
-
-def test_main_pane_is_a_real_work_surface():
-    for name, ws in _data()["workspaces"].items():
-        leaves = list(_leaves(ws["main"]))
-        assert leaves, f"{name}: empty main pane"
-        for leaf in leaves:
-            assert leaf["type"] != "empty", f"{name}: main pane has an empty leaf"
-            assert leaf.get("state", {}).get("file") != "home.md", (
-                f"{name}: home.md must not be pinned in a workspace (ADR-68)")
-
-def test_workspace_main_panes_open_gate_dashboards():
-    expected = {
-        "Desk": "system/dashboards/desk.md",
-        "Library": "system/dashboards/library.md",
-        "Studio": "system/dashboards/studio.md",
-    }
-    for name, ws in _data()["workspaces"].items():
-        files = [
-            leaf.get("state", {}).get("file")
-            for leaf in _leaves(ws["main"])
-            if leaf.get("state", {}).get("file")
-        ]
-        assert files == [expected[name]], f"{name}: unexpected main pane files {files}"
-
-def test_file_explorer_is_the_last_left_tab():
-    for name, ws in _data()["workspaces"].items():
-        types = [leaf["type"] for leaf in _leaves(ws["left"])]
-        assert types[-1] == "file-explorer", (
-            f"{name}: file explorer must be the last left tab, got {types}")
 
 
 def _choices():
@@ -117,96 +47,72 @@ def _quickadd_command_ids_by_name():
     }
 
 
-def _assert_buttons_dispatch_registered_commands(path):
-    text = path.read_text(encoding="utf-8")
-    blocks = re.findall(r"```button\n(.*?)```", text, re.S)
-    assert blocks, f"no button blocks in {path.relative_to(SRC)}"
-    choice_commands = {f"QuickAdd: {c['name']}" for c in _choices() if c.get("command")}
-    for block in blocks:
-        assert re.search(r"^type command$", block, re.M), (
-            f"non-command button in {path.relative_to(SRC)} (ADR-68 bans them):\n{block}")
-        action = re.search(r"^action (.+)$", block, re.M).group(1)
-        assert action == COPI_COMMAND or action in choice_commands, (
-            f"{path.relative_to(SRC)} button action {action!r} matches no registered command")
+def test_single_reset_workspace_ships_and_opens_inbox():
+    data = _workspace_data()
+    assert sorted(data["workspaces"]) == ["Memoria"]
+    assert data["active"] == "Memoria"
 
-def test_home_status_line_reads_linter_verdict_and_board_queue_depths():
-    text = HOME.read_text(encoding="utf-8")
+    ws = data["workspaces"]["Memoria"]
+    main_files = [
+        leaf.get("state", {}).get("file")
+        for leaf in _leaves(ws["main"])
+        if leaf.get("state", {}).get("file")
+    ]
+    assert main_files == ["gates/inbox.md"]
+    assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
+    assert [leaf["type"] for leaf in _leaves(ws["left"])] == ["file-explorer"]
 
-    assert "> [!brief] Status line" in text
-    assert "dv.pages(" in text
-    assert "system/metrics" in text
-    assert 'page.type === "lint-verdict"' in text
-    assert 'system/logs/lint-findings.jsonl' in text
-    assert 'system/logs/board-state.jsonl' in text
-    for field in ("running", "blocked", "review_queue", "retrying"):
-        assert f"totals.{field}" in text
-    assert "Active:" in text and "Waiting:" in text
-    assert "Review:" in text and "Retries:" in text
 
-def test_home_buttons_dispatch_registered_commands():
-    _assert_buttons_dispatch_registered_commands(HOME)
-    text = HOME.read_text(encoding="utf-8")
-    assert "QuickAdd: Memoria: open Project gate" in text
-    assert "[[project-gate|Project Gate]]" in text
+def test_homepage_opens_inbox_gate_on_startup():
+    homepage = json.loads(HOMEPAGE.read_text(encoding="utf-8"))
+    main = homepage["homepages"]["Main Homepage"]
+    assert main["kind"] == "File"
+    assert main["value"] == "gates/inbox"
+    assert main["openOnStartup"] is True
+    assert main["openMode"] == "Replace all open notes"
+    assert main["view"] == "Reading view"
 
-def test_desk_dashboard_buttons_dispatch_registered_commands():
-    _assert_buttons_dispatch_registered_commands(DESK_DASHBOARD)
 
-def test_workspace_choices_reference_the_loader_script():
-    by_name = {c["name"]: c for c in _choices()}
-    for ws in WORKSPACE_NAMES:
-        command = f"Memoria: open {ws} workspace"
-        choice = by_name.get(command)
-        assert choice, f"QuickAdd choice {command!r} missing"
-        assert choice["command"], f"workspace {ws}: choice not exposed as a command"
-        cmds = choice["macro"]["commands"]
-        assert len(cmds) == 1 and cmds[0]["path"] == "system/scripts/load-workspace.js"
-        assert cmds[0]["settings"] == {"Workspace": ws}
+def test_gate_dashboards_exist_and_link_to_each_other():
+    for gate, relpath in GATES.items():
+        path = SRC / relpath
+        assert path.is_file(), f"{relpath} missing"
+        text = path.read_text(encoding="utf-8")
+        assert f"gate: {gate}" in text
+        assert "![[" in text, f"{relpath} does not embed any Bases views"
+        for other, other_relpath in GATES.items():
+            if other == gate:
+                continue
+            link = other_relpath.removesuffix(".md")
+            assert f"[[{link}|" in text, f"{relpath} missing nav link to {link}"
 
-def test_project_gate_opens_inside_studio_not_as_a_fourth_workspace():
-    by_name = {c["name"]: c for c in _choices()}
-    choice = by_name["Memoria: open Project gate"]
-    assert choice["command"]
-    [cmd] = choice["macro"]["commands"]
-    assert cmd["path"] == "system/scripts/open-project-gate.js"
-    assert cmd["settings"] == {}
 
-    script = (SRC / "system" / "scripts" / "open-project-gate.js").read_text(encoding="utf-8")
-    assert 'WORKSPACE = "Studio"' in script
-    assert 'PROJECT_GATE = "system/dashboards/project-gate.md"' in script
-    assert "loadWorkspace(WORKSPACE)" in script
-    assert "openFile(file" in script
-    assert "Project" not in _data()["workspaces"]
+def test_gate_dashboards_use_non_hidden_location():
+    for relpath in GATES.values():
+        assert not relpath.startswith("system/"), f"{relpath} would be hidden by Portals"
 
-    studio = (SRC / "system" / "dashboards" / "studio.md").read_text(encoding="utf-8")
-    assert "## Project gate" in studio
-    assert "![[project-gate.base#Active projects]]" in studio
-    assert "[[project-gate|Open Project gate]]" in studio
 
-def test_loader_script_ships_and_names_all_three():
-    assert LOADER.is_file()
-    text = LOADER.read_text(encoding="utf-8")
-    for ws in WORKSPACE_NAMES:
-        assert f'"{ws}"' in text, f"load-workspace.js does not mention {ws}"
+def test_every_pinned_file_exists_under_src():
+    for name, ws in _workspace_data()["workspaces"].items():
+        for pane in ("main", "left", "right"):
+            for leaf in _leaves(ws[pane]):
+                file = leaf.get("state", {}).get("file")
+                if file is not None:
+                    assert (SRC / file).is_file(), (
+                        f"{name}/{pane}: pinned file {file} missing under src/")
 
-def test_buttons_plugin_is_bundled():
-    manifest = SRC / ".obsidian" / "plugins" / "buttons" / "manifest.json"
-    assert manifest.is_file()
-    assert json.loads(manifest.read_text(encoding="utf-8"))["id"] == "buttons"
-    roster = json.loads(
-        (SRC / ".obsidian" / "community-plugins.json").read_text(encoding="utf-8"))
-    assert "buttons" in roster
 
-def test_commander_plugin_is_bundled():
-    plugin_dir = SRC / ".obsidian" / "plugins" / "cmdr"
-    for filename in ("main.js", "manifest.json", "styles.css", "data.json"):
-        assert (plugin_dir / filename).is_file(), f"Commander missing {filename}"
-    assert json.loads((plugin_dir / "manifest.json").read_text(encoding="utf-8"))["id"] == "cmdr"
-    roster = json.loads(
-        (SRC / ".obsidian" / "community-plugins.json").read_text(encoding="utf-8"))
-    assert "cmdr" in roster
+def test_workspace_loader_choices_are_retired():
+    names = {choice["name"] for choice in _choices()}
+    assert "Memoria: open Desk workspace" not in names
+    assert "Memoria: open Library workspace" not in names
+    assert "Memoria: open Studio workspace" not in names
+    assert "Memoria: open Project gate" not in names
+    assert not (SRC / "system/scripts/load-workspace.js").exists()
+    assert not (SRC / "system/scripts/open-project-gate.js").exists()
 
-def test_commander_toolbar_commands_reference_quickadd_choices():
+
+def test_commander_ribbon_keeps_global_actions_only():
     data = json.loads(COMMANDER.read_text(encoding="utf-8"))
     quickadd_ids = _quickadd_command_ids_by_name()
 
@@ -216,9 +122,6 @@ def test_commander_toolbar_commands_reference_quickadd_choices():
         "Memoria: capture source from URL",
         "Memoria: delegate task",
         "Memoria: resolve inbox card",
-        "Memoria: open Desk workspace",
-        "Memoria: open Library workspace",
-        "Memoria: open Studio workspace",
     ]
     expected_page_header = [
         "Memoria: create linked claim note",
@@ -239,6 +142,63 @@ def test_commander_toolbar_commands_reference_quickadd_choices():
         ]
         assert all(entry["mode"] == "any" for entry in configured)
 
+
+def test_app_json_ships_memoria_editor_settings():
+    app = json.loads(APP.read_text(encoding="utf-8"))
+    assert app == {
+        "showInlineTitle": False,
+        "readableLineLength": True,
+        "newLinkFormat": "absolute",
+        "alwaysUpdateLinks": True,
+        "newFileLocation": "folder",
+        "newFileFolderPath": "notes/fleeting",
+        "attachmentFolderPath": "attachments",
+        "trashOption": "local",
+        "propertiesInDocument": "visible",
+    }
+
+
+def test_core_plugin_toggles_match_alpha7_shell():
+    core = json.loads(CORE.read_text(encoding="utf-8"))
+    assert core["workspaces"] is True
+    assert core["file-explorer"] is True
+    assert core["templates"] is False
+    assert core["daily-notes"] is False
+    assert core["tag-pane"] is False
+
+
+def test_portals_ships_curated_folder_navigation_with_core_fallback():
+    portals = json.loads(PORTALS.read_text(encoding="utf-8"))
+    spaces = portals["spaces"]
+    assert [space["folderPath"] for space in spaces] == [
+        "inbox",
+        "catalog",
+        "notes/sources",
+        "notes/claims",
+        "notes/hubs",
+        "projects",
+    ]
+    assert {space["portalType"] for space in spaces} == {"folder"}
+    assert portals["replaceFileExplorer"] is True
+    assert portals["hiddenItems"] == {"system": True, ".memoria": True}
+    assert portals["tagNotesFolderPath"] == "system/_tag-notes"
+    assert portals["splitViewTabs"] == ["recent", "bookmarks", "context-notes", "trash"]
+
+    roster = json.loads(COMMUNITY_PLUGINS.read_text(encoding="utf-8"))
+    assert "portals" in roster
+    assert "workspaces-plus" not in roster
+    assert json.loads(CORE.read_text(encoding="utf-8"))["file-explorer"] is True
+
+
+def test_buttons_plugin_is_still_bundled_but_home_has_no_buttons():
+    manifest = SRC / ".obsidian" / "plugins" / "buttons" / "manifest.json"
+    assert manifest.is_file()
+    assert json.loads(manifest.read_text(encoding="utf-8"))["id"] == "buttons"
+    roster = json.loads(COMMUNITY_PLUGINS.read_text(encoding="utf-8"))
+    assert "buttons" in roster
+    assert "```button" not in (SRC / "home.md").read_text(encoding="utf-8")
+
+
 def test_property_badge_snippet_ships_state_accents():
     snippet = SRC / ".obsidian" / "snippets" / "memoria-property-badges.css"
     css = snippet.read_text(encoding="utf-8")
@@ -250,6 +210,7 @@ def test_property_badge_snippet_ships_state_accents():
         '[value="block"]',
     ):
         assert marker in css
+
 
 def test_starter_vault_enables_memoria_snippets():
     appearance = json.loads(
@@ -273,3 +234,11 @@ def test_link_color_snippet_ships_lifecycle_accents():
         '--memoria-link-proposed-color',
     ):
         assert marker in css
+
+
+def test_gate_dashboard_embeds_reference_existing_base_names():
+    base_names = {path.name for path in SRC.rglob("*.base")}
+    for relpath in GATES.values():
+        text = (SRC / relpath).read_text(encoding="utf-8")
+        for base in re.findall(r"!\[\[([^#\]]+\.base)", text):
+            assert base in base_names, f"{relpath} embeds missing base {base}"

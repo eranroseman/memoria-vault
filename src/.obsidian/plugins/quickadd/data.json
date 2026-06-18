@@ -404,10 +404,10 @@
         ]
       }
     },
-        {
-            "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
-            "name": "Memoria: write claim note",
-            "type": "Template",
+    {
+      "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
+      "name": "Memoria: write claim note",
+      "type": "Template",
       "command": true,
       "templatePath": "system/templates/claim.md",
       "fileNameFormat": {
@@ -432,143 +432,61 @@
         "focus": true
       },
       "fileExistsBehavior": {
-                "kind": "prompt"
-            }
-        },
-        {
-            "id": "0d820455-25fd-4902-a682-0a8655fb2220",
-            "name": "Memoria: start project",
-            "type": "Macro",
-            "command": true,
-            "macro": {
-                "name": "Memoria: start project",
-                "id": "1c0a71a2-7e6e-4f6d-8f88-f8f1a3d5d9bf",
-                "commands": [
-                    {
-                        "name": "start-project",
-                        "type": "UserScript",
-                        "id": "9fc77431-9f32-4f6b-ae1e-b8791d3e4977",
-                        "path": "system/scripts/start-project.js",
-                        "settings": {}
-                    }
-                ]
-            }
-        },
-        {
-            "id": "f2ad67aa-5047-49bd-bbf8-3e7d7f15e7ab",
-            "name": "Memoria: refresh project gate",
-            "type": "Macro",
-            "command": true,
-            "macro": {
-                "name": "Memoria: refresh project gate",
-                "id": "b3b4cfd0-735c-4c6b-a01e-6b98c620355c",
-                "commands": [
-                    {
-                        "name": "refresh-project-gate",
-                        "type": "UserScript",
-                        "id": "3b6e8233-74f2-4452-a6d7-91fbd157c1b6",
-                        "path": "system/scripts/refresh-project-gate.js",
-                        "settings": {}
-                    }
-                ]
-            }
-        },
-        {
-            "id": "8da9c074-7b47-4dc6-ae8c-89410c2f2d47",
-            "name": "Memoria: supersede thesis",
-            "type": "Macro",
-            "command": true,
-            "macro": {
-                "name": "Memoria: supersede thesis",
-                "id": "369167c7-8355-4f10-aac8-688a60a71cc9",
-                "commands": [
-                    {
-                        "name": "supersede-thesis",
-                        "type": "UserScript",
-                        "id": "980ba61d-c451-42d1-ad31-e175dbfa2b68",
-                        "path": "system/scripts/supersede-thesis.js",
-                        "settings": {}
-                    }
-                ]
-            }
-        },
-        {
-            "id": "71138de4-6029-416b-8559-fb61fde5efb1",
-            "name": "Memoria: open Desk workspace",
+        "kind": "prompt"
+      }
+    },
+    {
+      "id": "0d820455-25fd-4902-a682-0a8655fb2220",
+      "name": "Memoria: start project",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: open Desk workspace",
-        "id": "f3200efc-acc2-4514-a8fb-2aff1e07c632",
+        "name": "Memoria: start project",
+        "id": "1c0a71a2-7e6e-4f6d-8f88-f8f1a3d5d9bf",
         "commands": [
           {
-            "name": "load-workspace",
+            "name": "start-project",
             "type": "UserScript",
-            "id": "1dd1f1d4-3fda-4f1b-8811-898abdf28d6c",
-            "path": "system/scripts/load-workspace.js",
-            "settings": {
-              "Workspace": "Desk"
-            }
+            "id": "9fc77431-9f32-4f6b-ae1e-b8791d3e4977",
+            "path": "system/scripts/start-project.js",
+            "settings": {}
           }
         ]
       }
     },
     {
-      "id": "5f43d3c5-544c-4a38-ba5b-be3891254236",
-      "name": "Memoria: open Library workspace",
+      "id": "f2ad67aa-5047-49bd-bbf8-3e7d7f15e7ab",
+      "name": "Memoria: refresh project gate",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: open Library workspace",
-        "id": "cb8c6830-284e-4b32-8e5f-41f8b5dddb7e",
+        "name": "Memoria: refresh project gate",
+        "id": "b3b4cfd0-735c-4c6b-a01e-6b98c620355c",
         "commands": [
           {
-            "name": "load-workspace",
+            "name": "refresh-project-gate",
             "type": "UserScript",
-            "id": "269b00ad-d63c-416c-9893-ec8c80f23893",
-            "path": "system/scripts/load-workspace.js",
-            "settings": {
-              "Workspace": "Library"
-            }
+            "id": "3b6e8233-74f2-4452-a6d7-91fbd157c1b6",
+            "path": "system/scripts/refresh-project-gate.js",
+            "settings": {}
           }
         ]
       }
     },
     {
-      "id": "4a9ffb2d-0cec-4436-9b39-a41384da9670",
-      "name": "Memoria: open Studio workspace",
+      "id": "8da9c074-7b47-4dc6-ae8c-89410c2f2d47",
+      "name": "Memoria: supersede thesis",
       "type": "Macro",
       "command": true,
       "macro": {
-        "name": "Memoria: open Studio workspace",
-        "id": "a99116b8-77e8-4137-a003-663c078c1649",
+        "name": "Memoria: supersede thesis",
+        "id": "369167c7-8355-4f10-aac8-688a60a71cc9",
         "commands": [
           {
-            "name": "load-workspace",
+            "name": "supersede-thesis",
             "type": "UserScript",
-            "id": "fd120069-4c46-45da-a8a2-c2856121e0b9",
-            "path": "system/scripts/load-workspace.js",
-            "settings": {
-              "Workspace": "Studio"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "id": "0a21068c-3655-45e9-8eaf-4cdef52afa74",
-      "name": "Memoria: open Project gate",
-      "type": "Macro",
-      "command": true,
-      "macro": {
-        "name": "Memoria: open Project gate",
-        "id": "85c2fca3-df78-4888-b6e8-17e2ac51080d",
-        "commands": [
-          {
-            "name": "open-project-gate",
-            "type": "UserScript",
-            "id": "eff4d379-3d5a-43d6-ac75-8ba5bbd92dd5",
-            "path": "system/scripts/open-project-gate.js",
+            "id": "980ba61d-c451-42d1-ad31-e175dbfa2b68",
+            "path": "system/scripts/supersede-thesis.js",
             "settings": {}
           }
         ]

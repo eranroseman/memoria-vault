@@ -12,14 +12,14 @@ views:
         - 'mode == "library"'
         - 'mode == "both"'
     order:
-      - file.name
+      - title
       - action
       - posture
       - output_target
   - type: table
     name: "All patterns"
     order:
-      - file.name
+      - title
       - mode
       - action
       - posture

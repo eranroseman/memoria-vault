@@ -91,7 +91,7 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 | Source | Schema is defined by | Fields |
 | --- | --- | --- |
-| `system/board/<id>.md` (card notes) | `board_export.py` → `card_markdown` `fm_keys` | `task_id, status, assignee, review_status, retry_count, reason, last_updated` (+ `type: board-card`) |
+| `system/board/<id>.md` (card notes) | `board_export.py` → `card_markdown` frontmatter | `title, type: worker-card, lifecycle, task_id, lane, status, review_status, retry_count, reason, as_of, created` |
 | `board-state.jsonl` | `board_export.py` snapshot dict | `timestamp, lanes{…}, totals{running,ready,blocked,review_queue}` — **counts only, no card identity** |
 | `system/metrics/lane-*.md` | `metrics_aggregate.py` → `lane_note` | `type:lane-metric, lane, period, trust_score, band, …, samples, success_rate` |
 | `system/metrics/lint-verdict-*.md` | `metrics_aggregate.py` → `lint_verdict_note` | `type:lint-verdict, period, verdict, finding_count, critical_count, high_count, medium_count, …` |

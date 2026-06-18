@@ -34,9 +34,10 @@ def _frontmatter_text(path: Path) -> str:
 def test_one_template_per_type():
     types = schema.load_types()
     names = {p.stem for p in TEMPLATES.glob("*.md")}
-    # patterns (ADR-53) and eval gold tasks (ADR-11) are not template-created —
-    # the files in system/patterns/ and system/eval/ ARE the instances
-    expected = set(types) - {"pattern", "eval-task"}
+    # patterns (ADR-53), eval gold tasks (ADR-11), gate dashboards, and
+    # worker-card projections are not template-created; their writers create
+    # the instances directly.
+    expected = set(types) - {"pattern", "eval-task", "gate", "worker-card"}
     assert names == expected, (
         f"templates {names ^ expected} out of sync with schemas")
 

@@ -1,0 +1,13 @@
+type: gate
+category: gates
+gated: false
+enums:
+  lifecycle: [current, archived]
+  gate: [inbox, library, knowledge, project]
+required:
+  type: literal:gate
+  lifecycle: enum:lifecycle
+  title: str
+  gate: enum:gate
+optional:
+  created: date

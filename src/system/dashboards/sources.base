@@ -3,25 +3,48 @@ filters:
   and:
     - file.inFolder("notes/sources")
     - 'lifecycle != "archived"'
+formulas:
+  age_days: '(now() - file.ctime).days.round(0)'
+properties:
+  formula.age_days:
+    displayName: "Age (days)"
 views:
   - type: table
-    name: "To read & distill"
+    name: "Reading pipeline"
     filters:
       and:
-        - 'lifecycle == "proposed"'
+        - 'lifecycle == "proposed" || lifecycle == "provisional"'
+    groupBy:
+      property: lifecycle
+      direction: ASC
+    sort:
+      - property: file.mtime
+        direction: DESC
     order:
-      - file.name
+      - title
       - lifecycle
       - entity
-      - source_type
-      - file.mtime
+      - evidence_level
+      - research_area
+  - type: table
+    name: "Discuss queue"
+    filters:
+      and:
+        - 'lifecycle == "provisional"'
+    sort:
+      - property: file.ctime
+        direction: ASC
+    order:
+      - title
+      - entity
+      - formula.age_days
   - type: table
     name: "All sources"
     groupBy:
       property: lifecycle
       direction: ASC
     order:
-      - file.name
+      - title
       - lifecycle
       - entity
       - research_area

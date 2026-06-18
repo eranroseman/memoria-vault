@@ -1,0 +1,20 @@
+type: worker-card
+category: system
+gated: false
+enums:
+  lifecycle: [current, archived]
+  status: [triage, todo, ready, running, blocked, retrying, done]
+required:
+  type: literal:worker-card
+  lifecycle: enum:lifecycle
+  title: str
+  task_id: str
+  lane: str
+  status: enum:status
+optional:
+  as_of: date
+  review_status: str
+  retry_count: int
+  reason: str
+  expected_outputs: str
+  created: date

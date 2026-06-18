@@ -1,21 +1,21 @@
 {
   "workspaces": {
-    "Desk": {
+    "Memoria": {
       "main": {
-        "id": "desk-main-root",
+        "id": "memoria-main-root",
         "type": "split",
         "children": [
           {
-            "id": "desk-main-tabs",
+            "id": "memoria-main-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "desk-main-board",
+                "id": "memoria-main-inbox",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "system/dashboards/desk.md",
+                    "file": "gates/inbox.md",
                     "mode": "preview",
                     "source": false
                   }
@@ -27,49 +27,15 @@
         "direction": "vertical"
       },
       "left": {
-        "id": "desk-left-root",
+        "id": "memoria-left-root",
         "type": "split",
         "children": [
           {
-            "id": "desk-left-tabs",
+            "id": "memoria-left-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "desk-left-inbox",
-                "type": "leaf",
-                "state": {
-                  "type": "bases",
-                  "state": {
-                    "file": "inbox/inbox.base"
-                  }
-                }
-              },
-              {
-                "id": "desk-left-drift",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/drift-watch.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "desk-left-weekly",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/weekly-review.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "desk-left-files",
+                "id": "memoria-left-files",
                 "type": "leaf",
                 "state": {
                   "type": "file-explorer",
@@ -84,244 +50,19 @@
         "width": 320
       },
       "right": {
-        "id": "desk-right-root",
+        "id": "memoria-right-root",
         "type": "split",
         "children": [
           {
-            "id": "desk-right-tabs",
+            "id": "memoria-right-tabs",
             "type": "tabs",
             "children": [
               {
-                "id": "desk-right-copi",
+                "id": "memoria-right-copi",
                 "type": "leaf",
                 "state": {
                   "type": "agent-client-chat-view",
                   "state": {}
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal",
-        "width": 360
-      },
-      "active": "desk-main-board",
-      "lastOpenFiles": []
-    },
-    "Library": {
-      "main": {
-        "id": "library-main-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "library-main-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "library-main-reading",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/library.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical"
-      },
-      "left": {
-        "id": "library-left-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "library-left-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "library-left-catalog",
-                "type": "leaf",
-                "state": {
-                  "type": "bases",
-                  "state": {
-                    "file": "catalog/catalog.base"
-                  }
-                }
-              },
-              {
-                "id": "library-left-discuss",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/discuss-queue.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "library-left-questions",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/open-questions.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "library-left-contradictions",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/contradictions.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              },
-              {
-                "id": "library-left-files",
-                "type": "leaf",
-                "state": {
-                  "type": "file-explorer",
-                  "state": {}
-                }
-              }
-            ],
-            "currentTab": 0
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "right": {
-        "id": "library-right-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "library-right-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "library-right-copi",
-                "type": "leaf",
-                "state": {
-                  "type": "agent-client-chat-view",
-                  "state": {}
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal",
-        "width": 360
-      },
-      "active": "library-main-reading",
-      "lastOpenFiles": []
-    },
-    "Studio": {
-      "main": {
-        "id": "studio-main-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "studio-main-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "studio-main-focus",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "system/dashboards/studio.md",
-                    "mode": "preview",
-                    "source": false
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "vertical"
-      },
-      "left": {
-        "id": "studio-left-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "studio-left-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "studio-left-claims",
-                "type": "leaf",
-                "state": {
-                  "type": "bases",
-                  "state": {
-                    "file": "system/dashboards/claims.base"
-                  }
-                }
-              },
-              {
-                "id": "studio-left-patterns",
-                "type": "leaf",
-                "state": {
-                  "type": "bases",
-                  "state": {
-                    "file": "system/patterns/patterns.base"
-                  }
-                }
-              },
-              {
-                "id": "studio-left-files",
-                "type": "leaf",
-                "state": {
-                  "type": "file-explorer",
-                  "state": {}
-                }
-              }
-            ],
-            "currentTab": 0
-          }
-        ],
-        "direction": "horizontal",
-        "width": 320
-      },
-      "right": {
-        "id": "studio-right-root",
-        "type": "split",
-        "children": [
-          {
-            "id": "studio-right-tabs",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "studio-right-copi",
-                "type": "leaf",
-                "state": {
-                  "type": "agent-client-chat-view",
-                  "state": {}
-                }
-              },
-              {
-                "id": "studio-right-backlink",
-                "type": "leaf",
-                "state": {
-                  "type": "backlink",
-                  "state": {
-                    "collapseAll": false,
-                    "showSearch": false
-                  }
                 }
               }
             ],
@@ -331,9 +72,9 @@
         "direction": "horizontal",
         "width": 360
       },
-      "active": "studio-main-focus",
+      "active": "memoria-main-inbox",
       "lastOpenFiles": []
     }
   },
-  "active": "Desk"
+  "active": "Memoria"
 }

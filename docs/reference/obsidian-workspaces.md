@@ -5,54 +5,47 @@ parent: Reference
 
 # Obsidian workspaces
 
-Three saved Obsidian workspace layouts ship in `src/.obsidian/workspaces.json`: **Desk**, **Library**, and **Studio** ([ADR-68](../adr/68-workspaces-desk-library-studio.md)). Each maps to a cognitive mode — the "what needs me?" look, reading & synthesis, drafting — not to a topic or project; the reasoning is in [Visual-style discipline](../explanation/obsidian/visual-discipline.md).
+Memoria ships one saved Obsidian workspace named **Memoria** in
+`src/.obsidian/workspaces.json`. It is a reset layout, not the gate switcher
+([ADR-81](../adr/81-persistent-gate-dashboards.md)).
 
-The Workspaces core plugin ships pre-enabled in the vault (`.obsidian/core-plugins.json`). Load a layout with one of the `Memoria: workspace …` palette commands, the workspace buttons on `home.md`, or the core "Workspaces: Manage workspaces" modal; see [Workspaces](../how-to-guides/using-obsidian/use-workspaces.md).
+Gate switching happens through dashboard notes under `gates/`:
 
----
+| Gate | Job | Dashboard |
+| --- | --- | --- |
+| Inbox | Triage what needs the PI now | `gates/inbox.md` |
+| Library | Collect and organize sources | `gates/library.md` |
+| Knowledge | Build and test claims | `gates/knowledge.md` |
+| Project | Steer bounded inquiry to output | `gates/project.md` |
 
-## The shared layout contract
+The Homepage plugin opens `gates/inbox` on startup. Each gate dashboard embeds the
+relevant Bases views and carries a nav row linking to the other gates. Clicking a gate
+link opens that dashboard in the active tab; it does not load a new workspace layout.
 
-Every workspace follows the same shape:
+## Reset layout
 
-- **Main pane** — the mode's work surface: a real file, never `home.md`, never an empty leaf.
-- **Left sidebar** (~320) — navigation: 2–4 pinned tabs of that mode's drill-down views, with the **file explorer always the last tab**.
-- **Right sidebar** (~360) — the Co-PI: the agent-client chat view, pinned in every workspace.
-- `home.md` is pinned in **no** workspace — the obsidian-homepage plugin opens it on launch ([ADR-13](../adr/13-homepage-front-door.md)).
+The **Memoria** workspace has one shared shell:
 
-## The three workspaces
+- **Main pane** — `gates/inbox.md`, opened in reading view.
+- **Left sidebar** — Portals folder navigation, with the core file explorer retained
+  as fallback.
+- **Right sidebar** — the Co-PI Agent Client chat view.
 
-| Workspace | Mode | Main pane | Left tabs (in order) | Right pane |
-| --- | --- | --- | --- | --- |
-| **Desk** (default) | "What needs me?" | `system/dashboards/desk.md` | `inbox/inbox.base` · `drift-watch.md` · `weekly-review.md` · file explorer | Co-PI chat |
-| **Library** | Reading & synthesis | `system/dashboards/library.md` | `catalog/catalog.base` · `discuss-queue.md` · `open-questions.md` · `contradictions.md` · file explorer | Co-PI chat |
-| **Studio** | Drafting + Project gate shell | `system/dashboards/studio.md` | `system/dashboards/claims.base` · `system/patterns/patterns.base` · file explorer | Co-PI chat + backlinks |
-
-Studio's right sidebar carries a second tab — the core backlink view — behind the Co-PI tab, so backlinks live where there is an active note. Studio replaces the "Project" workspace once planned for v0.1.0-alpha.3 ([ADR-68](../adr/68-workspaces-desk-library-studio.md)); the Project gate is a first-class surface inside Studio, opened from Home or `Memoria: open Project gate`, not a fourth saved workspace.
-
-## Palette commands
-
-Three QuickAdd choices give one-click switching (also wired to the workspace buttons on `home.md`), plus one Project-gate entry point that opens inside Studio:
-
-| Palette entry | Loads |
-| --- | --- |
-| `QuickAdd: Memoria: open Desk workspace` | Desk |
-| `QuickAdd: Memoria: open Library workspace` | Library |
-| `QuickAdd: Memoria: open Studio workspace` | Studio |
-| `QuickAdd: Memoria: open Project gate` | Studio, then `system/dashboards/project-gate.md` |
-
-The three workspace commands run `system/scripts/load-workspace.js`, which loads the named layout through the core Workspaces plugin (the plugin has no per-workspace commands of its own). The Project gate command runs `system/scripts/open-project-gate.js`: it loads Studio and then opens the Project gate dashboard in the active leaf.
+The core Workspaces plugin stays enabled so you can restore this shell with Obsidian's
+own **Manage workspaces** command if panes get rearranged. The retired QuickAdd
+workspace commands and loader script are not shipped.
 
 ## Layout storage
 
-Layouts are saved in `.obsidian/workspaces.json`. `.base` files are pinned as `bases` leaves (the core Bases view); dashboards as `markdown` leaves in preview mode. If you customize a layout, verify the file is versioned in your vault repo (`git status .obsidian/`).
+The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as
+`.obsidian/workspace.json` remains per-machine and is not part of the golden copy.
 
 ---
 
 ## Related
 
-- The dashboards the panes open: [Dashboards](dashboards.md)
+- Gate decision: [ADR-81](../adr/81-persistent-gate-dashboards.md)
+- The superseded workspace model: [ADR-68](../adr/68-workspaces-desk-library-studio.md)
+- The dashboard roster: [Dashboards](dashboards.md)
 - The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)
-- The Co-PI pane every right sidebar pins: [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md)
-- Why workspaces map to cognitive modes: [Visual-style discipline](../explanation/obsidian/visual-discipline.md)
-- The decision record: [ADR-68](../adr/68-workspaces-desk-library-studio.md)
+- The Co-PI pane: [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md)
