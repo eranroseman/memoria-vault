@@ -36,7 +36,7 @@ Open `catalog/papers/<citekey>.md` and look at the `relationships` block — tha
 
 ## Step 3 — Judge the candidate card
 
-Capture doesn't end with a silent import: a **`candidate` card** lands in your Inbox proposing the keep. Load the **Desk** workspace — the card is in the Inbox tab's **Needs me** view — or open the file in `inbox/`.
+Capture doesn't end with a silent import: a **`candidate` card** lands in your Inbox proposing the keep. Open the Inbox gate's **Needs me** view, or open the file in `inbox/`.
 
 The card carries the honesty body — an argument, never a verdict: an `action`, the case for and against, what tipped it, and a certainty level. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
 

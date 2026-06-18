@@ -70,7 +70,20 @@ def test_installers_verify_generated_profiles_use_https_ssl_verify():
         assert "OBSIDIAN_MCP_PORT" in text
         assert "/mcp" in text
         assert "OBSIDIAN_MCP_SSL_VERIFY" in text
-        assert "http://127" in text
+        assert 'url: "http://127' not in text
+
+def test_installers_render_profile_model_placeholders():
+    sh = INSTALL.read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    for placeholder in ("{{MODEL_PROVIDER}}", "{{MODEL_BASE_URL}}", "{{MODEL_DEFAULT}}"):
+        assert placeholder in sh
+        assert placeholder in ps
+    assert "MODEL_LOCAL_CONTEXT" in sh
+    assert "{{MODEL_LOCAL_CONTEXT}}" in ps
+    assert "MEMORIA_ENV" in sh
+    assert "MEMORIA_ENV" in ps
+    assert "qwen2.5:7b" in sh
+    assert "qwen2.5:7b" in ps
 
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")

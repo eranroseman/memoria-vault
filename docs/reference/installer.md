@@ -22,6 +22,18 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | `--dry-run` | Print every command that would run; change nothing. |
 | `--yes` / `-y` | Non-interactive: accept all defaults, no prompts (CI). |
 
+## Environment overlays
+
+| Variable | Effect |
+| --- | --- |
+| `MEMORIA_ENV=prod` | Default. Renders the shipped Kilo Code gateway model tiers: Co-PI and Peer-reviewer on Opus, Writer on Sonnet, Librarian and Engineer on Haiku. |
+| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to an OpenAI-compatible local endpoint, defaulting to `custom` + `http://127.0.0.1:11434/v1` + `qwen2.5:7b` with `context_length` and `ollama_num_ctx` set to `65536`. |
+| `MEMORIA_MODEL_BASE_URL` | Overrides the local endpoint when `MEMORIA_ENV=test`. |
+| `MEMORIA_MODEL_NAME` | Overrides the local model name when `MEMORIA_ENV=test`. |
+| `MEMORIA_MODEL_CONTEXT_LENGTH` | Overrides the rendered local context length when `MEMORIA_ENV=test`. |
+
+The local model overlay changes only the Hermes model block. The Obsidian MCP remains verified loopback HTTPS and still requires `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OBSIDIAN_API_KEY` in each profile's `.env`.
+
 ---
 
 ## The install flow
@@ -36,10 +48,10 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | 4b. Git hooks | If the vault is a git repo, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue Peer-reviewer verification. (The vault is _your_ repo; the installer never `git init`s for you.) |
 | 5. MCP dependencies | Creates the vault-local venv at `.memoria/.venv` and pip-installs `mcp/requirements.txt`. The **clustering stack is opt-in**: a confirm prompt offers `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
 | 5b. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing, registers the vault as a qmd collection (BM25 works immediately), and offers the ~2GB vector-model embed as an opt-in. Resolves the absolute binary path into each profile's `{{QMD}}` slot — a conda package also ships a `qmd`, so PATH lookup is unsafe. |
-| 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter) and `{{VAULT_PATH}}` into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
+| 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
 | 7. Skills | Clones the K-Dense bundle, verifies the bundled official Hermes skills, and installs the hub skills (`obsidian-markdown`, `qmd`). |
 | 8. Obsidian | Guided, not silent: Windows offers `winget`; Linux offers the Flatpak/AppImage path. **Zotero is no longer provisioned by the Linux test installer** — Windows production still offers winget guidance because Zotero is the expected production bibliography surface. |
-| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` → re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, switch to the Library workspace). |
+| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, then use the gate nav row to open Library). |
 
 ---
 
@@ -63,7 +75,7 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 
 | Item | Where |
 | --- | --- |
-| `KILOCODE_API_KEY` (model access), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
+| `KILOCODE_API_KEY` (production model access; not used by the `MEMORIA_ENV=test` local model block), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
 | Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
 | git in the vault | `git init && git add -A && git commit` — obsidian-git, the pre-commit gate, and verify-on-commit need a repo |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |

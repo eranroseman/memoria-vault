@@ -11,7 +11,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ## System
 
-**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to editor chat panes. The Co-PI's desk pane in Obsidian is an ACP pane. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
+**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to editor chat panes. The Co-PI pane in Obsidian is an ACP pane. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
 
 **Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
 

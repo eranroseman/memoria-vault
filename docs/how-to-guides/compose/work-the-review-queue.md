@@ -6,11 +6,11 @@ nav_order: 8
 
 # Work the review queue
 
-Clear the decisions waiting on you. In v0.1.0-alpha.2 the review surface is the **Inbox**: agents finish board cards, and what needs your judgment lands as typed cards (`candidate` / `gap` / `flag` / `alert`) at `lifecycle: proposed`. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
+Clear the decisions waiting on you. The review surface is the **Inbox**: agents finish board cards, and what needs your judgment lands as typed cards (`candidate` / `gap` / `flag` / `alert`) at `lifecycle: proposed`. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
 
 ## Prerequisites
 
-- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab)
+- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` on the Inbox gate)
 
 ## Steps
 

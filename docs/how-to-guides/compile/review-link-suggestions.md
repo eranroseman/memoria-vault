@@ -22,7 +22,7 @@ Because `notes/claims/` is review-gated, the link lane can't touch your `links:`
 
 Run **Memoria: link claim** from the claim note. The command writes a collapsed `[!suggestions]` callout with deterministic top-K candidates, then delegates the richer link-lane review. Open the callout first, in the note where the edge would matter.
 
-If the lane also raised cards, open the **Needs me** view of `inbox/inbox.base` — the Desk workspace's first left tab. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+If the lane also raised cards, open the **Needs me** view of `inbox/inbox.base` on the Inbox gate. Triage the batch together — the one-pass discipline keeps your judgment sharp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each candidate before deciding.**
 

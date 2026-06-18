@@ -12,6 +12,13 @@ EXPECTED = {"memoria-copi", "memoria-librarian", "memoria-writer",
             "memoria-peer-reviewer", "memoria-engineer"}
 RETIRED = {"memoria-mapper", "memoria-socratic", "memoria-verifier",
            "memoria-coder", "memoria-linter"}
+PROD_MODELS = {
+    "memoria-copi": "~anthropic/claude-opus-latest",
+    "memoria-peer-reviewer": "~anthropic/claude-opus-latest",
+    "memoria-writer": "~anthropic/claude-sonnet-latest",
+    "memoria-librarian": "~anthropic/claude-haiku-latest",
+    "memoria-engineer": "~anthropic/claude-haiku-latest",
+}
 
 
 def test_exactly_the_five_agents_ship():
@@ -61,15 +68,72 @@ def test_installer_generated_profile_configs_keep_verified_https():
         "{{VAULT_PATH}}": "/tmp/Memoria-test",
         "{{QMD}}": "qmd",
         "{{PROFILE}}": "memoria-test",
+        "{{MODEL_PROVIDER}}": "kilocode",
+        "{{MODEL_BASE_URL}}": "https://api.kilo.ai/api/gateway",
+        "{{MODEL_DEFAULT}}": "~anthropic/claude-haiku-latest",
     }
     for name in EXPECTED:
         text = (PROFILES / name / "config.yaml").read_text(encoding="utf-8")
         for old, new in replacements.items():
             text = text.replace(old, new)
+        text = text.replace("  # {{MODEL_LOCAL_CONTEXT}}\n", "")
         cfg = yaml.safe_load(text)
         obsidian = cfg["mcp_servers"]["obsidian"]
         assert obsidian["url"] == "https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp"
         assert obsidian["ssl_verify"] == "${OBSIDIAN_MCP_SSL_VERIFY}"
+
+
+def _render_profile_config(name: str, *, env: str) -> dict:
+    text = (PROFILES / name / "config.yaml").read_text(encoding="utf-8")
+    common = {
+        "{{PYTHON}}": "/tmp/Memoria-test/.memoria/.venv/bin/python",
+        "{{VAULT_PATH}}": "/tmp/Memoria-test",
+        "{{QMD}}": "qmd",
+        "{{PROFILE}}": name,
+    }
+    if env == "prod":
+        model = {
+            "{{MODEL_PROVIDER}}": "kilocode",
+            "{{MODEL_BASE_URL}}": "https://api.kilo.ai/api/gateway",
+            "{{MODEL_DEFAULT}}": PROD_MODELS[name],
+        }
+        context = ""
+    elif env == "test":
+        model = {
+            "{{MODEL_PROVIDER}}": "custom",
+            "{{MODEL_BASE_URL}}": "http://127.0.0.1:11434/v1",
+            "{{MODEL_DEFAULT}}": "qwen2.5:7b",
+        }
+        context = "  context_length: 65536\n  ollama_num_ctx: 65536\n"
+    else:
+        raise AssertionError(env)
+
+    for old, new in (common | model).items():
+        text = text.replace(old, new)
+    text = text.replace("  # {{MODEL_LOCAL_CONTEXT}}\n", context)
+    return yaml.safe_load(text)
+
+
+def test_prod_model_overlay_preserves_shipped_profile_tiers():
+    for name in EXPECTED:
+        model = _render_profile_config(name, env="prod")["model"]
+        assert model == {
+            "provider": "kilocode",
+            "base_url": "https://api.kilo.ai/api/gateway",
+            "default": PROD_MODELS[name],
+        }
+
+
+def test_test_model_overlay_wires_profiles_to_local_ollama():
+    for name in EXPECTED:
+        model = _render_profile_config(name, env="test")["model"]
+        assert model == {
+            "provider": "custom",
+            "base_url": "http://127.0.0.1:11434/v1",
+            "default": "qwen2.5:7b",
+            "context_length": 65536,
+            "ollama_num_ctx": 65536,
+        }
 
 
 def test_every_agent_has_a_lane_override():

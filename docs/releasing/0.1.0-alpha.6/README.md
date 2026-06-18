@@ -14,10 +14,6 @@ GitHub.
 | File | Holds |
 |---|---|
 | [Release plan — v0.1.0-alpha.6](release-plan-0.1.0-alpha.6.md) | Prose: scope, gate/stage definitions, out-of-scope, cut procedure, roadmap |
-| `tmp/exec-plan-0.1.0-alpha.6.md` | Living build doc — workstreams, sequencing, per-issue steps (retained for closeout audit) |
-| `tmp/adr-implementation-gap-analysis.md` | Audit scratch — accepted ADRs vs. built state (source of the G1–G3 issues) |
-| `tmp/deferred-adr-cadence-review.md` | Audit scratch — which deferred ADRs are buildable now (source of B1 + the alpha.7 harvest) |
-| `tmp/deferred-adr-implementability-verification.md` | Independent re-verification of the cadence review |
 
 - **Scope / readiness:** milestone `0.1.0-alpha.6` (#7) +
   [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
@@ -35,5 +31,6 @@ GitHub.
   model-free implementation landed in
   [PR #655](https://github.com/eranroseman/memoria-vault/pull/655), with the optional
   live Gemma/`llama.cpp` tool-call smoke still tracked in the release issues.
-- The tracked `tmp/` scratch folder is retained while alpha.6 is being designed;
-  promote durable decisions into ADRs and delete `tmp/` at cut.
+- The tracked `tmp/` scratch folder was pruned after closeout. Durable conformance and
+  harness decisions live in the accepted ADRs and current docs; unresolved deferred-ADR
+  implementability detail was carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`.

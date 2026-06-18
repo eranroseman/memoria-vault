@@ -53,8 +53,8 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 
 ## Part B — Substitution + secrets (S1–S2)
 
-**B1. `{{VAULT_PATH}}` substituted.** `grep -rn '{{VAULT_PATH}}' ~/.hermes/profiles/memoria-*/` 
-- ✓ Pass: **no matches** — every placeholder was replaced with the absolute vault path (the policy MCP launch line in `config.yaml`, hooks). A leftover `{{VAULT_PATH}}` means the deployed gate can't find `policy_mcp.py`.
+**B1. Template placeholders substituted.** `grep -rn '{{VAULT_PATH}}\|{{PYTHON}}\|{{QMD}}\|{{MODEL_' ~/.hermes/profiles/memoria-*/`
+- ✓ Pass: **no matches** — every placeholder was replaced with the absolute vault path, venv Python, qmd binary, and rendered model overlay. A leftover `{{VAULT_PATH}}` means the deployed gate can't find `policy_mcp.py`; a leftover `{{MODEL_*}}` means the profile will not know which provider/model to call.
 
 **B2. `.env` bootstrapped + shared keys seeded.** `cat ~/.hermes/profiles/memoria-librarian/.env`
 - ✓ Pass: a `.env` exists (from `.env.EXAMPLE`), and shared keys present in each profile (`seed_profile_env`): `OBSIDIAN_API_KEY`, `KILOCODE_API_KEY`, plus `OPENALEX_API_KEY` for the Librarian.

@@ -24,49 +24,25 @@ read-only/dry-run commands — *nothing* written).
 
 ## 1. Test environment setup
 
-### 1.1 Switch all agents to the cheapest test model
+### 1.1 Switch all agents to the local test model
 
-Run the suite on the **cheapest paid, tool-capable model on the KiloCode gateway**,
-confirmed **2026-06-02** against `GET https://api.kilo.ai/api/gateway/models` (no auth;
-the gateway returns live per-token prices). Method: rank the catalog by input price,
-drop free models and the pass-through routers (`openrouter/auto` et al., sentinel-priced),
-and keep only models whose `supported_parameters` include tool calling — an agent **must**
-call MCP tools, so a model without tool support can't run the suite at all.
+Run the suite against the Linux/WSL local-model overlay so the test run does not
+depend on paid Kilo Code pricing or mutate the production model tiers. The supported
+path is installer-owned: do not hand-edit the five profile `config.yaml` files.
 
-| Model | Input $/1M | Output $/1M | Context | Tools | Note |
-|---|---|---|---|---|---|
-| **`inclusionai/ling-2.6-flash`** | **0.010** | **0.030** | 262K | yes | **chosen — cheapest on input, output, and blended** |
-| `meta-llama/llama-3.1-8b-instruct` | 0.020 | 0.050 | 131K | yes | fallback #1 |
-| `openai/gpt-oss-20b` | 0.029 | 0.140 | 131K | yes | fallback #2 |
-| `z-ai/glm-4.7-flash` | 0.070 | 0.400 | 203K | yes | the originally-suggested example — **~7×/13× more expensive, not cheapest** |
-
-The gateway already reaches `inclusionai/ling-2.6-flash` via your existing
-`KILOCODE_API_KEY` — no new provider or key.
-
-> **Tool-use caveat.** Ultra-cheap models tool-call less reliably than the Claude tiers.
-> If a command fails on the *model's* tool-use (malformed MCP call, refusal to emit the
-> write) rather than the wiring, step down the fallback list above before concluding the
-> command is broken. Re-confirm prices at run time — the catalog changes.
-
-For each of the five profiles, edit `src/.memoria/profiles/memoria-<name>/config.yaml`
-and set the **main** model:
-
-```yaml
-model:
-  provider: kilocode
-  base_url: https://api.kilo.ai/api/gateway
-  default: inclusionai/ling-2.6-flash   # TEST MODEL — production is ~anthropic/claude-<tier>-latest
-```
-
-Production tiers to restore afterwards: Librarian/Engineer `claude-haiku-latest`,
-Writer `claude-sonnet-latest`, Co-PI/Peer-reviewer `claude-opus-latest`.
-
-Then **deploy** the source to the runtime copies and confirm:
+Start Ollama with a tool-capable local model, then render all profiles through the
+test overlay:
 
 ```bash
-bash scripts/install.sh --profiles-only      # .\scripts\install.ps1 -ProfilesOnly on Windows
-hermes profile show memoria-librarian | grep -i model   # expect inclusionai/ling-2.6-flash
+ollama list | grep qwen2.5:7b
+MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
+hermes profile show memoria-librarian | grep -i model
 ```
+
+Expected model block: `provider: custom`, `base_url: http://127.0.0.1:11434/v1`,
+`default: qwen2.5:7b`, `context_length: 65536`, and `ollama_num_ctx: 65536`.
+Override with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or
+`MEMORIA_MODEL_CONTEXT_LENGTH` if your local endpoint differs.
 
 > Auxiliary slots (title/approval/mcp/skills-hub/compression) are already cheap and
 > set in the **global** `~/.hermes/config.yaml`; leave them. See
@@ -80,7 +56,7 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 | Obsidian open with Local REST API HTTPS on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` and `OBSIDIAN_MCP_SSL_VERIFY` set | `curl --cacert "$OBSIDIAN_MCP_SSL_VERIFY" -s https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
 | Hermes gateway on `:8642` (needed for `kanban dispatch`) | `hermes gateway status` |
 | Zotero running with Better BibTeX; `.memoria/memoria.bib` present | file exists, contains the F1 citekeys |
-| `KILOCODE_API_KEY`, `OPENALEX_API_KEY` set per profile `.env` | `hermes profile show memoria-librarian` lists the keys (values redacted) |
+| `OPENALEX_API_KEY` set per profile `.env`; `KILOCODE_API_KEY` only needed when testing production model wiring | `hermes profile show memoria-librarian` lists the keys (values redacted) |
 | **Disposable test vault** (clone/fixture, never the real research vault) | `HERMES_HOME` / vault path points at the test copy |
 
 ### 1.3 Test fixtures (create once, referenced by ID below)
@@ -106,11 +82,8 @@ hermes profile show memoria-librarian | grep -i model   # expect inclusionai/lin
 
 ### 1.5 Reset after testing
 
-```bash
-git checkout -- src/.memoria/profiles/memoria-*/config.yaml   # restore production model tiers
-bash scripts/install.sh --profiles-only                          # redeploy production config
-# discard the disposable test vault
-```
+Discard the disposable test vault or redeploy production wiring with `MEMORIA_ENV=prod
+bash scripts/install.sh --profiles-only --vault <vault>`.
 
 ---
 

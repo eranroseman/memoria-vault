@@ -149,6 +149,7 @@ Full phase steps and investigation detail belong in `release-plan-v0.1.0-alpha.5
 
 ## 9. Appendix — what does NOT belong in this file
 
-Detailed build steps and scratch design notes are retained under `tmp/` for closeout audit. Durable
-decisions live in the ADRs; issue/PR evidence remains on GitHub. Long-tail phase/migration detail
-would go in `release-plan-v0.1.0-alpha.5-appendix.md` if it becomes worth preserving.
+Detailed build steps and scratch design notes were pruned after closeout. Durable decisions live in
+the ADRs; issue/PR evidence remains on GitHub. Unfinished packaging/test-env design detail was
+carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`, and long-tail phase/migration detail would
+go in `release-plan-v0.1.0-alpha.5-appendix.md` if it becomes worth preserving.

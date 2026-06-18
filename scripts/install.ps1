@@ -61,6 +61,7 @@ $HermesArgsPrefix = @()
 $AllProfiles = @('memoria-copi', 'memoria-librarian', 'memoria-writer', 'memoria-peer-reviewer', 'memoria-engineer')
 $RequiredFiles = @('SOUL.md', 'config.yaml', 'distribution.yaml')
 $VenvPython = $null
+$MemoriaEnv = if ($env:MEMORIA_ENV) { $env:MEMORIA_ENV } else { 'prod' }
 
 function Write-Line { param([string]$Message) Write-Host $Message }
 function Write-Header { param([string]$Message) Write-Host "`n== $Message ==" -ForegroundColor Cyan }
@@ -243,6 +244,44 @@ function ConvertTo-ForwardPath {
     return ($Path -replace '\\', '/')
 }
 
+function Get-ProfileModelDefault {
+    param([string]$ProfileName)
+    switch ($ProfileName) {
+        { $_ -in @('memoria-copi', 'memoria-peer-reviewer') } { return '~anthropic/claude-opus-latest' }
+        'memoria-writer' { return '~anthropic/claude-sonnet-latest' }
+        { $_ -in @('memoria-librarian', 'memoria-engineer') } { return '~anthropic/claude-haiku-latest' }
+        default { Stop-Install "Unknown profile for model overlay: $ProfileName" }
+    }
+}
+
+function Get-ProfileModelOverlay {
+    param([string]$ProfileName)
+    switch ($script:MemoriaEnv) {
+        { $_ -eq 'prod' -or $_ -eq '' } {
+            return @{
+                Provider = 'kilocode'
+                BaseUrl = 'https://api.kilo.ai/api/gateway'
+                Default = Get-ProfileModelDefault -ProfileName $ProfileName
+                Context = ''
+            }
+        }
+        'test' {
+            $baseUrl = if ($env:MEMORIA_MODEL_BASE_URL) { $env:MEMORIA_MODEL_BASE_URL } else { 'http://127.0.0.1:11434/v1' }
+            $modelName = if ($env:MEMORIA_MODEL_NAME) { $env:MEMORIA_MODEL_NAME } else { 'qwen2.5:7b' }
+            $context = if ($env:MEMORIA_MODEL_CONTEXT_LENGTH) { $env:MEMORIA_MODEL_CONTEXT_LENGTH } else { '65536' }
+            return @{
+                Provider = 'custom'
+                BaseUrl = $baseUrl
+                Default = $modelName
+                Context = "  context_length: $context`n  ollama_num_ctx: $context`n"
+            }
+        }
+        default {
+            Stop-Install "Unsupported MEMORIA_ENV=$script:MemoriaEnv (expected prod or test)."
+        }
+    }
+}
+
 function Set-TemplateValues {
     param([string]$Path, [string]$ProfileName = '')
     $text = Get-Content -Raw -Path $Path
@@ -254,15 +293,19 @@ function Set-TemplateValues {
     $text = $text.Replace('{{VAULT_PATH}}', $vaultPath)
     $text = $text.Replace('{{QMD}}', (ConvertTo-ForwardPath $qmd))
     $text = $text.Replace('{{PROFILE}}', $ProfileName)
+    if ($ProfileName) {
+        $model = Get-ProfileModelOverlay -ProfileName $ProfileName
+        $text = $text.Replace('{{MODEL_PROVIDER}}', $model.Provider)
+        $text = $text.Replace('{{MODEL_BASE_URL}}', $model.BaseUrl)
+        $text = $text.Replace('{{MODEL_DEFAULT}}', $model.Default)
+        $text = $text.Replace("  # {{MODEL_LOCAL_CONTEXT}}`n", $model.Context)
+    }
     Set-Content -Path $Path -Value $text -NoNewline -Encoding UTF8
 }
 
 function Assert-ProfileObsidianMcpHttps {
     param([string]$ConfigPath, [string]$ProfileName)
     $text = Get-Content -Raw -Path $ConfigPath
-    if ($text -match 'url:\s*"http://127\.0\.0\.1') {
-        Stop-Install "$ProfileName config.yaml uses plain HTTP for the Obsidian MCP; expected verified HTTPS."
-    }
     if ($text -notmatch 'url:\s*"https://127\.0\.0\.1:\$\{OBSIDIAN_MCP_PORT\}/mcp"') {
         Stop-Install "$ProfileName config.yaml must use https://127.0.0.1:`${OBSIDIAN_MCP_PORT}/mcp for the Obsidian MCP."
     }
@@ -394,10 +437,13 @@ function Install-Profiles {
         Write-Line "  staging $profileName"
         $dst = Join-Path $staging $profileName
         Copy-Item $src $dst -Recurse -Force
-        Set-TemplateValues -Path (Join-Path $dst 'config.yaml')
+        Set-TemplateValues -Path (Join-Path $dst 'config.yaml') -ProfileName $profileName
         Assert-ProfileObsidianMcpHttps -ConfigPath (Join-Path $dst 'config.yaml') -ProfileName $profileName
         Invoke-Logged -FilePath $script:HermesExe -ArgumentList ($script:HermesArgsPrefix + @('profile', 'install', $dst, '--name', $profileName, '--alias', '--force', '--yes'))
         $deployed = Join-Path $HermesProfilesDir $profileName
+        if (-not $DryRun) {
+            Copy-Item (Join-Path $dst 'config.yaml') (Join-Path $deployed 'config.yaml') -Force
+        }
         Copy-EnvValues -ProfileDir $deployed
         Deploy-PolicyPlugin -ProfileDir $deployed -ProfileName $profileName
     }

@@ -16,7 +16,7 @@ One principle runs through every page below: **the architecture is invisible dur
 
 | Page                                            | What it explains                                                                                                                 |
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [Home — the vault front door](home.md)          | The front door — why launch opens a plain note that _consumes_ dashboards and computes nothing itself.                           |
+| [Home — the vault front door](home.md)          | The front door — why launch opens the Inbox gate and keeps `home.md` as a plain fallback note.                           |
 | [The status line](the-status-line.md)           | The one always-visible ambient indicator — why a glance-readable count, not a dashboard, answers "is everything fine?"           |
 | [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) and what each means.              |
 | [The agent-client pane](agent-client-picker.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
@@ -25,7 +25,7 @@ One principle runs through every page below: **the architecture is invisible dur
 
 | Page                                            | What it explains                                                                                                                                                                         |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Visual-style discipline](visual-discipline.md) | The restraint that makes the above work — a fixed callout palette, hidden chrome, three cognitive-mode workspaces, and why each default is deliberate.                                    |
+| [Visual-style discipline](visual-discipline.md) | The restraint that makes the above work — a fixed callout palette, hidden chrome, gate dashboards as notes, and why each default is deliberate.                                    |
 | [Design system](design-system.md)               | The cross-context visual and voice spec — why a portable design system exists, and why the specific choices (single accent, system fonts, 4pt grid, voice guidelines) are what they are. |
 
 The **dashboards** are also an Obsidian surface, but they have their own section: [explanation/dashboards/](../dashboards/README.md).

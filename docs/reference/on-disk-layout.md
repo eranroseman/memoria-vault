@@ -13,7 +13,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 
 ```text
 <vault>/
-├── home.md                  the homepage (absorbs the daily-health glance)
+├── home.md                  fallback note linking to the Inbox gate
 ├── research-focus.md        program memory — the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
@@ -97,7 +97,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Homepage, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git). `src/.obsidian/workspaces.json` ships the three saved layouts — **Desk**, **Library**, and **Studio** (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Homepage, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria**; gate navigation is handled by `src/gates/inbox.md`, `src/gates/library.md`, `src/gates/knowledge.md`, and `src/gates/project.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 

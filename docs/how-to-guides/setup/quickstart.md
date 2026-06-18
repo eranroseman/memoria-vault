@@ -60,7 +60,7 @@ The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 - `hermes profile list` shows the five `memoria-*` profiles
 - `<vault>/catalog/papers/<citekey>.md` exists with `type: paper` and a `relationships` block
 - `<vault>/system/logs/audit.jsonl` shows at least one `allow_with_log` entry
-- A `candidate` card landed in `inbox/` (the **Needs me** view of `inbox.base`, in the Desk workspace)
+- A `candidate` card landed in `inbox/` (the **Needs me** view of `inbox.base`, shown on the Inbox gate)
 
 ## Related
 

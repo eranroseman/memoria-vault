@@ -6,7 +6,11 @@ nav_order: 2
 
 # The status line
 
-The status line is the vault's one **always-visible ambient indicator** — a single Dataview-rendered line that shows the Linter verdict and Kanban queue counts at a glance. It is the deliberate exception to "[chrome is hidden by default](visual-discipline.md#why-chrome-is-hidden-by-default)": it stays on screen because its whole job is to let the human *not* go looking.
+The status line is a deferred ambient-indicator design: a single Dataview-rendered line
+that would show the Linter verdict and Kanban queue counts at a glance. It is not
+shipped as a standalone widget in alpha.7; the current daily glance is the Inbox gate.
+The design remains useful because it explains the boundary between ambient state and
+dashboard decisions.
 
 For the exact format, counters, and design rules, see the reference: [Obsidian status line](../../reference/obsidian-status-line.md). This page explains *why* it exists and why it's shaped the way it is.
 
@@ -14,7 +18,7 @@ For the exact format, counters, and design rules, see the reference: [Obsidian s
 
 ## What it shows
 
-Two producers share one line — Linter first, then Kanban — e.g. `✓ PASS · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0`. The Linter segment reports the latest deterministic verdict; the Kanban segment reports live queue depths (running, blocked, awaiting-review, retrying). It is rendered as a Dataview widget pinned in a note — not the OS status bar, which Dataview cannot write to.
+The proposed line has two producers — Linter first, then Kanban — e.g. `✓ PASS · Active: 3 · Waiting: 2 · Review: 7 · Retries: 0`. The Linter segment reports the latest deterministic verdict; the Kanban segment reports live queue depths (running, blocked, awaiting-review, retrying). If implemented, it should render as a Dataview widget pinned in a note — not the OS status bar, which Dataview cannot write to.
 
 ---
 

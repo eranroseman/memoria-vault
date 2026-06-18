@@ -60,13 +60,13 @@ end (the boxes are clickable in Obsidian).
 | Plugin | Purpose | ✓ Validate it loaded |
 | --- | --- | --- |
 | `Agent Client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
-| `Buttons` | Renders `home.md` command buttons | home buttons render and invoke commands (Part C1) |
+| `Buttons` | Renders command buttons in shipped notes | command buttons render and invoke commands (Part C1) |
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
-| `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, resolve, and workspace buttons |
+| `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, resolve, and reset/navigation controls |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
-| `Homepage` | Opens `home.md` on startup | `home.md` opens as the startup surface |
+| `Homepage` | Opens `gates/inbox.md` on startup | `gates/inbox.md` opens as the startup surface |
 | `Local REST API with MCP` | Exposes the vault to Hermes (verified HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |

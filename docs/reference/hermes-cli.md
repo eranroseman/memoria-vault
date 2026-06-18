@@ -7,7 +7,7 @@ parent: Reference
 
 Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is the Co-PI conversation (the ACP pane), which delegates board work for you. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
 
-Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the desk pane).
+Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the Co-PI ACP pane).
 
 ---
 
@@ -82,7 +82,7 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 | Command | What it does |
 | --- | --- |
 | `hermes profile list` | List registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --name <name> --alias --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` — it handles the `{{PYTHON}}`/`{{VAULT_PATH}}` substitution and the env seeding first. |
+| `hermes profile install <dir> --name <name> --alias --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` or `scripts/install.ps1 -ProfilesOnly` — the installer renders Python, vault, qmd, and model tokens, refreshes deployed `config.yaml`, and seeds `.env` first. |
 | `hermes profile show <alias>` | A profile's `SOUL.md`, MCP servers, skills, and `.env` key names (values redacted). |
 | `hermes profile remove <alias>` | Remove the registration (used by the installer to prune the retired five). Does not delete the vault source under `.memoria/profiles/`. |
 

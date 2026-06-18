@@ -18,7 +18,7 @@ Open the vault in Obsidian, activate the bundled plugins, and copy the REST API 
 
 **1. Open the vault.**
 
-In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. `home.md` opens as the front door.
+In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. The Homepage plugin opens `gates/inbox.md` as the front door.
 
 **2. Enable community plugins.**
 
@@ -40,7 +40,7 @@ The required plugins:
 | `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
 | `modalforms` | Provides structured capture forms with controlled vocabulary fields |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
-| `homepage` | Opens `home.md` on launch |
+| `homepage` | Opens `gates/inbox.md` on launch |
 | `buttons` | Renders the command buttons on `home.md` |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.

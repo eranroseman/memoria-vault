@@ -36,9 +36,8 @@ state still close through the linked GitHub issues.
 ## 1. Scope — what this release is
 
 alpha.6 is a **conformance-and-verification checkpoint** built on two pillars. **Pillar
-one (Track A — re-implement approved goals):** the alpha.6 audit
-([`tmp/adr-implementation-gap-analysis.md`](tmp/adr-implementation-gap-analysis.md))
-read all 56 accepted ADRs against the built artifacts and found eight where the
+one (Track A — re-implement approved goals):** the alpha.6 audit read all 56
+accepted ADRs against the built artifacts and found eight where the
 accepted decision does not actually hold. alpha.6 closes the material ones — a runtime
 security regression (the Obsidian-MCP bearer token rides plain-HTTP loopback,
 contradicting ADR-31), two unenforced schema/query invariants (ADR-78 born-`current`
@@ -186,8 +185,8 @@ Full phase steps and investigation detail belong in
 
 ## 9. Appendix — what does NOT belong in this file
 
-The living build plan (workstreams, sequencing, per-issue steps) is
-[`tmp/exec-plan-0.1.0-alpha.6.md`](tmp/exec-plan-0.1.0-alpha.6.md); the audit research
-that produced this scope is the three `tmp/` scratch notes. Durable decisions live in
-the ADRs; issue/PR evidence remains on GitHub. Long-tail phase/migration detail would go
-in `release-plan-v0.1.0-alpha.6-appendix.md` if it becomes worth preserving.
+The living build plan and audit scratch were pruned after closeout. Durable decisions
+live in the ADRs; issue/PR evidence remains on GitHub. The unresolved deferred-ADR
+implementability detail was carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`.
+Long-tail phase/migration detail would go in `release-plan-v0.1.0-alpha.6-appendix.md`
+if it becomes worth preserving.

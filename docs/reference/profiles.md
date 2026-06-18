@@ -13,13 +13,15 @@ The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)):
 
 One conversational agent (the Co-PI) plus four background agents, each defined by a posture rather than a tool list:
 
-| Profile | Posture | Role | Invocation | Default model |
+| Profile | Posture | Role | Invocation | Production default model |
 | --- | --- | --- | --- | --- |
 | `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the desk / ACP pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
 | `memoria-librarian` | Faithful | Finds, ingests, enriches, and draft-classifies evidence. Four processing lanes: catalog · extract · link · map. | `dispatched` | `claude-haiku-latest` |
 | `memoria-writer` | Generative | Drafts and synthesizes into project scratch; review-gated. | `dispatched` | `claude-sonnet-latest` |
 | `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
 | `memoria-engineer` | Coordinating | The code lane: scaffolds handoffs to an external coding agent and owns the commit/revert gate in `projects/*/code/`. | `dispatched` | `claude-haiku-latest` |
+
+These are the `MEMORIA_ENV=prod` defaults rendered by the installer. Linux/WSL test installs may render all five profiles to a local OpenAI-compatible Ollama endpoint with `MEMORIA_ENV=test`; see [Installer environment overlays](installer.md#environment-overlays).
 
 ---
 

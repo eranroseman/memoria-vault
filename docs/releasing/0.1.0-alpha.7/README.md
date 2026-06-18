@@ -27,6 +27,5 @@ in GitHub.
 - **Scope-reconcile:** the alpha.6 roadmap's shadow/instrument harvest
   (#370/#611/#416/#371) is **not** absorbed here and rolls to alpha.8 / the next
   telemetry checkpoint.
-- The tracked `tmp/` scratch is retained temporarily for closeout audit. Durable
-  decisions moved into ADR-81; prune `tmp/` only when the PI explicitly asks for that
-  final cleanup.
+- The tracked `tmp/` scratch was pruned after closeout. Durable decisions live in ADR-81;
+  unresolved future UI design detail was carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`.
