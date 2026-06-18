@@ -166,6 +166,15 @@ no-model tier the shippable unit and defers the rest.
   production-acceptance pass; absolute output quality stays a production-model
   judgment.
 
+## Current implementation mapping
+
+Phase 1 is the `workflow-replay` layer in the testing model. The compatibility
+entrypoint is still `scripts/e2e-smoke.sh`, which now names its PR-safe sections:
+`vault-assembly`, `commit-gate`, `offline-ingest`, `workflow-replay`, and
+`final-integrity`. This does not make the full containerized/headless
+Obsidian/local-LLM design a required PR gate; that remains Phase 2 / nightly /
+release-candidate `runtime-integration`.
+
 ## When this matters
 
 **Phase 1 shipped in v0.1.0-alpha.6** (model-free L0–L4 record/replay harness, #586;

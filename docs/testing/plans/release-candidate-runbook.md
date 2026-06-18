@@ -24,6 +24,11 @@ or the release plan (the prose/definitions).
 The per-area detail lives in the linked plan docs; this sheet sequences them and
 adds the exact commands plus the ingest/runtime setup.
 
+This runbook is the `release-acceptance` layer. It consumes green PR-required
+`static-contract`, `component`, `vault-assembly`, and `workflow-replay` evidence,
+then adds the non-PR `runtime-integration` checks: live Hermes, the Obsidian bridge,
+local services, GUI/Bases/dashboards, and model connectivity.
+
 ## 0. Preconditions
 
 - [ ] Clean **native Windows production** box for the attended production install, plus a clean **Ubuntu / WSL2** box for the Linux test installer.
@@ -33,15 +38,25 @@ adds the exact commands plus the ingest/runtime setup.
 - [ ] Fresh clone: `git clone https://github.com/eranroseman/memoria-vault.git && cd memoria-vault` — record the commit (`git rev-parse --short HEAD`).
 - [ ] The Hermes global `.env` has the scholarly-API keys (`S2_API_KEY`, `OPENALEX_API_KEY`, `NCBI_EMAIL`), `OBSIDIAN_API_KEY`, `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY`; the installer propagates them per profile. **Never print key values.**
 
-## S0–S1 — static + pytest component suite  → records G6 (partial), S0, S1
+## S0–S1 — static-contract + component  → records G6 (partial), S0, S1
 
 ```bash
 bash scripts/test.sh all          # l1 (component tests, pytest) + l0 (static)
 ```
 
-- [ ] **S0** static (parse, LF endings, profile files present) — PASS.
-- [ ] **S1** the component test suite green (`scripts/test.sh l1` → `pytest tests/`): `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `retraction`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
+- [ ] **S0 / static-contract** static (parse, LF endings, profile files present) — PASS.
+- [ ] **S1 / component** the component test suite green (`scripts/test.sh l1` → `pytest tests/`): `policy_mcp`, `policy_hook`, `board_export`, `metrics_aggregate`, `retraction`, `detectors`, **and the ingest spine** (`ingest_paper`, `resolve_merge`, `link`, `extract`, `pipeline`, `sweeps`, `ingest_mcp`).
 - [ ] Confirm CI is green on the same commit (the required checks gate — G6): `gh pr checks` / the Actions tab.
+
+## PR-safe smoke — vault-assembly + workflow-replay  → records G6 (partial)
+
+```bash
+bash scripts/e2e-smoke.sh
+python3 scripts/test_env_harness.py replay --json
+```
+
+- [ ] **vault-assembly** builds a disposable vault, initializes git, wires executable hooks, verifies default CSS snippets and bundled plugins, and finishes fresh-vault integrity cleanly.
+- [ ] **workflow-replay** reaches the ADR-80 Phase 1 model-free path, writes the expected artifacts, denies the known forbidden write with an audit row, and leaves no forbidden file.
 
 ## S2 — installer dry-run  → records S2
 
@@ -67,11 +82,12 @@ bash scripts/install.sh --vault "$RV"      # re-run: must be idempotent (no erro
 
 Detail: [Installer test plan](installer-test-plan.md).
 
-## S4 — live: model, bridge, gate enforcement  → records G2, G3, S4
+## S4 — runtime-integration: model, bridge, gate enforcement  → records G2, G3, S4
 
 - [ ] **Model connectivity** — a trivial `hermes` chat/zero-shot returns (provider reachable).
 - [ ] **REST bridge (G3)** — the obsidian MCP reads **and** writes the vault via the Local REST API plugin's **native MCP over verified HTTPS** ([ADR-31](../../adr/31-native-obsidian-mcp.md)): set `OBSIDIAN_MCP_PORT` and `OBSIDIAN_MCP_SSL_VERIFY` in `~/.hermes/.env`, enable the plugin's HTTPS server on that port, reload the Obsidian window to bind it. The port lives in the URL, so the candidate and any other vault coexist on different ports — no need to close another vault.
 - [ ] **Gate enforcement (G2)** in **all three run modes** — `hermes -z`, gateway (api_server), and cron — on installer-deployed lanes: an allowed write logs `allow` + `write_complete`; a denied/`dry_run` write is blocked with **no file**; a simulated policy outage **fails closed**.
+- [ ] **Local services** — local LLM endpoint, MCP servers, and Obsidian bridge checks are recorded as manual/nightly evidence, not as PR-required CI, until a stable self-hosted runner exists.
 
 Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](headless-test-plan.md).
 
@@ -139,18 +155,18 @@ Record commit `__________` and date `__________`.
 
 | Gate / stage | Records | Result | Notes |
 | --- | --- | --- | --- |
-| S0 | static | ☐ | |
-| S1 | pytest component suite | ☐ | |
+| S0 | static-contract | ☐ | |
+| S1 | component | ☐ | |
+| G6 | required CI green, including vault-assembly + workflow-replay | ☐ | |
 | S2 | dry-run install | ☐ | |
 | S3 / G1 | real install, 5 profiles, idempotent | ☐ | |
-| S4 / G3 | model + REST bridge live | ☐ | |
+| S4 / G3 | runtime-integration: model + REST bridge live | ☐ | |
 | G2 | gate enforced (`-z` / gateway / cron) | ☐ | |
 | G9 | deterministic spine card | ☐ | |
 | G10 | ingest value loop end-to-end | ☐ | |
 | G11 | review loop closes | ☐ | |
 | S5 / G4 | GUI + 12 dashboards render | ☐ | |
 | G5 | four telemetry signals emit | ☐ | disposition/cost = known limitation |
-| G6 | CI green on the commit | ☐ | |
 | G7 | no High-priority blockers | ☐ | |
 | G8 | version + CHANGELOG cut | ☐ | at cut |
 

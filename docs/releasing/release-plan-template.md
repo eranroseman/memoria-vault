@@ -76,12 +76,12 @@ the runs in the relevant sub-issues under [Release vX.Y]({{ #NN }})).
 
 | Stage | Proves |
 | --- | --- |
-| S0 | {{ static checks: parse, formatting, presence }} |
-| S1 | {{ pytest component suite }} |
-| S2 | {{ dry-run / substitution }} |
-| S3 | {{ real install / integration }} |
-| S4 | {{ live: connectivity, enforcement }} |
-| S5 | {{ end-to-end / GUI / acceptance }} |
+| S0 | `static-contract`: {{ static checks: parse, formatting, presence }} |
+| S1 | `component`: {{ pytest component suite }} |
+| S2 | `vault-assembly`: {{ dry-run / substitution / disposable vault build }} |
+| S3 | `workflow-replay`: {{ model-free deterministic lifecycle replay }} |
+| S4 | `runtime-integration`: {{ live connectivity, services, bridge, enforcement }} |
+| S5 | `release-acceptance`: {{ end-to-end / GUI / acceptance }} |
 <!-- stages are cumulative; adjust the set per release -->
 
 ## 4. Blockers
