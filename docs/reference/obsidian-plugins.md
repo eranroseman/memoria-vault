@@ -122,17 +122,17 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
 | `post-commit` hook | enabled | Load-bearing — enqueues Peer-reviewer verification for committed `projects/**/*.md` drafts. Source lives in `.githooks/`, installer copies it into `.git/hooks/`; it is not a `data.json` setting. Do not disable. |
 
-> **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps deployments onto those keys.
+> **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
 
-**`autoPush` by deployment:**
+**Push behavior by deployment** (the two keys that actually exist):
 
-| Deployment | `autoPush` | Notes |
-| --- | --- | --- |
-| `local-only` | `false` | Push manually for offsite-backup checkpoints. |
-| `local-mesh` | `false` | Syncthing handles sync; Git is history only. |
-| `obsidian-sync` | `false` | Obsidian Sync handles sync; Git is history only. |
-| `always-on` (desktop) | `true` | Desktop auto-pushes as backup; Syncthing handles sync. |
-| `always-on` (VPS) | — | Set `disablePush: true`; VPS must only pull. |
+| Deployment | `disablePush` | `autoPushInterval` | Notes |
+| --- | --- | --- | --- |
+| `local-only` | `false` | `0` | Push manually for offsite-backup checkpoints. |
+| `local-mesh` | `false` | `0` | Syncthing handles sync; Git is history only. |
+| `obsidian-sync` | `false` | `0` | Obsidian Sync handles sync; Git is history only. |
+| `always-on` (desktop) | `false` | `> 0` (e.g. `10`) | Desktop auto-pushes as backup; Syncthing handles sync. |
+| `always-on` (VPS) | `true` | `0` | VPS must only pull, never push. |
 
 ### dataview
 
