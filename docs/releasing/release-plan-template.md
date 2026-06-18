@@ -141,10 +141,11 @@ Record runtime evidence for each target environment this release claims to suppo
 
 1. **Fresh clone:** all validation stages pass from a clean checkout, not only the working branch.
 2. **Installer target:** a real install or upgrade path succeeds against a disposable vault, never the user's production vault.
-3. **WSL/Linux host:** package updates needed for the release are applied or explicitly deferred; command resolution uses the intended binaries.
-4. **Hermes profiles:** installed profile configs match the shipped templates, secrets stay in `.env`, and no placeholder values remain.
-5. **Local services:** required local endpoints are reachable, including the local LLM endpoint for test-mode releases and the Obsidian Local REST API/native MCP bridge when the release depends on them.
-6. **GUI acceptance:** any Obsidian, Bases, workspace, portal, or plugin behavior changed by the release is opened and checked in the runtime vault or a disposable vault.
+3. **Sandbox refresh:** update and validate the `~/Memoria-test` sandbox, including git initialization/hooks, CSS snippets, installed plugins, local LLM wiring, and Obsidian bridge behavior when the release touches them.
+4. **WSL/Linux host:** package updates needed for the release are applied or explicitly deferred; command resolution uses the intended binaries.
+5. **Hermes profiles:** installed profile configs match the shipped templates, secrets stay in `.env`, and no placeholder values remain.
+6. **Local services:** required local endpoints are reachable, including the local LLM endpoint for test-mode releases and the Obsidian Local REST API/native MCP bridge when the release depends on them.
+7. **GUI acceptance:** any Obsidian, Bases, workspace, portal, or plugin behavior changed by the release is opened and checked in the runtime vault or a disposable vault.
 
 Evidence should include the command or manual check, date, target machine/environment,
 pass/fail summary, and a link to the issue comment, Actions artifact, or
