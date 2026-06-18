@@ -6,10 +6,14 @@
 > accepted ADRs (47, 49, 50, 51, 52, 56, 57, 68, 69, 70, 71, 77, 78, 79).
 >
 > **Scope:** the four building-block layers of the Obsidian-native UI —
-> *primitives → projection contract → `.base` spec → form schemas* — specified
-> tightly enough to build from. The next step is to fold this into an ADR
-> ("clean-slate UI architecture") plus revisions to the per-surface explanation
-> notes.
+> *primitives → projection contract → `.base` spec → form schemas*. **Read §0.1
+> first — the maturity across these layers is uneven, and the doc's tone overstates
+> how settled it is.** The next step is *not* more design: it is the alpha.7 scope
+> cut (§0.1) and an outside review.
+>
+> **Provenance caveat:** §1–§8 and their "review dispositions" were authored *and*
+> self-reviewed by the same agent. That is a known weakness (§0.1) — treat the
+> resolved/✅ labels as the author's claims, not independent verification.
 
 ---
 
@@ -25,9 +29,82 @@ typed-edge graph) is rendered into markdown/`.canvas` by a deterministic
 non-negotiable rule under all of it: **frontmatter is the only system of record
 for an edge** — every other surface is a derived view the Linter governs.
 
-This is notably leaner than the Dataview-era design: Bases + projection absorb
-most surfaces, Dataview drops to one (the home status strip), and Canvas adds the
-argument-graph layer the old design had no answer for.
+This is leaner than the Dataview-era design — but that comparison is against a
+prior *over-build*, not against need (see §0.1 proportionality). Bases + projection
+absorb most surfaces, Dataview drops to one (the home status strip), and Canvas
+*proposes* an argument-graph layer — the most novel idea here and, after review,
+the least built (§0.1).
+
+---
+
+## 0.1 Risk posture, scope, and how to read this doc
+
+*Added after an external-style critique. This section corrects the rest of the
+doc's tone, which reads more de-risked, closed, and proportionate than the work
+actually is.*
+
+**Maturity is uneven — verified substrate, sketched engine.** The §7 "verification
+log" is real but covers the *cheap, read-only, Obsidian-side* layer: Bases filter
+grammar, sort, render-at-scale, nested-map backlinks, Portals shippability. The
+*expensive* part — a new **deterministic projector subsystem** (reconcile with a
+delete arm, content-hash recurrence memory, collision-safe id→path encoding, the
+reverse index, quarantine-and-log, incremental-stable graph layout) — is specified
+as **prose rules only, with no design and no tests named for its bug-prone paths**
+(delete, recurrence, quarantine). The green checks validate the foundation, not the
+building. Do not read §7 as "the architecture is de-risked."
+
+**Proportionality is unasked — and it should drive an alpha.7 cut.** This builds a
+10k-note-scale reconciler for a single desk researcher (ADR-24). The right alpha.7
+move is almost certainly to ship the verified core and defer the engine:
+
+- **Ship (verified, low-risk):** Bases collections + the consolidated non-redundant
+  gate views (§3); capture forms (§4); the board mirror that *already exists*
+  (kanban → `system/board`); the UI-chrome/settings tier (§9–§10).
+- **Defer (speculative, unbuilt), gated on a real trigger — vault size / shown
+  need:** the projector engine beyond the board mirror, and the argument-graph
+  Canvas. For a near-empty alpha vault, *fewer surfaces + more Dataview + accept
+  manual refresh* beats a reconciler.
+
+This descope is a **PI decision, not the author's to close.**
+
+**Two decisions are named, not made.** (1) The canvas-arrangement Option A is
+presented as the default throughout (§2/§5/§6) but its justification depends on the
+incremental-stable layout the same doc calls undesigned debt — so it is deferred,
+not decided. (2) The "two primitives on two axes" taxonomy is a useful **heuristic,
+not a closed system**: the repeated reassurance "this does not break the taxonomy /
+the framing holds" (lineage, audit, dirty data, self-healing) is itself the tell.
+
+**"Deterministic" ≠ "trustworthy."** The projector's determinism is in the
+*rendering*, not the *content*. Its sources (lint findings, agent output) are
+LLM-shaped and dirty — which is the whole reason rule 6 (quarantine) exists. Read
+"deterministic projector" as "deterministic mechanism over possibly-bad data."
+
+**The projector has no specified identity.** "An engine, never an LLM" (ADR-57)
+says what it is *not*. What process runs it, where, triggered how, with what
+filesystem rights — and how that squares with [[mcp-only-agent-sandbox]] (no
+profile gets file/terminal/code) and the single obsidian write path (ADR-27/28) —
+is unresolved. Until that operator/trust model is pinned, "engine write to a
+consumer zone, ungated" (§1) is an assertion without a referent.
+
+**Standing constraints to name.**
+- *The agent can't self-verify the plugin tier.* Portals install and plugin
+  inspection were both blocked by the untrusted-code safety policy and needed a
+  human. That is structural, not incidental: a fraction of the chrome tier
+  (§9) can only ever be README-read + human-gated — which bounds the autonomy story
+  and should cap how many core-surface plugins get bundled.
+- *Self-review only.* §1–§8 were designed and "adversarially reviewed" by the same
+  agent; the clean 13-Fixed/2-Deferred close reflects that, not independent
+  scrutiny. **This design should go to a non-author reviewer before any deferred
+  engine work begins.**
+- *Two tracks bolted together.* §1–§8 are net-new engine architecture; §9–§10 are
+  config tuning. They are different risk tiers and should be separated
+  ([[memoria-design-collaboration-style]]).
+
+**Empty-state is a top-line release risk, not a footnote (§8).** alpha.7 ships a
+near-empty vault; every projected dashboard renders blank on arrival; "converges to
+empty" is a steady-state virtue only. First impressions of the whole UI form on
+empty Bases. This needs a release decision — seeded starter content (ADR-55) or
+per-surface empty-state copy — not a line in the open-items list.
 
 ---
 
@@ -723,6 +800,11 @@ unresolved blocker except the two flagged **DECIDE**.
     avoiding a migration and keeping consumer-only views in the consumer zone.
 
 ## 7. Live verification log (Obsidian 1.12.7, Bases)
+
+> **Scope caveat (§0.1):** everything here verifies the *substrate* — read-only,
+> Obsidian-side Bases behavior. **None of it touches the projector engine** (the
+> real risk), which is unbuilt and untested. Do not read this log as de-risking the
+> architecture.
 
 Fixtures built and torn down in the `Memoria-test` sandbox.
 
