@@ -9,11 +9,11 @@ topic: releases
 # Releasing
 
 One folder per version, `docs/releasing/<version>/`, holding the **prose** of that cut (scope,
-known limitations, cut procedure, roadmap). Live state lives in GitHub. The reusable body is
-[Release plan — vX.Y.Z](release-plan-template.md); the latest completed checkpoint is
-[v0.1.0-alpha.7](0.1.0-alpha.7/), with earlier checkpoints under the same folder. Alpha checkpoints
-are internal milestones, not formal releases. The *live readiness state* lives outside the file —
-see below.
+known limitations, documentation/runtime quality bars, close-out procedure, roadmap). Live state
+lives in GitHub. The reusable body is [Release plan — vX.Y.Z](release-plan-template.md); the latest
+completed checkpoint is [v0.1.0-alpha.7](0.1.0-alpha.7/), with earlier checkpoints under the same
+folder. Alpha checkpoints are internal milestones, not formal releases. The *live readiness state*
+lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 
@@ -27,6 +27,7 @@ see below.
 | **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
 | **Automated test evidence** | GitHub Actions runs and artifacts |
 | **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |
+| **Close-out evidence worth preserving** | the relevant issue comments, Actions artifacts, or optional `validation-log.md` |
 
 The plan file holds **prose, not state tables**. Gate/stage state is in the release
 issue/sub-issues; routine automated evidence is in Actions. Everything else points,
@@ -55,23 +56,35 @@ never restates.
 ## Cutting a release
 
 1. Every gate/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
-2. **Retire-sweep the ADRs.** Delete any ADR whose question this release dissolved or whose decision it superseded — keep the *Alternatives considered* memory; leave the number gap. See the [retirement criteria](../adr/README.md#when-to-retire-an-adr). (Lands as its own small PR before the cut.)
-3. Merge the **release-please** "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags
-   `vX.Y`, and publishes the GitHub Release with curated notes (fold in the plan's
-   known-limitations).
-4. Set the plan frontmatter. For a formal release, use `status: released`,
-   `released: true`. For an internal checkpoint that does not cut a tag or GitHub
-   Release, use `status: complete`, `released: false`.
-5. Close the milestone and the release parent issue; roll unfinished issues forward.
-6. Delete the release folder's `tmp/` design notes before the release/checkpoint is
-   considered done.
+2. **Documentation integrity is complete.** Shipped functionality is covered in
+   how-to/reference docs, explanatory context is current, contradiction/completion/duplication
+   scans are resolved, and Diataxis placement is checked.
+3. **Runtime readiness is complete.** Fresh-clone validation, installer checks, target
+   WSL/Linux state, Hermes profiles, local services, and changed Obsidian/plugin behavior
+   are verified with evidence in the issue trail, Actions, or `validation-log.md`.
+4. **Disposition tracked `tmp/` files.** Implemented scratch is captured in ADRs or system
+   documentation; unfinished scratch is moved to the next release `tmp/`; completed-release
+   `tmp/` folders are deleted only after that disposition.
+5. **Retire-sweep the ADRs.** Delete any ADR whose question this release dissolved or whose
+   decision it superseded — keep the *Alternatives considered* memory; leave the number gap.
+   See the [retirement criteria](../adr/README.md#when-to-retire-an-adr). (Lands as its own
+   small PR before the cut when it is not purely mechanical.)
+6. **Formal release:** merge the **release-please** "Release vX.Y" PR — it bumps
+   `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release with curated notes
+   (fold in the plan's known-limitations). Set the plan frontmatter to `status: released`,
+   `released: true`.
+7. **Internal checkpoint:** do not cut a tag or GitHub Release. Set the plan frontmatter to
+   `status: complete`, `released: false` after the parent issue is closed.
+8. Close the milestone and the release parent issue; roll unfinished issues forward.
+9. Confirm the release work is committed, merged through PR, the remote branch is deleted, the
+   task worktree is removed, and the dedicated main checkout is fast-forwarded with a clean status.
 
 ## Standard contents of a `docs/releasing/<version>/` folder
 
 | File | Holds |
 |---|---|
 | `README.md` | Thin index of this release's files |
-| `release-plan-<version>.md` | Prose: scope, gate/stage *definitions*, blockers rule, cut procedure, roadmap |
+| `release-plan-<version>.md` | Prose: scope, gate/stage *definitions*, docs/runtime bars, blockers rule, cut procedure, roadmap |
 | `release-plan-<version>-appendix.md` | *(optional)* phase roadmap + investigation detail |
 | `validation-log.md` | *(optional)* curated release evidence worth preserving after the GitHub issue/Actions trail |
 | `tmp/` | *(temporary)* tracked in-work design notes; remove when the release is done |
