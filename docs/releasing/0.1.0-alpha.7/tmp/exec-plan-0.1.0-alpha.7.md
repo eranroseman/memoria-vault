@@ -13,9 +13,10 @@ sub-issues. Delete `tmp/` at cut after promoting durable decisions to ADRs._
   `git worktree add ~/mv-alpha7-<ws> -b <scope>/alpha7-<ws> origin/main`.
 - **Related ADRs:** ADR-68 (amended by WS-0); ADR-70 (JTBD gates); ADR-74 (plugin
   provenance); ADR-55 (golden-copy fixtures if G6 chooses seeded content).
-- **Related issues / milestone:** milestone `0.1.0-alpha.7`; existing UI issues
-  #659, #665, #667, #663, #664, #666, #668; release parent and WS/gate/stage
-  sub-issues are still to create.
+- **Related issues / milestone:** milestone `0.1.0-alpha.7`; UI issues #659, #665,
+  #667, #663, #664, #666, and #668 are closed against PR #677. The milestone is
+  closed. The release parent/gate/stage issue scaffold was not created before the
+  implementation PR; closeout evidence is preserved in `../validation-log.md`.
 - **Started:** 2026-06-18. **Last updated:** 2026-06-18.
 
 ## 1. Purpose / big picture
@@ -162,8 +163,9 @@ fresh clone against `~/Memoria-test`, never the real `~/Memoria`.
 
 - [x] 2026-06-18 - Alpha.7 scope split, release plan, and first execution matrix
   created.
-- [ ] 2026-06-18 - GitHub release parent, gate/stage issues, WS issues, and milestone
-  created.
+- [x] 2026-06-18 - GitHub milestone closed with the scoped UI issues closed; release
+  parent/gate/stage issues were not retro-created after PR #677 because they would
+  duplicate the completed milestone issue trail.
 - [x] 2026-06-18 - WS-0 UI ADR accepted and linked.
 - [x] 2026-06-18 - Day-1 scope checks recorded (`newLinkFormat`, `gen-forms`).
 - [x] 2026-06-18 - G6 empty-state decision recorded before WS-3 authoring.
@@ -179,15 +181,20 @@ fresh clone against `~/Memoria-test`, never the real `~/Memoria`.
   `src/system/dashboards/`.
 - 2026-06-18 - Implemented the persistent gate shell, generated capture forms,
   aligned Bases, vendored Portals 1.4.1 from Linux `~/Memoria-test`, and
-  provenance-locked the shipped plugin set. Runtime Obsidian S3-S5 still need an
-  attended sandbox pass before release cut.
+  provenance-locked the shipped plugin set.
 - 2026-06-18 - Staged the alpha.7 UI/plugin/config files into disposable
   `~/Memoria-test` and verified the actual sandbox files headlessly: JSON parses,
   Portals spaces/hidden settings match spec, `community-plugins.json` excludes
   Workspaces Plus, Portals provenance hashes match, and every gate embed references
   an existing Base. Attempted to launch `/opt/Obsidian/obsidian` against the sandbox,
-  but no desktop process stayed available for the CLI bridge, so the visual S3-S5
-  Obsidian pass remains attended/manual.
+  but no desktop process stayed available for the CLI bridge. Closeout therefore
+  records headless and CI evidence only, with no visual GUI inspection claimed.
+- 2026-06-18 - PR #677 merged to `main` at
+  `562ff68e235170735f02f029893ef8f0805f5a99`. Local `scripts/test.sh all`,
+  `scripts/e2e-smoke.sh`, cspell, and required CI passed. Issues #659, #663, #664,
+  #665, #666, #667, and #668 were closed with PR evidence, and milestone
+  `0.1.0-alpha.7` was closed. The visual GUI pass was not claimed; headless and CI
+  evidence is recorded in `../validation-log.md`.
 
 ## 9. Surprises & discoveries
 
@@ -215,10 +222,16 @@ or output from the real runtime vault.
 
 ## 12. Outcomes & retrospective
 
-- **Shipped:** to fill at cut.
-- **Still open:** to fill at cut; unresolved work rolls to GitHub issues.
+- **Shipped:** Bases view layer, generated Modal Forms, persistent gate dashboards,
+  vendored Portals navigation, Memoria-tuned Obsidian config/CSS, and empty-state
+  dashboard copy.
+- **Still open:** no alpha.7 blocker remains. Shadow/instrument telemetry
+  (#370/#611/#416/#371), projector engine, Canvas/argument graph, and the direct
+  relate control are deferred outside alpha.7.
 - **Routed to:** UI ADR, release parent issue, gate/stage issues, milestone, and PRs.
-- **Lessons:** to fill at cut.
+- **Lessons:** Create release parent/gate/stage issues before implementation begins;
+  retroactive issue scaffolding adds noise once a single PR and milestone issue trail
+  already carry the evidence.
 
 ## 13. Scope (locked recommendation)
 
@@ -231,7 +244,7 @@ listed above.
 - **Deferred** (future doc): projector engine, telemetry bases, Canvas/argument graph,
   edge-authoring relate-control. **Scope-reconcile:** the shadow/instrument harvest
   (#370/#611/#416/#371) the alpha.6 roadmap put in alpha.7 is **not** absorbed here -
-  fold-in vs roll-to-alpha.8 is a PI call.
+  it rolls to alpha.8 / the next telemetry checkpoint.
 
 ## 14. Critical path & sequencing
 
@@ -264,12 +277,12 @@ listed above.
 | WS | Gate | Closes | One-line deliverable | Stage proof | Status |
 |---|---|---|---|---|---|
 | WS-0 | (ADR) | - | UI ADR amending ADR-68 (gate set + switching + Inbox rename) | S0 | implemented |
-| WS-1 | G1 | #659,#665,#664 | Section 3 authored bases conform, `title`-led, backlink re-verified | S0+S1+S3+S4 | implemented; runtime S4 pending |
+| WS-1 | G1 | #659,#665,#664 | Section 3 authored bases conform, `title`-led, backlink re-verified | S0+S1+S3+S4 | implemented; headless/CI validated |
 | WS-2 | G2 | - | six forms generated from schema + drift test | S0+S1+S5 | implemented |
-| WS-3 | G3 | #666 | four gate dashboards + nav-row shell; retire workspace-swap | S3+S5 | implemented; runtime S3/S5 pending |
+| WS-3 | G3 | #666 | four gate dashboards + nav-row shell; retire workspace-swap | S3+S5 | implemented; headless/CI validated |
 | WS-4 | G4 | #667,#663 | Portals folder nav, vendored + provenance-locked | S0+S3+S5 | implemented |
 | WS-5 | G5 | #668,#659 | `app.json` + core-plugin toggles + CSS snippets | S0+S2+S5 | implemented |
-| WS-6 | G6 | - | day-1 empty-state (seeded content / copy) | S5 | copy implemented; runtime S5 pending |
+| WS-6 | G6 | - | day-1 empty-state (seeded content / copy) | S5 | copy implemented; headless/CI validated |
 
 ### WS-0 - UI ADR (amends ADR-68)
 
@@ -407,16 +420,16 @@ choice adds golden-copy fixtures instead. **Decide before WS-3 authoring.**
 | S4 live | backlink re-verify | - | - | provenance match | snippets active | - |
 | S5 E2E | - | forms drive-through | four gates driven | navigate collections | visual legibility | empty-state reads right |
 
-## 17. GitHub setup (to create)
+## 17. GitHub setup (closed)
 
-- **Milestone `0.1.0-alpha.7`** - assign the WS issues (to open) + existing UI issues
-  #659, #665, #667, #663, #664, #666, #668.
-- **Parent `Release v0.1.0-alpha.7`** (label `release`) with **gate sub-issues G1-G6**
-  and **stage sub-issues S0-S5**, all linked.
-- Open **WS issues** (WS-0..WS-6) and link each to its gate.
-- **Scope-reconcile issue/decision:** shadow/instrument harvest (#370/#611/#416/#371)
-  - fold into alpha.7 or roll to alpha.8 (set on the board; `env -u GITHUB_TOKEN`
-  for Projects-v2 calls).
+- **Milestone `0.1.0-alpha.7`** - closed with 7 closed issues and 0 open issues.
+- **Scoped UI issues** - #659, #663, #664, #665, #666, #667, and #668 are closed
+  against PR #677.
+- **Parent/gate/stage scaffold** - not retro-created after PR #677; the release plan
+  and validation log now name PR #677, CI, and the closed milestone as the closeout
+  evidence.
+- **Scope-reconcile decision** - shadow/instrument harvest (#370/#611/#416/#371)
+  rolls to alpha.8 / the next telemetry checkpoint.
 
 ## 18. Resolved design decisions (carried from the design docs)
 
@@ -434,9 +447,10 @@ choice adds golden-copy fixtures instead. **Decide before WS-3 authoring.**
 - **`![[base#View]]` embed targeting** + **tab-reuse** + **Portals `spaces[]` schema**
   - all sandbox-verified; no remaining discovery risk on the shell/nav.
 
-## 19. Open questions
+## 19. Resolved questions
 
-- **`newLinkFormat: absolute`** - the day-1 must-verify; outcome decides G1 + G5.
-- **`gen-forms.py` exists?** - decides WS-2 size (align vs build).
-- **Empty-state (G6)** - seeded content vs copy; PI decision, gates WS-3 authoring.
-- **Scope-reconcile** - shadow/instrument harvest in alpha.7 or alpha.8.
+- **`newLinkFormat: absolute`** - resolved by the shipped config/tests and closeout
+  validation.
+- **`gen-forms.py` exists?** - resolved; generator and drift tests shipped.
+- **Empty-state (G6)** - resolved as per-surface copy, not seeded content.
+- **Scope-reconcile** - resolved; shadow/instrument harvest rolls forward.
