@@ -11,7 +11,7 @@ parent: Tutorials
 
 **You will use:** the Co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — a few Catalog entries and source notes give discovery something to compare against.
+**Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — a few Catalog entries and source notes give discovery something to compare against. You can run this tutorial directly after Tutorial 04; it does not depend on Tutorials 05–06, though working a `gap` card from Tutorial 06 is one natural way to trigger discovery.
 
 Tutorials 03 and 04 brought in papers you already knew about; this is the other direction — the system surfaces papers you haven't met, grounded in what your vault already holds.
 

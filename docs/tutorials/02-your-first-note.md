@@ -33,7 +33,7 @@ Your note's frontmatter looks like this:
 type: fleeting
 lifecycle: proposed
 origin: human
-created: 2026-06-10
+created: YYYY-MM-DD   # auto-filled with today's date at capture
 ```
 
 Three fields carry the meaning:

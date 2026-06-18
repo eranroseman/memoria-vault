@@ -21,10 +21,13 @@ Use this for **structural** changes that touch many notes. For renaming a single
 **1. Commit the current vault state.**
 
 ```bash
-cd ~/Memoria && git add -A && git commit -m "pre-migration snapshot"
+cd ~/Memoria
+git status                                   # confirm the tree is clean first
+git add notes/ catalog/ .memoria/schemas/    # stage only the migration scope, never -A
+git commit -m "pre-migration snapshot"
 ```
 
-A clean commit beforehand makes the migration one diff you can review — and revert in one command.
+Stage the paths the migration touches explicitly — never `git add -A`, which would sweep unrelated working-tree changes into the snapshot. A clean commit beforehand makes the migration one diff you can review — and revert in one command.
 
 **2. Enumerate the affected notes — your dry run.**
 
@@ -61,8 +64,12 @@ python3 .memoria/operations/integrity/linter/detectors.py --vault .
 
 ```bash
 git diff --stat       # only the expected files, only the expected change
-git add -A && git commit -m "schema: rename methodology rct → randomized-controlled-trial"
+xargs -a /tmp/migration-files.txt git add            # stage exactly the reviewed file list
+git add .memoria/schemas/types/<type>.yaml           # plus the schema, if step 3 changed it
+git commit -m "schema: rename methodology rct → randomized-controlled-trial"
 ```
+
+Staging from the step-2 file list keeps the commit scoped to the reviewed notes — no stray working-tree edits ride along.
 
 If the diff is wrong, `git reset --hard HEAD~1` returns you to the step-1 snapshot.
 

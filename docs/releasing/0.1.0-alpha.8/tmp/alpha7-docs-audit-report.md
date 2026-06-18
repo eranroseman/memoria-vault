@@ -5,7 +5,37 @@ title: alpha.7 docs audit handoff
 # alpha.7 docs audit handoff
 
 Status: carried-forward audit notes for alpha.8 planning. Generated after the alpha.7
-QA/docs cleanup pass.
+QA/docs cleanup pass. **An alpha.8 resolution pass has since worked these findings —
+see [Resolved in the alpha.8 docs pass](#resolved-in-the-alpha8-docs-pass) below; the
+"Remaining" tables are annotated with their outcome.**
+
+## Resolved in the alpha.8 docs pass
+
+| Finding (from the tables below) | Resolution | Files changed |
+| --- | --- | --- |
+| Controlled vocabulary reference is thin (no reader-facing allowed-values table). | Added complete `research_area` (27 terms) and `methodology` (architecture + specific methods) allowed-values tables mirrored from the shipped source, with an explicit "shipped note wins" source-of-truth note. | `docs/reference/vocabulary.md` |
+| `set-up-messaging.md` mixed shipped outbound push with the deferred inbound gateway. | Split the page into a shared "Create the bot" section, a **Shipped: outbound alert push** procedure + verify, and a clearly fenced **Deferred: inbound mobile-capture gateway** section with its own status banner. | `docs/how-to-guides/setup/set-up-messaging.md` |
+| Deferred setup pages read like runnable setup in the setup index. | Flagged `set-up-messaging.md` (inbound deferred) and `set-up-vps.md` (deferred/unvalidated) in the setup index with issue links, matching the parent how-to index. VPS page kept (it carries a strong `[deferred]` banner) rather than moved. | `docs/how-to-guides/setup/README.md` |
+| `run-a-schema-migration.md` used broad `git add -A`. | Replaced both `git add -A` calls with explicit-path staging: scoped paths for the snapshot, the step-2 reviewed file list (`xargs … git add`) plus the schema file for the migration commit. | `docs/how-to-guides/operate/run-a-schema-migration.md` |
+| obsidian-git push-behavior table contradicted its own prose (`autoPush` boolean vs. the real `disablePush`/`autoPushInterval` keys). | Reworked the table to map each deployment onto the two real keys (`disablePush`, `autoPushInterval`). | `docs/reference/obsidian-plugins.md` |
+| `explanation/profiles/README.md` carried stale release-status narrative ("v0.1.0-alpha.2 shipped…", "alpha.5 adds…"). | Rewrote to present-tense profile-index prose; dropped version-pegged narrative. | `docs/explanation/profiles/README.md` |
+| Tutorial examples / navigation polish. | Tutorial 02 `created:` example now uses `YYYY-MM-DD` with an "auto-filled today" note; Tutorial 05 adds a concrete "open the Inbox gate → Needs me" step for map results; Tutorial 06 adds the "Open the Inbox gate" cue before reading flags; Tutorial 07 clarifies it can run directly after Tutorial 04. | `docs/tutorials/02-your-first-note.md`, `05-synthesize-toward-a-writing-project.md`, `06-verify-and-address-gaps.md`, `07-find-new-sources.md` |
+| Status-line design deferred but present. | Verified both pages already open with explicit deferred banners naming Inbox as the shipped glance — no change needed (recommendation's "keep the explicit deferred banner" option is satisfied). | `docs/reference/obsidian-status-line.md`, `docs/explanation/obsidian/the-status-line.md` |
+
+`docs_doctor.py` reports clean after the pass.
+
+### Deferred by decision (no change this pass)
+
+These remaining recommendations are conditional ("if the page grows further"),
+subjective polish ("consider trimming/renaming"), or carry link-break risk; they are
+not current contradictions, so they are intentionally left for a future targeted edit
+rather than churned now:
+
+- `how-to-guides/hermes-agent/configuration.md` split — only triggered "if the page continues to grow"; the page is correct today.
+- README trims (`explanation/README.md`, `explanation/architecture/README.md`, `how-to-guides/README.md`) and reference rationale trims (`reference/computational-toolbox.md`, `reference/linking.md`) — subjective length preference, not defects.
+- File renames (`curate/build-a-moc.md` → "hub", `dashboards/operational-health/skill-lifecycle.md`) — link-break risk; redirect support is uncertain and the link *text* already uses the current "hub" wording.
+- `explanation/workflows/verify-on-commit.md` and `troubleshooting/safe-mode.md` restructures — optional, mechanism is correct as written.
+- Historical/consistency-note items (superseded ADRs, old release evidence, alpha.8 carried-forward scratch) — left intact **by design** per their own recommendation ("do not rewrite old release evidence"; "rewrite when promoting").
 
 ## Scope scanned
 
@@ -31,6 +61,12 @@ QA/docs cleanup pass.
 
 ## Remaining implementation documentation gaps
 
+> **Outcome (alpha.8 pass):** the vocabulary table, the messaging shipped/deferred
+> split, and the status-line banner check are **resolved** (see above). The deferred
+> how-to pages were flagged in the indexes (VPS page kept with its banner). The
+> configuration-guide split is **deferred by decision** — its trigger is "if the page
+> grows further" and the page is correct today.
+
 | Issue | Relevant files | Reasoning | Recommendation |
 | --- | --- | --- | --- |
 | Deferred how-to pages still live in the how-to tree. | `docs/how-to-guides/setup/set-up-vps.md`, `docs/how-to-guides/setup/set-up-messaging.md`, `docs/how-to-guides/setup/README.md`, `docs/how-to-guides/README.md` | `set-up-vps.md` is explicitly deferred/unvalidated but still reads like a procedure. `set-up-messaging.md` mixes shipped outbound alert setup with deferred inbound gateway behavior. This is not a current alpha.7 contradiction because both pages carry caveats, but it weakens how-to trust. | Split shipped procedures from deferred designs. Move unvalidated topology/inbound-gateway material to explanation or ADR/deferred release scratch; keep only runnable setup in how-to indexes. |
@@ -40,6 +76,10 @@ QA/docs cleanup pass.
 
 ## Remaining consistency notes
 
+> **Outcome (alpha.8 pass):** **no action by design.** Both rows recommend leaving
+> historical/superseded wording intact and rewriting only when carried-forward ideas
+> are promoted into durable docs. Nothing here is a current-system contradiction.
+
 | Issue | Relevant files | Reasoning | Recommendation |
 | --- | --- | --- | --- |
 | Historical release docs and superseded ADRs still contain Desk/Library/Studio language. | `docs/adr/68-workspaces-desk-library-studio.md`, `docs/adr/70-navigation-gates-dashboards.md`, `docs/releasing/0.1.0-alpha.6/release-plan-0.1.0-alpha.6.md`, `docs/releasing/0.1.0-alpha.7/validation-log.md` | These are historical records, not current-system docs. The active source of truth is ADR-81 plus reference/how-to pages. | Leave historical wording intact unless adding status notes; do not rewrite old release evidence as if it originally used the new model. |
@@ -48,30 +88,31 @@ QA/docs cleanup pass.
 ## Diataxis summary
 
 The audited docs are broadly in the right quadrants. The main fixed defect was stale
-UI terminology, not quadrant placement. Remaining per-file recommendations:
+UI terminology, not quadrant placement. Remaining per-file recommendations (✅ = applied
+this pass; ⏸ = deferred by decision, see [Deferred by decision](#deferred-by-decision-no-change-this-pass)):
 
-| File | Expected type | Recommendation |
-| --- | --- | --- |
-| `docs/explanation/README.md` | README index | Consider trimming long reading paths; keep routing and section summaries. |
-| `docs/explanation/architecture/README.md` | README index | Shorten architecture explanation or move detailed layer prose to a child page. |
-| `docs/explanation/workflows/verify-on-commit.md` | Explanation | Add more "why commit time" rationale or move to reference/how-to if it stays mechanism-only. |
-| `docs/explanation/profiles/README.md` | README index | Remove stale release-status narrative when next editing; keep it as a profile index. |
-| `docs/explanation/dashboards/operational-health/skill-lifecycle.md` | Explanation | Consider renaming if "lifecycle" reads like a state machine rather than skill governance. |
-| `docs/how-to-guides/README.md` | README index | Still long for an index; consider tightening to a category map. |
-| `docs/how-to-guides/hermes-agent/configuration.md` | How-to | Split stable reference tables from task steps if the page continues to grow. |
-| `docs/how-to-guides/setup/set-up-messaging.md` | How-to | Split shipped outbound alerts from deferred inbound messaging gateway. |
-| `docs/how-to-guides/setup/set-up-vps.md` | How-to | Move deferred/unvalidated topology to explanation/ADR or keep excluded from setup index until validated. |
-| `docs/how-to-guides/curate/build-a-moc.md` | How-to | Consider renaming the file to match the current "hub" title, with redirect if supported. |
-| `docs/how-to-guides/operate/run-a-schema-migration.md` | How-to | Replace broad git examples such as `git add -A` with explicit-path staging. |
-| `docs/how-to-guides/troubleshooting/safe-mode.md` | Troubleshooting how-to | Optionally split by failure mode if the page becomes hard to scan. |
-| `docs/reference/computational-toolbox.md` | Reference | Move deeper method rationale to explanation if the page gets longer. |
-| `docs/reference/linking.md` | Reference | Keep tables; shorten opening rationale if strict reference shape is desired. |
-| `docs/reference/obsidian-plugins.md` | Reference | Recheck the Obsidian Git push-behavior table against exact plugin keys. |
-| `docs/reference/vocabulary.md` | Reference | Add complete current allowed values or explicitly point to generated source. |
-| `docs/tutorials/02-your-first-note.md` | Tutorial | Use `YYYY-MM-DD` or "today's date" in examples; make beginner archive/fold-in choice explicit. |
-| `docs/tutorials/05-synthesize-toward-a-writing-project.md` | Tutorial | Add one concrete step for finding map results in the Inbox gate; consider MOC/hub link text cleanup. |
-| `docs/tutorials/06-verify-and-address-gaps.md` | Tutorial | Optional: say "Open the Inbox gate" before reading flags/gaps for navigation consistency. |
-| `docs/tutorials/07-find-new-sources.md` | Tutorial | Sequence now uses current gate language; next edit can clarify whether it depends on Tutorial 06 or can run after Tutorial 04. |
+| File | Expected type | Recommendation | Outcome |
+| --- | --- | --- | --- |
+| `docs/explanation/README.md` | README index | Consider trimming long reading paths; keep routing and section summaries. | ⏸ |
+| `docs/explanation/architecture/README.md` | README index | Shorten architecture explanation or move detailed layer prose to a child page. | ⏸ |
+| `docs/explanation/workflows/verify-on-commit.md` | Explanation | Add more "why commit time" rationale or move to reference/how-to if it stays mechanism-only. | ⏸ |
+| `docs/explanation/profiles/README.md` | README index | Remove stale release-status narrative when next editing; keep it as a profile index. | ✅ rewrote to present-tense |
+| `docs/explanation/dashboards/operational-health/skill-lifecycle.md` | Explanation | Consider renaming if "lifecycle" reads like a state machine rather than skill governance. | ⏸ |
+| `docs/how-to-guides/README.md` | README index | Still long for an index; consider tightening to a category map. | ⏸ |
+| `docs/how-to-guides/hermes-agent/configuration.md` | How-to | Split stable reference tables from task steps if the page continues to grow. | ⏸ trigger not met |
+| `docs/how-to-guides/setup/set-up-messaging.md` | How-to | Split shipped outbound alerts from deferred inbound messaging gateway. | ✅ split |
+| `docs/how-to-guides/setup/set-up-vps.md` | How-to | Move deferred/unvalidated topology to explanation/ADR or keep excluded from setup index until validated. | ✅ flagged deferred in index |
+| `docs/how-to-guides/curate/build-a-moc.md` | How-to | Consider renaming the file to match the current "hub" title, with redirect if supported. | ⏸ link-break risk |
+| `docs/how-to-guides/operate/run-a-schema-migration.md` | How-to | Replace broad git examples such as `git add -A` with explicit-path staging. | ✅ explicit-path staging |
+| `docs/how-to-guides/troubleshooting/safe-mode.md` | Troubleshooting how-to | Optionally split by failure mode if the page becomes hard to scan. | ⏸ |
+| `docs/reference/computational-toolbox.md` | Reference | Move deeper method rationale to explanation if the page gets longer. | ⏸ |
+| `docs/reference/linking.md` | Reference | Keep tables; shorten opening rationale if strict reference shape is desired. | ⏸ |
+| `docs/reference/obsidian-plugins.md` | Reference | Recheck the Obsidian Git push-behavior table against exact plugin keys. | ✅ table now uses real keys |
+| `docs/reference/vocabulary.md` | Reference | Add complete current allowed values or explicitly point to generated source. | ✅ added allowed-values tables |
+| `docs/tutorials/02-your-first-note.md` | Tutorial | Use `YYYY-MM-DD` or "today's date" in examples; make beginner archive/fold-in choice explicit. | ✅ date placeholder |
+| `docs/tutorials/05-synthesize-toward-a-writing-project.md` | Tutorial | Add one concrete step for finding map results in the Inbox gate; consider MOC/hub link text cleanup. | ✅ added Inbox-gate step |
+| `docs/tutorials/06-verify-and-address-gaps.md` | Tutorial | Optional: say "Open the Inbox gate" before reading flags/gaps for navigation consistency. | ✅ added cue |
+| `docs/tutorials/07-find-new-sources.md` | Tutorial | Sequence now uses current gate language; next edit can clarify whether it depends on Tutorial 06 or can run after Tutorial 04. | ✅ clarified dependency |
 
 ## Scan notes
 
