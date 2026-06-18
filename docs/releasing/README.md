@@ -58,7 +58,8 @@ never restates.
 1. Every gate/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
 2. **Documentation integrity is complete.** Shipped functionality is covered in
    how-to/reference docs, explanatory context is current, contradiction/completion/duplication
-   scans are resolved, and Diataxis placement is checked.
+   scans are resolved, Diataxis placement is checked, related links and terminology are
+   reviewed, and third-party/example claims are current.
 3. **Runtime readiness is complete.** Fresh-clone validation, installer checks, target
    WSL/Linux state, Hermes profiles, local services, and changed Obsidian/plugin behavior
    are verified with evidence in the issue trail, Actions, or `validation-log.md`.
