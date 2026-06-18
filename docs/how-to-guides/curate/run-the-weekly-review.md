@@ -21,7 +21,7 @@ Open `research-focus.md`. Confirm or update the active questions and reading foc
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
-Open the Desk workspace's Inbox tab — the **Needs me** view of `inbox/inbox.base` (every card at `lifecycle: proposed`) and work it as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, flags and alerts acted on and resolved ([Work the review queue](../compose/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
+Open the Inbox gate's **Needs me** view of `inbox/inbox.base` (every card at `lifecycle: proposed`) and work it as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, flags and alerts acted on and resolved ([Work the review queue](../compose/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Notice-level findings (5 min).**
 

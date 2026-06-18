@@ -25,27 +25,46 @@ Always edit the vault source. Re-deploy with `bash scripts/install.sh --profiles
 | File | Controls | Who edits |
 | --- | --- | --- |
 | `SOUL.md` | Profile identity, posture, behavioral constraints | Author (you) |
-| `config.yaml` | Model routing, `mcp_servers`, and the `plugins` block enabling the `memoria-policy-gate` write gate | Author (installer substitutes `{{PYTHON}}` and `{{VAULT_PATH}}`) |
+| `config.yaml` | Model routing, `mcp_servers`, and the `plugins` block enabling the `memoria-policy-gate` write gate | Author (installer substitutes Python, vault, qmd, and model tokens) |
 | `distribution.yaml` | Packages the profile for `hermes profile install` | Author |
 | `skills/` | Skill packages the profile can load | Author |
 | `.env` (deployed copy only) | API keys and secrets | **Human only** — never committed to git |
 
 The lane ceiling is the one piece that lives *outside* the profile directory: `<vault>/.memoria/lane-overrides/<name>.yaml` (see below).
 
-## Change the model for a profile
+## Change the model overlay
 
-Open `<vault>/.memoria/profiles/memoria-<name>/config.yaml` and edit the `model` field:
+The shipped profile `config.yaml` files use model placeholders. The installer renders them so production and disposable test vaults can use different model providers without hand-editing five profiles.
+
+Production is the default:
 
 ```yaml
 model:
-  provider: kilocode                       # your gateway/provider
+  provider: kilocode
   base_url: https://api.kilo.ai/api/gateway
-  default: ~anthropic/claude-opus-latest   # the model string (provider/model)
+  default: ~anthropic/claude-<tier>-latest
 ```
 
-The key is `default` (not `name`). For direct Anthropic instead, use `provider: anthropic`, `default: claude-opus-4-8`, and omit `base_url`. The shipped profiles set **only** the `model` block (plus `mcp_servers` and `plugins` blocks) — everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
+Linux/WSL test installs can render every profile to local Ollama:
 
-Save and re-deploy: `bash scripts/install.sh --profiles-only --vault <vault>`.
+```bash
+MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
+```
+
+That renders:
+
+```yaml
+model:
+  provider: custom
+  base_url: http://127.0.0.1:11434/v1
+  default: qwen2.5:7b
+  context_length: 65536
+  ollama_num_ctx: 65536
+```
+
+Use `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, and `MEMORIA_MODEL_CONTEXT_LENGTH` to override the local endpoint. The key for the rendered main model is `default` (not `name`). The shipped profiles set **only** the `model` block (plus `mcp_servers` and `plugins` blocks); everything else inherits from the global `~/.hermes/config.yaml`, because Hermes replaces a config section wholesale rather than deep-merging.
+
+For a permanent production tier change, update the installer's profile model overlay and the profile tests together, then re-deploy with `bash scripts/install.sh --profiles-only --vault <vault>`.
 
 ## Auxiliary models (set globally, not per-profile)
 

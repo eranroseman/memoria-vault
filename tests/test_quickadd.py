@@ -237,7 +237,7 @@ def test_zotero_capture_uses_bbt_json_rpc_not_cayw():
 def test_url_capture_writes_visible_candidate_card():
     """URL capture must create a visible Inbox candidate, not only a Hermes task.
 
-    The Desk workspace's Needs me view is backed by inbox/inbox.base, so a URL
+    The Inbox gate's Needs me view is backed by inbox/inbox.base, so a URL
     capture that only creates a board card is invisible in Obsidian until another
     actor runs. Keep the QuickAdd script wired to a schema-shaped candidate card.
     """

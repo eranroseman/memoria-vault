@@ -7,7 +7,7 @@ grand_parent: Dashboards
 
 # The Daily Health dashboard
 
-> **Absorbed into Home.** Daily Health no longer exists as a standalone dashboard file — the design update folded it into **`home.md`**, the front door. Its job (the morning "is anything red?" glance) is now the homepage's one-line **status strip**, with the Inbox's "what needs me?" view one click away in the Desk workspace ([ADR-68](../../../adr/68-workspaces-desk-library-studio.md)), so the daily ritual starts on the surface Obsidian already opens. This page records the design rationale, which survives the move unchanged.
+> **Absorbed into the launch surface.** Daily Health no longer exists as a standalone dashboard file — the design update folded its job into the Inbox gate. The morning "is anything red?" glance now starts with the Inbox gate's `Needs me`, `Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)), so the daily ritual starts on the surface Obsidian already opens. This page records the design rationale, which survives the move unchanged.
 
 The daily health view is the always-on system glance. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
@@ -15,7 +15,7 @@ The daily health view is the always-on system glance. The budget is 30 seconds �
 
 ## What it shows
 
-What populates the glance — the one-line status strip and the Desk "Needs me" view — is detailed where it now lives, [Home — the vault front door](../../obsidian/home.md). The framing that survives the move: each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
+What populates the glance — the Inbox gate's top views and the support dashboards behind them — is detailed where it now lives, [Home — the vault front door](../../obsidian/home.md). The framing that survives the move: each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ---
 
@@ -33,7 +33,7 @@ What populates the glance — the one-line status strip and the Desk "Needs me" 
 
 **Absorption beats a second front door.** A standalone Daily Health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the front door is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
 
-**Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the above-fold glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
+**Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox gate glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 
 **Graceful degradation.** When a feed has no data yet — a fresh vault with no agent runs — the glance states what would populate it: empty means "nothing to report," not "something is broken" (the cross-cutting [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
 

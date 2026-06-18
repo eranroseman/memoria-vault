@@ -5,7 +5,7 @@ parent: Tutorials
 
 # Tutorial 01: Set up from zero
 
-**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the Co-PI answering in the Agent Client pane, and the Library workspace loaded.
+**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the Co-PI answering in the Agent Client pane, and the Library gate open.
 
 **Time:** 20–30 minutes.
 
@@ -76,7 +76,7 @@ Re-run that command any time you add or rotate a key.
 3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in the shared Hermes env file. Also set `OBSIDIAN_MCP_PORT` to the plugin's HTTPS port and `OBSIDIAN_MCP_SSL_VERIFY` to the exported certificate path, then re-run the `--profiles-only` command from Step 2.
 4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
-`home.md` opens as the front door — the control panel: the one-line status strip, the action and workspace buttons, and the dashboard index. The Inbox queue itself lives in the **Desk** workspace's first left tab.
+Obsidian opens the **Inbox** gate. The gate nav row links Inbox, Library, Knowledge, and Project; `home.md` remains a simple fallback note if the Homepage plugin is disabled.
 
 ---
 
@@ -107,7 +107,7 @@ The Library gate opens the reading pipeline, the discuss queue, and the Catalog 
 - Five profiles installed and the maintenance crons wired
 - API keys in `~/.hermes/.env`, propagated to every profile
 - The Co-PI answering in the Agent Client pane
-- The Library workspace loaded
+- The Library gate open
 
 ---
 

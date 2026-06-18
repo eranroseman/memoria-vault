@@ -34,6 +34,14 @@ NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 
+For a Linux/WSL disposable test vault that should use a local Ollama model instead of Kilo Code, leave `KILOCODE_API_KEY` alone and run the profile deploy with `MEMORIA_ENV=test`. The installer renders every profile to `http://127.0.0.1:11434/v1`, `qwen2.5:7b`, and a 64K context by default:
+
+```bash
+MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
+```
+
+Override the local endpoint with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or `MEMORIA_MODEL_CONTEXT_LENGTH` when your Ollama setup uses a different model.
+
 **2. Propagate the keys into every profile.**
 
 Hermes profile runs read **only the profile's own `.env`** — there is no global fallback, so the keys must be seeded into each profile:
@@ -54,7 +62,7 @@ What `--profiles-only` re-deploys, and how it seeds each profile's `.env` from t
 grep -A2 "policy" ~/.hermes/profiles/memoria-librarian/config.yaml | head
 ```
 
-The `policy` server's entry should point at the vault venv's Python and an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{PYTHON}}` or `{{VAULT_PATH}}`, re-run `bash scripts/install.sh --profiles-only --vault <vault>` on Linux/WSL2 or `.\scripts\install.ps1 -ProfilesOnly -Vault <vault>` on Windows.
+The `policy` server's entry should point at the vault venv's Python and an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{PYTHON}}`, `{{VAULT_PATH}}`, or `{{MODEL_*}}`, re-run `bash scripts/install.sh --profiles-only --vault <vault>` on Linux/WSL2 or `.\scripts\install.ps1 -ProfilesOnly -Vault <vault>` on Windows.
 
 **4. Install the upstream MCP servers (Librarian + Peer-reviewer).**
 

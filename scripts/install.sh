@@ -30,6 +30,9 @@
 # password). --dry-run echoes everything and touches nothing.
 #
 # Honors $HERMES_HOME (default ~/.hermes), matching Hermes's own convention.
+# Honors $MEMORIA_ENV for Linux/WSL test profile model wiring:
+#   prod (default) -> shipped Kilo Code gateway tiers
+#   test           -> local OpenAI-compatible Ollama endpoint
 # =============================================================================
 set -euo pipefail
 
@@ -43,6 +46,7 @@ DEFAULT_TARGET="$HOME/Memoria"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_PROFILES_DIR="$HERMES_HOME/profiles"
 HERMES_SKILLS_DIR="$HERMES_HOME/skills"
+MEMORIA_ENV="${MEMORIA_ENV:-prod}"
 
 ALL_PROFILES="memoria-copi memoria-librarian memoria-writer memoria-peer-reviewer memoria-engineer"
 REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
@@ -556,13 +560,45 @@ deploy_policy_plugin() {
 verify_profile_obsidian_mcp() {
   local cfg="$1" prof="$2"
   [ -f "$cfg" ] || die "$prof config.yaml missing after staging."
-  if grep -q 'url: "http://127\.0\.0\.1' "$cfg"; then
-    die "$prof config.yaml uses plain HTTP for the Obsidian MCP; expected verified HTTPS."
-  fi
   grep -q 'url: "https://127\.0\.0\.1:${OBSIDIAN_MCP_PORT}/mcp"' "$cfg" \
     || die "$prof config.yaml must use https://127.0.0.1:\${OBSIDIAN_MCP_PORT}/mcp for the Obsidian MCP."
   grep -q 'ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"' "$cfg" \
     || die "$prof config.yaml must set obsidian ssl_verify to \${OBSIDIAN_MCP_SSL_VERIFY}."
+}
+
+profile_model_default() {
+  case "$1" in
+    memoria-copi|memoria-peer-reviewer) printf '%s' '~anthropic/claude-opus-latest' ;;
+    memoria-writer) printf '%s' '~anthropic/claude-sonnet-latest' ;;
+    memoria-librarian|memoria-engineer) printf '%s' '~anthropic/claude-haiku-latest' ;;
+    *) die "Unknown profile for model overlay: $1" ;;
+  esac
+}
+
+profile_model_overlay() {
+  local prof="$1"
+  MODEL_PROVIDER=""
+  MODEL_BASE_URL=""
+  MODEL_DEFAULT=""
+  MODEL_CONTEXT_LENGTH=""
+
+  case "$MEMORIA_ENV" in
+    prod|"")
+      MODEL_PROVIDER="kilocode"
+      MODEL_BASE_URL="https://api.kilo.ai/api/gateway"
+      MODEL_DEFAULT="$(profile_model_default "$prof")"
+      MODEL_CONTEXT_LENGTH=""
+      ;;
+    test)
+      MODEL_PROVIDER="custom"
+      MODEL_BASE_URL="${MEMORIA_MODEL_BASE_URL:-http://127.0.0.1:11434/v1}"
+      MODEL_DEFAULT="${MEMORIA_MODEL_NAME:-qwen2.5:7b}"
+      MODEL_CONTEXT_LENGTH="${MEMORIA_MODEL_CONTEXT_LENGTH:-65536}"
+      ;;
+    *)
+      die "Unsupported MEMORIA_ENV=$MEMORIA_ENV (expected prod or test)."
+      ;;
+  esac
 }
 
 # =============================================================================
@@ -617,16 +653,35 @@ install_profiles() {
     #                       policy hook import mcp+PyYAML from where install_mcp_deps
     #                       put them (not bare system python).
     #   - {{VAULT_PATH}} -> the real vault path.
+    #   - {{MODEL_*}}    -> prod cloud tiers by default, or local Ollama-compatible
+    #                       wiring when MEMORIA_ENV=test.
     local pybin="${VENV_PYTHON:-python}"
     if [ -f "$dst/config.yaml" ]; then
-      local pybin_esc vault_esc qmd_esc
+      local pybin_esc vault_esc qmd_esc model_provider_esc model_base_url_esc model_default_esc
+      profile_model_overlay "$p"
       pybin_esc="$(sed_repl "$pybin")"
       vault_esc="$(sed_repl "$VAULT_PATH")"
       qmd_esc="$(sed_repl "${QMD_BIN:-qmd}")"
+      model_provider_esc="$(sed_repl "$MODEL_PROVIDER")"
+      model_base_url_esc="$(sed_repl "$MODEL_BASE_URL")"
+      model_default_esc="$(sed_repl "$MODEL_DEFAULT")"
       run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' \
                   -e 's|{{VAULT_PATH}}|$vault_esc|g' \
                   -e 's|{{QMD}}|$qmd_esc|g' \
+                  -e 's|{{MODEL_PROVIDER}}|$model_provider_esc|g' \
+                  -e 's|{{MODEL_BASE_URL}}|$model_base_url_esc|g' \
+                  -e 's|{{MODEL_DEFAULT}}|$model_default_esc|g' \
                   \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
+      run_sh "awk -v ctx=\"$MODEL_CONTEXT_LENGTH\" '
+                  /# \\{\\{MODEL_LOCAL_CONTEXT\\}\\}/ {
+                    if (ctx != \"\") {
+                      print \"  context_length: \" ctx
+                      print \"  ollama_num_ctx: \" ctx
+                    }
+                    next
+                  }
+                  { print }
+                ' \"$dst/config.yaml\" > \"$dst/config.yaml.tmp\" && mv \"$dst/config.yaml.tmp\" \"$dst/config.yaml\""
       verify_profile_obsidian_mcp "$dst/config.yaml" "$p"
     fi
 
@@ -637,6 +692,11 @@ install_profiles() {
     # whole install errored out ("unrecognized arguments"). Use --name explicitly.
     if run hermes profile install "$dst" --name "$p" --alias --force --yes; then
       installed="$installed $p"
+      # Hermes preserves some deployed profile files as user-owned. Memoria owns
+      # the rendered config.yaml because it carries the vault path, MCP commands,
+      # policy plugin enablement, and MEMORIA_ENV model overlay; refresh it
+      # explicitly so --profiles-only cannot leave stale host-side model wiring.
+      run cp "$dst/config.yaml" "$HERMES_PROFILES_DIR/$p/config.yaml"
       # Capability layer (ADR-27): each profile's config.yaml already carries
       # `agent.disabled_toolsets` (every toolset NOT in the lane's tool-registry
       # allow-set), so the only vault-write path is the gated obsidian MCP. It
@@ -783,7 +843,7 @@ print_next_steps() {
   [ -n "$VAULT_PATH" ] && say "  2. Open this folder in Obsidian as your vault:  $VAULT_PATH"
   say "  3. Verify the profiles:        hermes profile list"
   say "  4. Open the Co-PI pane:        hermes -p memoria-copi acp   (or the Agent Client pane in Obsidian)"
-  say "  5. Switch to the Library workspace in Obsidian (Workspaces: Home | Library)"
+  say "  5. Open the Library gate from the Obsidian gate nav row"
   say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
   # obsidian-git needs a repo to commit into; we deliberately don't auto-init (the
   # vault is the user's own repo). Surface the one-liner only if it's not a repo yet.

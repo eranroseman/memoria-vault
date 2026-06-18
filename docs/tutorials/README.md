@@ -15,7 +15,7 @@ You converse with **one** agent throughout: the Co-PI, in the Agent Client pane.
 
 | # | Tutorial | What you'll do | What you end with |
 | --- | --- | --- | --- |
-| [01](01-set-up-from-zero.md) | Set up from zero | Run the one-line installer, add your API keys, open the vault, meet the Co-PI | A working vault: five profiles installed, the Co-PI pane answering, the Library workspace open |
+| [01](01-set-up-from-zero.md) | Set up from zero | Run the one-line installer, add your API keys, open the vault, meet the Co-PI | A working vault: five profiles installed, the Co-PI pane answering, the Library gate open |
 | [02](02-your-first-note.md) | Your first note | Capture a fleeting note from the palette, read its frontmatter, distill or archive it | One processed fleeting note and the distill-or-archive habit |
 | [03](03-bring-in-a-paper.md) | Bring in a paper | Optionally wire up Zotero, capture a paper, judge its candidate card, fill a source note | A Catalog entity, a kept candidate, and a source note in your own words |
 | [04](04-build-a-reading-batch.md) | Build a reading batch | Ask the Co-PI for a topic batch, then work the reading queue as one worklist | A reading queue in `sources.base` you work down in batches, not card by card |

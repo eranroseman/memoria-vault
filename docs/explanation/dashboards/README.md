@@ -8,16 +8,16 @@ permalink: /explanation/dashboards/
 
 # Dashboards
 
-The **Inbox** is the *action queue* — discrete things that need you now (it feeds Home's "what needs me?"). **Dashboards** are *browsable health views* — where things stand. They live in `system/dashboards/`, are Bases/Dataview-backed and consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
+The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `gates/`, `system/dashboards/`, and related Base files, are Bases/Dataview-backed and consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance/README.md)             | Home's status strip (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
+| [Daily glance](daily-glance/README.md)             | Inbox gate glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill lifecycle            | When checking how the agent fleet is performing   |
 
-Two of the old standalone dashboards changed shape in the design update: **Daily Health was absorbed into `home.md`** (the front door's above-fold glance — it no longer exists as a separate file), and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter engine's** structural debt — kept separate, not collapsed.
+Two of the old standalone dashboards changed shape in the design update: **Daily Health was absorbed into the Inbox launch surface** (it no longer exists as a separate file), and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter engine's** structural debt — kept separate, not collapsed.
 
 ## Why the dashboards are designed the way they are
 

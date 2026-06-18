@@ -5,7 +5,10 @@ parent: Reference
 
 # Obsidian status line
 
-The ambient indicator showing the Linter verdict and Kanban queue counts. Rendered as the Dataview widget pinned in `home.md`, not the OS status bar (which Dataview cannot write to).
+No standalone status-line widget ships in the alpha.7 Obsidian surface. The current
+ambient glance is the Inbox gate: `Needs me`, `Drift watch`, `Loose ends`, and `Board`.
+This page records the deferred widget contract so future work does not reinvent the
+format.
 
 ## Format
 
@@ -34,11 +37,14 @@ Shows the latest Linter verdict (`PASS`, `REVIEW`, or `FAIL`) from `system/metri
 | **Review** | Cards in `done` with `review_status: requested` (handed off, awaiting human review) |
 | **Retries** | Cards in `ready` with `retry_count > 0` |
 
-Click anywhere in the Kanban counts to open `board-state.md` for the full view.
+If this widget ships later, clicking the Kanban counts should open `board-state.md` for
+the full view.
 
 ## Implementation
 
-The shipped widget lives in `home.md`. It reads `system/logs/board-state.jsonl` snapshots written by `board_export.py` and the latest `lint-verdict` metric note written by `metrics_aggregate.py`, with a `lint-findings.jsonl` fallback before metrics exist.
+The deferred widget would read `system/logs/board-state.jsonl` snapshots written by
+`board_export.py` and the latest `lint-verdict` metric note written by
+`metrics_aggregate.py`, with a `lint-findings.jsonl` fallback before metrics exist.
 
 ## Constraints
 

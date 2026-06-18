@@ -1,17 +1,17 @@
 # Deferred-ADR implementability — independent re-verification
 
-_Generated 2026-06-16 during alpha.6. Working artifact (`tmp/`) — route durable
-actions to issues/ADRs before this release closes; delete when alpha.6 closes._
+_Generated 2026-06-16 during alpha.6 and carried forward to alpha.8. Working
+artifact (`tmp/`) — route durable actions to issues/ADRs before the next checkpoint
+closes._
 
 ## What this is
 
 A skeptical, code-level re-check of all 14 `deferred` ADRs at `main`, asking
 **which can be implemented now vs. which still have a real blocker**. Every claim
 was verified against the actual artifacts in `src/` — **not** against the ADR's own
-`assumes:`/trigger text, and **not** trusting the companion scratch note
-[deferred-adr-cadence-review.md](deferred-adr-cadence-review.md), which this pass
-both confirms and corrects. Four independent agents each owned a slice of the ADR
-set and read full files.
+`assumes:`/trigger text, and **not** trusting the now-pruned alpha.6 cadence-review
+scratch note, which this pass both confirmed and corrected. Four independent agents
+each owned a slice of the ADR set and read full files.
 
 Headline corrections vs. the cadence-review scratch note:
 

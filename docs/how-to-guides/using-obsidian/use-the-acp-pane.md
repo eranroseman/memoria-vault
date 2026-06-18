@@ -19,7 +19,11 @@ The picker offers exactly one agent: the **Co-PI** (`memoria-copi`) — the only
 
 ## Opening the pane
 
-The pane is pinned in the right sidebar of every shipped workspace — Desk, Library, and Studio ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) — so loading any layout brings the Co-PI with it, and it keeps its session across workspace switches ([Workspaces](use-workspaces.md)). To open it manually: `Cmd/Ctrl+P` → **Agent Client: Open chat view**, the **Talk to Co-PI** button on `home.md`, or the Hermes icon in the left ribbon.
+The saved **Memoria** reset workspace keeps the pane in the right sidebar, so restoring
+the shell brings the Co-PI back beside the active gate ([Workspaces](use-workspaces.md)).
+Gate switching does not reset the chat session because gates are notes, not workspace
+layout swaps. To open it manually: `Cmd/Ctrl+P` -> **Agent Client: Open chat view** or
+the Hermes icon in the left ribbon.
 
 ## Attaching a note as context
 
@@ -51,7 +55,7 @@ Three folders to **never** point `exportSettings.defaultFolder` at:
 
 - `.memoria/` — hidden runtime internals, not a PI-facing review surface.
 - `inbox/` — reserved for agent-raised honesty cards (candidates, gaps, flags, alerts), not chat transcripts.
-- `projects/` — reserved and empty until v0.1.0-alpha.4.
+- `projects/` — active project work belongs here, not chat transcripts.
 
 Auto-export is enabled for both new-chat and close-chat events (`autoExportOnNewChat: true`, `autoExportOnCloseChat: true`) so a pane session has a visible transcript even if Obsidian closes unexpectedly.
 
@@ -80,6 +84,6 @@ exception, not the production Windows default.
 ## Related
 
 - Discussing a paper end-to-end: [Discuss a paper](../compile/discuss-a-paper.md)
-- Workspace layouts: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Gate/reset layout: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Why one agent, not a picker of specialists: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)

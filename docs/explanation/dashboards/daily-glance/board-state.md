@@ -13,7 +13,7 @@ The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox
 
 ## What it shows
 
-The page is built on **`inbox.base`** — the one Obsidian Base over `inbox/`, grouped by card type ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)). Its **"Needs me"** view (cards in `proposed` — the same view `home.md` embeds) comes first; an **"All cards"** view (everything in flight, whatever its state) follows. A third section lists the **live worker cards** — the read-only markdown exports in `system/board/` that mirror what each Hermes lane is currently executing.
+The page is built on **`inbox.base`** — the one Obsidian Base over `inbox/`, grouped by card type ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)). Its **"Needs me"** view (cards in `proposed` — the same view the Inbox gate embeds) comes first; an **"All cards"** view (everything in flight, whatever its state) follows. A third section lists the **live worker cards** — the read-only markdown exports in `system/board/` that mirror what each Hermes lane is currently executing.
 
 Cards in `proposed` are waiting on you; the queue converges to empty. That convergence is the design: batch screening never lands here as N cards (one aggregate work-prompt points at the worklist instead), so a long queue always means real decisions, not noise.
 
@@ -43,7 +43,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 ## Related
 
-- The Home surface this feeds: [The Daily Health dashboard](daily-health.md)
+- The launch surface this feeds: [The Daily Health dashboard](daily-health.md)
 - How the projections work: [How the board surfaces in Obsidian](../../kanban-board/obsidian-projection.md)
 - The card format: [The honesty card](../../kanban-board/card-schema.md)
 - Troubleshooting board problems: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

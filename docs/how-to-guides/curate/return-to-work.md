@@ -45,7 +45,7 @@ git status
 
 Expected: "Already up to date" or a clean fast-forward. A diverged branch means another machine pushed while this one was offline — resolve before starting work.
 
-Then glance at `home.md`'s status strip and load the **Desk** workspace: the board and the Inbox's **Needs me** tab show what accumulated while you were away (the crons kept running — sweeps every 15 minutes, lint daily).
+Then open the Inbox gate: the **Needs me**, **Drift watch**, and **Board** views show what accumulated while you were away (the crons kept running — sweeps every 15 minutes, lint daily).
 
 ## What's fragile
 

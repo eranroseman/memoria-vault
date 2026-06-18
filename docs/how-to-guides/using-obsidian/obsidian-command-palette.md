@@ -48,7 +48,13 @@ The task commands default sensibly off the **active note** — `extract claims` 
 
 **2. Use the visible toolbar buttons for the main loop.**
 
-Commander places the high-frequency commands directly in Obsidian chrome: the left ribbon has capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card, and the Desk/Library/Studio workspace switchers. The note page header has create linked claim note, write claim note, extract claims, and link claim, so active-note defaults are visible when you invoke them.
+Commander places the high-frequency commands directly in Obsidian chrome: the left
+ribbon has capture fleeting, capture from Zotero selection, capture source from URL,
+delegate task, resolve inbox card, and open/reset navigation controls. Gate switching
+happens through the nav row in `gates/inbox.md`, `gates/library.md`,
+`gates/knowledge.md`, and `gates/project.md`. The note page header has create linked
+claim note, write claim note, extract claims, and link claim, so active-note defaults
+are visible when you invoke them.
 
 **3. Or skip the palette and ask the Co-PI.**
 
@@ -64,8 +70,8 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Verify
 
-- `Cmd-P` → `M` returns the `Memoria:` commands in the capture, task, assist, and workspace groups
-- The left ribbon exposes capture, delegate, resolve, and Desk/Library/Studio workspace buttons
+- `Cmd-P` -> `M` returns the `Memoria:` commands in the capture, task, and assist groups
+- The left ribbon exposes capture, delegate, resolve, and reset/navigation controls
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
 - `Memoria: structured source capture` creates a proposed `notes/sources/` note and an Inbox `candidate` card
 - `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding

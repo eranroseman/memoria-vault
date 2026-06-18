@@ -5,9 +5,14 @@ parent: Reference
 
 # Dashboards
 
-The dashboards shipped in `system/dashboards/` (`src/system/dashboards`) and the Bases views behind them. Desk, Library, and Studio are workspace landing surfaces; Project gate opens inside Studio; the rest are drill-down health or object views. All are Dataview / Bases consumers: they render existing vault state and logs, never write, and a healthy vault shows action queues near-empty.
+The primary dashboards are the four persistent gate notes under `gates/`
+(`src/gates`): Inbox, Library, Knowledge, and Project. Supporting dashboards and
+Bases live under `system/dashboards/` (`src/system/dashboards`) and related data
+folders. Gate switching is a wikilink nav row, not an Obsidian workspace swap. All
+dashboards are Dataview / Bases consumers: they render existing vault state and logs,
+never write, and a healthy vault shows action queues near-empty.
 
-Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage** (`home.md` carries the above-fold glance — there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
+Two changes from the early dashboard model: **daily-health was absorbed into the Inbox launch surface** (there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
 
 ---
 
@@ -15,39 +20,46 @@ Two changes from v0.1.0-alpha.1: **daily-health was absorbed into the homepage**
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Desk | Desk gate | `desk.md` | Action-first landing surface: the Inbox `Needs me` queue, capture/delegate/resolve commands, and worker state. |
-| Desk | Board state | `board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
-| Library | Library gate | `library.md` | Object-first landing surface: source notes, Catalog papers, and claims by maturity. |
-| Library | Reading pipeline | `reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
-| Library | Discuss queue | `discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
-| Library / Project | Open questions | `open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
-| Library / Project | Contradictions | `contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
-| Project / Studio | Project gate | `project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state; opened inside Studio. |
-| Studio | Studio gate | `studio.md` | Synthesis landing surface: `research-focus.md`, claims by maturity, Project gate state, and the pattern library. |
-| Maintenance | Drift watch | `drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
-| Maintenance | Loose ends | `loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
-| Maintenance | Weekly review | `weekly-review.md` | The Friday aggregator (multi-section). |
-| Agent-ops | Audit log | `audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies → flag. |
-| Agent-ops | Fleet health | `fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
-| Agent-ops | Eval trend | `eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
-| Agent-ops | Skill lifecycle | `skill-lifecycle.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
+| Gate | Inbox | `gates/inbox.md` | Action-first gate: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
+| Gate | Library | `gates/library.md` | Source intake gate: reading pipeline, discuss queue, and Catalog papers. |
+| Gate | Knowledge | `gates/knowledge.md` | Synthesis gate: claims by maturity, open questions, contradictions, hubs, and patterns. |
+| Gate | Project | `gates/project.md` | Project steering gate: active projects, saturation, and project gaps. |
+| Inbox support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
+| Library support | Reading pipeline | `system/dashboards/reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
+| Library support | Discuss queue | `system/dashboards/discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
+| Knowledge support | Open questions | `system/dashboards/open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
+| Knowledge support | Contradictions | `system/dashboards/contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
+| Project support | Project gate | `system/dashboards/project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state. |
+| Maintenance | Drift watch | `system/dashboards/drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
+| Maintenance | Loose ends | `system/dashboards/loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
+| Maintenance | Weekly review | `system/dashboards/weekly-review.md` | The Friday aggregator (multi-section). |
+| Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
+| Agent-ops | Fleet health | `system/dashboards/fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
+| Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
+| Agent-ops | Skill lifecycle | `system/dashboards/skill-lifecycle.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
-The **Surface** column is where a dashboard opens in the UI. Four of the sixteen rows above — the Desk, Library, Studio, and Project gates — are workspace landing surfaces; the other twelve are the standalone health dashboards. The explanation site groups those twelve by the *kind of attention* they demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational health** ([Dashboards](../explanation/dashboards/README.md)).
+The **Surface** column names the gate or support context where a dashboard is reached.
+The explanation site groups the support dashboards by the *kind of attention* they
+demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
+health** ([Dashboards](../explanation/dashboards/README.md)).
 
 ---
 
 ## The Bases views
 
-Obsidian Bases (`.base` files) are the database views the dashboards and workspaces lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
+Obsidian Bases (`.base` files) are the database views the dashboards and gate notes lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
 
 | Base | Lives at | View over |
 | --- | --- | --- |
 | `catalog.base` | `catalog/` | The Catalog — entity records by type (papers, people, organizations, venues, datasets, repositories), `lifecycle != archived`. |
 | `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; `action`/`finding` columns expose the next thing to decide; converges to empty. |
+| `board.base` | `system/board/` | Live worker cards by lane/state, mirrored from Hermes board state. |
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |
 | `project-gate.base` | `system/dashboards/` | Project notes by output mode, refutation stamp, maturity, saturation, and cache timestamp. |
+| `hubs.base` | `notes/hubs/` | Hub notes by topic cluster and lifecycle. |
+| `projects.base` | `projects/` | Project notes by output mode, thesis state, saturation, and open gaps. |
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
 | `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 

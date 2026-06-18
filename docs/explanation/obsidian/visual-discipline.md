@@ -30,17 +30,28 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 ---
 
-## Why three workspaces, not more
+## Why gates are notes, not workspaces
 
-The three-workspace design (**Desk**, **Library**, and **Studio** — [ADR-68](../../adr/68-workspaces-desk-library-studio.md)) maps workspaces to **cognitive modes**, not to projects: Desk is the "what needs me?" look, Library is reading and synthesis, Studio is drafting. A fourth workspace is a signal that either a new cognitive mode has been identified — in which case the workspace system needs rethinking — or that a project has been mistaken for a mode. Projects change constantly; cognitive modes are stable. A workspace per project would create as many workspaces as there are active projects, defeating the purpose of workspaces as a *stable navigational layer*.
+The current design maps work modes to **gate dashboard notes** — Inbox, Library,
+Knowledge, and Project — rather than to saved Obsidian workspaces
+([ADR-81](../../adr/81-persistent-gate-dashboards.md)). A gate is content the vault can
+diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
+state made navigation heavier than the job required.
 
-The full workspace layout (names, hotkeys, what each pane holds) is reference material: [Obsidian workspaces](../../reference/obsidian-workspaces.md).
+The saved **Memoria** workspace remains useful as a reset shell: Inbox in the main pane,
+navigation on the left, Co-PI on the right. Daily mode switching happens through the
+gate nav row, not layout swaps. The exact layout and gate list are reference material:
+[Obsidian workspaces](../../reference/obsidian-workspaces.md).
 
 ---
 
 ## The success condition
 
-Three months in, the mouse hand barely moves and there is no conscious tracking of which workspace is active. The vault looks like a writing environment, and the only time an indicator pulls the eye is when something genuinely needs a decision. That is what visual-style discipline is for — not minimalism for its own sake, but preserving attention for the moments that deserve it.
+Three months in, the mouse hand barely moves and there is no conscious tracking of which
+layout is active. The vault looks like a writing environment, and the only time an
+indicator pulls the eye is when something genuinely needs a decision. That is what
+visual-style discipline is for — not minimalism for its own sake, but preserving
+attention for the moments that deserve it.
 
 ---
 
@@ -49,4 +60,4 @@ Three months in, the mouse hand barely moves and there is no conscious tracking 
 - The ambient indicator this discipline allows: [The status line](the-status-line.md)
 - The callout types and their fixed three-color palette: [Callouts](callouts.md)
 - The front door, which participates in the same restraint: [Home — the vault front door](home.md)
-- Workspace layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
+- Gate/reset layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

@@ -1,12 +1,13 @@
 # memoria-peer-reviewer — verify, retraction/cite checks
 # Per-profile Hermes config. Hermes reads model / mcp_servers / agent / terminal /
 # checkpoints / hooks from THIS file (ADR-27). The installer substitutes the
-# {{PYTHON}} interpreter and {{VAULT_PATH}} at deploy time.
+# Python, vault, qmd, and model tokens at deploy time.
 # Recommended: set agent.reasoning_effort per lane via `hermes -p memoria-peer-reviewer config set`.
 model:
-  provider: kilocode
-  base_url: https://api.kilo.ai/api/gateway
-  default: ~anthropic/claude-opus-latest
+  provider: "{{MODEL_PROVIDER}}"
+  base_url: "{{MODEL_BASE_URL}}"
+  default: "{{MODEL_DEFAULT}}"
+  # {{MODEL_LOCAL_CONTEXT}}
 
 # Vault access + policy gate run as MCP servers — loaded ONLY from config.yaml
 # mcp_servers (a standalone mcp.json is never read by Hermes; ADR-27 finding 1).

@@ -106,7 +106,7 @@ Run the [GUI test plan](gui-test-plan.md) on the Windows side and **fully comple
 - [ ] **Part A** — all bundled plugins load/enable; REST round-trip; settings verified (no "didn't verify" caveat).
 - [ ] **Part B** — Zotero + Better BibTeX export works; the capture macro fires.
 - [ ] **Part C (G4)** — **all twelve dashboards render** on real data (Dataview queries resolve), including the ingested note + entities from G10.
-- [ ] **Part D — Bases render check (v0.1.0-alpha.2).** Open every shipped `.base` in Obsidian and confirm each view renders without a YAML/format error — all eight: `catalog/catalog.base` (6 entity views), `inbox/inbox.base` ("Needs me" + "All cards" — also the Desk workspace's first left tab), `system/dashboards/claims.base` / `sources.base` / `fleeting.base` / `project-gate.base`, `system/patterns/patterns.base`, `system/worklists/worklists.base`. The format is young and our CI only schema-syncs properties — rendering is verifiable only in the app.
+- [ ] **Part D — Bases render check.** Open every shipped `.base` in Obsidian and confirm each view renders without a YAML/format error: `catalog/catalog.base` (entity views), `inbox/inbox.base` ("Needs me" + "All cards" — also embedded by the Inbox gate), `notes/hubs/hubs.base`, `projects/projects.base`, `system/board/board.base`, `system/dashboards/claims.base` / `sources.base` / `fleeting.base` / `project-gate.base`, `system/patterns/patterns.base`, `system/worklists/worklists.base`. The format is young and our CI only schema-syncs properties — rendering is verifiable only in the app.
 
 ## G5 — telemetry signals  → records G5
 
