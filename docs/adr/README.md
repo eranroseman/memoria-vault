@@ -134,6 +134,9 @@ status.
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 | [102](102-disposable-projection-engine.md) | Disposable projection engine | proposed |
 | [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | proposed |
+| [104](104-telemetry-three-planes.md) | Telemetry as three planes — audit, analytics, diagnostic | proposed |
+| [105](105-diagnostic-plane.md) | Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail | proposed |
+| [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | proposed |
 
 <!-- ADR-INDEX:END -->
 
