@@ -138,6 +138,7 @@ status.
 | [105](105-diagnostic-plane.md) | Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail | proposed |
 | [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | proposed |
 | [107](107-okf-interchange-bundle-format.md) | OKF as Memoria's import/export bundle format | proposed |
+| [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
 
 <!-- ADR-INDEX:END -->
 
