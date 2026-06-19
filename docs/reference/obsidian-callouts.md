@@ -7,7 +7,7 @@ parent: Reference
 
 Three inline callout types defined via the [Callout Manager](obsidian-plugins.md) plugin. All three now have shipped producers: `[!brief]` during ingest, `[!suggestions]` from the link-claim palette action, and `[!verification]` from the verify-draft palette action.
 
-The fixed palette also applies to shipped navigation surfaces: the gate dashboards use
+The fixed palette also applies to shipped navigation surfaces: the space dashboards use
 `[!brief]` for their empty-state and orientation copy instead of generic Obsidian
 callout types. The `design-system-drift` Linter detector reports any ad-hoc/rainbow
 callout variants in shipped vault notes.

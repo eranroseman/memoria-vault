@@ -14,7 +14,7 @@ Use this for **structural** changes that touch many notes. For renaming a single
 
 - A clean working tree — `git status` shows nothing uncommitted, so the migration is one reviewable diff
 - A clear before/after for the field you're changing
-- If the schema itself changes: the matching edit ready for `.memoria/schemas/types/<type>.yaml` (the single schema source the Linter, the pre-commit gate, and the policy MCP all read)
+- If the schema itself changes: the matching edit ready for `.memoria/schemas/types/<type>.yaml` (the single schema source the Linter, the pre-commit hook, and the policy MCP all read)
 
 ## Steps
 
@@ -58,7 +58,7 @@ For anything non-mechanical (restructuring a map, splitting a field), edit by ha
 python3 .memoria/operations/integrity/linter/detectors.py --vault .
 ```
 
-`schema-check` must report nothing for the migrated field. The pre-commit gate will re-validate every staged note at commit, so a missed file blocks rather than lands.
+`schema-check` must report nothing for the migrated field. The pre-commit hook will re-validate every staged note at commit, so a missed file blocks rather than lands.
 
 **6. Review and commit.**
 

@@ -5,7 +5,7 @@ parent: Reference
 
 # Note types
 
-The 22 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit gate, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 22 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
 The 22 types group into five categories: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), and **3 system types** (the pattern, eval task, and worklist item).
 
@@ -28,7 +28,7 @@ Bibliographic / world records, keyed on stable IDs and carrying **given** `relat
 
 ## Projects (3)
 
-Project records live under `projects/` and anchor the Project gate ([ADR-77](../adr/77-project-gate.md)). They are not review-gated folders; the gated transition is the thesis promotion to `current`.
+Project records live under `projects/` and anchor the Project space ([ADR-77](../adr/77-project-gate.md)). They are not review-gated folders; the gated transition is the thesis promotion to `current`.
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
@@ -36,7 +36,7 @@ Project records live under `projects/` and anchor the Project gate ([ADR-77](../
 | `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `promoted_at`, `promoted_by`, `impact`, `on_path`, `evidence_saturation`, `argument_stage`, `computed_at` |
 | `code-note` | `projects/` | `proposed → current → archived` | `title`, `project`, `agent`, `task`, `acceptance` | `motivating_claims`, `inputs`, `outputs`, `run_command`, `dependencies`, `repository`, `created` |
 
-`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default. Current theses must carry `promoted_at` so the promotion is visible to the Linter and pre-commit gate. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.
+`project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the project's review transition, not a template default. Current theses must carry `promoted_at` so the promotion is visible to the Linter and pre-commit hook. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.
 
 ---
 

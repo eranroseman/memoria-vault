@@ -36,7 +36,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 CLI entry point:
 
 ```bash
-python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
+python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--space dashboard-field-drift,design-system-drift]
 python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--threshold 15] [--json]
 ```
 
@@ -44,7 +44,7 @@ python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--t
 
 ---
 
-## The pre-commit gate
+## The pre-commit hook
 
 The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 

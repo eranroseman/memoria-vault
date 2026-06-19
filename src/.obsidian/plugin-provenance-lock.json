@@ -174,7 +174,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/homepage/data.json": "a1dec1789a7683057be6525c66cc97b03017b147a13bd1def0c4d138ddb105bd",
+        "plugins/homepage/data.json": "1b4de1be597b91eebb90b90b3b5f72f3cc9cd3562e087e428c85347ec0a8d23b",
         "plugins/homepage/main.js": "ac86db78709143fb95ac9fe3dfc59b771eb7a43c28b120420b8a0c96e3bfe964",
         "plugins/homepage/manifest.json": "3f81933c9b1f5b6f29fc90d63b983fc4d5dd39a6c5783fbf702d484724d31cee",
         "plugins/homepage/styles.css": "96e102d93f2463bea8d4a5fa4e4537965eebb11fcd61ece96eda1d2301c64f38"

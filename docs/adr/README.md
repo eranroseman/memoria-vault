@@ -112,8 +112,9 @@ status.
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
-| [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | accepted |
+| [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | superseded → ADR-84 |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
+| [84](84-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 
 <!-- ADR-INDEX:END -->
 

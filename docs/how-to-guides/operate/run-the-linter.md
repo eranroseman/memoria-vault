@@ -11,7 +11,7 @@ Run a structural health check on the vault, or review the scheduled report. The 
 ## When it runs without you
 
 - **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed the drift-watch and loose-ends dashboards.
-- **Pre-commit gate** — every staged `.md` is schema-validated; an invalid typed note blocks the commit.
+- **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed note blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
 
@@ -53,7 +53,7 @@ python3 .memoria/operations/integrity/linter/golden_restore.py --vault . restore
 
 **4. Fix findings by hand.**
 
-Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit gate re-validates what you staged.
+Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit hook re-validates what you staged.
 
 **5. Confirm the cron is alive** (occasionally):
 

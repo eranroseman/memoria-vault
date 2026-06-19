@@ -83,7 +83,7 @@ The component tests live in the repo-side `tests/` pytest tree ([Tests in the py
 
 A dashboard that queries a field **no writer emits** doesn't error — it shows an empty table forever. These checks catch that. Run against the repo source tree (`src/`) and, when validating an installed candidate, the rebuilt test vault.
 
-**D1. dashboard-field-drift + design-system-drift on the repo source.** `python src/.memoria/operations/integrity/linter/detectors.py --vault src --gate dashboard-field-drift,design-system-drift`
+**D1. dashboard-field-drift + design-system-drift on the repo source.** `python src/.memoria/operations/integrity/linter/detectors.py --vault src --space dashboard-field-drift,design-system-drift`
 - ✓ Pass: no `dashboard-field-drift` or `design-system-drift` findings — dashboard fields resolve to templates, and shipped visual consumers stay inside `.memoria/design-system.md`.
 - ✗ Fails: it names the dashboard, the query block, and the missing field — add the field to a template or fix the query. (This covers note-folder queries only; D2 covers the non-note feeds it can't see.)
 

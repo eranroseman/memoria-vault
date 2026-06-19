@@ -82,7 +82,7 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 ## Related
 
 - Why folders carry the type and frontmatter carries the state: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
-- How material crosses the gates: [Why promotion is gated](promotion-model.md)
+- How material crosses the review gate: [Why promotion is gated](promotion-model.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
 - The card format in depth: [The honesty card](../kanban-board/card-schema.md)
 - Complete type reference (fields, templates): [Note types](../../reference/note-types.md)

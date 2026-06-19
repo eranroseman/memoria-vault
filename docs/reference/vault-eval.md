@@ -32,7 +32,7 @@ The shipped set (nine tasks) references well-known papers — the Transformer, B
 | `link` | `link` (Librarian) | propose BERT builds-on Transformer; *decline* a strong dropout↔ResNet edge (negative control) |
 | `verify` | `verify` (Peer-reviewer) | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
 
-Like patterns, eval tasks are authored directly — the files *are* the instances, no template. They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)), schema-checked by the Linter and the pre-commit gate, and a gold task whose wikilinked target no longer resolves surfaces as a broken-reference finding — gold-set rot is caught by machinery already running.
+Like patterns, eval tasks are authored directly — the files *are* the instances, no template. They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)), schema-checked by the Linter and the pre-commit hook, and a gold task whose wikilinked target no longer resolves surfaces as a broken-reference finding — gold-set rot is caught by machinery already running.
 
 ---
 

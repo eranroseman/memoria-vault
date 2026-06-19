@@ -45,7 +45,7 @@ The background lanes stay out of conversation by design: a lane is a propose-the
 
 ## The independence argument
 
-One consolidation was refused on principle: the **Peer-reviewer was never merged into the Librarian**, however much retrieval tooling they share. The agent that gathers and synthesizes must not also grade the result — separation of duties is the anti-rubber-stamp principle. A checker that inherits the proposer's faithful stance waves through exactly what the gate exists to catch. The two postures are in deliberate tension: the Librarian includes generously; the Peer-reviewer doubts independently. The asymmetry is the design — you need both, and they must be separate to work.
+One consolidation was refused on principle: the **Peer-reviewer was never merged into the Librarian**, however much retrieval tooling they share. The agent that gathers and synthesizes must not also grade the result — separation of duties is the anti-rubber-stamp principle. A checker that inherits the proposer's faithful stance waves through exactly what the review gate exists to catch. The two postures are in deliberate tension: the Librarian includes generously; the Peer-reviewer doubts independently. The asymmetry is the design — you need both, and they must be separate to work.
 
 ## No Orchestrator, no Reviewer
 
@@ -53,7 +53,7 @@ Memoria still deliberately omits two roles that comparable multi-agent systems i
 
 **No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
-**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the operations produce *recommendations* that inform the PI's judgment; the gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
+**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the operations produce *recommendations* that inform the PI's judgment; the review gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
 
 ---
 

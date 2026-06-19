@@ -32,7 +32,7 @@ provenance-doctor remain deferred by [ADR-74](../adr/74-pinned-obsidian-plugin-s
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
-| homepage | `homepage` | Opens `gates/inbox` on startup as the deterministic landing surface. |
+| homepage | `homepage` | Opens `spaces/inbox` on startup as the deterministic landing surface. |
 | buttons | `buttons` | Supports command-button snippets in note bodies. **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
 ---
@@ -164,7 +164,7 @@ clearly instead of silently skipping those paths.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; gate switching lives in dashboard nav rows. |
+| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; space switching lives in dashboard nav rows. |
 | `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 
@@ -180,7 +180,7 @@ clearly instead of silently skipping those paths.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `spaces[]` | Folder portals for `inbox`, `catalog`, `notes/sources`, `notes/claims`, `notes/hubs`, and `projects`. | Portals is reach-only folder navigation; no tag portals and no gate switching. |
+| `spaces[]` | Folder portals for `inbox`, `catalog`, `notes/sources`, `notes/claims`, `notes/hubs`, and `projects`. | Portals is reach-only folder navigation; no tag portals and no space switching. |
 | `replaceFileExplorer` | `true` | Portals replaces the visible explorer surface through its own setting while the core `file-explorer` plugin remains enabled as fallback. |
 | `hiddenItems` | `{ "system": true, ".memoria": true }` | Runtime and generated infrastructure stay out of the PI-facing navigation pane. |
 | `tagNotesFolderPath` | `system/_tag-notes` | Keeps the plugin's tag-note folder out of the user namespace. |

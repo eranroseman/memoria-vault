@@ -30,9 +30,9 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 ---
 
-## Why gates are notes, not workspaces
+## Why spaces are notes, not workspaces
 
-The current design maps work modes to **gate dashboard notes** — Inbox, Library,
+The current design maps work modes to **space dashboard notes** — Inbox, Library,
 Knowledge, and Project — rather than to saved Obsidian workspaces
 ([ADR-81](../../adr/81-persistent-gate-dashboards.md)). A gate is content the vault can
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
@@ -40,7 +40,7 @@ state made navigation heavier than the job required.
 
 The saved **Memoria** workspace remains useful as a reset shell: Inbox in the main pane,
 navigation on the left, Co-PI on the right. Daily mode switching happens through the
-gate nav row, not layout swaps. The exact layout and gate list are reference material:
+space nav row, not layout swaps. The exact layout and gate list are reference material:
 [Obsidian workspaces](../../reference/obsidian-workspaces.md).
 
 ---

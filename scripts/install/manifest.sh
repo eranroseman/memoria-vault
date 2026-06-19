@@ -28,7 +28,7 @@ SKELETON_DIRS=(
   projects/_template/drafts
   projects/_template/exports
   inbox
-  gates
+  spaces
   system/board
   system/exports
   system/exports/assets

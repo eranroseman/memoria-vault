@@ -18,7 +18,7 @@ For the *why* behind any design choice, see [Explanation](../explanation). For e
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Co-PI's agent-client pane, and the Inbox are your primary controls. The guides in the [Inbox](inbox), [Library](library), [Knowledge](knowledge), and [Project](project) gates are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Co-PI's agent-client pane, and the Inbox are your primary controls. The guides in the [Inbox](inbox), [Library](library), [Knowledge](knowledge), and [Project](project) spaces are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
 Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup), [Operate](operate), and [Troubleshooting](troubleshooting) are written for this mode.
@@ -112,7 +112,7 @@ Steer an inquiry to output — scope, frame, draft, verify, and export a deliver
 
 | Guide | What it covers |
 | --- | --- |
-| [Start a writing project](project/start-a-writing-project.md) | Scaffold a Project gate surface and active thesis |
+| [Start a writing project](project/start-a-writing-project.md) | Scaffold a Project space and active thesis |
 | [Assess your corpus](project/assess-your-corpus.md) | Delegate a `map` task: dense clusters, thin coverage, gaps |
 | [Frame a project](project/frame-a-project.md) | Generate competing outlines, choose one framing |
 | [Use canvas for argument mapping](project/use-canvas-for-argument-mapping.md) | Arrange claim notes spatially to find argument structure before drafting |

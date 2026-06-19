@@ -5,10 +5,10 @@ parent: Reference
 
 # Dashboards
 
-The primary dashboards are the four persistent gate notes under `gates/`
-(`src/gates`): Inbox, Library, Knowledge, and Project. Supporting dashboards and
+The primary dashboards are the four persistent space notes under `spaces/`
+(`src/spaces`): Inbox, Library, Knowledge, and Project. Supporting dashboards and
 Bases live under `system/dashboards/` (`src/system/dashboards`) and related data
-folders. Gate switching is a wikilink nav row, not an Obsidian workspace swap. All
+folders. Space switching is a wikilink nav row, not an Obsidian workspace swap. All
 dashboards are Dataview / Bases consumers: they render existing vault state and logs,
 never write, and a healthy vault shows action queues near-empty.
 
@@ -20,10 +20,10 @@ Two changes from the early dashboard model: **daily-health was absorbed into the
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Gate | Inbox | `gates/inbox.md` | Action-first gate: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
-| Gate | Library | `gates/library.md` | Source intake gate: reading pipeline, discuss queue, and Catalog papers. |
-| Gate | Knowledge | `gates/knowledge.md` | Synthesis gate: claims by maturity, open questions, contradictions, hubs, and patterns. |
-| Gate | Project | `gates/project.md` | Project steering gate: active projects, saturation, and project gaps. |
+| Space | Inbox | `spaces/inbox.md` | Action-first space: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
+| Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
+| Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
+| Space | Project | `spaces/project.md` | Project steering space: active projects, saturation, and project gaps. |
 | Inbox support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
 | Library support | Reading pipeline | `system/dashboards/reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
 | Library support | Discuss queue | `system/dashboards/discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
@@ -38,7 +38,7 @@ Two changes from the early dashboard model: **daily-health was absorbed into the
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 | Agent-ops | Skill state | `system/dashboards/skill-state.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
-The **Surface** column names the gate or support context where a dashboard is reached.
+The **Surface** column names the space or support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
 health** ([Dashboards](../explanation/dashboards/README.md)).
@@ -47,7 +47,7 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 ## The Bases views
 
-Obsidian Bases (`.base` files) are the database views the dashboards and gate notes lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
+Obsidian Bases (`.base` files) are the database views the dashboards and space notes lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
 
 | Base | Lives at | View over |
 | --- | --- | --- |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""precommit_check — schema-validate staged notes (the D50 commit gate).
+"""precommit_check — schema-validate staged notes (the D50 pre-commit hook).
 
 Called by the pre-commit hook with the staged .md paths. Each typed note must
 pass its schema; untyped system infra and vault-root nav pages are exempt,

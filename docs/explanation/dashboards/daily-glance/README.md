@@ -9,7 +9,7 @@ permalink: /explanation/dashboards/daily-glance/
 
 # Daily glance
 
-What you check at the start of a session to answer "is anything wrong, and what needs me today?" Since the alpha.7 design update, the daily glance starts on the Inbox gate: the `Needs me`, `Drift watch`, `Loose ends`, and `Board` views are one launch surface ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)) — nothing separate to remember to open.
+What you check at the start of a session to answer "is anything wrong, and what needs me today?" Since the alpha.7 design update, the daily glance starts on the Inbox space: the `Needs me`, `Drift watch`, `Loose ends`, and `Board` views are one launch surface ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)) — nothing separate to remember to open.
 
 | Surface | Question it answers |
 |---|---|

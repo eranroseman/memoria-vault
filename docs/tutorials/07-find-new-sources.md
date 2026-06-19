@@ -31,7 +31,7 @@ The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits 
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox gate), one per proposed source. Judge them exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md): read `argument_against` and `certainty` first, then keep (`lifecycle: current`) or skip (`lifecycle: archived`). A discovery card carries the same honesty body as a captured one — `argument_against` is the information-bearing field (the full card field list is in [Inbox card fields](../reference/inbox-card-fields.md)):
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox space), one per proposed source. Judge them exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md): read `argument_against` and `certainty` first, then keep (`lifecycle: current`) or skip (`lifecycle: archived`). A discovery card carries the same honesty body as a captured one — `argument_against` is the information-bearing field (the full card field list is in [Inbox card fields](../reference/inbox-card-fields.md)):
 
 > "N=23, single lab; may not generalize beyond students." — `certainty: likely`
 

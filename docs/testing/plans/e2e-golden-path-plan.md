@@ -15,7 +15,7 @@ One source carried through the **whole lifecycle** — capture → ingest → cl
 
 **Automated Phase 1 slice.** The [test-env harness](test-env-harness-plan.md) replays
 the model-free ADR-80 cassette for the same source → classify → discuss → claim →
-Project gate → draft → verify → export shape and is wired into
+Project space → draft → verify → export shape and is wired into
 [`scripts/e2e-smoke.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/e2e-smoke.sh).
 Use this page for the attended runtime path; use the harness for per-PR deterministic
 coverage.

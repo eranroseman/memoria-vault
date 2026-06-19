@@ -1,7 +1,7 @@
 # Canonical vault layout — THE single source for the type→folder map (ADR-47).
 # Read by: the Linter (lint:check-schema), the policy MCP (gated prefixes),
 # the pre-commit hook, the installer skeleton, and the template/Bases tests.
-categories: [catalog, notes, projects, inbox, gates, system]
+categories: [catalog, notes, projects, inbox, spaces, system]
 
 # type → folder-home (relative to the vault root)
 homes:
@@ -24,7 +24,7 @@ homes:
   flag: inbox
   alert: inbox
   work-prompt: inbox
-  gate: gates
+  space: spaces
   pattern: system/patterns
   worker-card: system/board
   eval-task: system/eval
@@ -60,7 +60,7 @@ skeleton:
   - projects/_template/drafts
   - projects/_template/exports
   - inbox
-  - gates
+  - spaces
   - system/board
   - system/exports
   - system/exports/assets

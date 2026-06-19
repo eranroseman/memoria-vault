@@ -43,7 +43,7 @@ Wire protocol: hermes-agent.nousresearch.com/docs/user-guide/features/hooks
   stdout : {} to allow; {"decision":"block","reason":"..."} to block.
 
 LIMITATION (documented): Hermes fails *open* on hook errors (non-zero exit /
-malformed JSON are logged but never abort the loop), so this gate cannot be
+malformed JSON are logged but never abort the loop), so this policy gate cannot be
 truly fail-closed at the Hermes layer. It fails closed on its own decisions --
 an unresolvable write (missing profile/path/task_id, or policy import failure)
 is blocked -- which is the strongest guarantee a hook can give. For hard

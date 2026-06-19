@@ -6,7 +6,7 @@ nav_order: 2
 
 # The Librarian
 
-The Librarian runs Memoria's four processing lanes — **catalog · extract · link · map** — covering everything between "a source exists somewhere" and "the corpus is mapped for a project." Its defining posture is **faithful**: include generously, report state accurately, and let the gate filter. The cost of a missing source is invisible; the cost of an over-inclusive candidate is one human decision. Given that asymmetry, generosity is the right policy for an intake agent — and fidelity to the source material is what keeps the generosity honest.
+The Librarian runs Memoria's four processing lanes — **catalog · extract · link · map** — covering everything between "a source exists somewhere" and "the corpus is mapped for a project." Its defining posture is **faithful**: include generously, report state accurately, and let the review gate filter. The cost of a missing source is invisible; the cost of an over-inclusive candidate is one human decision. Given that asymmetry, generosity is the right policy for an intake agent — and fidelity to the source material is what keeps the generosity honest.
 
 A research librarian does both intake and literature search, so the old Mapper's corpus work (scope reports, gap analysis, cluster maps) merged into this agent ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the **map** lane is the same faithful posture pointed at what the vault already holds.
 
@@ -29,7 +29,7 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 **The operation/agent split.** The mechanical half of cataloging — fetch metadata, extract text, build entity `relationships`, create Catalog records — is the **ingest operation**, not the Librarian. The agent fills the two LLM holes: composing the comparative `[!brief]` and proposing the classification. Keeping the mechanics deterministic keeps the high-volume path reproducible, auditable, and cheap; the agent spends LLM judgment only where judgment is needed — the [hybrid select-then-compose pattern](../rationale/why-computational-methods.md) applied to cataloging. Below a confidence floor the operation's fuzzy calls (entity resolution, dedup) emit a `flag` rather than merging silently ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
 
-**Faithful, not optimistic-and-loose.** The posture is generous about *inclusion* and strict about *representation*: a brief reports what the paper says, a coverage-report reports what the corpus holds, and neither editorializes. The gate can only filter well if the proposals beneath it are faithful.
+**Faithful, not optimistic-and-loose.** The posture is generous about *inclusion* and strict about *representation*: a brief reports what the paper says, a coverage-report reports what the corpus holds, and neither editorializes. The review gate can only filter well if the proposals beneath it are faithful.
 
 **One external surface, fully gated.** The Librarian touches the most external data in the system (OpenAlex, Crossref, Semantic Scholar, …), and every lookup goes through MCP — discovery tools and the ingest facade — never raw web access. Concentrating the external surface in one agent and routing it through the policy boundary makes it auditable by construction.
 

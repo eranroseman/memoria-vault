@@ -111,7 +111,7 @@ The previous seven-profile fleet consolidated into the five above ([ADR-48](../a
 | `memoria-mapper` | The Librarian's `map` lane + the cluster MCP |
 | `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps operation (deterministic checks) |
 | `memoria-coder` | `memoria-engineer` |
-| `memoria-linter` | The Linter **operation** — pre-commit gate + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
+| `memoria-linter` | The Linter **operation** — pre-commit hook + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
 
 ---
 

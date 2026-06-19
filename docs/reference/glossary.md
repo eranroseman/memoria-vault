@@ -65,6 +65,8 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Pattern** — a curated prompt-transformation stored as data in `system/patterns/` ([ADR-53](../adr/53-pattern-library.md)), typed and lifecycle-gated, executed only through the patterns MCP runner (one audited chokepoint; gated output targets degrade to dry-run).
 
+**State** — not a field name on its own; use the specific field. A note's state is its **`lifecycle`** (`proposed → … → archived`, [ADR-50](../adr/50-universal-lifecycle-and-maturity.md)); a board card's execution state is its **`status`** (`triage → … → done`); review carries **`review_status`**, ingest **`ingest_status`**, and the operational-health dashboard tracks **skill state**. Prefer the precise field name over a bare "state" wherever one of these is meant. Field contracts are specified in [Frontmatter fields](frontmatter.md).
+
 ---
 
 ## Policy and audit

@@ -5,7 +5,7 @@ parent: Tutorials
 
 # Tutorial 01: Set up from zero
 
-**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the Co-PI answering in the Agent Client pane, and the Library gate open.
+**You will end with:** a working Memoria vault open in Obsidian, the five profiles installed, the Co-PI answering in the Agent Client pane, and the Library space open.
 
 **Time:** 20–30 minutes.
 
@@ -74,9 +74,9 @@ Re-run that command any time you add or rotate a key.
 1. Open Obsidian → **Open folder as vault** → choose the folder the installer reported (default `~/Memoria`).
 2. Turn off Restricted mode when prompted (**Settings → Community plugins**) so the bundled plugins load — they ship pre-installed and pre-configured.
 3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in the shared Hermes env file. Also set `OBSIDIAN_MCP_PORT` to the plugin's HTTPS port and `OBSIDIAN_MCP_SSL_VERIFY` to the exported certificate path, then re-run the `--profiles-only` command from Step 2.
-4. Make the vault a git repo — obsidian-git and the pre-commit gate need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
+4. Make the vault a git repo — obsidian-git and the pre-commit hook need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
-Obsidian opens the **Inbox** gate. The gate nav row links Inbox, Library, Knowledge, and Project; `home.md` remains a simple fallback note if the Homepage plugin is disabled.
+Obsidian opens the **Inbox** space. The space nav row links Inbox, Library, Knowledge, and Project; `home.md` remains a simple fallback note if the Homepage plugin is disabled.
 
 ---
 
@@ -93,11 +93,11 @@ Say hello and ask it something — "explain how this vault is organized" is a go
 
 ---
 
-## Step 5 — Open the Library gate
+## Step 5 — Open the Library space
 
-The vault opens to **Inbox**. Use the dashboard nav row to open **Library** (`gates/library.md`), then move among Inbox, Library, Knowledge, and Project the same way. See [Obsidian workspaces](../reference/obsidian-workspaces.md).
+The vault opens to **Inbox**. Use the dashboard nav row to open **Library** (`spaces/library.md`), then move among Inbox, Library, Knowledge, and Project the same way. See [Obsidian workspaces](../reference/obsidian-workspaces.md).
 
-The Library gate opens the reading pipeline, the discuss queue, and the Catalog view — empty for now. They fill as you work through the next tutorials.
+The Library space opens the reading pipeline, the discuss queue, and the Catalog view — empty for now. They fill as you work through the next tutorials.
 
 ---
 
@@ -107,7 +107,7 @@ The Library gate opens the reading pipeline, the discuss queue, and the Catalog 
 - Five profiles installed and the maintenance crons wired
 - API keys in `~/.hermes/.env`, propagated to every profile
 - The Co-PI answering in the Agent Client pane
-- The Library gate open
+- The Library space open
 
 ---
 

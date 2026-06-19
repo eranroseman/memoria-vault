@@ -1,4 +1,4 @@
-"""Alpha.7 gate dashboards replace per-gate workspace swapping."""
+"""Alpha.7 space dashboards replace per-space workspace swapping."""
 
 import json
 import re
@@ -14,11 +14,11 @@ CORE = SRC / ".obsidian" / "core-plugins.json"
 COMMUNITY_PLUGINS = SRC / ".obsidian" / "community-plugins.json"
 PORTALS = SRC / ".obsidian" / "plugins" / "portals" / "data.json"
 
-GATES = {
-    "inbox": "gates/inbox.md",
-    "library": "gates/library.md",
-    "knowledge": "gates/knowledge.md",
-    "project": "gates/project.md",
+SPACES = {
+    "inbox": "spaces/inbox.md",
+    "library": "spaces/library.md",
+    "knowledge": "spaces/knowledge.md",
+    "project": "spaces/project.md",
 }
 COPI_VIEW = "agent-client-chat-view"
 
@@ -58,37 +58,37 @@ def test_single_reset_workspace_ships_and_opens_inbox():
         for leaf in _leaves(ws["main"])
         if leaf.get("state", {}).get("file")
     ]
-    assert main_files == ["gates/inbox.md"]
+    assert main_files == ["spaces/inbox.md"]
     assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
     assert [leaf["type"] for leaf in _leaves(ws["left"])] == ["file-explorer"]
 
 
-def test_homepage_opens_inbox_gate_on_startup():
+def test_homepage_opens_inbox_space_on_startup():
     homepage = json.loads(HOMEPAGE.read_text(encoding="utf-8"))
     main = homepage["homepages"]["Main Homepage"]
     assert main["kind"] == "File"
-    assert main["value"] == "gates/inbox"
+    assert main["value"] == "spaces/inbox"
     assert main["openOnStartup"] is True
     assert main["openMode"] == "Replace all open notes"
     assert main["view"] == "Reading view"
 
 
-def test_gate_dashboards_exist_and_link_to_each_other():
-    for gate, relpath in GATES.items():
+def test_space_dashboards_exist_and_link_to_each_other():
+    for space, relpath in SPACES.items():
         path = SRC / relpath
         assert path.is_file(), f"{relpath} missing"
         text = path.read_text(encoding="utf-8")
-        assert f"gate: {gate}" in text
+        assert f"space: {space}" in text
         assert "![[" in text, f"{relpath} does not embed any Bases views"
-        for other, other_relpath in GATES.items():
-            if other == gate:
+        for other, other_relpath in SPACES.items():
+            if other == space:
                 continue
             link = other_relpath.removesuffix(".md")
             assert f"[[{link}|" in text, f"{relpath} missing nav link to {link}"
 
 
-def test_gate_dashboards_use_non_hidden_location():
-    for relpath in GATES.values():
+def test_space_dashboards_use_non_hidden_location():
+    for relpath in SPACES.values():
         assert not relpath.startswith("system/"), f"{relpath} would be hidden by Portals"
 
 
@@ -236,9 +236,9 @@ def test_link_color_snippet_ships_lifecycle_accents():
         assert marker in css
 
 
-def test_gate_dashboard_embeds_reference_existing_base_names():
+def test_space_dashboard_embeds_reference_existing_base_names():
     base_names = {path.name for path in SRC.rglob("*.base")}
-    for relpath in GATES.values():
+    for relpath in SPACES.values():
         text = (SRC / relpath).read_text(encoding="utf-8")
         for base in re.findall(r"!\[\[([^#\]]+\.base)", text):
             assert base in base_names, f"{relpath} embeds missing base {base}"

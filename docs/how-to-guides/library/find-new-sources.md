@@ -27,11 +27,11 @@ The Co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_ta
 
 **2. Let the Librarian search.**
 
-It searches over the `paper_search` MCP (20+ scholarly databases) and compares hits against your Catalog so papers you already hold aren't resurfaced. Its posture is faithful and generous — include liberally, represent accurately, let your gate filter — with a diversity reserve so the corpus doesn't become an echo chamber ([The Librarian](../../explanation/profiles/librarian.md)).
+It searches over the `paper_search` MCP (20+ scholarly databases) and compares hits against your Catalog so papers you already hold aren't resurfaced. Its posture is faithful and generous — include liberally, represent accurately, let your review gate filter — with a diversity reserve so the corpus doesn't become an echo chamber ([The Librarian](../../explanation/profiles/librarian.md)).
 
 **3. Judge the candidates as one batch.**
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, shown on the Inbox gate), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Judge each one the same way as any captured candidate — read `argument_against` first, then keep (`current`) or skip (`archived`) ([Capture and ingest a source](capture-and-ingest.md)). Work them in one sitting:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, shown on the Inbox space), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Judge each one the same way as any captured candidate — read `argument_against` first, then keep (`current`) or skip (`archived`) ([Capture and ingest a source](capture-and-ingest.md)). Work them in one sitting:
 
 - **Keep:** the paper enters the Tutorial 03 flow (Catalog entity, reading queue, proposed source note).
 - **Skip:** skipping generously offered candidates is the system working, not failing.

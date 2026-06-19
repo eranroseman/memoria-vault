@@ -31,7 +31,7 @@ Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking an
 
 It is **knowledge production**, not just storage: the vault grows more useful over time as new sources connect to existing claims, synthesis sharpens as evidence accumulates, and structural maintenance keeps the graph coherent. That is the difference between a research vault and a notes pile.
 
-Day to day, that work happens at four gates: you bring sources into the **Library**, build them into connected claims in **Knowledge**, drive an inquiry to output in a **Project**, and act on what the agents surface for you in the **Inbox**.
+Day to day, that work happens at four spaces: you bring sources into the **Library**, build them into connected claims in **Knowledge**, drive an inquiry to output in a **Project**, and act on what the agents surface for you in the **Inbox**.
 
 ---
 

@@ -1,14 +1,14 @@
 ---
 title: Library
-type: gate
+type: space
 lifecycle: current
-dashboard: gate
-gate: library
+dashboard: space
+space: library
 ---
 
 # Library
 
-[[gates/inbox|Inbox]] · **Library** · [[gates/knowledge|Knowledge]] · [[gates/project|Project]]
+[[spaces/inbox|Inbox]] · **Library** · [[spaces/knowledge|Knowledge]] · [[spaces/project|Project]]
 
 > [!brief] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
 > the same source form, so all source notes follow the same schema.
@@ -25,11 +25,11 @@ gate: library
 
 ![[catalog.base#Papers]]
 
-Reading pipeline items distill into claims in the Knowledge gate.
+Reading pipeline items distill into claims in the Knowledge space.
 
 ## Guides
 
-Step-by-step for working this gate:
+Step-by-step for working this space:
 
 - [Find new sources](https://eranroseman.github.io/memoria-vault/how-to-guides/library/find-new-sources)
 - [Capture and ingest a source](https://eranroseman.github.io/memoria-vault/how-to-guides/library/capture-and-ingest)

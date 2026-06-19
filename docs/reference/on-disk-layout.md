@@ -13,7 +13,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 
 ```text
 <vault>/
-├── home.md                  fallback note linking to the Inbox gate
+├── home.md                  fallback note linking to the Inbox space
 ├── research-focus.md        program memory — the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
@@ -90,14 +90,14 @@ Runtime-only (created in the deployed vault, never shipped):
 | `.memoria/data/extracts/` | ingest MCP | Full-text extracts per citekey — outside the Librarian's write lane. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python the MCP servers run on. |
-| `.git/hooks/pre-commit` | installer | The schema commit gate (once the vault is a git repo). |
+| `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
 | `.git/hooks/post-commit` | installer | The verify-on-commit trigger copied from `.githooks/post-commit`. |
 
 ---
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Homepage, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria**; gate navigation is handled by `src/gates/inbox.md`, `src/gates/library.md`, `src/gates/knowledge.md`, and `src/gates/project.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Homepage, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria**; gate navigation is handled by `src/spaces/inbox.md`, `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 

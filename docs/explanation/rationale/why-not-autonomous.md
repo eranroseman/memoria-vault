@@ -38,7 +38,7 @@ One tempting refinement: route to the human only when the agent's self-assessed 
 
 Memoria declines this approach for two reasons:
 
-**Confident-wrong is the failure mode.** Hallucinated citations and fabricated numbers are emitted with high fluency and high confidence, not with visible hesitation — the argument is developed in [Why the review gate is structural](why-human-gate.md). Confidence-routing is the specific casualty: it routes on the agent's self-assessed confidence, the one signal that is gameable by exactly the outputs the gate exists to catch.
+**Confident-wrong is the failure mode.** Hallucinated citations and fabricated numbers are emitted with high fluency and high confidence, not with visible hesitation — the argument is developed in [Why the review gate is structural](why-human-gate.md). Confidence-routing is the specific casualty: it routes on the agent's self-assessed confidence, the one signal that is gameable by exactly the outputs the review gate exists to catch.
 
 **The cost model is inverted.** In a throughput-optimizing autonomous system, the cost of a wrong high-confidence output is a wasted run. In Memoria's vault, the cost is a wrongly-promoted claim that persists and compounds. Confidence-routing is worth the bet when errors are cheap; it isn't when the vault is durable.
 

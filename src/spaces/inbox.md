@@ -1,14 +1,14 @@
 ---
 title: Inbox
-type: gate
+type: space
 lifecycle: current
-dashboard: gate
-gate: inbox
+dashboard: space
+space: inbox
 ---
 
 # Inbox
 
-**Inbox** · [[gates/library|Library]] · [[gates/knowledge|Knowledge]] · [[gates/project|Project]]
+**Inbox** · [[spaces/library|Library]] · [[spaces/knowledge|Knowledge]] · [[spaces/project|Project]]
 
 > [!brief] Inbox empty? That's the goal. New agent proposals, integrity flags, and
 > work prompts land here when they need a decision.
@@ -29,11 +29,11 @@ gate: inbox
 
 ![[board.base#By lane]]
 
-Capture and global actions live in the ribbon; the gate switcher is the nav row above.
+Capture and global actions live in the ribbon; the space switcher is the nav row above.
 
 ## Guides
 
-Step-by-step for working this gate:
+Step-by-step for working this space:
 
 - [Triage fleeting notes](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/triage-fleeting-notes)
 - [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions)

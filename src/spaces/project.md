@@ -1,14 +1,14 @@
 ---
 title: Project
-type: gate
+type: space
 lifecycle: current
-dashboard: gate
-gate: project
+dashboard: space
+space: project
 ---
 
 # Project
 
-[[gates/inbox|Inbox]] · [[gates/library|Library]] · [[gates/knowledge|Knowledge]] · **Project**
+[[spaces/inbox|Inbox]] · [[spaces/library|Library]] · [[spaces/knowledge|Knowledge]] · **Project**
 
 > [!brief] No projects yet? Create one with the project form. A project carries its
 > inquiry, FINER scope, output mode, and thesis state.
@@ -31,7 +31,7 @@ pages.
 
 ## Guides
 
-Step-by-step for working this gate:
+Step-by-step for working this space:
 
 - [Start a writing project](https://eranroseman.github.io/memoria-vault/how-to-guides/project/start-a-writing-project)
 - [Assess your corpus](https://eranroseman.github.io/memoria-vault/how-to-guides/project/assess-your-corpus)
