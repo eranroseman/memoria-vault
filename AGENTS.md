@@ -281,22 +281,23 @@ Mixed-quadrant pages are wrong — split them.
 ### ADR template (`docs/adr/`)
 
 ADRs are the **single home for every decision, at any lifecycle status** — there is no
-separate proposals/RFC folder. An open proposal is an ADR with `status: proposed` or
-`deferred`; it is revisited each release cycle, never gated on a static adoption
-trigger. Full template + nav fields in [`docs/adr/_template.md`](docs/adr/_template.md).
+separate proposals/RFC folder. An open proposal is an ADR with `status: proposed`;
+accepted future direction is `status: accepted` even when implementation is later.
+Scheduling and readiness live in GitHub issues, not ADR status. Full template +
+nav fields in [`docs/adr/_template.md`](docs/adr/_template.md).
 
 ```markdown
 ---
 topic: decisions
 id: <NN>
 title: <Short title>
-status: proposed | accepted | deferred | rejected | superseded
+status: proposed | accepted | rejected | superseded
 date_proposed: YYYY-MM-DD
 date_resolved: YYYY-MM-DD
 assumes: []          # ADR/mechanism deps — so a change that invalidates this is detectable
 supersedes: []
 superseded_by: []
-# deferred/proposed ADRs also carry: nav_exclude: true   (unlisted on the site until accepted)
+# proposed ADRs also carry: nav_exclude: true   (unlisted on the site until accepted)
 ---
 
 # ADR-<NN>: <Title>
@@ -304,21 +305,21 @@ superseded_by: []
 ## Context
 ## Decision
 ## Consequences
-## When this matters   # deferred/proposed only — priority context for the cadence review, NOT a gate
+## When this matters   # proposed only — priority context for the cadence review, NOT a gate
 ## Alternatives considered
 ```
 
 Background design analysis lives **in the ADR itself** — there is no separate
-design-notes folder. A forward-looking or not-yet-built decision is a
-`status: deferred` ADR (`nav_exclude: true`) whose Context / Decision /
-*When this matters* sections carry the analysis and the revisit triggers.
-`docs/` describes only the current system; the decision history lives in the ADRs
-(and the full git history). Transient scratch that never graduates to a decision
-stays in the gitignored `_notes/`.
+design-notes folder. Forward-looking work uses `status: proposed` until the
+decision is made; once the choice is made, the ADR becomes `accepted` even if the
+implementation issue has Readiness `Later`. `docs/` describes only the current
+system; the decision history lives in the ADRs (and the full git history).
+Transient scratch that never graduates to a decision stays in the gitignored
+`_notes/`.
 
 ### Release plans (`docs/releasing/`)
 
-One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its gate/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps go to GitHub issues; scope cuts go to a `deferred`-status ADR in `docs/adr/`. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
+One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its gate/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
 
 ---
 
@@ -328,10 +329,10 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 |---|---|
 | Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `docs/releasing/<version>/tmp/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
-| Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`/`deferred`) |
+| Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) + Memoria Issue Tracker view filtered to that milestone |
 | Release readiness (gates/stages) | the **"Release vX.Y" parent issue** and its gate/stage sub-issues, *not* the plan §2/§3 |
-| Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: deferred` for forward-looking) |
+| Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
 | In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
@@ -339,7 +340,7 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 - Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Status and Readiness live in Project fields; release scope lives in milestones.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 

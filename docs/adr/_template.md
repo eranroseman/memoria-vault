@@ -2,7 +2,7 @@
 topic: decisions
 id: NN
 title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
-status: proposed  # proposed | accepted | deferred | rejected | superseded
+status: proposed  # proposed | accepted | rejected | superseded
 date_proposed: YYYY-MM-DD
 date_resolved:
 assumes: []        # ADR-NN refs / mechanisms this rests on — so a change that invalidates it is detectable
@@ -21,17 +21,15 @@ superseded_by: []
 > **Status values:**
 >
 > - `proposed` — under discussion; no action taken yet.
-> - `accepted` — decided; the codebase follows this rule.
-> - `deferred` — shape is settled, scheduling waits. **Not gated on a static trigger** —
->   record `assumes:` and a *When this matters* section as context, and re-judge it each
->   release cycle. (There is no separate proposals folder; a deferred decision is an ADR.)
+> - `accepted` — decided; the codebase follows this rule. Implementation can still
+>   be unscheduled; readiness and scheduling live on the linked GitHub issue.
 > - `superseded` — replaced by a later ADR (set `superseded_by`).
 > - `rejected` — decided against; kept with the reasoning so it isn't re-litigated.
 >
-> **Deferred/proposed ADRs** carry `nav_exclude: true` (unlisted on the site until
-> accepted) and add a *When this matters* section in place of the retired
-> "Adoption trigger"/"Guard" — describe the conditions that would raise priority as
-> *context for the cadence review*, never as an automatic gate.
+> **Proposed ADRs** carry `nav_exclude: true` (unlisted on the site until accepted)
+> and add a *When this matters* section in place of the retired "Adoption trigger"/
+> "Guard" — describe the conditions that would raise priority as context for the
+> cadence review, never as an automatic gate.
 >
 > Delete this how-to-use block when copying the template.
 
@@ -55,10 +53,10 @@ consequences split into independent threads.
 
 ## When this matters
 
-*(Deferred/proposed ADRs only — delete when accepted.)* The conditions under which
-this decision becomes worth scheduling — written as **context for the per-release
-cadence review, not a gate**. Pair with `assumes:` so that a change invalidating those
-conditions is detectable rather than silently leaving the decision parked.
+*(Proposed ADRs only — delete when accepted.)* The conditions under which this
+proposal becomes worth deciding — written as context for the per-release cadence
+review, not a gate. Pair with `assumes:` so that a change invalidating those
+conditions is detectable rather than silently leaving the proposal parked.
 
 ## Alternatives considered
 

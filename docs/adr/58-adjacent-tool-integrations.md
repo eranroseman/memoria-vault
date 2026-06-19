@@ -2,7 +2,7 @@
 topic: decisions
 id: 58
 title: Adjacent tool integrations and added surfaces
-status: deferred
+status: proposed
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
@@ -30,10 +30,11 @@ board counts, WIP depth, recent audit entries, and the Linter verdict band from
 inside Obsidian — belongs here as a future adjacent surface because it stays inside
 Obsidian and is read-only.
 
-## Decision
+## Proposal
 
-Memoria keeps these four integrations **deferred** — shape settled, scheduling parked —
-and adopts none until its own trigger fires:
+Memoria is considering these adjacent integrations as separate future decisions.
+They are grouped here because they share a surface-expansion cost, not because the
+set should be accepted as one bundle:
 
 - **Read-only Obsidian Inspector.** A sidebar pane inside Obsidian exposing board
   counts, WIP depth, recent audit entries, and the Linter verdict band. It reads
@@ -67,8 +68,8 @@ External access for any of these flows over the policy MCP per
 
 ## Consequences
 
-- Recording the set keeps each integration's shape and trigger legible so a cadence
-  review can judge readiness rather than re-derive the design.
+- Recording the set keeps each integration's shape legible so the linked issue can
+  be split or scheduled without re-deriving the design.
 - Mirroring (Todoist) does not fix a review-capacity problem: if Todoist items go
   unworked, the vault's gap cards stagnate regardless.
 - The open-design handoff contract is unspecified; adopting it requires designing the
@@ -97,4 +98,4 @@ Per-release context, not gates:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-32 (external access over MCP)](32-external-access-over-mcp.md) (the gated path any external integration takes)
-- **Tracking issue:** [#408](https://github.com/eranroseman/memoria-vault/issues/408) — revisit at each release cadence.
+- **Tracking issue:** [#408](https://github.com/eranroseman/memoria-vault/issues/408) — proposal shaping and scheduling live on the issue.

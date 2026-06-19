@@ -59,8 +59,8 @@ options can erase existing item values.
 
 Readiness answers "why isn't this being worked right now?" A `Blocked` issue
 should name the dependency in its body. A `Later` issue stays in
-Status `Backlog` and is revisited during release cadence review; if it is a
-deferred decision, the ADR itself carries `status: deferred`.
+Status `Backlog` and is revisited during release cadence review. If the work
+has an ADR, the ADR records the decision state; the issue records readiness.
 
 ## Field colors
 
@@ -109,9 +109,8 @@ Keep Status `Backlog` and set Readiness:
 - `Needs shaping` for work whose investigation, acceptance criteria, or design
   shape are not clear enough to schedule.
 
-Deferred items are revisited each release cycle, not forgotten. If it is a
-deferred decision, the ADR itself carries `status: deferred`; the issue only
-tracks the work.
+Later items are revisited each release cycle, not forgotten. If the item has an
+ADR, the ADR records the decision; the issue tracks the work.
 
 ### Umbrellas / epics
 

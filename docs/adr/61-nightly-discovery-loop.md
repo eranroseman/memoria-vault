@@ -2,7 +2,7 @@
 topic: decisions
 id: 61
 title: Nightly discovery loop, code-experiment loop, and Writer-proposed claims
-status: deferred
+status: proposed
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
@@ -20,9 +20,9 @@ nav_order: 61
 
 Three related capabilities extend what the agent does *between* human gates without moving the gates themselves: a proactive overnight discovery loop, a keep/revert experiment loop scoped to the code lane, and Writer-proposed candidate claim notes. Each absorbs friction the operator currently bears manually, and each carries a distinct over-automation risk. They are grouped here because they share the same boundary discipline — autonomy expands within the lane, the structural review gate stays put — and because none is gated on a static trigger; the conditions below are cadence-review context.
 
-## Decision
+## Proposal
 
-Memoria will, when scheduled, add:
+Memoria should consider these three lane-bounded automation expansions separately:
 
 1. **A nightly proactive discovery loop.** Hermes runs unattended on a nightly cron: read `research-focus.md`, pick top N priorities (default 3), run `find` per priority (max 10 candidates each), ingest the previous day's confirmed candidates, enrich stale paper notes, then commit and post a morning summary. This converts discovery from reactive (operator-triggered) to proactive. Silent cron failure is the dominant operational risk — the loop fails loud, never silent. A natural extension (surfaced by the [#194](https://github.com/eranroseman/memoria-vault/issues/194) comparative survey, after Khoj's scheduled-automation / deep-research mode) is a **packaged cross-lane "deep research" macro** — one operator-invoked or scheduled command that chains find → ingest → map → draft across the specialist lanes for a single priority — built on this same loop and the same lane-boundary discipline, not a separate runtime.
 
@@ -47,4 +47,4 @@ Memoria will, when scheduled, add:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-48 Co-PI and agent consolidation](48-copi-and-agent-consolidation.md) (the Librarian `find` capability the nightly loop drives); [ADR-21 L3 autonomy ceiling](21-l3-autonomy-ceiling.md) (the boundary all three respect); [ADR-51](51-inbox-category-and-honesty-card.md) (candidate and gap proposals land as Inbox cards).
-- **Tracking issue:** [#411](https://github.com/eranroseman/memoria-vault/issues/411) — revisit at each release cadence.
+- **Tracking issue:** [#411](https://github.com/eranroseman/memoria-vault/issues/411) — proposal shaping and scheduling live on the issue.

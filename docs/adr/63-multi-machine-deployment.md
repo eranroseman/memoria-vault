@@ -2,10 +2,9 @@
 topic: decisions
 id: 63
 title: Multi-machine deployment topologies and secondary-device patterns
-status: deferred
-nav_exclude: true
+status: accepted
 date_proposed: 2026-06-11
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [24, 26, 55]
 supersedes: []
 superseded_by: []
@@ -52,4 +51,4 @@ Per topology, a concrete signal — context for the cadence review, not a gate:
 - **Authoritative target / adopted baseline:** [deployment options](../explanation/deployment/deployment-options.md) — defers the past-`local-only` substrate to this decision; documents the `local-only` default and the common conventions (Git history, `memoria.bib` in-vault, one dispatcher per vault, `.env` per-machine) these patterns presuppose.
 - **Related decisions / Depends on:** [ADR-24](24-single-researcher-scope.md) (single-researcher scope); [ADR-26](26-repo-as-install-unit.md) (repo as install unit); [ADR-55](55-src-scaffold-populate-golden-copy.md) (src scaffold).
 - **Cross-machine capabilities:** [ADR-60 cross-vault knowledge sharing](60-cross-vault-knowledge-sharing.md) — the capabilities that ride this substrate; the two are designed to move together.
-- **Tracking issue:** [#413](https://github.com/eranroseman/memoria-vault/issues/413) — revisit at each release cadence.
+- **Tracking issue:** [#413](https://github.com/eranroseman/memoria-vault/issues/413) — implementation readiness lives on the issue.

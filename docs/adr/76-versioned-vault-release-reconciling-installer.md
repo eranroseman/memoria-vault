@@ -2,7 +2,7 @@
 topic: decisions
 id: 76
 title: Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer
-status: deferred
+status: proposed
 nav_exclude: true
 date_proposed: 2026-06-14
 date_resolved:
@@ -26,9 +26,11 @@ Designing from scratch, the spine inverts: the unit is a **versioned vault relea
 
 This decision does **not** change integrity *protection*. A common misconception — that [ADR-55](55-src-scaffold-populate-golden-copy.md)'s golden copy protects the runtime code — is false: `golden_restore.py`'s manifest covers `system/{templates,dashboards,patterns,eval,scripts}/`, three system files, and three `.obsidian` config files, with **no `.memoria/` prefix**. Code-integrity protection is the MCP-only sandbox (agents cannot write files; [ADR-46](46-seven-layer-architecture.md)) plus Git as source of truth. This design *extends* ADR-55's manifest idea to cover the code and authored layers for **verification**, but leaves the protection mechanism untouched.
 
-## Decision
+## Proposal
 
-Memoria is distributed as a single versioned vault release and deployed by a source-agnostic reconciling installer. Two decisions are load-bearing; everything else follows from them.
+Memoria may move from repo-subtree deployment to a single versioned vault release
+deployed by a source-agnostic reconciling installer. Two proposed decisions are
+load-bearing; everything else follows from them.
 
 ### Load-bearing decision 1 — one versioned release, laid down by a reconciling installer that is layered by lifecycle
 
@@ -89,9 +91,9 @@ Context for the cadence review, not a gate — pick this up when **any** holds:
 
 ## Related
 
-- **Tracking issue:** [#521](https://github.com/eranroseman/memoria-vault/issues/521) — revisit at each release cadence.
+- **Tracking issue:** [#521](https://github.com/eranroseman/memoria-vault/issues/521) — proposal shaping and scheduling live on the issue.
 - **Origin:** [#494](https://github.com/eranroseman/memoria-vault/issues/494) (research) and
-  deferred implementation tracker [#521](https://github.com/eranroseman/memoria-vault/issues/521).
+  implementation tracker [#521](https://github.com/eranroseman/memoria-vault/issues/521).
 - **Depends on:** [ADR-44](44-tests-in-pytest-tree.md) (the conftest `sys.path` block the package work deletes); [ADR-46](46-seven-layer-architecture.md) (the MCP-only sandbox that *is* integrity protection); [ADR-55](55-src-scaffold-populate-golden-copy.md) (the golden manifest this generalizes into the release manifest); [ADR-69](69-operations-layer-naming.md) (operations layout, now landed); [ADR-73](73-docs-reference-conventions.md) (reference conventions for moved paths).
 - **In tension with:** [ADR-26](26-repo-as-install-unit.md) (install unit becomes a versioned release, not the repo subtree).
 - **Strengthens:** [ADR-63](63-multi-machine-deployment.md) — one versioned release across N vaults is the natural multi-machine substrate.

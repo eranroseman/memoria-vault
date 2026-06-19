@@ -2,10 +2,9 @@
 topic: decisions
 id: 66
 title: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking
-status: deferred
-nav_exclude: true
+status: accepted
 date_proposed: 2026-06-11
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [50, 51, 54]
 supersedes: []
 superseded_by: []
@@ -47,4 +46,4 @@ Memoria will, when scheduled, add:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-50 lifecycle](50-universal-lifecycle-and-maturity.md) (the card states triage moves between); [ADR-51 inbox honesty card](51-inbox-category-and-honesty-card.md) (the inbox surface these improvements feed); [ADR-54 batch worklists](54-two-decision-kinds-batch-worklists.md) (the batch-approval mechanism semi-auto triage builds on).
-- **Tracking issue:** [#416](https://github.com/eranroseman/memoria-vault/issues/416) — revisit at each release cadence.
+- **Tracking issue:** [#416](https://github.com/eranroseman/memoria-vault/issues/416) — implementation readiness lives on the issue.
