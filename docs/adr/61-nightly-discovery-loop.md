@@ -2,13 +2,12 @@
 topic: decisions
 id: 61
 title: Nightly discovery loop, code-experiment loop, and Writer-proposed claims
-status: proposed
-nav_exclude: true
+status: superseded
 date_proposed: 2026-06-11
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [48, 21]
 supersedes: []
-superseded_by: []
+superseded_by: [95, 96, 97]
 parent: Decisions
 grand_parent: Explanation
 nav_order: 61
@@ -16,35 +15,15 @@ nav_order: 61
 
 # ADR-61: Nightly discovery loop, code-experiment loop, and Writer-proposed claims
 
-## Context
+## Superseded
 
-Three related capabilities extend what the agent does *between* human gates without moving the gates themselves: a proactive overnight discovery loop, a keep/revert experiment loop scoped to the code lane, and Writer-proposed candidate claim notes. Each absorbs friction the operator currently bears manually, and each carries a distinct over-automation risk. They are grouped here because they share the same boundary discipline — autonomy expands within the lane, the structural review gate stays put — and because none is gated on a static trigger; the conditions below are cadence-review context.
+This proposal bundle is split into one ADR per lane-bounded automation expansion:
 
-## Proposal
-
-Memoria should consider these three lane-bounded automation expansions separately:
-
-1. **A nightly proactive discovery loop.** Hermes runs unattended on a nightly cron: read `research-focus.md`, pick top N priorities (default 3), run `find` per priority (max 10 candidates each), ingest the previous day's confirmed candidates, enrich stale paper notes, then commit and post a morning summary. This converts discovery from reactive (operator-triggered) to proactive. Silent cron failure is the dominant operational risk — the loop fails loud, never silent. A natural extension (surfaced by the [#194](https://github.com/eranroseman/memoria-vault/issues/194) comparative survey, after Khoj's scheduled-automation / deep-research mode) is a **packaged cross-lane "deep research" macro** — one operator-invoked or scheduled command that chains find → ingest → map → draft across the specialist lanes for a single priority — built on this same loop and the same lane-boundary discipline, not a separate runtime.
-
-2. **A code-lane keep/revert experiment loop.** A lane-bounded `code-experiment-loop` skill runs propose → test → keep-if-improved → revert-otherwise for up to N iterations against a pre-defined scalar success criterion. A `code-experiment` card type carries `success_metric:`, `budget_iterations:`, and `budget_cost_usd:` fields. Output lands in `projects/<project>/code/experiments/<run-id>/`; the policy MCP permits writes only to that path. When the budget exhausts, a summary card goes to `done` (`review_status: requested`) with the best variant, its diff, and the metric trajectory for human promotion. Scoped to code (monotonic metric, reversible changes, independent experiments) — explicitly not synthesis.
-
-3. **Writer-proposed candidate claim notes.** After a `discuss` card closes, the Writer proposes claim candidates as Inbox cards, each carrying its provenance (source note plus the specific passage). The policy MCP denies writes to `notes/claims/`; the human edits, authors the canonical claim, or discards. Depends on claim-sentence classification and the Inbox honesty-card contract in [ADR-51](51-inbox-category-and-honesty-card.md).
-
-## Consequences
-
-- The nightly loop requires an always-on machine; a sleep-prone laptop misses the cron. Bad inclusion criteria flood the inbox and make morning triage unsustainable.
-- The experiment loop optimizes the metric, not the goal: a poorly-specified `success_metric:` produces a winner that game-played the test, and loose budgets balloon API spend.
-- Writer-proposed claims are the most judgment-adjacent automation in the roadmap, with two named risks: rubber-stamping (a fluent candidate invites acceptance without close reading) and framing capture (the agent's phrasing anchors the human's). Over-proposing is worse than not proposing.
-
-## When this matters
-
-*(Cadence-review context, not a gate.)*
-
-- **Nightly discovery loop** — all four hold: (1) Memoria v0.1 stable, (2) `research-focus.md` maintained for ≥ 4 weeks, (3) always-on deployment active on any machine that can run Hermes and reach the vault, (4) `screening-plan.md` written down. Adopting before inclusion criteria are written floods the inbox and makes triage the slowest part of the day.
-- **Code experiment loop** — the operator notices running the same "edit → test → revert if worse" cycle more than ~10–20 times per project, *and* a scalar success criterion existed *before* the cycle started.
-- **Writer-proposed claims** — `discuss` and `distill` are stable *and* the felt bottleneck is *transcribing* claims, not comprehending them. Prototype on a handful of sources and measure the accept-unedited rate; a high rate is a warning, not a win. If comprehension is the bottleneck, this does not help.
+- [ADR-95](95-nightly-proactive-discovery-loop.md): Nightly proactive discovery loop.
+- [ADR-96](96-code-lane-keep-revert-experiment-loop.md): Code-lane keep/revert experiment loop.
+- [ADR-97](97-writer-proposed-candidate-claim-notes.md): Writer-proposed candidate claim notes.
 
 ## Related
 
 - **Related decisions / Depends on:** [ADR-48 Co-PI and agent consolidation](48-copi-and-agent-consolidation.md) (the Librarian `find` capability the nightly loop drives); [ADR-21 L3 autonomy ceiling](21-l3-autonomy-ceiling.md) (the boundary all three respect); [ADR-51](51-inbox-category-and-honesty-card.md) (candidate and gap proposals land as Inbox cards).
-- **Tracking issue:** [#411](https://github.com/eranroseman/memoria-vault/issues/411) — proposal shaping and scheduling live on the issue.
+- **Original tracking issue:** [#411](https://github.com/eranroseman/memoria-vault/issues/411).
