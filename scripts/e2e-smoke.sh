@@ -8,7 +8,11 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 V="$(mktemp -d "${TMPDIR:-/tmp}/memoria-e2e-XXXXXXXX")"
-trap 'rm -rf "$V"' EXIT
+# Teardown must not fail the gate: git's background `gc --auto` can still be
+# writing into "$V/.git" when the EXIT trap fires, making `rm -rf` exit non-zero
+# ("Directory not empty") even after all gates pass. The temp dir is ephemeral,
+# so swallow cleanup errors rather than failing the run under `set -e`.
+trap 'rm -rf "$V" 2>/dev/null || true' EXIT
 PY="${PYTHON:-python3}"
 fail() { echo "e2e-smoke: FAIL — $1" >&2; exit 1; }
 
