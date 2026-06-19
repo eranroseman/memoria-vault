@@ -17,10 +17,10 @@ duplicated across two places.
 | Surface | Role | Do not also use for |
 |---|---|---|
 | **Issue** | The atomic unit of work: one bug, feature, task, decision, or question | Multi-topic dumps; split them |
-| **Project #1 — [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)** | Triage and planning surface; holds **Status / Area / Type / Priority** fields and board/table views | Release prose or decision rationale |
-| **Milestone** | Release phase only: `0.1.0-alpha.3`, `0.1.0-alpha.4`, `0.1.0` | Type, Status, Priority, or Area |
+| **Project #1 — [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)** | Triage and planning surface; holds **Status / Readiness / Area / Type / Priority** fields and board/table views | Release prose or decision rationale |
+| **Milestone** | Release phase only: `0.1.0-alpha.3`, `0.1.0-alpha.4`, `0.1.0` | Type, Status, Readiness, Priority, or Area |
 | **Sub-issues** | Hierarchy / epics; a big issue composed of smaller issues | Loose "related to" links; use a mention for that |
-| **Labels** | Repo-wide search chips and bot automation | Type, Area, Status, or Priority |
+| **Labels** | Repo-wide search chips and bot automation | Type, Area, Status, Readiness, or Priority |
 | **ADRs** | Decisions: what, why, alternatives, and consequences | Task tracking |
 
 The mental model: **an issue is the work; Project fields are how you slice the
@@ -40,12 +40,27 @@ the Project.
 | **In progress** | Being worked now |
 | **In review** | PR open or awaiting review |
 | **Done** | Merged or closed |
-| **Deferred** | Parked outside this release phase; revisit each release cycle |
 
-Keep the order as Backlog -> In progress -> In review -> Done -> Deferred.
-`Blocked` and `Needs scoping` are not statuses here: capture blockers in the issue
-body, priority, or acceptance criteria. If a status option must change, do it in
-the UI; API edits to single-select options can erase existing item values.
+Status is workflow-only: it answers "where is this in the work loop?" Keep the
+order as Backlog -> In progress -> In review -> Done. Do not use Status for
+blocked, deferred, research, or scoping state; that signal lives in Readiness.
+If a status option must change, do it in the UI; API edits to single-select
+options can erase existing item values.
+
+### Readiness
+
+| Value | Meaning |
+|---|---|
+| **Ready** | Clear enough to schedule or pick up |
+| **Needs scoping** | Problem is real, but shape or acceptance criteria are unclear |
+| **Research question** | Investigation or an answer is needed before implementation |
+| **Blocked** | Cannot proceed until an internal or external dependency changes |
+| **Future / deferred** | Valid idea intentionally parked for a later cadence review |
+
+Readiness answers "why isn't this being worked right now?" A `Blocked` issue
+should name the dependency in its body. A `Future / deferred` issue stays in
+Status `Backlog` and is revisited during release cadence review; if it is a
+deferred decision, the ADR itself carries `status: deferred`.
 
 ### Area
 
@@ -81,11 +96,12 @@ the category in the issue body.
 
 | Value | Reserve for |
 |---|---|
-| **High** | Blockers, for example defects that break a tutorial or core loop |
+| **High** | Release or core-loop urgency, for example defects that break a tutorial |
 | **Normal** | Default for real work |
 | **Low** | Nice-to-have, parked, or research |
 
-Keep High small; if everything is High, nothing is.
+Keep High small; if everything is High, nothing is. Use Readiness `Blocked` for
+dependency-blocked work; do not make every blocked item High.
 
 ## Field colors
 
@@ -94,7 +110,8 @@ matters and categorically where it does not:
 
 | Field | Option colors |
 |---|---|
-| **Status** | Backlog `Gray`, In progress `Blue`, In review `Orange`, Done `Green`, Deferred `Purple` |
+| **Status** | Backlog `Gray`, In progress `Blue`, In review `Orange`, Done `Green` |
+| **Readiness** | Ready `Green`, Needs scoping `Orange`, Research question `Yellow`, Blocked `Red`, Future / deferred `Purple` |
 | **Priority** | High `Red`, Normal `Yellow`, Low `Gray` |
 | **Type** | Bug `Red`, Feature `Green`, Refactor `Purple`, Docs `Blue`, Research `Yellow`, Decision `Orange` |
 | **Sub-issues progress** | `Purple` bar, segmented, numerical value shown |
@@ -110,7 +127,7 @@ Set colors in Project settings -> field -> option color picker.
    steps for bugs, and **acceptance criteria**.
 2. Add it to [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)
    if the auto-add workflow did not do it.
-3. Set Type, Area, Priority, and Status `Backlog`.
+3. Set Type, Area, Priority, Readiness, and Status `Backlog`.
 4. Set a milestone only when scheduling it into a release; no milestone means
    unscheduled backlog.
 5. If it is a decision, open or point to an ADR and set Type `Decision`.
@@ -126,11 +143,21 @@ Move `Backlog -> In progress`, assign yourself, open a PR, then move to `In revi
 When the PR merges and acceptance criteria are met, close the issue as `Done`.
 Bug fixes should be reproduced before closing.
 
-### Deferring
+### Parking, blocking, or scoping
 
-Set Status `Deferred`. If it is a deferred decision, the ADR itself carries
-`status: deferred`; the issue only tracks the work. Deferred items are revisited
-each release cycle, not forgotten.
+Keep Status `Backlog` and set Readiness:
+
+- `Future / deferred` for valid work intentionally parked outside the current
+  release phase.
+- `Blocked` for work waiting on a named dependency.
+- `Needs scoping` for work whose acceptance criteria or design shape are not
+  clear enough to schedule.
+- `Research question` for investigations that must answer "what should we do?"
+  before implementation.
+
+Deferred items are revisited each release cycle, not forgotten. If it is a
+deferred decision, the ADR itself carries `status: deferred`; the issue only
+tracks the work.
 
 ### Umbrellas / epics
 
@@ -144,12 +171,15 @@ Keep these views in [Memoria Issue Tracker](https://github.com/users/eranroseman
 
 - **Board grouped by Status** for day-to-day flow.
 - **Table grouped by Area** for triage and bulk edits.
+- **Table grouped by Readiness** for blocked, research, scoping, and future-work
+  review.
 - **Table filtered by the current milestone**, sorted by Priority, for the release
   plan.
-- **Filter `Status: Deferred`** for the parked set.
+- **Filter `Readiness: Future / deferred`** for the parked set.
 
 Useful filters include `field:Area:capture`, `field:Type:Bug`,
-`field:Priority:High`, and `milestone:"0.1.0-alpha.3"`.
+`field:Priority:High`, `field:Readiness:Blocked`, and
+`milestone:"0.1.0-alpha.3"`.
 
 ## Labels
 
@@ -196,11 +226,11 @@ API unless the user explicitly asks. Prefer the UI for large human triage passes
 
 ## Rules
 
-1. One Type, one Status, one Priority; one or more Areas when applicable.
+1. One Type, one Status, one Readiness, one Priority; one or more Areas when applicable.
 2. Milestone means release phase only.
 3. High priority is for blockers.
 4. Decisions are ADRs; issues track the work around them.
-5. Deferred is a Status, not a graveyard.
+5. Status is workflow; Readiness carries blocked, scoping, research, and future/deferred state.
 6. Umbrellas use sub-issues, not tracking labels.
 7. Retired labels stay retired.
 8. Acceptance criteria exist before an issue leaves Backlog.

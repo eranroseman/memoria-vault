@@ -18,9 +18,10 @@ Every actionable item is a GitHub issue in
 field model is in [Issue tracking](issue-tracking.md); this page only summarizes
 the working loop.
 
-Pick an issue with Status `Backlog`, move it to `In progress`, and open a branch.
-Open the PR with `Closes #N` so the linked issue moves to `In review`. Squash-merge
-when checks pass, then close the issue as `Done` once acceptance criteria are met.
+Pick an issue with Status `Backlog` and Readiness `Ready`, move it to
+`In progress`, and open a branch. Open the PR with `Closes #N` so the linked
+issue moves to `In review`. Squash-merge when checks pass, then close the issue
+as `Done` once acceptance criteria are met.
 
 ### Board automation
 
@@ -35,15 +36,15 @@ The Project's **Status** field is kept in sync by built-in workflows
 | Item closed / Pull request merged | → **Done** |
 | Auto-close issue | Setting Status **Done** closes the issue |
 
-Scheduling is the milestone, not a Status value. No milestone means unscheduled
-backlog; a milestone means the issue is scoped to that release phase.
+Scheduling is the milestone, not a Status or Readiness value. No milestone means
+unscheduled backlog; a milestone means the issue is scoped to that release phase.
 
 ## Issue triage
 
 Triage keeps the backlog actionable. The Project fields are defined in
 [Issue tracking](issue-tracking.md).
 
-- **New issue** (within ~48h): set Type, Area, Priority, and Status `Backlog`; assign a milestone only if scheduled.
+- **New issue** (within ~48h): set Type, Area, Priority, Readiness, and Status `Backlog`; assign a milestone only if scheduled.
 - **Weekly:** groom Backlog — fill missing fields, split oversized work, and re-prioritize.
 - **Monthly:** sweep stale issues (no activity in 30+ days) — close or refresh.
 
