@@ -13,11 +13,14 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 Memoria breaks without these. The starter vault **ships all thirteen bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
-The static provenance precursor for the bundled artifacts is
+The provenance lock for the bundled artifacts is
 `src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
 upstream repository, pinned local version, artifact SHA-256 digests, license assertion,
-and local patch status. It is a manual-audit lock for now; the updater and CI
-provenance-doctor remain deferred by [ADR-74](../adr/74-pinned-obsidian-plugin-supply-chain.md).
+and local patch status. `python scripts/plugin_provenance_doctor.py` validates the
+lock in the required gate: every enabled plugin is represented once, declared
+artifacts exist and match their digests, and no undeclared executable artifact is
+bundled. Updater automation remains deferred by
+[ADR-74](../adr/74-pinned-obsidian-plugin-supply-chain.md).
 
 | Plugin | ID (`.obsidian/plugins/<id>/`) | Purpose |
 | --- | --- | --- |

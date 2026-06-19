@@ -2,7 +2,7 @@
   "schema_version": 1,
   "generated_from": "vendored plugin files in src/.obsidian/plugins",
   "generated_at": "2026-06-18",
-  "notes": "Static ADR-74 precursor. Updater and CI provenance-doctor remain deferred; this lock pins the checked-in artifact hashes for manual audit.",
+  "notes": "ADR-74 provenance lock for checked-in Obsidian plugin artifacts. scripts/plugin_provenance_doctor.py validates the lock in CI; updater automation remains deferred.",
   "plugins": [
     {
       "id": "agent-client",

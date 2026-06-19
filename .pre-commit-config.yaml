@@ -149,6 +149,13 @@ repos:
         files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/github_doctor\.py$
         pass_filenames: false
 
+      - id: plugin-provenance-doctor
+        name: plugin-provenance-doctor
+        language: system
+        entry: python scripts/plugin_provenance_doctor.py
+        files: ^src/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
+        pass_filenames: false
+
       # Block 12: harper grammar (advisory — always exits 0)
       - id: harper-grammar
         name: harper-grammar

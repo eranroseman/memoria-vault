@@ -22,11 +22,11 @@ Memoria commits the built files for its required Obsidian plugins under
 install time. This supports the repo-as-install-unit and offline, reproducible
 vault image chosen in [ADR-26](26-repo-as-install-unit.md) and
 [ADR-55](55-src-scaffold-populate-golden-copy.md). The repository now records a
-static, machine-readable provenance precursor for those bundled artifacts in
+static, machine-readable provenance lock for those bundled artifacts in
 `src/.obsidian/plugin-provenance-lock.json`: plugin identity, upstream repository,
 pinned local version, artifact SHA-256 digests, license assertion, and local-patch
 status. That lock makes manual review auditable, but update automation is still
-future work: CI can validate the static lock against committed artifacts, while a
+future work: CI validates the static lock against committed artifacts, while a
 repository updater that fetches and replaces upstream-owned artifacts remains a
 later increment.
 
@@ -40,7 +40,7 @@ download executable plugin code. The accepted supply-chain model is incremental:
   plugin it records the plugin ID, upstream repository, pinned release tag or
   commit, source/release URL, artifact SHA-256 digests, license, and whether the
   checked-in files are unmodified, patched, or Memoria-authored.
-- A CI provenance doctor as the next increment. It proves the lock matches committed
+- A CI provenance doctor. It proves the lock matches committed
   artifacts, every enabled bundled plugin is represented exactly once, declared
   files exist, and no undeclared executable artifact has entered a plugin directory.
 - A strict ownership split: `main.js`, upstream `manifest.json`, and upstream
@@ -55,9 +55,9 @@ download executable plugin code. The accepted supply-chain model is incremental:
   fork or a reviewable patch recorded by the lock; editing minified build output
   without reproducible source or patch history is not allowed.
 
-The lock manifest is current behavior. CI enforcement and updater automation are
-sequenced implementation work, with the CI provenance doctor first so drift is
-detectable before any automation can rewrite artifacts.
+The lock manifest and CI doctor are current behavior. Updater automation remains
+sequenced implementation work, after the doctor is stable, so drift is detectable
+before any automation can rewrite artifacts.
 
 ## Consequences
 
@@ -77,15 +77,16 @@ detectable before any automation can rewrite artifacts.
 
 ## Current implementation mapping
 
-The static lock precursor is implemented in `src/.obsidian/plugin-provenance-lock.json`
-and validated by `tests/test_plugin_provenance.py`, which checks coverage of enabled
-plugins, manifest-version parity, declared upstream fields, and SHA-256 digests for
-the committed artifact files. This is enough for manual audit and review of vendored
-plugin changes, but it is not yet the full supply-chain automation. The next
-increment is a CI provenance doctor that runs the same class of checks in the
-required validation path and extends them to undeclared executable artifacts. Only
-after that doctor is stable should Memoria add an updater that downloads and stages
-new upstream artifacts for review.
+The lock is implemented in `src/.obsidian/plugin-provenance-lock.json` and
+validated by `scripts/plugin_provenance_doctor.py` in the required lint and local
+L0 gates. `tests/test_plugin_provenance.py` shares the doctor core so test
+fixtures and CI enforce the same contract: enabled-plugin coverage, exactly one
+lock entry per bundled plugin directory, manifest-version parity, declared
+upstream fields, SHA-256 digests for committed artifact files, and rejection of
+undeclared executable artifacts. This is enough for manual audit and review of
+vendored plugin changes, but it is not yet updater automation. Only after that
+doctor is stable should Memoria add an updater that downloads and stages new
+upstream artifacts for review.
 
 ## When this matters
 
@@ -116,14 +117,15 @@ source trees; many plugin repositories require a Node build with version-specifi
 tooling. Submodules would add contributor friction without eliminating the need
 to build, verify, and commit the exact runtime files.
 
-**Continue manual vendoring without a manifest.** This has the lowest immediate
-implementation cost and is the present deferred state, but leaves updates
-non-reproducible and weakens review of executable third-party changes. It is not
-the recommended long-term model.
+**Continue manual vendoring without a manifest.** This had the lowest immediate
+implementation cost before ADR-74, but would leave updates non-reproducible and
+weaken review of executable third-party changes. It is not the recommended
+long-term model.
 
 ## Related
 
 - **Files affected:** [`src/.obsidian/plugins/`](https://github.com/eranroseman/memoria-vault/tree/main/src/.obsidian/plugins),
+  [`scripts/plugin_provenance_doctor.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/plugin_provenance_doctor.py),
   [Obsidian plugin reference](../reference/obsidian-plugins.md)
 - **Related decisions / Depends on:** [ADR-26](26-repo-as-install-unit.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md),
