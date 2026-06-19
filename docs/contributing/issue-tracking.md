@@ -17,10 +17,10 @@ duplicated across two places.
 | Surface | Role | Do not also use for |
 |---|---|---|
 | **Issue** | The atomic unit of work: one bug, feature, task, decision, or question | Multi-topic dumps; split them |
-| **Project #1 — [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)** | Triage and planning surface; holds **Status / Readiness / Area / Type / Priority** fields and board/table views | Release prose or decision rationale |
-| **Milestone** | Release phase only: `0.1.0-alpha.3`, `0.1.0-alpha.4`, `0.1.0` | Type, Status, Readiness, Priority, or Area |
+| **Project #1 — [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)** | Triage and planning surface; holds **Status / Readiness** fields and board/table views | Release prose or decision rationale |
+| **Milestone** | Release phase only: `0.1.0-alpha.3`, `0.1.0-alpha.4`, `0.1.0` | Status, Readiness, priority, type, or subsystem |
 | **Sub-issues** | Hierarchy / epics; a big issue composed of smaller issues | Loose "related to" links; use a mention for that |
-| **Labels** | Repo-wide search chips and bot automation | Type, Area, Status, Readiness, or Priority |
+| **Labels** | Repo-wide search chips and bot automation | Status, Readiness, priority, or subsystem taxonomy |
 | **ADRs** | Decisions: what, why, alternatives, and consequences | Task tracking |
 
 The mental model: **an issue is the work; Project fields are how you slice the
@@ -30,7 +30,8 @@ work; the milestone is when; the ADR is why.**
 
 Set these on every active issue from the Project board or table view. Issue
 creation gives you title, body, labels, and milestone; the fields below live in
-the Project.
+the Project because they answer questions the issue itself does not answer
+cleanly.
 
 ### Status
 
@@ -43,7 +44,7 @@ the Project.
 
 Status is workflow-only: it answers "where is this in the work loop?" Keep the
 order as Backlog -> In progress -> In review -> Done. Do not use Status for
-blocked, deferred, research, or scoping state; that signal lives in Readiness.
+blocked, later, or shaping state; that signal lives in Readiness.
 If a status option must change, do it in the UI; API edits to single-select
 options can erase existing item values.
 
@@ -52,56 +53,14 @@ options can erase existing item values.
 | Value | Meaning |
 |---|---|
 | **Ready** | Clear enough to schedule or pick up |
-| **Needs scoping** | Problem is real, but shape or acceptance criteria are unclear |
-| **Research question** | Investigation or an answer is needed before implementation |
+| **Needs shaping** | Problem is real, but investigation, design shape, or acceptance criteria are unclear |
 | **Blocked** | Cannot proceed until an internal or external dependency changes |
-| **Future / deferred** | Valid idea intentionally parked for a later cadence review |
+| **Later** | Valid idea intentionally parked outside the current planning horizon |
 
 Readiness answers "why isn't this being worked right now?" A `Blocked` issue
-should name the dependency in its body. A `Future / deferred` issue stays in
+should name the dependency in its body. A `Later` issue stays in
 Status `Backlog` and is revisited during release cadence review; if it is a
 deferred decision, the ADR itself carries `status: deferred`.
-
-### Area
-
-| Value | Covers |
-|---|---|
-| **capture** | Fleeting / URL / Zotero capture, capture forms |
-| **ingest** | Ingest pipeline, metadata sources, extraction, scoring |
-| **knowledge** | Notes, claims, links, hubs, schema, vocabulary, projects |
-| **obsidian-ui** | Workspaces, `home.md`, dashboards, status bar, properties, client-agent pane |
-| **operations** | Deterministic operations: Processing / Integrity / Cleanup / Telemetry, Linter, policy gate |
-| **docs-site** | Jekyll / Diataxis docs and ADRs |
-| **installer** | Install, upgrade, golden copy, platform, deployment |
-| **integrations** | Zotero, MCP, external tools, messaging transports |
-| **agents** | Profiles, Co-PI, skills, lanes, model selection |
-| *(blank)* | Meta / positioning research with no subsystem fit |
-
-`operations` follows [ADR-69](../adr/69-operations-layer-naming.md). Its four
-categories are sub-kinds of operations work; keep Area as `operations` and name
-the category in the issue body.
-
-### Type
-
-| Value | Use for | Former label |
-|---|---|---|
-| **Bug** | Something is broken | `bug` |
-| **Feature** | New capability | most `enhancement` |
-| **Refactor** | Internal restructure / rename / cleanup, no behavior change | `enhancement` |
-| **Docs** | Documentation work | `documentation` |
-| **Research** | Open investigation or question | `research`, `question` |
-| **Decision** | Needs an ADR or an ADR acceptance/scoping call | `enhancement` |
-
-### Priority
-
-| Value | Reserve for |
-|---|---|
-| **High** | Release or core-loop urgency, for example defects that break a tutorial |
-| **Normal** | Default for real work |
-| **Low** | Nice-to-have, parked, or research |
-
-Keep High small; if everything is High, nothing is. Use Readiness `Blocked` for
-dependency-blocked work; do not make every blocked item High.
 
 ## Field colors
 
@@ -111,11 +70,8 @@ matters and categorically where it does not:
 | Field | Option colors |
 |---|---|
 | **Status** | Backlog `Gray`, In progress `Blue`, In review `Orange`, Done `Green` |
-| **Readiness** | Ready `Green`, Needs scoping `Orange`, Research question `Yellow`, Blocked `Red`, Future / deferred `Purple` |
-| **Priority** | High `Red`, Normal `Yellow`, Low `Gray` |
-| **Type** | Bug `Red`, Feature `Green`, Refactor `Purple`, Docs `Blue`, Research `Yellow`, Decision `Orange` |
+| **Readiness** | Ready `Green`, Needs shaping `Orange`, Blocked `Red`, Later `Purple` |
 | **Sub-issues progress** | `Purple` bar, segmented, numerical value shown |
-| **Area** | Auto-color; there are more areas than colors |
 
 Set colors in Project settings -> field -> option color picker.
 
@@ -127,10 +83,10 @@ Set colors in Project settings -> field -> option color picker.
    steps for bugs, and **acceptance criteria**.
 2. Add it to [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)
    if the auto-add workflow did not do it.
-3. Set Type, Area, Priority, Readiness, and Status `Backlog`.
+3. Set Readiness and Status `Backlog`.
 4. Set a milestone only when scheduling it into a release; no milestone means
    unscheduled backlog.
-5. If it is a decision, open or point to an ADR and set Type `Decision`.
+5. If it is a decision, open or point to an ADR.
 
 ### Triaging
 
@@ -143,17 +99,15 @@ Move `Backlog -> In progress`, assign yourself, open a PR, then move to `In revi
 When the PR merges and acceptance criteria are met, close the issue as `Done`.
 Bug fixes should be reproduced before closing.
 
-### Parking, blocking, or scoping
+### Parking, blocking, or shaping
 
 Keep Status `Backlog` and set Readiness:
 
-- `Future / deferred` for valid work intentionally parked outside the current
-  release phase.
+- `Later` for valid work intentionally parked outside the current planning
+  horizon.
 - `Blocked` for work waiting on a named dependency.
-- `Needs scoping` for work whose acceptance criteria or design shape are not
-  clear enough to schedule.
-- `Research question` for investigations that must answer "what should we do?"
-  before implementation.
+- `Needs shaping` for work whose investigation, acceptance criteria, or design
+  shape are not clear enough to schedule.
 
 Deferred items are revisited each release cycle, not forgotten. If it is a
 deferred decision, the ADR itself carries `status: deferred`; the issue only
@@ -170,15 +124,12 @@ Use ordinary mentions for loose related work.
 Keep these views in [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1):
 
 - **Board grouped by Status** for day-to-day flow.
-- **Table grouped by Area** for triage and bulk edits.
-- **Table grouped by Readiness** for blocked, research, scoping, and future-work
+- **Table grouped by Readiness** for blocked, shaping, ready, and later-work
   review.
-- **Table filtered by the current milestone**, sorted by Priority, for the release
-  plan.
-- **Filter `Readiness: Future / deferred`** for the parked set.
+- **Table filtered by the current milestone** for the release plan.
+- **Filter `Readiness: Later`** for the parked set.
 
-Useful filters include `field:Area:capture`, `field:Type:Bug`,
-`field:Priority:High`, `field:Readiness:Blocked`, and
+Useful filters include `field:Readiness:Blocked`, `field:Readiness:Ready`, and
 `milestone:"0.1.0-alpha.3"`.
 
 ## Labels
@@ -189,10 +140,11 @@ Keep labels to what needs repo-wide search or bot automation:
 - Bot-managed labels: `dependencies`, `python`, `github_actions`, `release`,
   `autorelease: pending`, `autorelease: tagged`.
 
-Do not recreate retired labels such as `enhancement`, `question`, `research`, or
-`needs-scoping`; their signal moved to Project fields. The trade-off is that
-Project fields filter inside the Project, while repo-wide `is:issue` search and
-bots see labels. That is why `bug` and `documentation` stay as search labels.
+Do not recreate retired labels such as `enhancement`, `question`, `research`,
+`needs-scoping`, or `needs-shaping`; their signal lives in the issue title/body,
+ADR links, milestone, or Readiness. The trade-off is that Project fields filter
+inside the Project, while repo-wide `is:issue` search and bots see labels. That
+is why `bug` and `documentation` stay as search labels.
 
 ## CLI notes
 
@@ -226,11 +178,10 @@ API unless the user explicitly asks. Prefer the UI for large human triage passes
 
 ## Rules
 
-1. One Type, one Status, one Readiness, one Priority; one or more Areas when applicable.
+1. One Status and one Readiness value per active issue.
 2. Milestone means release phase only.
-3. High priority is for blockers.
-4. Decisions are ADRs; issues track the work around them.
-5. Status is workflow; Readiness carries blocked, scoping, research, and future/deferred state.
-6. Umbrellas use sub-issues, not tracking labels.
-7. Retired labels stay retired.
-8. Acceptance criteria exist before an issue leaves Backlog.
+3. Decisions are ADRs; issues track the work around them.
+4. Status is workflow; Readiness carries blocked, shaping, ready, and later state.
+5. Umbrellas use sub-issues, not tracking labels.
+6. Retired labels stay retired.
+7. Acceptance criteria exist before an issue leaves Backlog.

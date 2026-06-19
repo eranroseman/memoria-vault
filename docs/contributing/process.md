@@ -44,8 +44,8 @@ unscheduled backlog; a milestone means the issue is scoped to that release phase
 Triage keeps the backlog actionable. The Project fields are defined in
 [Issue tracking](issue-tracking.md).
 
-- **New issue** (within ~48h): set Type, Area, Priority, Readiness, and Status `Backlog`; assign a milestone only if scheduled.
-- **Weekly:** groom Backlog — fill missing fields, split oversized work, and re-prioritize.
+- **New issue** (within ~48h): set Readiness and Status `Backlog`; assign a milestone only if scheduled.
+- **Weekly:** groom Backlog — fill missing Readiness values and split oversized work.
 - **Monthly:** sweep stale issues (no activity in 30+ days) — close or refresh.
 
 Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` label. Won't-fix → close with `wontfix` and a brief reason (keeps the decision on record).
