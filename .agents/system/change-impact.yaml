@@ -116,6 +116,22 @@ areas:
     checks:
       - python -m pytest tests/test_e2e_smoke_helpers.py tests/test_test_env_harness.py
       - bash scripts/e2e-smoke.sh
+  - area: Live Hermes L2 smoke
+    paths:
+      - scripts/test-l2.sh
+      - scripts/l2_smoke.py
+      - scripts/l2_openai_smoke_server.py
+      - scripts/l2_obsidian_mcp_shim.py
+    inspect:
+      - Hermes profile/config assumptions from upstream docs
+      - Disposable vault isolation and temporary HERMES_HOME behavior
+      - Deterministic OpenAI-compatible smoke backend
+      - Filesystem-backed Obsidian MCP shim tool names
+      - Policy-gate plugin deployment and audit assertions
+    checks:
+      - bash scripts/test-l2.sh --help
+      - python -m pytest tests/test_l2_smoke.py
+      - bash scripts/test-l2.sh --preflight-only
   - area: GitHub workflow or PR policy
     paths:
       - .github/workflows/**

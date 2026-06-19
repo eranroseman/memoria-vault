@@ -14,8 +14,11 @@ Every design component → the behavior/layer/plan that covers it → whether it
 `static-contract` = L0, `component` = L1, `vault-assembly` = installer-equivalent
 smoke, `workflow-replay` = ADR-80 Phase 1 model-free L2-L4 replay,
 `runtime-integration` = L3 live runtime/GUI, and `release-acceptance` = S0-S5 +
-G-gate evidence. L5 output quality remains the eval layer, and X marks cross-cutting
-surfaces that still need a named plan.
+G-gate evidence. `scripts/test-l2.sh` is the opt-in live Hermes L2 smoke: it is
+manual/nightly, not a required PR gate, and defaults to a deterministic local
+OpenAI-compatible smoke endpoint while allowing a real local model override. L5
+output quality remains the eval layer, and X marks cross-cutting surfaces that
+still need a named plan.
 
 **Status:** ✅ covered · 🟡 partial · ⛔ gap (no coverage yet).
 
@@ -49,13 +52,13 @@ surfaces that still need a named plan.
 
 ## L2 — automating the wiring layer
 
-L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now covered for all lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **model-free agent-wiring replay** is covered by ADR-80 Phase 1 `workflow-replay` and runs through `scripts/e2e-smoke.sh`. The **live Hermes agent-wiring smoke** is still planned, not shipped: driver `hermes -z` / `hermes chat -q` (not ACP), a filesystem-backed `obsidian` MCP shim (Option B), one cheap/local model, and disposable-vault artifact/audit assertions. Track that opt-in `scripts/test-l2.sh` work in [#688](https://github.com/eranroseman/memoria-vault/issues/688); keep it nightly/manual and out of required PR CI until stable. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
+L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr/29-testing-framework.md#l2-implementation-note)). The **policy-gate** half is hermetic Python and now covered for all lanes at L1 (Phase 1, #73) — per-commit, no runtime. The **model-free agent-wiring replay** is covered by ADR-80 Phase 1 `workflow-replay` and runs through `scripts/e2e-smoke.sh`. The **live Hermes agent-wiring smoke** now ships as opt-in `scripts/test-l2.sh`: driver `hermes chat -q` (not ACP), a filesystem-backed `obsidian` MCP shim (Option B), a local OpenAI-compatible endpoint, temporary `HERMES_HOME`, disposable-vault artifact assertion, and a live policy-gate audit-row assertion. The default deterministic endpoint keeps the smoke stable; `MEMORIA_L2_USE_SMOKE_MODEL=0` switches to a real cheap/local model endpoint. It remains nightly/manual and out of required PR CI until stable. The **full §4 matrix + GUI/Zotero/dashboard tail stays attended, per release** — automating the marginal cases costs most and benefits least.
 
 ## Open gaps (⛔ / 🟡), prioritized
 
 1. **L5 eval (#20)** — the only layer that tests *quality*; owned by ADR-11, gold tasks unbuilt. Highest long-term value.
 2. **Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
-3. **Runtime integration / golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; live model/GUI proof remains attended or nightly/manual.
+3. **Runtime integration / golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; `scripts/test-l2.sh` covers the opt-in live Hermes smoke; live GUI proof remains attended or nightly/manual.
 4. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
 5. **Security (#22)**, **Performance (#23)**, **Deployment (#24)** — stand up as the system hardens.
 

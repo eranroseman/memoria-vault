@@ -63,8 +63,8 @@ repos:
       - id: bash-syntax
         name: bash-syntax
         language: system
-        entry: bash -n scripts/install.sh scripts/install/manifest.sh scripts/install/runtime-tools.sh
-        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
+        entry: bash -n scripts/install.sh scripts/install/manifest.sh scripts/install/runtime-tools.sh scripts/test-l2.sh
+        files: ^scripts/install\.sh$|^scripts/install/.*\.sh$|^scripts/test-l2\.sh$
         pass_filenames: false
 
       # Block 3 partial: pytest
