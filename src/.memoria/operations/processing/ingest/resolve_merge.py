@@ -29,10 +29,13 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import ingest_paper  # sibling module — reuse the .bib parser
+from resolve_merge_logic import agreement as agreement
+from resolve_merge_logic import merge
+from resolve_merge_logic import union_refs as union_refs
+from resolve_merge_pubmed import parse_pubmed
 
 S2_BASE = "https://api.semanticscholar.org/graph/v1"
 OA_BASE = "https://api.openalex.org"
@@ -250,70 +253,6 @@ def fetch_crossref(ids: dict, email: str) -> dict:
     }
 
 
-def _article_text(article: ET.Element, path: str) -> str:
-    node = article.find(path)
-    return "".join(node.itertext()).strip() if node is not None else ""
-
-
-def _pubmed_year(article: ET.Element):
-    for path in (
-        ".//JournalIssue/PubDate/Year",
-        ".//ArticleDate/Year",
-        ".//PubMedPubDate[@PubStatus='pubmed']/Year",
-        ".//PubMedPubDate/Year",
-    ):
-        text = _article_text(article, path)
-        if text.isdigit():
-            return int(text)
-    return None
-
-
-def parse_pubmed(xml: str) -> dict:
-    """Normalize PubMed efetch XML into the partial-record shape."""
-    try:
-        root = ET.fromstring(xml)
-    except ET.ParseError:
-        return {"source": "pubmed", "found": False}
-    article = root.find(".//PubmedArticle")
-    if article is None:
-        return {"source": "pubmed", "found": False}
-    ids = {}
-    for node in article.findall(".//ArticleId"):
-        kind = (node.attrib.get("IdType") or "").lower()
-        if kind:
-            ids[kind] = (node.text or "").strip()
-    medline = article.find(".//MedlineCitation")
-    pmid = _article_text(article, ".//MedlineCitation/PMID")
-    title = _article_text(article, ".//Article/ArticleTitle")
-    venue = _article_text(article, ".//Journal/Title")
-    authors = []
-    for a in article.findall(".//AuthorList/Author"):
-        collective = _article_text(a, "CollectiveName")
-        if collective:
-            authors.append({"name": collective, "orcid": ""})
-            continue
-        name = " ".join(x for x in (_article_text(a, "ForeName"),
-                                    _article_text(a, "LastName")) if x)
-        orcid = ""
-        for ident in a.findall("Identifier"):
-            if (ident.attrib.get("Source") or "").upper() == "ORCID":
-                orcid = (ident.text or "").rsplit("/", 1)[-1]
-        if name:
-            authors.append({"name": name, "orcid": orcid})
-    pub_types = [_article_text(p, ".") for p in article.findall(".//PublicationTypeList/PublicationType")]
-    mesh = [_article_text(m, "DescriptorName") for m in article.findall(".//MeshHeadingList/MeshHeading")]
-    return {
-        "source": "pubmed", "found": True,
-        "pmid": pmid or ids.get("pubmed", ""), "pmcid": ids.get("pmc", ""),
-        "doi": ids.get("doi", ""), "title": title, "year": _pubmed_year(article),
-        "authors": authors, "orcid_count": sum(1 for a in authors if a["orcid"]),
-        "venue": venue,
-        "publication_types": [p for p in pub_types if p],
-        "mesh_terms": [m for m in mesh if m],
-        "nlm_unique_id": _article_text(medline, "MedlineJournalInfo/NlmUniqueID") if medline is not None else "",
-    }
-
-
 def _pubmed_id(ids: dict, email: str, api_key: str) -> str:
     if ids.get("pmid"):
         return ids["pmid"]
@@ -339,98 +278,6 @@ def fetch_pubmed(ids: dict, email: str, api_key: str) -> dict:
     if not xml:
         return {"source": "pubmed", "found": False}
     return parse_pubmed(xml)
-
-
-# --------------------------------------------------------------------------- #
-# Merge — per-field best-source, references union deduped by DOI
-# --------------------------------------------------------------------------- #
-def _pick(parts: dict, field: str, order: list[str]):
-    for s in order:
-        v = parts.get(s, {}).get(field)
-        if v:
-            return v, s
-    return "", ""
-
-
-def union_refs(parts: dict) -> list[dict]:
-    seen, out = {}, []
-    for s in ("s2", "crossref"):  # both expose ref DOIs; OpenAlex refs are W-ids (skipped)
-        for r in parts.get(s, {}).get("refs") or []:
-            key = r.get("doi") or ("arxiv:" + r["arxiv"] if r.get("arxiv") else None)
-            if not key:
-                continue
-            if key not in seen:
-                seen[key] = {"doi": r.get("doi", ""), "arxiv": r.get("arxiv", ""),
-                             "title": r.get("title", ""), "sources": [s]}
-                out.append(seen[key])
-            else:
-                seen[key]["sources"].append(s)
-    return out
-
-
-
-def _norm_title(s: str) -> str:
-    return "".join(c for c in (s or "").lower() if c.isalnum())
-
-
-def agreement(parts: dict) -> tuple[float, list[str]]:
-    """Cross-source identity agreement in [0,1] + the disagreements (ADR-56).
-
-    The merge is per-field best-source-wins, which silently papers over a source
-    that resolved a *different work*. Score: title agreement (normalized exact
-    across found sources) and year agreement. One source found = trusted (1.0) —
-    nothing to disagree with; zero found = 0.0.
-    """
-    found = [s for s in ("crossref", "openalex", "pubmed", "s2") if parts.get(s, {}).get("found")]
-    if not found:
-        return 0.0, ["no source resolved this work"]
-    if len(found) == 1:
-        return 1.0, []
-    disagreements: list[str] = []
-    titles = {s: _norm_title(parts[s].get("title", "")) for s in found if parts[s].get("title")}
-    if len(set(titles.values())) > 1:
-        disagreements.append("title differs across sources: "
-                             + "; ".join(f"{s}={parts[s].get('title','')!r}" for s in titles))
-    years = {s: parts[s].get("year") for s in found if parts[s].get("year")}
-    if len({y for y in years.values() if y}) > 1:
-        disagreements.append("year differs across sources: "
-                             + "; ".join(f"{s}={y}" for s, y in years.items()))
-    score = 1.0 - 0.5 * len(disagreements)
-    return max(score, 0.0), disagreements
-
-
-def merge(parts: dict) -> dict:
-    # authors: prefer the source carrying the most ORCIDs (OpenAlex, per the spike)
-    auth_src = max(("openalex", "pubmed", "s2", "crossref"),
-                   key=lambda s: parts.get(s, {}).get("orcid_count", -1)
-                   if parts.get(s, {}).get("found") else -1)
-    authors = parts.get(auth_src, {}).get("authors") or []
-    title, t_src = _pick(parts, "title", ["crossref", "openalex", "pubmed", "s2"])
-    year, y_src = _pick(parts, "year", ["crossref", "openalex", "pubmed", "s2"])
-    venue, v_src = _pick(parts, "venue", ["openalex", "crossref", "pubmed"])
-    refs = union_refs(parts)
-    return {
-        "title": title, "year": year, "venue": venue,
-        "issn": parts.get("openalex", {}).get("issn") or parts.get("crossref", {}).get("issn", ""),
-        "s2_id": parts.get("s2", {}).get("s2_id", ""),
-        "openalex_id": parts.get("openalex", {}).get("openalex_id", ""),
-        "pmid": (parts.get("pubmed", {}).get("pmid") or parts.get("openalex", {}).get("pmid")
-                 or parts.get("s2", {}).get("pmid", "")),
-        "pmcid": (parts.get("pubmed", {}).get("pmcid") or parts.get("openalex", {}).get("pmcid")
-                  or parts.get("s2", {}).get("pmcid", "")),
-        "authors": authors,
-        "tldr": parts.get("s2", {}).get("tldr", ""),
-        "fields_of_study": parts.get("s2", {}).get("fields_of_study") or [],
-        "topics": parts.get("openalex", {}).get("topics") or [],
-        "topics_scored": parts.get("openalex", {}).get("topics_scored") or [],
-        "publication_types": (parts.get("pubmed", {}).get("publication_types")
-                              or parts.get("s2", {}).get("publication_types") or []),
-        "mesh_terms": parts.get("pubmed", {}).get("mesh_terms") or [],
-        "references": refs,
-        "citation_count": parts.get("s2", {}).get("citation_count"),
-        "provenance": {"title": t_src, "year": y_src, "venue": v_src, "authors": auth_src},
-        "agreement": dict(zip(("score", "disagreements"), agreement(parts), strict=True)),
-    }
 
 
 def resolve(citekey: str, bib_text: str) -> dict:

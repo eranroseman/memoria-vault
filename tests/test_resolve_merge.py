@@ -1,10 +1,36 @@
 """L1 component test for resolve_merge — extracted from its former --self-test (ADR-44)."""
 import resolve_merge as _m
+import resolve_merge_logic as _logic
 
 _get = _m._get
 agreement = _m.agreement
 merge = _m.merge
 urllib = _m.urllib
+
+
+def test_union_refs_dedupes_by_doi_and_keeps_source_provenance():
+    refs = _logic.union_refs(
+        {
+            "s2": {
+                "refs": [
+                    {"doi": "10.1/a", "arxiv": "", "title": "A"},
+                    {"doi": "", "arxiv": "2401.00001", "title": "ArXiv"},
+                ]
+            },
+            "crossref": {
+                "refs": [
+                    {"doi": "10.1/a", "arxiv": "", "title": "A duplicate"},
+                    {"doi": "", "arxiv": "", "title": "no stable id"},
+                ]
+            },
+            "openalex": {"referenced_works": ["W1"]},
+        }
+    )
+
+    assert refs == [
+        {"doi": "10.1/a", "arxiv": "", "title": "A", "sources": ["s2", "crossref"]},
+        {"doi": "", "arxiv": "2401.00001", "title": "ArXiv", "sources": ["s2"]},
+    ]
 
 
 def test_resolve_merge():
