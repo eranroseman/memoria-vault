@@ -2,16 +2,15 @@
 topic: decisions
 id: 84
 title: Read-only Obsidian Inspector
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [32]
 supersedes: [58]
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 84
-nav_exclude: true
 ---
 
 # ADR-84: Read-only Obsidian Inspector
@@ -24,9 +23,9 @@ the operator to answer "what is loaded, what just happened, and what is unhealth
 without switching context. ADR-32 keeps any external access gated through MCP; this
 proposal stays inside Obsidian and remains read-only.
 
-## Proposal
+## Decision
 
-Memoria may add a read-only Obsidian Inspector sidebar pane showing board counts,
+Memoria adds a read-only Obsidian Inspector sidebar pane showing board counts,
 WIP depth, recent audit entries, and the Linter verdict band. It reads existing
 dashboards and logs and adds no write path.
 
@@ -36,6 +35,9 @@ dashboards and logs and adds no write path.
 - Adds an Obsidian UI surface that must stay consistent with the existing dashboard
   and log sources.
 - Must remain read-only; write actions belong to the existing command/gate paths.
+- Covers the live operational-health view inside Obsidian; the static-snapshot
+  question ([ADR-87](87-static-html-admin-reports.md)) remains a separate, deferred
+  concern.
 
 ## When this matters
 
