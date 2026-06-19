@@ -2,21 +2,20 @@
 topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
-status: deferred
+status: accepted
 assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against. Trigger (a) "live qmd index in retrieval" is now MET (qmd is wired into the Librarian/Writer/Peer-reviewer skills); only (b) dense-corpus tuning + building the find-duplicates sweep remain
 date_proposed: 2026-05-30
-date_resolved:
+date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 38
-nav_exclude: true
 ---
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
 
-> *Terminology note (v0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). This ADR remains deferred; the decision is unchanged.*
+> *Terminology note (v0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). The decision is unchanged.*
 
 ## What
 
@@ -51,14 +50,14 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 
 **Adopt now.** Rejected: nothing to dedup against on an early vault, and the threshold can't be tuned without real false-positive data.
 
-**Keep only retrospective `find-duplicates` forever.** Rejected: the two are complementary (ratchet at creation, sweep for what slipped through), not redundant; the sweep's painful post-link merges are exactly what the deferred ratchet removes.
+**Keep only retrospective `find-duplicates` forever.** Rejected: the two are complementary (ratchet at creation, sweep for what slipped through), not redundant; the sweep's painful post-link merges are exactly what the ratchet removes.
 
 **Auto-merge above the threshold.** Rejected: similarity is not identity (two JITAI-receptivity notes can be near-duplicate by keyword, distinct by claim). Merging is a human judgement; the gate only *surfaces* candidates.
 
 ## Related
 
-- **Tracking issue:** [#370](https://github.com/eranroseman/memoria-vault/issues/370) — revisit each release cadence.
-- **Pairs with:** [ADR-39 — note-acceptance checklists (deferred)](39-note-acceptance-checklists.md)
+- **Tracking issue:** [#370](https://github.com/eranroseman/memoria-vault/issues/370) — implementation readiness lives on the issue.
+- **Pairs with:** [ADR-39 — note-acceptance checklists](39-note-acceptance-checklists.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
 - **Profiles:** [Linter](../explanation/operations/README.md), [Mapper](../explanation/profiles/librarian.md)
 - **Note types gated:** [claim-note, reference-note](../reference/note-types.md)

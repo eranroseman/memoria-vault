@@ -19,10 +19,11 @@ number.
 
 ## Status lifecycle
 
-`proposed` → `accepted` → `superseded` (or `rejected`), plus `deferred` for a decision
-whose shape is settled but whose scheduling waits. A `deferred` or `proposed` ADR is
-not a to-do item; it is revisited each release cycle rather than parked on a fired
-condition. See [the template](_template.md) for the required fields per status.
+`proposed` → `accepted` → `superseded` (or `rejected`). ADR status records decision
+state only. Scheduling and readiness live in the GitHub issue tracker: an accepted
+decision can still have an implementation issue with Readiness `Later`, `Blocked`,
+or `Needs shaping`. See [the template](_template.md) for the required fields per
+status.
 
 ## Index
 
@@ -64,13 +65,13 @@ condition. See [the template](_template.md) for the required fields per status.
 | [32](32-external-access-over-mcp.md) | Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted | accepted |
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
 | [34](34-code-artifact-autopilot.md) | Code-artifact autopilot | rejected |
-| [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | deferred |
+| [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | accepted |
 | [36](36-dedicated-review-note-type.md) | Dedicated review-note type | superseded → ADR-51 |
 | [37](37-retriever-scout-profile.md) | Retriever / Scout as a separate profile | superseded → ADR-48 |
-| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | deferred |
-| [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") — deferred | deferred |
+| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | accepted |
+| [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") | accepted |
 | [40](40-admin-gui-surface.md) | Admin/forensic GUI surface (hermes-workspace) | rejected |
-| [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | deferred |
+| [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | accepted |
 | [42](42-profile-compilation.md) | Profile compilation from a shared base | superseded → ADR-48 |
 | [43](43-skill-governance.md) | Skill governance and lifecycle | accepted |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
@@ -87,15 +88,15 @@ condition. See [the template](_template.md) for the required fields per status.
 | [55](55-src-scaffold-populate-golden-copy.md) | The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
-| [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | deferred |
-| [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | deferred |
-| [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | deferred |
-| [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | deferred |
+| [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | proposed |
+| [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | proposed |
+| [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | accepted |
+| [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | proposed |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
-| [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | deferred |
+| [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | accepted |
 | [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
-| [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | deferred |
-| [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | deferred |
+| [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | proposed |
+| [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | accepted |
 | [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |
 | [68](68-workspaces-desk-library-studio.md) | Workspaces v2 — Desk / Library / Studio, home.md as control panel | superseded → ADR-81 |
 | [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | accepted |
@@ -105,14 +106,14 @@ condition. See [the template](_template.md) for the required fields per status.
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
-| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | deferred |
+| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | proposed |
 | [77](77-project-gate.md) | Project gate | accepted |
 | [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | accepted |
-| [83](83-direct-pi-relate-control.md) | Direct PI relate control | deferred |
+| [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
 
 <!-- ADR-INDEX:END -->
 
@@ -122,10 +123,10 @@ editing an ADR; CI fails if it is stale. Do not edit the table by hand.
 
 Rules:
 
-- **Every decision lives here, at any status.** Open proposals (`proposed`/`deferred`), accepted decisions, and superseded ones all share this folder and the one number sequence.
+- **Every decision lives here, at any status.** Open proposals (`proposed`), accepted decisions, rejected alternatives, and superseded ones all share this folder and the one number sequence.
 - **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
-- **Deferred is revisited, not gated.** A `deferred` ADR records `assumes:` (the decisions/mechanisms it rests on) so a change that invalidates it is detectable; it is re-judged each release cycle, never held on a static trigger.
+- **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, rejected, or superseded. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
 - **Sequencing is not decided here.** *When* a decision ships lives in the current milestone, the current "Release vX.Y" parent issue plus sub-issues, and the release plan under [`docs/releasing/`](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md), which change independently of these decisions. Link to that release surface rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR

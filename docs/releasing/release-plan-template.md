@@ -27,7 +27,7 @@ nav_order: 2
   (S#) STATE lives ONLY in the "Release vX.Y" parent issue and its sub-issues; §2/§3
   here list the gate/stage DEFINITIONS, not their state. Scope = the milestone +
   Memoria Issue Tracker view; build gaps = GitHub issues; automated evidence =
-  Actions runs/artifacts; scope cuts = deferred-status ADRs in docs/adr/; version
+  Actions runs/artifacts; scope cuts = GitHub issues with Readiness: Later; version
   + notes = release-please. Edit each fact in exactly one place.
 ============================================================================ -->
 
@@ -42,7 +42,7 @@ it flips to `true` only for a tagged GitHub Release. Internal checkpoints use
 ## 1. Scope — what this release is
 
 <!-- PROSE. What the release IS (the unit of delivery) and what it explicitly is
-     NOT. One paragraph. Out-of-scope detail → §5 + deferred-status ADRs in docs/adr/. -->
+     NOT. One paragraph. Out-of-scope detail → §5 + linked issues/ADRs. -->
 
 {{ What this version delivers, in one paragraph. Name the boundary: what is in,
 what is deliberately later. }}
@@ -93,13 +93,14 @@ Not enumerated here — a second list would drift. **By definition the blockers
 are** any open gate/stage sub-issue, plus any open High-priority blocker in
 [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
 
-## 5. Out of scope (deferred)
+## 5. Out of scope (later)
 
-<!-- PROSE. What this release consciously leaves out. Per-artifact deferred set lives
-     in docs/adr/ (deferred) — point, don't duplicate. -->
+<!-- PROSE. What this release consciously leaves out. Scope state lives in issues
+     with Readiness: Later; ADRs are linked only when the exclusion depends on a
+     decision or proposal. Point, don't duplicate. -->
 
-{{ Scope-level exclusions for this release. Point to the deferred-status ADRs for the
-per-artifact deferred set. }}
+{{ Scope-level exclusions for this release. Point to issues with Readiness: Later
+and to ADRs only when the exclusion has decision rationale. }}
 
 ## 6. Known limitations (state in the release notes)
 

@@ -2,7 +2,7 @@
 topic: decisions
 id: 59
 title: Classical method displacements over LLM calls
-status: deferred
+status: proposed
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
@@ -18,11 +18,11 @@ nav_order: 59
 
 ## Context
 
-Several tasks are currently routed to an LLM where a classical (deterministic or hybrid) method does the job better — cheaper, faster, reproducible, and auditable. The governing principle (see [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md)) is to **use the simplest tool that produces a reliable answer**: scripts beat NLP beat ML beat LLMs on cost, speed, determinism, and auditability, and the LLM enters only where residual judgment genuinely requires generation. This ADR catalogues the candidate displacements as a single deferred decision; each item carries its own raise-priority condition for the cadence review.
+Several tasks are currently routed to an LLM where a classical (deterministic or hybrid) method may do the job better — cheaper, faster, reproducible, and auditable. The governing principle (see [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md)) is to **use the simplest tool that produces a reliable answer**: scripts beat NLP beat ML beat LLMs on cost, speed, determinism, and auditability, and the LLM enters only where residual judgment genuinely requires generation. This ADR catalogues candidate displacements as a proposal bundle; each item needs its own acceptance or implementation issue before it becomes live architecture.
 
-## Decision
+## Proposal
 
-Memoria treats the following as the approved direction for displacing LLM calls with classical methods, to be scheduled per-item when its conditions hold:
+Memoria should evaluate the following candidate displacements per item:
 
 - **Learning-to-rank for triage.** A learning-to-rank model (e.g., LightGBM LambdaRank) trained on the human's past keep/discard decisions produces a reproducible, personalized triage ordering that sharpens as override history grows — replacing or cold-start-gating the LLM tournament in the triage queue. The scalar ordering or the LLM tournament remains the cold start until enough history exists.
 - **Claim-sentence classification.** A rhetorical-zone classifier (CoreSC/ART-style, or citation + hedge + numeric heuristics) locates claim/aspect sentences before the LLM, reducing input from full-paper to candidate sentences — lowering cost, improving precision, and enabling agent-proposed candidate claim notes.
@@ -31,7 +31,7 @@ Memoria treats the following as the approved direction for displacing LLM calls 
 - **Keyphrase extraction for tag candidates.** KeyBERT or YAKE extracts candidate tags, mapping extracted phrases onto the human's controlled vocabulary to improve recall on tags a classifier missed. Note there is no controlled-vocabulary tag classifier today to extend — `classify.py` classifies research_area from OpenAlex topics — so this item also stands up its host classifier.
 - **Record linkage for entity deduplication.** ORCID/OpenAlex IDs first, then string-similarity blocking, deduplicate author and venue entities during Librarian ingest instead of asking the LLM whether two entries refer to the same person.
 
-The **NLI-based contradiction proposer** is *not* re-decided here: it is already deferred in [ADR-09](09-contradictions-dashboard.md) as the deterministic candidate-generation engine that populates the contradictions dashboard's v2.
+The **NLI-based contradiction proposer** is *not* re-decided here: [ADR-09](09-contradictions-dashboard.md) already records it as the deterministic candidate-generation engine that can populate the contradictions dashboard's v2.
 
 ## Consequences
 
@@ -53,6 +53,6 @@ Per-item conditions that raise priority at the cadence review:
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-09 contradictions dashboard](09-contradictions-dashboard.md) (owns the deferred NLI contradiction proposer); [ADR-30 deterministic ingest pipeline](30-deterministic-ingest-pipeline.md) (the deterministic discipline these displacements extend).
+- **Related decisions / Depends on:** [ADR-09 contradictions dashboard](09-contradictions-dashboard.md) (owns the NLI contradiction proposer); [ADR-30 deterministic ingest pipeline](30-deterministic-ingest-pipeline.md) (the deterministic discipline these displacements extend).
 - **Source discussion:** [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md).
-- **Tracking issue:** [#409](https://github.com/eranroseman/memoria-vault/issues/409) — revisit at each release cadence.
+- **Tracking issue:** [#409](https://github.com/eranroseman/memoria-vault/issues/409) — proposal shaping and scheduling live on the issue.

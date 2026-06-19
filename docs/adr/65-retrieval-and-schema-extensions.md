@@ -2,7 +2,7 @@
 topic: decisions
 id: 65
 title: Retrieval and schema extensions
-status: deferred
+status: proposed
 nav_exclude: true
 date_proposed: 2026-06-11
 date_resolved:
@@ -28,9 +28,9 @@ incomplete answers and erodes trust, and aspect extraction adds an LLM call per 
 This ADR is the settled home for those extensions; it adopts none until its trigger
 fires.
 
-## Decision
+## Proposal
 
-Memoria keeps three retrieval/schema extensions **deferred**:
+Memoria should evaluate three retrieval/schema extensions separately:
 
 - **Relation-vocabulary expansion.** Extend the typed-relation vocabulary (the
   deployed `link-suggest-claim` skill already proposes `supports` / `contradicts` /
@@ -77,8 +77,8 @@ coexist with the expanded `links:` vocabulary.
   are lower quality than figure- or full-text-informed ones.
 - Exploration-trace capture adds an artifact-management obligation to the map lane's output
   contract and risks over-recording if every negative result is captured.
-- Recording these as the settled home keeps ADR-08's deferred future-work pointer
-  resolvable and anchors the (not-yet-built) figure-reading extraction path.
+- Recording these candidates keeps ADR-08's future-work pointer resolvable and
+  anchors the not-yet-built figure-reading extraction path.
 
 ## When this matters
 
@@ -96,4 +96,4 @@ Per-release context, not gates:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-52 (links vs relationships)](52-links-vs-relationships.md) (the typed-relationship base this extends and the split this respects), [ADR-30 (ingest pipeline)](30-deterministic-ingest-pipeline.md) (where `_aspects` are populated)
-- **Tracking issue:** [#415](https://github.com/eranroseman/memoria-vault/issues/415) — revisit at each release cadence.
+- **Tracking issue:** [#415](https://github.com/eranroseman/memoria-vault/issues/415) — proposal shaping and scheduling live on the issue.

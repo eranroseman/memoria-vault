@@ -51,7 +51,7 @@ def test_status_cell_renders_superseded_target():
 
 
 def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
-    bad = parse_adr("---\nid: 3\ntitle: Bad\nstatus: deferred\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n")
+    bad = parse_adr("---\nid: 3\ntitle: Bad\nstatus: proposed\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n")
     bad_errs = validate_adr(_m.Path("docs/adr/03-bad.md"), bad)
     accepted_open = parse_adr(_frontmatter(id="4", title="Bad", date_resolved=""))
     superseded_missing_by = parse_adr(

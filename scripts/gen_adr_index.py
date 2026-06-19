@@ -29,7 +29,7 @@ END = "<!-- ADR-INDEX:END -->"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 ADR_FILE_RE = re.compile(r"^\d+-.+\.md$")
-ADR_STATUSES = {"proposed", "accepted", "deferred", "rejected", "superseded"}
+ADR_STATUSES = {"proposed", "accepted", "rejected", "superseded"}
 REQUIRED_KEYS = (
     "topic",
     "id",
@@ -42,7 +42,7 @@ REQUIRED_KEYS = (
     "superseded_by",
 )
 RESOLVED_STATUSES = {"accepted", "rejected", "superseded"}
-UNRESOLVED_STATUSES = {"proposed", "deferred"}
+UNRESOLVED_STATUSES = {"proposed"}
 
 
 def parse_adr(text: str) -> dict[str, object]:
@@ -71,7 +71,7 @@ def parse_adr(text: str) -> dict[str, object]:
         elif key == "title":
             out["title"] = val.strip('"').strip("'")
         elif key == "status":
-            # drop any trailing YAML inline comment (e.g. "deferred  # NOT folded …")
+            # drop any trailing YAML inline comment (e.g. "accepted  # rationale …")
             out["status"] = val.split("#", 1)[0].strip()
         elif key in {"date_proposed", "date_resolved"}:
             out[key] = val.split("#", 1)[0].strip()

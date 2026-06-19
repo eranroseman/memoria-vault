@@ -2,13 +2,12 @@
 topic: decisions
 id: 83
 title: Direct PI relate control
-status: deferred
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [52, 71, 72, 79, 81]
 supersedes: []
 superseded_by: []
-nav_exclude: true
 ---
 
 # ADR-83: Direct PI relate control

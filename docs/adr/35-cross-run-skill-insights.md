@@ -2,16 +2,15 @@
 topic: decisions
 id: 35
 title: Cross-run skill-insights memory
-status: deferred
+status: accepted
 assumes: []
 date_proposed: 2026-05-15
-date_resolved:
+date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 35
-nav_exclude: true
 ---
 
 # ADR-35: Cross-run skill-insights memory
@@ -38,9 +37,9 @@ A concrete cross-project pattern recurs often enough to be worth capturing — i
 
 **Adopt now (general).** Rejected: too much architecture for a single-user vault at current density.
 
-**Adopt scoped to a single domain** (e.g. classifier mis-firings). A possible compromise; defer until a concrete recurring pattern justifies even the scoped version.
+**Adopt scoped to a single domain** (e.g. classifier mis-firings). Accepted as the prudent first implementation shape once the linked issue is ready.
 
 ## Related
 
-- **Tracking issue:** [#371](https://github.com/eranroseman/memoria-vault/issues/371) — revisit each release cadence.
+- **Tracking issue:** [#371](https://github.com/eranroseman/memoria-vault/issues/371) — implementation readiness lives on the issue.
 - **Files:** none currently.

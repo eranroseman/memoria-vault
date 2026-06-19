@@ -1,17 +1,16 @@
 ---
 topic: decisions
 id: 39
-title: Per-note-type acceptance checklists ("frozen evaluator") — deferred
-status: deferred
+title: Per-note-type acceptance checklists ("frozen evaluator")
+status: accepted
 assumes: []
 date_proposed: 2026-05-30
-date_resolved:
+date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 39
-nav_exclude: true
 ---
 
 # ADR-39: Per-note-type acceptance checklists ("frozen evaluator")
@@ -39,11 +38,11 @@ The vault holds **50+ `claim-note`s**, so the criteria can be grounded in real e
 
 **Adopt now as a mechanical pre-file gate.** Rejected: premature (criteria ungrounded) and partly unenforceable — mechanical enforcement of soft criteria creates friction; non-enforcement makes the checklist decorative.
 
-**Drop the idea entirely.** Rejected: it is a cheap, high-optionality enhancement once grounded, and it composes with the ratchet. Worth holding as a deferred decision rather than forgetting.
+**Drop the idea entirely.** Rejected: it is a cheap, high-optionality enhancement once grounded, and it composes with the ratchet. Worth accepting as future direction rather than forgetting.
 
 ## Related
 
-- **Tracking issue:** [#372](https://github.com/eranroseman/memoria-vault/issues/372) — revisit each release cadence.
+- **Tracking issue:** [#372](https://github.com/eranroseman/memoria-vault/issues/372) — implementation readiness lives on the issue.
 - **Pairs with:** [ADR-38 — ratchet duplicate gate](38-pre-file-similarity-gate.md)
 - **Note type concerned:** [claim-note](../reference/note-types.md)
 - **Re-entry trigger:** 50+ claim-notes in `notes/claims/`

@@ -2,16 +2,15 @@
 topic: decisions
 id: 41
 title: Configurable review-gate mode (blocking / advisory) for comparison studies
-status: deferred
+status: accepted
 assumes: []
 date_proposed: 2026-05-31
-date_resolved:
+date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 41
-nav_exclude: true
 ---
 
 # ADR-41: Configurable review-gate mode (blocking / advisory) for comparison studies
@@ -51,11 +50,11 @@ Committing to the Path 2/3 comparison study. The non-backfillable **attribution 
 
 **Run Path 2/3 single-arm (blocking only).** Rejected: "blocking beats advisory" cannot be supported by observing the blocking arm alone.
 
-**Stay blocking-only and defer the question.** Rejected as the standing answer because it leaves the system unable to ever produce the comparative evidence; recorded here as a deferred proposal precisely so the decision is explicit rather than implicit.
+**Stay blocking-only and leave the comparison arm undecided.** Rejected as the standing answer because it leaves the system unable to ever produce the comparative evidence; recorded here so the study-only exception is explicit rather than implicit.
 
 ## Related
 
-- **Tracking issue:** [#374](https://github.com/eranroseman/memoria-vault/issues/374) — revisit each release cadence.
+- **Tracking issue:** [#374](https://github.com/eranroseman/memoria-vault/issues/374) — implementation readiness lives on the issue.
 - **Workflows:** [Verify](../how-to-guides/project/verify-and-revise.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md); board dispatch rules ([timeline](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md)).
 - **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md); the publication-instrumentation track in [Release plan — v0.1.0-alpha.1 — appendix](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md), [ADR-11 vault-eval](11-vault-eval-maintenance.md), [ADR-14](14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
