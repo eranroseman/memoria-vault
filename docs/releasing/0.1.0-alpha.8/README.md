@@ -19,10 +19,13 @@ the Memoria Issue Tracker.
 Checked 2026-06-19 after ADR-58/59/61/65 were split into ADR-84 through ADR-100.
 Do not delete the folder wholesale yet; dispose file-by-file:
 
+Deleted 2026-06-19:
+
+- `tmp/alpha7-docs-audit-report.md` — all findings were already resolved or intentionally deferred in current docs/checks.
+- `tmp/deferred-adr-implementability-alpha6.md` — superseded by current ADR statuses plus issues #369, #371, #372, #374, #416, #521, #686, ADR-98/#711 through ADR-100/#713, and the now-closed old ADR-65 umbrella #611.
+
 | File | Safe to delete? | Durable home / blocker |
 |---|---:|---|
-| `tmp/alpha7-docs-audit-report.md` | Yes | All findings are marked resolved or intentionally deferred in the note itself; current docs and checks carry the resolved state. |
-| `tmp/deferred-adr-implementability-alpha6.md` | Yes | Superseded by current ADR statuses plus issues #369, #371, #372, #374, #416, #521, #686, and ADR-98/#711 through ADR-100/#713; old ADR-65 umbrella #611 is closed. |
 | `tmp/install-a-real-package-alpha5.md` | Not yet | Long-form rationale behind ADR-76/#521. Keep until ADR-76 absorbs or links the lane-overlay, policy-core import, release-manifest, and host-config details at decision time. |
 | `tmp/test-env-design-alpha5.md` | Not yet | Partly superseded by ADR-80 and current testing docs, but still contains discarded/changed clean-sheet assumptions and model/runtime questions. Keep until the useful Phase 2 residue is either folded into ADR-80 or closed as rejected. |
 | `tmp/ui-architecture-design-history-alpha7.md` | Not yet | Contains live verification evidence for Bases scale, nested-map backlinks, Portals, Workspaces Plus, CSS snippets, and Obsidian settings. Keep until the evidence is captured in ADRs/reference docs or explicitly rejected as historical scratch. |
