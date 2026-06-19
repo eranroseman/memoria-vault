@@ -88,6 +88,20 @@ areas:
       - bash -n scripts/install.sh
       - python -m pytest tests/test_installer_skeleton.py
       - bash scripts/e2e-smoke.sh
+  - area: Offline e2e smoke harness
+    paths:
+      - scripts/e2e-smoke.sh
+      - scripts/e2e_smoke.py
+      - scripts/test_env_harness.py
+      - fixtures/test-env/**
+    inspect:
+      - Stage names and ordering
+      - Disposable-vault assembly assertions
+      - Workflow-replay artifacts and deny audit row
+      - Shell entrypoint compatibility
+    checks:
+      - python -m pytest tests/test_e2e_smoke_helpers.py tests/test_test_env_harness.py
+      - bash scripts/e2e-smoke.sh
   - area: GitHub workflow or PR policy
     paths:
       - .github/workflows/**

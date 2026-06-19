@@ -25,7 +25,7 @@ is worth preserving after the GitHub trail.
 | [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release gate/stage sub-issues |
 | [scripts/test.sh](../../scripts/test.sh) | Local `static-contract` + `component` runner — historical L0/L1 static checks plus the `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
-| [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline `vault-assembly` + `workflow-replay` smoke; includes the ADR-80 Phase 1 cassette replay for the model-free path. |
+| [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline `vault-assembly` + `workflow-replay` smoke; shell entrypoint with assertions in `scripts/e2e_smoke.py`, including the ADR-80 Phase 1 cassette replay for the model-free path. |
 
 ## Why plans and runs stay separate
 
@@ -75,7 +75,9 @@ static-contract ─▶ component ─▶ vault-assembly ─▶ workflow-replay
 `static-contract` and `component` are CI-enforced first. `vault-assembly` builds a
 throwaway vault, initializes git, wires hooks, and checks the local shipped config.
 `workflow-replay` runs the model-free ADR-80 Phase 1 cassette through the deterministic
-lifecycle. `runtime-integration` is the non-PR live surface: Hermes, Obsidian bridge,
+lifecycle. The shell-compatible smoke entrypoint delegates assertions to
+`scripts/e2e_smoke.py` so the stage checks are importable and unit-covered.
+`runtime-integration` is the non-PR live surface: Hermes, Obsidian bridge,
 local services, GUI/Bases/dashboards, and model connectivity. `release-acceptance`
 is the [Release-candidate runbook](plans/release-candidate-runbook.md); record
 state/evidence in release gate/stage sub-issues and preserve only curated summaries
