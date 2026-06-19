@@ -335,8 +335,8 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 | In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
-- GitHub Project: "Memoria Issue Tracker" — fields `Status`, `Area`, `Type`, `Priority`; see `docs/contributing/issue-tracking.md`.
-- Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Type/Area/Status/Priority live in Project fields.
+- GitHub Project: "Memoria Issue Tracker" — fields `Status`, `Readiness`, `Area`, `Type`, `Priority`; see `docs/contributing/issue-tracking.md`.
+- Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Type/Area/Status/Readiness/Priority live in Project fields.
 - Milestones are releases. No milestone = unscheduled backlog.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
 - Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: deferred` if forward-looking); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
