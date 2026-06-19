@@ -78,4 +78,4 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 
 ## For decisions and direction
 
-The *why* behind a specific choice lives in an ADR — see [Decisions](../adr); deferred and forward-looking decisions are ADRs too (`status: deferred`). The release plan lives in the repo's [Releasing](https://github.com/eranroseman/memoria-vault/tree/main/docs/releasing) docs.
+The *why* behind a specific choice lives in an ADR — see [Decisions](../adr); forward-looking decisions are ADRs too (`status: proposed`) until accepted or rejected. Scheduling and readiness live on GitHub issues. The release plan lives in the repo's [Releasing](https://github.com/eranroseman/memoria-vault/tree/main/docs/releasing) docs.

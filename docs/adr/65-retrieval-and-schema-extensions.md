@@ -26,4 +26,5 @@ This proposal bundle is split into one ADR per retrieval/schema extension:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-52 (links vs relationships)](52-links-vs-relationships.md) (the typed-relationship base this extends and the split this respects), [ADR-30 (ingest pipeline)](30-deterministic-ingest-pipeline.md) (where `_aspects` are populated)
-- **Original tracking issue:** [#415](https://github.com/eranroseman/memoria-vault/issues/415).
+- **Original tracking issues:** [#415](https://github.com/eranroseman/memoria-vault/issues/415)
+  and [#611](https://github.com/eranroseman/memoria-vault/issues/611).

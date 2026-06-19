@@ -283,8 +283,12 @@ Mixed-quadrant pages are wrong — split them.
 ADRs are the **single home for every decision, at any lifecycle status** — there is no
 separate proposals/RFC folder. An open proposal is an ADR with `status: proposed`;
 accepted future direction is `status: accepted` even when implementation is later.
-Scheduling and readiness live in GitHub issues, not ADR status. Full template +
-nav fields in [`docs/adr/_template.md`](docs/adr/_template.md).
+Scheduling and readiness live in GitHub issues, not ADR status. Every proposed ADR
+gets a linked GitHub issue in the Memoria Issue Tracker, normally `Status: Backlog`
+and `Readiness: Needs shaping`; when a decision is accepted and implemented, its
+implementation issue is closed `Done`, or a separate implementation issue remains
+open with the correct Readiness. Full template + nav fields in
+[`docs/adr/_template.md`](docs/adr/_template.md).
 
 ```markdown
 ---
@@ -339,6 +343,9 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see `docs/contributing/issue-tracking.md`.
 - Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Status and Readiness live in Project fields; release scope lives in milestones.
 - Milestones are releases. No milestone = unscheduled backlog.
+- ADR/issue alignment: proposed ADRs link open shaping issues; accepted implemented
+  ADRs link closed `Done` issues or an explicit open implementation issue; superseded
+  ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
 - Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
