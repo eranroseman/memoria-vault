@@ -6,12 +6,15 @@ has_children: true
 
 # v0.1.0-alpha.8
 
-Planning handoff folder for work rolled forward from earlier checkpoint scratch.
-No release plan has been cut yet; live scope still belongs in GitHub milestones and
-the Memoria Issue Tracker.
+The **runtime-foundations & observability** checkpoint: implements every issue
+currently `Readiness: Ready` in the Memoria Issue Tracker. Live readiness state
+belongs to the "Release v0.1.0-alpha.8" parent issue and its gate/stage sub-issues;
+scope to the milestone + the tracker view.
 
 | File | Holds |
 |---|---|
+| `release-plan-0.1.0-alpha.8.md` | The release plan — scope, gates, stages, limitations, cut procedure. |
+| `tmp/execplan-alpha8-ready-issues.md` | Living ExecPlan orchestrating implementation of all Ready issues; deleted before this checkpoint closes. |
 | `tmp/` | Removed after the carried-forward scratch was routed to ADRs, docs, and GitHub issues. |
 
 ## Tmp disposition check
