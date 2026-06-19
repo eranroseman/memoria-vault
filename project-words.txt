@@ -313,6 +313,7 @@ studenty
 subfolders
 Syncthing
 Templater
+Tesseract
 thresholded
 tickable
 Tintarev
