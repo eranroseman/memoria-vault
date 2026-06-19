@@ -12,9 +12,13 @@ import re
 import sys
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from memoria.runtime.time import utc_z
+from memoria.runtime.vaultio import iter_markdown as iter_vault_markdown
+from memoria.runtime.vaultio import parse_frontmatter, safe_read
 
 SKIP_DIRS = {".git", ".memoria", ".obsidian", "node_modules"}
 RELATIONS = ("supports", "contradicts")
@@ -45,48 +49,15 @@ class Edge:
     addressed: bool
 
 
-def parse_frontmatter(text: str) -> dict[str, Any]:
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}
-    raw = text[3:end]
-    try:
-        import yaml
-
-        data = yaml.safe_load(raw)
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        fm: dict[str, Any] = {}
-        for line in raw.splitlines():
-            if not line.strip() or line.startswith((" ", "\t")) or ":" not in line:
-                continue
-            key, _, value = line.partition(":")
-            value = value.strip().strip("\"'")
-            if value.startswith("[") and value.endswith("]"):
-                fm[key.strip()] = [
-                    item.strip().strip("\"'")
-                    for item in value[1:-1].split(",")
-                    if item.strip()
-                ]
-            else:
-                fm[key.strip()] = value
-        return fm
-
-
 def iter_markdown(vault: Path):
-    for path in sorted(vault.rglob("*.md")):
-        if any(part in SKIP_DIRS for part in path.relative_to(vault).parts):
-            continue
-        yield path
+    yield from iter_vault_markdown(vault, SKIP_DIRS)
 
 
 def read_notes(vault: Path) -> dict[str, Note]:
     notes: dict[str, Note] = {}
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
-        text = path.read_text(encoding="utf-8")
+        text = safe_read(path)
         fm = parse_frontmatter(text)
         if fm.get("generated_by") == "memoria-structural-impact":
             continue
@@ -737,7 +708,7 @@ def run(
     if previous and stable_payload(previous) == stable_payload(payload):
         payload["computed_at"] = previous.get("computed_at", "")
         return {"changed": False, "path": out.relative_to(vault).as_posix(), "payload": payload}
-    payload["computed_at"] = (now or datetime.now(UTC)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    payload["computed_at"] = utc_z(now)
     if apply:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(render(payload), encoding="utf-8")

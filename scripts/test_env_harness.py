@@ -22,6 +22,12 @@ from urllib import error, request
 
 import yaml
 
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from memoria.runtime.vaultio import read_frontmatter  # noqa: E402
+
 DEFAULT_CASSETTE = Path("fixtures/test-env/cassettes/alpha6-l4-golden-path.json")
 SKIP_COPY = {".git"}
 
@@ -109,14 +115,7 @@ def populate_vault(root: Path, vault: Path) -> None:
 
 
 def parse_frontmatter(path: Path) -> dict[str, Any]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
-        return {}
-    end = text.find("\n---", 4)
-    if end == -1:
-        return {}
-    data = yaml.safe_load(text[4:end])
-    return data if isinstance(data, dict) else {}
+    return read_frontmatter(path)
 
 
 def write_frontmatter(path: Path, fm: dict[str, Any], body: str) -> None:

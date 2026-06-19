@@ -8,18 +8,15 @@ review-gated promotion until the PI acknowledges them by resolving the card.
 
 from __future__ import annotations
 
-import datetime as _dt
-import json
 import os
 import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
 
-try:
-    import yaml
-except ImportError:  # pragma: no cover - runtime dependency, fallback keeps tests light
-    yaml = None  # type: ignore[assignment]
+from memoria.runtime.jsonl import append_jsonl
+from memoria.runtime.time import now_iso
+from memoria.runtime.vaultio import read_frontmatter
 
 PUSH_LOUDNESS = frozenset({"alert", "block"})
 BLOCK_LOUDNESS = "block"
@@ -30,33 +27,6 @@ TELEGRAM_CHAT_ENV = ("MEMORIA_TELEGRAM_CHAT_ID", "TELEGRAM_CHAT_ID")
 TELEGRAM_API_BASE_ENV = "MEMORIA_TELEGRAM_API_BASE"
 
 
-def _now_iso() -> str:
-    return _dt.datetime.now(_dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def parse_frontmatter(text: str) -> dict[str, Any]:
-    if not text.startswith("---\n"):
-        return {}
-    try:
-        end = text.index("\n---", 4)
-    except ValueError:
-        return {}
-    raw = text[4:end]
-    if yaml is not None:
-        try:
-            data = yaml.safe_load(raw) or {}
-            return data if isinstance(data, dict) else {}
-        except yaml.YAMLError:
-            return {}
-    data: dict[str, Any] = {}
-    for line in raw.splitlines():
-        if ":" not in line or line.startswith((" ", "\t")):
-            continue
-        key, value = line.split(":", 1)
-        data[key.strip()] = value.strip().strip('"')
-    return data
-
-
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
     return (str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
             and str(frontmatter.get("lifecycle") or "").lower() == OPEN_LIFECYCLE)
@@ -65,10 +35,7 @@ def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
 def open_blockers(vault: Path) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
     for path in sorted((vault / "inbox").glob("*.md")):
-        try:
-            fm = parse_frontmatter(path.read_text(encoding="utf-8"))
-        except OSError:
-            continue
+        fm = read_frontmatter(path)
         if is_open_blocker(fm):
             blockers.append({
                 "path": str(path.relative_to(vault)).replace("\\", "/"),
@@ -99,10 +66,7 @@ def _first_env(names: tuple[str, ...], env: dict[str, str]) -> str:
 
 
 def _append_push_log(vault: Path, row: dict[str, Any]) -> None:
-    path = vault / PUSH_LOG_RELPATH
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(row, sort_keys=True) + "\n")
+    append_jsonl(vault / PUSH_LOG_RELPATH, [row])
 
 
 def push_card(vault: Path, card_path: Path, frontmatter: dict[str, Any], env: dict[str, str] | None = None) -> dict[str, Any]:
@@ -116,7 +80,7 @@ def push_card(vault: Path, card_path: Path, frontmatter: dict[str, Any], env: di
     loudness = str(frontmatter.get("loudness") or "notice").lower()
     rel = str(card_path.relative_to(vault)).replace("\\", "/")
     row: dict[str, Any] = {
-        "timestamp": _now_iso(),
+        "timestamp": now_iso(),
         "card": rel,
         "loudness": loudness,
         "title": str(frontmatter.get("title") or card_path.stem),
