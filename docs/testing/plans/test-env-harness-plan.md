@@ -43,10 +43,12 @@ bash scripts/e2e-smoke.sh
 
 `scripts/e2e-smoke.sh` remains the CI-compatible entrypoint. Internally it now names
 the PR-safe behaviors it proves: `vault-assembly`, `commit-gate`, `offline-ingest`,
-`workflow-replay`, and `final-integrity`. The `workflow-replay` section calls the
-harness replay after the installer-equivalent ingest and graph steps, then asserts
-the deny audit row and forbidden-file absence before final vault lint. This is the
-release-ready path for the model-free L4 slice.
+`workflow-replay`, and `final-integrity`. Importable assertions live in
+`scripts/e2e_smoke.py`; the shell orchestrates filesystem/git steps and calls those
+helpers. The `workflow-replay` section calls the harness replay after the
+installer-equivalent ingest and graph steps, then asserts the deny audit row and
+forbidden-file absence before final vault lint. This is the release-ready path for
+the model-free L4 slice.
 
 When a local OpenAI-compatible `llama.cpp`/Gemma endpoint is running, the optional
 ADR-80 G3 smoke is:
