@@ -27,7 +27,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 ## Why it's designed this way
 
-**The Co-PI is the discussion partner.** The queue drains through a conversation in the Co-PI pane, never through an agent writing the claims itself — the grounded-questioning pass that used to be its own profile now lives there ([The agent-client pane](../../obsidian/agent-client-picker.md)).
+**The Co-PI is the discussion partner.** The queue drains through a conversation in the Co-PI pane, never through an agent writing the claims itself — the grounded-questioning pass lives there ([The agent-client pane](../../obsidian/agent-client-pane.md)).
 
 **Five-or-fewer rows is healthy.** Ten or more rows is a signal to schedule a reading session. The goal is to make the queue's depth readable at a glance, without needing to count or calculate.
 

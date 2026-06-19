@@ -1,8 +1,7 @@
 profile: memoria-engineer
 
-# The Engineer's lane ceiling (ADR-48): the code lane only — the ADR-21 Coder-lane
-# exception under its new name. Scaffolds handoffs to an external coding agent and
-# owns the commit/revert gate.
+# The Engineer's lane ceiling (ADR-48): the code lane only (ADR-21). Scaffolds
+# handoffs to an external coding agent and owns the commit/revert gate.
 
 policy:
   allow:

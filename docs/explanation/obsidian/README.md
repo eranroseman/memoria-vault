@@ -19,7 +19,7 @@ One principle runs through every page below: **the architecture is invisible dur
 | [Home — the vault front door](home.md)          | The front door — why launch opens the Inbox space and keeps `home.md` as a plain fallback note.                           |
 | [The status line](the-status-line.md)           | The one always-visible ambient indicator — why a glance-readable count, not a dashboard, answers "is everything fine?"           |
 | [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) and what each means.              |
-| [The agent-client pane](agent-client-picker.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
+| [The agent-client pane](agent-client-pane.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
 
 ## The discipline behind them
 

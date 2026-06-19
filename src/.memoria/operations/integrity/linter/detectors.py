@@ -9,12 +9,12 @@ deploy, no design-repo git). All checks are REPORT-ONLY; none mutates the vault.
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --json
     python "${HERMES_SKILL_DIR}/scripts/detectors.py" --vault <path> --jsonl-out system/logs/lint-findings.jsonl
 
-Of the formerly out-of-scope drift procedures (ADR-67): skeleton-drift and
-vault-hash-drift turned out to need only the vault tree and live here now;
-plugin-config-drift is covered by the golden copy (golden_restore.py); and
-profile-install-drift / command-vocab-drift are retired -- the first needs
-~/.hermes deploy state the vault-side Linter doesn't have (the idempotent
-installer re-run is the fix), the second is a repo CI concern.
+The drift procedures in scope here (ADR-67): skeleton-drift and vault-hash-drift
+need only the vault tree and live here; plugin-config-drift is covered by the
+golden copy (golden_restore.py). Profile-install-drift and command-vocab-drift
+are out of scope -- the first needs ~/.hermes deploy state the vault-side Linter
+doesn't have (the idempotent installer re-run is the fix), the second is a repo
+CI concern.
 """
 from __future__ import annotations
 
