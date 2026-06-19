@@ -2,10 +2,9 @@
 topic: decisions
 id: 76
 title: Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer
-status: proposed
-nav_exclude: true
+status: accepted
 date_proposed: 2026-06-14
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [44, 46, 55, 69, 73]
 supersedes: []
 superseded_by: []
@@ -33,11 +32,20 @@ Designing from scratch, the spine inverts: the unit is a **versioned vault relea
 
 This decision does **not** change integrity *protection*. A common misconception — that [ADR-55](55-src-scaffold-populate-golden-copy.md)'s golden copy protects the runtime code — is false: `golden_restore.py`'s manifest covers `system/{templates,dashboards,patterns,eval,scripts}/`, three system files, and three `.obsidian` config files, with **no `.memoria/` prefix**. Code-integrity protection is the MCP-only sandbox (agents cannot write files; [ADR-46](46-seven-layer-architecture.md)) plus Git as source of truth. This design *extends* ADR-55's manifest idea to cover the code and authored layers for **verification**, but leaves the protection mechanism untouched.
 
-## Proposal
+## Decision
 
-Memoria may move from repo-subtree deployment to a single versioned vault release
-deployed by a source-agnostic reconciling installer. Two proposed decisions are
+Memoria moves from repo-subtree deployment to a single versioned vault release
+deployed by a source-agnostic reconciling installer. Two decisions are
 load-bearing; everything else follows from them.
+
+**Accepted scope.** This records the deployment *spine* as decided; the work is
+staged (see *Migration* and *Guard* below) and scheduling lives in the tracking
+issue. The import-hygiene package half (step 2 — `src/`-layout, editable install,
+console scripts, deleting the `sys.path`/`__file__` bootstraps) and the in-process
+policy core (decision 2) are cleared to proceed on their own merits. The
+tarball/signing/copy-install distribution half (decision 1's no-checkout path)
+stays deferred — readiness `Later` — until a no-checkout audience is real; git-tag
+remains the delivery posture until then.
 
 ### Load-bearing decision 1 — one versioned release, laid down by a reconciling installer that is layered by lifecycle
 

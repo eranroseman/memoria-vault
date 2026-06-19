@@ -106,7 +106,7 @@ status.
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
-| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | proposed |
+| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | accepted |
 | [77](77-project-gate.md) | Project gate | accepted |
 | [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
@@ -114,7 +114,7 @@ status.
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | superseded → ADR-101 |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
-| [84](84-read-only-obsidian-inspector.md) | Read-only Obsidian Inspector | proposed |
+| [84](84-read-only-obsidian-inspector.md) | Read-only Obsidian Inspector | accepted |
 | [85](85-todoist-gap-card-mirroring.md) | Todoist gap-card mirroring | proposed |
 | [86](86-open-design-deliverable-rendering-agent.md) | Open-design deliverable-rendering agent | proposed |
 | [87](87-static-html-admin-reports.md) | Static-HTML admin reports | proposed |
@@ -130,7 +130,7 @@ status.
 | [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | proposed |
 | [98](98-relation-vocabulary-expansion.md) | Relation-vocabulary expansion | proposed |
 | [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | proposed |
-| [100](100-exploration-trace-capture.md) | Exploration-trace capture | proposed |
+| [100](100-exploration-trace-capture.md) | Exploration-trace capture | accepted |
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 | [102](102-disposable-projection-engine.md) | Disposable projection engine | proposed |
 | [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | proposed |

@@ -2,16 +2,15 @@
 topic: decisions
 id: 100
 title: Exploration-trace capture
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [30, 52]
 supersedes: [65]
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 100
-nav_exclude: true
 ---
 
 # ADR-100: Exploration-trace capture
@@ -22,9 +21,9 @@ Map and scope work often explores directions that turn out not to help. Without 
 trace, the human may repeat the same dead end later. But rejected directions are
 project-local context, not canonical knowledge.
 
-## Proposal
+## Decision
 
-Memoria may capture rejected directions and dead ends as a structured artifact
+Memoria captures rejected directions and dead ends as a structured artifact
 beside a Librarian map-lane scope or gap report. The artifact stays at the project
 level and is never auto-promoted into canonical knowledge layers.
 
