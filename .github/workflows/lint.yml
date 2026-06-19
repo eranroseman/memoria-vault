@@ -36,7 +36,7 @@ jobs:
         run: python -m pip install --quiet -r requirements-dev.txt
       - name: ruff
         # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
-        run: ruff check scripts src/.memoria .github/scripts tests
+        run: ruff check memoria scripts src/.memoria .github/scripts tests
       - name: docs-doctor
         run: python scripts/docs_doctor.py docs
       - name: docs-links

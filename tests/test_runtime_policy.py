@@ -1,7 +1,8 @@
 """The packaged runtime policy primitives remain the canonical implementation."""
 
 import pytest
-from memoria_runtime.policy import (
+
+from memoria.runtime.policy import (
     glob_to_regex,
     normalize_path,
     path_matches,

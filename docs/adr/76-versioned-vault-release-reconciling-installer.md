@@ -104,9 +104,17 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
 
 **Migration is staged and ordered:**
 
-1. **Landed (alpha.4) ✅:** a repo-root `pyproject.toml` scoped strictly to tooling — `[tool.pytest.ini_options]` (`testpaths` + `pythonpath`) and `[tool.ruff]` only; `requirements-dev.txt` retained, no `[project]` table. The `conftest.py` `sys.path` block is gone (the `pythonpath` now lives in `pyproject.toml`).
-2. **Packaging:** add the `[project]` table and `src/`-layout, install editable, delete the runtime `__file__`/`sys.path` bootstraps (17 sites across 13 files), wire console scripts. This half stands on its own import-hygiene merits, independent of the delivery change.
-3. **Then (the spine):** flip deployment to the reconciling installer over a versioned release; have the gate shim import the installed policy core (decision 2) and drop its `sys.path` reach-through; introduce the release manifest and the tighten-only lane overlay.
+1. **Landed (alpha.4) ✅:** a repo-root `pyproject.toml` carried pytest and ruff
+   tooling, and the `conftest.py` `sys.path` block was removed.
+2. **Package spine (alpha.8, #727):** add the `[project]` table, introduce the
+   `memoria.*` import root, install the checkout editable by default, and migrate the
+   dependency-free policy path first. Legacy loose-module `pythonpath` entries remain
+   until their modules move behind the package root in later slices.
+3. **Packaging continuation:** delete the remaining runtime `__file__`/`sys.path`
+   bootstraps as modules move, then wire console scripts where they replace existing
+   file entrypoints. This half stands on its own import-hygiene merits, independent of
+   the delivery change.
+4. **Then (the spine):** flip deployment to the reconciling installer over a versioned release; have the gate shim import the installed policy core (decision 2) and drop its `sys.path` reach-through; introduce the release manifest and the tighten-only lane overlay.
 
 ## Consequences
 

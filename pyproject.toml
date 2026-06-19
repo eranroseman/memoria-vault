@@ -1,5 +1,19 @@
-# Tooling-only configuration for the current loose-runtime layout.
-# Do not add [project] here until ADR-76's wheel migration actually starts.
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memoria-vault"
+version = "0.1.0a8"
+description = "Memoria vault runtime and tooling"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Eran Roseman" }]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["memoria*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -37,4 +51,9 @@ pythonpath = [
 select = ["E4", "E7", "E9", "F", "W", "I", "B", "C4", "UP", "RUF", "PIE"]
 ignore = [
   "E731",  # assigning a lambda to a name -- idiomatic for concise test helpers.
+  # Adding project metadata makes Ruff infer Python 3.11+ and flag legacy
+  # datetime.timezone.utc uses. Keep that migration with the alpha.8 shared
+  # runtime-helper work instead of sweeping unrelated files into the package
+  # spine PR.
+  "UP017",
 ]
