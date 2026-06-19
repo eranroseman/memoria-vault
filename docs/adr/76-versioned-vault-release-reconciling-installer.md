@@ -110,11 +110,15 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
    `memoria.*` import root, install the checkout editable by default, and migrate the
    dependency-free policy path first. Legacy loose-module `pythonpath` entries remain
    until their modules move behind the package root in later slices.
-3. **Packaging continuation:** delete the remaining runtime `__file__`/`sys.path`
+3. **Shared runtime helpers (alpha.8, #728):** centralize dependency-light
+   frontmatter, JSONL, timestamp, and vault path primitives under
+   `memoria.runtime.{vaultio,jsonl,time,paths}`; keep MCP `_shared.py` as a
+   compatibility facade while operations migrate to the package root.
+4. **Packaging continuation:** delete the remaining runtime `__file__`/`sys.path`
    bootstraps as modules move, then wire console scripts where they replace existing
    file entrypoints. This half stands on its own import-hygiene merits, independent of
    the delivery change.
-4. **Then (the spine):** flip deployment to the reconciling installer over a versioned release; have the gate shim import the installed policy core (decision 2) and drop its `sys.path` reach-through; introduce the release manifest and the tighten-only lane overlay.
+5. **Then (the spine):** flip deployment to the reconciling installer over a versioned release; have the gate shim import the installed policy core (decision 2) and drop its `sys.path` reach-through; introduce the release manifest and the tighten-only lane overlay.
 
 ## Consequences
 

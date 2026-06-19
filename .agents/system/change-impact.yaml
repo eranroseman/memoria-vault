@@ -46,6 +46,21 @@ areas:
       - Tasks delegation semantics
     checks:
       - python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_schemas.py
+  - area: Runtime helpers
+    paths:
+      - memoria/runtime/vaultio.py
+      - memoria/runtime/jsonl.py
+      - memoria/runtime/time.py
+      - memoria/runtime/paths.py
+      - src/.memoria/mcp/_shared.py
+    inspect:
+      - Frontmatter parsing behavior and PyYAML-free fallback
+      - JSONL append/iterate tolerance and parent creation
+      - UTC timestamp format expected by telemetry/audit rows
+      - Runtime modules that still carry duplicate helper code
+    checks:
+      - python -m pytest tests/test_runtime_helpers.py tests/test_package_spine.py
+      - python -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
   - area: Ingest or linter operation
     paths:
       - src/.memoria/operations/processing/ingest/**
