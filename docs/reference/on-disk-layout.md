@@ -63,7 +63,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 │   ├── cleanup/               reconcile.py, archive_inbox.py
 │   └── telemetry/eval/        eval_dispatch.py, eval_score.py
 ├── mcp/                     the MCP servers (Layer 5)
-│   ├── policy_mcp.py + policy_hook.py     the write gate
+│   ├── policy_mcp.py + policy_server.py + policy_hook.py     the write gate
 │   ├── ingest_mcp.py · cluster_mcp.py · tasks_mcp.py · patterns_mcp.py
 │   ├── board_export.py · metrics_aggregate.py    telemetry (cron, not MCP)
 │   └── requirements.txt · requirements-cluster.txt
@@ -77,6 +77,10 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ├── memoria.bib              the bibliographic backbone export
 ├── design-system.md · project-hints.yaml.example
 ```
+
+The policy gate's stable deployed entrypoint stays in `.memoria/mcp/`, while its
+behavior-preserving decision/audit/engine modules live in the installed
+`memoria.runtime.policy` package.
 
 ## `.githooks/` — source hooks
 
