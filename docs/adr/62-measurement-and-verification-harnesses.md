@@ -32,7 +32,7 @@ Memoria treats the following analysis harnesses as the approved direction:
 
 ## Consequences
 
-- Each remaining deferred harness reads the six-signal capture model. For signals that already emit, deferral is a scheduling question; for the two Hermes-metadata-dependent streams, the harnesses must treat missing rows as an implementation gap rather than valid zero activity until [#625](https://github.com/eranroseman/memoria-vault/issues/625) is resolved.
+- Each remaining deferred harness reads the six-signal capture model. For signals that already emit, deferral is a scheduling question; for cost and disposition, the harnesses must treat missing rows as an implementation gap rather than valid zero activity until the [ADR-106](106-cost-and-disposition-capture.md) capture path is implemented in [#737](https://github.com/eranroseman/memoria-vault/issues/737).
 - Several harnesses gate one another (the CiteME fixture gates the claim taxonomy; fleet observability surfaces the retry rate that gates reflection-on-retry), so order matters and the conditions encode it.
 - Partial adoption can be worse than none — a claim taxonomy with most claims untyped makes type-aware checks unreliable; a too-small or too-easy CiteME fixture gives false confidence — so each waits for its condition.
 - Verdicts stay diagnostic, not gating, consistent with [ADR-11](11-vault-eval-maintenance.md): an eval or prose-check dip informs the human and never auto-halts scheduled work.
@@ -55,13 +55,15 @@ The telemetry schema and downstream aggregation contract are current system beha
 but the six signals are not all equally populated yet. `audit.jsonl`,
 `board-state.jsonl`, `board-transitions.jsonl`, `lint-findings.jsonl`, and the other
 non-Hermes-overlay streams emit through their documented writers. `disposition.jsonl`
-and `cost.jsonl` are wired in `board_export.py` but stay empty because current Hermes
-serialized card JSON does not expose the `metadata` overlay fields Memoria needs
-(`review_status`, `cost`, and `tokens`). That is an upstream/runtime dependency, not
-permission to invent a second local source of truth. Keep the six-signal model as the
-accepted direction, and close the implementation gap by making Hermes expose stable
-card metadata or an equivalent supported API; track that work in
-[#625](https://github.com/eranroseman/memoria-vault/issues/625).
+and `cost.jsonl` remain the live gap. The earlier implementation mapping treated that
+gap as an upstream Hermes card-overlay limitation; subsequent verification against the
+installed Hermes showed a better closure path: cost/tokens are reachable through the
+Hermes session store, joined from `hermes kanban show <id> --json`, and disposition
+belongs at the human review action rather than in an inferred card overlay. That path
+is proposed in [ADR-106](106-cost-and-disposition-capture.md) and tracked in
+[#737](https://github.com/eranroseman/memoria-vault/issues/737). Until ADR-106 is
+implemented, consumers must still treat missing disposition/cost rows as an
+implementation gap rather than valid zero activity.
 
 ## Related
 
@@ -69,5 +71,5 @@ card metadata or an equivalent supported API; track that work in
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
 - **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
   — cadence review for the harness family;
-  [#625](https://github.com/eranroseman/memoria-vault/issues/625) — Hermes metadata
-  dependency for `disposition.jsonl` and `cost.jsonl`.
+  [#737](https://github.com/eranroseman/memoria-vault/issues/737) — proposed
+  session-store/review-action path for `disposition.jsonl` and `cost.jsonl`.
