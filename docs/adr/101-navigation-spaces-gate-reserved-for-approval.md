@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 84
+id: 101
 title: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate
 status: accepted
 date_proposed: 2026-06-19
@@ -10,10 +10,10 @@ supersedes: [82]
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
-nav_order: 84
+nav_order: 101
 ---
 
-# ADR-84: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate
+# ADR-101: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate
 
 ## Context
 

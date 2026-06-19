@@ -88,14 +88,14 @@ status.
 | [55](55-src-scaffold-populate-golden-copy.md) | The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
-| [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | proposed |
-| [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | proposed |
+| [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | superseded → ADR-84, ADR-85, ADR-86, ADR-87, ADR-88 |
+| [59](59-classical-method-displacements.md) | Classical method displacements over LLM calls | superseded → ADR-89, ADR-90, ADR-91, ADR-92, ADR-93, ADR-94 |
 | [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | accepted |
-| [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | proposed |
+| [61](61-nightly-discovery-loop.md) | Nightly discovery loop, code-experiment loop, and Writer-proposed claims | superseded → ADR-95, ADR-96, ADR-97 |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
 | [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | accepted |
 | [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
-| [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | proposed |
+| [65](65-retrieval-and-schema-extensions.md) | Retrieval and schema extensions | superseded → ADR-98, ADR-99, ADR-100 |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | accepted |
 | [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |
 | [68](68-workspaces-desk-library-studio.md) | Workspaces v2 — Desk / Library / Studio, home.md as control panel | superseded → ADR-81 |
@@ -112,9 +112,26 @@ status.
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
-| [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | superseded → ADR-84 |
+| [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | superseded → ADR-101 |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
-| [84](84-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
+| [84](84-read-only-obsidian-inspector.md) | Read-only Obsidian Inspector | proposed |
+| [85](85-todoist-gap-card-mirroring.md) | Todoist gap-card mirroring | proposed |
+| [86](86-open-design-deliverable-rendering-agent.md) | Open-design deliverable-rendering agent | proposed |
+| [87](87-static-html-admin-reports.md) | Static-HTML admin reports | proposed |
+| [88](88-literate-code-note.md) | Literate code-note | proposed |
+| [89](89-learning-to-rank-triage.md) | Learning-to-rank triage | proposed |
+| [90](90-claim-sentence-classification.md) | Claim-sentence classification | proposed |
+| [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
+| [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | proposed |
+| [93](93-keyphrase-extraction-tag-candidates.md) | Keyphrase extraction for tag candidates | proposed |
+| [94](94-record-linkage-entity-deduplication.md) | Record linkage for entity deduplication | proposed |
+| [95](95-nightly-proactive-discovery-loop.md) | Nightly proactive discovery loop | proposed |
+| [96](96-code-lane-keep-revert-experiment-loop.md) | Code-lane keep/revert experiment loop | proposed |
+| [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | proposed |
+| [98](98-relation-vocabulary-expansion.md) | Relation-vocabulary expansion | proposed |
+| [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | proposed |
+| [100](100-exploration-trace-capture.md) | Exploration-trace capture | proposed |
+| [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 
 <!-- ADR-INDEX:END -->
 
