@@ -12,21 +12,18 @@ the Memoria Issue Tracker.
 
 | File | Holds |
 |---|---|
-| `tmp/` | Carried-forward design scratch whose implementation is not complete and whose durable destination is still pending. |
+| `tmp/` | Removed after the carried-forward scratch was routed to ADRs, docs, and GitHub issues. |
 
 ## Tmp disposition check
 
 Checked 2026-06-19 after ADR-58/59/61/65 were split into ADR-84 through ADR-100.
-Do not delete the folder wholesale yet; dispose file-by-file:
+All carried-forward `tmp/` files have now been disposed.
 
 Deleted 2026-06-19:
 
 - `tmp/alpha7-docs-audit-report.md` — all findings were already resolved or intentionally deferred in current docs/checks.
 - `tmp/deferred-adr-implementability-alpha6.md` — superseded by current ADR statuses plus issues #369, #371, #372, #374, #416, #521, #686, ADR-98/#711 through ADR-100/#713, and the now-closed old ADR-65 umbrella #611.
-
-| File | Safe to delete? | Durable home / blocker |
-|---|---:|---|
-| `tmp/install-a-real-package-alpha5.md` | Not yet | Long-form rationale behind ADR-76/#521. Keep until ADR-76 absorbs or links the lane-overlay, policy-core import, release-manifest, and host-config details at decision time. |
-| `tmp/test-env-design-alpha5.md` | Not yet | Partly superseded by ADR-80 and current testing docs, but still contains discarded/changed clean-sheet assumptions and model/runtime questions. Keep until the useful Phase 2 residue is either folded into ADR-80 or closed as rejected. |
-| `tmp/ui-architecture-design-history-alpha7.md` | Not yet | Contains live verification evidence for Bases scale, nested-map backlinks, Portals, Workspaces Plus, CSS snippets, and Obsidian settings. Keep until the evidence is captured in ADRs/reference docs or explicitly rejected as historical scratch. |
-| `tmp/ui-architecture-future-alpha7.md` | Not yet | Partly split into ADR-83 and ADR-98 through ADR-100, but still carries the general projector/canvas trigger model and open operator/sync/failure-surfacing questions. Keep until those are folded into proposed ADRs or GitHub issues. |
+- `tmp/install-a-real-package-alpha5.md` — folded into [ADR-76](../../adr/76-versioned-vault-release-reconciling-installer.md) and [#521](https://github.com/eranroseman/memoria-vault/issues/521).
+- `tmp/test-env-design-alpha5.md` — folded into [ADR-80](../../adr/80-ephemeral-containerized-test-env.md), current testing docs, and Phase 2 tracker [#722](https://github.com/eranroseman/memoria-vault/issues/722).
+- `tmp/ui-architecture-design-history-alpha7.md` — verification evidence moved into reference docs and related ADRs.
+- `tmp/ui-architecture-future-alpha7.md` — split into [ADR-102](../../adr/102-disposable-projection-engine.md) / [#719](https://github.com/eranroseman/memoria-vault/issues/719) and [ADR-103](../../adr/103-projected-canvas-spatial-axis.md) / [#721](https://github.com/eranroseman/memoria-vault/issues/721).

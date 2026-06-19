@@ -35,6 +35,11 @@ The core Workspaces plugin stays enabled so you can restore this shell with Obsi
 own **Manage workspaces** command if panes get rearranged. The retired QuickAdd
 workspace commands and loader script are not shipped.
 
+Workspaces Plus was evaluated and rejected for the shipped path. It can register
+native workspace-switching commands, but Memoria no longer models spaces as saved
+workspace layouts; the dashboard-note navigation in `spaces/` is the source of
+truth.
+
 ## Layout storage
 
 The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as

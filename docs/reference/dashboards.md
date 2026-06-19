@@ -63,6 +63,24 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
 | `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 
+### Verified Bases behavior
+
+The alpha.7 UI review verified the following in Obsidian 1.12.7:
+
+- Wikilinks inside nested `links:` maps register as backlinks, so typed edges such
+  as `links.contradicts` are visible both to contradiction views and to orphan
+  checks that use `file.backlinks`.
+- Native Bases filters handle nested relation presence checks such as
+  `!links.contradicts.isEmpty()`; no materialized `has_contradiction` field is
+  needed for the shipped contradiction view.
+- Warm-cache Bases rendering is not the current scale limit: a 7,004-row grouped
+  view with multi-key sort and formulas rendered in about 1.4 seconds in the
+  sandbox.
+- Cold metadata parsing is the scale risk: a 10,000-file bulk write took about
+  76 seconds before the metadata cache fully settled. Future projection work must
+  wait for cache settlement before signalling readiness; see
+  [ADR-102](../adr/102-disposable-projection-engine.md).
+
 ---
 
 ## Verdict band (drift-watch)
