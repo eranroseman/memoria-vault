@@ -26,6 +26,12 @@ Bases views while ordinary internal links reuse the active tab.
 
 ## Decision
 
+> **Superseded slice (see [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)):**
+> the directory is now `src/spaces/`, not `src/gates/`, and these navigation surfaces are
+> called **spaces** — "gate" is now reserved for the approval/review checkpoint. The
+> dashboard decision below still stands; only the path and the "gate" naming changed, and
+> the historical wording is kept as-authored.
+
 Memoria uses **four job-named gate dashboard notes** as the primary navigation model:
 Inbox, Library, Knowledge, and Project. The dashboards live under `src/gates/` and
 compose existing Bases views with empty-state copy. Gate switching is a wikilink nav

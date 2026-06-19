@@ -36,6 +36,12 @@ Release readiness lives in a **"Release vX.Y" parent issue** with one sub-issue 
 gate or validation stage, instead of a single checklist embedded in the release
 plan or parent issue body.
 
+> **Current field set (see [Issue tracking](../contributing/issue-tracking.md)):**
+> the live Project carries `Status` and `Readiness` only. The original `Area`, `Type`,
+> and `Priority` fields were retired as unused planning overhead, and `Readiness` was
+> added to separate "is it decided" from "is it ready to build." The decision to model
+> planning state in Project fields — not labels or markdown — is unchanged.
+
 ## Consequences
 
 - Each release gate/stage can have its own evidence trail, assignee, comments, and
