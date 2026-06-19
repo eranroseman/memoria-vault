@@ -63,6 +63,8 @@ from pathlib import Path
 
 from _shared import safe_filename
 
+from memoria.runtime.diagnostics import record_event
+
 # obsidian (mcp-obsidian) tool-name keyword -> policy action. Matched by substring
 # so it survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools
 # (get / list / search) contain none of these keywords -> not gated (return {}).
@@ -273,6 +275,20 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         # log the failure to stderr so it is diagnosable in Hermes logs.
         print(f"[policy_hook] audit completion failed for {profile}/{path}: "
               f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        try:
+            record_event(
+                component="mcp.policy_hook",
+                level="error",
+                code="audit_completion_failed",
+                details={
+                    "profile": profile,
+                    "path": path,
+                    "exception_type": type(exc).__name__,
+                },
+                vault_path=vault,
+            )
+        except Exception:
+            pass
     finally:
         try:
             pend.unlink()

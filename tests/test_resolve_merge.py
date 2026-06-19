@@ -114,6 +114,23 @@ def test_resolve_merge():
     assert _run() == 0
 
 
+def test_resolve_merge_http_errors_emit_content_light_diagnostic(monkeypatch, tmp_path):
+    monkeypatch.setenv("MEMORIA_DIAGNOSTICS_DIR", str(tmp_path / "diagnostics"))
+
+    def _fake(req, timeout=25):
+        raise urllib.error.HTTPError(req.full_url, 500, "Server leaked title", {}, None)
+
+    monkeypatch.setattr(urllib.request, "urlopen", _fake)
+
+    assert _get("https://example.test/private-title") is None
+    log = next((tmp_path / "diagnostics").glob("diagnostics-*.jsonl"))
+    text = log.read_text(encoding="utf-8")
+
+    assert "http_error" in text
+    assert "private-title" not in text
+    assert "Server leaked title" not in text
+
+
 def test_agreement_confidence_d51():
     """ADR-56: cross-source identity disagreement scores below the floor."""
     one = {"crossref": {"found": True, "title": "Same Work", "year": 2024}}

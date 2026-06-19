@@ -37,6 +37,8 @@ from resolve_merge_logic import merge
 from resolve_merge_logic import union_refs as union_refs
 from resolve_merge_pubmed import parse_pubmed
 
+from memoria.runtime.diagnostics import record_event
+
 S2_BASE = "https://api.semanticscholar.org/graph/v1"
 OA_BASE = "https://api.openalex.org"
 CR_BASE = "https://api.crossref.org"
@@ -45,6 +47,18 @@ S2_FIELDS = ("title,year,externalIds,referenceCount,citationCount,tldr,"
              "s2FieldsOfStudy,publicationTypes,authors.name,authors.externalIds,"
              "references.externalIds,references.title")
 _S2_LAST = [0.0]  # crude ~1 req/s throttle for S2
+
+
+def _diagnose(level: str, code: str, **details) -> None:
+    try:
+        record_event(
+            component="ingest.resolve_merge",
+            level=level,
+            code=code,
+            details=details,
+        )
+    except Exception:
+        return
 
 
 def _env(key: str) -> str:
@@ -76,10 +90,12 @@ def _get(url: str, headers: dict | None = None, data: bytes | None = None, retri
                 continue
             if e.code not in (404, 429):
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
+                _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
             return None
         except Exception as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}",
                   file=sys.stderr)
+            _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
             return None
     return None
 
@@ -99,10 +115,12 @@ def _get_text(url: str, retries: int = 3) -> str | None:
                 continue
             if e.code != 404:
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
+                _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
             return None
         except Exception as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}",
                   file=sys.stderr)
+            _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
             return None
     return None
 
