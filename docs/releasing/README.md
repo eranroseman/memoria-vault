@@ -23,7 +23,7 @@ lives outside the file — see below.
 | **Readiness** (gate + validation-stage state) | the parent **"Release vX.Y"** issue and its gate/stage sub-issues |
 | **Prose** (scope summary, limitations, cut steps, roadmap) | `docs/releasing/<version>/release-plan-<version>.md` |
 | **Build gaps** | GitHub issues |
-| **Scope cuts** | `docs/adr/` (deferred-status ADRs) |
+| **Scope cuts** | GitHub issues with Readiness `Later`; ADRs only when the cut records a decision or durable rationale |
 | **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
 | **Automated test evidence** | GitHub Actions runs and artifacts |
 | **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |
@@ -64,8 +64,9 @@ never restates.
    WSL/Linux state, Hermes profiles, local services, and changed Obsidian/plugin behavior
    are verified with evidence in the issue trail, Actions, or `validation-log.md`.
 4. **Disposition tracked `tmp/` files.** Implemented scratch is captured in ADRs or system
-   documentation; unfinished scratch is moved to the next release `tmp/`; completed-release
-   `tmp/` folders are deleted only after that disposition.
+   documentation; unfinished scratch is moved to the next release `tmp/` or to a GitHub
+   issue with the right Readiness; completed-release `tmp/` folders are deleted only
+   after that disposition.
 5. **Retire-sweep the ADRs.** Delete any ADR whose question this release dissolved or whose
    decision it superseded — keep the *Alternatives considered* memory; leave the number gap.
    See the [retirement criteria](../adr/README.md#when-to-retire-an-adr). (Lands as its own

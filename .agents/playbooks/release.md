@@ -12,7 +12,8 @@ process prose; this playbook is the portable agent procedure for applying it.
   sub-issues.
 - **Prose** lives in `docs/releasing/<version>/release-plan-<version>.md`.
 - **Build gaps** live as GitHub issues.
-- **Scope cuts** live as deferred-status ADRs in `docs/adr/`.
+- **Scope cuts** live as GitHub issues with Readiness `Later`; ADRs record the
+  decision or rationale only when there is one.
 - **Version and notes** are owned by release-please.
 - **In-work release design notes** live under `docs/releasing/<version>/tmp/`
   while the release is being shaped and are deleted before the release/checkpoint
