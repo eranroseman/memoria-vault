@@ -25,9 +25,9 @@ Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking an
 
 **Opinionated** — it enforces specific workflows and eliminates setup paralysis. The vault structure, the note types, and the review gates are not configurable surfaces to tune; they are the design.
 
-**Phase-gated** — work passes through defined phases with explicit outputs, and nothing becomes a claim or deliverable without human review. A source doesn't become a claim until it's been classified, discussed, and synthesized; a draft doesn't become a deliverable until it's been verified and approved. Each phase has a clear entry condition and a clear exit condition.
+**Phase-gated** — work passes through defined phases with explicit outputs, and nothing becomes a claim or deliverable without human review. A source doesn't become a claim until it's been classified, discussed, and synthesized; a draft doesn't become a deliverable until it's been verified and approved. Each phase has a clear entry and exit condition.
 
-**Bounded** — agent autonomy is structurally constrained. The agent does not decide what is worth keeping and does not promote claims to canonical knowledge; the PI decides what is worth keeping and what becomes canonical. These limits are structural — enforced by the system's architecture, not by prompt instructions.
+**Bounded** — agent autonomy is structurally constrained. The agent does not decide what is worth keeping or promote claims to canonical knowledge; the PI does. These limits are structural — enforced by the system's architecture, not by prompt instructions.
 
 It is **knowledge production**, not just storage: the vault grows more useful over time as new sources connect to existing claims, synthesis sharpens as evidence accumulates, and structural maintenance keeps the graph coherent. That is the difference between a research vault and a notes pile.
 

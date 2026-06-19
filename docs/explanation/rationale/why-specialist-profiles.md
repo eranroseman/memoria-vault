@@ -49,7 +49,7 @@ One consolidation was refused on principle: the **Peer-reviewer was never merged
 
 ## No Orchestrator, no Reviewer
 
-Memoria still deliberately omits two roles that comparable multi-agent systems include:
+Memoria still omits two roles that comparable multi-agent systems include:
 
 **No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
