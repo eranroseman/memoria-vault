@@ -2,16 +2,15 @@
 topic: decisions
 id: 104
 title: Telemetry as three planes — audit, analytics, diagnostic
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [20, 24, 25, 63]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 104
-nav_exclude: true
 ---
 
 # ADR-104: Telemetry as three planes — audit, analytics, diagnostic
@@ -41,7 +40,7 @@ Memoria's telemetry is **three planes, separated by their intrinsic requirements
 
 ## When this matters
 
-*(Proposed.)* The diagnostic plane becomes worth building the first time a Memoria MCP/Operations failure is diagnosed by guesswork because stderr was gone — most concretely during unattended `always-on` operation ([ADR-63](63-multi-machine-deployment.md)), where no human watches the terminal. The per-machine partitioning becomes load-bearing the moment a second device writes to the vault. Until either is real, the existing single-machine audit + analytics streams are adequate; this ADR records the shape so the move is a refactor, not a redesign.
+The diagnostic plane becomes worth building the first time a Memoria MCP/Operations failure is diagnosed by guesswork because stderr was gone — most concretely during unattended `always-on` operation ([ADR-63](63-multi-machine-deployment.md)), where no human watches the terminal. The per-machine partitioning becomes load-bearing the moment a second device writes to the vault. Until either is real, the existing single-machine audit + analytics streams are adequate; this ADR records the shape so the move is a refactor, not a redesign.
 
 ## Alternatives considered
 

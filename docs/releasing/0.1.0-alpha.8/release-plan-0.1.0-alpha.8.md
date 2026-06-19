@@ -31,9 +31,10 @@ content-light diagnostic plane and cost/disposition analytics, the read-only
 Inspector and exploration-trace capture, the shadow-only similarity/calibration
 telemetry, the day-1 empty-state polish, the Zotero→catalog capture fix, and the CI
 provenance + opt-in live-Hermes test hardening. The boundary: this checkpoint is
-**refactor + observability + telemetry-shadow**, not net-new product surface. No
-calibrated enforcement, no auto-merge/auto-block, no relation-vocabulary expansion,
-and no installer-distribution (tarball/signing) work — those stay deliberately later.
+**refactor + observability + telemetry-shadow plus two already-accepted read-only
+surfaces**, not new autonomous behavior. No calibrated enforcement, no
+auto-merge/auto-block, no relation-vocabulary expansion, and no
+installer-distribution (tarball/signing) work — those stay deliberately later.
 
 The complete, sequenced implementation steps for every in-scope issue live in the
 ExecPlan working doc:
@@ -63,16 +64,16 @@ its work is folded into the G6 telemetry baseline and is not re-scoped here.
 
 The staged test plan that turns `shipped` into `approved`. A release candidate must
 re-run **all stages green from a fresh clone** on a clean target box (track the runs
-in the relevant sub-issues under the release parent issue).
+in the stage sub-issues under the release parent issue).
 
-| Stage | Proves |
-| --- | --- |
-| S0 | `static-contract`: editable-install metadata parses; `docs_doctor`, `status_doctor`, `agents_doctor`, `check_test_refs`, adr-index, cspell clean; plugin-provenance lock validates. |
-| S1 | `component`: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/` green, including new helper, policy-split, diagnostic-redaction, and cost-join tests; bare-import smoke imports pure decision modules without the MCP SDK. |
-| S2 | `vault-assembly`: `bash scripts/e2e-smoke.sh` green (stage names unchanged); disposable-vault build carries gates, empty-state copy, plugin lock, and CSS snippets. |
-| S3 | `workflow-replay`: model-free ADR-80 Phase 1 replay asserts expected artifacts, deny audit row, and forbidden-file absence after the splits. |
-| S4 | `runtime-integration`: live policy-gate audit row, diagnostic/cost capture, and shadow telemetry observed against a disposable vault (opt-in `scripts/test-l2.sh`). |
-| S5 | `release-acceptance`: fresh-vault GUI pass — empty states, Inspector, Zotero capture, and exploration-trace surfaces behave in the runtime vault. |
+| Stage | Proves | Stage issue |
+| --- | --- | --- |
+| S0 | `static-contract`: editable-install metadata parses; `docs_doctor`, `status_doctor`, `agents_doctor`, `check_test_refs`, adr-index, cspell clean; plugin-provenance lock validates. | #756 |
+| S1 | `component`: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/` green, including new helper, policy-split, diagnostic-redaction, and cost-join tests; bare-import smoke imports pure decision modules without the MCP SDK. | #757 |
+| S2 | `vault-assembly`: `bash scripts/e2e-smoke.sh` green (stage names unchanged); disposable-vault build carries gates, empty-state copy, plugin lock, and CSS snippets. | #758 |
+| S3 | `workflow-replay`: model-free ADR-80 Phase 1 replay asserts expected artifacts, deny audit row, and forbidden-file absence after the splits. | #759 |
+| S4 | `runtime-integration`: live policy-gate audit row, diagnostic/cost capture, and shadow telemetry observed against a disposable vault (opt-in `scripts/test-l2.sh`). | #760 |
+| S5 | `release-acceptance`: fresh-vault GUI pass — empty states, Inspector, Zotero capture, and exploration-trace surfaces behave in the runtime vault. | #761 |
 
 ## 4. Blockers
 

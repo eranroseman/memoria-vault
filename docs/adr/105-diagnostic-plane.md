@@ -2,16 +2,15 @@
 topic: decisions
 id: 105
 title: Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [24, 46, 104]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 105
-nav_exclude: true
 ---
 
 # ADR-105: Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail
@@ -40,7 +39,7 @@ Memoria's diagnostic plane is **content-light, local, and disposable**, governed
 
 ## When this matters
 
-*(Proposed.)* The plane earns its place the first time an unattended `always-on` run ([ADR-63](63-multi-machine-deployment.md)) or a cron fails and the cause is unrecoverable from stderr. The ephemeral content-capture path matters only when a typed error code plus payload hash is genuinely insufficient to reproduce a parse/enrichment failure — build the content-light core first and add the capture path on first real need.
+The plane earns its place the first time an unattended `always-on` run ([ADR-63](63-multi-machine-deployment.md)) or a cron fails and the cause is unrecoverable from stderr. The ephemeral content-capture path matters only when a typed error code plus payload hash is genuinely insufficient to reproduce a parse/enrichment failure — build the content-light core first and add the capture path on first real need.
 
 ## Alternatives considered
 

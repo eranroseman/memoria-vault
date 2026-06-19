@@ -2,16 +2,15 @@
 topic: decisions
 id: 106
 title: Cost and disposition capture — Hermes session store and the review action
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-06-19
 assumes: [20, 22, 104]
 supersedes: []
 superseded_by: []
 parent: Decisions
 grand_parent: Explanation
 nav_order: 106
-nav_exclude: true
 ---
 
 # ADR-106: Cost and disposition capture — Hermes session store and the review action
@@ -36,11 +35,11 @@ Because this couples to Hermes's internal, undocumented SQLite schema, the **Her
 - Coupling to a private Hermes DB schema is brittle across upgrades — pinning plus an upgrade-time doctor is the standing maintenance cost this accepts.
 - Cost capture is per-card via a `kanban show` call per completed card and a session-store lookup; session rotation can occasionally drop an aged session (observed ~1 in 13), so a small miss rate is expected and not treated as an error.
 - The misleading "upstream limitation" note in [Telemetry & logs](../reference/telemetry.md) is corrected to describe the real mechanism and its brittleness.
-- If this ADR is accepted, [ADR-62](62-measurement-and-verification-harnesses.md)'s current implementation mapping must be amended: the cost/disposition gap is no longer "wait for Hermes card overlay"; it is "implement and guard the session-store/review-action capture path."
+- [ADR-62](62-measurement-and-verification-harnesses.md)'s current implementation mapping must be amended: the cost/disposition gap is no longer "wait for Hermes card overlay"; it is "implement and guard the session-store/review-action capture path."
 
 ## When this matters
 
-*(Proposed.)* This matters as soon as the publication benchmark ([ADR-20](20-publication-path.md)) needs real cost or acceptance-quality numbers — i.e. before any run whose cost or disposition is meant to appear in the paper. Until then the capture is wired but the absence is documented, not silently empty.
+This matters as soon as the publication benchmark ([ADR-20](20-publication-path.md)) needs real cost or acceptance-quality numbers — i.e. before any run whose cost or disposition is meant to appear in the paper. Until then the capture is wired but the absence is documented, not silently empty.
 
 ## Alternatives considered
 
