@@ -56,7 +56,7 @@ With folders carrying the type and frontmatter carrying the state, topics are en
 - `methodology` — a controlled vocabulary covering method and study design
 - `topics` on claim notes
 
-Topical *navigation* is built on top by **hubs** (`notes/hubs/` — the renamed Maps of Content): curated notes that link the relevant sources and claims for an area, regardless of state or project. A hub is authored perspective over the graph, not a folder in disguise.
+Topical *navigation* is built on top by **hubs** (`notes/hubs/`): curated notes that link the relevant sources and claims for an area, regardless of state or project. A hub is authored perspective over the graph, not a folder in disguise.
 
 ---
 

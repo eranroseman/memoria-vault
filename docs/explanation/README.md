@@ -70,7 +70,7 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 - [Profiles](profiles/README.md) — the five profiles: Co-PI (conversational front) plus four background lanes — librarian, writer, peer-reviewer, engineer — plus delegation-posture
 - [Kanban board](kanban-board/README.md) — the board as coordination layer: states, card-schema, obsidian-projection
 - [Workflows](workflows/README.md) — how work moves: board-as-state-machine, review-as-state, plus verify-on-commit
-- [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, the-status-line, callouts, agent-client-picker, visual-discipline, design-system
+- [Obsidian](obsidian/README.md) — how the human interacts through Obsidian: home, the-status-line, callouts, agent-client-pane, visual-discipline, design-system
 - [Dashboards](dashboards/README.md) — the twelve dashboards, grouped: daily-glance, synthesis-agenda, structural-health, operational-health
 - [Deployment](deployment/README.md) — how the system is packaged and installed: distribution-model, bootstrap-installer, deployment-options
 

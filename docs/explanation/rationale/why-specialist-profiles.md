@@ -6,7 +6,7 @@ nav_order: 2
 
 # Why specialist profiles, not a generalist agent
 
-Memoria uses **one conversational Co-PI and four posture-defined background agents** instead of one generalist — and instead of the seven specialists it used to run ([ADR-48](../../adr/48-copi-and-agent-consolidation.md), superseding ADR-02). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes both arguments — why specialists at all, and why five postures beat seven roles.
+Memoria uses **one conversational Co-PI and four posture-defined background agents** instead of one generalist ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes the argument — why specialists at all, and why posture is the axis that divides them.
 
 ---
 
@@ -24,32 +24,32 @@ A generalist agent that does everything — discovers sources, synthesizes claim
 
 ## Why posture is the unit, not the role
 
-The original cut produced seven role-named profiles (Librarian, Mapper, Socratic, Writer, Verifier, Coder, Linter). Under the rule **a profile is a posture; skills attach per lane**, that set turned out to be over-divided — several profiles shared one stance:
+A profile is a **posture** — a stance bound to a write-permission — not a task list. Skills attach per lane; the agent is defined by *how it acts on the vault*, not *what task it runs*. Organizing by posture rather than by role keeps the set small: tasks that share a stance collapse into one agent.
 
-- The old Librarian and Mapper were both *faithful* — intake and corpus mapping are one research-librarian stance pointed in two directions. They merged into the **Librarian** (catalog · extract · link · map).
-- The old Socratic was the conversational stance with the write-wall — exactly the **Co-PI**, so it folded in.
-- The old Verifier mixed two method classes: its *judgment* checks became the **Peer-reviewer**; its deterministic sweeps became **operations**.
-- The old Linter was never an agent at all — zero-LLM, reproducible, cron-run: an **operation** by definition.
-- The old Coder kept its boundary and became the **Engineer**.
+- Intake and corpus mapping are one *faithful* research-librarian stance pointed in two directions, so they are a single agent — the **Librarian** (catalog · extract · link · map) — not several.
+- Judgment-checking is a distinct *skeptical, independent* stance, so it is its own agent — the **Peer-reviewer**.
+- Conversational questioning is the read-only front stance — the **Co-PI**.
+- Scaffolding a code handoff is a *delegating* stance — the **Engineer**.
+- Deterministic, zero-LLM work has no posture at all, so it is not an agent: it is an **operation** (the Linter, the sweeps).
 
 One posture per agent, one agent per posture. The fragmentation cost of going finer is real: more lanes to route between, more permission matrices, and — decisively — a fragmented learning loop.
 
 ## Why one Co-PI fronts everything
 
-Seven specialists created a real UX failure: *who do I talk to?* Every profile was a possible conversation, so no conversation compounded. Concentrating all dialogue in **one Co-PI** fixes both halves:
+Splitting conversation across many agents creates a real UX failure: *who do I talk to?* Every profile becomes a possible conversation, so no conversation compounds. Concentrating all dialogue in **one Co-PI** fixes both halves:
 
-- **The learning loop needs one home.** Hermes' self-improving loop — memory · /goals · skills — only compounds in an agent that has every conversation. Split across seven, each got a sliver of context and none grew.
+- **The learning loop needs one home.** Hermes' self-improving loop — memory · /goals · skills — only compounds in an agent that has every conversation. Split across many fronts, each gets a sliver of context and none grows.
 - **Delegation keeps the wall.** The Co-PI is read-only; every write leaves as a routed card under a background lane's ceiling. You get one warm, remembering front *and* stateless, scoped executors — not a generalist with the union of everyone's permissions.
 
 The background lanes stay out of conversation by design: a lane is a propose-then-dispose executor, and keeping it stateless is what keeps its failures scoped and its permissions legible.
 
 ## The independence argument
 
-One consolidation was refused on principle: the **Peer-reviewer was never merged into the Librarian**, however much retrieval tooling they share. The agent that gathers and synthesizes must not also grade the result — separation of duties is the anti-rubber-stamp principle. A checker that inherits the proposer's faithful stance waves through exactly what the review gate exists to catch. The two postures are in deliberate tension: the Librarian includes generously; the Peer-reviewer doubts independently. The asymmetry is the design — you need both, and they must be separate to work.
+The **Peer-reviewer is kept separate from the Librarian** on principle, however much retrieval tooling they share. The agent that gathers and synthesizes must not also grade the result — separation of duties is the anti-rubber-stamp principle. A checker that inherits the proposer's faithful stance waves through exactly what the review gate exists to catch. The two postures are in deliberate tension: the Librarian includes generously; the Peer-reviewer doubts independently. The asymmetry is the design — you need both, and they must be separate to work.
 
 ## No Orchestrator, no Reviewer
 
-Memoria still omits two roles that comparable multi-agent systems include:
+Memoria omits two roles that comparable multi-agent systems include:
 
 **No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
@@ -66,6 +66,6 @@ Dividing by posture still has its price: the same *technique* can live in severa
 ## Related
 
 - The five agents described: [Profiles](../profiles/README.md)
-- The deterministic actors that left the set: [Operations](../operations/README.md)
+- The deterministic actors that are not agents: [Operations](../operations/README.md)
 - Why the layers separate concerns: [Why the architecture is layered](why-three-layers.md)
 - Why the review gate is human-owned: [Why the review gate is structural](why-human-gate.md)

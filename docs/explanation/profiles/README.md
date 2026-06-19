@@ -41,6 +41,6 @@ All five agents **propose**; the **PI disposes** — promotions, the `retracted`
 
 ## Where to go next
 
-- Why one Co-PI + four lanes, not seven specialists: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
+- Why one Co-PI + four background lanes: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
 - The deterministic actors that left the profile set: [Operations](../operations/README.md)
 - How cards reach the lanes and come back: [The control plane](../architecture/control-plane.md)

@@ -14,9 +14,8 @@
 #
 # No profile gets a direct-world toolset (terminal, file, code_execution, browser,
 # web, computer_use): agents reach the vault, operations, and APIs ONLY through MCP
-# (D40/D41/ADR-46), enforced by test_no_profile_has_direct_world_access. ADR-21
-# retired the v0.1.0-alpha.1 Coder-lane terminal+file exception; its successor the Engineer
-# is MCP-only.
+# (D40/D41/ADR-46), enforced by test_no_profile_has_direct_world_access. The code
+# lane (the Engineer) is MCP-only too — no terminal or file access (ADR-21).
 #
 # Semantics:
 #   - `allow` is an allowlist; anything not listed is DENIED (default-deny).
@@ -72,4 +71,4 @@ profiles:
 
   memoria-engineer:
     allow: [vault_read, vault_write, skills, todo, policy]
-    notes: "The code lane: MCP-only (ADR-21 retired the v0.1.0-alpha.1 Coder-lane terminal+file exception). It scaffolds the handoff to an external coding agent through the gated obsidian MCP; the substantive coding and git run in that external agent, not here. vault_write lane-scoped to projects/*/code/."
+    notes: "The code lane: MCP-only (ADR-21) — no terminal or file access. It scaffolds the handoff to an external coding agent through the gated obsidian MCP; the substantive coding and git run in that external agent, not here. vault_write lane-scoped to projects/*/code/."

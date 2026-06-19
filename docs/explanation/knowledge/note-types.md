@@ -47,7 +47,7 @@ Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim i
 
 ### Hubs: authored navigation
 
-A **`hub`** (the renamed Map of Content / MOC) is a curated, annotated view of an area: what it is about, what matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also gated 🔒, because a hub is an act of judgment about what belongs together, not a query result. Agents can propose additions; the PI curates.
+A **`hub`** is a curated, annotated view of an area: what it is about, what matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also gated 🔒, because a hub is an act of judgment about what belongs together, not a query result. Agents can propose additions; the PI curates.
 
 ### Fleeting and index notes
 

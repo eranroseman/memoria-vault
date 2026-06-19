@@ -13,9 +13,9 @@ Talk to the Co-PI from inside Obsidian without switching to a terminal. This gui
 - Obsidian open with the vault
 - `agent-client` plugin installed and the Hermes gateway reachable ([Set up Hermes](../setup/set-up-hermes.md))
 
-## One agent in the picker — by design
+## One agent in the pane — by design
 
-The picker offers exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-picker.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
+The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-pane.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 
@@ -76,7 +76,7 @@ exception, not the production Windows default.
 
 ## Verify
 
-- The picker shows one agent — **Co-PI** — and the pane connects
+- The pane runs one agent — **Co-PI** — and connects
 - Opening the pane with a note active attaches it as a context card (auto-mention)
 - Asking for lane work ("verify this draft") produces a card on the board, not prose-only
 - Pressing **Clear** empties the pane and resets the session
@@ -86,4 +86,4 @@ exception, not the production Windows default.
 - Discussing a paper end-to-end: [Discuss a paper](../library/discuss-a-paper.md)
 - Gate/reset layout: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- Why one agent, not a picker of specialists: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)
+- Why one conversational agent: [The agent-client pane](../../explanation/obsidian/agent-client-pane.md)

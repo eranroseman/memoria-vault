@@ -1,8 +1,7 @@
 # tests/
 
 L1 component tests (pytest), per [ADR-44](../docs/adr/44-tests-in-pytest-tree.md).
-These were formerly inline `--self-test` blocks inside the modules; they now live here
-so the shipped vault carries no test code.
+They live here as standalone files so the shipped vault carries no test code.
 
 - `test_*.py` — one per module under test; imports the module and asserts its contract
   on synthetic fixtures (no vault runtime, no network).

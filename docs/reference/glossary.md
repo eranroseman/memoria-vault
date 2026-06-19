@@ -95,18 +95,6 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
-## Retired terms (v0.1.0-alpha.1 → v0.1.0-alpha.2)
-
-| Retired | Replaced by |
-| --- | --- |
-| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps operation (Verifier), the Engineer (Coder), and the Linter **operation** (no longer an agent). |
-| **Reference note** (`reference-note`, `30-synthesis/02-reference/`) | Dropped ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)) — it double-encoded maturity; an `evergreen` claim is the settled unit. |
-| **MOC** (`moc`, `30-synthesis/03-moc/`) | The `hub` type in `notes/hubs/`. |
-| **`99-system`** (and the numbered folders `00-` … `95-`) | The five type-first categories ([ADR-47](../adr/47-type-first-category-folders.md)); system infrastructure now lives at `system/`. |
-| **"The human"** | The **PI** (and the agent fronting for them, the **Co-PI**). |
-
----
-
 ## Related
 
 - Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
