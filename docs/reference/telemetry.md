@@ -6,7 +6,13 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk schema. All logs live under `system/logs/`. For the design rationale — why these particular signals and how they map to a publication — see [ADR-20 (publication path)](../adr/20-publication-path.md) and the deferred [ADR-62 (measurement and verification harnesses)](../adr/62-measurement-and-verification-harnesses.md).
+Every signal Memoria records about its own operation, with the exact on-disk
+schema. Audit and analytics logs live under `system/logs/`; the diagnostic plane
+is the deliberate exception and lives outside the vault under the OS state
+directory. For the design rationale — why these particular signals and how they
+map to a publication — see [ADR-20 (publication path)](../adr/20-publication-path.md),
+the deferred [ADR-62 (measurement and verification harnesses)](../adr/62-measurement-and-verification-harnesses.md),
+and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
 
 ## Conventions (apply to every log)
 
@@ -37,6 +43,28 @@ Every signal Memoria records about its own operation, with the exact on-disk sch
 Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below. Likewise derived: `system/metrics/eval/runs.jsonl`, one line per scored vault-eval run, written by `eval_score.py` from the board's eval-card results — schema in [Vault eval](vault-eval.md).
 
 > **`disposition.jsonl` and `cost.jsonl` are currently empty — but the data is reachable.** `board_export.py` derives these two from the card `metadata` overlay returned by `hermes kanban list --json`, which omits run metadata and cost — so both files stay empty today. This was previously described as an upstream limitation; it is not. Hermes (v0.14.0) **does** record per-call cost and tokens, in its per-profile session store (`~/.hermes/profiles/<lane>/state.db`, `sessions` table), reachable via `hermes kanban show <id> --json` (`runs[].metadata.worker_session_id`) joined to that store; disposition is a human review decision capturable at the review action, not from a card overlay. The fix and its trade-offs are [ADR-106 (cost and disposition capture)](../adr/106-cost-and-disposition-capture.md). The other signals (`board-state`, `board-transitions` status changes, `audit`, `lint-findings`) are unaffected.
+
+## Diagnostic Plane
+
+Diagnostics are local troubleshooting records for Memoria-owned Python MCP
+servers and Operations. They are not audit memory and never live under the vault
+or `system/logs/`.
+
+| Item | Contract |
+| --- | --- |
+| Default location | `$XDG_STATE_HOME/memoria/diagnostics/`, or `~/.local/state/memoria/diagnostics/` when `XDG_STATE_HOME` is unset |
+| Override | `MEMORIA_DIAGNOSTICS_DIR`, still rejected when a caller supplies a vault path and the target is inside that vault |
+| File pattern | `diagnostics-YYYY-MM-DD.jsonl`, rotated to bounded `.gz` backups |
+| Default level | `warn` and `error`; raise with `MEMORIA_DIAGNOSTIC_LEVEL` or `MEMORIA_DIAGNOSTIC_LEVEL_<COMPONENT>` |
+| Default content | typed `code`, `component`, `level`, timestamp, payload SHA-256, payload byte length, and content-light details |
+| Raw capture | one process only with `MEMORIA_DIAGNOSTIC_RAW_ONCE=1`; the flag is consumed after one event and stored only as redacted text |
+| Bundle command | `python -m memoria.runtime.diagnostics --bundle ~/memoria-diagnostics.tgz` |
+| Redaction self-test | `python -m memoria.runtime.diagnostics --self-test` |
+
+Diagnostic detail fields hash strings and paths instead of writing them verbatim.
+The user-triggered bundle is a compressed archive with a README and redacted JSONL
+files; review it before sharing. Use `--include-raw` only when a one-shot raw
+capture was deliberately enabled and the redacted payload is needed for support.
 
 ## audit.jsonl
 
