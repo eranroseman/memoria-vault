@@ -50,6 +50,7 @@ l0() {
   run python3 scripts/agents_doctor.py
   run python3 scripts/github_doctor.py
   run python3 scripts/ruleset_doctor.py
+  run python3 scripts/plugin_provenance_doctor.py
   if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
   run python3 -m py_compile scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py

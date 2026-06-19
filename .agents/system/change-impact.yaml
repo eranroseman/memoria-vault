@@ -88,6 +88,20 @@ areas:
       - bash -n scripts/install.sh
       - python -m pytest tests/test_installer_skeleton.py
       - bash scripts/e2e-smoke.sh
+  - area: Bundled Obsidian plugin provenance
+    paths:
+      - src/.obsidian/community-plugins.json
+      - src/.obsidian/plugin-provenance-lock.json
+      - src/.obsidian/plugins/**
+      - scripts/plugin_provenance_doctor.py
+    inspect:
+      - Enabled plugin roster and bundled plugin directories
+      - Lock entry metadata, manifest versions, and SHA-256 artifact digests
+      - Undeclared executable artifacts under bundled plugin directories
+      - ADR-74 and Obsidian plugin reference wording
+    checks:
+      - python scripts/plugin_provenance_doctor.py
+      - python -m pytest tests/test_plugin_provenance.py
   - area: Offline e2e smoke harness
     paths:
       - scripts/e2e-smoke.sh

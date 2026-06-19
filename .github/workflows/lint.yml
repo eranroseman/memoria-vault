@@ -51,5 +51,7 @@ jobs:
         run: python scripts/github_doctor.py
       - name: ruleset contract
         run: python scripts/ruleset_doctor.py
+      - name: plugin-provenance-doctor
+        run: python scripts/plugin_provenance_doctor.py
       - name: test-runner paths
         run: bash scripts/test.sh check   # L1 module paths in test.sh resolve (drift guard)
