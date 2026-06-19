@@ -111,6 +111,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
+| [83](83-direct-pi-relate-control.md) | Direct PI relate control | deferred |
 
 <!-- ADR-INDEX:END -->
 
