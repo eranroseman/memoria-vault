@@ -17,7 +17,7 @@ nav_order: 62
 
 ## Context
 
-A set of analysis capabilities would make the Peer-reviewer measurable, the claim layer richer, and the system's health visible over time. The **minimal capture** they all read — the six-signal operational log (state-transition timestamps + decision time, cost per card, deny reasons, suggestion disposition, FAMA exposure) — is **already decided and shipping**: it is the single highest-leverage action from the publication-path report, emitted and self-tested in v0.1, with schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see [ADR-20 publication path](20-publication-path.md)). Capture cannot be back-filled, so it ships first. This ADR records the harness family: the fleet observability aggregator has shipped, while the remaining harnesses stay deferred until their per-item conditions raise priority.
+A set of analysis capabilities would make the Peer-reviewer measurable, the claim layer richer, and the system's health visible over time. The **minimal capture** they all read — the six-signal operational log (state-transition timestamps + decision time, cost per card, deny reasons, suggestion disposition, FAMA exposure) — is the single highest-leverage action from the publication-path report, with schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see [ADR-20 publication path](20-publication-path.md)). Capture cannot be back-filled, so the schema and available emitters ship first; two card-metadata-derived streams remain blocked on Hermes serialization. This ADR records the harness family: the fleet observability aggregator has shipped, while the remaining harnesses stay deferred until their per-item conditions raise priority.
 
 ## Decision
 
@@ -32,7 +32,7 @@ Memoria treats the following analysis harnesses as the approved direction:
 
 ## Consequences
 
-- Each remaining deferred harness reads the already-shipping six-signal capture, so the deferral is a scheduling question, not a data-availability one once the log accumulates.
+- Each remaining deferred harness reads the six-signal capture model. For signals that already emit, deferral is a scheduling question; for the two Hermes-metadata-dependent streams, the harnesses must treat missing rows as an implementation gap rather than valid zero activity until [#625](https://github.com/eranroseman/memoria-vault/issues/625) is resolved.
 - Several harnesses gate one another (the CiteME fixture gates the claim taxonomy; fleet observability surfaces the retry rate that gates reflection-on-retry), so order matters and the conditions encode it.
 - Partial adoption can be worse than none — a claim taxonomy with most claims untyped makes type-aware checks unreliable; a too-small or too-easy CiteME fixture gives false confidence — so each waits for its condition.
 - Verdicts stay diagnostic, not gating, consistent with [ADR-11](11-vault-eval-maintenance.md): an eval or prose-check dip informs the human and never auto-halts scheduled work.
@@ -49,8 +49,25 @@ Per-item conditions that raise priority at the cadence review:
 - **LLM-judge `prose-check` gate** — a deliverable has been re-exported more than twice for issues a model could have caught on the first read.
 - **Reflection-on-retry** — sustained retry rate > 0.10 across a lane visible in fleet observability, *or* a specific skill's retry rate crosses 0.20.
 
+## Current implementation mapping
+
+The telemetry schema and downstream aggregation contract are current system behavior,
+but the six signals are not all equally populated yet. `audit.jsonl`,
+`board-state.jsonl`, `board-transitions.jsonl`, `lint-findings.jsonl`, and the other
+non-Hermes-overlay streams emit through their documented writers. `disposition.jsonl`
+and `cost.jsonl` are wired in `board_export.py` but stay empty because current Hermes
+serialized card JSON does not expose the `metadata` overlay fields Memoria needs
+(`review_status`, `cost`, and `tokens`). That is an upstream/runtime dependency, not
+permission to invent a second local source of truth. Keep the six-signal model as the
+accepted direction, and close the implementation gap by making Hermes expose stable
+card metadata or an equivalent supported API; track that work in
+[#625](https://github.com/eranroseman/memoria-vault/issues/625).
+
 ## Related
 
 - **Related decisions / Depends on:** [ADR-11 vault-eval as a maintenance capability](11-vault-eval-maintenance.md) (the diagnostic-not-gating discipline and the eval surface these harnesses report through); [ADR-20 publication path](20-publication-path.md) (the six-signal capture these harnesses read, already adopted); [ADR-41 configurable review-gate mode](41-configurable-review-gate-mode.md) (the export/review gate the `prose-check` capability attaches to).
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
-- **Tracking issue:** [#412](https://github.com/eranroseman/memoria-vault/issues/412) — revisit at each release cadence.
+- **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
+  — cadence review for the harness family;
+  [#625](https://github.com/eranroseman/memoria-vault/issues/625) — Hermes metadata
+  dependency for `disposition.jsonl` and `cost.jsonl`.

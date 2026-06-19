@@ -25,15 +25,28 @@ No mature, typed, gated clustering/topic MCP exists to adopt — a survey of the
 
 ## Decision
 
-Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and ship it in v0.1. It wraps **BERTopic** — the one library that bundles the standard sentence-transformers → UMAP → HDBSCAN → c-TF-IDF pipeline in a single call — behind ~3 typed, read-only MCP tools (e.g. `cluster`, `reduce_2d`, `topic_model`) the Mapper invokes over MCP. The Mapper stays **fully sandboxed** (`code_execution` / `terminal` / `web` all disabled); the non-runnable `scikit-learn` and `umap-learn` skill grants are retired in favour of the MCP. This follows the [ADR-30](30-deterministic-ingest-pipeline.md) precedent (Memoria-authored deterministic compute reaches the agent over MCP) and the [ADR-32](32-external-access-over-mcp.md) rule (shared capability at the MCP layer, posture isolation at the agent layer).
+Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and ship it in v0.1. The MCP owns both the lightweight typed-graph clustering path and the optional heavy topic-modeling path: graph/community maps run with NetworkX over authored `links:` and `relationships`, while **BERTopic** remains the opt-in topic-modeling backend for the standard sentence-transformers → UMAP → HDBSCAN → c-TF-IDF pipeline. The Mapper invokes typed MCP tools such as `cluster_build_graph`, `cluster_emit_canvas`, and `cluster_model_topics` over MCP. The Mapper stays **fully sandboxed** (`code_execution` / `terminal` / `web` all disabled); the non-runnable `scikit-learn` and `umap-learn` skill grants are retired in favour of the MCP. This follows the [ADR-30](30-deterministic-ingest-pipeline.md) precedent (Memoria-authored deterministic compute reaches the agent over MCP) and the [ADR-32](32-external-access-over-mcp.md) rule (shared capability at the MCP layer, posture isolation at the agent layer).
 
 ## Consequences
 
-- **The Mapper's clustering actually runs** — gated and audited through the policy plugin — while the lane keeps `code_execution`/`terminal`/`web` off. The "no direct external access" property holds.
-- **The heavy ML dependencies live in exactly one gated place.** BERTopic pulls `sentence-transformers` (→ `torch`), `umap-learn`, and `hdbscan`. This is a real install-footprint cost, accepted because clustering inherently needs these libraries — the MCP *relocates* an inherent dependency behind the gate rather than adding net-new weight, and the agent never gains arbitrary-code execution. They ship as the cluster MCP's own (optionally separate) requirements, not the lean policy-core `requirements.txt`.
-- **Self-contained and deterministic.** The server computes embeddings itself (or, later, reads `qmd`'s vector index to avoid recompute); clustering is reproducible for fixed parameters; it ships an offline self-test over fixture vectors (no model download needed for the test), consistent with `verify_mcp.py`/`detectors.py`.
+- **The Mapper's graph clustering and Canvas proposal path actually run** — gated and audited through the policy plugin — while the lane keeps `code_execution`/`terminal`/`web` off. The "no direct external access" property holds.
+- **The heavy ML dependencies stay optional and isolated.** BERTopic pulls `sentence-transformers` (→ `torch`), `umap-learn`, and `hdbscan`. That install-footprint cost is accepted for topic modeling, but it is not part of the lean policy-core requirements and not required for the default graph/community path.
+- **Self-contained and deterministic.** The graph path uses authored vault edges plus fixed seeds and echoes parameters; the BERTopic path computes embeddings itself when the optional dependencies are installed (or, later, may read `qmd`'s vector index to avoid recompute). The offline self-test proves deterministic graph behavior and clean BERTopic degradation when optional dependencies are absent.
 - **Retires two dead skill grants** (`scikit-learn`, `umap-learn`) and tidies the installer's skill inventory.
 - **Implementation is a tracked follow-up.** This ADR records the decision and the shape; the server, the Mapper `config.yaml` `mcp_servers` wiring, the `cluster-mapping` skill update (call the MCP, not the skills), and the docs land next.
+
+## Current implementation mapping
+
+`src/.memoria/mcp/cluster_mcp.py` is the shipped cluster MCP. Its default,
+PR-safe surface is lightweight and deterministic: `cluster_build_graph` builds a
+typed NetworkX graph from authored note `links:` and entity `relationships`,
+computes communities/centrality/layout, and `cluster_emit_canvas` writes a staged
+claim-debate Canvas under the allowed maps home. `cluster_model_topics` is the
+optional BERTopic surface. If BERTopic or its heavy dependencies are absent, it
+returns a structured `bertopic-not-installed` error instead of requiring the default
+vault install to carry the ML stack. `tests/test_cluster_mcp.py` locks that split:
+graph/canvas behavior must run deterministically, and the topic-modeling path must
+either run with enough data and dependencies or degrade cleanly.
 
 ## Alternatives considered
 

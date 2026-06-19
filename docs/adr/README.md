@@ -103,7 +103,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | accepted |
 | [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | accepted |
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
-| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | deferred |
+| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | deferred |
 | [77](77-project-gate.md) | Project gate | accepted |
@@ -112,6 +112,7 @@ condition. See [the template](_template.md) for the required fields per status.
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | accepted |
+| [83](83-direct-pi-relate-control.md) | Direct PI relate control | deferred |
 
 <!-- ADR-INDEX:END -->
 
