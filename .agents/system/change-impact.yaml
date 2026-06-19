@@ -35,6 +35,7 @@ areas:
   - area: Runtime policy
     paths:
       - src/.memoria/mcp/policy_mcp.py
+      - src/.memoria/mcp/policy_server.py
       - src/.memoria/mcp/policy_hook.py
       - src/.memoria/plugins/memoria-policy-gate/**
       - memoria/runtime/policy/**

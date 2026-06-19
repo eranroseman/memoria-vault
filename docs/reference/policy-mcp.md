@@ -5,7 +5,7 @@ parent: Reference
 
 # Policy MCP
 
-The runtime write-gate (`src/.memoria/mcp/policy_mcp.py`): it intercepts every vault action, checks the lane-override rules, and returns a decision before any content reaches disk. Every rule lives in a versioned lane-override file — the gate is not a substitute for the review gate, not a content checker, and not a hidden controller.
+The runtime write-gate (`src/.memoria/mcp/policy_mcp.py`): it intercepts every vault action, checks the lane-override rules, and returns a decision before any content reaches disk. The stable deployed entrypoint is `policy_mcp.py`; the behavior-preserving core is split under `memoria.runtime.policy` (`model`, `paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped by `src/.memoria/mcp/policy_server.py`. Every rule lives in a versioned lane-override file — the gate is not a substitute for the review gate, not a content checker, and not a hidden controller.
 
 ---
 
@@ -54,7 +54,7 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 
 **Two rules override lane configuration entirely:**
 
-1. **Review-gated zones are never auto-written.** The gated prefixes are loaded from `src/.memoria/schemas/folders.yaml` (`gated_prefixes`) — in v0.1.0-alpha.2 that is `notes/claims/` and `notes/hubs/`. A dependency-free fallback tuple inside `policy_mcp.py` mirrors them (test-enforced to stay in sync). An otherwise-allowed mutating action there degrades to `dry_run` regardless of the lane's `policy.allow`. No profile can bypass this.
+1. **Review-gated zones are never auto-written.** The gated prefixes are loaded from `src/.memoria/schemas/folders.yaml` (`gated_prefixes`) — in v0.1.0-alpha.2 that is `notes/claims/` and `notes/hubs/`. The dependency-free fallback tuple in `memoria.runtime.policy.paths` mirrors them (test-enforced to stay in sync). An otherwise-allowed mutating action there degrades to `dry_run` regardless of the lane's `policy.allow`. No profile can bypass this.
 2. **Auto-fix is class-gated.** Only `flags.class ∈ {safe-and-unambiguous, authorized-targeted}` may proceed; `schema-content` is pinned to `dry_run` and `review-gated-edit` to `deny`, regardless of who asks.
 
 ---

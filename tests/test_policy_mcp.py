@@ -1,4 +1,4 @@
-"""L1 component test for policy_mcp — extracted from its former --self-test (ADR-44)."""
+"""L1 component test for the policy MCP and split policy core."""
 import policy_mcp as _m
 import pytest
 from _util import CheckHarness
@@ -327,3 +327,14 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     unblocked = engine.check("memoria-writer", "write", "notes/hubs/h.md", "T-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
+
+
+def test_split_policy_decision_core_imports_without_mcp_server():
+    from memoria.runtime.policy.decision import decide
+    from memoria.runtime.policy.model import LanePolicy
+
+    lane = LanePolicy(profile="memoria-test", allow_write=["inbox/**"], require=["audit_log"])
+    result = decide("memoria-test", "write", "inbox/card.md", lane)
+
+    assert result.decision == "allow_with_log"
+    assert result.policy_rule == "Test.write.inbox"

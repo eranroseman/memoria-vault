@@ -52,6 +52,7 @@ def _vault_with_policy(tmp_path):
     (vault / ".memoria" / "mcp").mkdir(parents=True)
     mcp_src = Path(_m.__file__).resolve().parent
     shutil.copy(mcp_src / "policy_mcp.py", vault / ".memoria" / "mcp" / "policy_mcp.py")
+    shutil.copy(mcp_src / "policy_server.py", vault / ".memoria" / "mcp" / "policy_server.py")
     shutil.copy(mcp_src / "_shared.py", vault / ".memoria" / "mcp" / "_shared.py")
     (lanes / "writer.yaml").write_text(
         "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
