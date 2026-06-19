@@ -5,7 +5,7 @@ parent: Reference
 
 # Glossary
 
-Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses. Retired terms are listed at the end.
+Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses.
 
 ---
 
