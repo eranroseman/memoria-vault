@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import structural_impact as impact
+import structural_impact_graph as impact_graph
 
 
 def write(path: Path, text: str):
@@ -84,6 +85,15 @@ def seed_mature_graph(vault: Path):
 
 def node(payload, path):
     return next(row for row in payload["nodes"] if row["path"] == path)
+
+
+def test_normalize_target_extracts_dict_wikilink_and_status():
+    assert impact_graph.normalize_target(
+        {"target": "[[notes/claims/a.md#section|Claim A]]", "status": "closed"}
+    ) == ("notes/claims/a", True)
+    assert impact_graph.normalize_target(
+        {"target": "[[notes/claims/a]]", "status": "open"}
+    ) == ("notes/claims/a", False)
 
 
 def test_structural_impact_materializes_mature_argument_graph(tmp_path):
