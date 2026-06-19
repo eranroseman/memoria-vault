@@ -96,6 +96,7 @@ eranroseman
 evals
 evergreen
 Excalidraw
+execplan
 explainability
 FAISS
 FAMA
@@ -127,6 +128,7 @@ hermes
 HITL
 HNSW
 hnswlib
+hotspots
 hyperparameters
 idempotent
 idempotently
