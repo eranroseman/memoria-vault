@@ -407,3 +407,9 @@ libcudart
 libcublas
 
 LOCALAPPDATA
+Merkle
+recomputable
+lossiness
+exfiltrates
+exfiltration
+capturable
