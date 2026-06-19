@@ -71,9 +71,9 @@ documented architecture.
 
 **Sequencing tiers:**
 
-1. **Tier 0 — bootstrap.** Create the "Release v0.1.0-alpha.8" parent issue + gate
-   sub-issues (G1–G9), and the `0.1.0-alpha.8` milestone; backfill the `{{ #NN }}`
-   placeholders in the release plan.
+1. **Tier 0 — bootstrap.** Create the "Release v0.1.0-alpha.8" parent issue, gate
+   sub-issues (G1–G9), stage sub-issues (S0–S5), and the `0.1.0-alpha.8`
+   milestone; backfill the `{{ #NN }}` placeholders in the release plan.
 2. **Tier 1 — spine (blocks the rest of the refactor).** #727.
 3. **Tier 2 — helpers.** #728 (prefer before #729/#730).
 4. **Tier 3 — parallel after foundation.** #729, #731, #686, #688, #736, #737,
@@ -92,8 +92,9 @@ any change (a shared checkout sweeps concurrent staged files into your commit).
    ```bash
    env -u GITHUB_TOKEN gh api repos/eranroseman/memoria-vault/milestones \
      -f title='0.1.0-alpha.8' -f state=open
-   # create the "Release v0.1.0-alpha.8" parent issue with one sub-issue per gate G1-G9,
-   # then edit release-plan-0.1.0-alpha.8.md §2/§4 to replace {{ #NN }} with the parent number.
+   # create the "Release v0.1.0-alpha.8" parent issue with one sub-issue per gate G1-G9
+   # and one sub-issue per validation stage S0-S5, then edit release-plan-0.1.0-alpha.8.md
+   # §2/§3 to replace {{ #NN }} with the parent number and stage issue numbers.
    ```
 
 1. **Per-issue session** (template — repeat for each issue, `<slug>`/`<n>` filled):
@@ -236,19 +237,58 @@ Per the verify-change playbook. Lowest-cost evidence first; paste transcripts in
 - **Claim:** Given a fresh checkout, when `pip install -e .` then
   `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/`, then both succeed and a
   bare import of the core package works without the MCP SDK. *(G1/#727)*
+- **Claim:** Given shared runtime helpers, when helper edge-case unit tests run, then
+  malformed frontmatter, nested YAML, no-frontmatter, bad/missing JSONL, append parent
+  creation, and skip-dir traversal cases pass, and at least three production modules
+  no longer carry duplicate helper code. *(G2/#728)*
 - **Claim:** Given the policy split, when the policy/gate/loudness test suites run, then
   every security invariant in §4/#729 still holds (deny paths, audit, narrowing, hash
   validation). *(G3/#729)*
+- **Claim:** Given the structural-impact/ingest/installer hotspot splits, when their
+  focused extraction tests, `pytest tests/`, and `bash scripts/e2e-smoke.sh` run, then
+  moved symbols keep documented compatibility wrappers and no behavior changes.
+  *(G3/#730)*
+- **Claim:** Given the e2e smoke refactor, when `bash scripts/e2e-smoke.sh` runs, then
+  the same stage names execute in the same order and assertions live in importable
+  Python helpers behind the unchanged shell entrypoint. *(G4/#731)*
+- **Claim:** Given the bundled-plugin provenance doctor, when the required validation
+  path runs, then enabled plugins are represented once, declared artifacts exist and
+  match SHA-256, undeclared executables are rejected, and install remains
+  network-independent. *(G4/#686)*
+- **Claim:** Given `scripts/test-l2.sh`, when prereqs are missing it reports a clear
+  skip, and when prereqs are present it proves at least one live Hermes dispatch,
+  policy-gate audit row, and artifact assertion without entering PR CI. *(G4/#688)*
 - **Claim:** Given the diagnostic plane, when an error is logged, then a redacted,
   rotated file appears in the OS state dir and **no** file appears under the vault or a
   committed path; the redaction self-test passes on known-sensitive strings. *(G5/#736)*
+- **Claim:** Given cost/disposition analytics, when the Hermes cost doctor and joined
+  fixture run, then CLI/schema drift fails closed, completed cards join to session rows
+  with provenance, missing sessions are counted, and review disposition is emitted at
+  the human action. *(G5/#737)*
 - **Claim:** Given pre-file similarity, when a claim note is filed near existing
   neighbours, then top-3 neighbours are surfaced report-only and nothing is auto-merged
   or blocked. *(G6/#370)*
+- **Claim:** Given the hybrid-score calibration spec, when `calibration.yaml` and the
+  threshold documentation are reviewed, then candidate-rank, outline-score, and
+  clustering thresholds are filled only with real-data, error-budgeted, drift-bound
+  evidence, and unfilled scores do not ship. *(G6/#379)*
+- **Claim:** Given the read-only Inspector, when opened in a runtime vault, then it shows
+  operational state from existing sources without adding a write path. *(G7/#697)*
+- **Claim:** Given exploration-trace capture, when a map-lane scope or gap report records
+  rejected directions, then the structured trace lands beside the project output and is
+  not auto-promoted to canonical knowledge. *(G7/#713)*
 - **Claim:** Given a fresh vault, when each of the four gate dashboards is opened empty,
   then each reads as intentional with a clear first action. *(G8/#690)*
 - **Claim:** Given `capture zotero`, when run, then the catalog gains the captured
   entry (regression test green). *(G8/#660)*
+- **Claim:** Given the Obsidian project-management survey, when the research output is
+  reviewed, then each plugin/methodology has adopt/borrow/reject rationale, conflicts
+  with the gate/lifecycle model are named, and durable findings route to issues or ADRs
+  rather than remaining only in `tmp/`. *(G9/#329)*
+- **Claim:** Given all child issues are closed, when the Tier 5 close-out runs, then
+  docs/reference, docs/testing, ADR-76, and the release plan describe the final
+  import/deploy shape and the release parent/gate/stage issues carry the evidence.
+  *(#726)*
 - **Prove with:** `scripts/test.sh` selections, `bash scripts/e2e-smoke.sh`,
   `scripts/test-l2.sh` (opt-in), and a fresh-vault GUI pass.
 
@@ -270,6 +310,8 @@ Per the verify-change playbook. Lowest-cost evidence first; paste transcripts in
       sub-issues G1 #741 · G2 #742 · G3 #743 · G4 #744 · G5 #745 · G6 #746 · G7 #747 ·
       G8 #748 · G9 #749 (natively linked under #740, on the board as `Ready`); 17 work
       issues assigned to the milestone; release-plan placeholder backfilled.
+- [x] 2026-06-19 — Stage sub-issues added and linked under #740: S0 #756 · S1 #757 ·
+      S2 #758 · S3 #759 · S4 #760 · S5 #761.
 - [ ] Tier 1 — #727 package spine merged.
 - [ ] Tier 2 — #728 shared helpers merged.
 - [ ] Tier 3 — #729 #731 #686 #688 #736 #737 #370 #379 #697 #713 #690 #660 #329 merged.

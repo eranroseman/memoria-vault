@@ -134,9 +134,9 @@ status.
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 | [102](102-disposable-projection-engine.md) | Disposable projection engine | proposed |
 | [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | proposed |
-| [104](104-telemetry-three-planes.md) | Telemetry as three planes — audit, analytics, diagnostic | proposed |
-| [105](105-diagnostic-plane.md) | Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail | proposed |
-| [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | proposed |
+| [104](104-telemetry-three-planes.md) | Telemetry as three planes — audit, analytics, diagnostic | accepted |
+| [105](105-diagnostic-plane.md) | Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail | accepted |
+| [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | accepted |
 | [107](107-okf-interchange-bundle-format.md) | OKF as Memoria's import/export bundle format | proposed |
 | [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
 
