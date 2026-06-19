@@ -132,6 +132,8 @@ status.
 | [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | proposed |
 | [100](100-exploration-trace-capture.md) | Exploration-trace capture | proposed |
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
+| [102](102-disposable-projection-engine.md) | Disposable projection engine | proposed |
+| [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | proposed |
 
 <!-- ADR-INDEX:END -->
 

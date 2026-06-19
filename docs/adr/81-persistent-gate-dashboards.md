@@ -45,9 +45,11 @@ replaces the file explorer only through its own `replaceFileExplorer` setting, w
 the core file explorer retained as fallback and ADR-74 provenance satisfied by
 vendored artifacts.
 
-The deferred set for this UI line is explicit: the general projector engine,
-projected telemetry bases, Canvas/argument graph, and dedicated edge-authoring
-"relate" control are not part of alpha.7.
+The deferred set for this UI line is explicit: the general projector engine
+([ADR-102](102-disposable-projection-engine.md)), projected telemetry bases, and
+Canvas/argument graph ([ADR-103](103-projected-canvas-spatial-axis.md)) are not
+part of alpha.7. The dedicated edge-authoring "relate" control is a separate
+accepted decision ([ADR-83](83-direct-pi-relate-control.md)).
 
 ## Consequences
 
@@ -90,4 +92,6 @@ metaphor.
   [ADR-70](70-navigation-gates-dashboards.md),
   [ADR-72](72-command-surfacing.md),
   [ADR-74](74-pinned-obsidian-plugin-supply-chain.md).
+- **Related future proposals:** [ADR-102](102-disposable-projection-engine.md),
+  [ADR-103](103-projected-canvas-spatial-axis.md).
 - **Resolves / supersedes:** [ADR-68](68-workspaces-desk-library-studio.md).

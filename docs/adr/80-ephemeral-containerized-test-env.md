@@ -66,8 +66,7 @@ so absolute L5 quality and the per-profile config-shape surface stay on the
 Windows production-acceptance pass; the harness validates wiring, integration,
 golden path, recovery, security, and scale, plus eval *mechanics* and regression.
 
-**Three gates must be resolved before the harness ships** (it is `deferred` until
-then):
+**Three gates scope the remaining Phase 2 work**:
 
 1. **Prove the gate fires (safety).** The harness MUST include a negative
    deny-assertion: a known-deny write, routed through the live ADR-28 plugin, is
@@ -185,6 +184,20 @@ cheap model and disposable vault. That live driver belongs under opt-in/nightly
 containerized/headless Obsidian/local-LLM design remains Phase 2 / nightly /
 release-candidate `runtime-integration`, not a required PR gate.
 
+## Scratch disposition
+
+The clean-sheet alpha.5 test-env scratch is retired into this ADR and the current
+testing docs. The retained parts are Phase 1 `workflow-replay`, the explicit Git
+preflight, the known-deny assertion, cassette matching on tool-call structure, and
+the Phase 2 `runtime-integration` plan. The stale parts are rejected rather than
+carried forward: the old Desk/Library/Studio command surface, WSL2 cron as a
+nightly trigger, any required PR dependency on Docker/GPU/headless Obsidian, and
+the idea that workflow replay completely replaces a future live Hermes smoke. Live
+Hermes, GUI/REST proof, local-model tool-call smoke, screenshots, chaos/security,
+and performance stay opt-in/nightly/release-candidate work until a stable runner
+exists; issue [#722](https://github.com/eranroseman/memoria-vault/issues/722)
+tracks that Phase 2 closure path.
+
 ## When this matters
 
 **Phase 1 shipped in v0.1.0-alpha.6** (model-free L0–L4 record/replay harness, #586;
@@ -231,3 +244,5 @@ separate stack.
   [#576](https://github.com/eranroseman/memoria-vault/issues/576), thin deny-slice
   [#582](https://github.com/eranroseman/memoria-vault/issues/582)) and issue
   [#527](https://github.com/eranroseman/memoria-vault/issues/527) (HTTPS REST).
+  Phase 2 runtime-integration follow-up is tracked in
+  [#722](https://github.com/eranroseman/memoria-vault/issues/722).
