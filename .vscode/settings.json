@@ -32,6 +32,10 @@
       "tables": false
     }
   },
+  "editor.pasteAs.enabled": false,
+  "markdown.editor.pasteUrlAsFormattedLink.enabled": "never",
+  "markdown.editor.filePasteCopyIntoWorkspace": "never",
+  "markdown.editor.drop.copyIntoWorkspace": "never",
   "harper.diagnosticSeverity": "hint",
   "harper.linters.SpellCheck": false,
   "harper.linters.UseTitleCase": false,
