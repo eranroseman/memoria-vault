@@ -140,3 +140,4 @@ corpus; deferring it is a sequencing choice, not a different decision.
   serves the deferred Path-4 release of [ADR-20](20-publication-path.md).
 - **Reference:** Open Knowledge Format (OKF) v0.1 draft —
   `GoogleCloudPlatform/knowledge-catalog`, `okf/SPEC.md`.
+- **Tracking issue:** [#753](https://github.com/eranroseman/memoria-vault/issues/753).
