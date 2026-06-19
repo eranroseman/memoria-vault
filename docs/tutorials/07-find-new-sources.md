@@ -35,9 +35,9 @@ The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits 
 
 > "N=23, single lab; may not generalize beyond students." — `certainty: likely`
 
-Work the whole discovery queue in one batch sitting, not card by card — the discipline (and why) is in [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md). Kept papers join your reading queue via the ingest engine; skipping generously offered candidates is the system working, not failing.
+Work the whole discovery queue in one batch sitting, not card by card — the discipline (and why) is in [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md). Kept papers join your reading queue via the ingest operation; skipping generously offered candidates is the system working, not failing.
 
-Run discovery again whenever synthesis stalls — a hub that won't grow, a claim with one lonely source — and from any `gap` card you agree with. For the habit and keeping your research focus current, see [Find new sources](../how-to-guides/compile/find-new-sources.md).
+Run discovery again whenever synthesis stalls — a hub that won't grow, a claim with one lonely source — and from any `gap` card you agree with. For the habit and keeping your research focus current, see [Find new sources](../how-to-guides/library/find-new-sources.md).
 
 ---
 
@@ -51,7 +51,7 @@ Run discovery again whenever synthesis stalls — a hub that won't grow, a claim
 
 ## Where to go from here
 
-You've completed the tutorial sequence. The [How-to guides](../how-to-guides/README.md) cover each recurring task in more depth — and [Run the weekly review](../how-to-guides/curate/run-the-weekly-review.md) is the Friday ritual that keeps the queues honest. The [Reference](../reference/README.md) section is where you look up the exact field, command, or schema.
+You've completed the tutorial sequence. The [How-to guides](../how-to-guides/README.md) cover each recurring task in more depth — and [Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md) is the Friday ritual that keeps the queues honest. The [Reference](../reference/README.md) section is where you look up the exact field, command, or schema.
 
 ---
 

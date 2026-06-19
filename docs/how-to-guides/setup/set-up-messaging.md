@@ -95,7 +95,7 @@ Send any message to your bot in Telegram. Within a few seconds, a `.md` file sho
 
 ## Related
 
-- Fleeting note triage workflow: [Triage fleeting notes](../compile/triage-fleeting-notes.md)
+- Fleeting note triage workflow: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
 - The supported capture path meanwhile: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 - The two HTTP roles of the gateway: [Distribution model](../../explanation/deployment/distribution-model.md)
 - Hermes gateway docs: [hermes-agent.nousresearch.com/docs](https://hermes-agent.nousresearch.com/docs)

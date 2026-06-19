@@ -2,7 +2,7 @@
 # Retraction Watch dataset refresh cron. Downloads the Crossref-owned Retraction
 # Watch CSV (gitlab.com/crossref/retraction-watch-data, CC) to
 # .memoria/data/retraction_watch.csv — the authoritative source the retraction
-# sweep engine (operations/integrity/retraction/retraction.py) indexes by OriginalPaperDOI.
+# sweep operation (operations/integrity/retraction/retraction.py) indexes by OriginalPaperDOI.
 #
 # Deterministic, read-only fetch — no LLM, no vault writes. Monthly is plenty (the
 # dataset changes slowly; CrossRef update-to covers the real-time delta between

@@ -10,4 +10,4 @@ created: {{DATE:YYYY-MM-DD}}
 
 # Who
 
-One line: who this person is in the corpus (the ingest engine fills this).
+One line: who this person is in the corpus (the ingest operation fills this).

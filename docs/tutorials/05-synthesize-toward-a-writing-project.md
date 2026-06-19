@@ -48,7 +48,7 @@ If two of your claims relate, say so in `links:` — `supports` or `contradicts`
 
 When a topic has a few claims, give it a navigational home: a **hub** in `notes/hubs/` that lists your claim notes (and key sources) as `members` and says in a few lines what the cluster is about, what's settled, and what's still fighting. A hub is the renamed MOC — the synthesis surface a future draft starts from — and, like claims, it's review-gated and PI-authored.
 
-Create one now for this batch's topic; the full template and step-by-step procedure are in [Build a hub](../how-to-guides/curate/build-a-moc.md).
+Create one now for this batch's topic; the full template and step-by-step procedure are in [Build a hub](../how-to-guides/knowledge/build-a-moc.md).
 
 ---
 

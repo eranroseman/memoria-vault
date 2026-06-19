@@ -51,14 +51,14 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 ## From three layers to seven
 
-ADR-01's three layers described the v0.1.0-alpha.1 infrastructure but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). The design update pulled them apart, and [ADR-46](../../adr/46-seven-layer-architecture.md) superseded ADR-01 with the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Engines · Vault.**
+ADR-01's three layers described the v0.1.0-alpha.1 infrastructure but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). The design update pulled them apart, and [ADR-46](../../adr/46-seven-layer-architecture.md) superseded ADR-01 with the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
 
 Each refinement is the old argument carried further, not a new one:
 
 - The **board and workers** became the **Tasks** layer, with the **Co-PI** lifted out as its own layer — the one agent that converses and remembers, separated from the stateless lanes that execute.
 - The **policy boundary** became an explicit layer (**MCP**) rather than an implementation detail of the worker layer — naming where allow-listing, write-scoping, and audit actually live.
-- Deterministic work was pulled out of the worker set into **engines** — reproducible mechanism that needs no posture and no lane.
-- The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (Co-PI → Tasks → MCP → Engines/Vault); the PI and cron/CI are direct edges.
+- Deterministic work was pulled out of the worker set into **operations** — reproducible mechanism that needs no posture and no lane.
+- The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (Co-PI → Tasks → MCP → Operations/Vault); the PI and cron/CI are direct edges.
 
 The file-as-bus, durable-state core — thick files, thin everything else — is unchanged from ADR-01 to ADR-46.
 

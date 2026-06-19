@@ -1,6 +1,6 @@
 ---
 name: map-graph-claims
-description: "Render the typed claim graph: take claim notes and their typed relations (supports / contradicts / extends) from the cluster MCP's cluster_build_graph, emit a JSON Canvas of the claim debate — who supports, who contradicts, who extends whom — with contradictions visible at a glance, then raise one card. The engine computes the graph; this skill emits the propose-class canvas the PI inspects; the PI thinks. No score, threshold, or calibration. Use when a claim-graph / 'show me the debate' request lands for a topic or project."
+description: "Render the typed claim graph: take claim notes and their typed relations (supports / contradicts / extends) from the cluster MCP's cluster_build_graph, emit a JSON Canvas of the claim debate — who supports, who contradicts, who extends whom — with contradictions visible at a glance, then raise one card. The operation computes the graph; this skill emits the propose-class canvas the PI inspects; the PI thinks. No score, threshold, or calibration. Use when a claim-graph / 'show me the debate' request lands for a topic or project."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Mapping, Canvas, Claims, Visualization]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "map:graph-claims"
+    skill_id: "map-graph-claims"
     profile: memoria-librarian
     lane: map
     mcp_tools:
@@ -26,9 +26,9 @@ metadata:
     outputs: [fleeting, candidate]
 ---
 
-# map:graph-claims
+# map-graph-claims
 
-Show the corpus's claims as what they are — a debate. The cluster engine computes the
+Show the corpus's claims as what they are — a debate. The cluster operation computes the
 typed graph (nodes for claim notes, edges for the `supports` / `contradicts` /
 `extends` relations the notes already declare) and **deliberately does not emit Canvas**
 (ADR-33): turning that graph into a `.canvas` proposal is this skill, the map lane's
@@ -52,7 +52,7 @@ by a confidence threshold or calibrated cutoff.
 2. **Emit the claim canvas**: `cluster_emit_canvas(scope="notes/claims", …)` — one
    `file` node per claim (real vault paths); edges carry their relation as the label,
    `contradicts` edges visually distinct (color); claims grouped where the graph shows
-   a cluster. Layout starts from the engine's coordinates — adjust only to de-overlap.
+   a cluster. Layout starts from the operation's coordinates — adjust only to de-overlap.
 3. **Write — gated.** The canvas to
    `notes/fleeting/maps/graph-claims-<topic>-<YYYY-MM-DD>.canvas` plus a companion note
    (same stem, `.md`) recording provenance: scope, cap, `params_echo`, what was pruned.
@@ -64,7 +64,7 @@ by a confidence threshold or calibrated cutoff.
 - The `.canvas` file: ≤ cap claim file-nodes with real paths, relation-labeled edges,
   contradictions visible at a glance.
 - The companion provenance note: every pruned claim listed with its centrality (the PI
-  can disagree with the cap), and the engine `params_echo` for reproducibility.
+  can disagree with the cap), and the operation `params_echo` for reproducibility.
 - One `candidate` card (schema `candidate`, ADR-51 honesty body): `action` = "open the
   claim graph and judge the debate"; honest `argument_against` (e.g. "edges reflect
   declared relations only — an unstated contradiction the notes never link won't show").

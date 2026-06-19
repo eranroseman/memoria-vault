@@ -107,7 +107,7 @@ Each case below gives: **Setup** (fixtures/preconditions) · **Run** (invocation
 | S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `inclusionai/ling-2.6-flash` (test config is live) |
 | S3 | `hermes -p memoria-librarian chat -s query "<F2 topic>"` | returns ranked results; **no** write row in `audit.jsonl` |
 | S4 | `hermes -p memoria-librarian chat -s ingest smithA` | `catalog/papers/smithA.md` created; `allow_with_log` row in `audit.jsonl` |
-| S5 | `hermes -p memoria-copi chat -s socratic-processing catalog/papers/smithA.md` then ask it to "write a note" | questions only; **`deny`** (or no write) for `memoria-copi` in `audit.jsonl` — write-wall holds |
+| S5 | `hermes -p memoria-copi chat -s ask-question-source catalog/papers/smithA.md` then ask it to "write a note" | questions only; **`deny`** (or no write) for `memoria-copi` in `audit.jsonl` — write-wall holds |
 
 If S1–S5 pass, proceed to the full matrix.
 
@@ -141,7 +141,7 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| C1 | `socratic-processing` | F1 note | `socratic-processing catalog/papers/smithA.md` | questioning turns only; **zero** vault writes; any write attempt → `deny` for `memoria-copi` |
+| C1 | `ask-question-source` | F1 note | `ask-question-source catalog/papers/smithA.md` | questioning turns only; **zero** vault writes; any write attempt → `deny` for `memoria-copi` |
 | C2 | `lens-reading` | a lens slug exists | `lens-reading <author>-<concept>` on a note | questions framed by the lens; still no writes |
 
 ### 4.4 Writer — `hermes -p memoria-writer chat -s …`
@@ -150,7 +150,7 @@ If S1–S5 pass, proceed to the full matrix.
 |---|---|---|---|---|
 | W1 | `draft` | F3 | `draft "<question over F3 claims>"` | an answer card in `inbox/`; card → `done`, queued for review (lifecycle stays `proposed`); audit write row |
 | W2 | `query` | F3 | `query "<term>"` | ranked results; read-only (no write row) |
-| W3 | `lint` (handoff) | a draft | `lint` | a Linter-engine request/card is raised; **Writer writes nothing to logs** — the Linter engine executes (verify no Writer lint output, a handoff card instead) |
+| W3 | `lint` (handoff) | a draft | `lint` | a Linter-operation request/card is raised; **Writer writes nothing to logs** — the Linter operation executes (verify no Writer lint output, a handoff card instead) |
 | W4 | `promote` (handoff) | an evergreen claim (`type: claim`, `maturity: evergreen`) | `promote <claim>` | a promotion proposal surfaces; the write into `notes/claims/` is **review-gated → `dry_run`** in `audit.jsonl` (no real write until human approves) |
 
 ### 4.5 Peer-reviewer — `hermes -p memoria-peer-reviewer chat -s …` (dry-run by default)
@@ -174,10 +174,10 @@ If S1–S5 pass, proceed to the full matrix.
 | K5 | `workspace` | F4 | `workspace` | VS Code workspace set up with vault **read-only** and the `code/` zone writable |
 | K6 | **Engineer write-wall** | — | (during K1) | writes confined to `projects/*/code/`; any write elsewhere → `deny` |
 
-### 4.7 Linter engine (report-only)
+### 4.7 Linter operation (report-only)
 
-The Linter is an **engine** the Librarian/system invokes, not a chat profile —
-`memoria-linter` is retired. These checks run as engine passes (report-only); the
+The Linter is an **operation** the Librarian/system invokes, not a chat profile —
+`memoria-linter` is retired. These checks run as operation passes (report-only); the
 findings land in the logs below.
 
 | ID | Command | Setup | Run | Pass criteria |
@@ -189,7 +189,7 @@ findings land in the logs below.
 | S5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
 | T6 | `session-log` *(deferred)* | — | `session-log` | a per-session digest at `system/logs/sessions/<timestamp>.jsonl` — written by the Linter's `session_summary.py` on the daily lint cron, not by a `session-log` CLI command ([ADR-25](../../adr/25-session-logging-two-logs.md)); sessions are digested after a 24 h quiet window |
 | T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
-| T8 | **Linter scope** | — | (during S1) | only `system/logs/**` writes occur for the Linter engine; cosmetic/log auto-fixes only |
+| T8 | **Linter scope** | — | (during S1) | only `system/logs/**` writes occur for the Linter operation; cosmetic/log auto-fixes only |
 
 ### 4.8 Board management — `hermes kanban …` (non-interactive)
 
@@ -246,7 +246,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X2 | **Co-PI write-wall** — any Co-PI write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
 | X3 | **Review-gate degradation** — Writer/agent write to `notes/claims/` or `notes/hubs/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
-| X5 | **Dry-run safety** — all Peer-reviewer/Linter-engine default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
+| X5 | **Dry-run safety** — all Peer-reviewer/Linter-operation default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
 | X7 | **Model in effect** — `profile show` for all 5 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |
 

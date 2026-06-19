@@ -29,7 +29,7 @@ The audit log is what the audit-log and fleet-health [dashboards](../dashboards/
 
 The audit log answers "did this write happen and was it authorized?" — it is forensic and append-only. Because each write is hash-paired (the mechanism is owned by [Policy MCP](../../reference/policy-mcp.md)), a write can be reversed and an edit made outside the trail is detectable; the Linter closes the loop over this log with its `audit-unpaired-writes` and `vault-hash-drift` detectors (a legitimate human edit in Obsidian surfaces on the latter too, by design — see [Operations](../operations/README.md)). Per-session summaries answer "what did the session accomplish?" — they are per-session digests.
 
-Combining them would make the audit log verbose (session detail) and would make session summaries harder to query (mixed with per-write events). Each log has a different reader: the audit log feeds dashboards and tamper detection; session summaries are for the researcher reviewing what happened. The decision is [ADR-25](../../adr/25-session-logging-two-logs.md).
+Combining them would make the audit log verbose (session detail) and would make session summaries harder to query (mixed with per-write events). Each log has a different reader: the audit log feeds dashboards and tamper detection; session summaries are for the PI reviewing what happened. The decision is [ADR-25](../../adr/25-session-logging-two-logs.md).
 
 ---
 
@@ -41,6 +41,6 @@ Per-session files are named by `YYYY-MM-DD-HHMM`, so files from different machin
 
 ## Related
 
-- The Linter engine (reads `system/logs/`; runs the integrity checks; writes the session digests): [Operations](../operations/README.md)
+- The Linter operation (reads `system/logs/`; runs the integrity checks; writes the session digests): [Operations](../operations/README.md)
 - Session-log granularity (per-session files, not per-action): [Memory substrates](../../reference/memory.md)
 - Audit log (the other log): [Policy MCP](../../reference/policy-mcp.md)

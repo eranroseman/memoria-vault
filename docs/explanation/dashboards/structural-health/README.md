@@ -9,7 +9,7 @@ permalink: /explanation/dashboards/structural-health/
 
 # Structural health
 
-Dashboards that surface drift, loose ends, and the weekly maintenance agenda — the *Linter engine's* structural debt. The synthesis-agenda group is the PI's unfinished thinking; the actor-split rationale is in [Dashboards](../README.md).
+Dashboards that surface drift, loose ends, and the weekly maintenance agenda — the *Linter operation's* structural debt. The synthesis-agenda group is the PI's unfinished thinking; the actor-split rationale is in [Dashboards](../README.md).
 
 | Dashboard | Question it answers |
 |---|---|

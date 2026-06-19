@@ -1,7 +1,7 @@
 # Map-lane methods
 
-The method detail shared by the map lane's skills — `map:scope-project`,
-`map:report-coverage` (legacy `gap-report`), and `map:cluster-corpus` (legacy
+The method detail shared by the map lane's skills — `map-scope-project`,
+`map-report-coverage` (legacy `gap-report`), and `map-cluster-corpus` (legacy
 `cluster-map` / `cluster-mapping`). In v0.1.0-alpha.2 the clustering and topic-modeling run
 inside the **cluster MCP** (`cluster_build_graph` / `cluster_model_topics`, ADR-33);
 the HDBSCAN/UMAP layers below describe the intended full method. Every classical step below is
@@ -31,7 +31,7 @@ fixed random seed and fixed UMAP parameters the projection is reproducible.
 
 ## Topic modeling
 
-For thin-coverage detection (`map:report-coverage`), topics are extracted with BERTopic, or with
+For thin-coverage detection (`map-report-coverage`), topics are extracted with BERTopic, or with
 LDA / NMF over a TF-IDF representation for smaller corpora (`scikit-learn`). Topic
 identification is deterministic for fixed parameters. Topics are then thresholded by note
 count: topics with few supporting notes surface as underrepresented / thin coverage.
@@ -48,14 +48,14 @@ The LLM runs only after the deterministic layer has produced clusters, topics, a
 aggregations. It composes the narrative prose: the `corpus-map.md` summary over the cluster
 output, and the `gap-report.md` narrative about which thin-coverage topics matter for the
 project and in what order. The LLM never alters cluster boundaries, topic assignments, or the
-aggregated statistics — it only describes them. The `map:cluster-corpus` skill has no LLM step at
+aggregated statistics — it only describes them. The `map-cluster-corpus` skill has no LLM step at
 all; it emits a structured table or figure directly.
 
 ## The deterministic-vs-LLM split
 
-The Mapper's value is the deterministic ML layer producing reproducible maps. Clustering
+The map lane's value is the deterministic ML layer producing reproducible maps. Clustering
 (HDBSCAN), visualization (UMAP), topic modeling (BERTopic / LDA / NMF), and the recency /
 density aggregations are all deterministic for fixed parameters. The LLM only composes prose
 over those fixed outputs — it is downstream of the data, never upstream of the cluster
-decision. Topic-importance ranking in `map:report-coverage` is the one place where the LLM exercises
+decision. Topic-importance ranking in `map-report-coverage` is the one place where the LLM exercises
 judgment, and even there it ranks topics the deterministic model already identified.

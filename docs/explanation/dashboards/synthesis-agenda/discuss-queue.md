@@ -40,6 +40,6 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 ## Related
 
 - Broader sibling: [The reading-pipeline dashboard](reading-pipeline.md)
-- The conversation that drains this queue: [Discuss a paper](../../../how-to-guides/compile/discuss-a-paper.md)
-- What distillation produces: [Write a claim note](../../../how-to-guides/compile/write-a-claim-note.md)
+- The conversation that drains this queue: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)
+- What distillation produces: [Write a claim note](../../../how-to-guides/knowledge/write-a-claim-note.md)
 - The gate/reset layout model: [Obsidian workspaces](../../../reference/obsidian-workspaces.md)

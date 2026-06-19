@@ -13,7 +13,7 @@ policy:
       - qmd                    # hybrid BM25+vector vault search (the search engine)
     write:
       - "inbox/**"             # candidate / gap cards (the honesty body, ADR-51)
-      - "catalog/**"           # entity records (the ingest engine writes; agent fills the LLM holes)
+      - "catalog/**"           # entity records (the ingest operation writes; agent fills the LLM holes)
       - "notes/fleeting/**"    # discovery captures
       - "notes/sources/**"      # proposed source notes (lifecycle: proposed)
   deny:

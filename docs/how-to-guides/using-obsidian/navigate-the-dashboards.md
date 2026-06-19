@@ -34,13 +34,13 @@ A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troub
 
 **Library** — `gates/library.md`.
 
-Oldest-first — clear the oldest items first. See [Classify a source](../compile/classify-a-source.md).
+Oldest-first — clear the oldest items first. See [Classify a source](../library/classify-a-source.md).
 
 ### "Which papers are worth a discussion pass?"
 
 **Discuss queue** — Library gate.
 
-Open a paper from this queue, then open the Agent Client pane — the active note auto-attaches. See [Discuss a paper](../compile/discuss-a-paper.md).
+Open a paper from this queue, then open the Agent Client pane — the active note auto-attaches. See [Discuss a paper](../library/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 
@@ -83,7 +83,7 @@ Open when a write didn't happen as expected ([Diagnose a denied or blocked write
 
 **Weekly review** — open manually on Fridays.
 
-The [Run the weekly review](../curate/run-the-weekly-review.md) guide walks through it step by step.
+The [Run the weekly review](../inbox/run-the-weekly-review.md) guide walks through it step by step.
 
 ### "What low-stakes structural debt has piled up?"
 
@@ -93,6 +93,6 @@ More than five items is a cleanup signal.
 
 ## Related
 
-- Weekly review procedure: [Run the weekly review](../curate/run-the-weekly-review.md)
+- Weekly review procedure: [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Workspace layouts: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - The dashboard inventory and the Bases views behind it: [Dashboards](../../reference/dashboards.md)

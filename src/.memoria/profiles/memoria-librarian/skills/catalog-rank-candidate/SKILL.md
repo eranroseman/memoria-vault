@@ -10,7 +10,7 @@ metadata:
     tags: [Screening, Ranking, Triage, Catalog]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "catalog:rank-candidate"
+    skill_id: "catalog-rank-candidate"
     profile: memoria-librarian
     lane: catalog
     mcp_tools:
@@ -27,12 +27,12 @@ metadata:
     outputs: [candidate, fleeting]
 ---
 
-# catalog:rank-candidate
+# catalog-rank-candidate
 
 *(legacy name: `candidate-rank`; load on disk as `catalog-rank-candidate`.)*
 
 Order the screening queue so the PI's attention lands where it pays. Given a batch of
-candidate sources (a `catalog:find-source` worklist, a `.bib` intake batch), rank them
+candidate sources (a `catalog-find-source` worklist, a `.bib` intake batch), rank them
 by stated criteria and show the work. **Ranking informs triage order — the keep/skip
 decision stays the PI's** (propose, never dispose).
 

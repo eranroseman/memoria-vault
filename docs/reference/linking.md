@@ -67,7 +67,7 @@ Allowed link types:
 | `contradicts` | This note contradicts the linked note. |
 | `extends` | This note builds on the linked note. |
 
-Catalog entities carry **given** `relationships:` instead, written by the ingest engine (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating this reference and the Linter's `frontmatter-link` detector.
+Catalog entities carry **given** `relationships:` instead, written by the ingest operation (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating this reference and the Linter's `frontmatter-link` detector.
 
 ---
 
@@ -127,7 +127,7 @@ The `research_area`, `methodology`, and `topics` fields use the controlled lists
 - The active `research_area` list stays near **~30 terms** per corpus; a smaller vocabulary produces more consistent classification.
 - Claim `topics` draw from the same `research_area` list so claims and sources stay queryable together.
 - Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) lives in `_enrichment` (auto-populated from APIs), not in the hand-curated classification fields.
-- A topic-term rename goes through [Manage your topic vocabulary](../how-to-guides/curate/manage-vocabulary.md), not a manual search-replace across notes.
+- A topic-term rename goes through [Manage your topic vocabulary](../how-to-guides/knowledge/manage-vocabulary.md), not a manual search-replace across notes.
 
 ---
 
@@ -149,7 +149,7 @@ Slugs are permanent — renaming a note breaks all wikilinks pointing to the old
 
 ## Related
 
-- How-to for setting authored links: [Link related claims](../how-to-guides/compile/link-related-claims.md)
+- How-to for setting authored links: [Link related claims](../how-to-guides/knowledge/link-related-claims.md)
 - Why the Connections section is load-bearing: [Note body structure](../explanation/knowledge/note-body-structure.md)
 - Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../explanation/knowledge/lifecycle-over-topic.md)
 - How links keep the vault compounding: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)

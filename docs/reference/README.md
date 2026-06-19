@@ -37,6 +37,8 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [Dashboards](dashboards.md) | The twelve dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
+| [Pattern library](patterns.md) | The shipped patterns, the pattern-note schema, the `patterns_list`/`patterns_run` contract, gated-target dry-run, and provenance |
+| [Clustering](clustering.md) | The cluster MCP: graph build, claim-debate Canvas, BERTopic topics — parameters, outputs, and the opt-in stack |
 
 ## Pipelines and I/O
 
@@ -44,6 +46,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest |
 | [Sweeps](sweeps.md) | Re-ingest and retraction maintenance passes |
+| [Search](search.md) | The qmd retrieval surface: hybrid BM25 + vector + rerank, the MCP, consumers, the index, and limits |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets |
 | [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention (append-only forever) |
 | [Telemetry & logs](telemetry.md) | Every operational log under `system/logs/`: exact JSONL schema, cadence, join keys |

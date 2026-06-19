@@ -19,25 +19,25 @@ Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-p
 
 ## Skill names
 
-Lane skills use the **`<task>:<verb>-<object>`** convention — the task/lane is the prefix, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog:enrich-record`, `link:suggest-claim`). Co-PI desk skills that are not lane work use direct load names (`explore-framings`, `route-task`, `explain-system`) so the conversational surface and on-disk names match.
+Lane skills use the **`<task>-<verb>-<object>`** kebab-case convention — the task/lane is the first token, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog-enrich-record`, `link-suggest-claim`). Co-PI conversational skills that are not lane work use bare `<verb>-<object>` names (`explore-framings`, `route-task`, `explain-system`). One spelling is used everywhere — in prose, on disk, and at the `-s` load flag.
 
-The **on-disk directory replaces the colon with a hyphen**, because directory and skill-load names cannot carry `:`. So `catalog:enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record` (the `-s` flag also takes the hyphen form). When serialized as an MCP tool the separators all collapse to underscores: `catalog_enrich_record`.
+So `catalog-enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`. When serialized as an MCP tool the separators collapse to underscores: `catalog_enrich_record`.
 
 The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`); **legacy v0.1.0-alpha.1 names in parentheses**:
 
 | Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
-| **Co-PI** (desk) | `ask:question-source` · `ask:read-lens` (lens-reading) · `explore-framings` · `route-task` (delegate-task) · `explain-system` |
-| **Librarian** (catalog · extract · link · map) | `catalog:find-source` (find) · `catalog:enrich-record` (obsidian-paper-note) · `catalog:classify-source` (classify) · `catalog:rank-candidate` (candidate-rank) · `extract:stub-claim` · `extract:flag-distill` (distill-candidate-flag) · `link:suggest-claim` (relation-suggest) · `link:surface-tension` (tension-surface) · `map:scope-project` (scope-project) · `map:report-coverage` (gap-report) · `map:cluster-corpus` (cluster-mapping) · `map:seed-canvas` (canvas-seed) · `map:graph-claims` · `map:canvas-hub` |
-| **Writer** (draft) | `draft:write-section` (draft) · `draft:outline-argument` (counter-outline) · `draft:score-outline` (outline-score) · `draft:bind-citation` (citation-bind) |
-| **Peer-reviewer** (verify) | `verify:check-citation` (cite-check, ex-claim-checks) · `verify:trace-claim` (claim-trace, ex-claim-checks) · `verify:card-gap` (gap-card) · `verify:propose-fix` (gap-fix-propose) |
-| **Ingest** engine | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
-| **Search** engine | `search:query-vault` (query) · `search:find-similar` |
-| **Clustering** engine | `cluster:model-topics` · `cluster:build-graph` |
-| **Sweeps** engine | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
-| **Linter** engine | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
+| **Co-PI** (pane) | `ask-question-source` · `ask-read-lens` (lens-reading) · `explore-framings` · `route-task` (delegate-task) · `explain-system` |
+| **Librarian** (catalog · extract · link · map) | `catalog-find-source` (find) · `catalog-enrich-record` (obsidian-paper-note) · `catalog-classify-source` (classify) · `catalog-rank-candidate` (candidate-rank) · `extract-stub-claim` · `extract-flag-distill` (distill-candidate-flag) · `link-suggest-claim` (relation-suggest) · `link-surface-tension` (tension-surface) · `map-scope-project` (scope-project) · `map-report-coverage` (gap-report) · `map-cluster-corpus` (cluster-mapping) · `map-seed-canvas` (canvas-seed) · `map-graph-claims` · `map-canvas-hub` |
+| **Writer** (draft) | `draft-write-section` (draft) · `draft-outline-argument` (counter-outline) · `draft-score-outline` (outline-score) · `draft-bind-citation` (citation-bind) |
+| **Peer-reviewer** (verify) | `verify-check-citation` (cite-check, ex-claim-checks) · `verify-trace-claim` (claim-trace, ex-claim-checks) · `verify-card-gap` (gap-card) · `verify-propose-fix` (gap-fix-propose) |
+| **Ingest** operation | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
+| **Search** operation | `search:query-vault` (query) · `search:find-similar` |
+| **Clustering** operation | `cluster:model-topics` · `cluster:build-graph` |
+| **Sweeps** operation | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
+| **Linter** operation | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
 
-Engine "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map:graph-claims` / `map:canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster engine's typed graph, with no score or calibration.
+Operation "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
 
 Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`src/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
 
@@ -52,7 +52,7 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 | tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The Co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
 | cluster | `cluster_build_graph(seed)` | NetworkX over authored `links:` + given `relationships` → nodes, typed edges, communities, centrality, layout. Read-only; params echoed. |
 | cluster | `cluster_model_topics(folder, min_cluster_size)` | BERTopic over note text → topics, doc-topic map, outliers (needs the opt-in cluster stack). |
-| cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the claim-debate JSON Canvas artifact (staging-only) — the Librarian's map lane (`map:seed-canvas`). |
+| cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the claim-debate JSON Canvas artifact (staging-only) — the Librarian's map lane (`map-seed-canvas`). |
 | patterns | `patterns_list(mode)` | Runnable (`lifecycle: current`) patterns, optionally filtered by `library` / `project`. |
 | patterns | `patterns_run(pattern_id, input_text, input_ref)` | Compose preamble + pattern + input → the prompt + staging target; gated targets degrade to dry-run; every run provenance-logged to `system/logs/patterns.jsonl`. |
 | ingest | `ingest_pipeline(citekey, enrich, pdf_path)` | The deterministic draft bundle with the two LLM holes. See [Ingest routing](ingest.md). |

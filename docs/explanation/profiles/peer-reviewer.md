@@ -16,7 +16,7 @@ It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-a
 
 **Independence is the design, not a staffing detail.** The agent that synthesizes must not also grade its own work — which is why the Peer-reviewer was never merged into the Librarian, however much tooling they share. The separation-of-duties / anti-rubber-stamp argument behind that is [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).
 
-**Judgment checks vs engine sweeps.** A retraction lookup gives the same answer on every run — that's an engine. "Does this prose claim actually follow from this source?" requires reading — that's this agent. Splitting by determinism keeps the reproducible checks cheap and auditable while spending LLM judgment only where a verdict requires it.
+**Judgment checks vs operation sweeps.** A retraction lookup gives the same answer on every run — that's an operation. "Does this prose claim actually follow from this source?" requires reading — that's this agent. Splitting by determinism keeps the reproducible checks cheap and auditable while spending LLM judgment only where a verdict requires it.
 
 **Flag, don't fix.** The entity that checks the work must not correct it. A failed trace becomes a `gap` card the Librarian picks up; a soundness problem becomes a `flag` for the PI. The draft is untouched — closing the loop without blurring the duty.
 
@@ -28,7 +28,7 @@ It replaces the old Verifier, split by determinism ([ADR-48](../../adr/48-copi-a
 
 **Not the Co-PI's sparring.** The Peer-reviewer is the formal, independent pass over a finished artifact — it certifies work, where [The Co-PI](co-pi.md)'s continuous in-conversation questioning sharpens thinking.
 
-**Not the sweeps.** If a check is reproducible without judgment, it belongs to an engine, and findings reach the PI the same way — as Inbox cards.
+**Not the sweeps.** If a check is reproducible without judgment, it belongs to an operation, and findings reach the PI the same way — as Inbox cards.
 
 ---
 

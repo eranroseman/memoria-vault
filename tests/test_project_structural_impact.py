@@ -98,8 +98,8 @@ def test_structural_impact_materializes_mature_argument_graph(tmp_path):
 
     assert result["changed"] is True
     assert result["path"] == "projects/demo/project-gate-index.md"
-    assert payload["graph_maturity"] == "mature"
-    assert payload["saturation_state"] == "saturated"
+    assert payload["argument_stage"] == "mature"
+    assert payload["evidence_saturation"] == "saturated"
     assert payload["saturation_conditions"] == {
         "mature_graph": True,
         "no_high_impact_open_gaps": True,
@@ -151,8 +151,8 @@ def test_structural_impact_ranks_on_path_gaps_and_prunes_off_path(tmp_path):
     result = impact.run(tmp_path, "projects/demo/project")
     payload = result["payload"]
 
-    assert payload["graph_maturity"] == "mature"
-    assert payload["saturation_state"] == "unsaturated"
+    assert payload["argument_stage"] == "mature"
+    assert payload["evidence_saturation"] == "unsaturated"
     assert payload["open_high_impact_gaps"] == 1
     assert node(payload, "inbox/on-path-gap.md")["on_path"] is True
     assert node(payload, "inbox/on-path-gap.md")["impact"] >= 2
@@ -174,10 +174,10 @@ def test_structural_impact_requires_refutation_sufficiency_stamp(tmp_path):
 
     payload = impact.run(tmp_path, "projects/demo/project")["payload"]
 
-    assert payload["graph_maturity"] == "mature"
+    assert payload["argument_stage"] == "mature"
     assert payload["refutation_floor_met"] is True
     assert payload["refutation_sufficiency"] is False
-    assert payload["saturation_state"] == "unsaturated"
+    assert payload["evidence_saturation"] == "unsaturated"
     assert payload["saturation_conditions"]["refutation_sufficiency"] is False
 
 
@@ -193,8 +193,8 @@ def test_structural_impact_cold_start_when_scope_does_not_overlap(tmp_path):
 
     assert payload["relation_count"] == 5
     assert payload["scope_overlap_count"] == 0
-    assert payload["graph_maturity"] == "cold-start"
-    assert payload["saturation_state"] == "unknown"
+    assert payload["argument_stage"] == "cold-start"
+    assert payload["evidence_saturation"] == "unknown"
     assert payload["displayed_confidence"] == "below-threshold"
     assert payload["gap_findings"] == []
     assert payload["advisories"] == []
@@ -209,13 +209,13 @@ def test_structural_impact_refutation_advisory_only_above_maturity(tmp_path):
 
     payload = impact.run(tmp_path, "projects/demo/project")["payload"]
 
-    assert payload["graph_maturity"] == "immature"
+    assert payload["argument_stage"] == "developing"
     assert payload["advisories"] == []
 
     claim(tmp_path, "e", "supports", "c")
     payload = impact.run(tmp_path, "projects/demo/project")["payload"]
 
-    assert payload["graph_maturity"] == "mature"
+    assert payload["argument_stage"] == "mature"
     assert any(row["kind"] == "refutation" for row in payload["advisories"])
 
 
@@ -233,8 +233,8 @@ def test_survey_mode_uses_coverage_saturation(tmp_path):
     payload = impact.run(tmp_path, "projects/demo/project")["payload"]
 
     assert payload["mode"] == "survey"
-    assert payload["graph_maturity"] == "mature"
-    assert payload["saturation_state"] == "saturated"
+    assert payload["argument_stage"] == "mature"
+    assert payload["evidence_saturation"] == "saturated"
     assert payload["saturation_conditions"] == {
         "mature_graph": True,
         "no_open_scope_gaps": True,
@@ -243,5 +243,5 @@ def test_survey_mode_uses_coverage_saturation(tmp_path):
     gap(tmp_path, "survey-gap", "supports", "a")
     payload = impact.run(tmp_path, "projects/demo/project")["payload"]
 
-    assert payload["saturation_state"] == "unsaturated"
+    assert payload["evidence_saturation"] == "unsaturated"
     assert any(row["path"] == "inbox/survey-gap.md" for row in payload["gap_findings"])

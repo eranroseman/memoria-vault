@@ -15,7 +15,7 @@ One conversational agent (the Co-PI) plus four background agents, each defined b
 
 | Profile | Posture | Role | Invocation | Production default model |
 | --- | --- | --- | --- | --- |
-| `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the desk / ACP pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
+| `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the ACP pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
 | `memoria-librarian` | Faithful | Finds, ingests, enriches, and draft-classifies evidence. Four processing lanes: catalog · extract · link · map. | `dispatched` | `claude-haiku-latest` |
 | `memoria-writer` | Generative | Drafts and synthesizes into project scratch; review-gated. | `dispatched` | `claude-sonnet-latest` |
 | `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
@@ -36,7 +36,7 @@ A lane _is_ an `assignee` value on the Hermes board. The task-lane → profile m
 | `verify` | `memoria-peer-reviewer` |
 | `code` | `memoria-engineer` |
 
-The Co-PI has **no lane** — it converses at the desk and delegates via `delegate_route_task`, which validates every handoff against the receiving lane's ceiling. See [Kanban board reference](kanban-board.md).
+The Co-PI has **no lane** — it converses in the pane and delegates via `delegate_route_task`, which validates every handoff against the receiving lane's ceiling. See [Kanban board reference](kanban-board.md).
 
 ---
 
@@ -78,7 +78,7 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 
 ## Bundled skills
 
-**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. Lane skills use the `<task>:<verb>-<object>` convention with a colon (e.g. `catalog:enrich-record`); on disk the colon becomes a hyphen (`skills/catalog-enrich-record/`). Co-PI desk skills that are not lane work use direct load names such as `route-task` and `explain-system`.
+**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. Lane skills use a single kebab-case name, `<task>-<verb>-<object>` (e.g. `catalog-enrich-record`, in `skills/catalog-enrich-record/`) — the same spelling in prose, on disk, and at load. Co-PI conversational skills that are not lane work use bare names such as `route-task` and `explain-system`.
 
 | Profile | Bundled-skill count |
 | --- | --- |
@@ -97,7 +97,7 @@ For the full per-skill map (names, lanes, and legacy-name aliases) see the [Herm
 `src/.memoria/tool-registry.yaml` is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
-- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, engines, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0-alpha.1 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
+- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, operations, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0-alpha.1 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
 
 ---
 
@@ -109,9 +109,9 @@ The previous seven-profile fleet consolidated into the five above ([ADR-48](../a
 | --- | --- |
 | `memoria-socratic` | The Co-PI (`memoria-copi`) — the conversational front, now hard read-only |
 | `memoria-mapper` | The Librarian's `map` lane + the cluster MCP |
-| `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps engine (deterministic checks) |
+| `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps operation (deterministic checks) |
 | `memoria-coder` | `memoria-engineer` |
-| `memoria-linter` | The Linter **engine** — pre-commit gate + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
+| `memoria-linter` | The Linter **operation** — pre-commit gate + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
 
 ---
 

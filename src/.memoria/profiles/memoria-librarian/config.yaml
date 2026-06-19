@@ -37,7 +37,7 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
   cluster:
-    # The clustering engine (ADR-33): typed graph + topics for the map lane.
+    # The clustering operation (ADR-33): typed graph + topics for the map lane.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120

@@ -1,6 +1,6 @@
 ---
 name: link-suggest-claim
-description: "Propose typed links (supports / contradicts / extends) between claim notes — and between claims and sources — with the evidence quoted per edge, as ONE candidate card for the PI's link gate. Candidates come from qmd similarity and the cluster MCP's typed graph; authored links: are the PI's to accept, relationships are the engine's (ADR-52) — you author neither. Use after new claims are promoted or on a periodic link pass."
+description: "Propose typed links (supports / contradicts / extends) between claim notes — and between claims and sources — with the evidence quoted per edge, as ONE candidate card for the PI's link gate. Candidates come from qmd similarity and the cluster MCP's typed graph; authored links: are the PI's to accept, relationships are the operation's (ADR-52) — you author neither. Use after new claims are promoted or on a periodic link pass."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Linking, Claims, Graph]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "link:suggest-claim"
+    skill_id: "link-suggest-claim"
     profile: memoria-librarian
     lane: link
     mcp_tools:
@@ -25,14 +25,14 @@ metadata:
     outputs: [candidate]
 ---
 
-# link:suggest-claim
+# link-suggest-claim
 
 *(legacy name: `relation-suggest`; load on disk as `link-suggest-claim`.)*
 
 Find the edges the PI hasn't drawn yet. Claims accumulate faster than their
 connections; this skill proposes typed links — `supports`, `contradicts`, `extends` —
 with the textual evidence for each edge. **The PI confirms at the link gate**: authored
-`links:` land only by the PI's hand, and `relationships` belong to the ingest engine
+`links:` land only by the PI's hand, and `relationships` belong to the ingest operation
 (ADR-52) — you author neither; claim notes are review-gated and read-only to you.
 
 ## Inputs
@@ -53,7 +53,7 @@ with the textual evidence for each edge. **The PI confirms at the link gate**: a
    carries the relation.
 3. **Type honestly.** `supports` = same direction, independent evidence;
    `contradicts` = incompatible as written (route genuine tensions onward to
-   `link:surface-tension`); `extends` = narrows/broadens with shared mechanism. A pair
+   `link-surface-tension`); `extends` = narrows/broadens with shared mechanism. A pair
    that is merely *about the same thing* is not an edge.
 4. **Write — gated.** ONE `candidate` card in `inbox/` per pass listing the proposed
    edges (ADR-54): `[[from]] —type→ [[to]]` · the two quoted sentences · per-edge

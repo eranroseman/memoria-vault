@@ -93,7 +93,7 @@ Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](he
 
 ## G9 — deterministic spine (zero-LLM card)  → records G9
 
-- [ ] A *dispatched, zero-LLM* card (Linter engine `health-report` or Peer-reviewer `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
+- [ ] A *dispatched, zero-LLM* card (Linter operation `health-report` or Peer-reviewer `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
 Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
 

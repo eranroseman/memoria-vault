@@ -97,7 +97,7 @@ NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects", "gates")
 # --------------------------------------------------------------------------- #
 # Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
-# the dependency-free fallback so the engine still runs without PyYAML.
+# the dependency-free fallback so the operation still runs without PyYAML.
 # --------------------------------------------------------------------------- #
 TYPE_SCHEMAS: dict | None = None
 _FOLDERS: dict | None = None
@@ -155,7 +155,7 @@ def relpath(vault: Path, p: Path) -> str:
 def parse_frontmatter(text: str) -> dict:
     """YAML frontmatter parser: PyYAML when available (full fidelity — nested
     maps and ints matter for schema validation), else the minimal hand parser
-    (top-level scalars + inline lists) so the engine stays runnable without it."""
+    (top-level scalars + inline lists) so the operation stays runnable without it."""
     if not text.startswith("---"):
         return {}
     end = text.find("\n---", 3)

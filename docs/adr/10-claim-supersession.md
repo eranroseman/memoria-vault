@@ -45,7 +45,7 @@ A claim note records that it has been overturned with a single typed relation, `
 
 ## Related
 
-- **Workflows affected:** [Distill](../how-to-guides/compile/write-a-claim-note.md), [Promote](../how-to-guides/compile/promote-a-claim.md) (where the link is set), [Verify](../how-to-guides/compose/verify-and-revise.md) and the Linter (FAMA-style check), [Query](../how-to-guides/compose/query-the-vault.md) / [Write](../how-to-guides/compose/draft-with-writer.md) (filter superseded claims).
+- **Workflows affected:** [Distill](../how-to-guides/knowledge/write-a-claim-note.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md) (where the link is set), [Verify](../how-to-guides/project/verify-and-revise.md) and the Linter (FAMA-style check), [Query](../how-to-guides/knowledge/query-the-vault.md) / [Write](../how-to-guides/project/draft-with-writer.md) (filter superseded claims).
 - **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Note types](../reference/note-types.md) + `99-system/templates/claim-note.md`, the Linter's `structural-detectors.md` (in the starter vault).
 - **Related decisions / Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (adopts one relation from its namespace ahead of the rest); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
 - **Source discussion:** benchmark review — [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Change 1, and the benchmark detail); evidence from Memora/FAMA and ClawArena.

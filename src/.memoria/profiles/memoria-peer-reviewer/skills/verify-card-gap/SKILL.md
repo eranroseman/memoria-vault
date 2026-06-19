@@ -1,6 +1,6 @@
 ---
 name: verify-card-gap
-description: "Turn a verification finding about MISSING evidence into a well-formed gap card in inbox/ — the synthesis backlog entry the PI (and the Librarian's discovery pass) picks up. Used standalone when review surfaces a hole, or called by verify:trace-claim for each failed trace. Writes only inbox/ gap cards with the full ADR-51 honesty body; never creates the missing claim or source itself."
+description: "Turn a verification finding about MISSING evidence into a well-formed gap card in inbox/ — the synthesis backlog entry the PI (and the Librarian's discovery pass) picks up. Used standalone when review surfaces a hole, or called by verify-trace-claim for each failed trace. Writes only inbox/ gap cards with the full ADR-51 honesty body; never creates the missing claim or source itself."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Verification, Gaps, Inbox]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "verify:card-gap"
+    skill_id: "verify-card-gap"
     profile: memoria-peer-reviewer
     lane: verify
     mcp_tools:
@@ -24,7 +24,7 @@ metadata:
     outputs: [gap]
 ---
 
-# verify:card-gap
+# verify-card-gap
 
 *(legacy name: `gap-card`; load on disk as `verify-card-gap`.)*
 
@@ -45,7 +45,7 @@ the absence precisely; you never fill it (finding the source is the Librarian's
 ## Procedure
 
 1. **Check for an existing card.** Search `inbox/` (via the `obsidian` skill) for an
-   open gap card covering the same absence — extend reasoning happens at the PI's desk,
+   open gap card covering the same absence — extend reasoning happens in the Co-PI pane,
    so a duplicate card is noise. If one exists, stop and report it instead.
 2. **State the gap concretely.** Quote the unsupported sentence; name what would close
    the gap (a claim note? a source? a replication?). "Coverage is thin" is not a gap;

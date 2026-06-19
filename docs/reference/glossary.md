@@ -41,7 +41,9 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
-**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The Co-PI has no lane; engines run off the board.
+**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The Co-PI has no lane; operations run off the board.
+
+**Card vs task** — a *task* is a unit of delegated work; the *card* (`worker-card`) is its representation on the board. One task becomes one card — the same split as a Jira *work item* rendered as a Kanban *card*.
 
 **Worklist** — the batch surface for high-cardinality decisions ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): instead of one card per item, like decisions queue into one `system/worklists/` batch where each `worklist-item` row has a `decision` field the PI can sweep in Bases.
 
@@ -83,8 +85,8 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 | Name | Values | Set by | Scope |
 | --- | --- | --- | --- |
-| `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / engines | the soft verdict on a verification card — advisory only |
-| verdict band | `PASS` / `REVIEW` / `FAIL` | Linter engine | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](linter.md) |
+| `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / operations | the soft verdict on a verification card — advisory only |
+| verdict band | `PASS` / `REVIEW` / `FAIL` | Linter operation | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](linter.md) |
 | `certainty` | `confident` / `likely` / `unsure` | proposing agent | the calibrated confidence on an honesty card |
 
 **Trust score** — a 0–100 per-lane operational-health aggregate on the fleet-health dashboard; its inputs and bands are specified in [Dashboards](dashboards.md).
@@ -95,7 +97,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 | Retired | Replaced by |
 | --- | --- |
-| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps operation (Verifier), the Engineer (Coder), and the Linter **engine** (no longer an agent). |
+| **Socratic, Mapper, Verifier, Coder, Linter** (as profiles) | The Co-PI (Socratic), the Librarian's map lane (Mapper), the Peer-reviewer + sweeps operation (Verifier), the Engineer (Coder), and the Linter **operation** (no longer an agent). |
 | **Reference note** (`reference-note`, `30-synthesis/02-reference/`) | Dropped ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)) — it double-encoded maturity; an `evergreen` claim is the settled unit. |
 | **MOC** (`moc`, `30-synthesis/03-moc/`) | The `hub` type in `notes/hubs/`. |
 | **`99-system`** (and the numbered folders `00-` … `95-`) | The five type-first categories ([ADR-47](../adr/47-type-first-category-folders.md)); system infrastructure now lives at `system/`. |

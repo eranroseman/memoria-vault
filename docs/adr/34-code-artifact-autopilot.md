@@ -54,7 +54,7 @@ path, audit trail, and human promotion.
 
 - **Tracking issue:** [#369](https://github.com/eranroseman/memoria-vault/issues/369)
   tracks the replacement code-experiment loop shape.
-- **Workflows:** [Code](../how-to-guides/compose/create-a-code-artifact.md)
+- **Workflows:** [Code](../how-to-guides/project/create-a-code-artifact.md)
 - **Files:** [The Coder](../explanation/profiles/engineer.md), `99-system/templates/code-note.md`
 - **Related proposal:** [Nightly discovery loop](61-nightly-discovery-loop.md) §2 (Coder experiment loop) — the keep/revert variant of the same Coder-lane autonomy; this proposal is the *scheduled-script* variant.
 - **Bounded by:** [ADR-21 L3 autonomy ceiling](21-l3-autonomy-ceiling.md) (the Coder exception).

@@ -1,13 +1,13 @@
 # The four claim sub-checks in detail
 
 This is the per-check detail for the four non-retraction verification sub-checks that
-shipped as the legacy `claim-checks` skill. Under the `<task>:<verb>-<object>` registry
-(Appendix C) they split: **cite-check** is the `verify:check-citation` skill, **claim-trace**
-is the `verify:trace-claim` skill, and the two duplicate detectors (**similarity-check**,
-**find-duplicates**) are slated for the deterministic sweeps engine
-(`sweep:check-similarity` / `sweep:find-duplicates`) — until that engine lands, the
+shipped as the legacy `claim-checks` skill. Under the `<task>-<verb>-<object>` skill registry
+(Appendix C) they split: **cite-check** is the `verify-check-citation` skill, **claim-trace**
+is the `verify-trace-claim` skill, and the two duplicate detectors (**similarity-check**,
+**find-duplicates**) are slated for the deterministic sweeps operation
+(`sweep:check-similarity` / `sweep:find-duplicates`) — until that operation lands, the
 Peer-reviewer may still run them ad hoc from this reference. The retraction sub-check is the
-sweeps engine's `sweep:check-retraction`, and the completeness sub-check is a final gate
+sweeps operation's `sweep:check-retraction`, and the completeness sub-check is a final gate
 described in the profile SOUL; neither is covered here.
 
 Each check below may surface issues independently, and a single failure is enough to flag a
@@ -71,7 +71,7 @@ rather than auto-failing).
 A point-of-action check run when a new claim note is about to be filed. It computes cosine
 similarity between the new claim's embedding and the existing claim notes through the **shared
 `qmd` vector index** — the same similarity primitive the Librarian uses for the `[!brief]`
-neighbours and the Mapper for `find related`, just with the Verifier's own threshold — returns
+neighbours and the map lane for `find related`, just with the Peer-reviewer's own threshold — returns
 the top 3 by score, and flags at roughly 0.8. It is **fully deterministic — no LLM call** —
 and it never blocks filing.
 

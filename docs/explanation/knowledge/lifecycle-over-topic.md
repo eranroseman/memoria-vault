@@ -52,7 +52,7 @@ One consequence to know: because Inbox cards use the same lifecycle vocabulary a
 
 With folders carrying the type and frontmatter carrying the state, topics are encoded as **facets** on source and claim notes:
 
-- `research_area` — seeded from OpenAlex topics by the ingest engine
+- `research_area` — seeded from OpenAlex topics by the ingest operation
 - `methodology` — a controlled vocabulary covering method and study design
 - `topics` on claim notes
 

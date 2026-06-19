@@ -27,9 +27,9 @@ dependencies remain in `src/.memoria/mcp/requirements.txt`.
 | Changed paths | Focused checks |
 |---|---|
 | `src/.memoria/schemas/**` | `python -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_installer_skeleton.py` |
-| `src/.memoria/lane-overrides/**` | `python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_lifecycle_dashboard.py` |
-| `src/.memoria/tool-registry.yaml` | `python -m pytest tests/test_profiles.py tests/test_skill_lifecycle_dashboard.py` |
-| `src/.memoria/profiles/**` | `python -m pytest tests/test_profiles.py tests/test_skill_lifecycle_dashboard.py` |
+| `src/.memoria/lane-overrides/**` | `python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_state_dashboard.py` |
+| `src/.memoria/tool-registry.yaml` | `python -m pytest tests/test_profiles.py tests/test_skill_state_dashboard.py` |
+| `src/.memoria/profiles/**` | `python -m pytest tests/test_profiles.py tests/test_skill_state_dashboard.py` |
 | `src/.memoria/mcp/policy_*` or policy plugin | `python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_loudness.py tests/test_schemas.py` |
 | `src/.memoria/mcp/tasks_mcp.py` | `python -m pytest tests/test_tasks_mcp.py tests/test_loudness.py tests/test_profiles.py tests/test_quickadd.py` |
 | `src/.memoria/mcp/ingest_mcp.py` | `python -m pytest tests/test_ingest_mcp.py tests/test_pipeline.py tests/test_inbox_cards.py` |

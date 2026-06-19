@@ -10,7 +10,7 @@ metadata:
     tags: [Mapping, Coverage, Gaps]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "map:report-coverage"
+    skill_id: "map-report-coverage"
     profile: memoria-librarian
     lane: map
     mcp_tools:
@@ -26,13 +26,13 @@ metadata:
     outputs: [fleeting, gap]
 ---
 
-# map:report-coverage
+# map-report-coverage
 
 *(legacy name: `gap-report`; load on disk as `map-report-coverage`.)*
 
 Tell the PI where the corpus is thin **relative to a brief** — not where it is thin in
 the abstract (every corpus is thin almost everywhere). Topics come from the
-deterministic engine; the one judgment you exercise is **ranking which thin topics
+deterministic operation; the one judgment you exercise is **ranking which thin topics
 matter for this brief** — and that ranking is argued, not asserted.
 
 ## Inputs
@@ -47,7 +47,7 @@ matter for this brief** — and that ranking is argued, not asserted.
 
 1. **Retrieve** the brief-relevant corpus with `qmd`; record the query trail.
 2. **Model topics deterministically** — `cluster_model_topics(folder, …)`; the topic
-   set, sizes, and outliers are the engine's verbatim. Missing cluster stack → report
+   set, sizes, and outliers are the operation's verbatim. Missing cluster stack → report
    and stop (a coverage report without real topics would be confabulation).
 3. **Threshold**: thin = below the note-count floor, or note-rich but **claim-poor**
    (sources held, nothing promoted — read claim presence off `cluster_build_graph()` +
@@ -66,7 +66,7 @@ matter for this brief** — and that ranking is argued, not asserted.
   threshold used); the ranked thin-topic list (topic · size · claim presence · why it
   matters · what evidence would thicken it); the parked out-of-scope list.
 - One `gap` card (schema `gap`, ADR-51 honesty body): `action` = "review the gap
-  report; delegate `catalog:find-source` for the topics you accept";
+  report; delegate `catalog-find-source` for the topics you accept";
   `argument_for` = the top-ranked gaps' stakes; `argument_against` = the honest
   rebuttal ("thin may be fine — topics 3–5 are background, not argument legs");
   `what_tipped_it`; `certainty`.
@@ -79,4 +79,4 @@ matter for this brief** — and that ranking is argued, not asserted.
   carries the central claim outranks a large peripheral one.
 - Claim-poor ≠ unread: distinguish "no sources" from "sources held, nothing distilled"
   — the remedies differ (find vs extract).
-- Topics, sizes, and outliers are the engine's; you rank and narrate, never re-draw.
+- Topics, sizes, and outliers are the operation's; you rank and narrate, never re-draw.

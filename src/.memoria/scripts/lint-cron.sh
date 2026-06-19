@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lint-cron.sh — the Linter engine's daily sweep (ADR-49: gates at commit,
+# lint-cron.sh — the Linter operation's daily sweep (ADR-49: gates at commit,
 # monitors between). Runs the structural detectors over the vault, the
 # golden-copy drift check, and the per-session digests (ADR-25); findings
 # surface in the vault's drift dashboards.

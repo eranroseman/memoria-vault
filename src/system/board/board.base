@@ -1,4 +1,4 @@
-# Projected worker cards from kanban.db. Generated cards are disposable engine output.
+# Projected worker cards from kanban.db. Generated cards are disposable operation output.
 filters:
   and:
     - file.inFolder("system/board")

@@ -150,13 +150,13 @@ Home page — it is not a standalone dashboard file.)
 | 3 | `discuss-queue.md` | sources `lifecycle: provisional` | resolves; empty OK |
 | 4 | `open-questions.md` | claims with zero inbound links (`notes/claims/`) | resolves; add an unconnected claim → it lists |
 | 5 | `contradictions.md` | note `links.contradicts` pairs | resolves; empty OK |
-| 6 | `drift-watch.md` | `system/logs/lint-findings.jsonl` | resolves; populates after a Linter engine run |
+| 6 | `drift-watch.md` | `system/logs/lint-findings.jsonl` | resolves; populates after a Linter operation run |
 | 7 | `loose-ends.md` | `notice`-loudness `flag` cards (`lifecycle: proposed`) | resolves; create a notice flag card → it lists |
 | 8 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
 | 9 | `fleet-health.md` | `system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
 | 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 | 11 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
-| 12 | `skill-lifecycle.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
+| 12 | `skill-state.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
@@ -173,7 +173,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [ ] 9 · `fleet-health.md`
 - [ ] 10 · `audit-log.md`
 - [ ] 11 · `eval-trend.md`
-- [ ] 12 · `skill-lifecycle.md`
+- [ ] 12 · `skill-state.md`
 - [ ] **Part C / G4 Pass (all 12 resolve)**
 
 ---

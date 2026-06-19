@@ -11,7 +11,7 @@ Surfaces active and imminent drift — the Linter's and the verification sweeps'
 
 ## What it shows
 
-The dashboard (`system/dashboards/drift-watch.md`) lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the dashboard is a filtered view of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing engines are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit gate) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
+The dashboard (`system/dashboards/drift-watch.md`) lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the dashboard is a filtered view of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing operations are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit gate) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
 
 Loudness is the headline: `alert`- and `block`-level findings also appear in the Inbox gate's "Needs me" queue. `block` cards pause new delegation and review-gated promotion until the PI resolves the card; everything below alert waits here and in the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
 
@@ -19,7 +19,7 @@ Loudness is the headline: `alert`- and `block`-level findings also appear in the
 
 **Not audit-log or fleet-health.** Drift-watch is the *structural* view — open integrity findings, headlined by the verdict band; audit-log is per-write forensics and fleet-health is the operational aggregate. For the full three-way distinction, see [Operational health](../operational-health/README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
-**Not for content hygiene.** Stale literature and unfinished-looking filenames surface in weekly-review and loose-ends, not here. Drift-watch is reserved for what the engines can *detect mechanically* — the "silent" failures the human wouldn't notice by reading content.
+**Not for content hygiene.** Stale literature and unfinished-looking filenames surface in weekly-review and loose-ends, not here. Drift-watch is reserved for what the operations can *detect mechanically* — the "silent" failures the human wouldn't notice by reading content.
 
 ## When drift-watch becomes relevant
 

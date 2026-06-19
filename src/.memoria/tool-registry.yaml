@@ -13,7 +13,7 @@
 # which writes nowhere (write_scope: []) — is denied the write capability.
 #
 # No profile gets a direct-world toolset (terminal, file, code_execution, browser,
-# web, computer_use): agents reach the vault, engines, and APIs ONLY through MCP
+# web, computer_use): agents reach the vault, operations, and APIs ONLY through MCP
 # (D40/D41/ADR-46), enforced by test_no_profile_has_direct_world_access. ADR-21
 # retired the v0.1.0-alpha.1 Coder-lane terminal+file exception; its successor the Engineer
 # is MCP-only.

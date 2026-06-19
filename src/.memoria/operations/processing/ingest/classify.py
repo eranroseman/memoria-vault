@@ -22,7 +22,7 @@ Every applied/flagged decision appends one JSONL line to
 correctable (same provenance pattern as `system/logs/patterns.jsonl`).
 
 This module writes only the audit log; notes and cards stay with the gated
-writing layer, exactly like the rest of the ingest engine.
+writing layer, exactly like the rest of the ingest operation.
 
 ADR-15 addition: when an optional `.memoria/project-hints.yaml` exists, the
 classify step also PROPOSES project membership by simple topic overlap — the

@@ -16,7 +16,7 @@ Dashboards that track how the agent fleet is performing and what it decided.
 | [Fleet health](fleet-health.md) | Are the agents performing well over time? Is cost trending up? |
 | [Audit log](audit-log.md) | What did the policy MCP decide, and why? |
 | [Eval trend](eval-trend.md) | Is the deployed system still finding, extracting, linking, and verifying correctly on this vault? |
-| [Skill lifecycle](skill-lifecycle.md) | Which skills are active in which lane? Do lane policy and shipped skills agree? |
+| [Skill state](skill-state.md) | Which skills are active in which lane? Do lane policy and shipped skills agree? |
 
 ## Audit-log vs fleet-health vs drift-watch
 
@@ -24,6 +24,6 @@ Three dashboards sit close together but answer different questions at different 
 
 - **Audit log** is the *raw event stream*: one entry per policy-MCP write decision (per-decision forensics, newest-first).
 - **Fleet health** *aggregates* those entries (and other signals) into rolled-up per-lane trend metrics over time — quality and cost of completed work, headlined by the trust score.
-- **[Drift watch](../structural-health/drift-watch.md)** is *structural*, not operational: it shows the Linter engine's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
+- **[Drift watch](../structural-health/drift-watch.md)** is *structural*, not operational: it shows the Linter operation's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
 
 In short: audit-log is per-decision, fleet-health is aggregated-operational, drift-watch is aggregated-structural.

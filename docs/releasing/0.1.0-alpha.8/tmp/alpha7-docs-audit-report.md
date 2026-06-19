@@ -33,7 +33,7 @@ rather than churned now:
 
 - `how-to-guides/hermes-agent/configuration.md` split — only triggered "if the page continues to grow"; the page is correct today.
 - README trims (`explanation/README.md`, `explanation/architecture/README.md`, `how-to-guides/README.md`) and reference rationale trims (`reference/computational-toolbox.md`, `reference/linking.md`) — subjective length preference, not defects.
-- File renames (`curate/build-a-moc.md` → "hub", `dashboards/operational-health/skill-lifecycle.md`) — link-break risk; redirect support is uncertain and the link *text* already uses the current "hub" wording.
+- File renames (`knowledge/build-a-moc.md` → "hub", `dashboards/operational-health/skill-state.md`) — link-break risk; redirect support is uncertain and the link *text* already uses the current "hub" wording.
 - `explanation/workflows/verify-on-commit.md` and `troubleshooting/safe-mode.md` restructures — optional, mechanism is correct as written.
 - Historical/consistency-note items (superseded ADRs, old release evidence, alpha.8 carried-forward scratch) — left intact **by design** per their own recommendation ("do not rewrite old release evidence"; "rewrite when promoting").
 
@@ -97,12 +97,12 @@ this pass; ⏸ = deferred by decision, see [Deferred by decision](#deferred-by-d
 | `docs/explanation/architecture/README.md` | README index | Shorten architecture explanation or move detailed layer prose to a child page. | ⏸ |
 | `docs/explanation/workflows/verify-on-commit.md` | Explanation | Add more "why commit time" rationale or move to reference/how-to if it stays mechanism-only. | ⏸ |
 | `docs/explanation/profiles/README.md` | README index | Remove stale release-status narrative when next editing; keep it as a profile index. | ✅ rewrote to present-tense |
-| `docs/explanation/dashboards/operational-health/skill-lifecycle.md` | Explanation | Consider renaming if "lifecycle" reads like a state machine rather than skill governance. | ⏸ |
+| `docs/explanation/dashboards/operational-health/skill-state.md` | Explanation | Consider renaming if "lifecycle" reads like a state machine rather than skill governance. | ⏸ |
 | `docs/how-to-guides/README.md` | README index | Still long for an index; consider tightening to a category map. | ⏸ |
 | `docs/how-to-guides/hermes-agent/configuration.md` | How-to | Split stable reference tables from task steps if the page continues to grow. | ⏸ trigger not met |
 | `docs/how-to-guides/setup/set-up-messaging.md` | How-to | Split shipped outbound alerts from deferred inbound messaging gateway. | ✅ split |
 | `docs/how-to-guides/setup/set-up-vps.md` | How-to | Move deferred/unvalidated topology to explanation/ADR or keep excluded from setup index until validated. | ✅ flagged deferred in index |
-| `docs/how-to-guides/curate/build-a-moc.md` | How-to | Consider renaming the file to match the current "hub" title, with redirect if supported. | ⏸ link-break risk |
+| `docs/how-to-guides/knowledge/build-a-moc.md` | How-to | Consider renaming the file to match the current "hub" title, with redirect if supported. | ⏸ link-break risk |
 | `docs/how-to-guides/operate/run-a-schema-migration.md` | How-to | Replace broad git examples such as `git add -A` with explicit-path staging. | ✅ explicit-path staging |
 | `docs/how-to-guides/troubleshooting/safe-mode.md` | Troubleshooting how-to | Optionally split by failure mode if the page becomes hard to scan. | ⏸ |
 | `docs/reference/computational-toolbox.md` | Reference | Move deeper method rationale to explanation if the page gets longer. | ⏸ |

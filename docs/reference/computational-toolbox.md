@@ -17,7 +17,7 @@ For the rationale — why deterministic over LLM, the hybrid pattern, cost and a
 
 **For:** parsing structured text (citations, frontmatter, wikilinks), pattern detection in filenames, deterministic transformations (normalize whitespace, sort YAML keys).
 
-**Used by:** Linter structural detectors, Peer-reviewer `verify:check-citation`, schema validation, Librarian ingest type-detection dispatch table.
+**Used by:** Linter structural detectors, Peer-reviewer `verify-check-citation`, schema validation, Librarian ingest type-detection dispatch table.
 
 **Cost:** free. Latency: microseconds. Determinism: total.
 
@@ -47,7 +47,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 **For:** corpus density analysis, identifying conceptual clusters in a project scope, gap detection.
 
-**Used by:** the Librarian's map lane — `map:cluster-corpus`, `map:scope-project`, `map:report-coverage`.
+**Used by:** the Librarian's map lane — `map-cluster-corpus`, `map-scope-project`, `map-report-coverage`.
 
 **Implementation:** HDBSCAN over note embeddings (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
 
@@ -114,7 +114,7 @@ Training characteristics:
 
 **For:** detecting whether two claim notes contradict, entail, or are neutral to each other — surfacing candidate contradictions for the human to confirm.
 
-**Proposed use:** candidate-proposer for the `contradicts` relation and contradictions dashboard. The relation and surface ship human-set; NLI is the deferred engine that *proposes* pairs to confirm.
+**Proposed use:** candidate-proposer for the `contradicts` relation and contradictions dashboard. The relation and surface ship human-set; NLI is the deferred operation that *proposes* pairs to confirm.
 
 **Implementation:** sentence-pair NLI model (`roberta-large-mnli`, `deberta-v3-large-mnli`, or domain-tuned variant) over claim pairs. Pre-filter to topically-near pairs using the embedding index (cosine above a threshold) so NLI runs on O(k) candidate pairs, not O(n²). Output: per-pair label + confidence; above threshold → proposed `contradicts` link the human confirms — never auto-written.
 
@@ -154,5 +154,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [engines](../explanation/operations/README.md) (Linter, Clustering, Sweeps)
+- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [operations](../explanation/operations/README.md) (Linter, Clustering, Sweeps)
 - Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/

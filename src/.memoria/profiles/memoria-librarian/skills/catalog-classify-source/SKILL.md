@@ -10,7 +10,7 @@ metadata:
     tags: [Classification, Vocabulary, Catalog, Triage]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "catalog:classify-source"
+    skill_id: "catalog-classify-source"
     profile: memoria-librarian
     lane: catalog
     mcp_tools:
@@ -26,14 +26,14 @@ metadata:
     outputs: [paper, flag]
 ---
 
-# catalog:classify-source
+# catalog-classify-source
 
 *(legacy name: `classify`; load on disk as `catalog-classify-source`.)*
 
 Propose how a source is filed — `research_area`, `methodology` — without ever
 deciding it. Classification is **audited metadata, not a gate** (D16/D21): your values
 land in the note's `_proposed_classification` block; the human-owned main fields stay
-empty until the PI promotes at triage. Normally `catalog:enrich-record` fills this hole
+empty until the PI promotes at triage. Normally `catalog-enrich-record` fills this hole
 during ingest; this skill is the standalone path for notes that missed it or need a
 re-read.
 

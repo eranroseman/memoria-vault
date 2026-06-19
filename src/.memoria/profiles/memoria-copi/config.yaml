@@ -8,7 +8,7 @@ model:
   default: "{{MODEL_DEFAULT}}"
   # {{MODEL_LOCAL_CONTEXT}}
 
-# Vault access + policy gate + the read/compute engines run as MCP servers — loaded
+# Vault access + policy gate + the read/compute operations run as MCP servers — loaded
 # ONLY from config.yaml mcp_servers (ADR-27 finding 1).
 mcp_servers:
   policy:
@@ -26,13 +26,13 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
   ingest:
-    # Read/compute facade over the ingest engine (D41) — lets the Co-PI inspect a
+    # Read/compute facade over the ingest operation (D41) — lets the Co-PI inspect a
     # citekey's draft bundle while discussing it; the gated writes stay lane-side.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120
   cluster:
-    # The clustering engine (ADR-33): typed graph + topics, read-only.
+    # The clustering operation (ADR-33): typed graph + topics, read-only.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120

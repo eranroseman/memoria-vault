@@ -5,8 +5,8 @@ initial_lifecycle: current
 enums:
   lifecycle: [current, archived]
   output_mode: [thesis, survey]
-  saturation_state: [unknown, unsaturated, saturated, stale]
-  graph_maturity: [cold-start, immature, mature]
+  evidence_saturation: [unknown, unsaturated, saturated, stale]
+  argument_stage: [cold-start, developing, mature]
 required:
   type: literal:project
   lifecycle: enum:lifecycle
@@ -22,8 +22,8 @@ optional:
   active_thesis: str
   impact: int
   on_path: bool
-  saturation_state: enum:saturation_state
-  graph_maturity: enum:graph_maturity
+  evidence_saturation: enum:evidence_saturation
+  argument_stage: enum:argument_stage
   computed_at: date
   refutation_sufficiency: bool
   refutation_sufficiency_at: date

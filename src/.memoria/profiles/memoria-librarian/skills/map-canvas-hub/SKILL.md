@@ -10,7 +10,7 @@ metadata:
     tags: [Mapping, Canvas, Navigation, Visualization]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "map:canvas-hub"
+    skill_id: "map-canvas-hub"
     profile: memoria-librarian
     lane: map
     mcp_tools:
@@ -26,7 +26,7 @@ metadata:
     outputs: [fleeting, candidate]
 ---
 
-# map:canvas-hub
+# map-canvas-hub
 
 Give the PI one spatial index into the maps instead of a folder of loose canvases. The
 other map skills each emit a single view (a claim graph, a cluster map, a topic seed);

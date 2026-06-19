@@ -1,16 +1,16 @@
 ---
 name: ask-question-source
-description: "Interrogate a specific source at the desk: answer the PI's questions about a paper/dataset/repository strictly from what the vault holds on it — the catalog note, [!brief], _enrichment, extract text, derived claim notes — with every answer pointing at its evidence. Read-only; anything the conversation decides to change is delegated via route-task. Use when the PI asks 'what does <source> actually say about…'."
+description: "Interrogate a specific source in the Co-PI pane: answer the PI's questions about a paper/dataset/repository strictly from what the vault holds on it — the catalog note, [!brief], _enrichment, extract text, derived claim notes — with every answer pointing at its evidence. Read-only; anything the conversation decides to change is delegated via route-task. Use when the PI asks 'what does <source> actually say about…'."
 version: 1.0.0
 author: Memoria
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [Desk, Sources, Question-Answering]
+    tags: [Sources, Question-Answering]
     related_skills: [obsidian, qmd]
   memoria:
-    skill_id: "ask:question-source"
+    skill_id: "ask-question-source"
     profile: memoria-copi
     lane: ask
     mcp_tools:
@@ -22,11 +22,11 @@ metadata:
     outputs: []
 ---
 
-# ask:question-source
+# ask-question-source
 
 *(load on disk as `ask-question-source`.)*
 
-The desk conversation about one source. The PI asks what a paper actually says, how it
+The conversation about one source. The PI asks what a paper actually says, how it
 measured something, whether it supports a sentence they are writing — you answer **from
 the vault's holdings on that source**, quoting and pointing, never from general
 knowledge dressed up as the paper.

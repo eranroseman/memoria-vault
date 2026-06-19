@@ -39,7 +39,7 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 1. Open the paper entity in `catalog/papers/`
 2. Copy the fields you accept from the `_proposed_classification` block into the main frontmatter
 3. Delete the `_proposed_classification:` block
-4. Set `lifecycle: current` ([Classify a source](../compile/classify-a-source.md))
+4. Set `lifecycle: current` ([Classify a source](../library/classify-a-source.md))
 
 **If Dataview is not rendering** — search manually in Obsidian for `lifecycle: proposed` to find unclassified notes.
 
@@ -82,7 +82,7 @@ All four must return expected values before blaming a tool.
 
 ## Related
 
-- Return-to-work checklist: [Return to work](../curate/return-to-work.md)
+- Return-to-work checklist: [Return to work](../inbox/return-to-work.md)
 - Fix stale .bib: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - Fix stuck card: [Fix a stuck card](fix-stuck-card.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)

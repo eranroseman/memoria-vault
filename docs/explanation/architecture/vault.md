@@ -6,7 +6,7 @@ nav_order: 1
 
 # The vault
 
-The vault is where durable knowledge lives. Everything else in Memoria — the board, the agents, the engines, the dashboards — exists to serve it. This page explains its structure: the category folders, the type homes, the gated zones, and the conventions that keep it sound.
+The vault is where durable knowledge lives. Everything else in Memoria — the board, the agents, the operations, the dashboards — exists to serve it. This page explains its structure: the category folders, the type homes, the gated zones, and the conventions that keep it sound.
 
 ---
 
@@ -28,7 +28,7 @@ The top level is organized by **category** — one content kind per folder, no l
 └── .memoria/       ← hidden runtime (MCP, profiles, schemas, golden copy)
 ```
 
-**One folder never mixes two categories**, and folders are named for their *content*, not for a doer — both the ingest engine and the Librarian agent operate *on* `catalog/`. The type → folder-home map is machine-read (`.memoria/schemas/folders.yaml`) and is the single source for the Linter, the policy gate, the installer skeleton, and the tests.
+**One folder never mixes two categories**, and folders are named for their *content*, not for a doer — both the ingest operation and the Librarian agent operate *on* `catalog/`. The type → folder-home map is machine-read (`.memoria/schemas/folders.yaml`) and is the single source for the Linter, the policy gate, the installer skeleton, and the tests.
 
 ## Types and their homes
 
@@ -46,7 +46,7 @@ Everything the PI sees uses one lifecycle chain ([ADR-50](../../adr/50-universal
 
 Catalog entities (and the Inbox board, and the per-type note queues) surface through **Obsidian Bases** — saved database views over frontmatter. Every row is a file; the records are the source of truth; nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
 
-Bases has no integrity guarantees — no schema, no constraints. That gap is the **Linter engine's** job: it validates every record against its type schema in `.memoria/schemas/` (required fields, value types, enum vocabularies, `links:`/`relationships` resolving to real targets) and flags drift as Inbox `flag`s. It is a **monitor and a commit gate**: a pre-commit `schema-check` gates git-tracked writes at commit, and the cron/CI sweep monitors between commits. It does not block a live in-app edit — between a bad edit and the next sweep a Base can briefly serve a malformed record; that window is accepted under the solo premise and bounded by the commit gate. On detected drift in system files, the Linter can restore from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
+Bases has no integrity guarantees — no schema, no constraints. That gap is the **Linter operation's** job: it validates every record against its type schema in `.memoria/schemas/` (required fields, value types, enum vocabularies, `links:`/`relationships` resolving to real targets) and flags drift as Inbox `flag`s. It is a **monitor and a commit gate**: a pre-commit `schema-check` gates git-tracked writes at commit, and the cron/CI sweep monitors between commits. It does not block a live in-app edit — between a bad edit and the next sweep a Base can briefly serve a malformed record; that window is accepted under the solo premise and bounded by the commit gate. On detected drift in system files, the Linter can restore from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ---
 

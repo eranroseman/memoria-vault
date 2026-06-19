@@ -2,7 +2,7 @@
 """golden — the restorable golden copy of system files (ADR-55).
 
 The installer stages a canonical copy of every system file at
-`<vault>/.memoria/golden/` with a SHA-256 manifest. This engine turns the Linter
+`<vault>/.memoria/golden/` with a SHA-256 manifest. This operation turns the Linter
 into a *repairer*: `check` reports drift between the live system files and the
 golden copy; `restore` writes the golden content back — **propose-only by
 default** (a dry-run diff + an Inbox flag); `--apply` performs the restore

@@ -1,6 +1,6 @@
 ---
 name: verify-propose-fix
-description: "When a verification finding has an obvious remedy, propose the fix as an inbox candidate card — the exact edit, spelled out, with the ADR-51 honesty body — WITHOUT touching the thing under review (flag, don't fix). Used after verify:check-citation / verify:trace-claim when a finding is mechanical enough that the remedy is clear (a typo'd citekey, a wikilink to the wrong note, a stale superseded reference)."
+description: "When a verification finding has an obvious remedy, propose the fix as an inbox candidate card — the exact edit, spelled out, with the ADR-51 honesty body — WITHOUT touching the thing under review (flag, don't fix). Used after verify-check-citation / verify-trace-claim when a finding is mechanical enough that the remedy is clear (a typo'd citekey, a wikilink to the wrong note, a stale superseded reference)."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Verification, Proposals, Inbox]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "verify:propose-fix"
+    skill_id: "verify-propose-fix"
     profile: memoria-peer-reviewer
     lane: verify
     mcp_tools:
@@ -24,7 +24,7 @@ metadata:
     outputs: [candidate]
 ---
 
-# verify:propose-fix
+# verify-propose-fix
 
 *(legacy name: `gap-fix-propose`; load on disk as `verify-propose-fix`.)*
 
@@ -81,6 +81,6 @@ A `candidate` card (schema `candidate`, `lifecycle: proposed`):
 - Never apply the fix — not even a one-character citekey edit; the card is the entire
   output (separation of duties, ADR-48).
 - Never propose fixes for judgment findings (an unsupported claim has no mechanical
-  remedy — that is `verify:card-gap`'s lane).
+  remedy — that is `verify-card-gap`'s lane).
 - The PI's rejection of a fix card is information: do not re-propose the same fix on
   the next pass; note the standing rejection instead.

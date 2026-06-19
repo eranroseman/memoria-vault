@@ -28,8 +28,8 @@ The original cut produced seven role-named profiles (Librarian, Mapper, Socratic
 
 - The old Librarian and Mapper were both *faithful* — intake and corpus mapping are one research-librarian stance pointed in two directions. They merged into the **Librarian** (catalog · extract · link · map).
 - The old Socratic was the conversational stance with the write-wall — exactly the **Co-PI**, so it folded in.
-- The old Verifier mixed two method classes: its *judgment* checks became the **Peer-reviewer**; its deterministic sweeps became **engines**.
-- The old Linter was never an agent at all — zero-LLM, reproducible, cron-run: an **engine** by definition.
+- The old Verifier mixed two method classes: its *judgment* checks became the **Peer-reviewer**; its deterministic sweeps became **operations**.
+- The old Linter was never an agent at all — zero-LLM, reproducible, cron-run: an **operation** by definition.
 - The old Coder kept its boundary and became the **Engineer**.
 
 One posture per agent, one agent per posture. The fragmentation cost of going finer is real: more lanes to route between, more permission matrices, and — decisively — a fragmented learning loop.
@@ -53,13 +53,13 @@ Memoria still deliberately omits two roles that comparable multi-agent systems i
 
 **No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
-**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the engines produce *recommendations* that inform the PI's judgment; the gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
+**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the operations produce *recommendations* that inform the PI's judgment; the gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
 
 ---
 
 ## The cost: capability duplication
 
-Dividing by posture still has its price: the same *technique* can live in several agents. Embedding similarity drives the Librarian's mapping, the Peer-reviewer's duplicate adjudication, and the intake brief. Memoria takes the duplication on purpose — a shared capability-agent would need the union of every caller's access, dissolving the per-lane write boundaries the split exists to make legible. The reconciliation is layering: capability lives in **engines and shared MCP servers** every lane reaches through the policy gate; the **agents stay posture-pure** — identity, write zone, and stance, not tools.
+Dividing by posture still has its price: the same *technique* can live in several agents. Embedding similarity drives the Librarian's mapping, the Peer-reviewer's duplicate adjudication, and the intake brief. Memoria takes the duplication on purpose — a shared capability-agent would need the union of every caller's access, dissolving the per-lane write boundaries the split exists to make legible. The reconciliation is layering: capability lives in **operations and shared MCP servers** every lane reaches through the policy gate; the **agents stay posture-pure** — identity, write zone, and stance, not tools.
 
 ---
 

@@ -11,7 +11,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 
 ## The detectors
 
-`src/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the engine running without dependencies.
+`src/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
@@ -91,7 +91,7 @@ The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script mem
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 engine is report-only — the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the one shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 operation is report-only — the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the one shipped repair path.
 
 ---
 

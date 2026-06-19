@@ -16,7 +16,7 @@ For the frontmatter fields, templates, and field-by-field reference, see [Note t
 
 A source's record has two authorship layers, and the split between them is intentional, not a convenience.
 
-The mechanical layer is the **paper entity** in `catalog/`: the ingest engine populates the bibliographic facts and the `relationships` (cites, cited-by, authored-by, published-in) at intake. These are derivable from the source's metadata and the existing corpus without reading comprehension — structural facts about the source's place in the graph, produced deterministically and cheaply. The Librarian adds the two LLM pieces — a comparative brief and a draft classification — as proposals.
+The mechanical layer is the **paper entity** in `catalog/`: the ingest operation populates the bibliographic facts and the `relationships` (cites, cited-by, authored-by, published-in) at intake. These are derivable from the source's metadata and the existing corpus without reading comprehension — structural facts about the source's place in the graph, produced deterministically and cheaply. The Librarian adds the two LLM pieces — a comparative brief and a draft classification — as proposals.
 
 The human layer is the **source note** in `notes/sources/`: the Summary, the Critique, and the Open questions. These require reading comprehension and judgment. The Summary in particular is load-bearing — it is what the PI reads six months later to cite the paper without re-reading it. A Summary that merely paraphrases the abstract has failed this purpose; it needs to capture the thesis, the key findings that will actually be cited, and the paper's relevance to the specific research direction.
 
@@ -59,5 +59,5 @@ Taking the separation as given, the body sections are what enforce it concretely
 - The three epistemic roles explained: [Note types and epistemic roles](note-types.md)
 - Why the Links section compounds: [The knowledge cycle](knowledge-cycle.md)
 - What goes wrong without this structure: [Common pitfalls](common-pitfalls.md)
-- How to use the reading workflow: [Discuss a paper](../../how-to-guides/compile/discuss-a-paper.md)
+- How to use the reading workflow: [Discuss a paper](../../how-to-guides/library/discuss-a-paper.md)
 - Note-type reference (templates, fields, lifecycle tables): [Note types](../../reference/note-types.md)

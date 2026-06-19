@@ -42,7 +42,7 @@ A card is not just a task title. It carries:
 
 **Review state** — `review_status`, a Memoria overlay (enum in the [Kanban board reference](../../reference/kanban-board.md)). This answers "has the human accepted it as canonical?"
 
-**Agent recommendation** — `agent_recommendation` (optional, from the Peer-reviewer or an engine such as the Linter). This answers "what does the checking pass advise?" — separate from the human's decision.
+**Agent recommendation** — `agent_recommendation` (optional, from the Peer-reviewer or an operation such as the Linter). This answers "what does the checking pass advise?" — separate from the human's decision.
 
 **Handoff payload** — `summary`, `metadata.allowed_paths`, `metadata.expected_outputs`, `metadata.promote_target`. The context the next worker needs to continue; why the receiver inherits this structured payload and never the sender's session context is [The control plane](../architecture/control-plane.md)'s design point.
 

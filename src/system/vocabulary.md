@@ -18,7 +18,7 @@ later. The Linter's `schema-check` validates note values against these lists.
 How each field is populated:
 
 - **`research_area`** — *what the work is about.* Seeded mechanically from OpenAlex
-  topics by the ingest engine (`classify.py`), so the vocabulary is free and consistent
+  topics by the ingest operation (`classify.py`), so the vocabulary is free and consistent
   across sources; the list below is the curated preferred set you consolidate toward.
 - **`methodology`** — *how the study was structured, and the techniques it used.* A
   coarse facet is derived from the S2 publication types at ingest; the rest is
@@ -28,7 +28,7 @@ How each field is populated:
 
 Each term carries a one-line definition so classification is grounded rather than
 guessed. Keep `research_area` to ~30 terms; consolidate drift at roughly fifty papers
-(see [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/curate/manage-vocabulary/)
+(see [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/manage-vocabulary/)
 and [Vocabulary discipline](https://eranroseman.github.io/memoria-vault/explanation/knowledge/vocabulary-discipline/)).
 
 Reference taxonomies (MeSH, ACM CCS, OpenAlex fields-of-study) are **not** here —

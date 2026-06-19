@@ -9,7 +9,7 @@ nav_order: 2
 
 Start a terminal session with a Memoria profile — the Co-PI without Obsidian, or a background lane for debugging. (This is the `hermes … chat` CLI — not the in-Obsidian Agent Client pane, which speaks ACP to the same profiles.)
 
-Reach for a CLI chat session when Obsidian isn't running, when debugging a lane profile directly outside board dispatch, or to verify a redeployed profile loads its MCP servers and skills. Otherwise, use the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Note that lint and the retraction sweep are now **engines**, not chat sessions ([Run the Linter](../operate/run-the-linter.md), [Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
+Reach for a CLI chat session when Obsidian isn't running, when debugging a lane profile directly outside board dispatch, or to verify a redeployed profile loads its MCP servers and skills. Otherwise, use the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Note that lint and the retraction sweep are now **operations**, not chat sessions ([Run the Linter](../operate/run-the-linter.md), [Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
 
 ```bash
 hermes -p <profile-alias> chat
@@ -34,7 +34,7 @@ Type `exit` or Ctrl-C to end a session cleanly.
 
 ## Chatting safely
 
-No special flag is needed — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the Co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../compose/work-the-review-queue.md)). To test a single permission decision without any agent, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configuration.md#verify-a-configuration-change)).
+No special flag is needed — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the Co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the review queue ([Work the review queue](../inbox/work-the-review-queue.md)). To test a single permission decision without any agent, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configuration.md#verify-a-configuration-change)).
 
 ## Watching what a session did
 
@@ -46,5 +46,5 @@ No special flag is needed — the policy gate enforces it ([Policy MCP](../../re
 
 - Profile configuration: [Configure a profile](configuration.md)
 - The pane that replaces most CLI chats: [Agent-client pane](../using-obsidian/use-the-acp-pane.md)
-- Ingest: [Capture and ingest a source](../compile/capture-and-ingest.md)
+- Ingest: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Administrative CLI commands (profile, kanban, skills, cron): [Hermes CLI](../../reference/hermes-cli.md)

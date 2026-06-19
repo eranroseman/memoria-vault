@@ -52,4 +52,4 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
 
     project_gate = (tmp_path / "projects/harness/project-gate-index.md").read_text(encoding="utf-8")
     assert "Harness support" in project_gate
-    assert "saturation_state: \"unsaturated\"" in project_gate
+    assert "evidence_saturation: \"unsaturated\"" in project_gate

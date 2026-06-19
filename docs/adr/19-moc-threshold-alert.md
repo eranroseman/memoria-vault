@@ -28,7 +28,7 @@ The system surfaces when a topic cluster has crossed the hub-creation threshold 
 
 ## Why
 
-There is an asymmetry in how human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([Obsidian command palette](../reference/obsidian-command-palette.md)). A `hub` formerly got none — it is human-authored start to finish ([Build a Map of Content](../how-to-guides/curate/build-a-moc.md)), and the Mapper now receives the request as a `map` lane card rather than as a profile command.
+There is an asymmetry in how human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([Obsidian command palette](../reference/obsidian-command-palette.md)). A `hub` formerly got none — it is human-authored start to finish ([Build a Map of Content](../how-to-guides/knowledge/build-a-moc.md)), and the Mapper now receives the request as a `map` lane card rather than as a profile command.
 
 Yet the Mapper already computes the exact signal a hub proposal needs: `cluster-map` finds dense topic clusters, and [Wikilink and link conventions](../reference/linking.md#hub-thresholds) defines the ≥15–20-note threshold that says "time for a hub." The capability is present; it is simply not wired to a proposal. Today the human must manually track note counts per topic to know when a hub is due — a bookkeeping task the system is otherwise built to absorb.
 

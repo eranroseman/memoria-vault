@@ -14,7 +14,7 @@ The vault's types are not arbitrary — each one answers a different question ab
 
 The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliographic index** (who wrote what, where) physically separate from the **main slip-box** (his own thinking). Memoria does the same (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)):
 
-- **`catalog/` — entity records.** Structured facts about things in the world: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Built by the **ingest engine** from metadata APIs, surfaced through Obsidian Bases, not review-gated — they are extractions of given facts, not judgments. Entities carry `relationships` (cited-by, authored-by, published-in): **given** connections the engine derives mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)).
+- **`catalog/` — entity records.** Structured facts about things in the world: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Built by the **ingest operation** from metadata APIs, surfaced through Obsidian Bases, not review-gated — they are extractions of given facts, not judgments. Entities carry `relationships` (cited-by, authored-by, published-in): **given** connections the operation derives mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)).
 - **`notes/` — prose.** What a source says, what you think, how it all hangs together. Written by the PI or proposed by an agent. Notes carry `links:` — **authored** connections (supports, contradicts, hub membership) that an agent may propose but only the PI confirms.
 
 "Relationships are given; links are authored." A connection between two entities is always a relationship; `links:` endpoints are always notes. Keeping the two boxes separate is what lets the mechanical half run ungated while the judgment half stays human.
@@ -23,7 +23,7 @@ The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliograp
 
 ## The six entity types
 
-All in `catalog/`, all engine-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Note types](../../reference/note-types.md#catalog-entities-6).
+All in `catalog/`, all operation-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Note types](../../reference/note-types.md#catalog-entities-6).
 
 An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/sources/` that points back at the entity.
 
@@ -73,7 +73,7 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 
 **Provenance.** If a source note could contain the PI's claims, "what does this paper say?" gets mixed with "what do I think about it?", and the Peer-reviewer cannot trace citations in a draft back to what sources actually said.
 
-**Agent permissions.** The boundary follows the epistemic roles: agents (and the ingest engine) build entity records and propose source-note material, but `notes/claims/` and `notes/hubs/` are gated — recording what a source says is bookkeeping; asserting the PI's synthesis is not delegable.
+**Agent permissions.** The boundary follows the epistemic roles: agents (and the ingest operation) build entity records and propose source-note material, but `notes/claims/` and `notes/hubs/` are gated — recording what a source says is bookkeeping; asserting the PI's synthesis is not delegable.
 
 **Lifecycle subsets.** Every type uses a subset of the one universal lifecycle chain, declared in its schema file under `.memoria/schemas/types/`; the chain and its values are defined in [Frontmatter fields](../../reference/frontmatter.md). The subset encodes the epistemic shape: entities are born `current` (facts don't await approval); source notes start `proposed` (awaiting reading); claims exist only once the PI makes them `current`.
 

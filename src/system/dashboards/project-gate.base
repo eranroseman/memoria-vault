@@ -16,8 +16,8 @@ views:
       - output_mode
       - active_thesis
       - refutation_sufficiency
-      - graph_maturity
-      - saturation_state
+      - argument_stage
+      - evidence_saturation
       - computed_at
   - type: table
     name: "Needs refutation stamp"
@@ -28,6 +28,6 @@ views:
     order:
       - title
       - active_thesis
-      - graph_maturity
-      - saturation_state
+      - argument_stage
+      - evidence_saturation
       - computed_at

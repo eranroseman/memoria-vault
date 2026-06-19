@@ -2,7 +2,7 @@
 """Delegate ADR-19 hub-threshold findings to the Librarian map lane.
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those
-findings and creates a review-gated Mapper handoff: the agent may draft a hub
+findings and creates a review-gated map-lane handoff: the agent may draft a hub
 proposal in staging, but the canonical hub home (notes/hubs/) remains PI-owned.
 
     python hub_handoff.py --vault <path> [--threshold 15] [--json]

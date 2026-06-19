@@ -179,7 +179,7 @@ def load_lane(vault: Path, profile: str) -> LanePolicy:
 @dataclass
 class Decision:
     decision: str                       # allow | allow_with_log | deny | dry_run
-    policy_rule: str                    # e.g. "Coder.write.40-workbench" | "review_gated.dry_run"
+    policy_rule: str                    # e.g. "Librarian.write.catalog" | "review_gated.dry_run"
     message: str = ""
     log_required: bool = False
 

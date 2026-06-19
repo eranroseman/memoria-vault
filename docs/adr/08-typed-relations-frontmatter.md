@@ -42,7 +42,7 @@ Adopt a **`relations:` frontmatter block** on claim-notes for *associative* type
 
 ## Related
 
-- **Workflows affected:** [Distill](../how-to-guides/compile/write-a-claim-note.md) (where `contradicts` / `supports` are set), [Promote](../how-to-guides/compile/promote-a-claim.md), [Query](../how-to-guides/compose/query-the-vault.md) (relation-aware retrieval).
+- **Workflows affected:** [Distill](../how-to-guides/knowledge/write-a-claim-note.md) (where `contradicts` / `supports` are set), [Promote](../how-to-guides/knowledge/promote-a-claim.md), [Query](../how-to-guides/knowledge/query-the-vault.md) (relation-aware retrieval).
 - **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (the `relations:` namespace + vocabulary), [Note types](../reference/note-types.md) + `99-system/templates/claim-note.md`, the Linter's `structural-detectors.md` (vocabulary check), [contradictions dashboard](../explanation/dashboards/synthesis-agenda/contradictions.md) (consumer).
 - **Required by:** [ADR-9 (Contradictions dashboard)](09-contradictions-dashboard.md) — now unblocked.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (the temporal relation kept top-level; this generalizes the associative rest).

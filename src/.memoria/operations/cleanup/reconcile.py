@@ -54,7 +54,7 @@ except ImportError:  # executed from elsewhere
 SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
 CHATS_FOLDER = "notes/fleeting/chats"  # legacy ACP-pane export stamp target
 LIBRARIAN = "memoria-librarian"
-SKILL = "catalog-enrich-record"  # on-disk form of catalog:enrich-record
+SKILL = "catalog-enrich-record"  # the catalog lane's ingest skill
 
 
 def read_log(log_path: Path) -> dict:

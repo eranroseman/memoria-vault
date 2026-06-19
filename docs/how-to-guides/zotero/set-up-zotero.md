@@ -103,6 +103,6 @@ For each service's registration URL and the with-/without-key rate limits, see [
 ## Related
 
 - Next step: [Set up Hermes](../setup/set-up-hermes.md)
-- What ingest does with the `.bib`: [Capture and ingest a source](../compile/capture-and-ingest.md)
+- What ingest does with the `.bib`: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Fixing a stale `.bib`: [Fix a stale .bib](fix-stale-bib.md)
 - Citekey naming convention: [ADR-6](../../adr/06-citekey-naming-convention.md)

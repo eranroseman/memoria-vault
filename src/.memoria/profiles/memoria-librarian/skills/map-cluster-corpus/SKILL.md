@@ -10,7 +10,7 @@ metadata:
     tags: [Mapping, Clustering, Corpus-Analysis, Deterministic]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "map:cluster-corpus"
+    skill_id: "map-cluster-corpus"
     profile: memoria-librarian
     lane: map
     mcp_tools:
@@ -27,12 +27,12 @@ metadata:
     outputs: [fleeting, candidate]
 ---
 
-# map:cluster-corpus
+# map-cluster-corpus
 
 *(legacy name: `cluster-mapping`; load on disk as `map-cluster-corpus`.)*
 
 Map what already exists in the corpus. You retrieve notes, cluster them
-deterministically through the **cluster MCP** (ADR-33 — the engine, not you, owns the
+deterministically through the **cluster MCP** (ADR-33 — the operation, not you, owns the
 boundaries), aggregate recency and density, and emit a structured map. The clustering is
 reproducible: the same corpus and the same parameters yield the same clusters every run
 (`params_echo` proves it). The LLM contributes labels and prose, never the clusters.
@@ -60,7 +60,7 @@ never gates anything (reports inform — ADR-54).
 3. **Aggregate.** Compute recency, density, and source-diversity per cluster — pure
    aggregations over frontmatter dates and counts.
 4. **Compose.** Emit a structured table (cluster · size · density · last-touched ·
-   exemplar notes · outliers). Label clusters from the engine's topic words; keep
+   exemplar notes · outliers). Label clusters from the operation's topic words; keep
    narrative prose minimal and clearly downstream of the deterministic outputs.
 5. **Write — gated.** Persist the map note via the `obsidian` skill under
    `notes/fleeting/maps/cluster-map-<topic>-<YYYY-MM-DD>.md`, then raise ONE `candidate`
@@ -78,10 +78,10 @@ never gates anything (reports inform — ADR-54).
 
 ## Honesty rules
 
-- Cluster boundaries, topics, and outliers come from the engine verbatim — never edit,
+- Cluster boundaries, topics, and outliers come from the operation verbatim — never edit,
   merge, or re-assign them to make the story cleaner.
-- If the corpus is too small for stable clusters (the engine flags many outliers), say
+- If the corpus is too small for stable clusters (the operation flags many outliers), say
   so in the card and set `certainty: unsure` — do not dress noise up as structure.
-- Scope-project and coverage reporting are their own skills (`map:scope-project`,
-  `map:report-coverage`); method details shared by the map lane live in
+- Scope-project and coverage reporting are their own skills (`map-scope-project`,
+  `map-report-coverage`); method details shared by the map lane live in
   `references/methods.md`.

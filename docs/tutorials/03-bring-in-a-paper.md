@@ -19,7 +19,7 @@ parent: Tutorials
 
 Pick a paper you actually want to read, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl+P` → **Memoria: capture source from URL** → paste the URL (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey). That puts a capture card on the Librarian's `catalog` lane.
 
-> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route, and telling the Co-PI "bring in this paper: `<DOI>`", feeds the same `catalog` lane. See [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md).
+> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route, and telling the Co-PI "bring in this paper: `<DOI>`", feeds the same `catalog` lane. See [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md).
 
 ---
 

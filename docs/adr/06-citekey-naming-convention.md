@@ -43,5 +43,5 @@ This produces `mamykina2010sense` from a Mamykina 2010 paper titled "Sense and s
 
 ## Related
 
-- **Workflows affected:** [Zotero capture](../how-to-guides/compile/capture-and-ingest.md), [Ingest](../reference/ingest.md)
+- **Workflows affected:** [Zotero capture](../how-to-guides/library/capture-and-ingest.md), [Ingest](../reference/ingest.md)
 - **Files affected:** [The vault](../explanation/architecture/vault.md), `system/templates/paper.md` (in the starter vault)

@@ -193,6 +193,21 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 | `cost` / `tokens_in` / `tokens_out` | `cost.jsonl` | period totals |
 | `consistency_passk` | reserved | placeholder (`null`) for a future pass^k harness |
 
+### The trust-score composite
+
+`trust_score` is the lane's headline 0–100 number, computed by `src/.memoria/mcp/metrics_aggregate.py` from the signals above. It starts at 100 and subtracts weighted penalties, each capped so no single signal can sink the score alone:
+
+| Penalty | Weight | Cap | Driven by |
+| --- | --- | --- | --- |
+| `deny_rate` | 40 × rate | — | denials ÷ writes (`audit.jsonl`) — the strongest negative signal (injection / misconfiguration) |
+| `1 − success_rate` | 40 × rate | — | failed runs — `done ÷ (done + blocked)` from the board |
+| `retry_rate` | 20 × rate | 30 | retries ÷ runs |
+| drift incidents | 2 each | 20 | structural-drift incidents in the period |
+| secret-field hits | 10 each | 30 | secret-field access attempts |
+| suggestion-ratio extreme | 10 flat | — | `accept_ratio` > 0.9 (rubber-stamping) **or** < 0.2 (candidate scoring needs tuning) |
+
+The result is clamped to `[0, 100]` and rounded. Bands: **≥ 90 healthy · 70–89 watch · < 70 act**. A lane with fewer than 5 samples in the period is reported `insufficient-data` rather than a band — the score is indicative, not actionable. The inputs in prose and the dashboard that renders the bands are in [Dashboards](dashboards.md).
+
 ## Derived: lint-verdict notes
 
 `metrics_aggregate.py` also rolls the period's `lint-findings.jsonl` into one `system/metrics/lint-verdict-<period>.md` note (written only once the Linter has produced a findings log). It gives the drift dashboards a periodized verdict history that the timeless findings feed can't:

@@ -43,13 +43,13 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 [Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Set up the vault homepage](how-to-guides/using-obsidian/use-the-vault-homepage.md) · [Use workspaces](how-to-guides/using-obsidian/use-workspaces.md)
 
 **Daily work — sources**
-[Find new sources](how-to-guides/compile/find-new-sources.md) · [Capture and ingest](how-to-guides/compile/capture-and-ingest.md) · [Classify a source](how-to-guides/compile/classify-a-source.md) · [Write a claim note](how-to-guides/compile/write-a-claim-note.md)
+[Find new sources](how-to-guides/library/find-new-sources.md) · [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Write a claim note](how-to-guides/knowledge/write-a-claim-note.md)
 
 **Daily work — writing**
-[Query the vault](how-to-guides/compose/query-the-vault.md) · [Assess your corpus](how-to-guides/compose/assess-your-corpus.md) · [Draft with Writer](how-to-guides/compose/draft-with-writer.md) · [Verify and revise](how-to-guides/compose/verify-and-revise.md)
+[Query the vault](how-to-guides/knowledge/query-the-vault.md) · [Assess your corpus](how-to-guides/project/assess-your-corpus.md) · [Draft with Writer](how-to-guides/project/draft-with-writer.md) · [Verify and revise](how-to-guides/project/verify-and-revise.md)
 
 **Weekly**
-[Return to work](how-to-guides/curate/return-to-work.md) · [Weekly review](how-to-guides/curate/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
+[Return to work](how-to-guides/inbox/return-to-work.md) · [Weekly review](how-to-guides/inbox/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
 
 **Troubleshooting**
 [Safe mode](how-to-guides/troubleshooting/safe-mode.md) · [Failure modes reference](reference/failure-modes.md)
@@ -66,7 +66,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
 | **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert gate  |
 
-Five deterministic **engines** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
+Five deterministic **operations** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
 

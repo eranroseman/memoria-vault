@@ -83,7 +83,7 @@ exception, not the production Windows default.
 
 ## Related
 
-- Discussing a paper end-to-end: [Discuss a paper](../compile/discuss-a-paper.md)
+- Discussing a paper end-to-end: [Discuss a paper](../library/discuss-a-paper.md)
 - Gate/reset layout: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Why one agent, not a picker of specialists: [The agent-client pane](../../explanation/obsidian/agent-client-picker.md)

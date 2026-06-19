@@ -56,7 +56,7 @@ Committing to the Path 2/3 comparison study. The non-backfillable **attribution 
 ## Related
 
 - **Tracking issue:** [#374](https://github.com/eranroseman/memoria-vault/issues/374) — revisit each release cadence.
-- **Workflows:** [Verify](../how-to-guides/compose/verify-and-revise.md), [Promote](../how-to-guides/compile/promote-a-claim.md); board dispatch rules ([timeline](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md)).
+- **Workflows:** [Verify](../how-to-guides/project/verify-and-revise.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md); board dispatch rules ([timeline](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md)).
 - **Files:** the card/log schema (`review_mode` field, `schema_version` bump); [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md); the publication-instrumentation track in [Release plan — v0.1.0-alpha.1 — appendix](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md), [ADR-11 vault-eval](11-vault-eval-maintenance.md), [ADR-14](14-advisor-review-vs-frozen-deliverable.md) (distinct "advisor-review").
 - **Source discussion:** publication-path analysis — the Path-2/3 advisory-baseline gap.

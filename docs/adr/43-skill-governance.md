@@ -24,7 +24,7 @@ deferred until the count stopped fitting; at v0.1.0-alpha.2 the vault shipped **
 skills across five profiles** (threshold: > 15), and the open question became which of
 two shapes to stand up:
 
-- **Dashboard-only** — a `skill-lifecycle` dashboard giving visibility into which
+- **Dashboard-only** — a `skill-state` dashboard giving visibility into which
   skills are active in which lane, with no new process.
 - **Full lifecycle** — a state machine (`intake → proposed → scaffolded → testing →
   needs-review → approved → active → archived`), per-skill governance notes in
@@ -35,8 +35,8 @@ dashboard; uncontrolled *graduations* want the state machine.
 
 ## Decision
 
-**Dashboard-only.** The `skill-lifecycle` dashboard ships in
-`system/dashboards/skill-lifecycle.md`: a Dataview view that reads the runtime
+**Dashboard-only.** The `skill-state` dashboard ships in
+`system/dashboards/skill-state.md`: a Dataview view that reads the runtime
 governance layer directly (`.memoria/lane-overrides/*.yaml` and
 `.memoria/profiles/*/skills/*/SKILL.md`) and renders, per lane, the allowed and denied
 runtime skills, the shipped `SKILL.md` folders, and a consistency-check table that
@@ -71,7 +71,7 @@ drift from them. Adding a skill remains a runtime operation, exactly as before.
   only in git, which is acceptable at n=1 operator.
 - `system/skills/` is never created; the on-disk layout is unchanged.
 - The shape of the two file formats the dashboard parses is pinned by tests
-  (`tests/test_skill_lifecycle_dashboard.py`), so a lane-override or `SKILL.md`
+  (`tests/test_skill_state_dashboard.py`), so a lane-override or `SKILL.md`
   restructuring fails CI rather than silently blanking the dashboard.
 
 ## Alternatives considered
@@ -97,5 +97,5 @@ store).
 
 - **Tracking issue:** [#368](https://github.com/eranroseman/memoria-vault/issues/368) — the trigger firing and the shape decision.
 - **System of record:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **The dashboard:** `system/dashboards/skill-lifecycle.md`; rationale in [skill-lifecycle dashboard](../explanation/dashboards/operational-health/skill-lifecycle.md).
+- **The dashboard:** `system/dashboards/skill-state.md`; rationale in [skill-state dashboard](../explanation/dashboards/operational-health/skill-state.md).
 - **Scope premise:** [ADR-24](24-single-researcher-scope.md) — single researcher; one judgment owner.

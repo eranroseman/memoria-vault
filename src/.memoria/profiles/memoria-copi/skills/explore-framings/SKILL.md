@@ -1,13 +1,13 @@
 ---
 name: explore-framings
-description: "Branch a question into genuinely rival framings at the desk: take the question the PI is circling, develop 2–4 distinct ways to frame it (each with what it presupposes, what evidence the vault holds for it, and what it would take to kill it), and keep them alive side by side instead of converging early. Read-only sparring-partner work; chosen directions become delegated tasks. Use when the PI is shaping a question, not answering one."
+description: "Branch a question into genuinely rival framings in the Co-PI pane: take the question the PI is circling, develop 2–4 distinct ways to frame it (each with what it presupposes, what evidence the vault holds for it, and what it would take to kill it), and keep them alive side by side instead of converging early. Read-only sparring-partner work; chosen directions become delegated tasks. Use when the PI is shaping a question, not answering one."
 version: 1.0.0
 author: Memoria
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [Desk, Framing, Exploration, Socratic]
+    tags: [Framing, Exploration]
     related_skills: [obsidian, qmd]
   memoria:
     skill_id: "explore-framings"
@@ -29,7 +29,7 @@ metadata:
 Resist premature convergence. When the PI is still *shaping* a question, the failure
 mode is locking onto the first framing and back-filling evidence. This skill branches:
 develop the rival framings properly — each at full strength — and hold them open until
-the PI chooses. Sparring partner, not oracle (the old socratic posture, ADR-48).
+the PI chooses. Sparring partner, not oracle (ADR-48).
 
 ## Inputs
 

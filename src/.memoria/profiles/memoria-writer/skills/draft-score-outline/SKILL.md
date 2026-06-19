@@ -1,6 +1,6 @@
 ---
 name: draft-score-outline
-description: "Score an existing outline (or outline options) against mechanical readiness criteria — claim coverage per node, maturity of load-bearing claims, contradiction exposure, hole count — and append the scorecard to the outline note in project scratch. Advisory only: scores inform the PI's pick, they never gate. Use after draft:outline-argument, or before committing a section to draft:write-section."
+description: "Score an existing outline (or outline options) against mechanical readiness criteria — claim coverage per node, maturity of load-bearing claims, contradiction exposure, hole count — and append the scorecard to the outline note in project scratch. Advisory only: scores inform the PI's pick, they never gate. Use after draft-outline-argument, or before committing a section to draft-write-section."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Drafting, Outlining, Scoring]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "draft:score-outline"
+    skill_id: "draft-score-outline"
     profile: memoria-writer
     lane: draft
     mcp_tools:
@@ -25,7 +25,7 @@ metadata:
     outputs: [source]
 ---
 
-# draft:score-outline
+# draft-score-outline
 
 *(legacy name: `outline-score`; load on disk as `draft-score-outline`.)*
 
@@ -56,7 +56,7 @@ property, never trust).
    only to resolve claim links).
 2. **Compute** each criterion per node; no holistic vibes — each cell of the scorecard
    traces to a count or a frontmatter field.
-3. **Append — gated.** Add a `## Scorecard (draft:score-outline, YYYY-MM-DD)` section
+3. **Append — gated.** Add a `## Scorecard (draft-score-outline, YYYY-MM-DD)` section
    to the outline note itself (`obsidian` append/patch): the per-node table, the
    per-option totals when scoring options, and a one-paragraph reading of where the
    structure is thinnest. Never write outside `projects/`.

@@ -37,5 +37,5 @@ Any `current` claim with no inbound links appears immediately. No plugin, no log
 
 - [contradictions dashboard](contradictions.md) — closest sibling; both build the synthesis agenda (questions vs. tensions)
 - Where the cycle is stuck: [The knowledge cycle](../../knowledge/knowledge-cycle.md)
-- [Write a claim note](../../../how-to-guides/compile/write-a-claim-note.md) — where to put open questions in claim notes
-- Where questions are generated: [Discuss a paper](../../../how-to-guides/compile/discuss-a-paper.md)
+- [Write a claim note](../../../how-to-guides/knowledge/write-a-claim-note.md) — where to put open questions in claim notes
+- Where questions are generated: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)

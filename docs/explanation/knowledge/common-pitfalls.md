@@ -12,15 +12,15 @@ Failure modes that recur in research vaults built this way. Most of them look li
 
 The Writer produces a draft in response to a query. It looks good. A paragraph gets copied into a composition. Later it emerges that the agent cited paper X for a claim that paper X does not actually make — the semantic similarity was there, but the specific claim wasn't.
 
-This is the failure the Peer-reviewer exists to catch, but its `verify:check-citation` pass only verifies that citekeys resolve — it doesn't verify that the source actually supports the specific claim in the prose. That final check is irreducibly human. The system's design treats agent output as a proposal that requires verification, not a draft that requires only polish.
+This is the failure the Peer-reviewer exists to catch, but its `verify-check-citation` pass only verifies that citekeys resolve — it doesn't verify that the source actually supports the specific claim in the prose. That final check is irreducibly human. The system's design treats agent output as a proposal that requires verification, not a draft that requires only polish.
 
 ## Unpinned citekeys
 
-You add a paper to Zotero, the ingest engine catalogs it, wikilinks form across the vault pointing to `mamykina2010sense`. Then you correct a metadata field in Zotero — the author's name, the year, a typo in the title — and Better BibTeX regenerates the citekey. Every wikilink in the vault is now broken, silently.
+You add a paper to Zotero, the ingest operation catalogs it, wikilinks form across the vault pointing to `mamykina2010sense`. Then you correct a metadata field in Zotero — the author's name, the year, a typo in the title — and Better BibTeX regenerates the citekey. Every wikilink in the vault is now broken, silently.
 
 The reason this is silent: Obsidian doesn't warn about broken wikilinks; it just shows them as unresolved. Without the Linter's `lint:analyze-graph` check, the breakage is invisible until you're actively looking for a specific note. The failure compounds over time because new notes continue linking to the broken citekey, not knowing it has changed.
 
-The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Capture and ingest a source](../../how-to-guides/compile/capture-and-ingest.md) for the pinning procedure.
+The root cause is that Better BibTeX treats citekeys as derived from metadata, not as stable identifiers. Pinning a key tells it to treat the key as the identifier, not the derivation. See [Capture and ingest a source](../../how-to-guides/library/capture-and-ingest.md) for the pinning procedure.
 
 ## Vocabulary drift
 
@@ -63,6 +63,6 @@ For the explicit mapping of tasks to their appropriate owner, see [Profile capab
 ## Related
 
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
-- The fix for compound notes: [Refactor claim notes](../../how-to-guides/curate/refactor-a-note.md)
+- The fix for compound notes: [Refactor claim notes](../../how-to-guides/knowledge/refactor-a-note.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
 - Lane permissions referenced here: [Profile capabilities](../../reference/profiles.md)
