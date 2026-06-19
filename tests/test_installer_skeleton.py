@@ -8,6 +8,7 @@ import schema
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
 MANIFEST = ROOT / "scripts" / "install" / "manifest.sh"
+RUNTIME_TOOLS = ROOT / "scripts" / "install" / "runtime-tools.sh"
 
 
 def _skeleton_dirs() -> set[str]:
@@ -41,6 +42,24 @@ def test_cron_wrappers_exist_for_wired_jobs():
     text = INSTALL.read_text(encoding="utf-8")
     for wrapper in re.findall(r'\.memoria/scripts/([a-z-]+\.sh)', text):
         assert (ROOT / "src/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
+
+def test_installer_cron_helper_keeps_all_job_schedules():
+    helper = RUNTIME_TOOLS.read_text(encoding="utf-8")
+    text = INSTALL.read_text(encoding="utf-8")
+
+    assert "install_hermes_cron()" in helper
+    assert 'hermes cron create "$schedule" --script "$dest_name" --no-agent' in helper
+    for source, dest, schedule, job in (
+        ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
+        ("sweeps-cron.sh", "memoria-sweeps.sh", "*/15 * * * *", "memoria-sweeps"),
+        ("lint-cron.sh", "memoria-lint.sh", "0 6 * * *", "memoria-lint"),
+        ("metrics-cron.sh", "memoria-metrics.sh", "30 6 * * 1", "memoria-metrics"),
+        ("eval-cron.sh", "memoria-eval.sh", "0 7 1 */3 *", "memoria-eval"),
+    ):
+        assert source in text
+        assert dest in text
+        assert schedule in text
+        assert job in text
 
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "src/.memoria/scripts/lint-cron.sh").read_text(encoding="utf-8")

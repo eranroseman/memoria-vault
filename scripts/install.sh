@@ -941,32 +941,12 @@ resolve_vault_for_profiles() {
 # vault and appends the operational logs. Global (not per-lane). Idempotent.
 # =============================================================================
 wire_telemetry_cron() {
-  hdr "Telemetry cron (board export)"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the telemetry cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/board-export-cron.sh"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/memoria-board-export.sh"
-  if [ ! -f "$src" ]; then
-    warn "telemetry cron wrapper missing at $src — board-export cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  # Create the recurring no-agent job (idempotent — skip if one already exists).
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-board-export"; then
-    say "  board-export cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create '* * * * *' --script memoria-board-export.sh --no-agent \
-      --name memoria-board-export --deliver local \
-      || warn "could not create the board-export cron — create it manually (see project-files/plans)"
-  fi
-  say "  (emits the six-signal telemetry; fires whenever the Hermes scheduler/gateway runs)"
-  ok "Telemetry cron wired"
+  install_hermes_cron \
+    "Telemetry cron (board export)" "telemetry" \
+    "board-export-cron.sh" "memoria-board-export.sh" '* * * * *' "memoria-board-export" \
+    "board-export" "telemetry" "board-export" " (see project-files/plans)" \
+    "emits the six-signal telemetry; fires whenever the Hermes scheduler/gateway runs" \
+    "Telemetry"
 }
 
 # =============================================================================
@@ -975,116 +955,39 @@ wire_telemetry_cron() {
 # re-ingest cards. Global (not per-lane). Idempotent.
 # =============================================================================
 wire_sweeps_cron() {
-  hdr "Re-ingest sweeps cron"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the sweeps cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/sweeps-cron.sh"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/memoria-sweeps.sh"
-  if [ ! -f "$src" ]; then
-    warn "sweeps cron wrapper missing at $src — sweeps cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  # Create the recurring no-agent job (idempotent — skip if one already exists).
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-sweeps"; then
-    say "  sweeps cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create '*/15 * * * *' --script memoria-sweeps.sh --no-agent \
-      --name memoria-sweeps --deliver local \
-      || warn "could not create the sweeps cron — create it manually (see docs/reference/ingest.md)"
-  fi
-  say "  (recovers stalled captures every 15 min via idempotent re-ingest cards)"
-  ok "Sweeps cron wired"
+  install_hermes_cron \
+    "Re-ingest sweeps cron" "sweeps" \
+    "sweeps-cron.sh" "memoria-sweeps.sh" '*/15 * * * *' "memoria-sweeps" \
+    "sweeps" "sweeps" "sweeps" " (see docs/reference/ingest.md)" \
+    "recovers stalled captures every 15 min via idempotent re-ingest cards" \
+    "Sweeps"
 }
 
 wire_lint_cron() {
-  hdr "Linter cron"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the lint cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/lint-cron.sh"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/memoria-lint.sh"
-  if [ ! -f "$src" ]; then
-    warn "lint cron wrapper missing at $src — lint cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-lint"; then
-    say "  lint cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent \
-      --name memoria-lint --deliver local \
-      || warn "could not create the lint cron — create it manually"
-  fi
-  say "  (the engine monitors between commits: detectors + golden-copy drift, daily)"
-  ok "Lint cron wired"
+  install_hermes_cron \
+    "Linter cron" "lint" \
+    "lint-cron.sh" "memoria-lint.sh" '0 6 * * *' "memoria-lint" \
+    "lint" "lint" "lint" "" \
+    "the engine monitors between commits: detectors + golden-copy drift, daily" \
+    "Lint"
 }
 
 wire_metrics_cron() {
-  hdr "Metrics cron (fleet health)"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the metrics cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/metrics-cron.sh"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/memoria-metrics.sh"
-  if [ ! -f "$src" ]; then
-    warn "metrics cron wrapper missing at $src — metrics cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-metrics"; then
-    say "  metrics cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create '30 6 * * 1' --script memoria-metrics.sh --no-agent \
-      --name memoria-metrics --deliver local \
-      || warn "could not create the metrics cron — create it manually"
-  fi
-  say "  (rolls audit + board + lint logs into system/metrics/ weekly for fleet-health)"
-  ok "Metrics cron wired"
+  install_hermes_cron \
+    "Metrics cron (fleet health)" "metrics" \
+    "metrics-cron.sh" "memoria-metrics.sh" '30 6 * * 1' "memoria-metrics" \
+    "metrics" "metrics" "metrics" "" \
+    "rolls audit + board + lint logs into system/metrics/ weekly for fleet-health" \
+    "Metrics"
 }
 
 wire_eval_cron() {
-  hdr "Eval cron (vault-eval, ADR-11)"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the eval cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/eval-cron.sh"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/memoria-eval.sh"
-  if [ ! -f "$src" ]; then
-    warn "eval cron wrapper missing at $src — eval cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "memoria-eval"; then
-    say "  eval cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create '0 7 1 */3 *' --script memoria-eval.sh --no-agent \
-      --name memoria-eval --deliver local \
-      || warn "could not create the eval cron — create it manually"
-  fi
-  say "  (quarterly: fans the system/eval/ gold set out as idempotent eval cards — diagnostic, never gating)"
-  ok "Eval cron wired"
+  install_hermes_cron \
+    "Eval cron (vault-eval, ADR-11)" "eval" \
+    "eval-cron.sh" "memoria-eval.sh" '0 7 1 */3 *' "memoria-eval" \
+    "eval" "eval" "eval" "" \
+    "quarterly: fans the system/eval/ gold set out as idempotent eval cards — diagnostic, never gating" \
+    "Eval"
 }
 
 # =============================================================================
