@@ -42,4 +42,4 @@ It shows what is in flight on the Library side and what has come out the other s
 - Narrower Library-discipline sibling: [The discuss-queue dashboard](discuss-queue.md)
 - Weekly entry point that links to this: [The weekly-review dashboard](../structural-health/weekly-review.md)
 - The state model behind `proposed`/`provisional`: [Lifecycle, not topic — and state, not folders](../../knowledge/lifecycle-over-topic.md)
-- Next step after the pipeline surfaces a source: [Discuss a paper](../../../how-to-guides/compile/discuss-a-paper.md)
+- Next step after the pipeline surfaces a source: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)

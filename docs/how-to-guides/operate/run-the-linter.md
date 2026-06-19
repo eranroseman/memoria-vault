@@ -6,7 +6,7 @@ nav_order: 1
 
 # Run the Linter
 
-Run a structural health check on the vault, or review the scheduled report. The Linter is an **engine, not an agent** — deterministic, zero-LLM Python under `.memoria/operations/integrity/linter/`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
+Run a structural health check on the vault, or review the scheduled report. The Linter is an **operation, not an agent** — deterministic, zero-LLM Python under `.memoria/operations/integrity/linter/`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
 ## When it runs without you
 
@@ -70,7 +70,7 @@ hermes cron run memoria-lint   # force a pass now
 
 ## Related
 
-- Weekly review (the structural-health step): [Run the weekly review](../curate/run-the-weekly-review.md)
+- Weekly review (the structural-health step): [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Fix broken frontmatter: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 - The detector inventory and gate flags: [Linter: detectors and auto-fix](../../reference/linter.md)
 - Where findings surface: [Dashboards](../../reference/dashboards.md)

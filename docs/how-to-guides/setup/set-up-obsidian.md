@@ -75,7 +75,7 @@ the certificate or a real plugin `data.json`.
 
 Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it. It is a second frontmatter authority that collides with the agent-owned namespaces and bypasses the policy-MCP audit trail; the full rationale is in [ADR-12](../../adr/12-obsidian-linter-reference-only.md).
 
-Memoria's linting is the Linter **engine** — deterministic Python with a daily cron and a pre-commit gate ([Linter: detectors and auto-fix](../../reference/linter.md)); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
+Memoria's linting is the Linter **operation** — deterministic Python with a daily cron and a pre-commit gate ([Linter: detectors and auto-fix](../../reference/linter.md)); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 
 ## Verify
 

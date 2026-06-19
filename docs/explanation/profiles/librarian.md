@@ -27,7 +27,7 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 ## Why it's designed this way
 
-**The engine/agent split.** The mechanical half of cataloging — fetch metadata, extract text, build entity `relationships`, create Catalog records — is the **ingest engine**, not the Librarian. The agent fills the two LLM holes: composing the comparative `[!brief]` and proposing the classification. Keeping the mechanics deterministic keeps the high-volume path reproducible, auditable, and cheap; the agent spends LLM judgment only where judgment is needed — the [hybrid select-then-compose pattern](../rationale/why-computational-methods.md) applied to cataloging. Below a confidence floor the engine's fuzzy calls (entity resolution, dedup) emit a `flag` rather than merging silently ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
+**The operation/agent split.** The mechanical half of cataloging — fetch metadata, extract text, build entity `relationships`, create Catalog records — is the **ingest operation**, not the Librarian. The agent fills the two LLM holes: composing the comparative `[!brief]` and proposing the classification. Keeping the mechanics deterministic keeps the high-volume path reproducible, auditable, and cheap; the agent spends LLM judgment only where judgment is needed — the [hybrid select-then-compose pattern](../rationale/why-computational-methods.md) applied to cataloging. Below a confidence floor the operation's fuzzy calls (entity resolution, dedup) emit a `flag` rather than merging silently ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
 
 **Faithful, not optimistic-and-loose.** The posture is generous about *inclusion* and strict about *representation*: a brief reports what the paper says, a coverage-report reports what the corpus holds, and neither editorializes. The gate can only filter well if the proposals beneath it are faithful.
 
@@ -39,7 +39,7 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 **Not its own reviewer.** The agent that gathers and proposes must not also grade the result — that is the [Peer-reviewer](peer-reviewer.md)'s independence, the anti-rubber-stamp principle.
 
-**Not the ingest engine.** You *run* ingest; you *delegate* to the Librarian. The folder is named `catalog/` for its content because both operate on it.
+**Not the ingest operation.** You *run* ingest; you *delegate* to the Librarian. The folder is named `catalog/` for its content because both operate on it.
 
 ---
 

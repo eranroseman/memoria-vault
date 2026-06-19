@@ -10,18 +10,18 @@ Every note in the vault is somewhere in a long-term progression from catalogued 
 
 ## The six delegable tasks
 
-The PI works in two modes — **Library** (take knowledge in) and **Project** (put work out) — not a pipeline. Within them, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
+The PI works at the four gates — **Inbox**, **Library**, **Knowledge**, and **Project** — not along a pipeline. Library, Knowledge, and Project are where knowledge is taken in, built into claims, and turned into output; the Inbox is where the agents' proposals surface for a decision. Beneath the gates, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
 
-| Mode    | Task        | What it does                                            | Inbox signal    |
-| ------- | ----------- | ------------------------------------------------------- | --------------- |
-| Library | **catalog** | find and record a source (entity record + candidate)    | `candidate`     |
-|         | **extract** | distill a kept source toward claim stubs                | (work prompt)   |
-|         | **link**    | propose connections between claims                      | (link proposal) |
-| Project | **map**     | scope a corpus — coverage, clusters, writability        | `gap`           |
-|         | **draft**   | generate proposed prose with bound citations            | —               |
-|         | **verify**  | check citations, trace claims, red-team the argument    | `flag`          |
+| Task        | What it does                                            | Inbox signal    |
+| ----------- | ------------------------------------------------------- | --------------- |
+| **catalog** | find and record a source (entity record + candidate)    | `candidate`     |
+| **extract** | distill a kept source toward claim stubs                | (work prompt)   |
+| **link**    | propose connections between claims                      | (link proposal) |
+| **map**     | scope a corpus — coverage, clusters, writability        | `gap`           |
+| **draft**   | generate proposed prose with bound citations            | —               |
+| **verify**  | check citations, trace claims, red-team the argument    | `flag`          |
 
-The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. The four Library tasks belong to the Librarian posture, draft to the Writer, and verify to the Peer-reviewer; the authoritative task-lane → profile map lives in [Profile capabilities](../../reference/profiles.md). All six are reachable from either mode via the command palette.
+The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. The four Librarian tasks (catalog, extract, link, map) belong to the Librarian posture, draft to the Writer, and verify to the Peer-reviewer; the authoritative task-lane → profile map lives in [Profile capabilities](../../reference/profiles.md). All six are reachable from the gates via the command palette.
 
 A new source typically arrives as a `candidate` card, is kept at triage, and becomes a Catalog entity plus a `proposed` source note. The PI reads it, distills claims in their own words, and confirms the links that connect them into the graph. Those claims mature and cross-link; once enough accumulate, a project maps the corpus, drafts, verifies, and ships.
 
@@ -55,7 +55,6 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 
 **Explanation**
 
-- The same cycle seen as a phase sequence (find → capture → … → export) rather than as delegable tasks: [Compile and compose](../workflows/compile-and-compose.md)
 - The ritual that keeps the cycle from stalling: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
 - The epistemic roles of note types: [Note types and epistemic roles](note-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
@@ -63,5 +62,5 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 
 **How-to**
 
-- The weekly maintenance pass: [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md)
-- The cycle's key transition: [Write a claim note](../../how-to-guides/compile/write-a-claim-note.md)
+- The weekly maintenance pass: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
+- The cycle's key transition: [Write a claim note](../../how-to-guides/knowledge/write-a-claim-note.md)

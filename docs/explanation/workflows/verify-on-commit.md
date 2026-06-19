@@ -31,4 +31,4 @@ This is consistent with the rest of the system's posture: agents produce recomme
 ## Related
 
 - [The Peer-reviewer](../profiles/peer-reviewer.md) — what the Peer-reviewer checks and how
-- [Verify and revise a draft](../../how-to-guides/compose/verify-and-revise.md) — how to read the report and address gaps
+- [Verify and revise a draft](../../how-to-guides/project/verify-and-revise.md) — how to read the report and address gaps

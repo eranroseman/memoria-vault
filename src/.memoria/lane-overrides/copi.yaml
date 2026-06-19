@@ -3,7 +3,7 @@ profile: memoria-copi
 # The Co-PI's lane ceiling (ADR-48): the one agent the PI converses with — and the
 # one agent with ZERO write paths. It runs read-only skills directly and delegates
 # every write as a task card; the hard write-denial is the structural guarantee
-# behind "read directly, delegate writes". Modeled on the old socratic lane.
+# behind "read directly, delegate writes". A read-only conversational posture.
 
 policy:
   allow:
@@ -21,6 +21,6 @@ policy:
     - audit_log
 
 routing:
-  invocation: interactive_only  # the desk pane (ACP) — never dispatched to the board
+  invocation: interactive_only  # the Co-PI pane (ACP) — never dispatched to the board
   external_api_policy: explicit_only
   write_scope: []

@@ -8,7 +8,7 @@ grand_parent: Dashboards
 
 # The weekly-review dashboard
 
-The weekly-review dashboard is the Friday-ritual entry point. It gathers the week's accumulated content decisions — a full Inbox, candidate cards awaiting triage, claim maturity to revisit, orphans, project pages, the quiet-level findings — into one ordered surface so the ritual has a single starting place rather than six. The discipline is **one ritual per week, ~90 minutes** — not "open whenever." A weekly cadence is what prevents the vault from accumulating drift faster than it produces synthesis. (For the actionable top-to-bottom sequence, see [run the weekly review](../../../how-to-guides/curate/run-the-weekly-review.md); the ordering rationale is below.)
+The weekly-review dashboard is the Friday-ritual entry point. It gathers the week's accumulated content decisions — a full Inbox, candidate cards awaiting triage, claim maturity to revisit, orphans, project pages, the quiet-level findings — into one ordered surface so the ritual has a single starting place rather than six. The discipline is **one ritual per week, ~90 minutes** — not "open whenever." A weekly cadence is what prevents the vault from accumulating drift faster than it produces synthesis. (For the actionable top-to-bottom sequence, see [run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md); the ordering rationale is below.)
 
 ---
 
@@ -45,7 +45,7 @@ The weekly-review dashboard is the Friday-ritual entry point. It gathers the wee
 
 **How-to**
 
-- How to run the ritual: [run the weekly review](../../../how-to-guides/curate/run-the-weekly-review.md)
+- How to run the ritual: [run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md)
 
 **Background**
 

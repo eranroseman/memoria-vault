@@ -6,7 +6,7 @@ write** — this server turns a delegation into a Hermes kanban card on the righ
 lane, after validating the handoff against the lane's ceiling: `allowed_paths`
 may *narrow* but never *widen* the lane's write scope (lane = ceiling, payload
 = floor). Card creation shells out to `hermes kanban create` — the same proven
-path the sweeps engine uses — so board semantics (WIP, dedup, dispatch) stay
+path the sweeps operation uses — so board semantics (WIP, dedup, dispatch) stay
 Hermes-native.
 
     python tasks_mcp.py --vault <path>            # run the MCP server (needs `mcp`)

@@ -1,6 +1,6 @@
 ---
 name: extract-flag-distill
-description: "Spot kept sources that are worth the PI's reading time and raise the distill work-prompt — a candidate card arguing why THIS source deserves distillation now (density of stub-able findings, relevance to open gaps and active questions, connective position in the corpus). The prompt proposes the PI's attention; extract:stub-claim does the stubbing once accepted. Use on a sweep of recently kept sources or when triage asks what to read next."
+description: "Spot kept sources that are worth the PI's reading time and raise the distill work-prompt — a candidate card arguing why THIS source deserves distillation now (density of stub-able findings, relevance to open gaps and active questions, connective position in the corpus). The prompt proposes the PI's attention; extract-stub-claim does the stubbing once accepted. Use on a sweep of recently kept sources or when triage asks what to read next."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Extraction, Triage, Reading-Queue]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "extract:flag-distill"
+    skill_id: "extract-flag-distill"
     profile: memoria-librarian
     lane: extract
     mcp_tools:
@@ -24,7 +24,7 @@ metadata:
     outputs: [candidate]
 ---
 
-# extract:flag-distill
+# extract-flag-distill
 
 *(legacy name: `distill-candidate-flag`; load on disk as `extract-flag-distill`.)*
 
@@ -65,7 +65,7 @@ distilling a source now. It proposes attention; it extracts nothing itself.
 One `candidate` card (schema `candidate`, `lifecycle: proposed`):
 
 - `title` — e.g. "3 sources worth distilling this week".
-- `action` — "accept to queue extract:stub-claim on the listed sources, in order".
+- `action` — "accept to queue extract-stub-claim on the listed sources, in order".
 - `argument_for` — the strongest signal per nominated source, concretely (which gap,
   which contradiction).
 - `argument_against` — the honest rebuttal ("two nominations rest on tldr skims, not

@@ -10,7 +10,7 @@ metadata:
     tags: [Mapping, Scoping, Corpus-Analysis]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "map:scope-project"
+    skill_id: "map-scope-project"
     profile: memoria-librarian
     lane: map
     mcp_tools:
@@ -26,7 +26,7 @@ metadata:
     outputs: [fleeting, candidate]
 ---
 
-# map:scope-project
+# map-scope-project
 
 *(legacy name: `scope-project`; load on disk as `map-scope-project`.)*
 
@@ -50,7 +50,7 @@ not the map's.
 2. **Cluster deterministically** via the cluster MCP: `cluster_model_topics(folder,
    …)` for the thematic structure, `cluster_build_graph()` for how the retrieved notes
    actually connect (a topically coherent but link-sparse area reads differently from
-   a worked-over one). Engine outputs are verbatim inputs to the narrative — never
+   a worked-over one). Operation outputs are verbatim inputs to the narrative — never
    adjusted. If the optional cluster stack is missing, report it and fall back to a
    link-graph-only map, labeled as such.
 3. **Aggregate** per cluster: note count, claim-vs-source mix, recency, source
@@ -58,7 +58,7 @@ not the map's.
 4. **Compose the narrative** over the fixed outputs: what each cluster is, which
    clusters carry promoted claims vs raw sources, where the brief's key terms retrieve
    almost nothing (named, not judged — gap *reporting* in depth is
-   `map:report-coverage`).
+   `map-report-coverage`).
 5. **Write — gated.** The map note to
    `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>.md`, then ONE `candidate`
    card in `inbox/` pointing at it (ADR-54). Never write under `projects/` — that zone
@@ -78,7 +78,7 @@ not the map's.
 - The map describes what exists — never inflate thin clusters with adjacent material
   to make coverage look better.
 - Name the retrieval bias every time: a map is only as wide as its query.
-- Cluster boundaries and topic labels trace to the engine's output; your prose adds
+- Cluster boundaries and topic labels trace to the operation's output; your prose adds
   reading, never rearrangement.
 - If the brief's central question retrieves nearly nothing, that IS the map — say it
   in the first line, `certainty: confident`.

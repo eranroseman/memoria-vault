@@ -65,6 +65,6 @@ A retraction sometimes resolves — or creates — a contradiction. Glance at `s
 ## Related
 
 - The pipeline context: [Ingest routing](../../reference/ingest.md)
-- Archiving the fallout: [Archive a source](../compile/archive-a-source.md)
-- The per-draft complement: [Verify and revise a draft](../compose/verify-and-revise.md)
-- Why the engine never flips a note: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)
+- Archiving the fallout: [Archive a source](../library/archive-a-source.md)
+- The per-draft complement: [Verify and revise a draft](../project/verify-and-revise.md)
+- Why the operation never flips a note: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)

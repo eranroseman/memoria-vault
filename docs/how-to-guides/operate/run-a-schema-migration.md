@@ -8,7 +8,7 @@ nav_order: 3
 
 Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal. In v0.1.0-alpha.2 there is **no automated migration command**: a migration is a deliberate, git-disciplined manual pass, validated by the schemas. That's by design — schema changes fall in the `schema-content` class, which the policy gate never lets run unattended ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
-Use this for **structural** changes that touch many notes. For renaming a single vocabulary term, [Manage your topic vocabulary](../curate/manage-vocabulary.md) covers the lighter path.
+Use this for **structural** changes that touch many notes. For renaming a single vocabulary term, [Manage your topic vocabulary](../knowledge/manage-vocabulary.md) covers the lighter path.
 
 ## Prerequisites
 
@@ -83,7 +83,7 @@ If the diff is wrong, `git reset --hard HEAD~1` returns you to the step-1 snapsh
 
 **How-to**
 
-- The lighter, single-term path: [Manage your topic vocabulary](../curate/manage-vocabulary.md)
+- The lighter, single-term path: [Manage your topic vocabulary](../knowledge/manage-vocabulary.md)
 - The validation pass: [Run the Linter](run-the-linter.md)
 - Recovering from a bad edit: [Fix broken frontmatter](../troubleshooting/fix-broken-frontmatter.md)
 

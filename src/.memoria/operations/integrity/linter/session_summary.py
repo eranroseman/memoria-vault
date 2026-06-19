@@ -2,7 +2,7 @@
 """session_summary — per-session deterministic digests of the audit log (ADR-25).
 
 The second of ADR-25's two logs. The Linter is zero-LLM, so the per-session
-record is a *deterministic digest*, not an LLM narrative: this engine groups
+record is a *deterministic digest*, not an LLM narrative: this operation groups
 `system/logs/audit.jsonl` entries by `task_id` (one session = one task) and, for
 each session not yet summarized, writes one JSONL file under
 `system/logs/sessions/` named `YYYY-MM-DD-HHMM.jsonl` from the session's first

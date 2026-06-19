@@ -5,7 +5,7 @@ Fans the hand-curated gold set in ``system/eval/`` out through the *deployed*
 profiles: one Hermes kanban card per ``lifecycle: current`` gold task, routed to
 the board lane its frontmatter names (ADR-48 lane → profile map, mirrored from
 ``tasks_mcp.LANE_PROFILE``; tests/test_eval.py guards the parity). It lives with
-the sweeps engines because it has exactly their shape — a deterministic, no-LLM
+the sweeps operations because it has exactly their shape — a deterministic, no-LLM
 detector-over-the-vault that enqueues idempotent cards and lets the board
 provide serialization, dedup, and the failure circuit-breaker (ADR-30 discipline).
 
@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 # task lane -> the background agent that owns it (ADR-48 §4.1).
-# Mirrors mcp/tasks_mcp.py LANE_PROFILE (the sweeps engines don't import from
+# Mirrors mcp/tasks_mcp.py LANE_PROFILE (the sweeps operations don't import from
 # mcp/); tests/test_eval.py asserts the two maps stay identical.
 LANE_PROFILE = {
     "catalog": "memoria-librarian",

@@ -29,7 +29,7 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
 
-# Policy sandbox (D40/ADR-46): agents reach the vault, engines, and APIs ONLY
+# Policy sandbox (D40/ADR-46): agents reach the vault, operations, and APIs ONLY
 # through MCP — no exceptions. Keep toolsets = skills, todo; disabled_toolsets =
 # every Hermes toolset NOT in the keep-set. The v0.1.0-alpha.1 Coder kept terminal+file
 # (ADR-27 §4); the Engineer does not — code scaffolds go through the gated

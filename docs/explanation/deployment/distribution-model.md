@@ -22,7 +22,7 @@ Shipping `src/` rather than a live `vault/` template is deliberate ([ADR-55](../
 
 ## What ships in `src/`
 
-`src/` carries three kinds of source: the **vault skeleton** (the type-first category tree, [ADR-47](../../adr/47-type-first-category-folders.md), with templates, dashboards, Bases, and `home.md` pre-populated), the **`.obsidian/` config**, and the **`.memoria/` scaffold** (profiles, engines, the policy MCP, schemas, lane-overrides, scripts, and `memoria.bib`). The full directory catalog — every folder and what it holds — is owned by [On-disk layout](../../reference/on-disk-layout.md); the design rationale for the category tree is [The vault](../architecture/vault.md). Empty content dirs are recreated by the installer's scaffold step, checked against the machine-read folder map (`.memoria/schemas/folders.yaml`).
+`src/` carries three kinds of source: the **vault skeleton** (the type-first category tree, [ADR-47](../../adr/47-type-first-category-folders.md), with templates, dashboards, Bases, and `home.md` pre-populated), the **`.obsidian/` config**, and the **`.memoria/` scaffold** (profiles, operations, the policy MCP, schemas, lane-overrides, scripts, and `memoria.bib`). The full directory catalog — every folder and what it holds — is owned by [On-disk layout](../../reference/on-disk-layout.md); the design rationale for the category tree is [The vault](../architecture/vault.md). Empty content dirs are recreated by the installer's scaffold step, checked against the machine-read folder map (`.memoria/schemas/folders.yaml`).
 
 ## The golden copy: the restore source
 

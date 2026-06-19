@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""retraction.py — the retraction sweep engine (ADR-46/D41: cron-only, no MCP facade).
+"""retraction.py — the retraction sweep operation (ADR-46/D41: cron-only, no MCP facade).
 
-The Verifier reaches every external service over MCP (code_execution / terminal /
+The Peer-reviewer reaches every external service over MCP (code_execution / terminal /
 web are disabled on the lane), so retraction status arrives the same way vault
 access and the policy gate do — over **MCP**, gated and audited.
 
@@ -276,7 +276,7 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 
 def sweep(vault: Path, offline: bool = True) -> dict:
     """Scan catalog paper/dataset DOIs against the local RW CSV; raise an Inbox
-    `alert` for each retracted work (the writing half of the sweep engine)."""
+    `alert` for each retracted work (the writing half of the sweep operation)."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
     import inbox as inbox_writer
 
@@ -311,7 +311,7 @@ def sweep(vault: Path, offline: bool = True) -> dict:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Retraction sweep engine (Retraction Watch CSV + CrossRef + Open Retractions)")
+    ap = argparse.ArgumentParser(description="Retraction sweep operation (Retraction Watch CSV + CrossRef + Open Retractions)")
     ap.add_argument("--refresh", action="store_true", help="download/refresh the Retraction Watch CSV and exit")
     ap.add_argument("--doi", help="one-off CLI lookup (makes live HTTP calls)")
     ap.add_argument("--sweep", action="store_true", help="scan catalog DOIs; write Inbox alerts for retracted works")

@@ -41,5 +41,5 @@ Discovery volume genuinely overwhelms the unified Librarian — e.g. the [nightl
 
 ## Related
 
-- **Workflows:** [Find](../how-to-guides/compile/find-new-sources.md), [Ingest](../how-to-guides/compile/capture-and-ingest.md)
+- **Workflows:** [Find](../how-to-guides/library/find-new-sources.md), [Ingest](../how-to-guides/library/capture-and-ingest.md)
 - **Files:** [Profiles](../explanation/profiles/README.md), [The Librarian](../explanation/profiles/librarian.md)

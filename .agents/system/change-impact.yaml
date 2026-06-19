@@ -31,7 +31,7 @@ areas:
       - MCP availability and direct-world prohibitions
       - Profile posture and bundled skills
     checks:
-      - python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_lifecycle_dashboard.py
+      - python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_state_dashboard.py
   - area: Runtime policy
     paths:
       - src/.memoria/mcp/policy_mcp.py

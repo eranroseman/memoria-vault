@@ -1,6 +1,6 @@
 ---
 name: extract-stub-claim
-description: "On a kept source, propose claim stubs — one-sentence, citekey-bound candidate claims — into the source note's 'Worth distilling' section in notes/sources/. Stubs are proposals: notes/claims/ is review-gated (ADR-47), so the PI promotes a stub into a claim note; you never create one. Use when a kept source is ready for distillation, typically after the PI accepts the distill work-prompt from extract:flag-distill."
+description: "On a kept source, propose claim stubs — one-sentence, citekey-bound candidate claims — into the source note's 'Worth distilling' section in notes/sources/. Stubs are proposals: notes/claims/ is review-gated (ADR-47), so the PI promotes a stub into a claim note; you never create one. Use when a kept source is ready for distillation, typically after the PI accepts the distill work-prompt from extract-flag-distill."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Extraction, Claims, Distillation]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "extract:stub-claim"
+    skill_id: "extract-stub-claim"
     profile: memoria-librarian
     lane: extract
     mcp_tools:
@@ -26,7 +26,7 @@ metadata:
     outputs: [source, candidate]
 ---
 
-# extract:stub-claim
+# extract-stub-claim
 
 *(load on disk as `extract-stub-claim`.)*
 

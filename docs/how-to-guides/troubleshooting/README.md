@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 parent: How-to guides
-nav_order: 8
+nav_order: 9
 has_children: true
 permalink: /how-to-guides/troubleshooting/
 ---
@@ -18,3 +18,5 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
 | "Citekey not found" at ingest                                     | [Fix a stale `.bib`](../zotero/fix-stale-bib.md)                           |
 | Deployed profile doesn't match the vault source                   | [Fix profile drift](fix-profile-drift.md)                        |
+| Enrichment is empty after ingest; classification never applied    | [Fix empty enrichment](fix-empty-enrichment.md)                  |
+| A filtered query returns nothing though the notes are valid       | [Fix missing query results](fix-missing-query-results.md)        |

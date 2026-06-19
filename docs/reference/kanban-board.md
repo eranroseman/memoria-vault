@@ -5,7 +5,7 @@ parent: Reference
 
 # Kanban board reference
 
-Lookup tables for the Hermes Kanban board — the control plane for every unit of **agent** work. A human action (usually a Co-PI delegation) or a cron creates a card; the dispatcher assigns it to a lane; the worker runs it; the result resurfaces as an Inbox signal. Engines run _off_ the board (cron/CI), and the Co-PI has no lane — it converses at the desk.
+Lookup tables for the Hermes Kanban board — the control plane for every unit of **agent** work. A human action (usually a Co-PI delegation) or a cron creates a card; the dispatcher assigns it to a lane; the worker runs it; the result resurfaces as an Inbox signal. Engines run _off_ the board (cron/CI), and the Co-PI has no lane — it converses in the pane.
 
 ---
 

@@ -8,7 +8,7 @@ core, and BLOCKS denied / review-gated writes by printing
 ``{"decision": "block", "reason": ...}``. Allowed actions print ``{}`` (proceed).
 
 The sandbox model is policy-via-MCP, MCP-only (D40/ADR-46): agents reach the
-vault, engines, and external APIs ONLY through MCP servers. Accordingly:
+vault, operations, and external APIs ONLY through MCP servers. Accordingly:
   - the `obsidian` MCP write tools (every profile's one vault-write path) are
     PATH-GATED -- mapped to a policy action and decided by the lane policy; and
   - every direct-capability tool (`file`, `terminal`, code-exec families --
@@ -77,7 +77,7 @@ WRITE_KEYWORDS = {
     "move": "move",
 }
 # Direct-capability tools hard-denied for EVERY lane (D40/ADR-46: agents reach
-# the vault, engines, and APIs ONLY through MCP — no exceptions). No Memoria
+# the vault, operations, and APIs ONLY through MCP — no exceptions). No Memoria
 # profile ships the `file`/`terminal` toolsets, so any such call is config drift
 # (e.g. a Hermes update adding toolsets the denylist doesn't know) — fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
@@ -128,7 +128,7 @@ def to_vault_relative(path: str, vault: Path):
       - relative path        -> returned as-is (sans leading ``./``)
       - absolute under vault -> relativized to the vault root
       - absolute OUTSIDE vault -> ``None``: the gate governs vault zones only, so
-        an external write (e.g. Coder committing to a repo outside the vault) is
+        an external write (e.g. the Engineer committing to a repo outside the vault) is
         not this hook's concern and is left to proceed."""
     if not path:
         return path

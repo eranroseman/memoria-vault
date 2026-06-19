@@ -20,9 +20,9 @@ created: {{DATE:YYYY-MM-DD}}
 
 # What it is
 
-One-paragraph mechanical summary (abstract-derived; the ingest engine fills this).
+One-paragraph mechanical summary (abstract-derived; the ingest operation fills this).
 
 # Relationships
 
-Given facts only — built by the ingest engine, never authored here (ADR-52).
+Given facts only — built by the ingest operation, never authored here (ADR-52).
 The interpretive reading lives in the linked source note.

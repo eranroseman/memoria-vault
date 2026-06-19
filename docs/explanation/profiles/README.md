@@ -14,7 +14,7 @@ Memoria runs **one conversational agent — the Co-PI — and four background ag
 
 | Agent | Posture | Where | What it does |
 | --- | --- | --- | --- |
-| **[The Co-PI](co-pi.md)** | reflective thinking-partner | the ACP pane (the desk) | Holds the conversation, asks the sharpening questions, and delegates every write as a task card. Read-only by design. |
+| **[The Co-PI](co-pi.md)** | reflective thinking-partner | the ACP pane | Holds the conversation, asks the sharpening questions, and delegates every write as a task card. Read-only by design. |
 
 ## The four background lanes
 

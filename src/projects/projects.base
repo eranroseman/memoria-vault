@@ -21,8 +21,8 @@ views:
       - output_mode
       - active_thesis
       - refutation_sufficiency
-      - graph_maturity
-      - saturation_state
+      - argument_stage
+      - evidence_saturation
       - computed_at
   - type: table
     name: "Saturation"
@@ -30,12 +30,12 @@ views:
       and:
         - 'type == "project"'
     groupBy:
-      property: saturation_state
+      property: evidence_saturation
       direction: ASC
     order:
       - title
-      - saturation_state
-      - graph_maturity
+      - evidence_saturation
+      - argument_stage
       - computed_at
       - active_thesis
   - type: table
@@ -51,5 +51,5 @@ views:
       - gap_type
       - impact
       - on_path
-      - saturation_state
-      - graph_maturity
+      - evidence_saturation
+      - argument_stage

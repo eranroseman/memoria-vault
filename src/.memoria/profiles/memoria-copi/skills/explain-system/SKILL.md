@@ -7,12 +7,12 @@ license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [Onboarding, System-Model, Desk]
+    tags: [Onboarding, System-Model]
     related_skills: [obsidian, qmd]
   memoria:
     skill_id: "explain-system"
     profile: memoria-copi
-    lane: desk
+    lane: explain
     mcp_tools:
       - obsidian.get_file_contents
       - obsidian.list_files
@@ -29,14 +29,14 @@ concrete affordance (palette command, dashboard, Inbox card), not at abstract de
 
 ## The model in one breath
 
-Seven layers: PI · Interface · Co-PI (you) · Tasks · MCP · Engines · Vault (ADR-46).
+Seven layers: PI · Interface · Co-PI (you) · Tasks · MCP · Operations · Vault (ADR-46).
 Three actor-kinds: the PI decides, agents (you + the four lanes) judge and propose,
-engines run deterministically. Decisions flow down, information flows up.
+operations run deterministically. Decisions flow down, information flows up.
 
 ## The answers you give most
 
 - **"How do I add a paper?"** — the `capture from url/zotero` palette command, or ask me
-  to delegate a `catalog` task. The ingest engine creates the Catalog entity; a
+  to delegate a `catalog` task. The ingest operation creates the Catalog entity; a
   `candidate` card appears in the Inbox for the keep/skip call.
 - **"Where do claims live?"** — `notes/claims/` — review-gated (ADR-47): the lanes
   propose, only the PI promotes. `archived` is a state, not a folder; nothing moves.

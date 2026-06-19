@@ -10,7 +10,7 @@ metadata:
     tags: [Drafting, Outlining, Argumentation]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "draft:outline-argument"
+    skill_id: "draft-outline-argument"
     profile: memoria-writer
     lane: draft
     mcp_tools:
@@ -25,14 +25,14 @@ metadata:
     outputs: [source]
 ---
 
-# draft:outline-argument
+# draft-outline-argument
 
 *(legacy name: `counter-outline`; load on disk as `draft-outline-argument`.)*
 
 Structure before prose. Given a thesis (or a question) and a claim set, produce **two
 or three genuinely different outline options** — not one outline with cosmetic
 variants — each annotated with the strongest honest case *against* its structure. The
-PI picks the spine; `draft:write-section` fills it.
+PI picks the spine; `draft-write-section` fills it.
 
 ## Inputs
 
@@ -65,7 +65,7 @@ PI picks the spine; `draft:write-section` fills it.
 One outline-options note: 2–3 labeled options, each with section nodes →
 claim bindings → holes → its counter-outline paragraph; a closing comparison table
 (option · load-bearing claims · weakest node). Scoring the options is
-`draft:score-outline`'s job — present, don't rank, unless the handoff asks for both.
+`draft-score-outline`'s job — present, don't rank, unless the handoff asks for both.
 
 ## Honesty rules
 

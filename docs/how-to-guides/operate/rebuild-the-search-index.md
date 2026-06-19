@@ -11,7 +11,7 @@ Re-run the `qmd` embedding to restore semantic search. `qmd` (hybrid BM25 + vect
 
 ## When to rebuild
 
-- The Co-PI's vault answers miss notes you know exist ([Query the vault](../compose/query-the-vault.md))
+- The Co-PI's vault answers miss notes you know exist ([Query the vault](../knowledge/query-the-vault.md))
 - New papers stop showing up in `[!brief]` comparisons or similarity checks
 - A batch of 20+ notes was ingested and you haven't rebuilt since
 - `qmd search "known term"` returns empty or omits notes you know exist
@@ -87,5 +87,5 @@ Returns the note, and the Co-PI's vault answers cite recently added notes again.
 ## Related
 
 - Stale-index failure mode: [Failure modes](../../reference/failure-modes.md) — "qmd search index stale"
-- The search consumer you'll notice first: [Query the vault](../compose/query-the-vault.md)
+- The search consumer you'll notice first: [Query the vault](../knowledge/query-the-vault.md)
 - Where qmd sits in the toolchain: [External integrations](../../reference/integrations.md)

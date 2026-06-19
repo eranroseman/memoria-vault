@@ -11,15 +11,15 @@ nav_order: 3
 
 - The Obsidian Properties panel shows a YAML parse error on a note
 - The note does not appear in Dataview queries that should include it
-- The Linter engine reports a schema or YAML finding on this note
+- The Linter operation reports a schema or YAML finding on this note
 
-**Diagnosis:** the note's frontmatter contains malformed YAML, so the parser skips the whole block. Run the Linter engine to confirm and pinpoint the bad line.
+**Diagnosis:** the note's frontmatter contains malformed YAML, so the parser skips the whole block. Run the Linter operation to confirm and pinpoint the bad line.
 
 **Fix:** edit the raw file outside Obsidian, correct the malformed line, and re-check.
 
 ## Detect
 
-Run the Linter engine — report-only, zero-LLM — to confirm and identify the specific error ([Run the Linter](../operate/run-the-linter.md)):
+Run the Linter operation — report-only, zero-LLM — to confirm and identify the specific error ([Run the Linter](../operate/run-the-linter.md)):
 
 ```bash
 python3 .memoria/operations/integrity/linter/detectors.py --vault .
@@ -67,7 +67,7 @@ FROM "catalog/papers"
 WHERE file.name = "<citekey>"
 ```
 
-The note should appear. Then confirm with the Linter engine:
+The note should appear. Then confirm with the Linter operation:
 
 ```bash
 python3 .memoria/operations/integrity/linter/detectors.py --vault .

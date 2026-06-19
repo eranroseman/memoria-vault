@@ -127,6 +127,41 @@ Then capture a source from desktop Obsidian (`Cmd/Ctrl-P` → **Memoria: capture
 | Hermes dispatch, crons, qmd index | VPS |
 | Vault files | Syncthing-synced between both |
 
+## A cron that didn't fire overnight
+
+**Symptom:** a scheduled job didn't run — the dashboards are stale, no new metrics or sweeps landed, or you suspect the overnight pass was skipped.
+
+Memoria's crons append a success row to `system/logs/cron-heartbeat.jsonl` only after the job's operation chain exits cleanly, so a **missing or stale heartbeat is the evidence** that a job didn't fire (or failed before finishing) — see [Telemetry & logs](../../reference/telemetry.md).
+
+**1. Confirm the schedule is registered.**
+
+```bash
+hermes cron list   # every maintenance cron should show a future next-run time
+```
+
+**2. Check the last successful run for the job in question.**
+
+```bash
+jq -c 'select(.job == "memoria-sweeps")' system/logs/cron-heartbeat.jsonl | tail -1
+```
+
+Compare the row's `timestamp` to the cadence you expect (sweeps every 15 min, lint/metrics daily, eval quarterly). No recent row means the job didn't complete.
+
+**3. Read the unit's log.**
+
+```bash
+journalctl --user -u hermes-overnight   # or the specific hermes-* unit
+```
+
+Common causes and fixes:
+
+- **The host slept through the schedule.** A laptop or desktop that suspends misses its timers — exactly why dispatch belongs on an always-on VPS. Make sure the VPS isn't configured to suspend.
+- **User services died on logout.** The systemd *user* manager (and its timers) stop when the session ends unless lingering is enabled: `sudo loginctl enable-linger $USER` (step 6 sets this — confirm it stuck).
+- **A stale or missing `.env`.** A cron that can't read its keys exits before the heartbeat. Re-seed with `bash install.sh --profiles-only --vault ~/Memoria` and confirm the key is present.
+- **Two dispatchers racing.** If the desktop crons were never disabled, both machines run the jobs and conflict — only the VPS should dispatch (step 7).
+
+**Verify:** after the next scheduled window, `cron-heartbeat.jsonl` carries a fresh row for the job and `hermes cron list` shows its next-run advancing.
+
 ## Related
 
 - Local install prerequisite: [Quickstart](quickstart.md)

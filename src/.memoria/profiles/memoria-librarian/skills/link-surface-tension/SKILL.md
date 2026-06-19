@@ -10,7 +10,7 @@ metadata:
     tags: [Linking, Contradictions, Tensions]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "link:surface-tension"
+    skill_id: "link-surface-tension"
     profile: memoria-librarian
     lane: link
     mcp_tools:
@@ -25,7 +25,7 @@ metadata:
     outputs: [candidate]
 ---
 
-# link:surface-tension
+# link-surface-tension
 
 *(legacy name: `tension-surface`; load on disk as `link-surface-tension`.)*
 
@@ -43,7 +43,7 @@ unfinished thinking (the `contradictions` dashboard), not defects to be cleaned 
 
 ## Procedure
 
-1. **Collect candidates**: `contradicts`-typed candidates from `link:suggest-claim`
+1. **Collect candidates**: `contradicts`-typed candidates from `link-suggest-claim`
    passes, "may contradict" lines in recent catalog `[!brief]`s, and
    `cluster_build_graph()` neighbourhoods where opposing claims sit one hop apart.
 2. **Verify the tension is real** (vault reads): quote each side's exact sentence and

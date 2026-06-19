@@ -3,7 +3,7 @@
 # Copy this file to `.memoria/project-hints.yaml` and edit it for your own projects.
 # Absent file = project membership is fully manual (no agent proposal). See ADR-15.
 #
-# How it's used: at classify time the ingest engine scores each project's `primary_topics`
+# How it's used: at classify time the ingest operation scores each project's `primary_topics`
 # against the paper's enrichment topic signals (the OpenAlex topic names and subfields,
 # kebab-case normalized; `mhealth` matches `mhealth-apps`) by simple overlap, and proposes
 # every project with at least one match — ranked by overlap — in the note's

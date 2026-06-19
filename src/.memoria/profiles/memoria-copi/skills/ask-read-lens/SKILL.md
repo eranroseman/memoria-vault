@@ -1,16 +1,16 @@
 ---
 name: ask-read-lens
-description: "Read a source (or a small set) through a named lens at the desk — a theoretical frame, a methods checklist, a rival hypothesis — and report what the lens makes visible and what it occludes. A structured re-reading of what the vault holds, not new research; read-only, with any resulting work delegated. Use when the PI says 'read this as a <lens> person would' or wants the same material seen from a different angle."
+description: "Read a source (or a small set) through a named lens in the Co-PI pane — a theoretical frame, a methods checklist, a rival hypothesis — and report what the lens makes visible and what it occludes. A structured re-reading of what the vault holds, not new research; read-only, with any resulting work delegated. Use when the PI says 'read this as a <lens> person would' or wants the same material seen from a different angle."
 version: 1.0.0
 author: Memoria
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
   hermes:
-    tags: [Desk, Reading, Lenses, Framing]
+    tags: [Reading, Lenses, Framing]
     related_skills: [obsidian, qmd]
   memoria:
-    skill_id: "ask:read-lens"
+    skill_id: "ask-read-lens"
     profile: memoria-copi
     lane: ask
     mcp_tools:
@@ -23,7 +23,7 @@ metadata:
     outputs: []
 ---
 
-# ask:read-lens
+# ask-read-lens
 
 *(legacy name: `lens-reading`; load on disk as `ask-read-lens`.)*
 

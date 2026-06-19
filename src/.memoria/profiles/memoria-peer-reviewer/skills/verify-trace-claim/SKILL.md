@@ -1,6 +1,6 @@
 ---
 name: verify-trace-claim
-description: "The claim-trace: every substantive factual claim in a draft must trace to a supporting claim note in notes/claims/, by a fixed three-route order — explicit wikilink, [@citekey] + prose embedding match, then similarity search across all claim notes. Deterministic ranking; an LLM verdict only on ambiguous top candidates. A failed trace becomes a gap card via verify:card-gap. Flag-only — the draft is never edited. Run when tracing a draft before review or export."
+description: "The claim-trace: every substantive factual claim in a draft must trace to a supporting claim note in notes/claims/, by a fixed three-route order — explicit wikilink, [@citekey] + prose embedding match, then similarity search across all claim notes. Deterministic ranking; an LLM verdict only on ambiguous top candidates. A failed trace becomes a gap card via verify-card-gap. Flag-only — the draft is never edited. Run when tracing a draft before review or export."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Verification, Claims, Provenance]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "verify:trace-claim"
+    skill_id: "verify-trace-claim"
     profile: memoria-peer-reviewer
     lane: verify
     mcp_tools:
@@ -28,7 +28,7 @@ metadata:
     outputs: [flag, gap]
 ---
 
-# verify:trace-claim
+# verify-trace-claim
 
 *(legacy name: `claim-trace`, shipped inside `claim-checks`; load on disk as
 `verify-trace-claim`.)*
@@ -59,7 +59,7 @@ Walk each substantive claim through the **fixed trace order** (detail:
    similarity score is ambiguous.
 
 Then **report — gated**: ONE `flag` card to `inbox/` summarizing traced vs untraced
-claims (finding-first, ADR-51); each failed trace is handed to `verify:card-gap`, which
+claims (finding-first, ADR-51); each failed trace is handed to `verify-card-gap`, which
 raises the `gap` card for the missing evidence. Batch results stay one summary card,
 never N (ADR-54).
 
@@ -68,7 +68,7 @@ never N (ADR-54).
 - One `flag` card (schema `flag`): `finding` = the trace summary (n traced / n failed,
   with the untraced sentences quoted), `agent_recommendation` ∈
   `clean / issues-found / inconclusive`, `target` = the draft path.
-- Failed traces → `gap` cards (schema `gap`, raised through `verify:card-gap`) — the
+- Failed traces → `gap` cards (schema `gap`, raised through `verify-card-gap`) — the
   synthesis backlog the map lane and the PI pick up.
 
 ## Honesty rules

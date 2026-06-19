@@ -61,7 +61,7 @@ The card's `review_status` field carries exactly this: `unreviewed` (initial sta
 
 ## The agent verdict is not the review
 
-The Peer-reviewer and the engines (the Linter, the sweeps) can attach a recommendation — `metadata.agent_recommendation` — to a finished card. This recommendation is deliberately separate from the review decision:
+The Peer-reviewer and the operations (the Linter, the sweeps) can attach a recommendation — `metadata.agent_recommendation` — to a finished card. This recommendation is deliberately separate from the review decision:
 
 - **The recommendation can be wrong.** A clean Peer-reviewer report doesn't mean the draft is good; it means the citations trace and the schema is valid. The human judgment about whether the synthesis is correct, useful, and worth keeping is separate.
 - **They can disagree.** The Peer-reviewer reports clean; the human reads the draft and rejects it. The separation makes this case coherent — there's no confusion about which verdict counts.

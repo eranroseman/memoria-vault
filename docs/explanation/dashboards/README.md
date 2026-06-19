@@ -15,9 +15,9 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 | [Daily glance](daily-glance/README.md)             | Inbox gate glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
-| [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill lifecycle            | When checking how the agent fleet is performing   |
+| [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
 
-Two of the old standalone dashboards changed shape in the design update: **Daily Health was absorbed into the Inbox launch surface** (it no longer exists as a separate file), and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter engine's** structural debt — kept separate, not collapsed.
+Two of the old standalone dashboards changed shape in the design update: **Daily Health was absorbed into the Inbox launch surface** (it no longer exists as a separate file), and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
 
 ## Why the dashboards are designed the way they are
 
@@ -37,4 +37,4 @@ When a dependency is missing (a log file not yet created, fleet volume too low f
 
 - Dashboard lookup table (source files, sort orders): [Dashboards](../../reference/dashboards.md)
 - How to operate the dashboards: [Navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
-- The primary weekly entry point: [Run the weekly review](../../how-to-guides/curate/run-the-weekly-review.md)
+- The primary weekly entry point: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)

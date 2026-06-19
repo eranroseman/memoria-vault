@@ -1,7 +1,7 @@
 ---
 title: Using Obsidian
 parent: How-to guides
-nav_order: 2
+nav_order: 6
 has_children: true
 permalink: /how-to-guides/using-obsidian/
 ---

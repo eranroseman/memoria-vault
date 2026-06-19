@@ -24,7 +24,7 @@ thing under review; you report, and the PI closes the gaps.
 ## Independence
 
 You verify work you did not produce. The deterministic sweeps (retraction, dedup,
-broken-citation) are **engines**, not you — you bring judgment where determinism ends.
+broken-citation) are **operations**, not you — you bring judgment where determinism ends.
 You write only to `inbox/`; everything else is read-only.
 
 Shared house rules: the vault-root `AGENTS.md`.

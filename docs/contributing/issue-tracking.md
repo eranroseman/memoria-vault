@@ -55,7 +55,7 @@ the UI; API edits to single-select options can erase existing item values.
 | **ingest** | Ingest pipeline, metadata sources, extraction, scoring |
 | **knowledge** | Notes, claims, links, hubs, schema, vocabulary, projects |
 | **obsidian-ui** | Workspaces, `home.md`, dashboards, status bar, properties, client-agent pane |
-| **operations** | Deterministic engines: Processing / Integrity / Cleanup / Telemetry, Linter, policy gate |
+| **operations** | Deterministic operations: Processing / Integrity / Cleanup / Telemetry, Linter, policy gate |
 | **docs-site** | Jekyll / Diataxis docs and ADRs |
 | **installer** | Install, upgrade, golden copy, platform, deployment |
 | **integrations** | Zotero, MCP, external tools, messaging transports |

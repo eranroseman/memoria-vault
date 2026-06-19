@@ -1,6 +1,6 @@
 ---
 name: catalog-find-source
-description: "Scholarly discovery: search the literature for sources matching a research question or topic via the paper_search MCP (arXiv, PubMed, Semantic Scholar, Google Scholar, bioRxiv/medRxiv), screen the hits against what the vault already holds, and raise candidate cards with the ADR-51 honesty body for the PI's keep/skip call. Discovery proposes — it never ingests; the accepted candidate flows to catalog:enrich-record. Use when a find/discovery request lands."
+description: "Scholarly discovery: search the literature for sources matching a research question or topic via the paper_search MCP (arXiv, PubMed, Semantic Scholar, Google Scholar, bioRxiv/medRxiv), screen the hits against what the vault already holds, and raise candidate cards with the ADR-51 honesty body for the PI's keep/skip call. Discovery proposes — it never ingests; the accepted candidate flows to catalog-enrich-record. Use when a find/discovery request lands."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -10,7 +10,7 @@ metadata:
     tags: [Research, Discovery, Literature, Screening]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "catalog:find-source"
+    skill_id: "catalog-find-source"
     profile: memoria-librarian
     lane: catalog
     mcp_tools:
@@ -30,7 +30,7 @@ metadata:
     outputs: [candidate, fleeting]
 ---
 
-# catalog:find-source
+# catalog-find-source
 
 *(legacy name: `find`; load on disk as `catalog-find-source`.)*
 
@@ -73,7 +73,7 @@ and report state — the PI's keep/skip gate filters, not you.
   `argument_for` / `argument_against` (e.g. "half the hits are adjacent-field — the
   question may be too broad"); `what_tipped_it`; `certainty` calibrated to hit quality.
 - Accepted sources flow onward: the PI pins the citekey in Zotero and
-  `catalog:enrich-record` ingests — this skill never creates catalog records.
+  `catalog-enrich-record` ingests — this skill never creates catalog records.
 
 ## Honesty rules
 

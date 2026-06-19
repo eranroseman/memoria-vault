@@ -9,9 +9,9 @@ nav_order: 14
 
 # Deterministic-spine test plan — v0.1 (G9)
 
-The leanest possible proof that **the agent spine runs end-to-end through the board**: a *dispatched* card runs the Linter engine's `health-report` (zero-LLM, deterministic), writes its report through the live policy gate into an allowed zone, the write is audited, and the card reaches `done` — **with no human-review step required.** Where the [golden-path plan](e2e-golden-path-plan.md) threads all five profiles through the whole lifecycle, this isolates the single question underneath it: *does dispatch → claim → run → gated write → audit → done work live, at all?* Prove this first; it de-risks every richer loop (the ingest value loop is [G10](../../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md)).
+The leanest possible proof that **the agent spine runs end-to-end through the board**: a *dispatched* card runs the Linter operation's `health-report` (zero-LLM, deterministic), writes its report through the live policy gate into an allowed zone, the write is audited, and the card reaches `done` — **with no human-review step required.** Where the [golden-path plan](e2e-golden-path-plan.md) threads all five profiles through the whole lifecycle, this isolates the single question underneath it: *does dispatch → claim → run → gated write → audit → done work live, at all?* Prove this first; it de-risks every richer loop (the ingest value loop is [G10](../../releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md)).
 
-**Why the Linter engine.** The dispatched lane allows writes only to `system/logs/**`, and that zone is **not** review-gated (the gated zones are `notes/claims/` and `notes/hubs/`). So the write logs a clean `allow_with_log` and the card completes **without** a human approval round — that is the G11 review loop, deliberately out of scope here. The Linter engine is also `invocation: dispatched`, `external_api_policy: blocked`, and zero-LLM ([detectors.py](../../reference/linter.md) is pure-stdlib `run_all()` + `verdict()`), so the same vault state yields the same report every run — the only fully reproducible spine in the system.
+**Why the Linter operation.** The dispatched lane allows writes only to `system/logs/**`, and that zone is **not** review-gated (the gated zones are `notes/claims/` and `notes/hubs/`). So the write logs a clean `allow_with_log` and the card completes **without** a human approval round — that is the G11 review loop, deliberately out of scope here. The Linter operation is also `invocation: dispatched`, `external_api_policy: blocked`, and zero-LLM ([detectors.py](../../reference/linter.md) is pure-stdlib `run_all()` + `verdict()`), so the same vault state yields the same report every run — the only fully reproducible spine in the system.
 
 **The distinction this plan insists on.** The board is Hermes-native — cards live in `kanban.db`; the **dispatcher** polls every 60 s, claims `ready` cards for the matching lane, and advances them to `running`. `system/board/<task_id>.md` is only the *export mirror* (empty until a card exists and the exporter runs). G9 tests the **dispatch** path — the dispatcher claiming a card — **not** a direct `hermes -p … chat` invocation. Direct invocation proves the skill; dispatch proves the *operability*.
 
@@ -28,7 +28,7 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 - [ ] Gate candidate installed; `hermes profile list` shows all 5 at `0.1.0-alpha.2`; policy plugin enabled per-lane.
 - [ ] `hermes gateway status` → running (the dispatcher polls only while the gateway is up).
 - [ ] Baseline captured: `hermes kanban list --json` _(confirm)_ and a copy of `system/logs/audit.jsonl` (for a clean before/after diff).
-- [ ] `cron_mode` defaults to `deny`; for **Variant A** dispatch one card by hand, for **Variant B** enable the Linter-engine lane cron explicitly.
+- [ ] `cron_mode` defaults to `deny`; for **Variant A** dispatch one card by hand, for **Variant B** enable the Linter-operation lane cron explicitly.
 
 ---
 
@@ -36,11 +36,11 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 
 Run **A-min first** (isolates the gate/write/complete spine from the scheduler); run **A-cron** second, once A-min is green.
 
-**A-min. Hand-create one `ready` card** for the Linter engine: task `health-report` (or `nightly-lint`), `state: ready`, `assignee: memoria-engineer`, via `hermes kanban create …` _(confirm)_.
-- ✓ Pass: card appears in `hermes kanban list --json` as `ready`/`memoria-engineer`; within ~60 s the dispatcher moves it to `running` and runs the Linter engine.
+**A-min. Hand-create one `ready` card** for the Linter operation: task `health-report` (or `nightly-lint`), `state: ready`, `assignee: memoria-engineer`, via `hermes kanban create …` _(confirm)_.
+- ✓ Pass: card appears in `hermes kanban list --json` as `ready`/`memoria-engineer`; within ~60 s the dispatcher moves it to `running` and runs the Linter operation.
 - ✗ If it fails: card never claimed → dispatcher not polling (gateway down), or lane-assignee mismatch. Card claimed but no run → profile registration/`config.yaml` problem.
 
-**A-cron** (after A-min). Enable the Linter-engine lane cron and let `nightly-lint` fire on its schedule (`cron/scheduled.yaml`: `0 2 * * *` → `creates_card:{state: ready}`), or force a tick _(confirm)_.
+**A-cron** (after A-min). Enable the Linter-operation lane cron and let `nightly-lint` fire on its schedule (`cron/scheduled.yaml`: `0 2 * * *` → `creates_card:{state: ready}`), or force a tick _(confirm)_.
 - ✓ Pass: the cron entry creates the `ready` card with no human action, then A-min's claim behavior follows.
 - ✗ If it fails: cron created nothing → scheduler not running, or `cron_mode` still `deny`. (This is the first live exercise of cron→card creation — expect to debug it here.)
 
@@ -48,7 +48,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 ## Part B — Run (deterministic health-report)
 
-**B1.** The claimed Linter-engine run produces the report — `detectors.py --vault <path>` → `run_all()` + `verdict()`, via the profile's terminal capability (it is the shipped detector engine, not a coined skill).
+**B1.** The claimed Linter-operation run produces the report — `detectors.py --vault <path>` → `run_all()` + `verdict()`, via the profile's terminal capability (it is the shipped detector operation, not a coined skill).
 - ✓ Pass: a findings set + a single verdict band (`PASS`/`REVIEW`/`FAIL`) is produced; running it twice on unchanged vault state yields a byte-identical report (determinism).
 - ✗ If it fails: a stack trace or a non-deterministic diff → a detector bug, not a spine problem (run `python3 -m pytest tests/test_detectors.py` to bisect).
 
@@ -58,7 +58,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 `detectors.py` **prints to stdout** — it does not write a file. The agent must capture that output and save the report; that save is the gated write. This seam is the thing most likely to be assumed-not-built — test it explicitly.
 
-**C1.** The Linter engine's report is written to `system/logs/` (e.g. `system/logs/health-report-<date>.md`). The write crosses `policy_hook` → `policy_mcp`.
+**C1.** The Linter operation's report is written to `system/logs/` (e.g. `system/logs/health-report-<date>.md`). The write crosses `policy_hook` → `policy_mcp`.
 - ✓ Pass: file on disk under `system/logs/`; the gate logs `allow_with_log` (in-zone, non-gated); **no** `dry_run`/`deny`.
 - ✗ If it fails: `deny` → the write targeted a path outside `system/logs/` (a SOUL-procedure path bug). No write at all → the stdout→save step isn't in the procedure (the seam was assumed).
 

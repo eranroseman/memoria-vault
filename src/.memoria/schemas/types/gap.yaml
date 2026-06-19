@@ -6,8 +6,8 @@ enums:
   certainty: [confident, likely, unsure]
   loudness: [quiet, notice, alert, block]
   gap_type: [additive, conflict, fragility, structural, unstated-warrant, refutation]
-  saturation_state: [unknown, unsaturated, saturated, stale]
-  graph_maturity: [cold-start, immature, mature]
+  evidence_saturation: [unknown, unsaturated, saturated, stale]
+  argument_stage: [cold-start, developing, mature]
 required:
   type: literal:gap
   lifecycle: enum:lifecycle
@@ -23,7 +23,7 @@ optional:
   loudness: enum:loudness
   impact: int
   on_path: bool
-  saturation_state: enum:saturation_state
-  graph_maturity: enum:graph_maturity
+  evidence_saturation: enum:evidence_saturation
+  argument_stage: enum:argument_stage
   computed_at: date
   created: date

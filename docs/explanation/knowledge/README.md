@@ -23,5 +23,6 @@ The vault stores durable knowledge organized type-first into category folders, w
 | [Why promotion is gated](promotion-model.md)                       | What promotion means, the one-way promotion map and its disallowed moves, and why the human gate sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
+| [Why hubs](hubs-and-navigation.md)                                 | Why the link-first vault needs a human-curated navigation layer, and why hubs are authored, threshold-prompted, and review-gated.        |
 
 For the complete note-type reference (fields, templates, lifecycle tables), see [Note types](../../reference/note-types.md).

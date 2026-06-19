@@ -6,7 +6,7 @@ nav_order: 5
 
 # Why promotion is gated
 
-Promotion is the act of making content canonical — confirming a claim into `notes/claims/`, curating a hub, accepting a proposed link. In Memoria it is always a human act. The rule for every actor that is not the PI is **propose, not dispose**: agents and engines stage proposals; the PI decides what becomes part of the record. This is not a safeguard bolted onto the system — it is the mechanism that keeps the vault trustworthy.
+Promotion is the act of making content canonical — confirming a claim into `notes/claims/`, curating a hub, accepting a proposed link. In Memoria it is always a human act. The rule for every actor that is not the PI is **propose, not dispose**: agents and operations stage proposals; the PI decides what becomes part of the record. This is not a safeguard bolted onto the system — it is the mechanism that keeps the vault trustworthy.
 
 ---
 
@@ -16,7 +16,7 @@ The gated zones are `notes/claims/` 🔒 and `notes/hubs/` 🔒. Project notes a
 
 Since lifecycle moved out of the folders ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)), promotion is no longer a file move. A note is born in its type-home and stays there; what the gate controls is the **state transition** (a fleeting thought becoming a `current` claim, a proposed link becoming part of the graph) and the **write into a gated zone**. The policy gate enforces the boundary mechanically: agents write staging and ungated zones; gated-zone writes, promotions, the `retracted` decision, and the archive move are PI-only.
 
-What is deliberately *not* gated: the Catalog. Entity records are clean mechanical extractions of given facts — gating them would be a rubber stamp. Where the ingest engine's confidence drops (entity resolution, dedup, license calls), it raises a `flag` instead of merging silently.
+What is deliberately *not* gated: the Catalog. Entity records are clean mechanical extractions of given facts — gating them would be a rubber stamp. Where the ingest operation's confidence drops (entity resolution, dedup, license calls), it raises a `flag` instead of merging silently.
 
 ---
 

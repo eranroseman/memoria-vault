@@ -2,9 +2,9 @@
 """eval_score.py — the deterministic vault-eval scorer (ADR-11: diagnostic, never gating).
 
 Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans the gold
-set out as one card per task, this engine reads the **results reported on those
+set out as one card per task, this operation reads the **results reported on those
 cards** and turns them into machine scores — zero-LLM, report-only, the Linter
-scoring discipline of ADR-11 hosted with the sweeps engines (the same
+scoring discipline of ADR-11 hosted with the sweeps operations (the same
 deterministic detector-over-the-vault shape as the dispatcher).
 
 The result contract (non-committing, ADR-11): an eval lane never writes the
@@ -107,7 +107,7 @@ def superseded_claims(vault: Path) -> set[str]:
 def load_cards(from_json: Path | None = None) -> list[dict]:
     """The board's cards as dicts — a JSON file when given (tests/offline), else
     `hermes kanban list --json`. Mirrors mcp/board_export.py::load_cards (the
-    sweeps engines don't import from mcp/)."""
+    sweeps operations don't import from mcp/)."""
     if from_json is not None:
         raw = from_json.read_text(encoding="utf-8")
     else:

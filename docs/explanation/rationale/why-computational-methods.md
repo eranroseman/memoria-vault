@@ -44,5 +44,5 @@ Without an explicit classification, there is pressure to route every task to an 
 
 - [Callouts](../obsidian/callouts.md) — how the hybrid pattern produces callout content
 - Which profile handles which task type: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
-- The zero-LLM engine this rationale produces: [The Linter](../operations/README.md)
+- The zero-LLM operation this rationale produces: [The Linter](../operations/README.md)
 - [Retrieval and analysis methods](../../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses

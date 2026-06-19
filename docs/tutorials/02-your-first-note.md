@@ -59,7 +59,7 @@ For this tutorial, make the call now. If you distill, write the durable version 
 
 ## Step 4 — See where fleeting notes surface
 
-You won't re-find fleeting notes by browsing. They surface on two tracking surfaces — `system/dashboards/fleeting.base` and the Friday weekly review — so unprocessed captures can't silently pile up; how the two work together as a triage queue is covered in [Triage fleeting notes](../how-to-guides/compile/triage-fleeting-notes.md).
+You won't re-find fleeting notes by browsing. They surface on two tracking surfaces — `system/dashboards/fleeting.base` and the Friday weekly review — so unprocessed captures can't silently pile up; how the two work together as a triage queue is covered in [Triage fleeting notes](../how-to-guides/inbox/triage-fleeting-notes.md).
 
 Open `fleeting.base` now (its "To process" view). If you archived your note in Step 3, the view is empty — and *empty is the goal state*. A fleeting queue that converges to zero means the discipline is working.
 
@@ -75,7 +75,7 @@ Open `fleeting.base` now (its "To process" view). If you archived your note in S
 
 ## What's next
 
-[Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — capture a real source, watch the ingest engine build its Catalog entry, and write your first source note.
+[Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — capture a real source, watch the ingest operation build its Catalog entry, and write your first source note.
 
 ---
 

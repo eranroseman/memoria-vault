@@ -32,8 +32,8 @@ Project records live under `projects/` and anchor the Project gate ([ADR-77](../
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
-| `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `refutation_sufficiency`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
-| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `promoted_at`, `promoted_by`, `impact`, `on_path`, `saturation_state`, `graph_maturity`, `computed_at` |
+| `project` | `projects/` | `current → archived` | `title`, `slug`, `scope_topics`, `inquiry`, `finer`, `output_mode`, `question_version`, `question_log` | `active_thesis`, `refutation_sufficiency`, `impact`, `on_path`, `evidence_saturation`, `argument_stage`, `computed_at` |
+| `thesis` | `projects/` | full chain | `title`, `project`, `sources` | `links`, `superseded_by`, `refutation_sufficiency`, `promoted_at`, `promoted_by`, `impact`, `on_path`, `evidence_saturation`, `argument_stage`, `computed_at` |
 | `code-note` | `projects/` | `proposed → current → archived` | `title`, `project`, `agent`, `task`, `acceptance` | `motivating_claims`, `inputs`, `outputs`, `run_command`, `dependencies`, `repository`, `created` |
 
 `project.inquiry` carries the PICO block (`population`, `intervention`, `comparison`, `outcome`) and `project.finer` carries the answerability lens. A `thesis` starts at `proposed`; promotion to `current` is the Project gate's review transition, not a template default. Current theses must carry `promoted_at` so the promotion is visible to the Linter and pre-commit gate. A `code-note` is the Engineer's handoff/provenance note for external coding agents under a project's `code/` scratch.

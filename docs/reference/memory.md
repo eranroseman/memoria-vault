@@ -33,7 +33,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 | --- | --- |
 | Program memory is the PI's steering | The PI authors `research-focus.md`; every profile reads it; it never archives. |
 | Project memory is the per-project cross-lane channel | Anything that must survive across lanes within one project. Archives with the project. |
-| Audit memory is append-only | The policy gate writes an entry at every decision; engines append their own logs (`capture-intake.jsonl`, `patterns.jsonl`). |
+| Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own logs (`capture-intake.jsonl`, `patterns.jsonl`). |
 | Handoff memory is per-card, not per-profile | When work moves Librarian → Writer, the payload travels with the card; the Writer does not inherit the Librarian's working memory. |
 | Agent memory is the Co-PI's alone | Frozen at session start; mid-session writes show up next session. Keep it small and stable — not in-flight task state. Specialists have it disabled. |
 | Session history is read-only history | Never gates anything; never authoritative over the vault. |

@@ -324,8 +324,8 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     thesis = find_thesis(notes, project, resolver)
     if thesis is None:
         payload = base_payload(project, None)
-        payload["graph_maturity"] = "cold-start"
-        payload["saturation_state"] = "unknown"
+        payload["argument_stage"] = "cold-start"
+        payload["evidence_saturation"] = "unknown"
         payload["displayed_confidence"] = "below-threshold"
         return payload
 
@@ -352,7 +352,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     ):
         maturity = "mature"
     else:
-        maturity = "immature"
+        maturity = "developing"
 
     points = articulation_points(on_path_nodes, graph)
     rows = []
@@ -416,8 +416,8 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     payload = base_payload(project, thesis)
     payload.update(
         {
-            "graph_maturity": maturity,
-            "saturation_state": saturation,
+            "argument_stage": maturity,
+            "evidence_saturation": saturation,
             "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
             "relation_count": len(component_edges),
             "supports_count": support_count,
@@ -552,11 +552,11 @@ def analyze_survey(notes: dict[str, Note], resolver: dict[str, str], project: No
     if len(scoped) >= MATURITY_RELATION_THRESHOLD and high_degree:
         maturity = "mature"
     elif scoped:
-        maturity = "immature"
+        maturity = "developing"
     saturation = "unknown"
     if maturity == "mature":
         saturation = "saturated" if not open_scope_gaps else "unsaturated"
-    elif maturity == "immature":
+    elif maturity == "developing":
         saturation = "unsaturated"
     rows = []
     for key in sorted(scoped):
@@ -580,8 +580,8 @@ def analyze_survey(notes: dict[str, Note], resolver: dict[str, str], project: No
     payload.update(
         {
             "mode": "survey",
-            "graph_maturity": maturity,
-            "saturation_state": saturation,
+            "argument_stage": maturity,
+            "evidence_saturation": saturation,
             "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
             "relation_count": len(edges),
             "scope_overlap_count": len(scoped),
@@ -616,8 +616,8 @@ def base_payload(project: Note, thesis: Note | None) -> dict[str, Any]:
         "project_slug": str(project.frontmatter.get("slug") or project.stem),
         "active_thesis": thesis.path if thesis else "",
         "thesis_lifecycle": thesis.lifecycle if thesis else "",
-        "graph_maturity": "cold-start",
-        "saturation_state": "unknown",
+        "argument_stage": "cold-start",
+        "evidence_saturation": "unknown",
         "displayed_confidence": "below-threshold",
         "stale": False,
         "relation_count": 0,
@@ -670,8 +670,8 @@ def render(payload: dict[str, Any]) -> str:
         "active_thesis": payload["active_thesis"],
         "computed_at": payload["computed_at"],
         "stale": payload["stale"],
-        "graph_maturity": payload["graph_maturity"],
-        "saturation_state": payload["saturation_state"],
+        "argument_stage": payload["argument_stage"],
+        "evidence_saturation": payload["evidence_saturation"],
         "displayed_confidence": payload["displayed_confidence"],
         "relation_count": payload["relation_count"],
         "open_high_impact_gaps": payload["open_high_impact_gaps"],

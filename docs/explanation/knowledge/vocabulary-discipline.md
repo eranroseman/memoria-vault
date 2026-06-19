@@ -24,7 +24,7 @@ Early in a vault's life, forcing term consistency is counterproductive. The righ
 
 The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
 
-This is also why `research_area` is seeded from **OpenAlex topics** by the ingest engine: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
+This is also why `research_area` is seeded from **OpenAlex topics** by the ingest operation: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
 
 ## Why drift fails silently
 
@@ -36,5 +36,5 @@ This is the class of failure the Linter's `lint:check-schema` pass is designed t
 
 - The operation that validates the vocabulary: [Operations](../operations/README.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
-- The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/curate/manage-vocabulary.md)
+- The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/knowledge/manage-vocabulary.md)
 - Field definitions: [Frontmatter fields](../../reference/frontmatter.md)

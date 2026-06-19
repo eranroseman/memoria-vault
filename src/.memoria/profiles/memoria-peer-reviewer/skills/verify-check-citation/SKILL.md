@@ -10,7 +10,7 @@ metadata:
     tags: [Verification, Citations, Claims]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "verify:check-citation"
+    skill_id: "verify-check-citation"
     profile: memoria-peer-reviewer
     lane: verify
     mcp_tools:
@@ -29,7 +29,7 @@ metadata:
     outputs: [flag]
 ---
 
-# verify:check-citation
+# verify-check-citation
 
 *(legacy name: `cite-check`, shipped inside `claim-checks`; load on disk as
 `verify-check-citation`.)*
@@ -83,4 +83,4 @@ approval (ADR-50).
   the finding names it, the PI (or a delegated lane) fixes it.
 - An `inconclusive` middle-band verdict is reported as inconclusive — never rounded up
   to clean because the rest of the draft looked fine.
-- Missing-evidence findings are not yours to chase: hand them to `verify:card-gap`.
+- Missing-evidence findings are not yours to chase: hand them to `verify-card-gap`.

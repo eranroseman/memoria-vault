@@ -39,7 +39,7 @@ An **advisor-review export** — a live-citation `.docx`/`.odt` carrying editabl
 is a **separate, explicitly non-deliverable working artifact.** It does **not** live in
 `50-deliverables/`, is not subject to the "never edit in place" rule, and is regenerated from
 the same draft whenever a new round is needed. The routes and their failure modes are
-documented in [export a draft](../how-to-guides/compose/export-a-draft.md); the
+documented in [export a draft](../how-to-guides/project/export-a-draft.md); the
 human chooses the target editor **before drafting**.
 
 ## Consequences
@@ -70,6 +70,6 @@ not reimplement citation-field injection.
 
 ## Related
 
-- **Workflows affected:** [export a draft](../how-to-guides/compose/export-a-draft.md) (companion how-to, added with this ADR), [Export routes and formats](../reference/export.md) (the existing static path)
+- **Workflows affected:** [export a draft](../how-to-guides/project/export-a-draft.md) (companion how-to, added with this ADR), [Export routes and formats](../reference/export.md) (the existing static path)
 - **Files affected:** the `deliverable` note type — [Note types](../reference/note-types.md)
 - **Profiles:** [Coder](../explanation/profiles/engineer.md) runs the Pandoc mechanics

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cluster_mcp.py — the clustering engine behind a gated MCP (ADR-33 / ADR-46).
+"""cluster_mcp.py — the clustering operation behind a gated MCP (ADR-33 / ADR-46).
 
 Three tools over the vault's typed graph and text:
 
@@ -17,7 +17,7 @@ Three tools over the vault's typed graph and text:
                           Heavy deps (bertopic -> torch) live in requirements-cluster.txt,
                           NEVER the policy-core requirements (ADR-33).
 
-The engine decides *how to display*, never *what is canonical* (D44/D48): every
+The operation decides *how to display*, never *what is canonical* (D44/D48): every
 result echoes its parameters, and defaults come from .memoria/schemas/calibration.yaml
 (drift-bound — recalibrate on model-version change). Deterministic discipline:
 fixed seed, params echoed, no writes.

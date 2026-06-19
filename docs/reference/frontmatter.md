@@ -119,8 +119,8 @@ cache ([ADR-77](../adr/77-project-gate.md), [ADR-78](../adr/78-thesis-note-type.
 | `question_version` / `question_log` | `int` / `list` | Version and rationale log for question changes. |
 | `gap_type` | `enum` | Project gap kind: `additive`, `conflict`, `fragility`, `structural`, `unstated-warrant`, or `refutation`. |
 | `impact` / `on_path` | `int` / `bool` | Materialized structural-impact cache for Project dashboards. |
-| `saturation_state` | `enum` | `unknown`, `unsaturated`, `saturated`, or `stale`. |
-| `graph_maturity` | `enum` | `cold-start`, `immature`, or `mature`. |
+| `evidence_saturation` | `enum` | `unknown`, `unsaturated`, `saturated`, or `stale`. |
+| `argument_stage` | `enum` | `cold-start`, `developing`, or `mature`. |
 | `computed_at` | `date` | Timestamp for the derived cache; stale values are shown as stale, not silently current. |
 | `refutation_sufficiency` / `refutation_sufficiency_at` | `bool` / `date` | PI stamp that the active thesis has faced its strongest available rebuttal; the Project operation treats this as saturation condition 3, not as a deterministic judgment. |
 | `promoted_at` / `promoted_by` | `date` / `str` | Promotion provenance for a thesis. A `thesis` at `lifecycle: current` must carry `promoted_at`; proposed and provisional theses do not. |

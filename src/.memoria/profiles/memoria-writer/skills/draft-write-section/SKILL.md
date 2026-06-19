@@ -10,7 +10,7 @@ metadata:
     tags: [Drafting, Writing, Synthesis]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "draft:write-section"
+    skill_id: "draft-write-section"
     profile: memoria-writer
     lane: draft
     mcp_tools:
@@ -26,7 +26,7 @@ metadata:
     outputs: [source]
 ---
 
-# draft:write-section
+# draft-write-section
 
 *(legacy name: `draft`; load on disk as `draft-write-section`.)*
 

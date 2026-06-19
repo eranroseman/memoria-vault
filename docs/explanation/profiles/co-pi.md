@@ -6,7 +6,7 @@ nav_order: 1
 
 # The Co-PI
 
-The Co-PI is the one agent the PI converses with — the permanent presence in the ACP pane at the desk. Its mission has three verbs: **question** (sharpen the PI's thinking — the old Socratic role, folded in), **explain** (it knows the system and can account for what any part of Memoria is doing), and **delegate** (route work to the right background lane). Its product is the PI's sharpened thinking and well-routed work — never a file ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)).
+The Co-PI is the one agent the PI converses with — the permanent presence in the ACP pane. Its mission has three verbs: **question** (sharpen the PI's thinking — the old Socratic role, folded in), **explain** (it knows the system and can account for what any part of Memoria is doing), and **delegate** (route work to the right background lane). Its product is the PI's sharpened thinking and well-routed work — never a file ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)).
 
 ---
 
@@ -22,7 +22,7 @@ Concentrating every conversation in one agent lets it run Hermes' self-improving
 
 ## What the Co-PI is not
 
-**Not a lane.** It never appears on the board; it converses at the desk and creates cards for others.
+**Not a lane.** It never appears on the board; it converses in the pane and creates cards for others.
 
 **Not a router-only shell.** Delegation is one verb of three. The informal, continuous sparring — questioning a source, branching framings, explaining a decision — is the Co-PI's own work, distinct from the formal artifact-level pass run by [The Peer-reviewer](peer-reviewer.md).
 

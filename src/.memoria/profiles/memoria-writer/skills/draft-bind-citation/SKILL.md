@@ -10,7 +10,7 @@ metadata:
     tags: [Drafting, Citations, Provenance]
     related_skills: [qmd, obsidian]
   memoria:
-    skill_id: "draft:bind-citation"
+    skill_id: "draft-bind-citation"
     profile: memoria-writer
     lane: draft
     mcp_tools:
@@ -25,7 +25,7 @@ metadata:
     outputs: [source]
 ---
 
-# draft:bind-citation
+# draft-bind-citation
 
 *(legacy name: `citation-bind`; load on disk as `draft-bind-citation`.)*
 
@@ -75,6 +75,6 @@ else.
   quote the hedge.
 - Never reach outside the given claim set (no new sources, no vault-wide scavenging) —
   a missing carrier is gap-workflow input, not a search prompt.
-- Never verify your own binds as correct — that is `verify:check-citation`'s lane.
+- Never verify your own binds as correct — that is `verify-check-citation`'s lane.
 - The binding report counts must add up to the sentence inventory; sentences you chose
   to treat as non-factual (framing, signposting) are listed as such, auditable.

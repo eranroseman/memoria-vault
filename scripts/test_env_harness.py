@@ -283,9 +283,9 @@ def assert_final(vault: Path, final: dict[str, Any]) -> None:
         payload = json.loads(text[start + len("<!-- memoria-structural-impact:json -->"):end])
         if payload["relation_count"] < int(gate["min_relation_count"]):
             raise HarnessError("project gate relation count below expected floor")
-        if payload["saturation_state"] != gate["expected_saturation_state"]:
+        if payload["evidence_saturation"] != gate["expected_saturation_state"]:
             raise HarnessError(
-                f"project gate saturation {payload['saturation_state']!r} != "
+                f"project gate saturation {payload['evidence_saturation']!r} != "
                 f"{gate['expected_saturation_state']!r}"
             )
 

@@ -14,7 +14,7 @@ Schema fields for Inbox cards under `inbox/`. The source of truth is `src/.memor
 | `type` | `literal` | All cards | Pins the note to its schema. |
 | `lifecycle` | `enum` | All cards | `proposed`, `current`, or `archived`. |
 | `title` | `str` | All cards | Human-readable card title. |
-| `raised_by` | `str` | Optional on all cards | Profile, engine, or process that raised the item. |
+| `raised_by` | `str` | Optional on all cards | Profile, operation, or process that raised the item. |
 | `loudness` | `enum` | Optional on all cards | `quiet`, `notice`, `alert`, or `block`. `quiet`/`notice` stay pull-only; `alert`/`block` create a Telegram push record when written through the shared card writer; open `block` cards pause delegation and review-gated promotion until resolved. |
 | `created` | `date` | Optional on all cards | Creation date. |
 

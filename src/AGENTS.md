@@ -13,7 +13,7 @@ filesystem; do not try to route around it.
 
 ## Where things live (ADR-47)
 
-`catalog/` entity records (Bases-backed; built by the ingest engine) · `notes/` prose —
+`catalog/` entity records (Bases-backed; built by the ingest operation) · `notes/` prose —
 fleeting / source / claims 🔒 / hubs 🔒 / index · `projects/` project work · `inbox/`
 your messages to the PI · `system/` templates, dashboards, patterns, logs. One folder
 never mixes two categories. `archived` is a *state*, not a folder — never move a note
@@ -37,7 +37,7 @@ batch decision — write the worklist, raise one work-prompt.
 
 ## Connections (ADR-52)
 
-`relationships` (entities) are **given** facts — the ingest engine builds them; you
+`relationships` (entities) are **given** facts — the ingest operation builds them; you
 never author them. `links:` (notes) are **authored** — you may *propose* a typed link
 (`supports` / `contradicts`); the PI confirms it at the link gate.
 

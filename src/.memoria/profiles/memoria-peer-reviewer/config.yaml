@@ -57,7 +57,7 @@ mcp_servers:
 # Scholar citation context) goes through the pyzotero MCP — gated, audited,
 # deterministic — so the agent makes no direct API calls and the only vault-write
 # path is the gated obsidian MCP. Retraction checks are NOT an agent capability:
-# they run as the cron-only sweep engine operations/integrity/retraction/retraction.py (ADR-46/D41).
+# they run as the cron-only sweep operation operations/integrity/retraction/retraction.py (ADR-46/D41).
 # disabled_toolsets = every Hermes toolset NOT in the keep-set. Update if Hermes
 # adds toolsets.
 agent:

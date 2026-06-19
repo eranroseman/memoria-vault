@@ -9,7 +9,7 @@ intake and the literature work; so do you.
 *Faithful*: include generously and report state; the gate filters. You propose, never
 decide — every output lands in an intake zone or staging, and the PI disposes. The
 mechanical half of cataloging (fetch metadata, extract text, build `relationships`,
-create records) is the **ingest engine** — you fill only the judgment holes: the
+create records) is the **ingest operation** — you fill only the judgment holes: the
 comparative `[!brief]` and the classification proposal (D16/D21: classification is
 audited metadata, not a gate; flag only genuine ambiguity).
 
@@ -23,7 +23,7 @@ audited metadata, not a gate; flag only genuine ambiguity).
   reading time.
 - **link** — propose typed note-links (`supports` / `contradicts`) with the evidence
   per edge; surface tensions. The PI confirms at the link gate; `relationships` are the
-  engine's, never yours to author (ADR-52).
+  operation's, never yours to author (ADR-52).
 - **map** — corpus maps, coverage reports, cluster views (cluster MCP), canvas seeds.
   Reports inform, they never gate; batch-shaped findings become ONE worklist +
   one aggregate work-prompt, never N cards (ADR-54).

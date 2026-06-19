@@ -36,7 +36,7 @@ nav_order: 30
 
 ## Context
 
-Capture-from-Zotero → ingest is the system's primary intake path but the least-built part of it: the command-palette reference marks the API-POST capture commands as **designed, not shipped**, and the only operable path is a manual Librarian CLI session ([Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md)). The existing `obsidian-paper-note` skill is **fully LLM-orchestrated** — costly, non-reproducible, and fragile (its PDF dependency `ocr-and-documents` currently fails to install) for work that is overwhelmingly mechanical.
+Capture-from-Zotero → ingest is the system's primary intake path but the least-built part of it: the command-palette reference marks the API-POST capture commands as **designed, not shipped**, and the only operable path is a manual Librarian CLI session ([Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md)). The existing `obsidian-paper-note` skill is **fully LLM-orchestrated** — costly, non-reproducible, and fragile (its PDF dependency `ocr-and-documents` currently fails to install) for work that is overwhelmingly mechanical.
 
 Two things make a redesign tractable: a **free, programmatic scholarly-API layer** (Semantic Scholar, OpenAlex, Crossref, PubMed/PMC, arXiv, Unpaywall, CORE) lets enrichment be built as **fallback chains** rather than a single dependency; and **lightweight tooling** (`pymupdf4llm`, embedding retrieval over the user's own tag list) covers the rest without heavy local ML. The hard requirements: every write **gated and audited**; **nothing captured is ever lost**; robustness **by redundancy**.
 
@@ -137,7 +137,7 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 
 ## Related
 
-- **Workflows affected:** [Capture and ingest a source](../how-to-guides/compile/capture-and-ingest.md), [Obsidian command palette](../reference/obsidian-command-palette.md).
+- **Workflows affected:** [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md), [Obsidian command palette](../reference/obsidian-command-palette.md).
 - **Files affected:** `obsidian-paper-note/SKILL.md` (slims to *call the ingest tool* + judgments + gated write), a new `ingest_paper.py` (source of truth for API field lists, chain order, and merge rules — kept out of the ADR so it can change without re-deciding), [Ingest routing](../reference/ingest.md) (type routing, fallback chains, extraction tiers, S2-not-GROBID), [Frontmatter fields](../reference/frontmatter.md) / [Note types](../reference/note-types.md) (`captured` + `ingest_status`), `capture-from-zotero.js` (`curl` not `requestUrl`; the capture-intake log), the seed-tag vocabulary format (tags carry definitions).
 - **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist (ADR-27) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
 - **Related decisions / Depends on:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).
