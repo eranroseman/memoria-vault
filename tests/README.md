@@ -5,7 +5,8 @@ They live here as standalone files so the shipped vault carries no test code.
 
 - `test_*.py` — one per module under test; imports the module and asserts its contract
   on synthetic fixtures (no vault runtime, no network).
-- `pyproject.toml` — declares pytest `pythonpath` for the current loose runtime modules.
+- `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
+  `pythonpath` for legacy loose runtime modules that have not moved yet.
 - `_util.py` — the shared `CheckHarness`.
 
 Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the

@@ -27,6 +27,11 @@ if [ -n "$PY" ]; then
   else
     note "pip install failed — install requirements-dev.txt manually for local lint parity"
   fi
+  if "$PY" -m pip install --quiet -e .; then
+    note "Memoria package installed editable"
+  else
+    note "editable install failed — run manually: $PY -m pip install -e ."
+  fi
   if [ -f src/.memoria/mcp/requirements.txt ]; then
     if "$PY" -m pip install --quiet -r src/.memoria/mcp/requirements.txt; then
       note "MCP deps installed (self-tests will run)"

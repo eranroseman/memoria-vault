@@ -18,7 +18,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Agent posture | `src/.memoria/profiles/*/SOUL.md` | Bundled profile skills and shared `src/AGENTS.md` |
 | Profile package metadata | `src/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
 | Task lane to profile routing | `src/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
-| Runtime path and glob semantics | `src/.memoria/memoria_runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
+| Runtime path and glob semantics | `memoria/runtime/policy/` | `src/.memoria/memoria_runtime/policy/` compatibility fallback, Policy MCP, tasks MCP, patterns MCP |
 | Runtime write decisions and audit | `src/.memoria/mcp/policy_mcp.py` | Policy hook/plugin, lane overrides, audit log |
 | Write interception | `src/.memoria/plugins/memoria-policy-gate/` and `src/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
 | Shared schema validation | `src/.memoria/operations/lib/schema.py` | Linter, pre-commit, installer and schema tests |

@@ -125,6 +125,16 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
     assert "skipping MCP deps" not in install_mcp_deps
 
+def test_installer_installs_memoria_package_editable():
+    text = INSTALL.read_text(encoding="utf-8")
+    install_mcp_deps = re.search(
+        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
+        text,
+        re.S,
+    ).group("body")
+    assert '-e "$REPO_DIR"' in install_mcp_deps
+    assert "install Memoria editable" in install_mcp_deps
+
 def test_installer_preserves_user_appearance_on_refresh():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
