@@ -1,4 +1,4 @@
-# Project gate - project notes plus generated cache timestamp fields.
+# Project space — project notes plus generated cache timestamp fields.
 filters:
   and:
     - or:

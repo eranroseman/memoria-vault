@@ -29,7 +29,7 @@ You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
 ## Step 2 — Read the flag cards
 
-Open the **Inbox gate** (the **Needs me** view). Findings land there as **`flag` cards**. Unlike a candidate's honesty body, a flag is **finding-first** — the `finding` leads, carries an `agent_recommendation`, and names its `target`; here the verdict is the point. Why a verification card leads with the finding: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
+Open the **Inbox space** (the **Needs me** view). Findings land there as **`flag` cards**. Unlike a candidate's honesty body, a flag is **finding-first** — the `finding` leads, carries an `agent_recommendation`, and names its `target`; here the verdict is the point. Why a verification card leads with the finding: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
 
 A `clean` flag closes nothing by itself and an `issues-found` flag changes nothing by itself — you act, the agent flags. Typical actions:
 
@@ -61,7 +61,7 @@ Skip the gaps you don't buy — archive them with a clear conscience. The honest
 - The retraction sweep running on cron behind you
 - At least one gap turned back into a discovery task — one full turn of the loop
 
-> **Project-level verification:** once a cluster becomes a Project gate, keep drafts in `projects/<slug>/` and verify them claim by claim against your vault before anything ships.
+> **Project-level verification:** once a cluster becomes a project, keep drafts in `projects/<slug>/` and verify them claim by claim against your vault before anything ships.
 
 ---
 

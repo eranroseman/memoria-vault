@@ -50,15 +50,15 @@ The task commands default sensibly off the **active note** — `extract claims` 
 
 Commander places the high-frequency commands directly in Obsidian chrome: the left
 ribbon has capture fleeting, capture from Zotero selection, capture source from URL,
-delegate task, resolve inbox card, and open/reset navigation controls. Gate switching
-happens through the nav row in `gates/inbox.md`, `gates/library.md`,
-`gates/knowledge.md`, and `gates/project.md`. The note page header has create linked
+delegate task, resolve inbox card, and open/reset navigation controls. Space switching
+happens through the nav row in `spaces/inbox.md`, `spaces/library.md`,
+`spaces/knowledge.md`, and `spaces/project.md`. The note page header has create linked
 claim note, write claim note, extract claims, and link claim, so active-note defaults
 are visible when you invoke them.
 
 **3. Or skip the palette and ask the Co-PI.**
 
-The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane when work should become durable ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane, task, or assist verb; use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational. Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit gate ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
+The conversational route does the same thing: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane when work should become durable ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane, task, or assist verb; use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational. Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit hook ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
 
 **4. Use the palette by type, not by scroll.**
 

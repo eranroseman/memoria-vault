@@ -18,7 +18,7 @@ Open the vault in Obsidian, activate the bundled plugins, and copy the REST API 
 
 **1. Open the vault.**
 
-In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. The Homepage plugin opens `gates/inbox.md` as the front door.
+In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. The Homepage plugin opens `spaces/inbox.md` as the front door.
 
 **2. Enable community plugins.**
 
@@ -40,7 +40,7 @@ The required plugins:
 | `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
 | `modalforms` | Provides structured capture forms with controlled vocabulary fields |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
-| `homepage` | Opens `gates/inbox.md` on launch |
+| `homepage` | Opens `spaces/inbox.md` on launch |
 | `buttons` | Renders the command buttons on `home.md` |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
@@ -75,7 +75,7 @@ the certificate or a real plugin `data.json`.
 
 Memoria is **incompatible** with the frontend `obsidian-linter` plugin — do not install it. It is a second frontmatter authority that collides with the agent-owned namespaces and bypasses the policy-MCP audit trail; the full rationale is in [ADR-12](../../adr/12-obsidian-linter-reference-only.md).
 
-Memoria's linting is the Linter **operation** — deterministic Python with a daily cron and a pre-commit gate ([Linter: detectors and auto-fix](../../reference/linter.md)); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
+Memoria's linting is the Linter **operation** — deterministic Python with a daily cron and a pre-commit hook ([Linter: detectors and auto-fix](../../reference/linter.md)); `markdownlint` covers Markdown hygiene. Neither needs this plugin.
 
 ## Verify
 
@@ -84,9 +84,9 @@ Memoria's linting is the Linter **operation** — deterministic Python with a da
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - The left ribbon includes Memoria capture, delegate, and resolve buttons
 - Modal Forms lists the six Memoria capture forms
-- The Homepage plugin opens `gates/inbox.md`
+- The Homepage plugin opens `spaces/inbox.md`
 
-Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then use the gate nav row to open **Library** for the reading pipeline.
+Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then use the space nav row to open **Library** for the reading pipeline.
 
 ## Related
 

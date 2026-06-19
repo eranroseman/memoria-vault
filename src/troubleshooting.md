@@ -44,7 +44,7 @@ The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/mem
 
 **Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `catalog/papers/<citekey>.md` from the [[paper|paper template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/library/capture-and-ingest).)
 
-**Review ([policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** the runtime gate is bypassed — **treat every write as if it could land somewhere it shouldn't.** Edit carefully, `git commit` often; replay the audit log when the MCP returns.
+**Review ([policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** the runtime write gate is bypassed — **treat every write as if it could land somewhere it shouldn't.** Edit carefully, `git commit` often; replay the audit log when the MCP returns.
 
 **Export (Peer-reviewer/Writer down):** verify citekeys resolve manually, then run Pandoc directly — skip cite-check / similarity-check, rely on human review (Pandoc/CSL details: [export reference](https://eranroseman.github.io/memoria-vault/reference/export)):
 

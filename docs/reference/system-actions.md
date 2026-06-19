@@ -30,7 +30,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Run detectors | Linter (`detectors.py`, daily cron) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
-| Pre-commit gate | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one gate that prevents rather than reports. |
+| Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
 | Golden stage | Linter (`golden_restore.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
 | Golden upgrade | Linter (`golden_restore.py upgrade`) | Three-way reconciles old golden, new source, and live system files; applies clean release changes and preserves PI-customized conflicts. |
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
@@ -148,7 +148,7 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | Delegate a task | Prompts for a lane and goal — the palette twin of the Co-PI's routing skill. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
-| Gate dashboards | Switches mode by opening `gates/inbox.md`, `gates/library.md`, `gates/knowledge.md`, or `gates/project.md` from the dashboard nav row ([ADR-81](../adr/81-persistent-gate-dashboards.md)). |
+| Gate dashboards | Switches mode by opening `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, or `spaces/project.md` from the dashboard nav row ([ADR-81](../adr/81-persistent-gate-dashboards.md)). |
 
 ### Review decisions
 

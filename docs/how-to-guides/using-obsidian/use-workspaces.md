@@ -6,7 +6,7 @@ nav_order: 2
 
 # Use the reset workspace
 
-Memoria's daily navigation is the four gate dashboards, not saved workspace switching.
+Memoria's daily navigation is the four space dashboards, not saved workspace switching.
 Use the saved **Memoria** workspace only when you want to reset a rearranged window.
 
 ## Prerequisites
@@ -16,14 +16,14 @@ Use the saved **Memoria** workspace only when you want to reset a rearranged win
 
 ## Steps
 
-**1. Switch gates from the dashboard nav row.**
+**1. Switch spaces from the dashboard nav row.**
 
-Start from Inbox. Each gate dashboard links to the others:
+Start from Inbox. Each space dashboard links to the others:
 
-- `gates/inbox.md` — triage what needs the PI now
-- `gates/library.md` — collect and organize sources
-- `gates/knowledge.md` — build and test claims
-- `gates/project.md` — steer bounded inquiry to output
+- `spaces/inbox.md` — triage what needs the PI now
+- `spaces/library.md` — collect and organize sources
+- `spaces/knowledge.md` — build and test claims
+- `spaces/project.md` — steer bounded inquiry to output
 
 **2. Reset the shell only when needed.**
 
@@ -35,8 +35,8 @@ keeps the Co-PI pane on the right.
 
 ## Verify
 
-- The Homepage plugin opens `gates/inbox.md` on startup.
-- Each gate dashboard links to the other three gates.
+- The Homepage plugin opens `spaces/inbox.md` on startup.
+- Each space dashboard links to the other three spaces.
 - Loading the **Memoria** workspace restores the shared shell without changing the
   gate model.
 

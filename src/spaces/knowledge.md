@@ -1,14 +1,14 @@
 ---
 title: Knowledge
-type: gate
+type: space
 lifecycle: current
-dashboard: gate
-gate: knowledge
+dashboard: space
+space: knowledge
 ---
 
 # Knowledge
 
-[[gates/inbox|Inbox]] · [[gates/library|Library]] · **Knowledge** · [[gates/project|Project]]
+[[spaces/inbox|Inbox]] · [[spaces/library|Library]] · **Knowledge** · [[spaces/project|Project]]
 
 > [!brief] No claims yet? Start with a claim note. A claim cites its sources and
 > keeps typed connections in `links:` frontmatter.
@@ -39,7 +39,7 @@ gate: knowledge
 
 ## Guides
 
-Step-by-step for working this gate:
+Step-by-step for working this space:
 
 - [Write a claim note](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/write-a-claim-note)
 - [Link related claims](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-related-claims)

@@ -52,7 +52,7 @@ The local model overlay changes only the Hermes model block. The Obsidian MCP re
 | 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. Then **prunes stale profiles** from previous installs (`mapper` / `socratic` / `verifier` / `coder` / `linter`). |
 | 7. Skills | Clones the K-Dense bundle, verifies the bundled official Hermes skills, and installs the hub skills (`obsidian-markdown`, `qmd`). |
 | 8. Obsidian | Guided, not silent: Windows offers `winget`; Linux offers the Flatpak/AppImage path. **Zotero is no longer provisioned by the Linux test installer** — Windows production still offers winget guidance because Zotero is the expected production bibliography surface. |
-| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, then use the gate nav row to open Library). |
+| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, then use the space nav row to open Library). |
 
 ---
 
@@ -78,7 +78,7 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 | --- | --- |
 | `KILOCODE_API_KEY` (production model access; not used by the `MEMORIA_ENV=test` local model block), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
 | Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
-| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; then initialize the runtime vault with `git init && git add -A && git commit`. obsidian-git, the pre-commit gate, verify-on-commit, rollback, and history need a real repo. |
+| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; then initialize the runtime vault with `git init && git add -A && git commit`. obsidian-git, the pre-commit hook, verify-on-commit, rollback, and history need a real repo. |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
 ---

@@ -70,4 +70,4 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Zotero plugins](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison |
 | [Obsidian callouts](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema |
 | [Obsidian status line](obsidian-status-line.md) | Status-line format, field definitions, and update cadence |
-| [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and the persistent gate-dashboard navigation model |
+| [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and the persistent space-dashboard navigation model |

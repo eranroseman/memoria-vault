@@ -46,7 +46,7 @@ Every pattern file is YAML frontmatter followed by a single `# Pattern` body. Th
 | `adapted_from` | str (optional) | Upstream provenance of the prompt (e.g. `fabric/analyze_claims`). |
 | `created` | date | — |
 
-The schema is enforced by the Linter and the pre-commit gate, the same machinery that guards every other system note.
+The schema is enforced by the Linter and the pre-commit hook, the same machinery that guards every other system note.
 
 ---
 

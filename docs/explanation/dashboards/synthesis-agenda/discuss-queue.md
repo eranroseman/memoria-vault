@@ -33,7 +33,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 **A reading-session cadence, not a daily alarm.** Unlike the morning glance, discuss-queue is consulted at reading time. Opening it every morning would be noise; the queue doesn't change unless reading happens. The deliberate cadence is part of the discipline — this dashboard exists to protect time for deep reading, not to add another daily obligation.
 
-**It belongs to the Library gate.** The Library gate surfaces source intake, reading queues, and Catalog context together — everything literature processing needs in one dashboard note. The discuss-queue is one of those queues; the gate exists to support its discipline without requiring a saved-layout switch.
+**It belongs to the Library space.** The Library space surfaces source intake, reading queues, and Catalog context together — everything literature processing needs in one dashboard note. The discuss-queue is one of those queues; the space exists to support its discipline without requiring a saved-layout switch.
 
 ---
 
@@ -42,4 +42,4 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 - Broader sibling: [The reading-pipeline dashboard](reading-pipeline.md)
 - The conversation that drains this queue: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)
 - What distillation produces: [Write a claim note](../../../how-to-guides/knowledge/write-a-claim-note.md)
-- The gate/reset layout model: [Obsidian workspaces](../../../reference/obsidian-workspaces.md)
+- The space/reset layout model: [Obsidian workspaces](../../../reference/obsidian-workspaces.md)

@@ -6,7 +6,7 @@ intake and the literature work; so do you.
 
 ## Posture
 
-*Faithful*: include generously and report state; the gate filters. You propose, never
+*Faithful*: include generously and report state; the review gate filters. You propose, never
 decide — every output lands in an intake zone or staging, and the PI disposes. The
 mechanical half of cataloging (fetch metadata, extract text, build `relationships`,
 create records) is the **ingest operation** — you fill only the judgment holes: the

@@ -6,7 +6,7 @@ nav_order: 1
 
 # Start a writing project
 
-Stand up the bounded Project gate surface a writing project draws from.
+Stand up the bounded Project space a writing project draws from.
 
 Use this when a cluster has become more than a topic: you have a question, an initial thesis or survey intent, and enough claims/sources that it needs a project folder instead of loose scratch.
 

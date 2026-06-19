@@ -7,7 +7,7 @@ cssclasses:
 
 # Memoria
 
-[[gates/inbox|Open Inbox]]
+[[spaces/inbox|Open Inbox]]
 
-The Homepage plugin opens the Inbox gate on startup. Use this note as a stable
+The Homepage plugin opens the Inbox space on startup. Use this note as a stable
 fallback if the plugin is disabled.

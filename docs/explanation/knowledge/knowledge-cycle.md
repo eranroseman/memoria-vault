@@ -10,7 +10,7 @@ Every note in the vault is somewhere in a long-term progression from catalogued 
 
 ## The six delegable tasks
 
-The PI works at the four gates — **Inbox**, **Library**, **Knowledge**, and **Project** — not along a pipeline. Library, Knowledge, and Project are where knowledge is taken in, built into claims, and turned into output; the Inbox is where the agents' proposals surface for a decision. Beneath the gates, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
+The PI works at the four spaces — **Inbox**, **Library**, **Knowledge**, and **Project** — not along a pipeline. Library, Knowledge, and Project are where knowledge is taken in, built into claims, and turned into output; the Inbox is where the agents' proposals surface for a decision. Beneath the spaces, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
 
 | Task        | What it does                                            | Inbox signal    |
 | ----------- | ------------------------------------------------------- | --------------- |
@@ -21,7 +21,7 @@ The PI works at the four gates — **Inbox**, **Library**, **Knowledge**, and **
 | **draft**   | generate proposed prose with bound citations            | —               |
 | **verify**  | check citations, trace claims, red-team the argument    | `flag`          |
 
-The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. The four Librarian tasks (catalog, extract, link, map) belong to the Librarian posture, draft to the Writer, and verify to the Peer-reviewer; the authoritative task-lane → profile map lives in [Profile capabilities](../../reference/profiles.md). All six are reachable from the gates via the command palette.
+The tasks are **individually triggered, not a set**. A human gate — often a long gap — sits between each: a source is catalogued; much later, if ever, extracted; only after a claim exists does linking fire. The four Librarian tasks (catalog, extract, link, map) belong to the Librarian posture, draft to the Writer, and verify to the Peer-reviewer; the authoritative task-lane → profile map lives in [Profile capabilities](../../reference/profiles.md). All six are reachable from the spaces via the command palette.
 
 A new source typically arrives as a `candidate` card, is kept at triage, and becomes a Catalog entity plus a `proposed` source note. The PI reads it, distills claims in their own words, and confirms the links that connect them into the graph. Those claims mature and cross-link; once enough accumulate, a project maps the corpus, drafts, verifies, and ships.
 

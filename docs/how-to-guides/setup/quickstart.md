@@ -45,7 +45,7 @@ Propagate them into every profile (profile runs read only their own `.env`):
 bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git, rollback/history, the pre-commit schema gate, and verify-on-commit need a repo:
+**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git, rollback/history, the pre-commit schema check, and verify-on-commit need a repo:
 
 ```bash
 cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
@@ -60,7 +60,7 @@ The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 - `hermes profile list` shows the five `memoria-*` profiles
 - `<vault>/catalog/papers/<citekey>.md` exists with `type: paper` and a `relationships` block
 - `<vault>/system/logs/audit.jsonl` shows at least one `allow_with_log` entry
-- A `candidate` card landed in `inbox/` (the **Needs me** view of `inbox.base`, shown on the Inbox gate)
+- A `candidate` card landed in `inbox/` (the **Needs me** view of `inbox.base`, shown on the Inbox space)
 
 ## Related
 

@@ -10,7 +10,7 @@ Clear the decisions waiting on you. The review surface is the **Inbox**: agents 
 
 ## Prerequisites
 
-- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` on the Inbox gate)
+- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` on the Inbox space)
 
 ## Steps
 

@@ -8,7 +8,7 @@ permalink: /how-to-guides/inbox/
 
 # Inbox
 
-Act on what needs you — the queue of agent proposals, integrity flags, and recurring rituals that await a decision. The job of this gate is to reach a clear queue. Performed inside Obsidian.
+Act on what needs you — the queue of agent proposals, integrity flags, and recurring rituals that await a decision. The job of this space is to reach a clear queue. Performed inside Obsidian.
 
 | Guide | What it covers |
 | --- | --- |

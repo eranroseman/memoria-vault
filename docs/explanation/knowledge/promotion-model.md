@@ -22,7 +22,7 @@ What is deliberately *not* gated: the Catalog. Entity records are clean mechanic
 
 ## The honesty card: what an approval gate hands you
 
-The gate hands the PI a proposal, not a verdict. A proposal card carries an honest argument (with the agent's strongest self-rebuttal) and no verdict line; a verification card leads with the finding instead. Why that shape defeats automation bias — and the per-card field breakdown — is developed in [The honesty card](../kanban-board/card-schema.md) (fields in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields)), where the design-smell rule it serves is stated in full.
+The review gate hands the PI a proposal, not a verdict. A proposal card carries an honest argument (with the agent's strongest self-rebuttal) and no verdict line; a verification card leads with the finding instead. Why that shape defeats automation bias — and the per-card field breakdown — is developed in [The honesty card](../kanban-board/card-schema.md) (fields in [Frontmatter fields](../../reference/frontmatter.md#the-honesty-card-fields)), where the design-smell rule it serves is stated in full.
 
 ---
 
@@ -37,7 +37,7 @@ Not every place the PI acts is an approval ([ADR-54](../../adr/54-two-decision-k
 
 **High-cardinality decisions become a batch worklist, never N cards.** When a coverage report finds forty sources each needing a keep/reject call, the Inbox gets *one* aggregate work-prompt ("40 sources to screen"), pointing at a Bases-backed worklist where each file-backed row carries a `decision` field the PI toggles at group or item granularity — the systematic-review screening model. Forty cards would flood a queue meant to converge to zero and train select-all-accept.
 
-And nowhere is there confidence-tiered auto-accept: confident-wrong is exactly the failure the gate exists to catch.
+And nowhere is there confidence-tiered auto-accept: confident-wrong is exactly the failure the review gate exists to catch.
 
 ---
 
@@ -51,7 +51,7 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 
 ## Why this feels slow
 
-The human gate is the system's bottleneck by design, and that is the point — the full argument for why the gate is structural rather than advisory is in [Why the review gate is structural](../rationale/why-human-gate.md). Here the consequence: agents can catalog, extract, and draft faster than the PI can review, so the proposal queue grows unless the PI keeps pace.
+The human gate is the system's bottleneck by design, and that is the point — the full argument for why the review gate is structural rather than advisory is in [Why the review gate is structural](../rationale/why-human-gate.md). Here the consequence: agents can catalog, extract, and draft faster than the PI can review, so the proposal queue grows unless the PI keeps pace.
 
 The right response to a full queue is not to automate review but to let the WIP limits and back-pressure bite — the board mechanism that makes the bottleneck visible instead of letting "reviewed" silently degrade into "rubber-stamped." That mechanism, and the rule that a rejected proposal spawns a fresh card rather than reopening the old one, are explained in [Board states and the review gate](../kanban-board/states.md). The gate is also instrumented — time-on-gate and accept-rate feed the fleet-health dashboard — so a gate that has stopped being a real decision shows up in the data.
 
@@ -64,7 +64,7 @@ The right response to a full queue is not to automate review but to let the WIP 
 - The types and zones involved: [Note types and epistemic roles](note-types.md)
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/card-schema.md)
-- The board mechanics behind the gate: [Board states and the review gate](../kanban-board/states.md)
+- The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)
 
 **Decisions**
 

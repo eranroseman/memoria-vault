@@ -6,7 +6,7 @@ parent: Reference
 # Obsidian status line
 
 No standalone status-line widget ships in the alpha.7 Obsidian surface. The current
-ambient glance is the Inbox gate: `Needs me`, `Drift watch`, `Loose ends`, and `Board`.
+ambient glance is the Inbox space: `Needs me`, `Drift watch`, `Loose ends`, and `Board`.
 This page records the deferred widget contract so future work does not reinvent the
 format.
 

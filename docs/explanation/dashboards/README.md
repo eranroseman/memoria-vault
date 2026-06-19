@@ -8,11 +8,11 @@ permalink: /explanation/dashboards/
 
 # Dashboards
 
-The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `gates/`, `system/dashboards/`, and related Base files, are Bases/Dataview-backed and consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
+The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `spaces/`, `system/dashboards/`, and related Base files, are Bases/Dataview-backed and consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance/README.md)             | Inbox gate glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
+| [Daily glance](daily-glance/README.md)             | Inbox space glance (the absorbed Daily Health), Board state   | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |

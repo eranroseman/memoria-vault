@@ -60,7 +60,7 @@ Now ask the system what your corpus actually covers. In the Co-PI pane:
 
 The Co-PI delegates a **`map`** task to the Librarian, whose map lane produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
 
-To find them: open the **Inbox gate** and look in the **Needs me** view — the coverage read and the new `gap` cards land there alongside your other candidate cards.
+To find them: open the **Inbox space** and look in the **Needs me** view — the coverage read and the new `gap` cards land there alongside your other candidate cards.
 
 Read the coverage view and decide: is any cluster dense enough to write from (a hub with several mutually linked claims is the tell)? Keep the gap cards — Tutorial 06 closes the loop on them.
 

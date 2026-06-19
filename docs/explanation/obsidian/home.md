@@ -6,15 +6,15 @@ nav_order: 1
 
 # Home — the vault front door
 
-The obsidian-homepage plugin opens `gates/inbox.md` on launch. The vault-root
-`home.md` is now a plain fallback note that links back to the Inbox gate if the
+The obsidian-homepage plugin opens `spaces/inbox.md` on launch. The vault-root
+`home.md` is now a plain fallback note that links back to the Inbox space if the
 plugin is disabled, reset, or unavailable ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
 
 ---
 
 ## What it shows
 
-The current launch surface is the **Inbox gate**. It shows the gate nav row, a brief
+The current launch surface is the **Inbox space**. It shows the space nav row, a brief
 empty-state note, the `Needs me`, `Drift watch`, `Loose ends`, and `Board` views, and a
 reminder that capture/global actions live in the ribbon. The launch surface is still a
 plain Markdown note; it owns no custom renderer.
@@ -33,7 +33,7 @@ different answers to "is anything wrong?"
 
 ## Why a note, not a plugin start-page
 
-The launch surface is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. The obsidian-homepage plugin merely *opens* `gates/inbox.md` on launch; it is a convenience, not a dependency. If the plugin isn't installed, `home.md` remains an ordinary fallback note that points to Inbox.
+The launch surface is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. The obsidian-homepage plugin merely *opens* `spaces/inbox.md` on launch; it is a convenience, not a dependency. If the plugin isn't installed, `home.md` remains an ordinary fallback note that points to Inbox.
 
 This is the same discipline applied to the dashboards themselves: the human-facing surface is always a plain note the system's own tools can see and check.
 

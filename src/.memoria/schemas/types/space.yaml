@@ -1,13 +1,13 @@
-type: gate
-category: gates
+type: space
+category: spaces
 gated: false
 enums:
   lifecycle: [current, archived]
-  gate: [inbox, library, knowledge, project]
+  space: [inbox, library, knowledge, project]
 required:
-  type: literal:gate
+  type: literal:space
   lifecycle: enum:lifecycle
   title: str
-  gate: enum:gate
+  space: enum:space
 optional:
   created: date

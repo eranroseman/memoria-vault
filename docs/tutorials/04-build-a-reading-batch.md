@@ -29,7 +29,7 @@ The Co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll nev
 
 ## Step 2 — Judge the candidates as a batch
 
-Candidate cards accumulate in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox gate), each with the honesty body from Tutorial 03. Sit down once and judge them together:
+Candidate cards accumulate in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox space), each with the honesty body from Tutorial 03. Sit down once and judge them together:
 
 - Read each card's `argument_against` and `certainty` first.
 - **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.
@@ -45,9 +45,9 @@ For each kept paper, the Catalog entity and proposed source note stub already ex
 Your queue is **not** the Inbox — candidates were a keep/skip decision; reading is a different kind of work, on a different surface:
 
 - **`system/dashboards/sources.base`**, view **"To read & distill"** — every source note still at `lifecycle: proposed`, i.e. awaiting your reading.
-- **`system/dashboards/reading-pipeline.md`** — the same queue plus your claims by maturity: the Library gate's intake view at a glance.
+- **`system/dashboards/reading-pipeline.md`** — the same queue plus your claims by maturity: the Library space's intake view at a glance.
 
-The Library gate (Tutorial 01) opens the reading pipeline, discuss queue, and Catalog — switch to it for reading sessions.
+The Library space (Tutorial 01) opens the reading pipeline, discuss queue, and Catalog — switch to it for reading sessions.
 
 ---
 
