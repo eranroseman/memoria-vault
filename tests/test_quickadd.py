@@ -45,6 +45,7 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: extract claims",
         "Memoria: link claim",
         "Memoria: map corpus",
+        "Memoria: record exploration trace",
         "Memoria: draft section",
         "Memoria: verify draft",
         "Memoria: run pattern",
@@ -219,6 +220,36 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     assert 'command -v hermes' in script
     assert '$HOME/.local/bin' in script
     assert "Hermes not found on PATH" in script
+
+
+def test_exploration_trace_capture_is_project_local_and_noncanonical():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: record exploration trace"]
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/record-exploration-trace.js"
+
+    script = (SCRIPTS / "record-exploration-trace.js").read_text(encoding="utf-8")
+    for marker in (
+        'MAPS_DIR = "notes/fleeting/maps/"',
+        '"type: fleeting"',
+        '"origin: human"',
+        '"# Exploration trace"',
+        '"## Rejected direction"',
+        '"## Why rejected"',
+        '"## Evidence checked"',
+        '"## Retry only if"',
+        "never promoted automatically into canonical knowledge",
+        "isMapReport(reportPath)",
+    ):
+        assert marker in script
+    for forbidden in (
+        "notes/claims/",
+        "notes/hubs/",
+        "projects/",
+        "type: claim",
+        "type: hub",
+    ):
+        assert forbidden not in script
     assert 'hermes kanban create' not in script
 
 

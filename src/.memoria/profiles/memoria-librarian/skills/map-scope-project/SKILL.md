@@ -60,15 +60,22 @@ not the map's.
    almost nothing (named, not judged — gap *reporting* in depth is
    `map-report-coverage`).
 5. **Write — gated.** The map note to
-   `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>.md`, then ONE `candidate`
-   card in `inbox/` pointing at it (ADR-54). Never write under `projects/` — that zone
-   is the PI's and the Writer's, not yours.
+   `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>.md`. If the run explored
+   rejected directions or dead ends worth remembering, write the companion trace note
+   `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>-exploration-trace.md` before
+   the card. Then raise ONE `candidate` card in `inbox/` pointing at the map (ADR-54).
+   Never write under `projects/` — that zone is the PI's and the Writer's, not yours.
 
 ## Output contract
 
 - The corpus-map note: frontmatter `sources:` (folders · date range · qmd index ·
   cluster `params_echo`) for reproducibility; per-cluster sections; an explicit "thin
   or absent" list; a links-to-claims coverage table.
+- The optional exploration-trace note: `type: fleeting`, `lifecycle: proposed`,
+  `origin: agent`, stored beside the map, with structured sections for each rejected
+  direction: `direction`, `why_rejected`, `evidence_checked`, `retry_only_if`, and a
+  link back to the map. It stays project-local and is never auto-promoted into claims,
+  sources, hubs, or project state.
 - One `candidate` card (schema `candidate`, ADR-51 honesty body): `action` = "read the
   corpus map before scoping", honest `argument_against` (e.g. "retrieval was
   keyword-led; adjacent literatures the brief didn't name are invisible to this map").

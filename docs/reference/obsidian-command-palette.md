@@ -69,6 +69,7 @@ not create board cards.
 | `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
 | `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `src/system/scripts/refresh-project-gate.js` |
 | `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `src/system/scripts/supersede-thesis.js` |
+| `Memoria: record exploration trace` | Capture a rejected direction/dead end beside an active or selected map/gap report under `notes/fleeting/maps/`. | QuickAdd Macro → `src/system/scripts/record-exploration-trace.js` |
 
 ---
 
