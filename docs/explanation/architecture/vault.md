@@ -21,7 +21,7 @@ The top level is organized by **category** — one content kind per folder, no l
 │   papers · people · organizations · venues · datasets · repositories
 ├── notes/          ← NOTES: prose (Zettelkasten)
 │   fleeting/ · sources/ · claims/ 🔒 · hubs/ 🔒 · indexes/
-├── projects/       ← PROJECTS: work artifacts, project-scoped (ships empty in v0.1.0-alpha.2)
+├── projects/       ← PROJECTS: work artifacts, project-scoped
 ├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
 ├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)

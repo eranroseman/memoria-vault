@@ -6,7 +6,7 @@ nav_order: 3
 
 # Run a schema migration
 
-Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal. In v0.1.0-alpha.2 there is **no automated migration command**: a migration is a deliberate, git-disciplined manual pass, validated by the schemas. That's by design — schema changes fall in the `schema-content` class, which the policy gate never lets run unattended ([Linter: detectors and auto-fix](../../reference/linter.md)).
+Rewrite a frontmatter field across many notes at once — a field rename, a value-set change, or a deprecated-field removal. There is **no automated migration command**: a migration is a deliberate, git-disciplined manual pass, validated by the schemas. That's by design — schema changes fall in the `schema-content` class, which the policy gate never lets run unattended ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
 Use this for **structural** changes that touch many notes. For renaming a single vocabulary term, [Manage your topic vocabulary](../knowledge/manage-vocabulary.md) covers the lighter path.
 

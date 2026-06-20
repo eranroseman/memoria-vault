@@ -8,7 +8,7 @@ nav_order: 2
 
 The status line is a deferred ambient-indicator design: a single Dataview-rendered line
 that would show the Linter verdict and Kanban queue counts at a glance. It is not
-shipped as a standalone widget in alpha.7; the current daily glance is the Inbox space.
+part of the current Obsidian surface; the daily glance is the Inbox space.
 The design remains useful because it explains the boundary between ambient state and
 dashboard decisions.
 

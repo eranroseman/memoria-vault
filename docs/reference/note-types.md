@@ -52,7 +52,7 @@ The PI's knowledge, carrying **authored** `links:` edges (the field contract is 
 | `hub` | `notes/hubs/` | **yes** | `current → archived` | `title`, `topic` | `members`, `links` |
 | `index` | `notes/indexes/` | no | `current → archived` | `title` | — |
 
-`maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). Claim template version 2 includes `schema_version: 2`; query and write-assist surfaces exclude claims with non-empty `superseded_by` unless the task is explicitly about supersession history. `hub` is the renamed MOC; the `reference` type was dropped in the same decision ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
+`maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). Claim template version 2 includes `schema_version: 2`; query and write-assist surfaces exclude claims with non-empty `superseded_by` unless the task is explicitly about supersession history.
 
 ---
 

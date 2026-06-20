@@ -55,7 +55,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Honesty card** — an Inbox proposal (`candidate` / `gap`) carrying the honesty body and **never a verdict** ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)); verification cards (`flag` / `alert`) are the complement, leading with the `finding`. The honesty-card and verification-card field contracts are specified in [Frontmatter fields](frontmatter.md).
 
-**Hub** — a structure note in `notes/hubs/` aggregating a topic's members and links; the renamed MOC ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). Review-gated.
+**Hub** — a review-gated structure note in `notes/hubs/` aggregating a topic's members and links ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
 
 **Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (the PI-facing state of any item); `maturity` is a claim **property** describing how settled it is — never a gate. Both chains and their values are specified in [Frontmatter fields](frontmatter.md).
 

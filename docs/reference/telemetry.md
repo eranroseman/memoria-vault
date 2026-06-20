@@ -329,8 +329,8 @@ It does not emit telemetry or mutate any source log.
 
 ## What is *not* captured
 
-By design, to keep v0.1's capture minimal and the consent story simple:
+By design, to keep capture minimal and the consent story simple:
 
 - **No note content** ever enters a log — only paths, IDs, counts, severities, and the human verdict.
 - **No keystroke- or token-level provenance** inside a draft; cost is per-card, not per-edit.
-- **No `pass^k` consistency runs** — the `consistency_passk` field exists but the harness that would populate it is deferred past v0.1.
+- **No `pass^k` consistency runs** — the `consistency_passk` field exists but the harness that would populate it is deferred.

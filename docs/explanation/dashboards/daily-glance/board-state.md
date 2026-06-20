@@ -33,7 +33,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 ## Why it's designed this way
 
-**One Base, several views — not several dashboards.** "What needs me?", "what's in flight?", and "what are the workers doing?" are slices of one queue. Keeping them as views of `inbox.base` means there is exactly one definition of a card and one place its state lives; a second source of truth is what the old standalone board dashboard kept threatening to become.
+**One Base, several views — not several dashboards.** "What needs me?", "what's in flight?", and "what are the workers doing?" are slices of one queue. Keeping them as views of `inbox.base` means there is exactly one definition of a card and one place its state lives.
 
 **The lifecycle chain is the card state you see.** No execution vocabulary leaks into the view: `proposed` = awaiting you, `current` = acted on, `archived` = closed — the same chain every note uses, scoped to `inbox/` so card-state and note-state never collide.
 

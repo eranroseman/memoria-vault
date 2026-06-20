@@ -19,7 +19,7 @@ Configure Zotero with Better BibTeX and wire up the automatic export so Memoria'
 
 **1. Open Better BibTeX preferences.**
 
-In Zotero 9: Tools → Better BibTeX Preferences (in Zotero 5/6 this was Edit → Preferences → Better BibTeX).
+In Zotero 9: Tools → Better BibTeX Preferences.
 
 **2. Set the citation key formula.**
 

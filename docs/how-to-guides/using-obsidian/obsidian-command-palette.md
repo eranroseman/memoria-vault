@@ -79,6 +79,6 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Related
 
-- Full command catalog, including the removed and retired commands: [Obsidian command palette](../../reference/obsidian-command-palette.md)
+- Full command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 - The conversational route: [Agent-client pane](use-the-acp-pane.md)
 - QuickAdd and the rest of the plugin set: [Obsidian plugins](../../reference/obsidian-plugins.md)

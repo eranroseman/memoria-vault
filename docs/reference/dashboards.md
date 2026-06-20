@@ -12,7 +12,7 @@ folders. Space switching is a wikilink nav row, not an Obsidian workspace swap. 
 dashboards are Dataview / Bases consumers: they render existing vault state and logs,
 never write, and a healthy vault shows action queues near-empty.
 
-Two changes from the early dashboard model: **daily-health was absorbed into the Inbox launch surface** (there is no `daily-health.md` anymore), and **board-state is now the Inbox board** — a thin page embedding `inbox.base`.
+The daily glance starts in the Inbox launch surface, and **board-state is the Inbox board** — a thin page embedding `inbox.base`.
 
 ---
 
@@ -65,7 +65,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 
 ### Verified Bases behavior
 
-The alpha.7 UI review verified the following in Obsidian 1.12.7:
+The supported dashboard UI relies on these Obsidian 1.12.7 Bases behaviors:
 
 - Wikilinks inside nested `links:` maps register as backlinks, so typed edges such
   as `links.contradicts` are visible both to contradiction views and to orphan

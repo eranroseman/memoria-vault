@@ -85,7 +85,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Claude API** | Primary LLM for synthesis, classification proposals, and narrative composition. Model routing: Claude for synthesis; cheaper models for embed/classify/summarize tasks. |
-| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset (the v0.1.0-alpha.1 Coder exception was retired, ADR-21); it writes scaffolds through the gated obsidian MCP into `projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
+| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)); it writes scaffolds through the gated obsidian MCP into `projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
 
 ---
 

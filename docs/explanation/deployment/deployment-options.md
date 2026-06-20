@@ -6,18 +6,16 @@ nav_order: 3
 
 # Deployment options
 
-The system spans a **vault** (knowledge layer) and an **execution layer** (Hermes profiles, MCPs). Where each lives — and how they sync — is a human decision with real trade-offs. v0.1 ships and is documented around a single adopted default: **`local-only`**. The multi-machine topologies (`local-mesh`, `obsidian-sync`, `always-on`) and the secondary-device operating patterns are a forward-looking capability, specified in [multi-machine deployment](../../adr/63-multi-machine-deployment.md).
+The system spans a **vault** (knowledge layer) and an **execution layer** (Hermes profiles, MCPs). Where each lives — and how they sync — is a human decision with real trade-offs. The supported install path is **`local-only`**. The multi-machine topologies (`local-mesh`, `obsidian-sync`, `always-on`) and the secondary-device operating patterns are a forward-looking capability, specified in [multi-machine deployment](../../adr/63-multi-machine-deployment.md).
 
 | Pattern | Sync mechanism | Always-on agent | Zotero API access | Ongoing cost | When to use |
 | --- | --- | --- | --- | --- | --- |
-| **`local-only`** (v0.1 default) | Git (manual pull / push) | ❌ Workstation must be on | ✅ Full localhost:23119 | $0 infra | Simplest start; single workstation; no discovery loop |
+| **`local-only`** (default) | Git (manual pull / push) | ❌ Workstation must be on | ✅ Full localhost:23119 | $0 infra | Simplest start; single workstation; no discovery loop |
 | `local-mesh` | Syncthing peer-to-peer (no VPS) | ⚠️ Primary device when on | ✅ Full localhost on primary | $0 infra | Desktop + laptop; auto-sync without cloud or VPS — see the [multi-machine proposal](../../adr/63-multi-machine-deployment.md) |
 | `obsidian-sync` | Obsidian's cloud sync | ⚠️ Needs VPS for cron | ⚠️ `.bib` only on VPS | ~$10/mo | iOS access; small team — see the [multi-machine proposal](../../adr/63-multi-machine-deployment.md) |
 | `always-on` | Syncthing + VPS (P2P, peer = full filesystem) | ✅ VPS runs as a Syncthing peer | ⚠️ `.bib` only on VPS | ~$12–25/mo VPS | Multi-device with always-on agent — see the [multi-machine proposal](../../adr/63-multi-machine-deployment.md) |
 
-*(Legacy labels map: A → `local-only`, A+ → `local-mesh`, B → `obsidian-sync`, C → `always-on`. The named forms are authoritative; the letters are retained only where an existing anchor depends on them.)*
-
-**Start with `local-only`.** It is the adopted v0.1 posture: a single workstation, Git for history, Zotero on localhost. Adding Syncthing or a VPS later is additive — it doesn't require restructuring the vault — so deferring the multi-machine patterns costs nothing. When a second device or unattended automation enters the picture, see the [multi-machine deployment proposal](../../adr/63-multi-machine-deployment.md).
+**Start with `local-only`.** It is the adopted posture: a single workstation, Git for history, Zotero on localhost. Adding Syncthing or a VPS later is additive — it doesn't require restructuring the vault — so deferring the multi-machine patterns costs nothing. When a second device or unattended automation enters the picture, see the [multi-machine deployment proposal](../../adr/63-multi-machine-deployment.md).
 
 ## Common decisions across options
 

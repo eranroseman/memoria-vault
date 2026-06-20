@@ -32,13 +32,13 @@ The **Memoria** workspace has one shared shell:
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
 The core Workspaces plugin stays enabled so you can restore this shell with Obsidian's
-own **Manage workspaces** command if panes get rearranged. The retired QuickAdd
-workspace commands and loader script are not shipped.
+own **Manage workspaces** command if panes get rearranged. Workspace switching is
+not exposed through QuickAdd commands or loader scripts.
 
 Workspaces Plus was evaluated and rejected for the shipped path. It can register
-native workspace-switching commands, but Memoria no longer models spaces as saved
-workspace layouts; the dashboard-note navigation in `spaces/` is the source of
-truth.
+native workspace-switching commands, but Memoria models spaces as dashboard notes,
+not saved workspace layouts; the dashboard-note navigation in `spaces/` is the
+source of truth.
 
 ## Layout storage
 

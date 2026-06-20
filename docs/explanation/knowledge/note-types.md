@@ -36,7 +36,7 @@ An entity record never contains anyone's reading of the source — that is what 
 
 A **`source`** note records what a source says — the brief, the key concepts, the limitations, the critique. It is written from an outside perspective: a source note never says what the PI thinks; it says what the source argues. That constraint is the mechanism that makes citation tracing work. If source notes expressed opinions, the boundary between "what the source says" and "what I think" would collapse, and provenance would become unverifiable.
 
-(v0.1.0-alpha.1's `paper-note`/`item-note` distinction is gone: identification now lives on the *entity* — paper vs repository vs dataset — and the prose is one `source` note type regardless.)
+A source note is one prose type regardless of whether the entity behind it is a paper, repository, dataset, report, or other source. Identification lives on the Catalog entity; the prose record stays focused on what the source says.
 
 ### Claim notes: the synthesis atom
 
@@ -53,12 +53,6 @@ A **`hub`** is a curated, annotated view of an area: what it is about, what matt
 ### Fleeting and index notes
 
 A **`fleeting`** note is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. An **`index`** note is a register — Luhmann's entry-point list into the web.
-
----
-
-## Why `reference` was dropped
-
-v0.1.0-alpha.1 had a `reference` note type for "settled" synthesis pages. It was retired ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)) for two reasons. It **double-encoded maturity**: an `evergreen` claim already *is* the settled unit, so a second type restated a property as a type. And it **collided with Zettelkasten vocabulary**, where a "reference note" means a literature note — our `source`. Existing reference-type material becomes evergreen claims or source notes.
 
 ---
 

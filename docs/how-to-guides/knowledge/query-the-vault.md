@@ -7,7 +7,7 @@ nav_order: 7
 
 # Query the vault
 
-Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a read operation — nothing is written; the v0.1.0-alpha.1 answer-note inbox is retired, and anything worth keeping you author yourself.
+Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a read operation — nothing is written; anything worth keeping you author yourself.
 
 ## Which retrieval path?
 

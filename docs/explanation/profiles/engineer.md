@@ -14,7 +14,7 @@ The Engineer runs the **code** lane as a documentary front for an external codin
 
 **Memoria doesn't compete with coding agents — it connects to them.** Capable coding agents already exist; reimplementing them inside Memoria would produce a worse copy. The Engineer owns the connective tissue between Memoria's audit and review discipline and the external agent's capability: the handoff package (goal, specs, constraints, acceptance checks) is the contract, and what comes back re-enters through the gated `code/` zone.
 
-**Execution stays outside Memoria.** [ADR-21](../../adr/21-l3-autonomy-ceiling.md) retired the old Coder-lane execution exception: no Memoria agent — the Engineer included — gets terminal, file, or code-execution capability. The external coding agent is third-party code that runs in its own runtime, never inside Memoria's; its work re-enters only as artifacts under `projects/<project>/code/`, through the Engineer's per-task commits and the PI's review.
+**Execution stays outside Memoria.** No Memoria agent — the Engineer included — gets terminal, file, or code-execution capability ([ADR-21](../../adr/21-l3-autonomy-ceiling.md)). The external coding agent is third-party code that runs in its own runtime, never inside Memoria's; its work re-enters only as artifacts under `projects/<project>/code/`, through the Engineer's per-task commits and the PI's review.
 
 **Per-task commits, not mega-commits.** One logical change per call keeps the audit trail granular — one card, one commit, one diff to review — and keeps revert scope small.
 

@@ -100,8 +100,8 @@ Two related fields: a `source` note's required `entity` field is a wikilink to t
 Project-gate argument edges may carry an optional `warrant` attribute on a
 `supports` relation when the author wants to state the grounds-to-claim inference
 explicitly ([ADR-79](../adr/79-argument-graph-and-warrant.md)). The schema keeps
-`links:` as a map because older string-list relations and newer edge objects must
-coexist during the alpha.5 transition.
+`links:` as a map so relation values can carry either plain wikilinks or structured
+edge objects.
 
 ---
 

@@ -71,7 +71,7 @@ The emit is idempotent: transitions are diffed against the export's state cache 
 
 ## WIP limits
 
-Unchanged from v0.1.0-alpha.1 — back-pressure on the human bottleneck:
+Back-pressure protects the human bottleneck:
 
 | Lane | WIP cap | Notes |
 | --- | --- | --- |

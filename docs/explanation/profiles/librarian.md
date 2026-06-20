@@ -8,7 +8,7 @@ nav_order: 2
 
 The Librarian runs Memoria's four processing lanes — **catalog · extract · link · map** — covering everything between "a source exists somewhere" and "the corpus is mapped for a project." Its defining posture is **faithful**: include generously, report state accurately, and let the review gate filter. The cost of a missing source is invisible; the cost of an over-inclusive candidate is one human decision. Given that asymmetry, generosity is the right policy for an intake agent — and fidelity to the source material is what keeps the generosity honest.
 
-A research librarian does both intake and literature search, so the old Mapper's corpus work (scope reports, gap analysis, cluster maps) merged into this agent ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the **map** lane is the same faithful posture pointed at what the vault already holds.
+A research librarian does both intake and literature search, so corpus work (scope reports, gap analysis, cluster maps) belongs in this agent ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the **map** lane is the same faithful posture pointed at what the vault already holds.
 
 ---
 
