@@ -69,7 +69,7 @@ def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
     of `gated_prefixes` should share."""
     try:
         return tuple(load_folders(schemas_dir)["gated_prefixes"]) or FALLBACK_GATED_PREFIXES
-    except Exception:
+    except (OSError, yaml.YAMLError, KeyError):
         return FALLBACK_GATED_PREFIXES
 
 

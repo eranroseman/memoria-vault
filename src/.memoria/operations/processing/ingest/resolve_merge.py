@@ -64,7 +64,7 @@ def _diagnose(level: str, code: str, **details) -> None:
             code=code,
             details=details,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 -- diagnostics-only; must never break the merge
         return
 
 
@@ -99,7 +99,7 @@ def _get(url: str, headers: dict | None = None, data: bytes | None = None, retri
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
                 _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
             return None
-        except Exception as exc:
+        except (OSError, ValueError) as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}", file=sys.stderr)
             _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
             return None
@@ -123,7 +123,7 @@ def _get_text(url: str, retries: int = 3) -> str | None:
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
                 _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
             return None
-        except Exception as exc:
+        except OSError as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}", file=sys.stderr)
             _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
             return None

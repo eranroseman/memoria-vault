@@ -183,7 +183,7 @@ def record_event(
 
 
 def redaction_self_test() -> None:
-    corpus = "\n".join(
+    corpus = "\n".join(  # noqa: FLY002 -- list of distinct secret patterns is clearer than one literal
         [
             "Bearer abcdefghijklmnopqrstuvwxyz",
             "OBSIDIAN_API_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",

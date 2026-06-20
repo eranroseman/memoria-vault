@@ -90,7 +90,10 @@ def read_session_row(db_path: Path, session_id: str) -> dict | None:
         with sqlite3.connect(db_path) as con:
             con.row_factory = sqlite3.Row
             row = con.execute(
-                f"SELECT {fields} FROM sessions WHERE id = ?", (session_id,)
+                # `fields` is a join of the hardcoded REQUIRED_SESSION_COLUMNS set;
+                # the only runtime value (session_id) is bound via a `?` placeholder.
+                f"SELECT {fields} FROM sessions WHERE id = ?",  # noqa: S608
+                (session_id,),
             ).fetchone()
     except sqlite3.DatabaseError as exc:
         raise CostDoctorError(f"cannot read Hermes session store {db_path}: {exc}") from exc

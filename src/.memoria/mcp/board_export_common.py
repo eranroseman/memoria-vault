@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 BOARD_RELDIR = "system/board"
@@ -93,7 +93,7 @@ def _iso_ts(value, default="") -> str:
         return str(value)
     if ts > 1e11:  # milliseconds -> seconds
         ts /= 1000.0
-    return datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(ts, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _metadata(card: dict) -> dict:

@@ -51,7 +51,7 @@ def _gate(tool_name, args, task_id, **kwargs):
         if result.get("decision") == "block":
             return {"action": "block", "message": result.get("reason", "policy gate: blocked")}
         return None
-    except Exception as exc:  # any failure to evaluate -> block (fail-closed)
+    except Exception as exc:  # noqa: BLE001 -- policy gate fails closed; any error blocks the write
         return {"action": "block", "message": f"policy gate failed-closed (plugin error): {exc}"}
 
 
@@ -61,11 +61,11 @@ def _complete(tool_name, args, task_id, **kwargs):
         import policy_hook
 
         policy_hook.evaluate_post(_payload(tool_name, args, task_id), PROFILE, VAULT)
-    except Exception:
+    except Exception:  # noqa: BLE001 -- never block the agent on audit-completion failures
         # Never block the agent on audit-completion failures, but log so the
         # operator can diagnose missing audit records.
         traceback.print_exc(file=sys.stderr)
-    return None
+    return
 
 
 def register(ctx):

@@ -25,7 +25,7 @@ def load_gated_prefixes(vault: Path) -> tuple[str, ...]:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
         prefixes = tuple(data["gated_prefixes"])
         return prefixes or REVIEW_GATED_PREFIXES
-    except Exception:
+    except Exception:  # noqa: BLE001 -- schema load with import-inside-try; degrade to default prefixes
         return REVIEW_GATED_PREFIXES
 
 

@@ -1,11 +1,11 @@
 """L1 component test for session_summary — ADR-25's per-session digests."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from operations.integrity.linter import session_summary as ss
 
-NOW = datetime(2026, 6, 12, 12, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
 
 
 def _entry(ts, task, path, action="write", decision="allow_with_log", **kw):

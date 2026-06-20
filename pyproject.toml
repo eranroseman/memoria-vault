@@ -39,26 +39,55 @@ line-length = 100
 docstring-code-format = true
 
 [tool.ruff.lint]
-# Curated, high-signal rule set. Beyond ruff's defaults (E4/E7/E9 + F = pyflakes
-# real bugs) this adds:
-#   W   pycodestyle warnings (trailing whitespace, invalid escapes)
-#   I   import sorting (isort)
-#   B   flake8-bugbear -- likely bugs (mutable defaults, unused loop vars, ...)
-#   C4  flake8-comprehensions -- clearer/faster comprehensions
-#   UP  pyupgrade -- modern syntax for the target Python
-#   RUF ruff-specific (mutable class defaults, etc.)
-#   PIE flake8-pie -- misc small correctness/clarity rules
-# E501 (line length) is deliberately NOT enabled -- the formatter owns width, and
-# the only over-100 lines left are unsplittable string literals it cannot break,
-# so E501 would just be noise. SIM/PERF/FURB are omitted: they push opinionated
-# refactors (contextlib
-# .suppress, list-extend, removeprefix) that trade clarity for terseness here.
-select = ["E4", "E7", "E9", "F", "W", "I", "B", "C4", "UP", "RUF", "PIE"]
-ignore = [
-  "E731",  # assigning a lambda to a name -- idiomatic for concise test helpers.
-  # Adding project metadata makes Ruff infer Python 3.11+ and flag legacy
-  # datetime.timezone.utc uses. Keep that migration with the alpha.8 shared
-  # runtime-helper work instead of sweeping unrelated files into the package
-  # spine PR.
-  "UP017",
+# Curated, high-signal rule set for an agent-generated codebase: catch real bugs,
+# enforce the consistency the formatter cannot (imports, idioms), and modernize.
+# Layout is the formatter's job, so style-only rules stay off.
+#
+#   F    pyflakes -- undefined names, unused imports (non-negotiable)
+#   E4/E7/E9  the real-error pycodestyle subset (imports, statements, syntax)
+#   W    pycodestyle warnings (invalid escapes, ...)
+#   B    flake8-bugbear -- likely bugs (mutable defaults, except ordering, ...)
+#   I    import sorting (isort) -- the formatter does NOT do this
+#   UP   pyupgrade -- modern syntax for the target Python (py311)
+#   C4   flake8-comprehensions -- clearer/faster comprehensions
+#   PIE  flake8-pie -- misc small correctness/clarity rules
+#   RUF  ruff-specific (mutable class defaults, unused noqa, ...)
+#   A    flake8-builtins -- shadowing id/type/list/dict, a common agent mistake
+#   PT   flake8-pytest-style -- consistency across the test suite
+#   DTZ  flake8-datetimez -- naive-datetime bugs (pairs with the UP017 migration)
+#   FLY  flynt -- static str.join -> f-string
+#   BLE  flake8-blind-except -- no swallowing errors behind bare/broad except
+#   S    flake8-bandit -- the real subprocess/network surface (off in tests)
+#   RET  flake8-return -- unnecessary else-after-return and friends
+#
+# Deliberately OFF: E1/E2/E3, W291/293, E501, COM, ISC, Q -- the formatter owns
+# layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
+# LOG/G (no logging), PTH (already 100% pathlib), ANN/D (noise, no payoff),
+# SIM/PERF/FURB (opinionated terseness-over-clarity refactors).
+select = [
+  "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
+  "A", "PT", "DTZ", "FLY", "BLE", "S", "RET",
 ]
+ignore = [
+  "E731",    # lambda-to-name -- idiomatic for concise test helpers.
+  "PT018",   # composite assert -- splitting `assert a and b` is cosmetic churn.
+  # PT011/PT017 assume the pytest.raises idiom, but this suite deliberately uses a
+  # pytest-independent try/except/else style so tests run under both pytest and the
+  # ADR-44 CheckHarness (most test files do not import pytest).
+  "PT011",   # pytest.raises without match=.
+  "PT017",   # assertion on the exception inside an except block.
+  # The bandit (S) subrules below are threat-model misfits for a local,
+  # single-user CLI tool (no untrusted remote input). The high-value S rules
+  # (deserialization, eval/exec, SQL/yaml/xml injection) stay enabled.
+  "S603",    # subprocess call -- args are statically constructed, not untrusted.
+  "S607",    # partial executable path -- we call git/npx/ollama via PATH on purpose.
+  "S310",    # urlopen -- URLs are built from fixed HTTPS API bases, not user input.
+  "S311",    # non-crypto random -- used only for sampling/jitter, never for secrets.
+  "DTZ011",  # date.today() -- local-date semantics are intended for a single-user vault.
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use assert and run trusted subprocesses; bandit there is noise.
+"tests/**" = ["S"]
+# The e2e smoke harness uses assert as its assertion mechanism, like the tests.
+"scripts/e2e_smoke.py" = ["S101"]

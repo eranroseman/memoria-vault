@@ -28,7 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from _shared import (
@@ -502,7 +502,7 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
 
 
 def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> dict:
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     period = iso_period(now)
     audit = read_audit(vault, period)
     board = read_board(cards)

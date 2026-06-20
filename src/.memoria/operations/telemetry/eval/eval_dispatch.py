@@ -90,7 +90,7 @@ def parse_frontmatter(text: str) -> dict:
         import yaml
 
         return yaml.safe_load(m.group(1)) or {}
-    except Exception:
+    except Exception:  # noqa: BLE001 -- parse with import-inside-try; degrade to empty frontmatter
         return {}
 
 
@@ -190,7 +190,7 @@ def create_card(card: dict) -> str:
 
 def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
     """Record what was dispatched when (plain markdown — untyped system infra)."""
-    now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     lines = [
         "# vault-eval — last dispatch",
         "",

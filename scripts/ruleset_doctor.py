@@ -32,7 +32,10 @@ def local_errors(contract: dict | None = None) -> list[str]:
             errors.append(f"{check}: workflow missing: {relative}")
             continue
         text = path.read_text(encoding="utf-8")
-        workflow = yaml.load(text, Loader=yaml.BaseLoader) or {}
+        # BaseLoader (not safe_load) keeps the GitHub Actions `on:` key as the
+        # string "on" -- safe_load parses it to bool True (YAML 1.1). BaseLoader
+        # never instantiates objects, so it is safe.
+        workflow = yaml.load(text, Loader=yaml.BaseLoader) or {}  # noqa: S506
         triggers = workflow.get("on") or {}
         if "pull_request" not in triggers and "pull_request_target" not in triggers:
             errors.append(f"{check}: workflow does not report on pull requests")

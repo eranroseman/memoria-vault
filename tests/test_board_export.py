@@ -3,7 +3,7 @@
 import json
 import re
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import board_export as _m
@@ -473,8 +473,8 @@ def test_non_done_transitions_emit_nothing(tmp_path):
 
 
 def test_bootstrap_guard_skips_old_done_cards(tmp_path):
-    old = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    recent = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    old = (datetime.now(UTC) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    recent = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     first_run = [
         _card("t_old", "done", updated=old),  # pre-feature backlog: silent
         _card("t_recent", "done", updated=recent),  # done within 24h: prompt
@@ -489,7 +489,7 @@ def test_run_export_reports_review_prompts(tmp_path):
     cards = tmp_path / "cards.json"
     cards.write_text(json.dumps([_card("t_1", "running")]), encoding="utf-8")
     run_export(tmp_path, cards)
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     cards.write_text(json.dumps([_card("t_1", "done", updated=now)]), encoding="utf-8")
     assert run_export(tmp_path, cards)["review_prompts"] == 1
     assert run_export(tmp_path, cards)["review_prompts"] == 0

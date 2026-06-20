@@ -187,7 +187,7 @@ def _prune_stale_pending(vault: Path, max_age_s: float = 24 * 3600) -> None:
                     f.unlink()
             except OSError:
                 continue
-    except Exception:
+    except Exception:  # noqa: S110,BLE001 -- best-effort prune on hot path; must never raise
         pass
 
 
@@ -235,7 +235,7 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         import policy_mcp  # reuse the tested decision core
-    except Exception as exc:  # import failure -> block the write
+    except Exception as exc:  # noqa: BLE001 -- import failure -> block the write fail-closed
         return {
             "decision": "block",
             "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed.",
@@ -295,7 +295,7 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         policy_mcp.PolicyEngine(vault).complete_write(
             profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256)
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- never break the agent loop on audit completion
         # Never break the agent loop on the audit-completion path, but always
         # log the failure to stderr so it is diagnosable in Hermes logs.
         print(
@@ -315,7 +315,7 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
                 },
                 vault_path=vault,
             )
-        except Exception:
+        except Exception:  # noqa: S110,BLE001 -- diagnostics-only; must not break the loop
             pass
     finally:
         try:

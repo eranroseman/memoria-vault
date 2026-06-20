@@ -110,7 +110,7 @@ def push_card(
         with urllib.request.urlopen(url, data=data, timeout=5) as resp:
             row["status"] = "sent"
             row["http_status"] = getattr(resp, "status", None)
-    except Exception as exc:  # Push is best-effort; the Inbox card is the durable signal.
+    except OSError as exc:  # Push is best-effort; the Inbox card is the durable signal.
         row["status"] = "failed"
         row["error"] = f"{type(exc).__name__}: {exc}"
     _append_push_log(vault, row)
