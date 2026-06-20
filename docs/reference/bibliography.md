@@ -7,7 +7,7 @@ parent: Reference
 
 Works cited across the Memoria documentation. Formatted in ACM author-date style. In-text citations elsewhere in the docs (e.g. "Chen et al. 2026") link here.
 
-Entries are alphabetical by first author. Classic sources (Bush, Luhmann, Matuschak, Karpathy) appear first under *Foundational sources*; the contemporary AI-research systems follow under *AI-research systems*.
+Entries are alphabetical by first author. Classic sources (Bush, Luhmann, Matuschak, Karpathy) appear first under *Foundational sources*; the contemporary AI-research systems follow under *AI-research systems*; pivotal works from the wider ~400-paper literature review follow under *Broader literature foundations*.
 
 ---
 
@@ -154,9 +154,48 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 
 ---
 
+## Broader literature foundations
+
+Pivotal works from the wider literature review — ~400 papers read end-to-end and judged adopt/borrow/reject for the design (`_papers/`, reviewed 2026-06; the working corpus is the Zotero export `_papers/Exported Items.bib`). These ground the cross-cutting choices cited in [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md) and [Intellectual foundations](../explanation/overview/intellectual-foundations.md): the HCI human-augmentation tradition behind the review gate, generator–verifier and evidence-grounded verification, temporal retrieval, and the indirect-prompt-injection case for the MCP sandbox.
+
+<a id="abdallah2026tempo"></a>
+Abdelrahman Abdallah, Mohammed Ali, Muhammad Abdul-Mageed, and Adam Jatowt. 2026. TEMPO: A Realistic Multi-Domain Benchmark for Temporal Reasoning-Intensive Retrieval. arXiv:2601.09523. Retrieved from https://arxiv.org/abs/2601.09523
+
+<a id="ackerman2000cscw"></a>
+Mark S. Ackerman. 2000. The Intellectual Challenge of CSCW: The Gap Between Social Requirements and Technical Feasibility. *Human–Computer Interaction* 15, 2–3 (Sept. 2000), 179–203. https://doi.org/10.1207/S15327051HCI1523_5
+
+<a id="amershi2019guidelines"></a>
+Saleema Amershi, Dan Weld, Mihaela Vorvoreanu, Adam Fourney, Besmira Nushi, Penny Collisson, Jina Suh, Shamsi Iqbal, Paul N. Bennett, Kori Inkpen, Jaime Teevan, Ruth Kikin-Gil, and Eric Horvitz. 2019. Guidelines for Human-AI Interaction. In *Proceedings of the 2019 CHI Conference on Human Factors in Computing Systems*. ACM, 1–13. https://doi.org/10.1145/3290605.3300233
+
+<a id="bender2021parrots"></a>
+Emily M. Bender, Timnit Gebru, Angelina McMillan-Major, and Shmargaret Shmitchell. 2021. On the Dangers of Stochastic Parrots: Can Language Models Be Too Big? In *Proceedings of the 2021 ACM Conference on Fairness, Accountability, and Transparency (FAccT '21)*. ACM, 610–623. https://doi.org/10.1145/3442188.3445922
+
+<a id="bernstein2010soylent"></a>
+Michael S. Bernstein, Greg Little, Robert C. Miller, Björn Hartmann, Mark S. Ackerman, David R. Karger, David Crowell, and Katrina Panovich. 2010. Soylent: A Word Processor with a Crowd Inside. In *Proceedings of the 23rd Annual ACM Symposium on User Interface Software and Technology (UIST '10)*. ACM, 313–322. https://doi.org/10.1145/1866029.1866078
+
+<a id="cobbe2021verifiers"></a>
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. 2021. Training Verifiers to Solve Math Word Problems. arXiv:2110.14168. Retrieved from https://arxiv.org/abs/2110.14168
+
+<a id="debenedetti2024agentdojo"></a>
+Edoardo Debenedetti, Jie Zhang, Mislav Balunović, Luca Beurer-Kellner, Marc Fischer, and Florian Tramèr. 2024. AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents. arXiv:2406.13352. Retrieved from https://arxiv.org/abs/2406.13352
+
+<a id="greshake2023injection"></a>
+Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten Holz, and Mario Fritz. 2023. Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. In *Proceedings of the 16th ACM Workshop on Artificial Intelligence and Security (AISec '23)*. ACM, 79–90. https://doi.org/10.1145/3605764.3623985
+
+<a id="horvitz1999mixedinitiative"></a>
+Eric Horvitz. 1999. Principles of Mixed-Initiative User Interfaces. In *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '99)*. ACM Press, 159–166. https://doi.org/10.1145/302979.303030
+
+<a id="perez2022modelwritten"></a>
+Ethan Perez, Sam Ringer, Kamilė Lukošiūtė, Karina Nguyen, Edwin Chen, Scott Heiner, Craig Pettit, Catherine Olsson, Sandipan Kundu, Saurav Kadavath, et al. 2022. Discovering Language Model Behaviors with Model-Written Evaluations. arXiv:2212.09251. Retrieved from https://arxiv.org/abs/2212.09251
+
+<a id="thorne2018fever"></a>
+James Thorne, Andreas Vlachos, Christos Christodoulopoulos, and Arpit Mittal. 2018. FEVER: A Large-Scale Dataset for Fact Extraction and VERification. arXiv:1803.05355. Retrieved from https://arxiv.org/abs/1803.05355
+
+---
+
 ## Notes on this list
 
-- **Coverage.** This list holds works *cited in the documentation*, not Memoria's full reading corpus (the working bibliography lives in Zotero / `notes/papers.md`).
+- **Coverage.** This list holds works *cited in the documentation*, not Memoria's full reading corpus (the working bibliography lives in Zotero / `notes/papers.md`). The wider literature reviewed for the design — ~400 papers — sits in `_papers/` (Zotero export `_papers/Exported Items.bib`), with synthesized adopt/borrow/reject verdicts in `_papers/REVIEW-SUMMARY.md`.
 - **Preprints.** Most contemporary entries are arXiv preprints (`pubstate: prepublished`); the `arXiv:ID` is the stable identifier.
 
 ---

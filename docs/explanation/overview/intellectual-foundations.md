@@ -6,7 +6,7 @@ nav_order: 2
 
 # Intellectual foundations
 
-Memoria is built on four converging ideas and informed by a broad survey of contemporary AI research systems. Understanding where the design comes from makes it easier to understand why specific choices were made.
+Memoria is built on four converging ideas and informed by a full review of ~400 papers spanning contemporary AI-research systems and the HCI, extraction, evaluation, and retrieval traditions they build on. Understanding where the design comes from makes it easier to understand why specific choices were made.
 
 ---
 
@@ -46,11 +46,13 @@ Memoria's vault is the Memex made operational: the graph of wikilinks, typed rel
 
 ---
 
-## AI-research systems survey
+## The literature review
 
-A broad survey of ~47 contemporary agent-driven research systems, conducted in May 2026, grounds the design in what the field has actually tried. The patterns Memoria borrows — stage-gated pipelines, thin control over thick state, explicit agent roles, structured outputs at handoffs, persistent knowledge graphs — recur across nearly every end-to-end system surveyed, and Memoria's layered split is the structural form of them. The survey also fixes what Memoria *declines*: the advisory-only LLM review, scalar-metric keep/revert, and tree-search-over-synthesis postures that most autonomous systems layer on top.
+A full review of ~400 papers (`_papers/`, each read end-to-end and judged for what Memoria should adopt, borrow, or reject) grounds the design in what the field has actually tried. It subsumes an earlier ~47-system survey of agent-driven research platforms and extends across the bodies of work those systems sit on: the HCI/CSCW human-augmentation tradition (mixed-initiative interfaces, Find-Fix-Verify, the social-technical gap), faithful information-extraction and claim-verification methods, evaluation and benchmark discipline, and retrieval with temporal reasoning.
 
-The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused — is the [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md) table; the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](../rationale/why-human-gate.md).
+The headline finding is that this wider literature does not merely *permit* Memoria's design — it independently *re-derives* it. The structural review gate ("engines write, agents judge, PI approves"), the durable vault-as-memory, the MCP-only agent sandbox, and deterministic ingest are each re-arrived-at by separate research lines. The patterns Memoria borrows — stage-gated pipelines, thin control over thick state, explicit agent roles, structured outputs at handoffs, persistent knowledge graphs — recur across nearly every end-to-end system, and Memoria's layered split is the structural form of them. The review also fixes what Memoria *declines* (advisory-only LLM review, scalar-metric keep/revert, tree-search-over-synthesis) and contributes two sharpenings to the knowledge model: build contradiction and supersession on entailment rather than embedding similarity, and treat temporal coverage as a first-class retrieval dimension.
+
+The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused, plus the [cross-cutting findings](../rationale/why-pattern-provenance.md#cross-cutting-findings-from-the-full-literature-review) from the wider corpus — is in [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md); the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](../rationale/why-human-gate.md).
 
 ---
 
