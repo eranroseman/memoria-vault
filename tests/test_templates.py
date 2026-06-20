@@ -65,6 +65,13 @@ def test_fleeting_template_keeps_origin_comment_out_of_yaml():
     assert "origin: human #" not in fm
 
 
+def test_fleeting_template_does_not_write_instructions_into_notes():
+    body = (TEMPLATES / "fleeting.md").read_text(encoding="utf-8")
+    assert "# Capture" not in body
+    assert "Origin values are" not in body
+    assert "The thought, quote, or idea" not in body
+
+
 def test_proposal_cards_carry_honesty_body():
     """Candidate/gap templates render the D49 honesty sections (ADR-51)."""
     for name in ("candidate", "gap"):

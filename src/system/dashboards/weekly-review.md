@@ -26,10 +26,12 @@ SORT file.ctime DESC
 ```dataview
 TABLE file.link AS Note, type, lifecycle
 FROM "notes"
-WHERE file.ctime >= date(today) - dur(7 days)
+WHERE file.ctime >= date(today) - dur(7 days) AND type != "fleeting"
 SORT file.ctime DESC
 ```
 
 ## Fleeting backlog
+
+This is the same proposed fleeting queue embedded in the Inbox space. Distill, attach, or archive each note; do not review these again in **New this week — notes**.
 
 ![[fleeting.base#To process]]

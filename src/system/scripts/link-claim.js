@@ -15,7 +15,7 @@ const ASSIGNEE = "memoria-librarian";
 const SKILL = "link-suggest-claim";
 const CLAIM_PREFIX = "notes/claims/";
 const SUGGESTION_LIMIT = 10;
-const { appendCallout, fnv1a, run, shq } = require("./quickadd-utils");
+const { appendCallout, fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 const STOPWORDS = new Set([
   "about", "after", "again", "against", "also", "because", "before", "between",
   "claim", "could", "from", "have", "into", "more", "note", "only", "paper",

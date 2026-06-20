@@ -3,32 +3,20 @@
     {
       "id": "7c9406c9-ba8a-454f-a813-1f420795ed07",
       "name": "Memoria: capture fleeting",
-      "type": "Template",
+      "type": "Macro",
       "command": true,
-      "templatePath": "system/templates/fleeting.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{DATE:YYYY-MM-DD-HHmmss}}-fleeting"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "notes/fleeting"
-        ],
-        "chooseWhenCreatingNote": false,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": false
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
+      "macro": {
+        "name": "Memoria: capture fleeting",
+        "id": "0ba22ca0-d3a5-4678-b347-411ebd2c7997",
+        "commands": [
+          {
+            "name": "capture-fleeting",
+            "type": "UserScript",
+            "id": "8d8f7f5e-dc8f-4d0f-a9c4-6f8517f05274",
+            "path": "system/scripts/capture-fleeting.js",
+            "settings": {}
+          }
+        ]
       }
     },
     {

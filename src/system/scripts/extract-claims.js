@@ -13,7 +13,7 @@ const LANE = "extract";
 const ASSIGNEE = "memoria-librarian";
 const SKILL = "extract-stub-claim";
 const SOURCE_PREFIXES = ["catalog/papers/", "notes/sources/"];
-const { fnv1a, run, shq } = require("./quickadd-utils");
+const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

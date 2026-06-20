@@ -94,7 +94,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/quickadd/data.json": "fc2270730cba7cf0eb926e8c3b2f1287621ce2925daf6113a6d719ff6304ea4a",
+        "plugins/quickadd/data.json": "ad09481153ec8a1bd90c6033342bdc030e92af196d7539333076fdc5242208fc",
         "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
         "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
         "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"
@@ -126,7 +126,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/modalforms/data.json": "f91422edee25d2fdc675752cf0744f72e2f037fb02ab84aff92e15b40acb9126",
+        "plugins/modalforms/data.json": "d5781453766d70f2e931b0454c4e43bf008e1be18f8dc0d49f8991f0454c5369",
         "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
         "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"
@@ -189,7 +189,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/homepage/data.json": "1b4de1be597b91eebb90b90b3b5f72f3cc9cd3562e087e428c85347ec0a8d23b",
+        "plugins/homepage/data.json": "6ff869aa1e02875e56f9cef20158cb1eccc483a6a58582c1e3abfe3ab13aa353",
         "plugins/homepage/main.js": "ac86db78709143fb95ac9fe3dfc59b771eb7a43c28b120420b8a0c96e3bfe964",
         "plugins/homepage/manifest.json": "3f81933c9b1f5b6f29fc90d63b983fc4d5dd39a6c5783fbf702d484724d31cee",
         "plugins/homepage/styles.css": "96e102d93f2463bea8d4a5fa4e4537965eebb11fcd61ece96eda1d2301c64f38"

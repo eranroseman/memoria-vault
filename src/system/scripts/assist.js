@@ -15,7 +15,7 @@ const RESULTS_STAGE =
   "Do not write directly to canonical/current notes.";
 
 const PATTERNS_DIR = "system/patterns/";
-const { fnv1a, run, shq } = require("./quickadd-utils");
+const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 const VERBS = {
   find: {

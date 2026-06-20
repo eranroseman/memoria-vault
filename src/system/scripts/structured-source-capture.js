@@ -9,8 +9,8 @@
 
 const FORM_NAME = "memoria-source-capture";
 const SOURCE_FOLDER = "notes/sources/";
-const { appendSimilarityTelemetry, buildSimilarityCallout, preFileSimilarityShadow } = require("./quickadd-similarity");
-const { normalizeList, slug, uniquePath, yamlString } = require("./quickadd-utils");
+const { appendSimilarityTelemetry, buildSimilarityCallout, preFileSimilarityShadow } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-similarity.js"));
+const { normalizeList, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

@@ -4,7 +4,7 @@
  * callout so the PI can notice likely duplicates.
  */
 
-const { exists, run, shq } = require("./quickadd-utils");
+const { exists, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 const SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl";
 const SIMILARITY_SCOPES = ["notes/claims/", "notes/sources/"];

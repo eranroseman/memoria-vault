@@ -16,7 +16,7 @@
 const BBT_RPC = "http://127.0.0.1:23119/better-bibtex/json-rpc";
 const SELECTED_CITEKEY_REQUEST =
   '[{"jsonrpc":"2.0","method":"item.citationkey","params":["selected"],"id":1}]';
-const { exists, run, shq, slug, uniquePath, yamlString } = require("./quickadd-utils");
+const { exists, run, shq, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

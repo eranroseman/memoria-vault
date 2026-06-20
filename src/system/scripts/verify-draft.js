@@ -14,7 +14,7 @@ const LANE = "verify";
 const ASSIGNEE = "memoria-peer-reviewer";
 const SKILL = "verify-check-citation";
 const DRAFT_PREFIX = "projects/";
-const { appendCallout, fnv1a, run, shq, uniquePath, yamlString } = require("./quickadd-utils");
+const { appendCallout, fnv1a, run, shq, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

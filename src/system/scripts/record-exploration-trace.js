@@ -8,7 +8,7 @@
  */
 
 const MAPS_DIR = "notes/fleeting/maps/";
-const { fnv1a, uniquePath, yamlString } = require("./quickadd-utils");
+const { fnv1a, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
