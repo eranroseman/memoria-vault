@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
+
+
+def load_json(path: Path) -> object:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def safe_filename(value: str) -> str:

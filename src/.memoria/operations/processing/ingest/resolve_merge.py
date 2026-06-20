@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """resolve_merge.py — Tier-1 resolve + multi-source merge (ADR-30).
 
 Fetch a paper from the open-access fallback chain (Semantic Scholar + OpenAlex
@@ -80,39 +79,13 @@ def _env(key: str) -> str:
     return ""
 
 
-def _get(url: str, headers: dict | None = None, data: bytes | None = None, retries: int = 3):
-    """GET/POST JSON. Retries on HTTP 429 (rate limit) with Retry-After / backoff so
-    a single burst-throttle doesn't silently drop a co-primary source (S2 is the
-    chief offender). Other errors return None (treated as not-found by callers)."""
-    req = urllib.request.Request(url, headers=headers or {}, data=data)
+def _http_retry(req: urllib.request.Request, read_fn, *, retries: int = 3):
+    """Run read_fn(response) with 429 backoff. Returns None on error."""
+    url = req.full_url
     for attempt in range(retries + 1):
         try:
             with urllib.request.urlopen(req, timeout=25) as r:
-                return json.load(r)
-        except urllib.error.HTTPError as e:
-            if e.code == 429 and attempt < retries:
-                ra = (e.headers or {}).get("Retry-After", "")
-                wait = float(ra) if ra.isdigit() else min(2**attempt, 8)
-                time.sleep(wait + random.random())
-                continue
-            if e.code not in (404, 429):
-                print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
-                _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
-            return None
-        except (OSError, ValueError) as exc:
-            print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}", file=sys.stderr)
-            _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
-            return None
-    return None
-
-
-def _get_text(url: str, retries: int = 3) -> str | None:
-    """GET text/XML with the same 429 retry behavior as _get."""
-    req = urllib.request.Request(url)
-    for attempt in range(retries + 1):
-        try:
-            with urllib.request.urlopen(req, timeout=25) as r:
-                return r.read().decode("utf-8", errors="ignore")
+                return read_fn(r)
         except urllib.error.HTTPError as e:
             if e.code == 429 and attempt < retries:
                 ra = (e.headers or {}).get("Retry-After", "")
@@ -123,11 +96,29 @@ def _get_text(url: str, retries: int = 3) -> str | None:
                 print(f"[resolve_merge] HTTP {e.code} {e.reason} from {url}", file=sys.stderr)
                 _diagnose("warn", "http_error", status=e.code, reason=e.reason, url=url)
             return None
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             print(f"[resolve_merge] {type(exc).__name__} fetching {url}: {exc}", file=sys.stderr)
             _diagnose("warn", "fetch_exception", exception_type=type(exc).__name__, url=url)
             return None
     return None
+
+
+def _get(url: str, headers: dict | None = None, data: bytes | None = None, retries: int = 3):
+    """GET/POST JSON. S2 is the chief 429 offender; _http_retry handles backoff."""
+    return _http_retry(
+        urllib.request.Request(url, headers=headers or {}, data=data),
+        json.load,
+        retries=retries,
+    )
+
+
+def _get_text(url: str, retries: int = 3) -> str | None:
+    """GET text/XML."""
+    return _http_retry(
+        urllib.request.Request(url),
+        lambda r: r.read().decode("utf-8", errors="ignore"),
+        retries=retries,
+    )
 
 
 # --------------------------------------------------------------------------- #

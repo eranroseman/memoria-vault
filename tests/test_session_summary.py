@@ -17,7 +17,7 @@ def _entry(ts, task, path, action="write", decision="allow_with_log", **kw):
         "task_id": task,
         "decision": decision,
     }
-    e.update(kw)
+    e |= kw
     return e
 
 

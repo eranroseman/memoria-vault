@@ -59,7 +59,6 @@ def export_markdown(vault: Path, cards: list[dict]) -> set[str]:
         fname = safe_filename(c["task_id"]) + ".md"
         (board / fname).write_text(card_markdown(c), encoding="utf-8")
         written.add(fname)
-    # Prune stale exports (keep .keep and any non-exported scaffolding).
     for f in board.glob("*.md"):
         if f.name not in written:
             f.unlink()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """Deterministic vault detectors (zero-LLM) for the Memoria Linter.
 
 Reference implementation of the *self-contained* checks from structural-detectors.md and

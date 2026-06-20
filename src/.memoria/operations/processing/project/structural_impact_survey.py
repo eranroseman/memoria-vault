@@ -64,35 +64,33 @@ def analyze_survey(
             }
         )
     payload = base_payload(project, None)
-    payload.update(
-        {
-            "mode": "survey",
-            "argument_stage": maturity,
-            "evidence_saturation": saturation,
-            "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
-            "relation_count": len(edges),
-            "scope_overlap_count": len(scoped),
-            "open_high_impact_gaps": len(open_scope_gaps),
-            "survey_high_degree_count": len(high_degree),
-            "saturation_conditions": {
-                "mature_graph": maturity == "mature",
-                "no_open_scope_gaps": not open_scope_gaps,
-            },
-            "gap_findings": []
-            if maturity != "mature"
-            else [
-                {
-                    "kind": str(note.frontmatter.get("gap_type") or "additive"),
-                    "visibility": "shown",
-                    "path": note.path,
-                    "title": note.title,
-                    "impact": len(graph.get(note.key, set()) & scoped),
-                }
-                for note in open_scope_gaps
-                if str(note.frontmatter.get("gap_type") or "additive") in CONFIDENT_GAP_KINDS
-            ],
-            "advisories": [],
-            "nodes": rows,
-        }
-    )
+    payload |= {
+        "mode": "survey",
+        "argument_stage": maturity,
+        "evidence_saturation": saturation,
+        "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
+        "relation_count": len(edges),
+        "scope_overlap_count": len(scoped),
+        "open_high_impact_gaps": len(open_scope_gaps),
+        "survey_high_degree_count": len(high_degree),
+        "saturation_conditions": {
+            "mature_graph": maturity == "mature",
+            "no_open_scope_gaps": not open_scope_gaps,
+        },
+        "gap_findings": []
+        if maturity != "mature"
+        else [
+            {
+                "kind": str(note.frontmatter.get("gap_type") or "additive"),
+                "visibility": "shown",
+                "path": note.path,
+                "title": note.title,
+                "impact": len(graph.get(note.key, set()) & scoped),
+            }
+            for note in open_scope_gaps
+            if str(note.frontmatter.get("gap_type") or "additive") in CONFIDENT_GAP_KINDS
+        ],
+        "advisories": [],
+        "nodes": rows,
+    }
     return payload

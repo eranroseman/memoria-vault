@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """Board transition, cost, blind-review, and review-prompt event handling."""
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from _shared import append_jsonl, now_iso
+from _shared import append_jsonl, load_json, now_iso
 from board_export_common import (
     BLIND_REVIEW_RELPATH,
     COST_MISSES_RELPATH,
@@ -34,7 +33,7 @@ def load_state_cache(vault: Path) -> dict:
     p = vault / STATE_CACHE_RELPATH
     if p.exists():
         try:
-            data = json.loads(p.read_text(encoding="utf-8"))
+            data = load_json(p)
             return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as exc:
             print(f"[board_export] corrupt state cache ({p}), resetting: {exc}", file=sys.stderr)

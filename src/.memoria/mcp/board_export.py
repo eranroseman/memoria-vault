@@ -44,8 +44,8 @@ for _path in (_RUNTIME_ROOT, _REPO_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from _shared import resolve_vault  # noqa: E402
-from board_export_common import (  # noqa: E402,F401
+from _shared import resolve_vault
+from board_export_common import (
     BLIND_REVIEW_RELPATH,
     BOARD_RELDIR,
     COST_MISSES_RELPATH,
@@ -66,7 +66,7 @@ from board_export_common import (  # noqa: E402,F401
     normalize,
     worker_session_ids,
 )
-from board_export_cost import (  # noqa: E402,F401
+from board_export_cost import (
     CostDoctorError,
     HermesCostLookup,
     _hermes_home,
@@ -78,7 +78,7 @@ from board_export_cost import (  # noqa: E402,F401
     state_db_for_lane,
     validate_session_schema,
 )
-from board_export_events import (  # noqa: E402,F401
+from board_export_events import (
     REVIEW_PROMPT_FRESH_SECONDS,
     _recently_done,
     compute_events,
@@ -89,7 +89,7 @@ from board_export_events import (  # noqa: E402,F401
     save_state_cache,
     should_sample_blind_review,
 )
-from board_export_projection import (  # noqa: E402,F401
+from board_export_projection import (
     _yaml_scalar,
     board_snapshot,
     card_markdown,

@@ -42,6 +42,9 @@ from pathlib import Path
 
 AUDIT_RELPATH = "system/logs/classify.jsonl"
 HINTS_RELPATH = ".memoria/project-hints.yaml"
+# Confidence floor and margin tuned against the alpha-7 corpus: below 0.60 the
+# top topic is unreliable; a margin < 0.15 means two topics are near-tied and
+# manual confirmation beats auto-apply.
 DEFAULT_FLOOR = 0.60
 DEFAULT_MARGIN = 0.15
 

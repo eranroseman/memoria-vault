@@ -174,6 +174,34 @@ On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
 
 ---
 
+## Python style
+
+**Docstrings** — two rules, no exceptions:
+
+- Every module gets a docstring. One line is enough; name the file's role and reference an ADR when one governs it.
+- Functions and classes get a docstring only when the name and signature don't tell the full story — a non-obvious invariant, a surprising side-effect, or a constraint the caller must know. If removing the docstring would leave a reader confused, write one; otherwise omit it.
+
+No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the function is too complex — split it first.
+
+`D` (pydocstyle) rules are deliberately off in ruff (`pyproject.toml`). Docstring presence is a judgement call, not a lint gate.
+
+**Inline comments** — write a comment only when the WHY is non-obvious:
+
+- A hidden constraint or domain invariant (a threshold calibrated against real data, a penalty formula, an ordering that must not change)
+- A workaround for an external system quirk (API idiosyncrasy, platform difference, known bug)
+- A one-shot or ordering invariant that would surprise a reader (e.g. `pop()` vs `get()` for single-use semantics)
+- A security or safety reason behind an otherwise-odd choice
+
+Don't explain what the code does — well-named identifiers already do that. Don't reference the task, PR, or caller ("added for X", "used by Y").
+
+Section dividers (`# --- Label ---`) are acceptable in files over ~200 lines when they mark a genuine logical boundary. In short files or before a function that already has a docstring, they are noise — remove them.
+
+Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE001 -- config load with import-inside-try; degrade to default`.
+
+**Line length** — 100 characters (`ruff format`, `pyproject.toml`). The formatter owns layout; don't fight it.
+
+---
+
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.

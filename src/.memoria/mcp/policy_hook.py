@@ -62,7 +62,7 @@ import sys
 import time
 from pathlib import Path
 
-from _shared import safe_filename
+from _shared import load_json, safe_filename
 
 from memoria.runtime.diagnostics import record_event
 
@@ -277,7 +277,7 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
     if not pend.is_file():
         return {}  # read, denied write, or unmatched -> nothing to complete
     try:
-        stashed = json.loads(pend.read_text(encoding="utf-8"))
+        stashed = load_json(pend)
     except (json.JSONDecodeError, OSError):
         return {}
 

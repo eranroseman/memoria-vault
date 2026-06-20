@@ -63,6 +63,7 @@ def agreement(parts: dict) -> tuple[float, list[str]]:
             "year differs across sources: "
             + "; ".join(f"{source}={year}" for source, year in years.items())
         )
+    # 0.5 penalty per disagreement: two disagreements (title + year) floors to 0.0.
     score = 1.0 - 0.5 * len(disagreements)
     return max(score, 0.0), disagreements
 

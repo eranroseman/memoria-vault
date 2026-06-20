@@ -32,7 +32,7 @@ if str(_RUNTIME_ROOT) not in sys.path:
 
 INTAKE_LOG = "system/logs/capture-intake.jsonl"
 
-from memoria.runtime.paths import resolve_vault  # noqa: E402
+from memoria.runtime.paths import resolve_vault
 
 
 def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:

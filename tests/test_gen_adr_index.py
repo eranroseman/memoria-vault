@@ -28,7 +28,7 @@ def _frontmatter(**overrides):
         "supersedes": "[]",
         "superseded_by": "[]",
     }
-    values.update(overrides)
+    values |= overrides
     body = "\n".join(f"{key}: {value}" for key, value in values.items())
     return f"---\n{body}\n---\n# body"
 
