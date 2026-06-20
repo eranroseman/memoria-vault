@@ -26,7 +26,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from memoria.runtime.vaultio import read_frontmatter  # noqa: E402
+from memoria.runtime.paths import load_json
+from memoria.runtime.vaultio import read_frontmatter
 
 DEFAULT_CASSETTE = Path("fixtures/test-env/cassettes/alpha6-l4-golden-path.json")
 SKIP_COPY = {".git"}
@@ -69,7 +70,7 @@ def arg_shape(value: Any) -> Any:
 
 
 def load_cassette(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = load_json(path)
     if data.get("schema_version") != 1:
         raise HarnessError(f"unsupported cassette schema_version: {data.get('schema_version')}")
     if data.get("match") != "tool_name+arg_shape":

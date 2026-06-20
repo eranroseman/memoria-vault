@@ -62,7 +62,7 @@ docstring-code-format = true
 #
 # Deliberately OFF: E1/E2/E3, W291/293, E501, COM, ISC, Q -- the formatter owns
 # layout (COM/ISC actively conflict with it). T20 (print is intentional in CLI),
-# LOG/G (no logging), PTH (already 100% pathlib), ANN/D (noise, no payoff),
+# LOG/G (no logging), PTH (already 100% pathlib), ANN/D (docstring presence is a judgement call, not a lint gate — see AGENTS.md §Python style),
 # SIM/PERF/FURB (opinionated terseness-over-clarity refactors).
 select = [
   "F", "E4", "E7", "E9", "W", "B", "I", "UP", "C4", "PIE", "RUF",
@@ -88,6 +88,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Tests legitimately use assert and run trusted subprocesses; bandit there is noise.
-"tests/**" = ["S"]
+# E402: test helpers do sys.path manipulation before imports.
+"tests/**" = ["S", "E402"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/e2e_smoke.py" = ["S101"]
+# src/.memoria scripts run with a custom sys.path set before imports.
+"src/.memoria/**" = ["E402"]
+"scripts/**" = ["E402"]
+# board_export re-exports symbols via __all__; F401 fires falsely on those imports.
+"src/.memoria/mcp/board_export.py" = ["E402", "F401"]

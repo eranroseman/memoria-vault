@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """eval_score.py — the deterministic vault-eval scorer (ADR-11: diagnostic, never gating).
 
 Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans the gold
@@ -108,9 +107,6 @@ def superseded_claims(vault: Path) -> set[str]:
     return out
 
 
-# --------------------------------------------------------------------------- #
-# Reading the result drop off the board
-# --------------------------------------------------------------------------- #
 def load_cards(from_json: Path | None = None) -> list[dict]:
     """The board's cards as dicts — a JSON file when given (tests/offline), else
     `hermes kanban list --json`. Mirrors mcp/board_export.py::load_cards (the
@@ -251,14 +247,12 @@ def score_run(vault: Path, cards: list[dict], quarter: str, k: int = DEFAULT_K) 
     aggregate: dict = {
         m: {"mean": round(sum(vs) / len(vs), 3), "n": len(vs)} for m, vs in sorted(sums.items())
     }
-    aggregate.update(
-        {
-            "tasks_total": len(tasks_out),
-            "tasks_scored": counts["scored"],
-            "tasks_reported": counts["reported"],
-            "tasks_unscored": counts["unscored"],
-        }
-    )
+    aggregate |= {
+        "tasks_total": len(tasks_out),
+        "tasks_scored": counts["scored"],
+        "tasks_reported": counts["reported"],
+        "tasks_unscored": counts["unscored"],
+    }
     now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "timestamp": now,

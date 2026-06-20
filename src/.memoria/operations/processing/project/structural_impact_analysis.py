@@ -127,27 +127,25 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     )
 
     payload = base_payload(project, thesis)
-    payload.update(
-        {
-            "argument_stage": maturity,
-            "evidence_saturation": saturation,
-            "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
-            "relation_count": len(component_edges),
-            "supports_count": support_count,
-            "contradicts_count": contradict_count,
-            "scope_overlap_count": scope_overlap,
-            "open_high_impact_gaps": high_open_gaps,
-            "impact_threshold": HIGH_IMPACT_THRESHOLD,
-            "refutation_floor_met": refutation_floor_met,
-            "refutation_sufficiency": refutation_sufficiency,
-            "saturation_conditions": {
-                "mature_graph": condition_1,
-                "no_high_impact_open_gaps": condition_2,
-                "refutation_sufficiency": condition_3,
-            },
-            "gap_findings": gap_findings,
-            "advisories": advisories,
-            "nodes": rows,
-        }
-    )
+    payload |= {
+        "argument_stage": maturity,
+        "evidence_saturation": saturation,
+        "displayed_confidence": "load-bearing" if maturity == "mature" else "below-threshold",
+        "relation_count": len(component_edges),
+        "supports_count": support_count,
+        "contradicts_count": contradict_count,
+        "scope_overlap_count": scope_overlap,
+        "open_high_impact_gaps": high_open_gaps,
+        "impact_threshold": HIGH_IMPACT_THRESHOLD,
+        "refutation_floor_met": refutation_floor_met,
+        "refutation_sufficiency": refutation_sufficiency,
+        "saturation_conditions": {
+            "mature_graph": condition_1,
+            "no_high_impact_open_gaps": condition_2,
+            "refutation_sufficiency": condition_3,
+        },
+        "gap_findings": gap_findings,
+        "advisories": advisories,
+        "nodes": rows,
+    }
     return payload

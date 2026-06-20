@@ -77,10 +77,6 @@ def iso_period(dt: datetime) -> str:
     return f"{y}-W{w:02d}"
 
 
-# _parse_ts: delegate to _shared.parse_iso
-_parse_ts = parse_iso
-
-
 def read_audit(vault: Path, period: str) -> dict[str, dict]:
     """Per-profile mutating-decision counts for `period` from audit.jsonl."""
     out: dict[str, dict] = {}
@@ -204,7 +200,7 @@ def _iter_jsonl(vault: Path, relpath: str, period: str | None):
     """Yield JSON rows from a JSONL log, filtered to `period` (None = all)."""
     for e in _iter_jsonl_raw(vault / relpath):
         if period is not None:
-            ts = _parse_ts(e.get("timestamp", ""))
+            ts = parse_iso(e.get("timestamp", ""))
             if ts is None or iso_period(ts) != period:
                 continue
         yield e
@@ -261,8 +257,8 @@ def _num(value) -> float | None:
 
 
 def _minutes_between(start, end) -> float | None:
-    t0 = _parse_ts(str(start or ""))
-    t1 = _parse_ts(str(end or ""))
+    t0 = parse_iso(str(start or ""))
+    t1 = parse_iso(str(end or ""))
     if t0 is None or t1 is None or t1 < t0:
         return None
     return (t1 - t0).total_seconds() / 60.0
@@ -277,7 +273,7 @@ def read_decision_time(vault: Path, period: str) -> dict[str, float]:
     for e in _iter_jsonl(vault, TRANSITIONS_RELPATH, None):  # need full history to pair
         if e.get("kind") != "review":
             continue
-        ts = _parse_ts(e.get("timestamp", ""))
+        ts = parse_iso(e.get("timestamp", ""))
         tid, lane, to = e.get("task_id"), e.get("lane", "unknown"), e.get("to")
         if ts is None or tid is None:
             continue

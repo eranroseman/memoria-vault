@@ -15,7 +15,7 @@ def _clean_env(extra: dict[str, str] | None = None) -> dict[str, str]:
     for key in GIT_HOOK_ENV:
         env.pop(key, None)
     if extra:
-        env.update(extra)
+        env |= extra
     return env
 
 
