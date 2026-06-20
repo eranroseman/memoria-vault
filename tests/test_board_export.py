@@ -9,6 +9,7 @@ from _util import CheckHarness
 
 BOARD_RELDIR = _m.BOARD_RELDIR
 BLIND_REVIEW_RELPATH = _m.BLIND_REVIEW_RELPATH
+COST_MISSES_RELPATH = _m.COST_MISSES_RELPATH
 COST_RELPATH = _m.COST_RELPATH
 DISPOSITION_RELPATH = _m.DISPOSITION_RELPATH
 Path = _m.Path
@@ -24,6 +25,44 @@ normalize = _m.normalize
 run_export = _m.run_export
 save_state_cache = _m.save_state_cache
 should_sample_blind_review = _m.should_sample_blind_review
+
+
+def _session_store(root, lane="memoria-writer"):
+    db = root / "profiles" / lane / "state.db"
+    db.parent.mkdir(parents=True, exist_ok=True)
+    fields = {
+        "id": "TEXT PRIMARY KEY",
+        "model": "TEXT",
+        "input_tokens": "INTEGER",
+        "output_tokens": "INTEGER",
+        "cache_read_tokens": "INTEGER",
+        "cache_write_tokens": "INTEGER",
+        "reasoning_tokens": "INTEGER",
+        "estimated_cost_usd": "REAL",
+        "actual_cost_usd": "REAL",
+        "cost_status": "TEXT",
+        "cost_source": "TEXT",
+        "billing_provider": "TEXT",
+        "pricing_version": "TEXT",
+    }
+    cols = ", ".join(f"{name} {spec}" for name, spec in fields.items())
+    with _m.sqlite3.connect(db) as con:
+        con.execute(f"CREATE TABLE sessions ({cols})")
+    return db
+
+
+def _insert_session(db, session_id="sess-1"):
+    with _m.sqlite3.connect(db) as con:
+        con.execute(
+            """INSERT INTO sessions (
+                id, model, input_tokens, output_tokens, cache_read_tokens,
+                cache_write_tokens, reasoning_tokens, estimated_cost_usd,
+                actual_cost_usd, cost_status, cost_source, billing_provider,
+                pricing_version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (session_id, "gpt-test", 800, 1200, 11, 22, 33, 0.41, 0.42,
+             "actual", "provider-usage", "openai", "2026-06"),
+        )
 
 
 def test_board_export():
@@ -110,44 +149,109 @@ def test_board_export():
             ev1 = export_events(vault, load_state_cache(vault), run1)
             save_state_cache(vault, run1)
             check("first run seeds cache, emits no events",
-                  ev1 == {"transitions": 0, "dispositions": 0, "costs": 0, "blind_reviews": 0})
+                  ev1 == {"transitions": 0, "dispositions": 0, "costs": 0,
+                          "cost_misses": 0, "blind_reviews": 0})
+
+            hermes_home = vault / ".hermes"
+            db = _session_store(hermes_home)
+            _insert_session(db)
+            seen_show = []
+
+            def show_card(task_id):
+                seen_show.append(task_id)
+                return {"task_id": task_id,
+                        "runs": [{"metadata": {"worker_session_id": "sess-1"}}]}
+
+            lookup = _m.HermesCostLookup(hermes_home=hermes_home, show_card=show_card)
 
             run2 = [
-                # e1: ready -> done, with cost + tokens
+                # e1: ready -> done; cost joins through `hermes kanban show` + state.db
                 {"task_id": "e1", "title": "x", "status": "done", "assignee": "memoria-writer",
-                 "metadata": {"review_status": "unreviewed", "cost": 0.42, "tokens_in": 800, "tokens_out": 1200}},
-                # e2: requested -> approved => accepted
+                 "metadata": {"review_status": "unreviewed"}},
+                # e2: requested -> approved => blind-review sample only; disposition is QuickAdd-owned
                 {"task_id": "e2", "title": "y", "status": "done", "assignee": "memoria-writer",
                  "metadata": {"review_status": "approved", "agent_recommendation": "clean",
                               "blind_rereview": True}},
-                # e3: requested -> approved but human edited first => edited (explicit override)
+                # e3: requested -> approved; no disposition inferred from card overlay
                 {"task_id": "e3", "title": "z", "status": "done", "assignee": "memoria-verifier",
                  "metadata": {"review_status": "approved", "disposition": "edited"}},
             ]
-            ev2 = export_events(vault, load_state_cache(vault), run2)
+            ev2 = export_events(vault, load_state_cache(vault), run2, cost_lookup=lookup)
             save_state_cache(vault, run2)
             check("second run logs three transitions (e1 status, e2/e3 review)", ev2["transitions"] == 3)
             check("second run logs cost on completion", ev2["costs"] == 1)
-            check("second run logs two dispositions", ev2["dispositions"] == 2)
+            check("session id came from card detail", seen_show == ["e1"])
+            check("second run does not infer dispositions from board metadata", ev2["dispositions"] == 0)
+            check("second run has no cost misses", ev2["cost_misses"] == 0)
             check("second run samples one blind re-review", ev2["blind_reviews"] == 1)
 
-            disp = [json.loads(ln) for ln in (vault / DISPOSITION_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
-            by_id = {d["task_id"]: d for d in disp}
-            check("approve -> accepted", by_id["e2"]["disposition"] == "accepted")
-            check("explicit edited overrides accepted", by_id["e3"]["disposition"] == "edited")
             cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
-            check("cost row carries spend + tokens", cost["cost"] == 0.42 and cost["tokens_out"] == 1200)
+            check("cost row carries joined spend + tokens",
+                  cost["session_id"] == "sess-1" and cost["cost"] == 0.42
+                  and cost["tokens_out"] == 1200 and cost["cost_source"] == "provider-usage")
             blind = json.loads((vault / BLIND_REVIEW_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
             check("blind re-review row carries terminal review context",
                   blind["task_id"] == "e2" and blind["sample_reason"] == "blind-rereview")
             tr = [json.loads(ln) for ln in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
             check("transition records status change e1 ready->done",
                   any(t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr))
-            check("no spurious events on an unchanged re-run", export_events(vault, load_state_cache(vault), run2) ==
-                  {"transitions": 0, "dispositions": 0, "costs": 0, "blind_reviews": 0})
+            check("no spurious events on an unchanged re-run",
+                  export_events(vault, load_state_cache(vault), run2, cost_lookup=lookup) ==
+                  {"transitions": 0, "dispositions": 0, "costs": 0,
+                   "cost_misses": 0, "blind_reviews": 0})
 
         return t.summary()
     assert _run() == 0
+
+
+def test_cost_join_missing_session_is_reported_without_cost_row(tmp_path):
+    db = _session_store(tmp_path / ".hermes")
+    run1 = [_card("cost-miss", "ready")]
+    save_state_cache(tmp_path, run1)
+    run2 = [{"task_id": "cost-miss", "title": "x", "status": "done",
+             "assignee": "memoria-writer", "metadata": {"review_status": "unreviewed"},
+             "runs": [{"metadata": {"worker_session_id": "missing-session"}}]}]
+    lookup = _m.HermesCostLookup(hermes_home=tmp_path / ".hermes")
+
+    ev = export_events(tmp_path, load_state_cache(tmp_path), run2, cost_lookup=lookup)
+
+    assert ev["costs"] == 0
+    assert ev["cost_misses"] == 1
+    assert not (tmp_path / COST_RELPATH).exists()
+    miss = json.loads((tmp_path / COST_MISSES_RELPATH).read_text(encoding="utf-8").strip())
+    assert miss["reason"] == "missing-session-row"
+    assert miss["session_id"] == "missing-session"
+    assert db.exists()
+
+
+def test_cost_doctor_fails_closed_on_session_schema_drift(tmp_path):
+    db = tmp_path / ".hermes/profiles/memoria-writer/state.db"
+    db.parent.mkdir(parents=True, exist_ok=True)
+    with _m.sqlite3.connect(db) as con:
+        con.execute("CREATE TABLE sessions (id TEXT PRIMARY KEY)")
+
+    try:
+        _m.run_cost_doctor(tmp_path / ".hermes")
+    except _m.CostDoctorError as exc:
+        assert "schema drift" in str(exc)
+        assert "actual_cost_usd" in str(exc)
+    else:
+        raise AssertionError("schema drift should fail closed")
+
+
+def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
+    _session_store(tmp_path / ".hermes")
+    lookup = _m.HermesCostLookup(
+        hermes_home=tmp_path / ".hermes",
+        show_card=lambda task_id: {"task_id": task_id, "runs": [{"metadata": {}}]},
+    )
+
+    try:
+        lookup({"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, _m.now_iso())
+    except _m.CostDoctorError as exc:
+        assert "runs[].metadata.worker_session_id" in str(exc)
+    else:
+        raise AssertionError("missing worker_session_id should fail closed")
 
 
 # --------------------------------------------------------------------------- #

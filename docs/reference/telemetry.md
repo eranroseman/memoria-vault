@@ -29,8 +29,9 @@ and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
 | `audit.jsonl` | policy MCP | per gated decision | one policy decision (`allow` / `allow_with_log` / `deny` / `dry_run`) |
 | `board-state.jsonl` | `board_export.py` | per export run | a snapshot of per-lane queue counts |
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
-| `disposition.jsonl` | `board_export.py` | per export run | one review reaching a terminal outcome (see Hermes-dependency note below) |
-| `cost.jsonl` | `board_export.py` | per export run | one card's API spend at completion (see Hermes-dependency note below) |
+| `disposition.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one human review disposition over a work prompt |
+| `cost.jsonl` | `board_export.py` | per export run | one completed card joined to a Hermes session cost row |
+| `cost-misses.jsonl` | `board_export.py` | per export run | one completed card whose Hermes session join could not be completed |
 | `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |
 | `triage.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI triage decision over an Inbox card |
 | `blind-review-samples.jsonl` | `board_export.py` | per export run | one terminal review selected for blind re-review |
@@ -42,7 +43,14 @@ and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
 
 Derived, not raw: `system/metrics/lane-<lane>-<period>.md` notes are *computed* by `metrics_aggregate.py` from the logs above; they are reference output, not a capture point. See [their schema](#derived-lane-metric-notes) below. Likewise derived: `system/metrics/eval/runs.jsonl`, one line per scored vault-eval run, written by `eval_score.py` from the board's eval-card results — schema in [Vault eval](vault-eval.md).
 
-> **`disposition.jsonl` and `cost.jsonl` are currently empty — but the data is reachable.** `board_export.py` derives these two from the card `metadata` overlay returned by `hermes kanban list --json`, which omits run metadata and cost — so both files stay empty today. This was previously described as an upstream limitation; it is not. Hermes (v0.14.0) **does** record per-call cost and tokens, in its per-profile session store (`~/.hermes/profiles/<lane>/state.db`, `sessions` table), reachable via `hermes kanban show <id> --json` (`runs[].metadata.worker_session_id`) joined to that store; disposition is a human review decision capturable at the review action, not from a card overlay. The fix and its trade-offs are [ADR-106 (cost and disposition capture)](../adr/106-cost-and-disposition-capture.md). The other signals (`board-state`, `board-transitions` status changes, `audit`, `lint-findings`) are unaffected.
+> **Hermes-dependent cost capture.** `board_export.py --cost-doctor` validates the
+> pinned Hermes session-store shape before live exports trust cost joins. On a
+> completion transition, the exporter reads `hermes kanban show <id> --json` for
+> `runs[].metadata.worker_session_id`, joins that ID to
+> `~/.hermes/profiles/<lane>/state.db` (`sessions` table), and writes `cost.jsonl`.
+> CLI or schema drift fails closed with a clear doctor error. Normal data misses
+> such as a missing profile database or missing session row are counted in
+> `cost-misses.jsonl` and do not create a bogus zero-cost row.
 
 ## Diagnostic Plane
 
@@ -109,28 +117,64 @@ The card-level state-change stream — the spine the other event logs hang off. 
 
 ## disposition.jsonl
 
-The **un-backfillable** signal: what the human actually did with a finished card. Emitted when a card's `review_status` reaches a terminal outcome.
+The **un-backfillable** signal: what the human actually did with a finished work
+prompt. Emitted by the `Memoria: resolve inbox card` QuickAdd command at the same
+moment it writes `attention.jsonl` and `triage.jsonl`; it is not inferred from
+board metadata or terminal `review_status`.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "edited", "agent_recommendation": "clean"}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "work_prompt_reviewed", "path": "inbox/work-prompt-review-x.md", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "edited", "outcome": "current (edited)", "agent_recommendation": "clean", "source": "quickadd.resolve-inbox-card"}
 ```
 
 | Field | Values |
 | --- | --- |
+| `event` | currently `work_prompt_reviewed` |
+| `path` | vault-relative Inbox card path |
 | `disposition` | `accepted` \| `edited` \| `rejected` — the three-way human verdict |
+| `outcome` | visible resolve choice: `current (accept)`, `current (edited)`, or `archived (reject)` |
 | `agent_recommendation` | what the agent proposed (values in the [Glossary](glossary.md) Verdicts table); pairs the agent's self-assessment against the human's call |
+| `source` | currently `quickadd.resolve-inbox-card` |
 
-The terminal mapping is: `review_status: approved → accepted`, `rejected → rejected`. A card may override the default by setting `metadata.disposition` explicitly — this is the only way to record `edited` (accepted-after-changes), which the board's `review_status` cannot express on its own. **Without `edited` you cannot distinguish "accepted as written" from "accepted after I fixed it," which is the core acceptance-quality measure for the paper — hence un-backfillable.**
+Only `work-prompt` cards with a `task_id` write a disposition row. `archived (done
+/ no action)` remains a generic Inbox cleanup outcome and does not count as a
+finished-work review. The explicit `current (edited)` outcome is how the human
+records accepted-after-changes; without it the system cannot distinguish "accepted
+as written" from "accepted after I fixed it."
 
 ## cost.jsonl
 
-API spend and token counts, captured once, at the transition into `status: done` (cost is only final when the work is).
+API spend and token counts, captured once, at the transition into `status: done`
+(cost is only final when the work is). The row is not copied from card metadata:
+`board_export.py` looks up `runs[].metadata.worker_session_id` with
+`hermes kanban show <id> --json`, then joins that ID to the lane profile's
+Hermes `state.db` `sessions` row.
 
 ```json
-{"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "cost": 0.0142, "tokens_in": 8200, "tokens_out": 1450}
+{"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "session_id": "20260601_190628_c5e9fb", "cost": 0.0142, "tokens_in": 8200, "tokens_out": 1450, "input_tokens": 8200, "output_tokens": 1450, "cache_read_tokens": 0, "cache_write_tokens": 0, "reasoning_tokens": 0, "estimated_cost_usd": 0.0142, "actual_cost_usd": 0.0142, "cost_status": "actual", "cost_source": "provider-usage", "billing_provider": "openai", "pricing_version": "2026-06", "model": "gpt-test", "source": "hermes-session-store"}
 ```
 
-`cost` is USD (float); `tokens_in` / `tokens_out` are integers. Any field may be `""` (empty string) if the card never carried it — consumers must tolerate missing values rather than assume zero.
+`cost` is USD and prefers `actual_cost_usd`, falling back to `estimated_cost_usd`
+when the actual value is absent. `tokens_in` / `tokens_out` are compatibility
+aliases for `input_tokens` / `output_tokens`; consumers should prefer the explicit
+Hermes field names for new work. The provenance fields (`session_id`, `cost_status`,
+`cost_source`, `billing_provider`, `pricing_version`, `model`, `source`) preserve
+where the number came from.
+
+Run `python src/.memoria/mcp/board_export.py --cost-doctor` to validate the
+current Hermes session-store contract. Schema drift or a `hermes kanban show`
+contract change fails closed; missing data is reported separately and never
+materialized as zero spend.
+
+## cost-misses.jsonl
+
+Completion transitions whose cost join could not produce a trustworthy row.
+
+```json
+{"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "reason": "missing-session-row", "session_id": "20260601_190628_c5e9fb", "source": "hermes-session-store"}
+```
+
+`reason` is currently `missing-state-db` or `missing-session-row`. These rows are
+quality counters, not cost facts, and downstream spend totals must ignore them.
 
 ## attention.jsonl
 

@@ -17,7 +17,7 @@ nav_order: 106
 
 ## Context
 
-Two analytics signals the publication path depends on ([ADR-20](20-publication-path.md)) — per-card **cost/tokens** and reviewer **disposition** (accept / edit / reject) — are empty. The reference doc attributed this to an upstream limitation: that the current Hermes does not surface a cost/token overlay in its serialized card JSON, so the exporter has nothing to read. Verification against the installed Hermes (v0.14.0) showed that explanation is misleading. Hermes **does** compute and persist per-call cost and token usage — in its per-profile session store, not on the card — and the data is reachable from Memoria without modifying Hermes. The current exporter simply queries the one CLI endpoint (`kanban list --json`) that drops it. These signals cannot be back-filled ([ADR-20](20-publication-path.md)), so every day they stay empty is permanently lost data; the fix should not wait on an upstream change that is not actually required.
+At the time of this decision, two analytics signals the publication path depends on ([ADR-20](20-publication-path.md)) — per-card **cost/tokens** and reviewer **disposition** (accept / edit / reject) — were empty. The reference doc attributed this to an upstream limitation: that the current Hermes did not surface a cost/token overlay in its serialized card JSON, so the exporter had nothing to read. Verification against the installed Hermes (v0.14.0) showed that explanation was misleading. Hermes **does** compute and persist per-call cost and token usage — in its per-profile session store, not on the card — and the data is reachable from Memoria without modifying Hermes. The exporter was querying the one CLI endpoint (`kanban list --json`) that drops it. These signals cannot be back-filled ([ADR-20](20-publication-path.md)), so every day they stayed empty was permanently lost data; the fix should not wait on an upstream change that is not actually required.
 
 ## Decision
 
@@ -30,12 +30,12 @@ Because this couples to Hermes's internal, undocumented SQLite schema, the **Her
 
 ## Consequences
 
-- Both benchmark signals become populated from existing data, on Memoria's own schedule, with no Hermes modification and no inference-path risk.
+- Both benchmark signals are populated at Memoria-controlled capture points, with no Hermes modification and no inference-path risk.
 - The cost figure is Hermes's **estimate** (with the current kilocode provider `actual_cost_usd` is null); the recorded `cost_source` / `pricing_version` make that explicit rather than silently presenting an estimate as actual.
 - Coupling to a private Hermes DB schema is brittle across upgrades — pinning plus an upgrade-time doctor is the standing maintenance cost this accepts.
 - Cost capture is per-card via a `kanban show` call per completed card and a session-store lookup; session rotation can occasionally drop an aged session (observed ~1 in 13), so a small miss rate is expected and not treated as an error.
 - The misleading "upstream limitation" note in [Telemetry & logs](../reference/telemetry.md) is corrected to describe the real mechanism and its brittleness.
-- [ADR-62](62-measurement-and-verification-harnesses.md)'s current implementation mapping must be amended: the cost/disposition gap is no longer "wait for Hermes card overlay"; it is "implement and guard the session-store/review-action capture path."
+- [ADR-62](62-measurement-and-verification-harnesses.md)'s current implementation mapping records the session-store/review-action capture path.
 
 ## When this matters
 

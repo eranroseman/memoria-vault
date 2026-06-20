@@ -128,11 +128,13 @@ Run the [GUI test plan](gui-test-plan.md) on the Windows side and **fully comple
 
 ```bash
 hermes cron run memoria-board-export        # or: hermes cron tick
-ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings}.jsonl
+python src/.memoria/mcp/board_export.py --cost-doctor
+ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings,cost}.jsonl
 ```
 
 - [ ] `board-state`, `board-transitions`, `audit`, and `lint-findings` all gain rows from the live activity above.
-- [ ] **Known limitation (not a defect):** `disposition.jsonl` + `cost.jsonl` stay empty — they read the card `metadata` overlay the current Hermes doesn't surface; `board_export.py` is ready to emit them when it does. Record this in the release's known-limitations section.
+- [ ] The cost doctor passes before live export trusts the Hermes session-store join; any missing cost rows are counted in `cost-misses.jsonl`, not treated as zero.
+- [ ] Resolve at least one `work-prompt` through `Memoria: resolve inbox card` and confirm `disposition.jsonl` gains an `accepted`, `edited`, or `rejected` row from the human action surface.
 
 ## G7 — no High-priority blockers
 

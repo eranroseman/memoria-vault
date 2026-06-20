@@ -326,14 +326,19 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
     assert '"retracted"' not in script
     assert '"current (accept)": "current"' in script
+    assert '"current (edited)": "current"' in script
     assert '"archived (reject)": "archived"' in script
     assert '"archived (done / no action)": "archived"' in script
+    assert '"current (edited)": "edited"' in script
     assert 'ATTENTION_LOG = "system/logs/attention.jsonl"' in script
     assert 'TRIAGE_LOG = "system/logs/triage.jsonl"' in script
+    assert 'DISPOSITION_LOG = "system/logs/disposition.jsonl"' in script
     assert 'event: "inbox_card_resolved"' in script
+    assert 'event: "work_prompt_reviewed"' in script
     assert 'duration_minutes: durationMinutes(openedAt, resolvedAt)' in script
     assert 'appendJsonl(app, ATTENTION_LOG, attentionRow)' in script
     assert 'appendJsonl(app, TRIAGE_LOG, triageRow)' in script
+    assert 'appendJsonl(app, DISPOSITION_LOG, dispositionRow)' in script
 
 
 def test_delegate_task_picker_uses_work_labels_not_profile_ids():
