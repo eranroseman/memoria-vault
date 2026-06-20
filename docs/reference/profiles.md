@@ -19,7 +19,7 @@ One conversational agent (the Co-PI) plus four background agents, each defined b
 | `memoria-librarian` | Faithful | Finds, ingests, enriches, and draft-classifies evidence. Four processing lanes: catalog · extract · link · map. | `dispatched` | `claude-haiku-latest` |
 | `memoria-writer` | Generative | Drafts and synthesizes into project scratch; review-gated. | `dispatched` | `claude-sonnet-latest` |
 | `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
-| `memoria-engineer` | Coordinating | The code lane: scaffolds handoffs to an external coding agent and owns the commit/revert gate in `projects/*/code/`. | `dispatched` | `claude-haiku-latest` |
+| `memoria-engineer` | Coordinating | The code lane: writes scoped handoff/provenance notes for an external coding agent under `projects/*/code/`; substantive coding and git stay outside Memoria. | `dispatched` | `claude-haiku-latest` |
 
 These are the `MEMORIA_ENV=prod` defaults rendered by the installer. Linux/WSL test installs may render all five profiles to a local OpenAI-compatible Ollama endpoint with `MEMORIA_ENV=test`; see [Installer environment overlays](installer.md#environment-overlays).
 
@@ -98,6 +98,15 @@ For the full per-skill map (names and lanes) see the [Hermes CLI](hermes-cli.md)
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
 - **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, operations, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)); enforced by `test_no_profile_has_direct_world_access`.
+
+Enforcement is split deliberately:
+
+| Contract | Runtime status | Drift check |
+| --- | --- | --- |
+| Direct-world toolsets are absent from shipped profile config | Enforced by rendered Hermes profile configuration and disabled toolsets | `tests/test_profiles.py` |
+| Obsidian write tools obey lane path scopes | Enforced at runtime by the fail-closed `memoria-policy-gate` plugin | Policy and lane-scope tests |
+| Registry allowlist matches profile skill metadata and profile config | Checked as a source-of-truth contract | `tests/test_profiles.py` |
+| General tool-call gating from `tool-registry.yaml` inside the policy MCP/hook | Not built yet; the registry header tracks this as TODO | Registry drift tests only |
 
 ---
 

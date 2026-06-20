@@ -29,6 +29,8 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, the 27 skills, PI palette — with performer and purpose |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities |
+| [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior |
+| [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract |
 | [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |
@@ -54,6 +56,8 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention (append-only forever) |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys |
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas and derived metric-note contracts |
+| [Board export](board-export.md) | Hermes Kanban projection command, generated board files, event logs, and cost-join failure modes |
+| [Fleet metrics](fleet-metrics.md) | Weekly lane metrics, trust-score formula, inputs, bands, and low-confidence behavior |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract |
 
 ## System and infrastructure

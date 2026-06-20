@@ -8,7 +8,7 @@ nav_order: 3
 
 Stage a source from a guided form when you're entering its metadata by hand — a report, a web page, a dataset, or a paper you want to log without running the enrichment pipeline. The **structured source capture** form (a Modal Forms form, [ADR-71](../../adr/71-structured-capture-forms.md)) collects schema-valid fields and writes a proper `source` note plus an Inbox candidate, so a hand-entered source still arrives shaped like every other one.
 
-This guide covers the **source-capture** form specifically. The project on-ramp form is a different surface — see [Start a writing project](../project/start-a-writing-project.md).
+This guide covers the **source-capture** form specifically. The project on-ramp form is a different surface — see [Start a writing project](../project/start-a-writing-project.md). Four other generated Modal Forms definitions (`memoria-fleeting-capture`, `memoria-claim-capture`, `memoria-hub-capture`, and `memoria-thesis-capture`) are kept schema-aligned for future/personal capture use, but they do not currently have dedicated Memoria palette wrappers.
 
 ## When to use the form
 
