@@ -1,6 +1,6 @@
 """The canonical schema home (ADR-47/49/50): every consumer reads .memoria/schemas/."""
 
-import schema
+from operations.lib import schema
 
 
 def test_all_types_load():

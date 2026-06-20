@@ -27,8 +27,6 @@ metadata:
 
 # link-suggest-claim
 
-*(legacy name: `relation-suggest`; load on disk as `link-suggest-claim`.)*
-
 Find the edges the PI hasn't drawn yet. Claims accumulate faster than their
 connections; this skill proposes typed links — `supports`, `contradicts`, `extends` —
 with the textual evidence for each edge. **The PI confirms at the link gate**: authored

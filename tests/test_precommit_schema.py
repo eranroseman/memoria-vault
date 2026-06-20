@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import precommit_check
+from operations.integrity.linter import precommit_check
 
 
 def _vault(tmp_path: Path) -> Path:

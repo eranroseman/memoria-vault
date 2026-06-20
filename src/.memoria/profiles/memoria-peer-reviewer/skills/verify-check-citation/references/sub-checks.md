@@ -1,10 +1,9 @@
 # The four claim sub-checks in detail
 
-This is the per-check detail for the four non-retraction verification sub-checks that
-shipped as the legacy `claim-checks` skill. Under the `<task>-<verb>-<object>` skill registry
-(Appendix C) they split: **cite-check** is the `verify-check-citation` skill, **claim-trace**
-is the `verify-trace-claim` skill, and the two duplicate detectors (**similarity-check**,
-**find-duplicates**) are slated for the deterministic sweeps operation
+This is the per-check detail for the four non-retraction verification sub-checks. Under
+the `<task>-<verb>-<object>` skill registry, **verify-check-citation** handles citation
+support, **verify-trace-claim** handles claim traceability, and the two duplicate
+detectors are slated for the deterministic sweeps operation
 (`sweep:check-similarity` / `sweep:find-duplicates`) — until that operation lands, the
 Peer-reviewer may still run them ad hoc from this reference. The retraction sub-check is the
 sweeps operation's `sweep:check-retraction`, and the completeness sub-check is a final gate
@@ -15,7 +14,7 @@ card for revision. Across all four, the governing rule is mechanical-first, inte
 never: you check whether a citekey resolves or a claim traces, not whether the underlying
 claim is true.
 
-## 1. Citation check (cite-check)
+## 1. Citation check
 
 Every `[@citekey]` in the draft must resolve to a real paper note in `catalog/papers/`.
 

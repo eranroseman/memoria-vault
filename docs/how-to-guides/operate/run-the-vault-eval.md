@@ -10,7 +10,7 @@ Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks,
 
 ## When to run it by hand
 
-- After a release upgrade or a profile change, to confirm capability didn't regress ([Upgrade the vault to a new release](upgrade-to-a-new-release.md))
+- After installing a fresh release vault or changing profiles, to confirm capability didn't regress
 - When the eval-trend dashboard shows a dip you want to reproduce immediately
 - To smoke-test a fresh vault once the gold-set papers (Transformer, BERT, ResNet, Adam, Dropout) are ingested
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """Project-gate structural impact cache.
 
 Reads the thesis-rooted argument graph (`links.supports` / `links.contradicts`)
@@ -12,9 +13,13 @@ import json
 import sys
 from pathlib import Path
 
-from structural_impact_analysis import analyze
-from structural_impact_gap import gap_taxonomy
-from structural_impact_graph import (
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.processing.project.structural_impact_analysis import analyze
+from operations.processing.project.structural_impact_gap import gap_taxonomy
+from operations.processing.project.structural_impact_graph import (
     Edge,
     Note,
     adjacency,
@@ -35,14 +40,14 @@ from structural_impact_graph import (
     truthy,
     values_as_set,
 )
-from structural_impact_payload import (
+from operations.processing.project.structural_impact_payload import (
     ADVISORY_GAP_KINDS,
     CONFIDENT_GAP_KINDS,
     HIGH_IMPACT_THRESHOLD,
     MATURITY_RELATION_THRESHOLD,
     base_payload,
 )
-from structural_impact_render import (
+from operations.processing.project.structural_impact_render import (
     JSON_END,
     JSON_START,
     generated_path,
@@ -51,7 +56,7 @@ from structural_impact_render import (
     run,
     stable_payload,
 )
-from structural_impact_survey import analyze_survey
+from operations.processing.project.structural_impact_survey import analyze_survey
 
 __all__ = [
     "ADVISORY_GAP_KINDS",

@@ -58,8 +58,8 @@ def assert_executable(path: Path, label: str) -> None:
 def add_repo_paths(root: Path) -> None:
     for path in (
         root,
-        root / "src/.memoria/operations/processing/ingest",
-        root / "src/.memoria/operations/lib",
+        root / "src/.memoria",
+        root / "src/.memoria/mcp",
     ):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))
@@ -68,10 +68,8 @@ def add_repo_paths(root: Path) -> None:
 def assert_offline_ingest(root: Path, vault: Path) -> None:
     add_repo_paths(root)
 
-    import ingest_paper
-    import schema
-
-    import inbox
+    from operations.lib import inbox, schema
+    from operations.processing.ingest import ingest_paper
 
     bib = (
         "@article{x2024demo,\n"

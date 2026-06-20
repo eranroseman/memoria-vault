@@ -30,7 +30,7 @@ Also confirm the registration list is clean:
 hermes profile list
 ```
 
-Exactly the five `memoria-*` profiles — a retired name still registered is drift too ([Installer (bootstrap)](../../reference/installer.md) lists them); the installer prunes them on the next run.
+The five `memoria-*` profiles should be present.
 
 ## Diagnose before fixing
 

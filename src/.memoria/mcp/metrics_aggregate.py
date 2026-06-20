@@ -207,9 +207,9 @@ def read_cost(vault: Path, period: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for e in _iter_jsonl(vault, COST_RELPATH, period):
         rec = out.setdefault(e.get("lane", "unknown"),
-                             {"cost": 0.0, "tokens_in": 0, "tokens_out": 0, "cards": 0})
+                             {"cost": 0.0, "input_tokens": 0, "output_tokens": 0, "cards": 0})
         rec["cards"] += 1
-        for k in ("cost", "tokens_in", "tokens_out"):
+        for k in ("cost", "input_tokens", "output_tokens"):
             try:
                 rec[k] += float(e.get(k) or 0)
             except (TypeError, ValueError):
@@ -367,7 +367,8 @@ def compute_lane(lane: str, audit: dict, board: dict, drift: int,
         "card_open_resolve_min": att.get("card_open_resolve_min"),
         "blind_rereview_samples": blind_samples,
         "cost": round(c.get("cost", 0.0), 4),
-        "tokens_in": int(c.get("tokens_in", 0)), "tokens_out": int(c.get("tokens_out", 0)),
+        "input_tokens": int(c.get("input_tokens", 0)),
+        "output_tokens": int(c.get("output_tokens", 0)),
         "consistency_passk": None,   # pass^k needs repeated-run data; harness TODO (see header)
     }
 
@@ -384,7 +385,7 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
         "expand_then_accept_min": m["expand_then_accept_min"],
         "card_open_resolve_min": m["card_open_resolve_min"],
         "blind_rereview_samples": m["blind_rereview_samples"],
-        "cost": m["cost"], "tokens_in": m["tokens_in"], "tokens_out": m["tokens_out"],
+        "cost": m["cost"], "input_tokens": m["input_tokens"], "output_tokens": m["output_tokens"],
         "consistency_passk": m["consistency_passk"],
         "samples": m["samples"], "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
@@ -407,7 +408,7 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
               f"- runs: done {m['done']}, blocked {m['blocked']}",
               f"- deny_rate {m['deny_rate']} · success_rate {m['success_rate']} · retry_rate {m['retry_rate']}",
               f"- review: accepted {m['accepted']} / edited {m['edited']} / rejected {m['rejected']}{ratio}",
-              f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['tokens_in']}/{m['tokens_out']}",
+              f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['input_tokens']}/{m['output_tokens']}",
               f"- attention: time-on-gate {gate} · expand-to-accept {expand} · card-open-to-resolve {resolve}",
               f"- blind re-review samples: {m['blind_rereview_samples']}",
               "",

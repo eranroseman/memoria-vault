@@ -88,7 +88,7 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 | `memoria-peer-reviewer` | 4 |
 | `memoria-engineer` | 0 — the code lane scaffolds an external-agent handoff |
 
-For the full per-skill map (names, lanes, and legacy-name aliases) see the [Hermes CLI](hermes-cli.md) reference.
+For the full per-skill map (names and lanes) see the [Hermes CLI](hermes-cli.md) reference.
 
 ---
 
@@ -101,9 +101,9 @@ For the full per-skill map (names, lanes, and legacy-name aliases) see the [Herm
 
 ---
 
-## Retired profiles (v0.1.0-alpha.1 → v0.1.0-alpha.2)
+## Retired profiles (historical)
 
-The previous seven-profile fleet consolidated into the five above ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). The installer prunes stale `memoria-*` profiles from `~/.hermes/profiles/` on upgrade so an old SOUL never answers the ACP pane:
+The previous seven-profile fleet consolidated into the five above ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). These names are historical; the installer deploys only the five current profiles.
 
 | Retired profile | Where its job went |
 | --- | --- |

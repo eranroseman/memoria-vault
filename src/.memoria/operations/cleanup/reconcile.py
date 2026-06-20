@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""reconcile.py — the ingest backstops (ADR-30) + the chat-export stamp (#185).
+"""reconcile.py — the ingest backstops (ADR-30).
 
 Re-ingest must be **board-serialized** (ADR-30): find-or-create is idempotent in
 writes but only safe under the single-lane WIP=1 invariant, which only serializes
@@ -15,21 +15,7 @@ Two distinct backstops, distinct sources:
   (b) retry      — scan the vault for notes still at `ingest_status: tier0`
                    (Tier-1 never completed) and re-drive their enrichment.
 
-A third pass rides the same cron but is NOT a re-ingest detector:
-
-  (c) stamp      — legacy ACP-pane session exports land in notes/fleeting/chats/ as bare
-                   markdown (the agent-client plugin writes no Memoria frontmatter).
-                   This pass prepends valid fleeting frontmatter (type: fleeting,
-                   lifecycle: proposed, origin: chat) so the exports surface in the
-                   existing fleeting triage flow (fleeting.base, the stale-fleeting
-                   detector) instead of rotting. It writes the vault DIRECTLY —
-                   exempt from the board-serialization rule above because it is a
-                   deterministic, idempotent, single-file rewrite with no
-                   find-or-create semantics, on files no board lane touches (sole
-                   other writer = the Obsidian plugin, which writes once on close).
-                   Files that already start with a frontmatter fence are skipped.
-
-`--dry-run` reports what *would* be enqueued/stamped without touching anything.
+`--dry-run` reports what *would* be enqueued without touching anything.
 
 capture-intake.jsonl record (one JSON object per line, append-only; written by the
 capture entry point *before* the gated note write — the durability anchor):
@@ -44,15 +30,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-# import the shared frontmatter reader from the linker (same scripts dir)
-try:
-    from link import read_frontmatter
-except ImportError:  # executed from elsewhere
-    sys.path.insert(0, str(Path(__file__).parent))
-    from link import read_frontmatter
+from operations.processing.ingest.link import read_frontmatter
 
 SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
-CHATS_FOLDER = "notes/fleeting/chats"  # legacy ACP-pane export stamp target
 LIBRARIAN = "memoria-librarian"
 SKILL = "catalog-enrich-record"  # the catalog lane's ingest skill
 
@@ -151,66 +131,27 @@ def retry(vault: Path, dry_run: bool = False) -> dict:
     return {"pass": "retry", "stuck": len(stuck), "enqueued": enqueued, "dry_run": dry_run}
 
 
-def _chat_frontmatter(md: Path) -> str:
-    """Build the fleeting stamp for one exported chat file."""
-    import datetime
-    title = md.stem.replace("_", " ").strip() or md.stem
-    created = datetime.date.fromtimestamp(md.stat().st_mtime).isoformat()
-    safe_title = title.replace("\\", "\\\\").replace('"', '\\"')
-    return ("---\n"
-            f'title: "{safe_title}"\n'
-            "type: fleeting\n"
-            "lifecycle: proposed\n"
-            "origin: chat\n"
-            f"created: {created}\n"
-            "---\n")
-
-
-def stamp_chats(vault: Path, dry_run: bool = False) -> dict:
-    """(c) stamp bare ACP chat exports in notes/fleeting/chats/ with fleeting frontmatter.
-
-    Idempotent: a file that already opens with a `---` frontmatter fence is left
-    untouched, so a second sweep (or a hand-edited export) is a no-op.
-    """
-    folder = vault / CHATS_FOLDER
-    stamped, skipped = [], 0
-    if not folder.is_dir():
-        return {"pass": "stamp", "stamped": [], "skipped": 0, "dry_run": dry_run}
-    for md in sorted(folder.rglob("*.md")):
-        text = md.read_text(encoding="utf-8", errors="ignore")
-        if text.lstrip().startswith("---"):
-            skipped += 1
-            continue
-        if not dry_run:
-            md.write_text(_chat_frontmatter(md) + "\n" + text, encoding="utf-8")
-        stamped.append(str(md.relative_to(vault)))
-    return {"pass": "stamp", "stamped": stamped, "skipped": skipped, "dry_run": dry_run}
-
-
 # --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(
-        description="Ingest backstops: reconcile + retry sweeps (ADR-30) + chat-export stamp (#185)")
+        description="Ingest backstops: reconcile + retry sweeps (ADR-30)")
     ap.add_argument("--vault", help="vault root")
     ap.add_argument("--log", help="capture-intake.jsonl (default <vault>/system/logs/capture-intake.jsonl)")
     ap.add_argument("--reconcile", action="store_true", help="run pass (a) only")
     ap.add_argument("--retry", action="store_true", help="run pass (b) only")
-    ap.add_argument("--stamp-chats", action="store_true", help="run pass (c) only")
-    ap.add_argument("--dry-run", action="store_true", help="report without enqueuing/stamping")
+    ap.add_argument("--dry-run", action="store_true", help="report without enqueuing")
     a = ap.parse_args()
     if not a.vault:
         ap.error("provide --vault")
     vault = Path(a.vault)
     log = Path(a.log) if a.log else vault / "system/logs/capture-intake.jsonl"
-    do_all = not (a.reconcile or a.retry or a.stamp_chats)
+    do_all = not (a.reconcile or a.retry)
     out = []
     if a.reconcile or do_all:
         out.append(reconcile(log, vault, a.dry_run))
     if a.retry or do_all:
         out.append(retry(vault, a.dry_run))
-    if a.stamp_chats or do_all:
-        out.append(stamp_chats(vault, a.dry_run))
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0
 

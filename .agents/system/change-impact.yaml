@@ -39,7 +39,6 @@ areas:
       - src/.memoria/mcp/policy_hook.py
       - src/.memoria/plugins/memoria-policy-gate/**
       - memoria/runtime/policy/**
-      - src/.memoria/memoria_runtime/policy/**
     inspect:
       - Lane overrides and gated-prefix schema
       - Audit contract

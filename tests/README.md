@@ -6,7 +6,7 @@ They live here as standalone files so the shipped vault carries no test code.
 - `test_*.py` — one per module under test; imports the module and asserts its contract
   on synthetic fixtures (no vault runtime, no network).
 - `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
-  `pythonpath` for legacy loose runtime modules that have not moved yet.
+  `pythonpath` entries for the package root, MCP entrypoints, scripts, and CI helpers.
 - `_util.py` — the shared `CheckHarness`.
 
 Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the
@@ -27,4 +27,4 @@ contract tests over chasing a global percentage:
 
 Do not add a hard global coverage threshold until the project adopts a ratcheting
 baseline; a blanket threshold would reward broad, shallow tests and make unrelated
-legacy gaps block small fixes.
+coverage gaps block small fixes.

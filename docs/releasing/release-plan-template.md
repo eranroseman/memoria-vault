@@ -141,7 +141,7 @@ manual/subagent scan coverage) so the evidence is reproducible.
 Record runtime evidence for each target environment this release claims to support:
 
 1. **Fresh clone:** all validation stages pass from a clean checkout, not only the working branch.
-2. **Installer target:** a real install or upgrade path succeeds against a disposable vault, never the user's production vault.
+2. **Installer target:** a real fresh install or profile redeploy succeeds against a disposable vault, never the user's production vault.
 3. **Sandbox refresh:** update and validate the `~/Memoria-test` sandbox, including git initialization/hooks, CSS snippets, installed plugins, local LLM wiring, and Obsidian bridge behavior when the release touches them.
 4. **WSL/Linux host:** package updates needed for the release are applied or explicitly deferred; command resolution uses the intended binaries.
 5. **Hermes profiles:** installed profile configs match the shipped templates, secrets stay in `.env`, and no placeholder values remain.

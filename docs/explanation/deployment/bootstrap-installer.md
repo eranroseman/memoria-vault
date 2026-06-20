@@ -16,7 +16,7 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-What the installer ships and stages — the `src/`-not-a-live-vault separation, the hashed `<vault>/.memoria/golden/` restore baseline, and the idempotent profile pruning — is the distribution mechanism, owned by [Distribution model](distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
+What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 
@@ -25,7 +25,7 @@ One installer-specific sequencing choice worth calling out: Zotero deliberately 
 **Goals**
 
 - One command from zero to a runnable vault on native Windows production and Linux/WSL testing.
-- Idempotent: safe to re-run after a `git pull` (the per-profile redeploy path survives as `scripts/install.sh --profiles-only`).
+- Fresh-install by default, with an idempotent per-profile deployment path (`scripts/install.sh --profiles-only`) for profile source and secret changes.
 - Detect-then-install; never clobber existing apps, credentials, or user content.
 - Honest about what it cannot do (secrets, GUI steps) — explain, don't fake.
 
@@ -82,7 +82,7 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Surface area** is still nontrivial (WSL2 orchestration, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **The golden-copy update path** (how a later release refreshes `.memoria/golden/` without clobbering user customizations) is the known open question tracked by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
+- **Fresh release installs replace in-place migration.** This keeps the bootstrap small and avoids half-migrated vault states; profile redeploy remains the narrow idempotent path.
 
 ## Related
 

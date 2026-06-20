@@ -28,8 +28,6 @@ metadata:
 
 # map-scope-project
 
-*(legacy name: `scope-project`; load on disk as `map-scope-project`.)*
-
 Answer "what does the vault already hold on this?" for a project brief or question.
 The output is a **corpus map**: the relevant notes, clustered deterministically,
 narrated honestly — including where coverage is thin. It informs the project's scoping

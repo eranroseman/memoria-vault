@@ -7,8 +7,6 @@ import sys
 import tomllib
 from pathlib import Path
 
-import memoria_runtime.policy as legacy_policy
-
 import memoria
 import memoria.runtime.policy as packaged_policy
 
@@ -33,9 +31,6 @@ def test_bare_package_import_does_not_need_mcp_sdk():
     subprocess.run([sys.executable, "-c", code], cwd=ROOT, check=True)
 
 
-def test_legacy_policy_import_matches_packaged_policy():
-    assert legacy_policy.normalize_path("./a/b/../c") == packaged_policy.normalize_path("./a/b/../c")
-    assert legacy_policy.glob_to_regex("projects/*/code/**") == packaged_policy.glob_to_regex(
-        "projects/*/code/**"
-    )
-    assert legacy_policy.REVIEW_GATED_PREFIXES == packaged_policy.REVIEW_GATED_PREFIXES
+def test_vault_side_policy_compatibility_package_is_removed():
+    assert not (ROOT / "src/.memoria/memoria_runtime").exists()
+    assert packaged_policy.normalize_path("./a/b/../c") == "a/c"

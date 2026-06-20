@@ -26,8 +26,6 @@ metadata:
 
 # verify-card-gap
 
-*(legacy name: `gap-card`; load on disk as `verify-card-gap`.)*
-
 Turn "the evidence for X is missing" into a card the PI can act on. A gap is a
 **finding about an absence**: a claim with no supporting claim note, an argument leg
 with no source, a comparison the draft asserts but the vault cannot back. You record

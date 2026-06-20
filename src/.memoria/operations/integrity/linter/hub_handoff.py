@@ -18,12 +18,13 @@ from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
 _RUNTIME_ROOT = _HERE.parents[2]
-for _path in (_HERE, _RUNTIME_ROOT / "mcp", _RUNTIME_ROOT / "operations" / "lib"):
+for _path in (_RUNTIME_ROOT, _RUNTIME_ROOT / "mcp"):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-import detectors  # noqa: E402
 import tasks_mcp  # noqa: E402
+
+from operations.integrity.linter import detectors  # noqa: E402
 
 _ALLOWED_PATHS = ["notes/fleeting/maps/", "inbox/"]
 _FINDING_RE = re.compile(r"topic '(.+)' has (\d+) notes")

@@ -41,9 +41,9 @@ So the agents share the house rules but each brings its own stance and toolset. 
 
 ## Why the profile install is idempotent
 
-The bootstrap's profile-install step (also runnable on its own via `--profiles-only`) is designed to be re-run after every `git pull` without care about current state. It refreshes every author-owned file (profile sources, MCP configs, lane-override templates), **prunes** stale `memoria-*` profiles that are no longer shipped (the v0.1.0-alpha.1 seven-profile set), and leaves human-owned secrets (`.env`, any local overrides) untouched.
+The bootstrap's profile-install step (also runnable on its own via `--profiles-only`) is designed to be re-run after profile source or secret changes without care about current deployed profile state. It writes every author-owned profile file (profile sources, MCP configs, lane-override templates) and leaves human-owned secrets (`.env`, any local overrides) untouched.
 
-The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with their source. Without it, the profile directories under `~/.hermes/profiles/` would drift from the repo over time — a drift the Linter detects but the re-run fixes; making the re-run safe is what makes the fix actionable.
+The idempotency matters because it is the mechanism that keeps deployed profiles synchronized with their source. Without it, the profile directories under `~/.hermes/profiles/` would drift from the vault source over time — a drift the Linter detects but the re-run fixes; making the re-run safe is what makes the fix actionable.
 
 ---
 

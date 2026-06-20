@@ -31,9 +31,6 @@ metadata:
 
 # verify-check-citation
 
-*(legacy name: `cite-check`, shipped inside `claim-checks`; load on disk as
-`verify-check-citation`.)*
-
 Answer one mechanical question about a draft or claim note: **does every citation
 resolve, and does the cited work actually support the sentence that cites it?** You
 contribute no judgment about whether the claim is *true* — that is the PI's call. The

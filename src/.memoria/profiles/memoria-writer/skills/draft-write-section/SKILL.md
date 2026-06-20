@@ -28,8 +28,6 @@ metadata:
 
 # draft-write-section
 
-*(legacy name: `draft`; load on disk as `draft-write-section`.)*
-
 Produce one section of prose the PI will reshape. A draft is **raw material, never a
 deliverable**: it is marked agent-drafted, and the PI rewrites in their own words. You
 compose from what the vault holds — the claims and sources the handoff names — and

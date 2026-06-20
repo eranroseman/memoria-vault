@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from structural_impact_graph import Edge, Note
-from structural_impact_payload import ADVISORY_GAP_KINDS, CONFIDENT_GAP_KINDS
+from operations.processing.project.structural_impact_graph import Edge, Note
+from operations.processing.project.structural_impact_payload import (
+    ADVISORY_GAP_KINDS,
+    CONFIDENT_GAP_KINDS,
+)
 
 
 def gap_taxonomy(

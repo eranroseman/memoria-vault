@@ -23,7 +23,7 @@ Seven patterns ship at `lifecycle: current` (runnable). Each is one file under `
 | `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `notes/fleeting/` |
 | `surface-tensions` | Surface tensions | librarian | link | library | note-set | `projects/` |
 
-`mode` filters the picker: `library` patterns are for ongoing reading, `project` patterns for a writing project, `both` for either. The set is authored directly — the files *are* the instances, there is no template — and golden-copied like the other system files ([Upgrade the vault to a new release](../how-to-guides/operate/upgrade-to-a-new-release.md)).
+`mode` filters the picker: `library` patterns are for ongoing reading, `project` patterns for a writing project, `both` for either. The set is authored directly — the files *are* the instances, there is no template — and staged into the golden copy like the other system files ([Installer (bootstrap)](installer.md)).
 
 ---
 

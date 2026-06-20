@@ -16,7 +16,7 @@ Deterministic maintenance passes under `src/.memoria/operations`. Sweeps are rea
 | `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk. |
 | `--retry` | A captured note stuck at `ingest_status: tier0`. |
 
-`--dry-run` reports without touching the board. The installer wires these re-ingest passes into the `memoria-sweeps` cron (every 15 minutes), which also runs the chat-stamp pass and inbox archival ([System actions](system-actions.md)).
+`--dry-run` reports without touching the board. The installer wires these re-ingest passes into the `memoria-sweeps` cron (every 15 minutes), alongside inbox archival ([System actions](system-actions.md)).
 
 ## Retraction sweep
 

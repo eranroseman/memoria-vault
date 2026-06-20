@@ -27,8 +27,6 @@ metadata:
 
 # draft-score-outline
 
-*(legacy name: `outline-score`; load on disk as `draft-score-outline`.)*
-
 Tell the PI how draft-ready an outline is, per node, with the arithmetic shown. The
 score is **advisory** — it informs the pick between outline options or the go/no-go on
 drafting a section; it gates nothing and ranks no one's thinking (ADR-50: a score is a

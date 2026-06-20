@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """eval_score.py — the deterministic vault-eval scorer (ADR-11: diagnostic, never gating).
 
 Closes the loop ``eval_dispatch.py`` opens: where the dispatcher fans the gold
@@ -61,7 +62,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-import eval_dispatch  # sibling: gold-set loader, frontmatter parser, quarter_of
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.telemetry.eval import (
+    eval_dispatch,  # sibling: gold-set loader, frontmatter parser, quarter_of
+)
 
 METRICS_RELDIR = "system/metrics/eval"
 RUNS_LOG = "runs.jsonl"

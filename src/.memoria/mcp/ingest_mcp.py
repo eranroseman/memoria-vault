@@ -26,13 +26,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# runner.py (and the modules it imports) live in the ingest processing operation dir, which
-# sits beside this mcp/ dir under .memoria/. Resolve it relative to __file__ so the
-# import works identically in the repo and in a deployed vault.
-SCRIPTS_DIR = (Path(__file__).resolve().parent.parent
-               / "operations/processing/ingest")
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+_RUNTIME_ROOT = Path(__file__).resolve().parent.parent
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
 
 INTAKE_LOG = "system/logs/capture-intake.jsonl"
 
@@ -64,8 +60,8 @@ def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
 def build_server(vault: Path):
     """Wrap the pipeline as an MCP server. Imported lazily so the self-test
     doesn't require the `mcp` package."""
-    import runner  # from the ingest processing operation dir
     from mcp.server.fastmcp import FastMCP  # type: ignore
+    from operations.processing.ingest import runner
 
     server = FastMCP("memoria-ingest")
     bib_path = vault / ".memoria" / "memoria.bib"
@@ -99,8 +95,7 @@ def build_server(vault: Path):
                              bundle.pop("classify_flag_needed", None)) if f]
         if flags:
             try:
-                sys.path.insert(0, str(SCRIPTS_DIR.parents[1] / "lib"))
-                import inbox as inbox_writer
+                from operations.lib import inbox as inbox_writer
                 for flag in flags:
                     inbox_writer.write_finding(
                         vault, "flag", flag["title"], flag["finding"],

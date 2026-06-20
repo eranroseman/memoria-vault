@@ -8,8 +8,7 @@ Inbox flag. Offline: enrichment is stubbed with fixture payloads — no network.
 
 import json
 
-import classify
-import runner
+from operations.processing.ingest import classify, runner
 
 # --------------------------------------------------------------------------- #
 # fixtures

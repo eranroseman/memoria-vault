@@ -17,7 +17,7 @@ schema defines ``archived`` as a lifecycle value, not a file move, so the file
 never moves and every other frontmatter field and body byte is preserved (the
 sweep rewrites only the single ``lifecycle:`` line).
 
-Like the stamp-chats pass in reconcile.py, this writes the vault DIRECTLY —
+Like other cleanup sweeps, this writes the vault DIRECTLY —
 exempt from the board-serialization rule (ADR-30) because it is a
 deterministic, idempotent, single-line rewrite with no find-or-create
 semantics: an already-``archived`` card is skipped, so a re-run is a no-op.

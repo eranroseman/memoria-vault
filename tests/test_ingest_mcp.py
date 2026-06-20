@@ -3,17 +3,18 @@
 import ingest_mcp as _m
 
 INTAKE_LOG = _m.INTAKE_LOG
-SCRIPTS_DIR = _m.SCRIPTS_DIR
 append_intake_anchor = _m.append_intake_anchor
 json = _m.json
 
 
-def test_ingest_mcp_scripts_dir_is_importable():
-    assert SCRIPTS_DIR.is_dir()
+def test_ingest_pipeline_runner_is_importable():
+    from operations.processing.ingest import runner
+
+    assert callable(runner.run)
 
 
 def test_ingest_mcp_pipeline_runs_tier0_fixture():
-    import runner
+    from operations.processing.ingest import runner
 
     fixture = (
         "@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"

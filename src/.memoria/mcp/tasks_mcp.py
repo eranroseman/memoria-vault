@@ -22,13 +22,12 @@ import sys
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
-_OPERATIONS_LIB = _RUNTIME_ROOT / "operations" / "lib"
-for _path in (_RUNTIME_ROOT, _OPERATIONS_LIB):
-    if str(_path) not in sys.path:
-        sys.path.insert(0, str(_path))
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
 
-import loudness  # noqa: E402
-from memoria_runtime.policy import within_scope  # noqa: E402
+from operations.lib import loudness  # noqa: E402
+
+from memoria.runtime.policy import within_scope  # noqa: E402
 
 # task lane -> the background agent that owns it (ADR-48 §4.1)
 LANE_PROFILE = {

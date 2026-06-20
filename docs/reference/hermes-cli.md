@@ -13,7 +13,7 @@ Command structure: `hermes <command> [subcommand] [args]` — runs from any dire
 
 ## The profile set
 
-Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)). The v0.1.0-alpha.1 profiles are retired and pruned on upgrade — see the retired-names list in the [Installer (bootstrap)](installer.md).
+Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)).
 
 ---
 
@@ -23,19 +23,19 @@ Lane skills use the **`<task>-<verb>-<object>`** kebab-case convention — the t
 
 So `catalog-enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`. When serialized as an MCP tool the separators collapse to underscores: `catalog_enrich_record`.
 
-The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`); **legacy v0.1.0-alpha.1 names in parentheses**:
+The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`):
 
 | Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
-| **Co-PI** (pane) | `ask-question-source` · `ask-read-lens` (lens-reading) · `explore-framings` · `route-task` (delegate-task) · `explain-system` |
-| **Librarian** (catalog · extract · link · map) | `catalog-find-source` (find) · `catalog-enrich-record` (obsidian-paper-note) · `catalog-classify-source` (classify) · `catalog-rank-candidate` (candidate-rank) · `extract-stub-claim` · `extract-flag-distill` (distill-candidate-flag) · `link-suggest-claim` (relation-suggest) · `link-surface-tension` (tension-surface) · `map-scope-project` (scope-project) · `map-report-coverage` (gap-report) · `map-cluster-corpus` (cluster-mapping) · `map-seed-canvas` (canvas-seed) · `map-graph-claims` · `map-canvas-hub` |
-| **Writer** (draft) | `draft-write-section` (draft) · `draft-outline-argument` (counter-outline) · `draft-score-outline` (outline-score) · `draft-bind-citation` (citation-bind) |
-| **Peer-reviewer** (verify) | `verify-check-citation` (cite-check, ex-claim-checks) · `verify-trace-claim` (claim-trace, ex-claim-checks) · `verify-card-gap` (gap-card) · `verify-propose-fix` (gap-fix-propose) |
+| **Co-PI** (pane) | `ask-question-source` · `ask-read-lens` · `explore-framings` · `route-task` · `explain-system` |
+| **Librarian** (catalog · extract · link · map) | `catalog-find-source` · `catalog-enrich-record` · `catalog-classify-source` · `catalog-rank-candidate` · `extract-stub-claim` · `extract-flag-distill` · `link-suggest-claim` · `link-surface-tension` · `map-scope-project` · `map-report-coverage` · `map-cluster-corpus` · `map-seed-canvas` · `map-graph-claims` · `map-canvas-hub` |
+| **Writer** (draft) | `draft-write-section` · `draft-outline-argument` · `draft-score-outline` · `draft-bind-citation` |
+| **Peer-reviewer** (verify) | `verify-check-citation` · `verify-trace-claim` · `verify-card-gap` · `verify-propose-fix` |
 | **Ingest** operation | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
-| **Search** operation | `search:query-vault` (query) · `search:find-similar` |
+| **Search** operation | `search:query-vault` · `search:find-similar` |
 | **Clustering** operation | `cluster:model-topics` · `cluster:build-graph` |
-| **Sweeps** operation | `sweep:check-retraction` (retraction-check) · `sweep:find-duplicates` (find-duplicates) · `sweep:check-similarity` (similarity-check) |
-| **Linter** operation | `lint:check-schema` (schema-check) · `lint:migrate-schema` (schema-migrate) · `lint:analyze-graph` (graph-analyze) · `lint:report-health` (health-report) |
+| **Sweeps** operation | `sweep:check-retraction` · `sweep:find-duplicates` · `sweep:check-similarity` |
+| **Linter** operation | `lint:check-schema` · `lint:migrate-schema` · `lint:analyze-graph` · `lint:report-health` |
 
 Operation "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
 
@@ -82,9 +82,9 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 | Command | What it does |
 | --- | --- |
 | `hermes profile list` | List registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --name <name> --alias --force --yes` | Install or refresh a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` or `scripts/install.ps1 -ProfilesOnly` — the installer renders Python, vault, qmd, and model tokens, refreshes deployed `config.yaml`, and seeds `.env` first. |
+| `hermes profile install <dir> --name <name> --alias --force --yes` | Install a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` or `scripts/install.ps1 -ProfilesOnly` — the installer renders Python, vault, qmd, and model tokens, writes deployed `config.yaml`, and seeds `.env` first. |
 | `hermes profile show <alias>` | A profile's `SOUL.md`, MCP servers, skills, and `.env` key names (values redacted). |
-| `hermes profile remove <alias>` | Remove the registration (used by the installer to prune the retired five). Does not delete the vault source under `.memoria/profiles/`. |
+| `hermes profile remove <alias>` | Remove a profile registration. Does not delete the vault source under `.memoria/profiles/`. |
 
 ---
 

@@ -27,8 +27,6 @@ metadata:
 
 # link-surface-tension
 
-*(legacy name: `tension-surface`; load on disk as `link-surface-tension`.)*
-
 Make disagreements impossible to ignore. A tension is a pair of statements the vault
 holds that **cannot both be right as written** — two claims, or a claim and a newly
 ingested source's finding. Your job is to surface it sharply and *stop*: you present

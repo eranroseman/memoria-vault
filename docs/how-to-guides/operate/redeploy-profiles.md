@@ -32,7 +32,7 @@ bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2 (whe
 
 - Stages each profile's files to a temp directory
 - Substitutes `{{PYTHON}}` (the vault venv interpreter) and `{{VAULT_PATH}}` in `config.yaml`
-- Calls `hermes profile install --force` for each of the five profiles, and prunes any retired profile still registered ([Installer (bootstrap)](../../reference/installer.md))
+- Calls `hermes profile install --force` for each of the five profiles ([Installer (bootstrap)](../../reference/installer.md))
 - Seeds each profile's `.env` from `~/.hermes/.env` — never overwrites a value already set
 
 **2. Redeploy a single profile** (faster when only one changed):
@@ -61,7 +61,7 @@ For lane-override changes, verify with a test write operation — check `system/
 hermes profile list
 ```
 
-Exactly the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`) show as registered — no retired names, none missing.
+The five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`) show as registered.
 
 If you suspect the deployed copies still don't match the vault source, compare them directly and reconcile per the full procedure in [Fix profile drift](../troubleshooting/fix-profile-drift.md).
 

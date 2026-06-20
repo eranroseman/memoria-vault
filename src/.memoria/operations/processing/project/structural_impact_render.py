@@ -7,10 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from structural_impact_analysis import analyze
-from structural_impact_graph import find_project, read_notes
-
 from memoria.runtime.time import utc_z
+from operations.processing.project.structural_impact_analysis import analyze
+from operations.processing.project.structural_impact_graph import (
+    find_project,
+    read_notes,
+)
 
 JSON_START = "<!-- memoria-structural-impact:json -->"
 JSON_END = "<!-- /memoria-structural-impact:json -->"

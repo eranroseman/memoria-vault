@@ -25,8 +25,6 @@ metadata:
 
 # ask-read-lens
 
-*(legacy name: `lens-reading`; load on disk as `ask-read-lens`.)*
-
 The same material, different eyes. A **lens** is an explicit reading frame — a theory
 (behavior-change technique taxonomy), a posture (hostile reviewer 2), a discipline
 (health economist), a rival hypothesis — applied to material the vault already holds.

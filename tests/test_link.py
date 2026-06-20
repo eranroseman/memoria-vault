@@ -2,7 +2,7 @@
 
 import json
 
-import link as _m
+from operations.processing.ingest import link as _m
 
 append_by_name_audit = _m.append_by_name_audit
 plan_cites = _m.plan_cites

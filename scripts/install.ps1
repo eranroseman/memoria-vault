@@ -232,6 +232,9 @@ function Copy-VaultSource {
     Write-Header 'Scaffold and populate vault'
     $src = Join-Path $RepoRoot 'src'
     if (-not (Test-Path $src)) { Stop-Install "Missing src tree at $src." }
+    if (Test-Path (Join-Path $Vault '.memoria')) {
+        Stop-Install "$Vault is already a Memoria vault. This installer is fresh-install only; choose an empty target or move the existing vault aside."
+    }
     New-Item -ItemType Directory -Path $Vault -Force | Out-Null
     Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json', 'appearance.json')
     Write-Ok "Vault populated at $Vault"

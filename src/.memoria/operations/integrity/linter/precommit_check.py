@@ -15,11 +15,15 @@ import sys
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(_HERE))
-sys.path.insert(0, str(_HERE.parents[1] / "lib"))
+_RUNTIME_ROOT = _HERE.parents[2]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
 
-import schema  # noqa: E402
-from detectors import is_untyped_infra, parse_frontmatter  # noqa: E402
+from operations.integrity.linter.detectors import (  # noqa: E402
+    is_untyped_infra,
+    parse_frontmatter,
+)
+from operations.lib import schema  # noqa: E402
 
 
 def check_paths(vault: Path, paths: list[str]) -> list[str]:

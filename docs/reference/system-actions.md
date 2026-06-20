@@ -32,7 +32,6 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Run detectors | Linter (`detectors.py`, daily cron) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
 | Golden stage | Linter (`golden_restore.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
-| Golden upgrade | Linter (`golden_restore.py upgrade`) | Three-way reconciles old golden, new source, and live system files; applies clean release changes and preserves PI-customized conflicts. |
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
@@ -44,7 +43,6 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | --- | --- | --- |
 | Reconcile | sweeps operation (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
 | Retry tier-0 | sweeps operation (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
-| Stamp chats | sweeps operation (`reconcile.py`) | Prepends fleeting frontmatter to legacy bare ACP chat exports in `notes/fleeting/chats/`. |
 | Archive inbox | sweeps operation (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
 | Eval dispatch | sweeps operation (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
 | Eval score | sweeps operation (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |

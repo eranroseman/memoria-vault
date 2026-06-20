@@ -27,8 +27,6 @@ metadata:
 
 # draft-bind-citation
 
-*(legacy name: `citation-bind`; load on disk as `draft-bind-citation`.)*
-
 Make a draft's provenance explicit. Heavily edited or imported prose drifts away from
 its citations; this skill re-binds each factual sentence to the claim/source that
 carries it — **from the draft's own claim set**, never from fresh research. Where no

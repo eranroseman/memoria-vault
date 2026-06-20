@@ -20,13 +20,6 @@ testpaths = ["tests"]
 pythonpath = [
   "src/.memoria",
   "src/.memoria/mcp",
-  "src/.memoria/operations/lib",
-  "src/.memoria/operations/processing/ingest",
-  "src/.memoria/operations/processing/project",
-  "src/.memoria/operations/integrity/retraction",
-  "src/.memoria/operations/cleanup",
-  "src/.memoria/operations/telemetry/eval",
-  "src/.memoria/operations/integrity/linter",
   "scripts",
   ".github/scripts",
 ]

@@ -29,8 +29,6 @@ metadata:
 
 # catalog-enrich-record
 
-*(legacy name: `obsidian-paper-note`; load on disk as `catalog-enrich-record`.)*
-
 Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
 **deterministic and lives behind the `ingest_pipeline` MCP tool** (the
 `memoria-ingest` server wrapping the ingest operation (`.memoria/operations/processing/ingest/runner.py`)) — you do not reimplement

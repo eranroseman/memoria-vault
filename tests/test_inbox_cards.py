@@ -3,10 +3,8 @@
 import re
 
 import pytest
-import schema
 import yaml
-
-import inbox
+from operations.lib import inbox, schema
 
 
 def _frontmatter(path) -> dict:

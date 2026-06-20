@@ -26,8 +26,6 @@ metadata:
 
 # verify-propose-fix
 
-*(legacy name: `gap-fix-propose`; load on disk as `verify-propose-fix`.)*
-
 The bridge between "flag, don't fix" and not wasting the PI's time: when a finding's
 remedy is mechanical and unambiguous, spell the fix out so accepting it is one
 decision, not a research task. The fix is **proposed on a card** — the thing under

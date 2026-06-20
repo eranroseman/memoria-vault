@@ -151,15 +151,15 @@ API spend and token counts, captured once, at the transition into `status: done`
 Hermes `state.db` `sessions` row.
 
 ```json
-{"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "session_id": "20260601_190628_c5e9fb", "cost": 0.0142, "tokens_in": 8200, "tokens_out": 1450, "input_tokens": 8200, "output_tokens": 1450, "cache_read_tokens": 0, "cache_write_tokens": 0, "reasoning_tokens": 0, "estimated_cost_usd": 0.0142, "actual_cost_usd": 0.0142, "cost_status": "actual", "cost_source": "provider-usage", "billing_provider": "openai", "pricing_version": "2026-06", "model": "gpt-test", "source": "hermes-session-store"}
+{"timestamp": "2026-06-01T09:00:00Z", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "session_id": "20260601_190628_c5e9fb", "cost": 0.0142, "input_tokens": 8200, "output_tokens": 1450, "cache_read_tokens": 0, "cache_write_tokens": 0, "reasoning_tokens": 0, "estimated_cost_usd": 0.0142, "actual_cost_usd": 0.0142, "cost_status": "actual", "cost_source": "provider-usage", "billing_provider": "openai", "pricing_version": "2026-06", "model": "gpt-test", "source": "hermes-session-store"}
 ```
 
 `cost` is USD and prefers `actual_cost_usd`, falling back to `estimated_cost_usd`
-when the actual value is absent. `tokens_in` / `tokens_out` are compatibility
-aliases for `input_tokens` / `output_tokens`; consumers should prefer the explicit
-Hermes field names for new work. The provenance fields (`session_id`, `cost_status`,
-`cost_source`, `billing_provider`, `pricing_version`, `model`, `source`) preserve
-where the number came from.
+when the actual value is absent. Token counts use the explicit Hermes field names:
+`input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, and
+`reasoning_tokens`. The provenance fields (`session_id`, `cost_status`, `cost_source`,
+`billing_provider`, `pricing_version`, `model`, `source`) preserve where the number
+came from.
 
 Run `python src/.memoria/mcp/board_export.py --cost-doctor` to validate the
 current Hermes session-store contract. Schema drift or a `hermes kanban show`
@@ -289,7 +289,7 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 | `expand_then_accept_min` | `attention.jsonl` / board metadata | median PI expansion-to-accepted resolution latency, minutes |
 | `card_open_resolve_min` | `attention.jsonl` | median open-marker-to-resolve latency, minutes |
 | `blind_rereview_samples` | `blind-review-samples.jsonl` | count of terminal reviews sampled for blind re-review |
-| `cost` / `tokens_in` / `tokens_out` | `cost.jsonl` | period totals |
+| `cost` / `input_tokens` / `output_tokens` | `cost.jsonl` | period totals |
 | `consistency_passk` | reserved | placeholder (`null`) for a future pass^k harness |
 
 ### The trust-score composite

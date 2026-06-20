@@ -1,8 +1,7 @@
 # Map-lane methods
 
 The method detail shared by the map lane's skills — `map-scope-project`,
-`map-report-coverage` (legacy `gap-report`), and `map-cluster-corpus` (legacy
-`cluster-map` / `cluster-mapping`). In v0.1.0-alpha.2 the clustering and topic-modeling run
+`map-report-coverage`, and `map-cluster-corpus`. The clustering and topic-modeling run
 inside the **cluster MCP** (`cluster_build_graph` / `cluster_model_topics`, ADR-33);
 the HDBSCAN/UMAP layers below describe the intended full method. Every classical step below is
 deterministic for fixed parameters; the LLM enters only at the narrative-composition step.

@@ -28,7 +28,7 @@ _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from memoria_runtime.policy import REVIEW_GATED_PREFIXES  # noqa: E402
+from memoria.runtime.policy import REVIEW_GATED_PREFIXES  # noqa: E402
 
 PATTERNS_RELDIR = "system/patterns"
 PROVENANCE_RELPATH = "system/logs/patterns.jsonl"
