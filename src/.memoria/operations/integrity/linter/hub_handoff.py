@@ -23,9 +23,9 @@ for _path in (_RUNTIME_ROOT, _RUNTIME_ROOT / "mcp"):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-import tasks_mcp  # noqa: E402
+import tasks_mcp
 
-from operations.integrity.linter import detectors  # noqa: E402
+from operations.integrity.linter import detectors
 
 _ALLOWED_PATHS = ["notes/fleeting/maps/", "inbox/"]
 _FINDING_RE = re.compile(r"topic '(.+)' has (\d+) notes")

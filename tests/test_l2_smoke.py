@@ -9,9 +9,9 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import l2_obsidian_mcp_shim as shim  # noqa: E402
-import l2_openai_smoke_server as smoke_server  # noqa: E402
-import l2_smoke  # noqa: E402
+import l2_obsidian_mcp_shim as shim
+import l2_openai_smoke_server as smoke_server
+import l2_smoke
 
 
 def test_test_l2_help_documents_prereqs_and_non_pr_status():

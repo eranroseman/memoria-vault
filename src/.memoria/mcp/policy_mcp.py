@@ -29,9 +29,9 @@ for _path in (_RELEASE_ROOT, _RUNTIME_ROOT, _OPERATIONS_LIB):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from policy_server import build_server, resolve_vault  # noqa: E402
+from policy_server import build_server, resolve_vault
 
-from memoria.runtime.policy.audit import (  # noqa: E402
+from memoria.runtime.policy.audit import (
     AUDIT_RELPATH,
     AUDIT_SCHEMA_VERSION,
     EMPTY_SHA256,
@@ -39,7 +39,7 @@ from memoria.runtime.policy.audit import (  # noqa: E402
     append_audit,
     sha256_file,
 )
-from memoria.runtime.policy.decision import (  # noqa: E402
+from memoria.runtime.policy.decision import (
     AUTO_FIX_ALLOWED_CLASSES,
     AUTO_FIX_DENY_CLASSES,
     AUTO_FIX_DRY_RUN_CLASSES,
@@ -48,16 +48,16 @@ from memoria.runtime.policy.decision import (  # noqa: E402
     is_review_gated,
     set_gated_prefixes,
 )
-from memoria.runtime.policy.engine import PolicyEngine  # noqa: E402
-from memoria.runtime.policy.lanes import (  # noqa: E402
+from memoria.runtime.policy.engine import PolicyEngine
+from memoria.runtime.policy.lanes import (
     LANE_OVERRIDE_RELDIR,
     load_gated_prefixes,
     load_lane,
     parse_lane,
     yaml,
 )
-from memoria.runtime.policy.model import Decision, LanePolicy  # noqa: E402
-from memoria.runtime.policy.paths import (  # noqa: E402
+from memoria.runtime.policy.model import Decision, LanePolicy
+from memoria.runtime.policy.paths import (
     ACTIONS,
     MUTATING_ACTIONS,
     REVIEW_GATED_PREFIXES,

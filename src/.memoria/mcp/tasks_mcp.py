@@ -24,10 +24,10 @@ _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from operations.lib import loudness  # noqa: E402
+from operations.lib import loudness
 
-from memoria.runtime.paths import resolve_vault  # noqa: E402
-from memoria.runtime.policy import within_scope  # noqa: E402
+from memoria.runtime.paths import resolve_vault
+from memoria.runtime.policy import within_scope
 
 # task lane -> the background agent that owns it (ADR-48 §4.1)
 LANE_PROFILE = {

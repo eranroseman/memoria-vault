@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """Project-gate structural impact cache.
 
 Reads the thesis-rooted argument graph (`links.supports` / `links.contradicts`)
