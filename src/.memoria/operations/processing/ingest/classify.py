@@ -76,7 +76,7 @@ def thresholds(vault: Path | None) -> tuple[float, float]:
         f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
         c = yaml.safe_load(f.read_text(encoding="utf-8"))["classify"]
         return float(c["confidence_floor"]), float(c["near_tie_margin"])
-    except Exception as exc:  # noqa: BLE001 -- config load with import-inside-try; degrade to defaults
+    except Exception as exc:  # noqa: BLE001
         if not _warned_calibration:
             _warned_calibration = True
             print(
@@ -229,7 +229,7 @@ def load_project_hints(vault: Path | None) -> list[dict]:
             if pid and topics:
                 out.append({"id": pid, "primary_topics": topics})
         return out
-    except Exception as exc:  # noqa: BLE001 -- hints load with import-inside-try; degrade to manual
+    except Exception as exc:  # noqa: BLE001
         if not _warned_hints:
             _warned_hints = True
             print(

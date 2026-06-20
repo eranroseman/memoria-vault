@@ -63,7 +63,7 @@ def _diagnose(level: str, code: str, **details) -> None:
             code=code,
             details=details,
         )
-    except Exception:  # noqa: BLE001 -- diagnostics-only; must never break the merge
+    except Exception:  # noqa: BLE001
         return
 
 
