@@ -94,7 +94,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/quickadd/data.json": "4165d422cd6caec2c78007ef47a88f54ef0e37d35e4ccbea5f902dac08c35c9c",
+        "plugins/quickadd/data.json": "fc2270730cba7cf0eb926e8c3b2f1287621ce2925daf6113a6d719ff6304ea4a",
         "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
         "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
         "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"

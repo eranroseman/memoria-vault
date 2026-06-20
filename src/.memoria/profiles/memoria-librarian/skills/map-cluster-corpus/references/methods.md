@@ -59,3 +59,13 @@ density aggregations are all deterministic for fixed parameters. The LLM only co
 over those fixed outputs — it is downstream of the data, never upstream of the cluster
 decision. Topic-importance ranking in `map-report-coverage` is the one place where the LLM exercises
 judgment, and even there it ranks topics the deterministic model already identified.
+
+## Exploration trace companion
+
+When `map-scope-project` or `map-report-coverage` rejects a direction, dead end, or
+parked lens that a future human might otherwise repeat, it writes a companion
+`*-exploration-trace.md` note beside the report under `notes/fleeting/maps/`. The trace
+uses `type: fleeting`, `lifecycle: proposed`, and `origin: agent`; its body records the
+report link plus structured `direction`, `why_rejected`, `evidence_checked`, and
+`retry_only_if` entries. This is project-local map context, not canonical knowledge, and
+it is never auto-promoted into claims, sources, hubs, or project state.

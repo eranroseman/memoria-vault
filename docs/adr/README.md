@@ -139,6 +139,7 @@ status.
 | [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | accepted |
 | [107](107-okf-interchange-bundle-format.md) | OKF as Memoria's import/export bundle format | proposed |
 | [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
+| [109](109-project-management-native-views.md) | Project management uses native views over project notes | accepted |
 
 <!-- ADR-INDEX:END -->
 

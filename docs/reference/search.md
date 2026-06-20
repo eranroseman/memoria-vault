@@ -48,7 +48,7 @@ Found-by-keyword-but-not-by-meaning (or the reverse) is the diagnostic that dist
 | Consumer | Uses search for |
 | --- | --- |
 | Co-PI vault answers | The grounded retrieval behind a conversational question ([Query the vault](../how-to-guides/knowledge/query-the-vault.md)). |
-| Librarian map lane | `map-cluster-corpus`, `map-report-coverage` — coverage and gap analysis over the corpus. |
+| Librarian map lane | `map-cluster-corpus`, `map-report-coverage` — coverage and gap analysis over the corpus. Scope/gap reports may carry a companion exploration trace under `notes/fleeting/maps/` for rejected directions and dead ends. |
 | Librarian comparative pulls | The `[!brief]` comparative read at ingest and similarity checks. |
 | Peer-reviewer verify | Claim-trace and citation checks pull candidate evidence. |
 | QuickAdd pre-file shadow | `create-linked-claim` and `structured-source-capture` run a report-only top-3 neighbour check before filing claim/source notes. |

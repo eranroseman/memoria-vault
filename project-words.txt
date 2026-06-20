@@ -1,5 +1,8 @@
+Abdallah
+Ackerman
 actioned
 affordances
+Amershi
 Andrej
 arXiv
 arxiv
@@ -42,6 +45,7 @@ citekey
 citekeys
 citeproc
 claimnote
+Cobbe
 CODEOWNERS
 codeowners
 Colman
@@ -65,6 +69,7 @@ Dataview
 dataviewjs
 DBLP
 dbmi
+Debenedetti
 DeBERTa
 dedup
 DeepSeek
@@ -116,6 +121,7 @@ glanceable
 Goodharting
 Gottweis
 greppable
+Greshake
 Gridach
 GROBID
 habanero
@@ -128,6 +134,7 @@ hermes
 HITL
 HNSW
 hnswlib
+Horvitz
 hotspots
 hyperparameters
 idempotent
@@ -207,6 +214,7 @@ Neur
 newbot
 Niklas
 nonspawnable
+NOTENOUGHINFO
 NousResearch
 numba
 Obsidian
@@ -295,6 +303,7 @@ selftest
 semanticscholar
 sensemaking
 settledness
+sharpenings
 shellcheck
 Shneiderman
 shorttitle
@@ -314,6 +323,7 @@ subfolders
 Syncthing
 Templater
 Tesseract
+Thorne
 thresholded
 tickable
 Tintarev

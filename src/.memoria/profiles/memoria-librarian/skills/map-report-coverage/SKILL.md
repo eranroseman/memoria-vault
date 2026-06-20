@@ -57,14 +57,23 @@ matter for this brief** — and that ranking is argued, not asserted.
    (adjacent but out of scope). Out-of-scope thin topics go in a parking section, not
    the ranking.
 5. **Write — gated.** The report to
-   `notes/fleeting/maps/gap-report-<project>-<YYYY-MM-DD>.md`; then ONE `gap` card in
-   `inbox/` pointing at it (a report's findings are one card, never N — ADR-54).
+   `notes/fleeting/maps/gap-report-<project>-<YYYY-MM-DD>.md`. If you considered any
+   rejected directions, dead ends, or parked lenses that should prevent repeated work,
+   write the companion trace note
+   `notes/fleeting/maps/gap-report-<project>-<YYYY-MM-DD>-exploration-trace.md` before
+   the card. Then raise ONE `gap` card in `inbox/` pointing at the report (a report's
+   findings are one card, never N — ADR-54).
 
 ## Output contract
 
 - The gap-report note: frontmatter `sources:` (query trail · folders · `params_echo` ·
   threshold used); the ranked thin-topic list (topic · size · claim presence · why it
   matters · what evidence would thicken it); the parked out-of-scope list.
+- The optional exploration-trace note: `type: fleeting`, `lifecycle: proposed`,
+  `origin: agent`, stored beside the report, with structured sections for each rejected
+  direction: `direction`, `why_rejected`, `evidence_checked`, `retry_only_if`, and a
+  link back to the report. It is project-local context, not a claim/source/hub, and is
+  never auto-promoted into canonical knowledge.
 - One `gap` card (schema `gap`, ADR-51 honesty body): `action` = "review the gap
   report; delegate `catalog-find-source` for the topics you accept";
   `argument_for` = the top-ranked gaps' stakes; `argument_against` = the honest

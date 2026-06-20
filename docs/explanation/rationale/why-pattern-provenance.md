@@ -8,6 +8,8 @@ nav_order: 7
 
 Memoria draws on a broad survey of ~47 contemporary AI-research systems, platforms, and benchmarks. This document is the synthesized judgment table: what was borrowed as-is, what was taken with the autonomy stripped out, what informs framing without contributing a design pattern, and what was evaluated and explicitly refused.
 
+That agent-systems survey now sits inside a wider review of ~400 papers (`_papers/`, judged adopt/borrow/reject; verdicts in `_papers/REVIEW-SUMMARY.md`) spanning the bodies of work those systems build on — HCI/CSCW, faithful extraction and claim verification, evaluation discipline, and retrieval/temporal reasoning. The wider review mostly *validates and sharpens* rather than adds new agent-system patterns; its cross-cutting findings are collected in [Cross-cutting findings from the full literature review](#cross-cutting-findings-from-the-full-literature-review) below.
+
 The headline patterns are summarized in [Intellectual foundations](../overview/intellectual-foundations.md). The autonomy boundary that rejects several patterns wholesale is in [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md).
 
 ---
@@ -95,6 +97,23 @@ Patterns evaluated and explicitly refused. Each refusal is a specific judgment, 
 
 ---
 
+## Cross-cutting findings from the full literature review
+
+The wider ~400-paper review reached past the agent-systems corpus into HCI, extraction/verification, evaluation, and retrieval. It surfaced few *new* end-to-end patterns — its dominant result is that separate research lines independently re-derive Memoria's existing bets — but it contributes a handful of cross-cutting mechanics and one or two genuine sharpenings (contradiction on entailment rather than embedding similarity; temporal coverage as a retrieval dimension). Each is grounded below.
+
+| Finding | Source | What it adds / sharpens | Where it fits |
+|---|---|---|---|
+| **Generator–verifier, sample-and-rank** | [Cobbe et al. 2021](../../reference/bibliography.md#cobbe2021verifiers), [Perez et al. 2022](../../reference/bibliography.md#perez2022modelwritten) | The formal grounding of "engines write, agents judge" at the claim grain: generate N candidate extractions, score each with a *separate, cheaper* verifier, keep the top-ranked; the verifier's confidence doubles as a quality/uncertainty estimate. Cap N — returns go negative as candidates start gaming the verifier. | Peer-reviewer / structural review gate; per-claim uncertainty flags and triage scoring. |
+| **Evidence-grounded verification (retrieve → select-evidence → entail)** | [Thorne et al. 2018](../../reference/bibliography.md#thorne2018fever) (FEVER) | The sharpening: build supports/contradicts and supersession on explicit NLI/entailment with a tri-class SUPPORTED / REFUTED / NOTENOUGHINFO verdict and a recorded warrant sentence — *not* embedding cosine, which is blind to negation. NOTENOUGHINFO/abstain is a first-class output. | Contradictions dashboard, claim supersession, argument-graph warrants; the Peer-reviewer's claim-trace check. |
+| **Temporal coverage as a retrieval dimension** | [Abdallah et al. 2026](../../reference/bibliography.md#abdallah2026tempo) (TEMPO) | The other sharpening: time-mismatched evidence is worse than none, and the failure worsens as the store grows. Stamp claims with temporal scope; score retrieval on whether it spans the required period; abstain when it does not. Makes claim-supersession load-bearing, not optional. | Discovery loop, claim supersession, retriever/scout relevance scoring. |
+| **Human-augmentation / mixed-initiative + verify-before-judge** | [Horvitz 1999](../../reference/bibliography.md#horvitz1999mixedinitiative), [Bernstein et al. 2010](../../reference/bibliography.md#bernstein2010soylent) (Find-Fix-Verify), [Amershi et al. 2019](../../reference/bibliography.md#amershi2019guidelines), [Ackerman 2000](../../reference/bibliography.md#ackerman2000cscw) | The HCI lineage of the review gate, predating the agent literature: augmentation over delegation; an expected-utility act/ask router rather than an alert firehose; narrow span-level verification separated from generation; and the *social-technical gap* as the structural reason a human stays the adjudicator. Validates the gate and its routing. | Structural review gate, gate routing, profiles; one-click PI correction that tunes the engine, not the single note. |
+| **Indirect-prompt-injection hardening** | [Greshake et al. 2023](../../reference/bibliography.md#greshake2023injection), [Debenedetti et al. 2024](../../reference/bibliography.md#debenedetti2024agentdojo) (AgentDojo) | Empirical validation that ingested paper/PDF/web text is the attack surface and that more-capable models are *easier* to hijack — so safety must come from least-privilege tool allowlists and capability denial, never prompt-level filters. Confirms the MCP-only sandbox (ADR-32/46/28/27). | Ingest/discovery treat all external text as data; explicit instruction/data split with data ordered last in every engine prompt. |
+| **LM fluency ≠ knowledge → epistemic status as data** | [Bender et al. 2021](../../reference/bibliography.md#bender2021parrots) | A discipline, not a feature: a model's fluent assertion is not evidence. Every atomic claim carries an uncertainty flag and a source-span provenance grade, and contradiction/supersession privilege direct primary evidence over echoed consensus. | Claim schema and ingest extraction; contradictions dashboard. |
+
+These are wired into the existing design rather than standing as separate lanes: the generator–verifier and evidence-grounding findings reinforce the Peer-reviewer's *Claim-to-evidence chain by construction* (Borrow) and *Chain-of-Evidence claim taxonomy* (Adapt) rows above; the augmentation and injection findings reinforce the structural gate and the MCP sandbox.
+
+---
+
 ## Net effect
 
 The design shift versus a generic "agent-assisted knowledge base" is from agent-assisted to **bounded, phase-gated knowledge production**:
@@ -108,6 +127,8 @@ This makes the architecture more reliable (errors surface at phase gates), easie
 ---
 
 ## Systems surveyed
+
+This lists the ~47-system agent-research slice that grounds the borrow/adapt/ignore tables above. The wider ~400-paper corpus it now sits inside — including the HCI, extraction, evaluation, and retrieval works behind the [cross-cutting findings](#cross-cutting-findings-from-the-full-literature-review) — is catalogued in `_papers/` (Zotero export `_papers/Exported Items.bib`) with verdicts in `_papers/REVIEW-SUMMARY.md`.
 
 **Pipeline / role-based agent systems:** LitSearch, ResearchArena, SciLitLLM, LitLLM, LatteReview, ResearchAgent, Idea2Story, AI Scientist v1 (Lu et al. 2024), AI Scientist v2 (Yamada et al. 2025), Agent Laboratory, Sibyl, AutoResearchClaw (Liu et al. 2026), AI-Researcher, Auto-Research, OmegaWiki, CORAL, AIDE ML, MLR-Copilot, ScientistOne (Meng et al. 2026), ARA / The Last Human-Written Paper (Liu et al. 2026), Sibyl-AutoResearch (Wang et al. 2026).
 

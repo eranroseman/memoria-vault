@@ -99,8 +99,8 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | link-suggest-claim | Proposes typed links (supports / contradicts / extends) as one candidate card with quoted evidence. |
 | link-surface-tension | Surfaces claim-pair contradictions with both sides quoted and reconciliation options. |
 | map-cluster-corpus | Clusters topics via the cluster MCP and emits a map note plus a report card. |
-| map-report-coverage | Topic-models the corpus and composes a gap report of thin topics. |
-| map-scope-project | Corpus-maps a project into a narrative map with thin spots named. |
+| map-report-coverage | Topic-models the corpus and composes a gap report of thin topics; records rejected directions/dead ends as a companion exploration-trace note when present. |
+| map-scope-project | Corpus-maps a project into a narrative map with thin spots named; records rejected directions/dead ends as a companion exploration-trace note when present. |
 | map-seed-canvas | Seeds a JSON Canvas from the cluster graph (communities, edges, layout). |
 
 ### Writer (4)
@@ -137,12 +137,13 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 
 | Action | What it does |
 | --- | --- |
-| Capture from Zotero | Reads the current Zotero selection (CAYW), writes the intake anchor, creates an `intake:source` card. |
+| Capture from Zotero | Reads the current Zotero selection (Better BibTeX JSON-RPC), writes the intake anchor, materializes a Tier-0 `catalog/papers/<citekey>.md` stub, and creates an `intake:source` card. |
 | Capture source from URL | Prompts for a URL and creates an `intake:source` card on the Librarian lane. |
 | Catalog a source | Prompts for a citekey / URL and creates a catalog-lane card. |
 | Extract claims | Sends the active (or chosen) source to the extract lane. |
 | Link a claim | Sends the active (or chosen) claim to the link lane. |
 | Map the corpus | Prompts for an optional scope and creates a map-lane card. |
+| Record exploration trace | Captures a rejected direction/dead end beside a map or gap report under `notes/fleeting/maps/`; it stays project-local and is never canonical knowledge. |
 | Draft a section | Prompts for a goal and creates a draft-lane card. |
 | Verify a draft | Sends the active (or chosen) draft to the verify lane. |
 | Delegate a task | Prompts for a lane and goal — the palette twin of the Co-PI's routing skill. |

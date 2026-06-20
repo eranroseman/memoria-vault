@@ -55,6 +55,10 @@ The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
 **5. Bring in your first source.** In Obsidian: `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste a paper's URL (one with a resolvable DOI) — or open the Agent Client pane and tell the Co-PI "bring in this paper: `<DOI>`". The Librarian's lane does the rest and raises a candidate card in your Inbox.
 
+On a fresh vault, empty tables are normal. The Inbox, Library, Knowledge, and
+Project spaces each show a **First actions** callout above their Bases views; use
+those commands as the day-1 path for the space you are in.
+
 ## Verify
 
 - `hermes profile list` shows the five `memoria-*` profiles

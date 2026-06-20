@@ -13,6 +13,11 @@ space: project
 > [!brief] No projects yet? Create one with the project form. A project carries its
 > inquiry, FINER scope, output mode, and thesis state.
 
+> [!suggestions] First actions
+> - Use **Memoria: start project** to create the first project note.
+> - Use **Memoria: refresh project gate** after editing a project.
+> - Use **Memoria: draft section** when a project has enough sources and claims.
+
 ## Active projects
 
 ![[projects.base#Active projects]]

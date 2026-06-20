@@ -13,6 +13,11 @@ space: library
 > [!brief] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
 > the same source form, so all source notes follow the same schema.
 
+> [!suggestions] First actions
+> - Use **Memoria: capture source from URL** for a DOI, PMID, arXiv URL, or paper URL.
+> - Use **Memoria: capture from Zotero selection** after selecting an item in Zotero.
+> - Use **Memoria: structured source capture** when you already know the source details.
+
 ## Reading pipeline
 
 ![[sources.base#Reading pipeline]]
