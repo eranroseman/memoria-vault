@@ -38,7 +38,6 @@ def parse_frontmatter(text: str) -> dict[str, Any]:
 
 
 def read_frontmatter(path: Path) -> dict[str, Any]:
-    """Read ``path`` and parse its leading frontmatter."""
     return parse_frontmatter(safe_read(path))
 
 

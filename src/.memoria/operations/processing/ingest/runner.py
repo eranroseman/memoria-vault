@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 """runner.py — the deterministic ingest orchestrator (ADR-30).
 
 Chains the four deterministic stages into a single **draft bundle** that the

@@ -68,9 +68,9 @@ Override with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or
 | **F3** | ≥ 5 claim notes (`type: claim`) in `notes/claims/` on a shared topic (for Librarian map lane/Writer/Peer-reviewer). |
 | **F4** | A project at `projects/test-proj/` with a `README.md` (project note), a `map/` folder, and a `code/` folder. |
 | **F5** | A draft `projects/test-proj/draft.md` citing both a **resolvable** citekey (`smithA`) and a **bogus** one (`@nope1999`). |
-| **F6** | Two near-duplicate claim notes (`type: claim`, same idea, different wording) for `find-duplicates`. |
+| **F6** | Two near-duplicate claim notes (`type: claim`, same idea, different wording) for `verify-propose-fix`. |
 | **F7** | One paper entry (`type: paper`) whose `enriched_date` is > 180 days old (for `enrich`/staleness). |
-| **F8** | One retracted-DOI paper entry (`type: paper`, or a known retracted DOI) for `retraction-check`. |
+| **F8** | One retracted-DOI paper entry (`type: paper`, or a known retracted DOI) for the retraction sweep. |
 
 ### 1.4 Verification toolbox (how every test is checked)
 
@@ -105,8 +105,8 @@ Each case below gives: **Setup** (fixtures/preconditions) · **Run** (invocation
 |---|---|---|
 | S1 | `hermes profile list` | all 5 `memoria-*` profiles listed, status OK |
 | S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `inclusionai/ling-2.6-flash` (test config is live) |
-| S3 | `hermes -p memoria-librarian chat -s query "<F2 topic>"` | returns ranked results; **no** write row in `audit.jsonl` |
-| S4 | `hermes -p memoria-librarian chat -s ingest smithA` | `catalog/papers/smithA.md` created; `allow_with_log` row in `audit.jsonl` |
+| S3 | `hermes -p memoria-librarian chat -s catalog-find-source "<F2 topic>"` | returns ranked results; **no** write row in `audit.jsonl` |
+| S4 | `hermes -p memoria-librarian chat -s catalog-enrich-record smithA` | `catalog/papers/smithA.md` created; `allow_with_log` row in `audit.jsonl` |
 | S5 | `hermes -p memoria-copi chat -s ask-question-source catalog/papers/smithA.md` then ask it to "write a note" | questions only; **`deny`** (or no write) for `memoria-copi` in `audit.jsonl` — write-wall holds |
 
 If S1–S5 pass, proceed to the full matrix.
@@ -119,22 +119,22 @@ If S1–S5 pass, proceed to the full matrix.
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| L1 | `find` | F2 | `find "<topic>"` | ≥1 candidate card in `inbox/` with `type: candidate`, `source: find`; `allow_with_log` write row |
-| L2 | `ingest` | F1 (`smithA`) | `ingest smithA` | `catalog/papers/smithA.md` with `type: paper`, `citekey`, `_proposed_classification`, `_enrichment`, top-of-body `[!brief]` callout; Marker extract in `.memoria/data/extracts/smithA.md`; audit write row |
-| L3 | `ingest` (no PDF) | F1 (`jonesB`) | `ingest jonesB` | note created; `extract_path` blank (not aborted); ingest still completes |
+| L1 | `catalog-find-source` | F2 | `catalog-find-source "<topic>"` | ≥1 candidate card in `inbox/` with `type: candidate`, `source: find`; `allow_with_log` write row |
+| L2 | `catalog-enrich-record` | F1 (`smithA`) | `catalog-enrich-record smithA` | `catalog/papers/smithA.md` with `type: paper`, `citekey`, `_proposed_classification`, `_enrichment`, top-of-body `[!brief]` callout; Marker extract in `.memoria/data/extracts/smithA.md`; audit write row |
+| L3 | `catalog-enrich-record` (no PDF) | F1 (`jonesB`) | `catalog-enrich-record jonesB` | note created; `extract_path` blank (not aborted); ingest still completes |
 | L4 | `catalog-enrich-record` | F1 (`smithA`, delete the L2 note first) | `catalog-enrich-record smithA` | same as L2 — full pipeline incl. `[!brief]` (this is the skill `ingest` wraps) |
-| L5 | `enrich` | F7 | `enrich <citekey>` | `_enrichment` refreshed, top-level `enriched_date` = today; audit write row; main human fields untouched |
-| L6 | `classify` | a paper entry (`type: paper`) with empty/low-confidence `_proposed_classification` | `classify <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [Frontmatter fields](../../reference/frontmatter.md)); human fields still empty |
-| L7 | `query` | F3 | `query "<claim topic>"` | ranked matches returned; **read-only** — no write row in `audit.jsonl` |
-| L8 | `export prior-labels` | F3 + some paper entries | `export prior-labels` | an ASReview-format priors file produced; row count = # matching the frontmatter filter |
+| L5 | `catalog-enrich-record` refresh | F7 | `catalog-enrich-record <citekey>` | `_enrichment` refreshed, top-level `enriched_date` = today; audit write row; main human fields untouched |
+| L6 | `catalog-classify-source` | a paper entry (`type: paper`) with empty/low-confidence `_proposed_classification` | `catalog-classify-source <citekey>` | `_proposed_classification` re-proposed (values from the controlled vocabulary — [Frontmatter fields](../../reference/frontmatter.md)); human fields still empty |
+| L7 | `link-suggest-claim` | F3 | `link-suggest-claim "<claim topic>"` | ranked matches returned; **read-only** — no write row in `audit.jsonl` |
+| L8 | `catalog-rank-candidate` | F3 + candidate sources | `catalog-rank-candidate <candidate-ref>` | candidate ranking returned or staged according to the skill output contract; writes stay inside the Librarian lane scope |
 
 ### 4.2 Librarian (map lane) — `hermes -p memoria-librarian chat -s …`
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| M1 | `scope-project` | F3 + F4 | `scope-project --project test-proj --output projects/test-proj/map/corpus-map.md` | `corpus-map.md` written under `map/`; `sources:` frontmatter names what was scanned; audit write row scoped to `map/` |
-| M2 | `gap-report` | F3 + F4 | `gap-report --project test-proj` | `gap-report.md` in `map/` listing thin-coverage topics |
-| M3 | `cluster-map` | F3 | `cluster-map "<topic>"` | density/recency artifact in `map/cluster-maps/` (table/figure, not prose) |
+| M1 | `map-scope-project` | F3 + F4 | `map-scope-project --project test-proj --output projects/test-proj/map/corpus-map.md` | `corpus-map.md` written under `map/`; `sources:` frontmatter names what was scanned; audit write row scoped to `map/` |
+| M2 | `map-report-coverage` | F3 + F4 | `map-report-coverage --project test-proj` | `gap-report.md` in `map/` listing thin-coverage topics |
+| M3 | `map-cluster-corpus` | F3 | `map-cluster-corpus "<topic>"` | density/recency artifact in `map/cluster-maps/` (table/figure, not prose) |
 | M4 | **map-lane write-wall** | — | (during M1) attempt/observe any write outside `map/` | none occurs; if forced, `deny` row for `memoria-librarian` (the map lane is read-only across `catalog/`, `notes/`, etc.) |
 
 ### 4.3 Co-PI — `hermes -p memoria-copi chat -s …` (read-only)
@@ -142,54 +142,52 @@ If S1–S5 pass, proceed to the full matrix.
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
 | C1 | `ask-question-source` | F1 note | `ask-question-source catalog/papers/smithA.md` | questioning turns only; **zero** vault writes; any write attempt → `deny` for `memoria-copi` |
-| C2 | `lens-reading` | a lens slug exists | `lens-reading <author>-<concept>` on a note | questions framed by the lens; still no writes |
+| C2 | `ask-read-lens` | a lens slug exists | `ask-read-lens <author>-<concept>` on a note | questions framed by the lens; still no writes |
 
 ### 4.4 Writer — `hermes -p memoria-writer chat -s …`
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| W1 | `draft` | F3 | `draft "<question over F3 claims>"` | an answer card in `inbox/`; card → `done`, queued for review (lifecycle stays `proposed`); audit write row |
-| W2 | `query` | F3 | `query "<term>"` | ranked results; read-only (no write row) |
-| W3 | `lint` (handoff) | a draft | `lint` | a Linter-operation request/card is raised; **Writer writes nothing to logs** — the Linter operation executes (verify no Writer lint output, a handoff card instead) |
-| W4 | `promote` (handoff) | an evergreen claim (`type: claim`, `maturity: evergreen`) | `promote <claim>` | a promotion proposal surfaces; the write into `notes/claims/` is **review-gated → `dry_run`** in `audit.jsonl` (no real write until human approves) |
+| W1 | `draft-write-section` | F3 | `draft-write-section "<question over F3 claims>"` | an answer card in `inbox/`; card → `done`, queued for review (lifecycle stays `proposed`); audit write row |
+| W2 | `draft-outline-argument` | F3 | `draft-outline-argument "<term>"` | outline artifact/card follows the Writer output contract; writes stay review-gated |
+| W3 | `draft-score-outline` | a draft outline | `draft-score-outline <draft-or-outline>` | scoring output follows the Writer skill contract; any durable write is review-gated and scoped to the Writer lane |
+| W4 | `draft-bind-citation` | a draft with citations | `draft-bind-citation <draft>` | citation binding output is staged for review; no ungated write to `notes/claims/` or canonical source records occurs |
 
 ### 4.5 Peer-reviewer — `hermes -p memoria-peer-reviewer chat -s …` (dry-run by default)
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| V1 | `cite-check` | F5 | `cite-check projects/test-proj/draft.md` | report/`[!verification]` flags `@nope1999` as unresolved, `smithA` as OK; **no edit to the draft** (dry-run) |
-| V2 | `claim-trace` | F5 + F3 | `claim-trace …/draft.md` | per-claim trace; each unsupported claim spawns a gap card in `inbox/` (`type: gap`, `source: gap`); only the gap-card write appears in audit |
-| V3 | `similarity-check` | F3 + a new claim | `similarity-check "<new claim>"` | top-N with scores; flags ≥ ~0.8; **never merges** (no write to existing notes) |
-| V4 | `find-duplicates` | F6 | `find-duplicates` | the F6 pair surfaced as a merge candidate; no auto-merge |
-| V5 | `retraction-check` | F8 | `retraction-check` | the retracted paper flagged against Zotero/CrossRef; dry-run (report only) |
+| V1 | `verify-check-citation` | F5 | `verify-check-citation projects/test-proj/draft.md` | report/`[!verification]` flags `@nope1999` as unresolved, `smithA` as OK; **no edit to the draft** (dry-run) |
+| V2 | `verify-trace-claim` | F5 + F3 | `verify-trace-claim projects/test-proj/draft.md` | per-claim trace; each unsupported claim spawns a gap card in `inbox/` (`type: gap`, `source: gap`); only the gap-card write appears in audit |
+| V3 | `verify-card-gap` | F3 + a gap card | `verify-card-gap <gap-card>` | gap assessment is reported or staged as an Inbox card; existing notes are not merged |
+| V4 | `verify-propose-fix` | F6 | `verify-propose-fix <target-card>` | fix proposal is staged for review; no auto-merge |
+| V5 | Retraction operation | F8 | `python src/.memoria/operations/integrity/retraction/retraction.py --sweep --vault <vault>` | the retracted paper raises an Inbox alert; the source note lifecycle is unchanged |
 
-### 4.6 Engineer — `hermes -p memoria-engineer chat -s …` (MCP-only; no terminal/file)
+### 4.6 Engineer profile invariants
+
+`memoria-engineer` intentionally ships no chat skills. It is the MCP-only code lane for scoped handoff/provenance notes under `projects/*/code/`; substantive coding, git commits, and reverts happen in an external coding agent, not through Hermes chat skills.
+
+| ID | Test | Setup | Run | Pass criteria |
+|---|---|---|---|---|
+| K1 | Skill absence | — | `hermes profile show memoria-engineer` | no bundled skills are listed for the Engineer profile |
+| K2 | Direct-world ceiling | — | inspect rendered profile config or `hermes profile show memoria-engineer` | no `terminal`, `file`, `code_execution`, `browser`, `web`, or `computer_use` toolset is enabled |
+| K3 | Write scope | F4 | force or simulate an Obsidian write outside `projects/test-proj/code/` | policy gate records `deny`; no file is written |
+| K4 | Allowed handoff scope | F4 | create a code-lane handoff/provenance note through the supported delegation path | audit row is scoped to `projects/*/code/`; no repository files are edited by Hermes |
+
+### 4.7 Deterministic operations (report-only or generated)
+
+These are deterministic operation entry points, not chat profile skills. They are covered here so the CLI test plan exercises the current implementation surface in [Operations](../../reference/operations.md).
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| K1 | `scaffold` | F4 | `scaffold --project test-proj` | code-note skeleton from template under `projects/test-proj/code/`; audit write row scoped to `code/` |
-| K2 | `code` | F4 | `code "<task>"` | a code-note handoff scaffolded with vault context (sources, purpose); external-agent handoff recorded, not run by Memoria |
-| K3 | `commit` | a change in `code/` | `commit` | exactly one logical git commit created (one change per call) |
-| K4 | `revert` | a prior K3 commit | `revert <commit>` | that commit reverted; scope small; no other files touched |
-| K5 | `workspace` | F4 | `workspace` | VS Code workspace set up with vault **read-only** and the `code/` zone writable |
-| K6 | **Engineer write-wall** | — | (during K1) | writes confined to `projects/*/code/`; any write elsewhere → `deny` |
-
-### 4.7 Linter operation (report-only)
-
-The Linter is an **operation** the Librarian/system invokes, not a chat profile —
-`memoria-linter` is retired. These checks run as operation passes (report-only); the
-findings land in the logs below.
-
-| ID | Command | Setup | Run | Pass criteria |
-|---|---|---|---|---|
-| S1 | `lint` | a vault with a planted defect (e.g. broken wikilink) | `lint` | findings written to `system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
-| S2 | `schema-check` | a note with an out-of-vocab `methodology` | `schema-check` | the schema violation flagged; no auto-fix |
-| S3 | `schema-migrate` | a field rename scenario | `schema-migrate --field X --from a --to b --dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
-| S4 | `graph-analyze` | F3 + an orphan note | `graph-analyze` | graph-health output: orphan list, hubs, link density; orphan note appears |
-| S5 | `health-report` | — | `health-report` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
-| T6 | `session-log` *(deferred)* | — | `session-log` | a per-session digest at `system/logs/sessions/<timestamp>.jsonl` — written by the Linter's `session_summary.py` on the daily lint cron, not by a `session-log` CLI command ([ADR-25](../../adr/25-session-logging-two-logs.md)); sessions are digested after a 24 h quiet window |
-| T7 | `dry-run` | — | `dry-run lint` | runs any check report-only; confirm no writes besides the findings log |
-| T8 | **Linter scope** | — | (during S1) | only `system/logs/**` writes occur for the Linter operation; cosmetic/log auto-fixes only |
+| O1 | Linter | a vault with a planted defect (e.g. broken wikilink) | `python src/.memoria/operations/integrity/linter/detectors.py --vault <vault>` | findings written to `system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
+| O2 | Schema check | a note with an out-of-vocab `methodology` | linter schema detector via the supported linter command | the schema violation flagged; no auto-fix |
+| O3 | Schema migration | a field rename scenario | supported migration script with `--dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
+| O4 | Graph analysis | F3 + an orphan note | linter graph-health detector via the supported linter command | graph-health output: orphan list, hubs, link density; orphan note appears |
+| O5 | Fleet metrics | exported board state and logs | `python src/.memoria/mcp/metrics_aggregate.py --vault <vault>` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
+| O6 | Session digest *(deferred)* | — | daily lint cron invokes `session_summary.py` | a per-session digest at `system/logs/sessions/<timestamp>.jsonl` — written by the Linter's `session_summary.py` on the daily lint cron, not by a `session-log` CLI command ([ADR-25](../../adr/25-session-logging-two-logs.md)); sessions are digested after a 24 h quiet window |
+| O7 | Dry-run | — | operation-specific `--dry-run` where available | runs any check report-only; confirm no writes besides the findings log |
+| O8 | **Linter scope** | — | during O1 | only `system/logs/**` writes occur for the Linter operation; cosmetic/log auto-fixes only |
 
 ### 4.8 Board management — `hermes kanban …` (non-interactive)
 
@@ -246,7 +244,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X2 | **Co-PI write-wall** — any Co-PI write attempt | `deny` (or structurally impossible — `policy.allow.write: []`) |
 | X3 | **Review-gate degradation** — Writer/agent write to `notes/claims/` or `notes/hubs/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
-| X5 | **Dry-run safety** — all Peer-reviewer/Linter-operation default-dry-run commands | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
+| X5 | **Dry-run safety** — Peer-reviewer skills and deterministic operations with `--dry-run` | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
 | X7 | **Model in effect** — `profile show` for all 5 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |
 

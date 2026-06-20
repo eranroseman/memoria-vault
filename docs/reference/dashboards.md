@@ -110,6 +110,8 @@ The reasoning behind these conventions (and the synthesis-vs-structural actor sp
 
 ---
 
+For the exact `lane-metric` fields and trust-score calculation, see [Fleet metrics](fleet-metrics.md) and [Telemetry log schemas](telemetry-logs.md).
+
 ## Related
 
 - The detectors behind drift-watch: [Linter: detectors and auto-fix](linter.md)

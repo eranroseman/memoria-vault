@@ -170,6 +170,7 @@ def record_event(
         event["payload_length"] = digest.length
     if details:
         event["details"] = _content_light(details)
+    # pop() not get(): one-shot — a second log call in the same process never re-captures raw payloads.
     if payload is not None and os.environ.pop(RAW_ONCE_ENV, "") == "1":
         event["raw_capture"] = "ephemeral-redacted"
         event["payload_redacted"] = _redacted_payload(payload)
