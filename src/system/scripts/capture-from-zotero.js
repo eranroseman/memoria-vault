@@ -2,8 +2,9 @@
  * QuickAdd user script — "Memoria: capture from Zotero selection".
  *
  * Reads the item currently selected in Zotero (Better BibTeX JSON-RPC) and
- * creates an `intake:source` card on the Librarian lane (Hermes kanban). The
- * gateway's embedded dispatcher then ingests the citekey into catalog/papers/.
+ * creates a Tier-0 catalog stub plus an `intake:source` card on the Librarian
+ * lane (Hermes kanban). The gateway's embedded dispatcher then enriches the
+ * citekey in catalog/papers/.
  *
  * Both the Zotero read and the card-create go through `bash -lc`. We
  * deliberately use `curl`, NOT Obsidian's requestUrl:
@@ -84,6 +85,16 @@ module.exports = async (params) => {
   } catch (e) {
     // Non-fatal: warn but still create the card (don't block capture on a log write).
     new Notice(`Capture-intake log write failed for ${citekey} (continuing): ${e.message}`.slice(0, 200), 6000);
+  }
+
+  // 1c. Materialize the Tier-0 Catalog floor immediately. This is intentionally
+  //     minimal and idempotent: the Librarian enriches it later, but capture
+  //     itself must visibly add the selected Zotero item to the Catalog.
+  try {
+    const stub = await writePaperStub(params, citekey, title);
+    new Notice("Catalog stub ready: " + stub, 5000);
+  } catch (e) {
+    new Notice(("Catalog stub write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
   }
 
   // 2. Create the intake:source card on the Librarian lane
@@ -199,6 +210,50 @@ async function writeCandidateCard(params, citekey, sourceTitle) {
   return path;
 }
 
+async function writePaperStub(params, citekey, sourceTitle) {
+  const app = params.app || globalThis.app;
+  if (!app?.vault?.adapter) throw new Error("Obsidian vault adapter unavailable");
+  const adapter = app.vault.adapter;
+  const path = "catalog/papers/" + citekey + ".md";
+  if (await exists(adapter, path)) return path;
+  await ensureFolder(adapter, "catalog/papers");
+  const today = new Date().toISOString().slice(0, 10);
+  const title = sourceTitle || "Zotero capture: " + citekey;
+  const frontmatter = [
+    "---",
+    "title: " + yamlString(title),
+    "type: paper",
+    "lifecycle: current",
+    "citekey: " + yamlString(citekey),
+    "ingest_status: tier0",
+    "doi: \"\"",
+    "authors: []",
+    "venue: \"\"",
+    "url: \"\"",
+    "research_area: []",
+    "methodology: []",
+    "relationships:",
+    "  cited_by: []",
+    "  authored_by: []",
+    "  published_in: \"\"",
+    "created: " + today,
+    "---",
+    "",
+  ].join("\n");
+  const body = [
+    "# What it is",
+    "",
+    "Captured from Zotero with citekey `" + citekey + "`. The Librarian still needs to enrich this Tier-0 stub.",
+    "",
+    "# Relationships",
+    "",
+    "Given facts only — built by the ingest operation, never authored here (ADR-52).",
+    "",
+  ].join("\n");
+  await adapter.write(path, frontmatter + body);
+  return path;
+}
+
 async function uniquePath(adapter, firstPath) {
   const dot = firstPath.lastIndexOf(".");
   const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
@@ -217,6 +272,15 @@ async function exists(adapter, path) {
     return true;
   } catch (e) {
     return false;
+  }
+}
+
+async function ensureFolder(adapter, folder) {
+  const parts = folder.split("/");
+  let current = "";
+  for (const part of parts) {
+    current = current ? current + "/" + part : part;
+    if (!(await exists(adapter, current))) await adapter.mkdir(current);
   }
 }
 
