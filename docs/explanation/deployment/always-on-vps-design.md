@@ -1,23 +1,23 @@
 ---
-title: Set up a VPS
-parent: Setup
-nav_order: 8
+title: Always-on VPS design
+parent: Deployment
+nav_order: 4
 ---
 
-# Set up a VPS for always-on operation [deferred]
+# Always-on VPS design
 
-> **Status — deferred.** The supported install path is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](../../explanation/deployment/deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../../adr/63-multi-machine-deployment.md)). This guide documents the intended setup.
+> **Status — deferred.** The supported install path is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../../adr/63-multi-machine-deployment.md)). This page records the intended topology and validation shape; it is not a supported setup guide.
 
 Move Hermes from local WSL2 to a persistent VPS so the system runs the scheduled crons overnight, processes board cards unattended, and stays reachable from any device. The VPS becomes the **one dispatcher** for the vault — the desktop keeps Obsidian and Zotero, and Syncthing carries the vault between them.
 
-## Prerequisites
+## Intended prerequisites
 
-- A working local install ([Quickstart](quickstart.md)) confirmed end-to-end
+- A working local install ([Quickstart](../../how-to-guides/setup/quickstart.md)) confirmed end-to-end
 - A VPS running Ubuntu 24.04 (minimum: 2 vCPU, 4 GB RAM, 40 GB disk)
 - SSH access to the VPS from your Windows/WSL2 machine
 - Syncthing installed on your desktop (for vault sync)
 
-## Steps
+## Intended setup sequence
 
 **1. Install base dependencies on the VPS.**
 
@@ -112,7 +112,7 @@ cd ~/Memoria && qmd embed           # build the search index
 
 Then capture a source from desktop Obsidian (`Cmd/Ctrl-P` → **Memoria: capture source from URL**) and confirm the Catalog entity appears on the desktop via Syncthing within ~15 seconds of the VPS-side ingest.
 
-## Verify
+## Validation targets
 
 - `hermes cron list` on the VPS shows the five maintenance crons; the desktop's are disabled
 - Syncthing web UI shows both devices connected and the vault folder in sync
@@ -127,7 +127,7 @@ Then capture a source from desktop Obsidian (`Cmd/Ctrl-P` → **Memoria: capture
 | Hermes dispatch, crons, qmd index | VPS |
 | Vault files | Syncthing-synced between both |
 
-## A cron that didn't fire overnight
+## Failure mode to validate: a cron that didn't fire overnight
 
 **Symptom:** a scheduled job didn't run — the dashboards are stale, no new metrics or sweeps landed, or you suspect the overnight pass was skipped.
 
@@ -164,7 +164,7 @@ Common causes and fixes:
 
 ## Related
 
-- Local install prerequisite: [Quickstart](quickstart.md)
-- The topology trade-offs and dispatcher rule: [Deployment options](../../explanation/deployment/deployment-options.md)
-- Profile configuration: [Configure a profile](../hermes-agent/configuration.md)
+- Local install prerequisite: [Quickstart](../../how-to-guides/setup/quickstart.md)
+- The topology trade-offs and dispatcher rule: [Deployment options](deployment-options.md)
+- Profile configuration: [Configure a profile](../../how-to-guides/hermes-agent/configuration.md)
 - Connection drops on restart: [Failure modes](../../reference/failure-modes.md)

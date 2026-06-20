@@ -8,7 +8,7 @@ nav_order: 4
 
 The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. The pane hosts **one agent — the Co-PI** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes**, not conversation partners, and the Co-PI delegates cards to them. This document explains the pane's *design*: why a conversational surface exists at all alongside the board, and why exactly one agent lives in it.
 
-For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugins](../../reference/obsidian-plugins.md).
+For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) and [Obsidian plugin data files](../../reference/obsidian-plugin-data-files.md).
 
 ---
 
@@ -42,4 +42,5 @@ A pane session that keeps producing things you wish were files is the signal to 
 - The one agent in the pane: [The Co-PI](../profiles/co-pi.md)
 - Operating the pane: [Agent-client pane](../../how-to-guides/using-obsidian/use-the-acp-pane.md)
 - Where delegated work goes: [The control plane](../architecture/control-plane.md)
-- Plugin settings: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Plugin settings: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
+- Plugin data-file conventions: [Obsidian plugin data files](../../reference/obsidian-plugin-data-files.md)

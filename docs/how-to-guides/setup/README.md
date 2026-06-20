@@ -19,5 +19,4 @@ One-time configuration tasks. Run once per machine or after a major system chang
 | [Set up Hermes](set-up-hermes.md) | Install profiles and fill `.env` secrets |
 | [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 | [Set up messaging](set-up-messaging.md) | Telegram alert push (shipped); inbound mobile capture deferred ([#382](https://github.com/eranroseman/memoria-vault/issues/382)) |
-| [Set up a VPS](set-up-vps.md) | Always-on Hermes deployment — deferred/unvalidated ([#383](https://github.com/eranroseman/memoria-vault/issues/383)) |
 | [Add a second vault](add-a-second-vault.md) | Fork the starter for a separate project |

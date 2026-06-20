@@ -45,7 +45,7 @@ The required plugins:
 | `portals` | Replaces the raw file tree with curated folder navigation |
 | `memoria-inspector` | Shows the read-only Memoria Inspector sidebar |
 
-All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
+All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) for the load-bearing settings of each.
 
 **3. Configure the REST API plugin.**
 
@@ -93,6 +93,7 @@ Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Clien
 ## Related
 
 - Next step: [Set up Hermes](set-up-hermes.md)
-- Plugin reference: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Load-bearing settings: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
 - Callout types: [Obsidian callouts](../../reference/obsidian-callouts.md)
 - Workspaces reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

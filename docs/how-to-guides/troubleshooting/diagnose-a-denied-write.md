@@ -29,7 +29,7 @@ From `home.md` → the audit-log dashboard. Its primary view is recent **denies 
 
 **2. Found a matching `deny` or `dry_run`? It was a policy decision.**
 
-Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema and the lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md#audit-log-format)):
+Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema: [Policy audit log](../../reference/policy-audit-log.md); lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md)):
 
 - **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `notes/claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
 - **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../inbox/work-the-review-queue.md).
@@ -62,5 +62,6 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 - Approving a held (`dry_run`) write: [Work the review queue](../inbox/work-the-review-queue.md)
 - Other troubleshooting procedures: [Troubleshooting](README.md)
-- The event schema, decision protocol, and action vocabulary: [Policy MCP](../../reference/policy-mcp.md#audit-log-format)
+- The audit event schema: [Policy audit log](../../reference/policy-audit-log.md)
+- The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
 - The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)

@@ -3,7 +3,7 @@ title: Obsidian command palette
 parent: Reference
 ---
 
-# Command palette
+# Obsidian command palette
 
 The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching uses the nav row in the four dashboard notes ([ADR-81](../adr/81-persistent-gate-dashboards.md)); the command palette is for actions, not workspace switching. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
 

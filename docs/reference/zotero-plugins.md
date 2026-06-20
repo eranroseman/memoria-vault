@@ -46,5 +46,6 @@ For guidance on choosing between these connectors see [Set up Zotero](../how-to-
 
 ## Related
 
-- Obsidian plugin set and load-bearing settings: [Obsidian plugins](obsidian-plugins.md)
+- Obsidian plugin set: [Obsidian plugins](obsidian-plugins.md)
+- Obsidian plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
 - Zotero setup how-to: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md)
