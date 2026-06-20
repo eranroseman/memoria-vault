@@ -157,8 +157,7 @@ def gh_slug(text: str) -> str:
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)  # link -> label
     text = text.replace("`", "").strip().lower()
     text = re.sub(r"[^\w\s-]", "", text)
-    text = re.sub(r"\s", "-", text)
-    return text
+    return re.sub(r"\s", "-", text)
 
 
 ID_ATTR_RE = re.compile(r"""<[a-zA-Z][^>]*\bid\s*=\s*["']([^"']+)["']""")
@@ -348,14 +347,14 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
 def _load_schema_types(repo: Path) -> dict[str, dict]:
     try:
         import yaml
-    except Exception:
+    except ImportError:
         return {}
     schema_dir = repo / "src" / ".memoria" / "schemas" / "types"
     out: dict[str, dict] = {}
     for path in sorted(schema_dir.glob("*.yaml")):
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except Exception:
+        except (yaml.YAMLError, OSError):
             continue
         out[path.stem] = data
     return out
@@ -618,7 +617,7 @@ def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
+    except OSError:
         pass
     root = Path(sys.argv[1] if len(sys.argv) > 1 else "docs")
     if not root.is_dir():

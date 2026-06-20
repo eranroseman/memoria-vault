@@ -26,7 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 AUDIT_RELPATH = "system/logs/audit.jsonl"
@@ -39,7 +39,7 @@ def _parse_ts(value) -> datetime | None:
         ts = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except ValueError:
         return None
-    return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
+    return ts if ts.tzinfo else ts.replace(tzinfo=UTC)
 
 
 def load_sessions(vault: Path) -> dict[str, list[dict]]:
@@ -141,7 +141,7 @@ def write_summaries(
     vault: Path, quiet_hours: float = QUIET_HOURS, now: datetime | None = None
 ) -> list[Path]:
     """Digest every finished, not-yet-summarized session. Returns files written."""
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     done = summarized_task_ids(vault)
     outdir = vault / SESSIONS_RELDIR
     written: list[Path] = []

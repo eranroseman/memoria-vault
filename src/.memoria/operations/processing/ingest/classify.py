@@ -73,7 +73,7 @@ def thresholds(vault: Path | None) -> tuple[float, float]:
         f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
         c = yaml.safe_load(f.read_text(encoding="utf-8"))["classify"]
         return float(c["confidence_floor"]), float(c["near_tie_margin"])
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- config load with import-inside-try; degrade to defaults
         if not _warned_calibration:
             _warned_calibration = True
             print(
@@ -168,7 +168,7 @@ def append_audit(vault: Path, citekey: str, decision: dict, floor: float, margin
     """Append one JSONL audit line per classify decision (applied or flagged) to
     system/logs/classify.jsonl — the patterns.jsonl provenance pattern."""
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "run_id": str(uuid.uuid4())[:8],
         "stage": "classify",
         "citekey": citekey,
@@ -226,7 +226,7 @@ def load_project_hints(vault: Path | None) -> list[dict]:
             if pid and topics:
                 out.append({"id": pid, "primary_topics": topics})
         return out
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 -- hints load with import-inside-try; degrade to manual
         if not _warned_hints:
             _warned_hints = True
             print(
@@ -306,7 +306,7 @@ def append_project_audit(vault: Path, citekey: str, decision: dict) -> dict:
     no_match) in system/logs/classify.jsonl — same trail as append_audit().
     Honesty rules (ADR-51): candidates carry overlap counts, never confidence."""
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "run_id": str(uuid.uuid4())[:8],
         "stage": "project_hints",
         "citekey": citekey,

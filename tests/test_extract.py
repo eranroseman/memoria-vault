@@ -55,7 +55,7 @@ def test_pmc_api_key_param():
 
     def _fake_get(url, *a, **k):
         captured["url"] = url
-        return None
+        return
 
     orig = _m._get
     _m._get = _fake_get

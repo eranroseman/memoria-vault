@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import UTC
 from pathlib import Path
 
 
@@ -33,7 +34,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     record older than `max_age_h` means the reversibility chain has a hole --
     the write either failed silently or completed without its after_hash, so
     the prior state can no longer be pinned. Report-only, like every detector."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     log = vault / "system" / "logs" / "audit.jsonl"
     if not log.is_file():
@@ -54,7 +55,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
             and e.get("before_hash")
         ):
             pending[key] = e
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     out = []
     for (path, task_id), e in sorted(pending.items()):
         try:

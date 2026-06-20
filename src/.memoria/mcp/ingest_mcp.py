@@ -23,7 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
@@ -52,7 +52,7 @@ def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
             except json.JSONDecodeError:
                 continue
     rec = {
-        "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "citekey": citekey,
         "source": "ingest-tool",
         "note_path": note_path,
@@ -88,7 +88,7 @@ def build_server(vault: Path):
             bundle = runner.run(citekey, bib_text, vault, pdf_path or None, enrich=enrich)
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- top-level tool guard; return structured pipeline-error
             print(
                 f"[ingest_mcp] runner.run failed for {citekey}: {type(exc).__name__}: {exc}",
                 file=sys.stderr,
@@ -122,7 +122,7 @@ def build_server(vault: Path):
                         loudness="alert",
                     )
                 bundle["flag_raised"] = True
-            except Exception as exc:  # never fail the ingest on card-writing
+            except Exception as exc:  # noqa: BLE001 -- never fail the ingest on card-writing
                 bundle["flag_raised"] = False
                 bundle.setdefault("degraded", []).append(f"flag-write: {exc}")
 

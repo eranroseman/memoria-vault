@@ -2,6 +2,7 @@
 
 import hashlib
 import json as _json
+from datetime import UTC
 from pathlib import Path as _Path
 
 from _util import CheckHarness
@@ -118,9 +119,9 @@ def test_detectors():
             # audit chain: an unpaired mutating allow older than 1h -> MEDIUM
             # finding; a paired one and a fresh (<1h) unpaired one stay silent.
             import json as _json
-            from datetime import datetime, timedelta, timezone
+            from datetime import datetime, timedelta
 
-            _ts = lambda hours: (datetime.now(timezone.utc) - timedelta(hours=hours)).strftime(
+            _ts = lambda hours: (datetime.now(UTC) - timedelta(hours=hours)).strftime(
                 "%Y-%m-%dT%H:%M:%SZ"
             )
             (v / "system/logs").mkdir(parents=True, exist_ok=True)

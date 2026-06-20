@@ -75,7 +75,7 @@ def _get(url: str, timeout: int = 25) -> str | None:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as r:
             return r.read().decode("utf-8", errors="ignore")
-    except Exception as exc:
+    except OSError as exc:
         print(f"[extract] GET {url}: {type(exc).__name__}: {exc}", file=sys.stderr)
         return None
 

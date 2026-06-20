@@ -175,7 +175,7 @@ def append_by_name_audit(vault: Path, citekey: str, plan: dict) -> dict | None:
     if total == 0:
         return None
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "stage": "link",
         "citekey": citekey,
         "event": "recorded_by_name",

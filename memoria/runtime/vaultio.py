@@ -32,7 +32,7 @@ def parse_frontmatter(text: str) -> dict[str, Any]:
         return _parse_frontmatter_minimal(raw)
     try:
         data = yaml.safe_load(raw) or {}
-    except Exception:
+    except yaml.YAMLError:
         return {}
     return data if isinstance(data, dict) else {}
 

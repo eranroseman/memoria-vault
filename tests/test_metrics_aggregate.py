@@ -17,10 +17,10 @@ read_disposition = _m.read_disposition
 read_attention = _m.read_attention
 read_blind_reviews = _m.read_blind_reviews
 read_lint_verdict = _m.read_lint_verdict
-timezone = _m.timezone
+UTC = _m.UTC
 trust_score = _m.trust_score
 
-NOW = datetime(2026, 5, 28, tzinfo=timezone.utc)
+NOW = datetime(2026, 5, 28, tzinfo=UTC)
 PERIOD = "2026-W22"
 
 

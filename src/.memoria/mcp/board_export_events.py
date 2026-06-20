@@ -7,7 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
@@ -169,8 +169,8 @@ def _recently_done(c: dict, now: datetime | None = None) -> bool:
     except ValueError:
         return False
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=timezone.utc)
-    now = now or datetime.now(timezone.utc)
+        ts = ts.replace(tzinfo=UTC)
+    now = now or datetime.now(UTC)
     return (now - ts).total_seconds() <= REVIEW_PROMPT_FRESH_SECONDS
 
 
