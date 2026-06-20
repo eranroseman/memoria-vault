@@ -1,7 +1,7 @@
 ---
 topic: decisions
 id: 110
-title: Ruff format owns Python layout (line-length 100)
+title: "Ruff: formatter owns layout (line-length 100), curated lint ruleset"
 status: accepted
 date_proposed: 2026-06-20
 date_resolved: 2026-06-20
@@ -14,14 +14,19 @@ nav_order: 110
 nav_exclude: true
 ---
 
-# ADR-110: Ruff format owns Python layout (line-length 100)
+# ADR-110: Ruff — formatter owns layout (line-length 100), curated lint ruleset
+
+This ADR records two related decisions about the Ruff configuration: how layout is
+governed (the **formatter**) and what the **linter** checks. Both were rethought from
+first principles for an all-agent contributor model.
 
 ## Context
 
 Ruff has been the Python linter for repo tooling and runtime code, but `ruff format`
-was deliberately **not** used. The recorded rationale was that the codebase was
-hand-formatted — "aligned comment columns, deliberate line breaks" — and that
-reformatting would churn ~2k lines for no behavioral gain, with "many lines
+was deliberately **not** used, and the lint selection was a small set
+(`F/E4/E7/E9/W/I/B/C4/UP/RUF/PIE`). The recorded rationale for not formatting was that
+the codebase was hand-formatted — "aligned comment columns, deliberate line breaks" —
+and that reformatting would churn ~2k lines for no behavioral gain, with "many lines
 intentionally long" cited as the reason E501 stayed disabled.
 
 Two facts undercut that rationale once examined against the actual code:
@@ -45,6 +50,8 @@ between concurrent agent sessions.
 
 ## Decision
 
+### Formatter — owns layout
+
 Adopt `ruff format` as the single source of truth for Python layout in `memoria/`,
 `scripts/`, `src/.memoria/`, `.github/scripts/`, and `tests/`, at **line-length 100**.
 
@@ -60,6 +67,41 @@ versus the 88 default. The bulk reformat is isolated in a single commit listed i
 `.git-blame-ignore-revs` so `git blame` continues to attribute lines to their real
 authors.
 
+### Linter — curated high-signal ruleset
+
+The linter's job is to catch real bugs, enforce the consistency the formatter cannot
+(imports, idioms), and modernize — not to relitigate layout. The selection adds, on
+top of the prior set, rules chosen for what agents plausibly get wrong here:
+
+- `A` (shadowing `id`/`type`/`list`/`dict`), `PT` (pytest-style), `DTZ` (naive
+  datetimes), `FLY` (`str.join` → f-string), `BLE` (blind `except`), `S`
+  (bandit — the real subprocess/network/deserialization surface), `RET` (return
+  hygiene).
+
+Three classes of rule are turned **off** with inline rationale, each because it is
+noise *for this codebase*, not because the rule is bad:
+
+- **Layout-owned:** `E1/E2/E3`, `W291/293`, `E501`, `COM`, `ISC`, `Q` — the formatter
+  owns these, and `COM`/`ISC` actively conflict with it.
+- **Bandit threat-model misfits** for a local, single-user CLI (no untrusted remote
+  input): `S603`/`S607`/`S310`/`S311`. The high-value S rules (yaml/xml/SQL injection,
+  eval/exec, pickle) stay enabled. Tests ignore `S` wholesale; the e2e smoke harness
+  ignores `S101`.
+- **pytest-idiom rules** that clash with this suite's deliberately pytest-independent
+  test style: `PT011`/`PT017`/`PT018`. Most test files do not import pytest so they run
+  under both pytest and the ADR-44 `CheckHarness`; the `try/except/else` assertion idiom
+  is intentional. `DTZ011` (`date.today()`) is off because local-date semantics are
+  intended for a single-user vault.
+
+The previously-deferred `UP017` ignore is dropped and the `datetime.timezone.utc` →
+`datetime.UTC` migration completed (py311). Every finding the new rules surfaced was
+resolved by a fix or a documented `# noqa` — never blanket suppression: broad excepts
+are narrowed where the failure modes are knowable, otherwise kept broad with a one-line
+justification at each deliberate fault boundary; a few security findings are annotated
+false positives (e.g. `BaseLoader` keeps the GitHub Actions `on:` key a string where
+`safe_load` would parse it to `True`; a parameterized query whose only interpolation is
+a hardcoded column constant; XML parsed from the trusted NIH PubMed endpoint).
+
 ## Consequences
 
 - Python layout is now deterministic and consistent across all agent sessions;
@@ -74,6 +116,11 @@ authors.
   consistency; it is also more diff-friendly.
 - A first `git blame` pass over reformatted lines requires the ignore-revs file (GitHub
   honors it automatically; locally `git config blame.ignoreRevsFile .git-blame-ignore-revs`).
+- The wider lint ruleset now catches a real bug class going forward (builtin shadowing,
+  naive datetimes, blind excepts, the dangerous bandit subset) and made every broad
+  `except` carry an explicit justification or a narrowed type.
+- Some broad excepts that are genuine fault boundaries now carry `# noqa: BLE001`
+  comments; this is intended — it documents intent rather than hiding it.
 
 ## When this matters
 
@@ -96,6 +143,17 @@ only benefit is matching the ecosystem default.
 engages (only ~1.2% of lines exceed 100), so it fails to enforce a sane width on
 future sprawling expressions. It minimizes churn but at the cost of doing little.
 
+**Keep the small lint set.** Rejected: it caught syntax/import errors but missed whole
+bug classes (builtin shadowing, naive datetimes, blind excepts, unsafe deserialization)
+that are exactly what agents get wrong.
+
+**Enable the full bandit / pytest rule families.** Rejected: for a local single-user
+tool, the subprocess/partial-path/urlopen/random bandit rules are threat-model misfits
+that would be all-noise, and the pytest.raises-idiom rules fight this suite's
+pytest-independent design. Enabling the high-signal members and turning the misfits off
+with rationale beats both all-on and all-off.
+
 ## Related
 
-- Implemented in [PR #790](https://github.com/eranroseman/memoria-vault/pull/790).
+- Formatter implemented in [PR #790](https://github.com/eranroseman/memoria-vault/pull/790).
+- Lint ruleset implemented in [PR #794](https://github.com/eranroseman/memoria-vault/pull/794).
