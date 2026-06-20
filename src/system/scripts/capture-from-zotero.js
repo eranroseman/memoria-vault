@@ -16,24 +16,16 @@
 const BBT_RPC = "http://127.0.0.1:23119/better-bibtex/json-rpc";
 const SELECTED_CITEKEY_REQUEST =
   '[{"jsonrpc":"2.0","method":"item.citationkey","params":["selected"],"id":1}]';
+const { exists, run, shq, slug, uniquePath, yamlString } = require("./quickadd-utils");
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const run = (sh) =>
-    new Promise((resolve, reject) => {
-      const file = "bash";
-      const args = ["-lc", sh];
-      cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-        if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-        resolve(stdout);
-      });
-    });
 
   // 1. Current Zotero selection via curl (no Origin header -> Zotero accepts it)
   let raw;
   try {
-    raw = (await run(
+    raw = (await run(cp,
       `curl -s --max-time 8 -H 'Content-Type: application/json' --data ${shq(SELECTED_CITEKEY_REQUEST)} '${BBT_RPC}'`
     )).trim();
   } catch (e) {
@@ -116,7 +108,7 @@ module.exports = async (params) => {
     new Notice(("Inbox card write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
   }
   try {
-    await run(
+    await run(cp,
       hermesCommand() + " kanban create " + shq(cardTitle) +
       " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
       " --body " + shq(body)
@@ -126,11 +118,6 @@ module.exports = async (params) => {
     new Notice(`Capture failed for ${citekey}: ${e.message}`.slice(0, 300), 10000);
   }
 };
-
-// POSIX single-quote escape.
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
 
 function hermesCommand() {
   return [
@@ -167,7 +154,7 @@ async function writeCandidateCard(params, citekey, sourceTitle) {
   const argumentFor = "The PI explicitly selected this Zotero item for possible intake.";
   const argumentAgainst = "The bibliographic record has not been enriched yet, so relevance and metadata quality are still unknown.";
   const whatTippedIt = "A deliberate Zotero selection is enough to queue a lightweight keep/skip decision while the Librarian resolves metadata.";
-  const path = await uniquePath(adapter, "inbox/candidate-zotero-" + slug(citekey) + ".md");
+  const path = await uniquePath(adapter, "inbox/candidate-zotero-" + slug(citekey, "source") + ".md");
   const today = new Date().toISOString().slice(0, 10);
   const frontmatter = [
     "---",
@@ -254,27 +241,6 @@ async function writePaperStub(params, citekey, sourceTitle) {
   return path;
 }
 
-async function uniquePath(adapter, firstPath) {
-  const dot = firstPath.lastIndexOf(".");
-  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
-  const ext = dot === -1 ? "" : firstPath.slice(dot);
-  let path = firstPath;
-  for (let i = 2; await exists(adapter, path); i += 1) {
-    path = base + "-" + i + ext;
-  }
-  return path;
-}
-
-async function exists(adapter, path) {
-  if (typeof adapter.exists === "function") return adapter.exists(path);
-  try {
-    await adapter.read(path);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 async function ensureFolder(adapter, folder) {
   const parts = folder.split("/");
   let current = "";
@@ -282,12 +248,4 @@ async function ensureFolder(adapter, folder) {
     current = current ? current + "/" + part : part;
     if (!(await exists(adapter, current))) await adapter.mkdir(current);
   }
-}
-
-function slug(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "source";
-}
-
-function yamlString(s) {
-  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }

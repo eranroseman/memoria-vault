@@ -15,6 +15,7 @@ const ASSIGNEE = "memoria-librarian";
 const SKILL = "link-suggest-claim";
 const CLAIM_PREFIX = "notes/claims/";
 const SUGGESTION_LIMIT = 10;
+const { appendCallout, fnv1a, run, shq } = require("./quickadd-utils");
 const STOPWORDS = new Set([
   "about", "after", "again", "against", "also", "because", "before", "between",
   "claim", "could", "from", "have", "into", "more", "note", "only", "paper",
@@ -25,15 +26,6 @@ const STOPWORDS = new Set([
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const run = (sh) =>
-    new Promise((resolve, reject) => {
-      const file = "bash";
-      const args = ["-lc", sh];
-      cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-        if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-        resolve(stdout);
-      });
-    });
 
   const active = params.app.workspace.getActiveFile();
   let ref = active && active.path.startsWith(CLAIM_PREFIX) ? active.path : "";
@@ -65,7 +57,7 @@ module.exports = async (params) => {
 
   new Notice("Wrote [!suggestions]; delegating to the " + LANE + " lane…", 3000);
   try {
-    await run(
+    await run(cp,
       "hermes kanban create " + shq("Link claim: " + ref) +
       " --assignee " + ASSIGNEE + " --skill " + SKILL + " --created-by quickadd" +
       " --idempotency-key " + shq(idemKey) +
@@ -134,25 +126,7 @@ function candidateLine(item) {
   return "[[" + stem + "|" + label + "]] — score " + item.score.toFixed(3) + terms;
 }
 
-async function appendCallout(app, file, callout) {
-  const text = await app.vault.read(file);
-  await app.vault.modify(file, text.trimEnd() + "\n\n" + callout + "\n");
-}
-
 function termSet(text) {
   const terms = String(text).toLowerCase().match(/[a-z][a-z0-9-]{3,}/g) || [];
   return new Set(terms.filter((term) => !STOPWORDS.has(term)));
-}
-
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
-
-function fnv1a(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, "0");
 }

@@ -17,7 +17,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
 | [Inbox card fields](inbox-card-fields.md) | Field-level contract for candidate, gap, flag, alert, and work-prompt cards |
-| [Note types](note-types.md) | The 22 note types: folder, template, lifecycle, promotion map |
+| [Note types](note-types.md) | The 24 note types: folder, template, lifecycle, promotion map |
 | [Vocabulary](vocabulary.md) | Controlled values for `research_area`, `methodology`, and claim `topics` |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
@@ -27,7 +27,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 
 | File | What it covers |
 | --- | --- |
-| [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, the 25 skills, PI palette — with performer and purpose |
+| [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, the 27 skills, PI palette — with performer and purpose |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities |
 | [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |

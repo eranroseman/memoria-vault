@@ -7,18 +7,11 @@
  * `bash -lc` so it reaches the native Hermes CLI.
  */
 
+const { run, shq, slug, uniquePath, yamlString } = require("./quickadd-utils");
+
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const run = (sh) =>
-    new Promise((resolve, reject) => {
-      const file = "bash";
-      const args = ["-lc", sh];
-      cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-        if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-        resolve(stdout);
-      });
-    });
 
   const url = (await params.quickAddApi.inputPrompt("Source URL to capture:"))?.trim();
   if (!url) {
@@ -45,7 +38,7 @@ module.exports = async (params) => {
     new Notice(("Inbox card write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
   }
   try {
-    await run(
+    await run(cp,
       "hermes kanban create " + shq("Ingest source: " + url) +
       " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
       " --body " + shq(body)
@@ -55,11 +48,6 @@ module.exports = async (params) => {
     new Notice(("Capture failed: " + e.message).slice(0, 250), 10000);
   }
 };
-
-// POSIX single-quote escape.
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
 
 async function writeCandidateCard(params, url) {
   const app = params.app || globalThis.app;
@@ -71,7 +59,7 @@ async function writeCandidateCard(params, url) {
   const argumentFor = "The PI explicitly captured this URL for possible intake.";
   const argumentAgainst = "The source metadata has not been resolved yet, so relevance and bibliographic quality are still unknown.";
   const whatTippedIt = "A deliberate capture is enough to queue a lightweight keep/skip decision while the Librarian resolves metadata.";
-  const stem = "candidate-" + slug(host + "-" + url);
+  const stem = "candidate-" + slug(host + "-" + url, "source");
   const path = await uniquePath(adapter, "inbox/" + stem + ".md");
   const today = new Date().toISOString().slice(0, 10);
   const frontmatter = [
@@ -111,33 +99,4 @@ async function writeCandidateCard(params, url) {
   ].join("\n");
   await adapter.write(path, frontmatter + body);
   return path;
-}
-
-async function uniquePath(adapter, firstPath) {
-  const dot = firstPath.lastIndexOf(".");
-  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
-  const ext = dot === -1 ? "" : firstPath.slice(dot);
-  let path = firstPath;
-  for (let i = 2; await exists(adapter, path); i += 1) {
-    path = base + "-" + i + ext;
-  }
-  return path;
-}
-
-async function exists(adapter, path) {
-  if (typeof adapter.exists === "function") return adapter.exists(path);
-  try {
-    await adapter.read(path);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function slug(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "source";
-}
-
-function yamlString(s) {
-  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }

@@ -7,10 +7,14 @@ check_bare_adr_codes = _m.check_bare_adr_codes
 check_frontmatter = _m.check_frontmatter
 check_link_text = _m.check_link_text
 check_links = _m.check_links
+check_plugin_count_mirrors = _m.check_plugin_count_mirrors
+check_profile_skill_count_mirror = _m.check_profile_skill_count_mirror
+check_quickadd_command_reference_mirror = _m.check_quickadd_command_reference_mirror
 check_readmes = _m.check_readmes
 check_site_local_links = _m.check_site_local_links
 check_template_frontmatter = _m.check_template_frontmatter
 check_thin_folders = _m.check_thin_folders
+check_vocabulary_reference_mirror = _m.check_vocabulary_reference_mirror
 check_wikilink_aliases = _m.check_wikilink_aliases
 check_wikilinks = _m.check_wikilinks
 gh_slug = _m.gh_slug
@@ -335,3 +339,83 @@ def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
     assert "top-level" in slugs
     assert "sub-heading" in slugs
     assert "custom-anchor" in slugs
+
+
+def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
+    repo = tmp_path
+    (repo / "src" / "system").mkdir(parents=True)
+    (repo / "docs" / "reference").mkdir(parents=True)
+    (repo / "src" / "system" / "vocabulary.md").write_text(
+        "## research_area\n\n- alpha — A\n\n## methodology\n\n- beta — B\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "reference" / "vocabulary.md").write_text(
+        "### `research_area`\n\n| Term | Definition |\n| --- | --- |\n| `alpha` | A |\n\n"
+        "### `methodology`\n\n| Term | Definition |\n| --- | --- |\n| `gamma` | G |\n",
+        encoding="utf-8",
+    )
+
+    errs: list[str] = []
+    check_vocabulary_reference_mirror(repo, errs)
+
+    assert len(errs) == 1
+    assert "methodology vocabulary mirror differs" in errs[0]
+
+
+def test_check_quickadd_command_reference_mirror_compares_command_names(tmp_path):
+    repo = tmp_path
+    data_dir = repo / "src" / ".obsidian" / "plugins" / "quickadd"
+    doc_dir = repo / "docs" / "reference"
+    data_dir.mkdir(parents=True)
+    doc_dir.mkdir(parents=True)
+    (data_dir / "data.json").write_text(
+        '{"choices":[{"name":"Memoria: one","command":true},{"name":"Hidden","command":false}]}',
+        encoding="utf-8",
+    )
+    (doc_dir / "obsidian-command-palette.md").write_text("`Memoria: one`\n", encoding="utf-8")
+
+    errs: list[str] = []
+    check_quickadd_command_reference_mirror(repo, errs)
+
+    assert errs == []
+
+
+def test_check_plugin_count_mirrors_compares_community_plugins(tmp_path):
+    repo = tmp_path
+    (repo / "src" / ".obsidian").mkdir(parents=True)
+    (repo / "docs" / "reference").mkdir(parents=True)
+    (repo / "docs" / "testing" / "plans").mkdir(parents=True)
+    (repo / "src" / ".obsidian" / "community-plugins.json").write_text(
+        '["a","b"]', encoding="utf-8"
+    )
+    (repo / "docs" / "reference" / "obsidian-plugins.md").write_text(
+        "## Required Obsidian plugins (3)\n", encoding="utf-8"
+    )
+    (repo / "docs" / "testing" / "plans" / "gui-test-plan.md").write_text(
+        "Confirm all 2 required plugins.\n", encoding="utf-8"
+    )
+
+    errs: list[str] = []
+    check_plugin_count_mirrors(repo, errs)
+
+    assert len(errs) == 1
+    assert "says 3" in errs[0]
+
+
+def test_check_profile_skill_count_mirror_compares_skill_dirs(tmp_path):
+    repo = tmp_path
+    profile = repo / "src" / ".memoria" / "profiles" / "memoria-copi" / "skills"
+    profile.mkdir(parents=True)
+    (profile / "one").mkdir()
+    (repo / "docs" / "reference").mkdir(parents=True)
+    (repo / "docs" / "reference" / "profiles.md").write_text(
+        "**1 skills**\n\n| Profile | Bundled-skill count |\n| --- | --- |\n"
+        "| `memoria-copi` | 0 |\n",
+        encoding="utf-8",
+    )
+
+    errs: list[str] = []
+    check_profile_skill_count_mirror(repo, errs)
+
+    assert len(errs) == 1
+    assert "memoria-copi" in errs[0]

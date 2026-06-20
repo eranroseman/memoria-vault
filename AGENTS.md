@@ -12,7 +12,7 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 ## Working principles
 
 - **Cover the whole scope.** Read, verify, and audit completely — every file and line in scope, no sampling or grep-standing-in-for-a-read. Verify a sub-agent's claimed coverage before reporting done.
-- **Zero tolerated contradictions.** Docs must agree with each other and with the implementation — a stale page or a doc describing unbuilt behavior is a defect to fix, not log. Sweep the full surface with [`source-of-truth-map`](.agents/system/source-of-truth-map.md) + [`change-impact-map`](.agents/system/change-impact-map.md); no doc outranks another — research to the true source of truth and fix the stale side.
+- **Zero tolerated contradictions.** Docs must agree with each other and with the implementation — a stale page or a doc describing unbuilt behavior is a defect to fix, not log. Sweep the full surface with [`source-of-truth-map`](.agents/system/source-of-truth-map.md) + [`change-impact-map`](.agents/system/change-impact-map.md); no doc outranks another — research to the true source of truth and fix the stale side. Mirrors are allowed only as consumer views: they must name the owning source, avoid restating more contract detail than the reader needs, and be generated or covered by a drift check whenever they repeat machine-readable contracts (counts, rosters, fields, scopes, commands, lifecycle values, or required checks).
 - **Verify hard conclusions independently.** For an uncertain runtime/architecture call, re-diagnose with a fresh agent (prefer two) and live-test the allowed/denied/fail-closed path before declaring done — don't ship solo reasoning. Ground Hermes claims in the `~/.hermes` docs first.
 
 ---

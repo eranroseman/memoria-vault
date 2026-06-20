@@ -176,6 +176,7 @@ def test_structured_source_capture_is_palette_wired_and_staged():
     [cmd] = choice["macro"]["commands"]
     assert cmd["path"] == "system/scripts/structured-source-capture.js"
     script = (SCRIPTS / "structured-source-capture.js").read_text(encoding="utf-8")
+    similarity = (SCRIPTS / "quickadd-similarity.js").read_text(encoding="utf-8")
     for marker in (
         "openForm(FORM_NAME)",
         'FORM_NAME = "memoria-source-capture"',
@@ -186,11 +187,14 @@ def test_structured_source_capture_is_palette_wired_and_staged():
         '"raised_by: modalforms"',
         '"target: " + yamlString(sourcePath)',
         "preFileSimilarityShadow(app, cp, crypto",
+    ):
+        assert marker in script
+    for marker in (
         "[!similarity]- Pre-file similarity shadow",
         'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"',
         "qmd search --format json --full-path -n 12",
     ):
-        assert marker in script
+        assert marker in similarity
 
 
 def test_zotero_capture_writes_intake_log_where_readers_look():
@@ -210,7 +214,7 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     assert "writeCandidateCard(params, citekey, title)" in script
     assert "writePaperStub(params, citekey, title)" in script
-    assert '"inbox/candidate-zotero-" + slug(citekey) + ".md"' in script
+    assert '"inbox/candidate-zotero-" + slug(citekey, "source") + ".md"' in script
     assert '"catalog/papers/" + citekey + ".md"' in script
     for field in (
         "type: candidate",
@@ -232,7 +236,7 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
 def test_zotero_capture_materializes_schema_valid_tier0_catalog_stub():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     start = script.index("async function writePaperStub")
-    stub = script[start : script.index("async function uniquePath", start)]
+    stub = script[start : script.index("async function ensureFolder", start)]
     for marker in (
         '"type: paper"',
         '"lifecycle: current"',
@@ -320,8 +324,9 @@ def test_url_capture_writes_visible_candidate_card():
 
 def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     script = (SCRIPTS / "create-linked-claim.js").read_text(encoding="utf-8")
+    similarity = (SCRIPTS / "quickadd-similarity.js").read_text(encoding="utf-8")
     assert 'source.path.startsWith("notes/sources/")' in script
-    assert '"notes/claims/" + slug(claim) + ".md"' in script
+    assert '"notes/claims/" + slug(claim, "claim") + ".md"' in script
     for field in (
         "type: claim",
         "schema_version: 2",
@@ -338,19 +343,21 @@ def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     assert "app.vault.modify(source," in script
     assert "app.workspace.getLeaf(true).openFile(created)" in script
     assert "preFileSimilarityShadow(app, cp, crypto" in script
-    assert "[!similarity]- Pre-file similarity shadow" in script
-    assert 'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"' in script
-    assert "qmd search --format json --full-path -n 12" in script
+    assert "[!similarity]- Pre-file similarity shadow" in similarity
+    assert 'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"' in similarity
+    assert "qmd search --format json --full-path -n 12" in similarity
     assert (
-        "Report-only qmd neighbour check; no block, auto-merge, or calibrated threshold." in script
+        "Report-only qmd neighbour check; no block, auto-merge, or calibrated threshold."
+        in similarity
     )
-    assert 'event: "pre_file_similarity_shadow"' in script
-    assert "query_sha256" in script and "query_chars" in script
-    assert 'SIMILARITY_SCOPES = ["notes/claims/", "notes/sources/"]' in script
+    assert 'event: "pre_file_similarity_shadow"' in similarity
+    assert "query_sha256" in similarity and "query_chars" in similarity
+    assert 'SIMILARITY_SCOPES = ["notes/claims/", "notes/sources/"]' in similarity
 
 
 def test_link_claim_writes_suggestions_callout_before_delegating():
     script = (SCRIPTS / "link-claim.js").read_text(encoding="utf-8")
+    utils = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
 
     assert "[!suggestions]- Link suggestions" in script
     assert "rankLinkSuggestions(params.app, claim, claimText)" in script
@@ -359,8 +366,8 @@ def test_link_claim_writes_suggestions_callout_before_delegating():
     assert "Backward candidates" in script
     assert "score.toFixed(3)" in script
     assert "appendCallout(params.app, claim, buildSuggestionsCallout(suggestions))" in script
-    assert "text.trimEnd()" in script
-    assert "app.vault.modify(file," in script
+    assert "async function appendCallout" in utils
+    assert "app.vault.modify(file," in utils
     assert "optional LLM one-line explanations" in script
     assert "hermes kanban create" in script
 
@@ -374,6 +381,7 @@ def test_link_claim_excludes_superseded_claims_by_default():
 
 def test_verify_draft_writes_verification_callout_before_delegating():
     script = (SCRIPTS / "verify-draft.js").read_text(encoding="utf-8")
+    utils = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
 
     assert "[!verification] Verification trace" in script
     assert "traceDraftMarkers(draftText)" in script
@@ -381,8 +389,8 @@ def test_verify_draft_writes_verification_callout_before_delegating():
     assert "Citekeys found:" in script
     assert "No claim links or citekeys found" in script
     assert "appendCallout(params.app, draft, buildVerificationCallout(trace))" in script
-    assert "text.trimEnd()" in script
-    assert "app.vault.modify(file," in script
+    assert "async function appendCallout" in utils
+    assert "app.vault.modify(file," in utils
     assert "The deterministic [!verification] preflight callout has been written" in script
     assert "hermes kanban create" in script
 

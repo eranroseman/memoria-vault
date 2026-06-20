@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,6 +31,8 @@ if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
 INTAKE_LOG = "system/logs/capture-intake.jsonl"
+
+from memoria.runtime.paths import resolve_vault  # noqa: E402
 
 
 def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
@@ -146,16 +147,6 @@ def build_server(vault: Path):
         return bundle
 
     return server
-
-
-def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    if not raw:
-        sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
-    vault = Path(raw).expanduser().resolve()
-    if not vault.is_dir():
-        sys.exit(f"not a directory: {vault}")
-    return vault
 
 
 def main() -> None:

@@ -81,7 +81,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `code-note`, `pattern`, `eval-task`, `worklist-item` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
-| `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index` |
+| `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index`, `space`, `worker-card` |
 
 `proposed` always means _awaiting the PI_. `retracted` is a state, not a deletion — supersession keeps the lineage (`superseded_by`). Claim queries and write-assist surfaces exclude claims with a non-empty `superseded_by` by default; include them only for lineage, audit, or supersession-history work. This lifecycle is the **PI-facing state**; the board's `status` enum is a separate, hidden execution mechanic (see [Kanban board reference](kanban-board.md)).
 

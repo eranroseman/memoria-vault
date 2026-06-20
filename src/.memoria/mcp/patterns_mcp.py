@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import os
 import re
 import sys
 import uuid
@@ -28,6 +27,7 @@ _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
+from memoria.runtime.paths import resolve_vault  # noqa: E402
 from memoria.runtime.policy import REVIEW_GATED_PREFIXES  # noqa: E402
 
 PATTERNS_RELDIR = "system/patterns"
@@ -165,16 +165,6 @@ def build_server(vault: Path):
         return run_pattern(vault, pattern_id, input_text, input_ref)
 
     return server
-
-
-def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    if not raw:
-        sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
-    v = Path(raw).expanduser()
-    if not v.is_dir():
-        sys.exit(f"not a directory: {v}")
-    return v
 
 
 def main() -> None:

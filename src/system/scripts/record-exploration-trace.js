@@ -8,6 +8,7 @@
  */
 
 const MAPS_DIR = "notes/fleeting/maps/";
+const { fnv1a, uniquePath, yamlString } = require("./quickadd-utils");
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -104,16 +105,6 @@ function stripMd(path) {
   return String(path).replace(/\.md$/, "");
 }
 
-async function uniquePath(adapter, path) {
-  if (!(await adapter.exists(path))) return path;
-  const stem = path.replace(/\.md$/, "");
-  for (let i = 2; i < 100; i++) {
-    const candidate = stem + "-" + i + ".md";
-    if (!(await adapter.exists(candidate))) return candidate;
-  }
-  throw new Error("Could not allocate a unique exploration-trace path.");
-}
-
 async function ensureFolder(adapter, folder) {
   const parts = folder.replace(/\/$/, "").split("/");
   let current = "";
@@ -121,17 +112,4 @@ async function ensureFolder(adapter, folder) {
     current = current ? current + "/" + part : part;
     if (!(await adapter.exists(current))) await adapter.mkdir(current);
   }
-}
-
-function yamlString(value) {
-  return JSON.stringify(String(value));
-}
-
-function fnv1a(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, "0");
 }

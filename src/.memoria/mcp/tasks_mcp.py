@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -27,6 +26,7 @@ if str(_RUNTIME_ROOT) not in sys.path:
 
 from operations.lib import loudness  # noqa: E402
 
+from memoria.runtime.paths import resolve_vault  # noqa: E402
 from memoria.runtime.policy import within_scope  # noqa: E402
 
 # task lane -> the background agent that owns it (ADR-48 §4.1)
@@ -205,16 +205,6 @@ def build_server(vault: Path):
         )
 
     return server
-
-
-def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    if not raw:
-        sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
-    v = Path(raw).expanduser()
-    if not v.is_dir():
-        sys.exit(f"not a directory: {v}")
-    return v
 
 
 def main() -> None:
