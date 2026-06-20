@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [22, 46]
 supersedes: [2, 37, 42]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 48
 ---
 
 # ADR-48: One Co-PI fronts everything; specialists consolidate to posture-defined agents

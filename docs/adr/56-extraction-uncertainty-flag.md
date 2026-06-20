@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [30, 51]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 56
 ---
 
 # ADR-56: Low-confidence extraction routes to a flag — the ingest engine never merges identities silently

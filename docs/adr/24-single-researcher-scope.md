@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 24
 ---
 
 # ADR-24: Single-researcher scope — multi-user semantics are out of scope

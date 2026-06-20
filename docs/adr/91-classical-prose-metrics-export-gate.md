@@ -8,10 +8,6 @@ date_resolved:
 assumes: [14, 62]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 91
-nav_exclude: true
 ---
 
 # ADR-91: Classical prose metrics for the export gate

@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [50, 51, 54]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 66
 ---
 
 # ADR-66: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking

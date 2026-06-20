@@ -8,10 +8,6 @@ date_resolved:
 assumes: [32, 51]
 supersedes: [58]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 85
-nav_exclude: true
 ---
 
 # ADR-85: Todoist gap-card mirroring

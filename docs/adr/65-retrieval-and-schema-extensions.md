@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [52, 30]
 supersedes: []
 superseded_by: [98, 99, 100]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 65
 ---
 
 # ADR-65: Retrieval and schema extensions

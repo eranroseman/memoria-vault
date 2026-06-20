@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: [11, 20]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 62
 ---
 
 # ADR-62: Measurement and verification harnesses

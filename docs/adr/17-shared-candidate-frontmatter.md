@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: []
 supersedes: []
 superseded_by: [50, 51]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 17
 ---
 
 # ADR-17: Shared candidate frontmatter format

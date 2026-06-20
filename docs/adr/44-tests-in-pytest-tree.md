@@ -8,9 +8,6 @@ date_resolved: 2026-06-09
 assumes: [29]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 44
 ---
 
 # ADR-44: L1 component tests live in a repo-side pytest tree

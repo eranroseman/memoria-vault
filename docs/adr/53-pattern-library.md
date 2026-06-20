@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [3, 48]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 53
 ---
 
 # ADR-53: The pattern library — curated prompt-transformations as data in system/patterns/, one runner

@@ -8,9 +8,6 @@ date_resolved: 2026-05-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 3
 ---
 
 # ADR-03: Review gate is structural, enforced by the policy MCP

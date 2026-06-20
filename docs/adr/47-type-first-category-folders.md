@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [46]
 supersedes: [4]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 47
 ---
 
 # ADR-47: Type-first category folders — catalog · notes · projects · inbox · system

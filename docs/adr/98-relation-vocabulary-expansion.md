@@ -8,10 +8,6 @@ date_resolved:
 assumes: [52, 79]
 supersedes: [65]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 98
-nav_exclude: true
 ---
 
 # ADR-98: Relation-vocabulary expansion

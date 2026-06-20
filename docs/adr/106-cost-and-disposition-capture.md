@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [20, 22, 104]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 106
 ---
 
 # ADR-106: Cost and disposition capture — Hermes session store and the review action

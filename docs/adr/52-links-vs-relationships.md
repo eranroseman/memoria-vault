@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [47, 49]
 supersedes: [8]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 52
 ---
 
 # ADR-52: Notes carry authored links:, entities carry given relationships — two kinds of connection

@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: [50, 77]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 78
 ---
 
 # ADR-78: Thesis note type

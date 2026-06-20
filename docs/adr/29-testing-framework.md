@@ -8,9 +8,6 @@ date_resolved: 2026-06-02
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 29
 ---
 
 # ADR-29: A layered testing framework

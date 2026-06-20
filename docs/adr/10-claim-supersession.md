@@ -8,9 +8,6 @@ date_resolved: 2026-05-29
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 10
 ---
 
 # ADR-10: Claim supersession relation

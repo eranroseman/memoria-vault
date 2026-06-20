@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [47]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 49
 ---
 
 # ADR-49: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate

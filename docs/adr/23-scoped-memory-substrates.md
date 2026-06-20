@@ -8,9 +8,6 @@ date_resolved: 2026-06-02
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 23
 ---
 
 # ADR-23: Memory is seven scoped substrates, not one store

@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [68, 69, 77]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 70
 ---
 
 # ADR-70: Navigation — intent-named gates, ambient maintenance, JTBD dashboards

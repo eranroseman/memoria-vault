@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [3, 51]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 54
 ---
 
 # ADR-54: Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality

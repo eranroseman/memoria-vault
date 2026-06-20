@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [49, 30]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 71
 ---
 
 # ADR-71: Structured capture — forms at entry, the Linter as authority, one schema per type

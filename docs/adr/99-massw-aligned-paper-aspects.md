@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30]
 supersedes: [65]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 99
-nav_exclude: true
 ---
 
 # ADR-99: MASSW-aligned paper aspects

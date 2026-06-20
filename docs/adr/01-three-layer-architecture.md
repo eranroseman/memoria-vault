@@ -8,9 +8,6 @@ date_resolved: 2026-05-01
 assumes: []
 supersedes: []
 superseded_by: [46]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 1
 ---
 
 # ADR-01: Three-layer architecture — board, workers, vault

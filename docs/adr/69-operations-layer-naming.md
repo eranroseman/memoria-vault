@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [46]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 69
 ---
 
 # ADR-69: Operations — name the deterministic layer and its four categories

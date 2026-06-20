@@ -8,9 +8,6 @@ date_resolved: 2026-06-04
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 33
 ---
 
 # ADR-33: BERTopic cluster MCP for the Mapper

@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [24, 46, 104]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 105
 ---
 
 # ADR-105: Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail

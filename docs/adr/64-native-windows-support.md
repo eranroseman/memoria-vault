@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: [22, 26]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 64
 ---
 
 # ADR-64: Native Windows support: production on Windows, testing on Linux

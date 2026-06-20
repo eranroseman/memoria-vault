@@ -8,9 +8,6 @@ date_resolved: 2026-05-01
 assumes: []
 supersedes: []
 superseded_by: [47]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 4
 ---
 
 # ADR-04: Folders encode lifecycle stage, not subject area

@@ -8,10 +8,6 @@ date_resolved:
 assumes: [52, 79, 81, 83, 102]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 103
-nav_exclude: true
 ---
 
 # ADR-103: Projected Canvas spatial axis

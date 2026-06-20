@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30, 54]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 89
-nav_exclude: true
 ---
 
 # ADR-89: Learning-to-rank triage

@@ -8,9 +8,6 @@ date_resolved: 2026-06-04
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 31
 ---
 
 # ADR-31: Native obsidian MCP over HTTPS

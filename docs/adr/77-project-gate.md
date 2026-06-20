@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: [68, 70, 48, 49, 51, 69]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 77
 ---
 
 # ADR-77: Project gate

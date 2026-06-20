@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 21
 ---
 
 # ADR-21: L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired)

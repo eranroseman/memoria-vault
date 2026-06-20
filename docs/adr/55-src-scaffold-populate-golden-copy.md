@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [26, 49]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 55
 ---
 
 # ADR-55: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable

@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30, 32]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 108
-nav_exclude: true
 ---
 
 # ADR-108: LiteParse as the local document-parsing engine

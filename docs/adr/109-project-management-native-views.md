@@ -8,9 +8,6 @@ date_resolved: 2026-06-20
 assumes: [47, 49, 50, 54, 77, 81]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 109
 ---
 
 <!-- cspell:words Gantt TTRPG Vikunja Thino -->

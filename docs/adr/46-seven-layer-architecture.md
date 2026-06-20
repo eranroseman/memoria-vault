@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [22]
 supersedes: [1]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 46
 ---
 
 # ADR-46: Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault

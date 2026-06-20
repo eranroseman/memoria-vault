@@ -8,10 +8,6 @@ date_resolved:
 assumes: [32]
 supersedes: [58]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 86
-nav_exclude: true
 ---
 
 # ADR-86: Open-design deliverable-rendering agent

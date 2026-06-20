@@ -8,10 +8,6 @@ date_resolved: 2026-06-20
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 110
-nav_exclude: true
 ---
 
 # ADR-110: Ruff — formatter owns layout (line-length 100), curated lint ruleset

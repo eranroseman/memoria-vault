@@ -8,9 +8,6 @@ date_resolved: 2026-06-12
 assumes: [3, 23]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 25
 ---
 
 # ADR-25: Two separate session logs — hash-paired audit vs. per-session digests

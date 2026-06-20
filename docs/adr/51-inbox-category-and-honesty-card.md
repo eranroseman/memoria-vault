@@ -8,9 +8,6 @@ date_resolved: 2026-06-10
 assumes: [47, 50]
 supersedes: [17, 36]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 51
 ---
 
 # ADR-51: The Inbox category and the honesty card — argument for/against, what tipped it, certainty; no verdict on proposals

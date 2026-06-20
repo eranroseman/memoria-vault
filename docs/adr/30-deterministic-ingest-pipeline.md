@@ -8,9 +8,6 @@ date_resolved: 2026-06-03
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 30
 ---
 
 # ADR-30: Tiered ingest pipeline

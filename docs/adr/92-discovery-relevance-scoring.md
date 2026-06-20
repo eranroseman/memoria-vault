@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 92
-nav_exclude: true
 ---
 
 # ADR-92: Discovery relevance scoring

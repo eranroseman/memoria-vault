@@ -8,9 +8,6 @@ date_resolved: 2026-05-15
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 6
 ---
 
 # ADR-06: Citekey naming convention

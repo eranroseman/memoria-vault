@@ -8,9 +8,6 @@ date_resolved: 2026-06-08
 assumes: [29]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 45
 ---
 
 # ADR-45: Release management — gates as a tracking-issue checklist, release-please for versioning

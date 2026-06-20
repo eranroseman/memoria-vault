@@ -8,10 +8,6 @@ date_resolved:
 assumes: [26, 30, 47, 50, 52, 101, 102]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 107
-nav_exclude: true
 ---
 
 # ADR-107: OKF as Memoria's import/export bundle format

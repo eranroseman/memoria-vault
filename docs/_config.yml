@@ -40,6 +40,7 @@ plugins:
 # published to the site. The public site is the four Diátaxis quadrants
 # (tutorials/ how-to-guides/ reference/ explanation/) plus the ADRs.
 exclude:
+  - adr/
   - contributing/
   - releasing/
   - testing/
