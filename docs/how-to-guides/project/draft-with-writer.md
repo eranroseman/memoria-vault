@@ -6,7 +6,7 @@ nav_order: 5
 
 # Draft with the Writer
 
-Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — the Co-PI delegates, the board dispatches, and the result resurfaces through the Inbox.
+Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — use the direct palette command or ask the Co-PI to route the task, then the board dispatches it and the result resurfaces through the Inbox.
 
 ## Prerequisites
 
@@ -17,11 +17,11 @@ Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is hu
 
 **1. Delegate a section.**
 
-In the Co-PI pane, name the section, the framing, and the working set:
+Use `Cmd/Ctrl-P` → **Memoria: draft section**, or ask in the Co-PI pane if you want help shaping the handoff. Name the section, the framing, and the working set:
 
 > "Draft the introduction for `<deliverable>` from `projects/<slug>/chosen-framing.md`, using my claims on `<topic>`. Cite citekeys in-text."
 
-The Co-PI delegates via `delegate_route_task` ([Hermes CLI](../../reference/hermes-cli.md)); the handoff is validated against the Writer's lane ceiling and the card lands on the board. (Palette twin: **Memoria: draft section** — prompts for the goal or outline ref; see [Command palette](../../reference/obsidian-command-palette.md).)
+The palette command prompts for the goal or outline ref; the Co-PI route delegates via `delegate_route_task` ([Hermes CLI](../../reference/hermes-cli.md)). Both paths validate the handoff against the Writer's lane ceiling and land a card on the board (see [Command palette](../../reference/obsidian-command-palette.md)).
 
 **2. Know what the lane can and can't do.**
 

@@ -25,7 +25,7 @@ Open `system/dashboards/fleeting.base` (the **To process** view), or the **Fleet
 
 - If it connects cleanly to an existing claim: open the claim note and work the idea into its Evidence or Connections section. Archive the fleeting note.
 - If it could stand alone as a claim: use it as the seed for [Write a claim note](../knowledge/write-a-claim-note.md), then archive the fleeting note.
-- If it's a paper or source to chase: capture it (`Cmd/Ctrl-P` → **Memoria: capture source from URL**, or hand it to the Co-PI), then archive the fleeting note.
+- If it's a paper or source to chase: capture it (`Cmd/Ctrl-P` → **Memoria: capture source from URL**), delegate discovery (**Memoria: delegate task** → `catalog`), or ask the Co-PI to shape the search, then archive the fleeting note.
 
 **Attach — it's context for something else.**
 

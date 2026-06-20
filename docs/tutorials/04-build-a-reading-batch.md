@@ -15,13 +15,13 @@ parent: Tutorials
 
 ---
 
-## Step 1 — Ask the Co-PI for a batch
+## Step 1 — Delegate a batch
 
 Open the Co-PI pane and name a topic — the same area as your Tutorial 03 paper. For example:
 
 > "Build me a reading batch on notification receptivity — find the key papers and bring in the ones I should read. Mix foundational and recent; include something that might disagree with the rest."
 
-The Co-PI delegates discovery to the Librarian's catalog lane. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
+The Co-PI delegates discovery to the Librarian's catalog lane. If you already know the lane and do not need help shaping the request, the direct route is `Cmd/Ctrl-P` → **Memoria: delegate task** → `catalog` with the same topic brief. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
 
 (You can also seed the batch yourself by capturing papers you already know, exactly as in [Tutorial 03](03-bring-in-a-paper.md) — the same queue either way.)
 

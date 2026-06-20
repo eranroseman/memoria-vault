@@ -17,11 +17,11 @@ parent: Tutorials
 
 ## Step 1 — Ask for a verification pass
 
-In the Co-PI pane:
+Use the direct command (`Cmd/Ctrl-P` → **Memoria: verify draft**) when the target is a project draft; for claims, hubs, or another non-draft target, use **Memoria: delegate task** → `verify`. Ask in the Co-PI pane when you want help shaping the verification scope:
 
 > "Verify my claims on `<your-topic>` — check that each one is actually supported by its sources."
 
-The Co-PI delegates the pass to the **Peer-reviewer** — the adversarial verify lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
+Both routes delegate the pass to the **Peer-reviewer** — the adversarial verify lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
 
 You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
@@ -49,7 +49,7 @@ Now return to the **`gap` cards** — from Tutorial 05's coverage pass, or raise
 
 > "That gap on `<sub-topic>` is real — find sources to fill it."
 
-The Co-PI delegates discovery to the Librarian's catalog lane, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next coverage or verification pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
+Use **Memoria: delegate task** → `catalog`, or ask the Co-PI to route discovery to the Librarian's catalog lane. Candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next coverage or verification pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
 
 Skip the gaps you don't buy — archive them with a clear conscience. The honesty body exists so you can disagree.
 

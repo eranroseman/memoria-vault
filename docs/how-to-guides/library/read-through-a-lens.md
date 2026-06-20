@@ -6,12 +6,12 @@ nav_order: 6
 
 # Read a paper through a lens
 
-Read a paper through a named theoretical frame so the Co-PI questions it from an angle you choose. This is the Co-PI's read-only, synchronous `ask-read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names)) — never queue-dispatched.
+Read a paper through a named theoretical frame so the Co-PI questions it from an angle you choose. This is one of the deliberate Co-PI-only cases: the synchronous, read-only dialogue is the product, so the `ask-read-lens` skill ([Hermes CLI](../../reference/hermes-cli.md#skill-names)) is never queue-dispatched. If the lens session should create a durable artifact, capture that artifact separately with the palette or a normal delegated card.
 
 ## Prerequisites
 
 - A source note (or a cluster of notes) open to read against
-- The Agent Client pane connected ([Agent-client pane](../using-obsidian/use-the-acp-pane.md))
+- The Agent Client pane connected ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)); this guide is intentionally conversational rather than a queued action
 
 ## Steps
 
