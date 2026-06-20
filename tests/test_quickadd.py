@@ -181,6 +181,10 @@ def test_structured_source_capture_is_palette_wired_and_staged():
         '"type: candidate"',
         '"raised_by: modalforms"',
         '"target: " + yamlString(sourcePath)',
+        "preFileSimilarityShadow(app, cp, crypto",
+        "[!similarity]- Pre-file similarity shadow",
+        'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"',
+        "qmd search --format json --full-path -n 12",
     ):
         assert marker in script
 
@@ -275,6 +279,14 @@ def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     assert "app.vault.create(claimPath, frontmatter + body)" in script
     assert "app.vault.modify(source," in script
     assert "app.workspace.getLeaf(true).openFile(created)" in script
+    assert "preFileSimilarityShadow(app, cp, crypto" in script
+    assert "[!similarity]- Pre-file similarity shadow" in script
+    assert 'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"' in script
+    assert "qmd search --format json --full-path -n 12" in script
+    assert "Report-only qmd neighbour check; no block, auto-merge, or calibrated threshold." in script
+    assert 'event: "pre_file_similarity_shadow"' in script
+    assert "query_sha256" in script and "query_chars" in script
+    assert "SIMILARITY_SCOPES = [\"notes/claims/\", \"notes/sources/\"]" in script
 
 
 

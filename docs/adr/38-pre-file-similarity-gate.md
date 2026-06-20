@@ -35,6 +35,17 @@ Memoria catches duplicates **retrospectively**: `find-duplicates` runs on a cade
 
 **(a) is now satisfied** — `qmd` is live in the agent retrieval path (wired into the Librarian/Writer/Peer-reviewer skills as of alpha.5). What remains is **(b)** a synthesis corpus dense enough that filing a duplicate is a real risk — the point at which the 0.8 threshold and false-positive rate can be tuned against real notes — plus building the retrospective `find-duplicates` sweep, which does not yet exist. The gate primitive can ship in **shadow mode** first (log neighbours, never block) and harden once the corpus is dense.
 
+## Current implementation
+
+alpha.8 ships the shadow primitive, not enforcement. The active PI-side filing
+surfaces (`Memoria: create linked claim note` and `Memoria: structured source
+capture`) run `qmd search --format json --full-path` before writing the note,
+filter to claim/source neighbours, attach up to three neighbours in a
+`[!similarity]` callout, and append one content-light
+`system/logs/pre-file-similarity.jsonl` row. A missing/stale qmd index is a warning
+in the callout and telemetry, not a block. There is still no hard threshold,
+auto-merge, or bypass prompt; calibration/enforcement remains #562.
+
 ## Proposed mechanism (for when the trigger fires)
 
 Before filing, run a `qmd` similarity check against existing synthesis notes. If the top match exceeds a threshold (start at cosine **0.8**, tune), flag the note and present the candidate neighbours; the human confirms new / merges / overrides — never an automatic block or merge. The gate is owned by the **Linter** (validation discipline) or **Mapper** (it already surfaces neighbouring notes); the decision stays at the human review gate.
