@@ -14,6 +14,8 @@ never write, and a healthy vault shows action queues near-empty.
 
 The daily glance starts in the Inbox launch surface, and **board-state is the Inbox board** — a thin page embedding `inbox.base`.
 
+No standalone status-line widget ships in the current Obsidian surface. The Inbox space is the ambient glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` answer whether anything needs attention without adding a separate always-on widget.
+
 ---
 
 ## Dashboard inventory

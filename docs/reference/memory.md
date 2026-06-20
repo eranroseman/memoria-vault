@@ -60,7 +60,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 
 ## Audit memory
 
-The audit trail (`system/logs/audit.jsonl`) records every policy decision with its before/after hash pair. Its field schema, the eight guarded actions, the `decision` enum, and the per-write hash-pairing mechanism are owned by [Policy MCP](policy-mcp.md#audit-log-format).
+The audit trail (`system/logs/audit.jsonl`) records every policy decision with its before/after hash pair. Its field schema, the eight guarded actions, the `decision` enum, and the per-write hash-pairing mechanism are owned by [Policy audit log](policy-audit-log.md).
 
 ---
 

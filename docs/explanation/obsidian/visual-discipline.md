@@ -24,7 +24,9 @@ Emoji in note *titles* break filename portability across operating systems — a
 
 ## Why chrome is hidden by default
 
-The vault should feel like writing during normal operation. Chrome — tab bars, sidebars, status indicators — is noise during focused reading and writing, and becomes signal when something needs attention. Hiding it by default preserves the signal-to-noise ratio: when the sidebar opens, it *means* something is happening. The [status line](the-status-line.md) is the one always-visible exception, and it earns that by being a single ambient count rather than a panel.
+The vault should feel like writing during normal operation. Chrome — tab bars, sidebars, status indicators — is noise during focused reading and writing, and becomes signal when something needs attention. Hiding it by default preserves the signal-to-noise ratio: when the sidebar opens, it *means* something is happening.
+
+Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the Inbox space's daily glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` stay visible without adding a separate always-on indicator.
 
 One Obsidian window per vault is a technical constraint as much as a discipline. The agent layer assumes a single active vault; multiple windows updating the same card through the policy MCP produce race conditions in the audit log and board state.
 
@@ -57,7 +59,7 @@ attention for the moments that deserve it.
 
 ## Related
 
-- The ambient indicator this discipline allows: [The status line](the-status-line.md)
+- The current ambient glance and dashboard inventory: [Dashboards](../dashboards/README.md)
 - The callout types and their fixed three-color palette: [Callouts](callouts.md)
 - The front door, which participates in the same restraint: [Home — the vault front door](home.md)
 - Gate/reset layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

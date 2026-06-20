@@ -17,7 +17,6 @@ One principle runs through every page below: **the architecture is invisible dur
 | Page                                            | What it explains                                                                                                                 |
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [Home — the vault front door](home.md)          | The front door — why launch opens the Inbox space and keeps `home.md` as a plain fallback note.                           |
-| [The status line](the-status-line.md)           | The one always-visible ambient indicator — why a glance-readable count, not a dashboard, answers "is everything fine?"           |
 | [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) and what each means.              |
 | [The agent-client pane](agent-client-pane.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
 
@@ -35,5 +34,6 @@ The **dashboards** are also an Obsidian surface, but they have their own section
 ## Related
 
 - How to _use_ these surfaces (operate the pane, navigate dashboards, drive the palette): [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian)
-- Plugin inventory and load-bearing settings: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- Load-bearing plugin settings: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
 - Workspace, callout, and status-line reference pages: [Reference](../../reference)

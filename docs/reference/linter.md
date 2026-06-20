@@ -84,13 +84,13 @@ The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script mem
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The Linter operation is report-only; the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy auto-fix](policy-auto-fix.md). The Linter operation is report-only; the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the shipped repair path.
 
 ---
 
 ## Related
 
 - The schemas the detectors validate against: [Frontmatter fields](frontmatter.md)
-- The class gate enforcing auto-fix policy: [Policy MCP](policy-mcp.md)
+- The class gate enforcing auto-fix policy: [Policy auto-fix](policy-auto-fix.md)
 - Where the findings surface: [Dashboards](dashboards.md)
 - The crons the installer wires: [Installer (bootstrap)](installer.md)

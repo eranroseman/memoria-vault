@@ -34,7 +34,9 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries (the in-Obsidian UI surface) |
 | [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands: per-profile research, board management, profile/skills/cron admin |
-| [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, audit log format, auto-fix classes |
+| [Policy MCP](policy-mcp.md) | Policy MCP: decision values, request/response contract, tools, lane overrides, and enforcement |
+| [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing |
+| [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration |
 | [Dashboards](dashboards.md) | The twelve dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
@@ -50,7 +52,9 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Search](search.md) | The qmd retrieval surface: hybrid BM25 + vector + rerank, the MCP, consumers, the index, and limits |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets |
 | [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention (append-only forever) |
-| [Telemetry & logs](telemetry.md) | Every operational log under `system/logs/`: exact JSONL schema, cadence, join keys |
+| [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys |
+| [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas and derived metric-note contracts |
+| [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract |
 
 ## System and infrastructure
 
@@ -67,8 +71,9 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 
 | File | What it covers |
 | --- | --- |
-| [Obsidian plugins](obsidian-plugins.md) | Obsidian plugin inventory and load-bearing configuration settings |
+| [Obsidian plugins](obsidian-plugins.md) | Obsidian plugin inventory, install status, and evaluated alternatives |
+| [Obsidian plugin settings](obsidian-plugin-settings.md) | Load-bearing per-plugin settings |
+| [Obsidian plugin data files](obsidian-plugin-data-files.md) | `data.json`, `.example`, generated, and secret-bearing config conventions |
 | [Zotero plugins](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison |
 | [Obsidian callouts](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema |
-| [Obsidian status line](obsidian-status-line.md) | Status-line format, field definitions, and update cadence |
 | [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and the persistent space-dashboard navigation model |
