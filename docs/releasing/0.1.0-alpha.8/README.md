@@ -7,20 +7,24 @@ has_children: true
 # v0.1.0-alpha.8
 
 The **runtime-foundations & observability** checkpoint: implements every issue
-currently `Readiness: Ready` in the Memoria Issue Tracker. Live readiness state
-belongs to the "Release v0.1.0-alpha.8" parent issue and its gate/stage sub-issues;
-scope to the milestone + the tracker view.
+that was `Readiness: Ready` in the Memoria Issue Tracker at cut. Live readiness
+state belongs to the "Release v0.1.0-alpha.8" parent issue and its gate/stage
+sub-issues; scope to the milestone + the tracker view.
 
 | File | Holds |
 |---|---|
 | `release-plan-0.1.0-alpha.8.md` | The release plan — scope, gates, stages, limitations, cut procedure. |
-| `tmp/execplan-alpha8-ready-issues.md` | Living ExecPlan orchestrating implementation of all Ready issues; deleted before this checkpoint closes. |
-| `tmp/` | Removed after the carried-forward scratch was routed to ADRs, docs, and GitHub issues. |
+| `validation-log.md` | Curated closeout evidence for the completed internal checkpoint. |
 
 ## Tmp disposition check
 
 Checked 2026-06-19 after ADR-58/59/61/65 were split into ADR-84 through ADR-100.
 All carried-forward `tmp/` files have now been disposed.
+
+Deleted 2026-06-20:
+
+- `tmp/execplan-alpha8-ready-issues.md` — implementation sequencing artifact; durable
+  outcomes were routed to ADRs, docs, merged PRs, and release issue evidence.
 
 Deleted 2026-06-19:
 

@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.8
-status: draft        # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan — v0.1.0-alpha.8
 parent: Releasing
@@ -9,16 +9,13 @@ nav_order: 2
 
 # Release plan — v0.1.0-alpha.8
 
-**Current status: pre-release (draft).** alpha.8 is the **runtime-foundations &
-observability** checkpoint: it implements every issue currently marked
+**Current status: complete internal checkpoint.** alpha.8 is the **runtime-foundations &
+observability** checkpoint: it implemented every issue marked
 `Readiness: Ready` in the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
-The single biggest thing standing between here and cut is the ADR-76 package/import
-refactor spine (#727), which is the ordering dependency for the rest of the
-technical-debt block. `released:` in the frontmatter is the formal-release machine
-flag: it flips to `true` only for a tagged GitHub Release. Like alpha.5–alpha.7,
-alpha.8 is an **internal untagged checkpoint** — at cut it sets `status: complete`,
-`released: false` when the release parent issue is closed, and skips release-please,
-tag, and GitHub Release.
+`released:` in the frontmatter is the formal-release machine flag: it flips to
+`true` only for a tagged GitHub Release. Like alpha.5-alpha.7, alpha.8 is an
+**internal untagged checkpoint**: `status: complete`, `released: false`, no
+release-please PR, no tag, and no GitHub Release.
 
 ## 1. Scope — what this release is
 
@@ -36,9 +33,9 @@ surfaces**, not new autonomous behavior. No calibrated enforcement, no
 auto-merge/auto-block, no relation-vocabulary expansion, and no
 installer-distribution (tarball/signing) work — those stay deliberately later.
 
-The complete, sequenced implementation steps for every in-scope issue live in the
-ExecPlan working doc:
-[`tmp/execplan-alpha8-ready-issues.md`](tmp/execplan-alpha8-ready-issues.md).
+The in-work ExecPlan was deleted at closeout after its durable decisions and
+evidence were routed to ADRs, reference docs, validation issue comments, and
+[`validation-log.md`](validation-log.md).
 
 ## 2. Definition of done — gates
 
@@ -77,11 +74,9 @@ in the stage sub-issues under the release parent issue).
 
 ## 4. Blockers
 
-Not enumerated here — a second list would drift. **By definition the blockers are**
-any open gate/stage sub-issue, plus any open High-priority blocker in the
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1). The hard
-ordering blocker is **#727** (package spine): #728, #729, #730, and #731 should not
-start until it lands.
+None at closeout. All alpha.8 gate and stage sub-issues under
+[Release v0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740)
+were closed, and no open issue remained assigned to the `v0.1.0-alpha.8` milestone.
 
 ## 5. Out of scope (later)
 
@@ -170,10 +165,8 @@ This checkpoint follows the untagged internal path:
 | Bundled-plugin updater | After #686 doctor is stable | Updater/download automation on top of the provenance doctor |
 | Projector engine & spatial axis | Trigger-gated (ADR-81) | Extend board mirror; projected telemetry bases; argument-graph canvas |
 
-## 12. Appendix — what does NOT belong in this file
+## 12. Appendix — closeout disposition
 
-Exhaustive per-issue implementation steps, dependency ordering, exit criteria, and
-test selection live in the ExecPlan working doc
-[`tmp/execplan-alpha8-ready-issues.md`](tmp/execplan-alpha8-ready-issues.md), which is
-deleted before this checkpoint closes (its durable decisions route to the ADRs and
-issues above). This plan summarizes and links rather than absorbing that detail.
+The tracked `tmp/` ExecPlan was removed at closeout. Durable outcomes are preserved
+in the merged PRs, ADRs, issue comments, and [`validation-log.md`](validation-log.md);
+unfinished follow-on work remains in GitHub issues with post-alpha.8 readiness.
