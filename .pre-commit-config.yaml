@@ -26,6 +26,8 @@ repos:
     hooks:
       - id: ruff
         files: ^memoria/|^scripts/|^src/\.memoria/|^\.github/scripts/|^tests/
+      - id: ruff-format
+        files: ^memoria/|^scripts/|^src/\.memoria/|^\.github/scripts/|^tests/
 
   # ---------------------------------------------------------------------------
   # yamllint  —  Block 7

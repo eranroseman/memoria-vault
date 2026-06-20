@@ -37,6 +37,9 @@ jobs:
       - name: ruff
         # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
         run: ruff check memoria scripts src/.memoria .github/scripts tests
+      - name: ruff-format
+        # Layout is enforced by `ruff format`; this fails if anything is unformatted.
+        run: ruff format --check memoria scripts src/.memoria .github/scripts tests
       - name: docs-doctor
         run: python scripts/docs_doctor.py docs
       - name: docs-links

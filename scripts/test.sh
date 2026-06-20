@@ -45,6 +45,7 @@ check_paths() {
 l0() {
   echo "── L0: static + schema ──"
   run ruff check memoria scripts src/.memoria .github/scripts tests
+  run ruff format --check memoria scripts src/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
   run bash scripts/check-vault-links.sh
   run python3 scripts/agents_doctor.py

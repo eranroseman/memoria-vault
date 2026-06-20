@@ -24,11 +24,21 @@ pythonpath = [
   ".github/scripts",
 ]
 
+[tool.ruff]
+# Width is owned by the formatter (`ruff format`), not the E501 lint rule. 100 is
+# the deliberate choice: ~96% of lines already fit in 88, the genuinely long lines
+# are unsplittable string literals (argparse help, prompt/error text) the formatter
+# leaves alone, and 100 wraps only the long expressions that actually benefit while
+# leaving comfortable 88-100 one-liners intact.
+line-length = 100
+
+[tool.ruff.format]
+# `ruff format` is the single source of truth for layout so style never drifts
+# across the many agent sessions that generate this code. docstring-code-format
+# keeps fenced code inside docstrings formatted too.
+docstring-code-format = true
+
 [tool.ruff.lint]
-# Ruff is used as a LINTER only. The codebase is hand-formatted (aligned comment
-# columns, deliberate line breaks); `ruff format` is intentionally NOT used --
-# reformatting would churn ~2k lines for no behavioral gain.
-#
 # Curated, high-signal rule set. Beyond ruff's defaults (E4/E7/E9 + F = pyflakes
 # real bugs) this adds:
 #   W   pycodestyle warnings (trailing whitespace, invalid escapes)
@@ -38,8 +48,10 @@ pythonpath = [
 #   UP  pyupgrade -- modern syntax for the target Python
 #   RUF ruff-specific (mutable class defaults, etc.)
 #   PIE flake8-pie -- misc small correctness/clarity rules
-# E501 (line length) is deliberately NOT enabled -- many lines are intentionally
-# long. SIM/PERF/FURB are omitted: they push opinionated refactors (contextlib
+# E501 (line length) is deliberately NOT enabled -- the formatter owns width, and
+# the only over-100 lines left are unsplittable string literals it cannot break,
+# so E501 would just be noise. SIM/PERF/FURB are omitted: they push opinionated
+# refactors (contextlib
 # .suppress, list-extend, removeprefix) that trade clarity for terseness here.
 select = ["E4", "E7", "E9", "F", "W", "I", "B", "C4", "UP", "RUF", "PIE"]
 ignore = [
