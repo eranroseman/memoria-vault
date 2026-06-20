@@ -322,6 +322,11 @@ The result is clamped to `[0, 100]` and rounded. Bands: **≥ 90 healthy · 70�
 
 A field with no data for the period renders as `null` (never omitted) so downstream parsers see a stable key set.
 
+The read-only Memoria Inspector pane ([ADR-84](../adr/84-read-only-obsidian-inspector.md))
+reads the latest board-state snapshot, recent audit rows, and latest
+`lint-verdict` note to show the same operational health signals inside Obsidian.
+It does not emit telemetry or mutate any source log.
+
 ## What is *not* captured
 
 By design, to keep v0.1's capture minimal and the consent story simple:

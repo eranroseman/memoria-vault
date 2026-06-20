@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (13)
+## Required Obsidian plugins (14)
 
-Memoria breaks without these. The starter vault **ships all thirteen bundled and configured** in `.obsidian/plugins/` — no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all fourteen bundled and configured** in `.obsidian/plugins/` — thirteen third-party plugins plus the Memoria-authored Inspector, with no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 The provenance lock for the bundled artifacts is
 `src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
@@ -33,6 +33,7 @@ bundled. Updater automation remains deferred by
 | modalforms | `modalforms` | Provides structured in-Obsidian forms for capture and Project flows, including controlled `research_area`, `methodology`, and `scope_topics` fields sourced from `system/vocabulary.md`. |
 | portals | `portals` | Replaces the raw left file tree with curated folder portals while retaining the core file explorer as fallback. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
+| memoria-inspector | `memoria-inspector` | Memoria-authored read-only sidebar pane for board counts, WIP depth, recent audit entries, and the Linter verdict band ([ADR-84](../adr/84-read-only-obsidian-inspector.md)). |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
 | homepage | `homepage` | Opens `spaces/inbox` on startup as the deterministic landing surface. |
@@ -194,6 +195,14 @@ or space switcher.
 | `hiddenItems` | `{ "system": true, ".memoria": true }` | Runtime and generated infrastructure stay out of the PI-facing navigation pane. |
 | `tagNotesFolderPath` | `system/_tag-notes` | Keeps the plugin's tag-note folder out of the user namespace. |
 | `splitViewTabs` | `recent`, `bookmarks`, `context-notes`, `trash` | Drops journal/properties modules because Memoria does not use tag/daily-note navigation as primary structure. |
+
+### memoria-inspector
+
+| Setting | Required value | Constraint |
+| --- | --- | --- |
+| View type | `memoria-inspector-view` | Opens as a right-sidebar pane through the plugin command or ribbon icon. |
+| Data sources | `system/logs/board-state.jsonl`, `system/logs/audit.jsonl`, latest `system/metrics/lint-verdict-*.md` | Read-only operational snapshot only; the plugin has no vault write path, network request path, or shell path. |
+| Refresh cadence | Manual refresh plus 60 s refresh while open | Keeps the inspector current without becoming an action surface. |
 
 ### callout-manager
 
