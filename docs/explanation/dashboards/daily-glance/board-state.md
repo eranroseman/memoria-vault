@@ -43,7 +43,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 ## Related
 
-- The launch surface this feeds: [The Daily Health dashboard](daily-health.md)
+- The launch surface this feeds: [The daily glance view](daily-health.md)
 - How the projections work: [How the board surfaces in Obsidian](../../kanban-board/obsidian-projection.md)
 - The card format: [The honesty card](../../kanban-board/card-schema.md)
 - Troubleshooting board problems: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

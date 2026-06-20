@@ -27,7 +27,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
-**Vault** — the Obsidian folder tree where durable knowledge lives, organized into five type-first categories: `catalog`, `notes`, `projects`, `inbox`, `system` ([ADR-47](../adr/47-type-first-category-folders.md)).
+**Vault** — the Obsidian folder tree where durable knowledge lives, organized into six legal root categories: `catalog`, `notes`, `projects`, `inbox`, `spaces`, `system` ([ADR-47](../adr/47-type-first-category-folders.md)).
 
 ---
 

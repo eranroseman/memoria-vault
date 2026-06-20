@@ -11,7 +11,7 @@ into three planes with different rules. It is the design rationale behind
 [ADR-104 (telemetry three planes)](../../adr/104-telemetry-three-planes.md),
 [ADR-105 (diagnostic plane)](../../adr/105-diagnostic-plane.md), and
 [ADR-106 (cost and disposition capture)](../../adr/106-cost-and-disposition-capture.md).
-For the exact on-disk schemas, see [Telemetry & logs](../../reference/telemetry.md);
+For the exact on-disk schemas, see [Telemetry log schemas](../../reference/telemetry-logs.md);
 for the audit log specifically, [Session logging](session-logging.md).
 
 ---
@@ -142,6 +142,6 @@ whereas Git merges do.
   [ADR-105 (diagnostic plane)](../../adr/105-diagnostic-plane.md),
   [ADR-106 (cost and disposition capture)](../../adr/106-cost-and-disposition-capture.md)
 - The audit plane in detail: [Session logging](session-logging.md)
-- Exact schemas: [Telemetry & logs](../../reference/telemetry.md)
+- Exact schemas: [Telemetry log schemas](../../reference/telemetry-logs.md)
 - The integrity threat model: [ADR-24 (single-researcher scope)](../../adr/24-single-researcher-scope.md)
 - The sync substrate: [ADR-63 (multi-machine deployment)](../../adr/63-multi-machine-deployment.md)

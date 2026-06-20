@@ -165,7 +165,7 @@ brand:
     drafts:       "(in progress)"
   logo:
     placement: "title-page only"
-    file:      "90-assets/brand/memoria-mark.svg"   # if/when authored
+    file:      "system/exports/assets/brand/memoria-mark.svg"   # if/when authored
 ```
 
 ## 9. Anti-patterns

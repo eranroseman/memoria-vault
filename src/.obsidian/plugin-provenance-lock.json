@@ -78,7 +78,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/obsidian-local-rest-api/data.json.example": "d327b34cd4c1e8786b96592941f719caf0963241ae2ec86c517999bb6ee99172",
+        "plugins/obsidian-local-rest-api/data.json.example": "771f0997eb6c45f0a7d7eda07ff69b716cc51fb8c22042eb9701a2a7ffcac74b",
         "plugins/obsidian-local-rest-api/main.js": "7ccfbda2a8664c823deab8f345b8e6cdbeb8166a43c029901d44558305e3ff9f",
         "plugins/obsidian-local-rest-api/manifest.json": "c2abc7e944b1be0ad5c8548df55da7c2a595338575f6d03e2fc5ada66d6536b3",
         "plugins/obsidian-local-rest-api/styles.css": "497944ed33ba2acbc574b0138ab379396ec3a84c521935e882b3734ce1062c05"

@@ -1,17 +1,17 @@
 ---
-title: The Daily Health dashboard
+title: The daily glance view
 parent: Daily glance
 nav_order: 1
 grand_parent: Dashboards
 ---
 
-# The Daily Health view
+# The daily glance view
 
 The morning "is anything red?" glance starts with the Inbox space's `Needs me`,
 `Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)).
 The daily ritual starts on the surface Obsidian already opens.
 
-The daily health view is the always-on system glance. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+The daily glance is the Inbox space's always-visible system-health view. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
 ---
 
@@ -36,7 +36,7 @@ deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ## Why it's designed this way
 
-**Absorption beats a second front door.** A standalone Daily Health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the front door is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
+**Absorption beats a second front door.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox launch surface is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
 
 **Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox space glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 

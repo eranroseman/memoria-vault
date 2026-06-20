@@ -10,7 +10,7 @@ nav_order: 15
 # GUI test plan — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI stage (**S5**) and the twelve dashboards
+shell: the Obsidian/Zotero GUI stage (**S5**) and the thirteen support dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -46,7 +46,7 @@ end (the boxes are clickable in Obsidian).
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
-- ✓ Pass: file tree shows `catalog/ notes/ projects/ inbox/ system/ home.md README`.
+- ✓ Pass: file tree shows `catalog/ notes/ projects/ inbox/ spaces/ system/ home.md README`.
 - ✗ Fails: wrong folder (open the dir that contains `.obsidian/` and `.memoria/`).
 - [ ] **A1 Pass**
 
@@ -140,12 +140,13 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 ---
 
-## Part C — The twelve dashboards render (G4)
+## Part C — The thirteen support dashboards render (G4)
 
-Open each file under `system/dashboards/` (Reading view). For **every** ```dataview```
-block: it must render a table or placeholder, **never a query error**. (The former
-*Daily Health* dashboard is now the glance at the top of `home.md`, validated with the
-Home page — it is not a standalone dashboard file.)
+Open each support dashboard file under `system/dashboards/` (Reading view). For
+**every** ```dataview``` block: it must render a table or placeholder, **never a query
+error**. The four space dashboards under `spaces/` are validated through the launch
+and navigation checks; the former `daily-health.md` page is now the Inbox space glance,
+not a standalone dashboard file.
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
@@ -161,6 +162,7 @@ Home page — it is not a standalone dashboard file.)
 | 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
 | 11 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
 | 12 | `skill-state.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
+| 13 | `project-gate.md` | Project notes, active thesis, and structural-impact cache fields | resolves; active projects and saturation fields render when project data exists |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
@@ -178,7 +180,8 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 - [ ] 10 · `audit-log.md`
 - [ ] 11 · `eval-trend.md`
 - [ ] 12 · `skill-state.md`
-- [ ] **Part C / G4 Pass (all 12 resolve)**
+- [ ] 13 · `project-gate.md`
+- [ ] **Part C / G4 Pass (all 13 resolve)**
 
 ---
 
@@ -240,9 +243,9 @@ Then open `system/dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 12/12 plugins enabled, no load errors | | |
+| A | 14/14 plugins enabled, no load errors | | |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 12 dashboards' Dataview blocks resolve | | |
+| C / G4 | All 13 support dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | ACP pane returns a model response | | |

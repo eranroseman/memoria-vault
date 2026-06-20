@@ -1,10 +1,11 @@
 {
   "_comment": "Sanitized example. Do NOT commit the real data.json — it contains an apiKey, a TLS certificate, and an RSA private key. Gitignore the real file; let the plugin regenerate secrets on first launch. See https://eranroseman.github.io/memoria-vault/reference/obsidian-plugins/",
 
-  "_server_note": "Hermes reaches the vault over the plugin's NATIVE MCP on plain HTTP at http://127.0.0.1:<insecurePort>/mcp (ADR-31): Hermes can't skip TLS verify for the self-signed HTTPS (27124), so the loopback-only insecure HTTP server must be ON. OBSIDIAN_MCP_PORT in each profile's .env must match insecurePort. To run a sandbox + a production vault at once, give each a distinct insecurePort/OBSIDIAN_MCP_PORT.",
+  "_server_note": "Hermes reaches the vault over the plugin's native MCP on verified loopback HTTPS at https://127.0.0.1:<port>/mcp (ADR-31). OBSIDIAN_MCP_PORT in each profile's .env must match port, and OBSIDIAN_MCP_SSL_VERIFY must point at the exported PEM certificate/CA bundle. To run a sandbox + a production vault at once, give each a distinct HTTPS port/OBSIDIAN_MCP_PORT.",
   "port": 27124,
   "insecurePort": 27123,
-  "enableInsecureServer": true,
+  "enableHttpsServer": true,
+  "enableInsecureServer": false,
 
   "_apiKey_note": "On first launch the plugin generates a 64-char hex apiKey here. Copy that value into your local .env as OBSIDIAN_API_KEY so Hermes can authenticate; do not edit it back into this example file.",
   "apiKey": "REPLACE_ON_FIRST_LAUNCH",
