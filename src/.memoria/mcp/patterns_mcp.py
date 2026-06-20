@@ -41,7 +41,7 @@ def _gated_prefixes(vault: Path) -> tuple:
 
         f = vault / ".memoria" / "schemas" / "folders.yaml"
         return tuple(yaml.safe_load(f.read_text(encoding="utf-8"))["gated_prefixes"])
-    except Exception:  # noqa: BLE001 -- schema load with import-inside-try; degrade to default prefixes
+    except Exception:  # noqa: BLE001
         return REVIEW_GATED_PREFIXES
 
 
@@ -119,7 +119,7 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str, input_ref: str = 
         log.parent.mkdir(parents=True, exist_ok=True)
         with log.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record) + "\n")
-    except Exception as exc:  # noqa: BLE001 -- provenance write must not break the run
+    except Exception as exc:  # noqa: BLE001
         # The run is still returned (the prompt is the product), but the caller —
         # and the operator, via stderr — must know this run left no provenance.
         provenance_logged = False

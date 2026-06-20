@@ -26,7 +26,7 @@ def _pubmed_year(article: ET.Element):
 def parse_pubmed(xml: str) -> dict:
     """Normalize PubMed efetch XML into the partial-record shape."""
     try:
-        root = ET.fromstring(xml)  # noqa: S314 -- trusted NIH PubMed HTTPS endpoint
+        root = ET.fromstring(xml)  # noqa: S314
     except ET.ParseError:
         return {"source": "pubmed", "found": False}
     article = root.find(".//PubmedArticle")

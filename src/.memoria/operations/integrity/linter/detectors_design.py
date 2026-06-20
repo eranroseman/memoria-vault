@@ -71,7 +71,7 @@ def parse_frontmatter(text: str) -> dict:
 
         data = yaml.safe_load(text[3:end])
         return data if isinstance(data, dict) else {}
-    except Exception:  # noqa: BLE001 -- parse with import-inside-try; degrade to empty frontmatter
+    except Exception:  # noqa: BLE001
         return {}
 
 

@@ -69,7 +69,7 @@ def _calibration(vault: Path) -> dict:
 
         f = vault / ".memoria" / "schemas" / "calibration.yaml"
         return yaml.safe_load(f.read_text(encoding="utf-8")).get("clustering", {})
-    except Exception:  # noqa: BLE001 -- config load with import-inside-try; degrade to default
+    except Exception:  # noqa: BLE001
         return {}
 
 

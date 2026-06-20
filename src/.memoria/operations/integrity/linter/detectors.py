@@ -151,7 +151,7 @@ try:
     _FOLDERS = _schema.load_folders()
     TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
     KNOWN_TOP_DIRS = set(_FOLDERS["categories"])
-except Exception:  # noqa: BLE001 -- schema derive with import-inside-try; fall back to hardcodes  # pragma: no cover - fallback path
+except Exception:  # noqa: BLE001
     _schema = None
 
 from operations.integrity.linter.detectors_audit import (
@@ -216,7 +216,7 @@ def parse_frontmatter(text: str) -> dict:
 
             data = yaml.safe_load(text[3:end])
             return data if isinstance(data, dict) else {}
-        except Exception:  # noqa: BLE001 -- parse with import-inside-try; degrade to empty frontmatter
+        except Exception:  # noqa: BLE001
             return {}
     fm: dict = {}
     for line in text[3:end].splitlines():

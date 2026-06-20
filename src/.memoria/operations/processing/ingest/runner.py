@@ -53,7 +53,7 @@ def _confidence_floor(vault: Path | None) -> float:
         return float(
             yaml.safe_load(f.read_text(encoding="utf-8"))["entity_resolution"]["confidence_floor"]
         )
-    except Exception:  # noqa: BLE001 -- config load with import-inside-try; degrade to default
+    except Exception:  # noqa: BLE001
         return 0.85
 
 

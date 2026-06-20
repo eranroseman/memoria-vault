@@ -65,7 +65,7 @@ def archive_after_days(vault: Path | None) -> int:
 
         f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
         return int(yaml.safe_load(f.read_text(encoding="utf-8"))["inbox"]["archive_after_days"])
-    except Exception as exc:  # noqa: BLE001 -- config load with import-inside-try; degrade to default
+    except Exception as exc:  # noqa: BLE001
         if not _warned_calibration:
             _warned_calibration = True
             print(

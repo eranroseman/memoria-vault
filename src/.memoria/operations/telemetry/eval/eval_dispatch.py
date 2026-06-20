@@ -90,7 +90,7 @@ def parse_frontmatter(text: str) -> dict:
         import yaml
 
         return yaml.safe_load(m.group(1)) or {}
-    except Exception:  # noqa: BLE001 -- parse with import-inside-try; degrade to empty frontmatter
+    except Exception:  # noqa: BLE001
         return {}
 
 
