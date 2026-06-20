@@ -1,6 +1,7 @@
 ---
 title: Refactor claim notes
 parent: Knowledge
+grand_parent: How-to guides
 nav_order: 5
 ---
 

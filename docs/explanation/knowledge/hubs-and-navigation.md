@@ -1,6 +1,7 @@
 ---
 title: Why hubs
 parent: Knowledge
+grand_parent: Explanation
 nav_order: 8
 ---
 

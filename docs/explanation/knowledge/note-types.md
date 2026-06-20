@@ -1,6 +1,7 @@
 ---
 title: Note types and epistemic roles
 parent: Knowledge
+grand_parent: Explanation
 nav_order: 1
 ---
 

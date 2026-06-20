@@ -1,6 +1,7 @@
 ---
 title: Manage your topic vocabulary
 parent: Knowledge
+grand_parent: How-to guides
 nav_order: 6
 ---
 

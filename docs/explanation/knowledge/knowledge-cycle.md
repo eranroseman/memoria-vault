@@ -1,6 +1,7 @@
 ---
 title: The knowledge cycle
 parent: Knowledge
+grand_parent: Explanation
 nav_order: 2
 ---
 

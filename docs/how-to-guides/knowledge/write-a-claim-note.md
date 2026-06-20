@@ -1,6 +1,7 @@
 ---
 title: Write a claim note
 parent: Knowledge
+grand_parent: How-to guides
 nav_order: 1
 ---
 
