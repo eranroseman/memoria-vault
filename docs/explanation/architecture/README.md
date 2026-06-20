@@ -47,6 +47,7 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 | [The control plane](control-plane.md) | The board, the lanes, the hidden execution mechanic vs the PI-facing lifecycle, and the handoff payload. |
 | [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |
+| [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes with different retention and content rules. |
 
 ## Where to go next
 

@@ -14,7 +14,7 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
 | [Daily glance](daily-glance/README.md)             | Inbox space glance, Board state                              | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
-| Project steering                                   | Project gate                                                   | When steering a bounded inquiry to output          |
+| Project space                                      | Project gate                                                   | When steering a bounded inquiry to output          |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
 

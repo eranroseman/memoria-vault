@@ -17,7 +17,7 @@ parent: Tutorials
 
 ## Step 1 — Capture the paper
 
-Pick a paper you actually want to read, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl+P` → **Memoria: capture source from URL** → paste the URL (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey). That puts a capture card on the Librarian's `catalog` lane.
+Pick a paper you actually want to read, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl-P` → **Memoria: capture source from URL** → paste the URL (a resolvable DOI ingests; a bare URL asks you for the DOI or citekey). That puts a capture card on the Librarian's `catalog` lane.
 
 > **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route, and telling the Co-PI "bring in this paper: `<DOI>`", feeds the same `catalog` lane. See [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md).
 
@@ -40,7 +40,7 @@ Capture doesn't end with a silent import: a **`candidate` card** lands in your I
 
 The card carries the honesty body — an argument, never a verdict: an `action`, the case for and against, what tipped it, and a certainty level. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Frontmatter fields](../reference/frontmatter.md).
 
-Read the `argument_against` case first — it's the information-bearing field. Then decide: keep it (set `lifecycle: proposed` to `current`) or skip it (set it straight to `archived` — the Catalog entry stays as a record). For this tutorial, keep it; you'll archive the card in Step 5 once you've acted on it.
+Read the `argument_against` case first — it's the information-bearing field. Then decide: keep it or skip it. Resolve the card from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. For this tutorial, keep it (`current` = accepted); skipped cards resolve straight to `archived`, and the Catalog entry stays as a record. Accepted cards stay visible while fresh, then the archival sweep moves them to `archived` after the configured freshness window.
 
 ---
 
@@ -72,15 +72,15 @@ Fill the three body sections the template gives you:
 2. **Worth distilling** — candidate claims you might extract later. Use the **Create linked claim** button here when a sentence is ready to become a claim note.
 3. **Tensions** — where it disagrees with anything your vault already holds.
 
-Save. Then resolve the candidate card from Step 3 — its job is done.
+Save, then set the source note to `lifecycle: provisional`: read, captured in your words, but not yet distilled into claims. The discuss queue picks up provisional source notes when you want a questioning pass with the Co-PI. Once you distill the claims you need, advance the source note to `current` ([Write a claim note](../how-to-guides/knowledge/write-a-claim-note.md)).
 
 ---
 
 ## What you have
 
 - `catalog/papers/<citekey>.md` — the paper entity, with `relationships` edges into the Catalog
-- A judged candidate card — you read an honest argument and made the call
-- `notes/sources/` — one source note stub filled in your own words, linked to its entity
+- A judged candidate card — you read an honest argument and resolved it
+- `notes/sources/` — one provisional source note filled in your own words, linked to its entity
 
 The paper is a vault citizen; the source note is your intellectual claim on it.
 

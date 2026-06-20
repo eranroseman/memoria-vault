@@ -9,13 +9,13 @@ parent: Tutorials
 
 **Time:** 20–30 minutes.
 
-**You will use:** a terminal (for the installer and your API keys), then Obsidian.
+**You will use:** a terminal for the installer and API keys, then Obsidian.
 
 ---
 
 ## Prerequisites
 
-- Windows PowerShell 5.1+ for production, or Linux/WSL for the test installer
+- Windows PowerShell 5.1+ for the native Windows install, or Linux/WSL2 for the Linux installer
 - [Git](https://git-scm.com/) installed (the installer checks and tells you if anything is missing — it provisions the rest itself, including Hermes)
 - [Obsidian](https://obsidian.md/) installed, or let the installer guide you through it
 
@@ -35,7 +35,7 @@ Get-Content .\install.ps1     # read what it will do
 .\install.ps1
 ```
 
-For Linux/WSL testing:
+For Linux/WSL2:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -43,7 +43,7 @@ less install.sh        # read what it will do
 bash install.sh
 ```
 
-The installer confirms every external step before running it. On screen you'll watch it check prerequisites, then **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree). It deploys the **five profiles** (`memoria-copi` plus the four background lanes) and wires the maintenance crons. When it asks about the optional clustering stack (~2 GB), decline it — graph tools still work, and you can add it later.
+The installer confirms every external step before running it. On screen you'll watch it check prerequisites, then **scaffold → populate → golden-copy** your runtime vault (default `~/Memoria` — pick a folder outside any cloud-synced tree). It deploys the **five profiles** (`memoria-copi` plus the four background lanes) and wires the maintenance crons. When it asks about the optional clustering stack (~2 GB), skip it unless you already know you need BERTopic-style topic modeling; graph tools still work, and you can add it later.
 
 When it finishes it prints a **Next steps** checklist. The rest of this tutorial walks that checklist.
 
@@ -53,7 +53,7 @@ Full flag and step reference (the convenience one-liner, `--dry-run`, and adding
 
 ## Step 2 — Add your API keys
 
-Open the shared Hermes env file and fill in your keys — model access, the Obsidian Local REST API key (Step 3 below), the Local REST API HTTPS port and certificate path, and the discovery key. On Windows the file is `%LOCALAPPDATA%\hermes\.env`; on Linux/WSL2 it is `~/.hermes/.env`. The canonical key names and where each comes from are in [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
+Open the shared Hermes env file and fill in the keys you already have: model access and the discovery key. On Windows the file is `%LOCALAPPDATA%\hermes\.env`; on Linux/WSL2 it is `~/.hermes/.env`. You will add the Obsidian Local REST API key, HTTPS port, and certificate path after opening Obsidian in Step 3. The canonical key names and where each comes from are in [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
 
 Then propagate them into every profile (profile runs read only their own `.env` — there is no global fallback):
 
@@ -76,7 +76,7 @@ Re-run that command any time you add or rotate a key.
 3. Copy the API key from **Settings → Local REST API** into `OBSIDIAN_API_KEY` in the shared Hermes env file. Also set `OBSIDIAN_MCP_PORT` to the plugin's HTTPS port and `OBSIDIAN_MCP_SSL_VERIFY` to the exported certificate path, then re-run the `--profiles-only` command from Step 2.
 4. Make the vault a git repo — obsidian-git and the pre-commit hook need one, and the installer deliberately doesn't `git init` for you. The exact init/add/commit commands are in [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 
-Obsidian opens the **Inbox** space. The space nav row links Inbox, Library, Knowledge, and Project; `home.md` remains a simple fallback note if the Homepage plugin is disabled.
+Obsidian opens the **Inbox** space. The space nav row links Inbox, Library, Knowledge, and Project; `home.md` remains a fallback note if the Homepage plugin is disabled.
 
 ---
 
@@ -84,7 +84,7 @@ Obsidian opens the **Inbox** space. The space nav row links Inbox, Library, Know
 
 The Co-PI is the one agent you converse with. Open it either way:
 
-- **In Obsidian:** command palette (`Cmd/Ctrl+P`) → **Agent Client: Open chat view**. The pane defaults to the Co-PI.
+- **In Obsidian:** command palette (`Cmd/Ctrl-P`) → **Agent Client: Open chat view**. The pane defaults to the Co-PI.
 - **In a terminal:** `hermes -p memoria-copi acp`
 
 Verify the profiles installed first if you like: `hermes profile list` should show all five `memoria-*` profiles.
