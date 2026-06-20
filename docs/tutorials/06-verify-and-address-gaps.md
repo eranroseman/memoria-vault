@@ -11,17 +11,17 @@ parent: Tutorials
 
 **You will use:** the Co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the `map` task in your Inbox.
+**Prerequisite:** [Tutorial 05: Synthesize toward a writing project](05-synthesize-toward-a-writing-project.md) complete — claims in `notes/claims/`, gap cards from the coverage pass in your Inbox.
 
 ---
 
-## Step 1 — Delegate a verify task
+## Step 1 — Ask for a verification pass
 
 In the Co-PI pane:
 
 > "Verify my claims on `<your-topic>` — check that each one is actually supported by its sources."
 
-The Co-PI delegates a **`verify`** task to the **Peer-reviewer** — the adversarial lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
+The Co-PI delegates the pass to the **Peer-reviewer** — the adversarial verify lane ([The Peer-reviewer](../explanation/profiles/peer-reviewer.md)). Its posture is *flag, don't fix*: it traces claims to their cited sources, checks citations, and hunts duplicates — and the only thing it can write is Inbox cards. It never edits your notes, and it is deliberately not the agent that gathered the evidence: the proposer and the checker are independent by construction.
 
 You can point it at anything — one claim, a hub, a draft you wrote elsewhere.
 
@@ -37,19 +37,19 @@ A `clean` flag closes nothing by itself and an `issues-found` flag changes nothi
 - **A citation issue:** fix the `sources` entry on the claim.
 - **Inconclusive:** decide whether it's worth your own read; archive the flag either way once decided.
 
-Set each handled flag to `lifecycle: archived`. The Inbox converges to empty.
+Resolve each handled flag from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. The Inbox converges to empty.
 
-(One verification runs without you asking: a monthly cron sweeps your Catalog DOIs for retractions and raises an `alert` card on a hit — [Ingest routing](../reference/ingest.md).)
+One verification runs without you asking: the retraction sweep checks Catalog DOIs and raises an `alert` card on a hit — [Run a retraction sweep](../how-to-guides/operate/run-a-retraction-sweep.md).
 
 ---
 
 ## Step 3 — Close the loop: gaps re-trigger discovery
 
-Now return to the **`gap` cards** — from Tutorial 05's map task, or raised by a verify pass that found a claim resting on thin evidence. A gap is a proposal ("your corpus is missing X") with the full honesty body. For each gap you agree with, hand it straight back:
+Now return to the **`gap` cards** — from Tutorial 05's coverage pass, or raised by a verify pass that found a claim resting on thin evidence. A gap is a proposal ("your corpus is missing X") with the full honesty body. For each gap you agree with, hand it straight back:
 
 > "That gap on `<sub-topic>` is real — find sources to fill it."
 
-The Co-PI delegates a **`catalog`** task, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next map or verify pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
+The Co-PI delegates discovery to the Librarian's catalog lane, candidates arrive (Tutorial 07), reading produces sources, sources produce claims, and the next coverage or verification pass finds the next gap. That's one full turn of the loop — why it compounds rather than just repeats: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
 
 Skip the gaps you don't buy — archive them with a clear conscience. The honesty body exists so you can disagree.
 

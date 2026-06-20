@@ -5,11 +5,11 @@ parent: Tutorials
 
 # Tutorial 04: Build a reading batch
 
-**You will end with:** a reading queue of around five sources on one topic, built by delegation, and the habit of working it as **one worklist** — not card by card.
+**You will end with:** a reading queue of around five sources on one topic, built by delegation, and the habit of working it in **one batch pass** — not card by card.
 
 **Time:** 30 minutes to build the queue; reading time is yours, spread across sessions.
 
-**You will use:** the Co-PI pane, the Inbox, `sources.base`, and the reading-pipeline dashboard.
+**You will use:** the Co-PI pane, the Inbox, and the Library space's reading queue.
 
 **Prerequisite:** [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) complete.
 
@@ -21,7 +21,7 @@ Open the Co-PI pane and name a topic — the same area as your Tutorial 03 paper
 
 > "Build me a reading batch on notification receptivity — find the key papers and bring in the ones I should read. Mix foundational and recent; include something that might disagree with the rest."
 
-The Co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
+The Co-PI delegates discovery to the Librarian's catalog lane. You'll never see the Librarian directly — its work comes back as cards and Catalog entries.
 
 (You can also seed the batch yourself by capturing papers you already know, exactly as in [Tutorial 03](03-bring-in-a-paper.md) — the same queue either way.)
 
@@ -29,7 +29,7 @@ The Co-PI delegates one or more **`catalog`** tasks to the Librarian. You'll nev
 
 ## Step 2 — Judge the candidates as a batch
 
-Candidate cards accumulate in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox space), each with the honesty body from Tutorial 03. Sit down once and judge them together:
+Candidate cards accumulate in the Inbox space's **Needs me** view, each with the honesty body from Tutorial 03. Sit down once and judge them together:
 
 - Read each card's `argument_against` and `certainty` first.
 - **Keep** the ones worth your reading time; **skip** (archive) the rest. Skipping is cheap — the cost of an over-inclusive candidate is exactly this one decision.
@@ -42,18 +42,16 @@ For each kept paper, the Catalog entity and proposed source note stub already ex
 
 ## Step 3 — Open your reading queue
 
-Your queue is **not** the Inbox — candidates were a keep/skip decision; reading is a different kind of work, on a different surface:
+Your queue is **not** the Inbox — candidates were a keep/skip decision; reading is a different kind of work, on a different surface. Open the **Library** space and use its reading pipeline:
 
-- **`system/dashboards/sources.base`**, view **"To read & distill"** — every source note still at `lifecycle: proposed`, i.e. awaiting your reading.
-- **`system/dashboards/reading-pipeline.md`** — the same queue plus your claims by maturity: the Library space's intake view at a glance.
-
-The Library space (Tutorial 01) opens the reading pipeline, discuss queue, and Catalog — switch to it for reading sessions.
+- The **To read & distill** source view shows every source note still at `lifecycle: proposed`, i.e. awaiting your reading.
+- The **Reading pipeline** dashboard shows the same queue plus your claims by maturity: the Library space's intake view at a glance.
 
 ---
 
 ## Step 4 — Work the queue
 
-For each source in your batch, repeat the read-and-write steps from [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — read with the Catalog entity open, then fill the source note. What's new at batch scale: as you finish each, advance its `lifecycle` off `proposed` so it drops off the "To read & distill" view — the queue converging to empty is the success signal.
+For each source in your batch, repeat the read-and-write steps from [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md) — read with the Catalog entity open, then fill the source note. What's new at batch scale: as you finish each read, advance its `lifecycle` from `proposed` to `provisional` so it drops off the **To read & distill** view and enters the discuss/distill stage. Once its claims are distilled, advance it to `current`.
 
 Don't try to finish the batch in one session. The queue is durable; that's what it's for.
 
@@ -67,7 +65,7 @@ Don't try to finish the batch in one session. The queue is durable; that's what 
 
 - ~5 Catalog entities and kept candidates, judged in one sitting
 - Source note stubs in `notes/sources/`, filled in your own words as you read
-- A reading queue in `sources.base` / the reading-pipeline dashboard that you work down as a batch
+- A Library reading queue that you work down as a batch
 - A growing sense of where your sources agree and where they fight — fuel for the next tutorial
 
 ---

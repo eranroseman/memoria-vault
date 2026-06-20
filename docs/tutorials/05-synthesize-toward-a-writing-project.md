@@ -5,7 +5,7 @@ parent: Tutorials
 
 # Tutorial 05: Synthesize toward a writing project
 
-**You will end with:** two or three claim notes distilled from your reading batch, a hub gathering them, and a corpus map from a delegated `map` task — the synthesis surface a writing project will stand on.
+**You will end with:** two or three claim notes distilled from your reading batch, a hub gathering them, and a coverage read from the Librarian's map lane — the synthesis surface a writing project will stand on.
 
 **Time:** 45–60 minutes.
 
@@ -13,7 +13,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 04: Build a reading batch](04-build-a-reading-batch.md) complete — several read sources with filled **Worth distilling** sections.
 
-This tutorial builds your durable synthesis layer — claims and hubs — plus the `map` lane that tells you whether the corpus is ready to write from. (A preview of what's coming next is at the end.)
+This tutorial builds your durable synthesis layer — claims and hubs — plus the coverage pass that tells you whether the corpus is ready to write from. (A preview of what's coming next is at the end.)
 
 ---
 
@@ -21,7 +21,9 @@ This tutorial builds your durable synthesis layer — claims and hubs — plus t
 
 Open the source notes from Tutorial 04 and re-read each **Worth distilling** section. Pick two or three assertions that are durable, surprising, or in tension with each other.
 
-For each, create a claim note in `notes/claims/` from `system/templates/claim.md`:
+For each, use the **Create linked claim** button in the source note's **Worth distilling** section. It creates the claim in `notes/claims/`, carries over the source citekey, links the source note back to the claim, and runs the pre-file similarity shadow check before filing. If you prefer the palette, run `Cmd/Ctrl-P` → **Memoria: create linked claim note** from the source note.
+
+The claim starts with frontmatter shaped like this:
 
 ```yaml
 type: claim
@@ -40,7 +42,7 @@ links:
 
 If two of your claims relate, say so in `links:` — `supports` or `contradicts`. The contradictions are the valuable ones.
 
-`notes/claims/` is a **review-gated zone** — agents can only *propose* writes there, so you author claims directly ([Why promotion is gated](../explanation/knowledge/promotion-model.md)).
+`notes/claims/` is a **review-gated zone** — agents can only *propose* writes there, so you author claims directly ([Why promotion is gated](../explanation/knowledge/promotion-model.md)). After creating claims from a source, advance that source note to `current` when its useful claims are distilled.
 
 ---
 
@@ -52,13 +54,13 @@ Create one now for this batch's topic; the full template and step-by-step proced
 
 ---
 
-## Step 3 — Delegate a map task
+## Step 3 — Ask for a coverage pass
 
 Now ask the system what your corpus actually covers. In the Co-PI pane:
 
 > "Map my corpus on `<your-topic>` — what do I have good coverage on, and where is it thin?"
 
-The Co-PI delegates a **`map`** task to the Librarian, whose map lane produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
+The Co-PI delegates a map-lane task to the Librarian, which produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
 
 To find them: open the **Inbox space** and look in the **Needs me** view — the coverage read and the new `gap` cards land there alongside your other candidate cards.
 
@@ -70,7 +72,7 @@ Read the coverage view and decide: is any cluster dense enough to write from (a 
 
 - 2–3 claim notes in `notes/claims/` — falsifiable, sourced, `maturity: seedling`
 - A hub in `notes/hubs/` gathering the cluster
-- A corpus/coverage read from the `map` lane, and gap cards marking the thin spots
+- A corpus/coverage read from the Librarian's map lane, and gap cards marking the thin spots
 
 > **Next step when this becomes a bounded inquiry:** run `Memoria: start project` to scaffold `projects/<slug>/`, create the active thesis, and refresh the Project gate. The claims and hubs you just built are exactly its inputs.
 

@@ -47,18 +47,6 @@ Sorted by severity, then topic.
 
 ---
 
-## Recover checklist order
-
-When multiple failures occur simultaneously:
-
-1. CRITICAL first — address tamper detection and security before anything else.
-2. HIGH that's silent — failures that "look like nothing to do" burn time and can compound.
-3. HIGH that's visible — active breakage with obvious symptoms.
-4. MEDIUM — address during the weekly review ritual.
-5. LOW — batch and address monthly.
-
----
-
 ## Related
 
 - The troubleshooting how-to guides: [Troubleshooting](../how-to-guides/troubleshooting/README.md)

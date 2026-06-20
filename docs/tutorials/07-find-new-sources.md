@@ -25,13 +25,13 @@ Open the Co-PI pane and name the need in your own words:
 
 Phrase it as a research question, not keywords. Seed it however helps: "papers that build on `<citekey>`", "recent work that disagrees with my receptivity claims", "the foundational papers I skipped."
 
-The Co-PI delegates a **`catalog`** task; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
+The Co-PI delegates discovery to the Librarian's catalog lane; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
 
 ---
 
 ## Step 2 — Judge the candidates
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox.base`, shown on the Inbox space), one per proposed source. Judge them exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md): read `argument_against` and `certainty` first, then keep (`lifecycle: current`) or skip (`lifecycle: archived`). A discovery card carries the same honesty body as a captured one — `argument_against` is the information-bearing field (the full card field list is in [Inbox card fields](../reference/inbox-card-fields.md)):
+**`candidate` cards** land in the Inbox space's **Needs me** view, one per proposed source. Judge them exactly as in [Tutorial 03: Bring in a paper](03-bring-in-a-paper.md): read `argument_against` and `certainty` first, then resolve each card from the palette as keep (`current`) or skip (`archived`). A discovery card carries the same honesty body as a captured one — `argument_against` is the information-bearing field (the full card field list is in [Inbox card fields](../reference/inbox-card-fields.md)):
 
 > "N=23, single lab; may not generalize beyond students." — `certainty: likely`
 
