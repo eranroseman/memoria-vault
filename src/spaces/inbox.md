@@ -13,6 +13,11 @@ space: inbox
 > [!brief] Inbox empty? That's the goal. New agent proposals, integrity flags, and
 > work prompts land here when they need a decision.
 
+> [!suggestions] First actions
+> - Start Library intake with **Memoria: capture source from URL**.
+> - Capture a loose thought with **Memoria: capture fleeting**.
+> - Ask the Co-PI in the Agent Client pane what to do next.
+
 ## Needs me
 
 ![[inbox.base#Needs me]]

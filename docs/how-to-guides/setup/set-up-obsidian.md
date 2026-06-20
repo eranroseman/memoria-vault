@@ -42,6 +42,8 @@ The required plugins:
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 | `homepage` | Opens `spaces/inbox.md` on launch |
 | `buttons` | Renders the command buttons on `home.md` |
+| `portals` | Replaces the raw file tree with curated folder navigation |
+| `memoria-inspector` | Shows the read-only Memoria Inspector sidebar |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugins](../../reference/obsidian-plugins.md) for the load-bearing settings of each.
 
