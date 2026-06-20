@@ -31,7 +31,6 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
 | `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
-| `stale-answer-drafts` | LOW | Unreviewed answer drafts older than 90 days (folder retired in v0.1.0-alpha.2; the check remains for migrated vaults). |
 
 CLI entry point:
 
@@ -63,11 +62,6 @@ This is the human-facing half of template protection (#179): agents are already 
 | `golden_restore.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
 | `golden_restore.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
 
-Upgrade conflict rule: if a release changes a system file and the live copy also
-differs from the old golden baseline, the live file wins for safety. The command
-refreshes the golden baseline to the new release and leaves that path reported as
-drifted, so the PI can compare and decide rather than losing a customization.
-
 The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` and `memoria-property-badges.css` snippets. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
 
 ---
@@ -90,7 +84,7 @@ The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script mem
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The shipped v0.1.0-alpha.2 operation is report-only — the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the one shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy MCP](policy-mcp.md#auto-fix-policy). The Linter operation is report-only; the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the shipped repair path.
 
 ---
 

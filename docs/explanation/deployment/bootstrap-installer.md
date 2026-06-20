@@ -31,7 +31,6 @@ One installer-specific sequencing choice worth calling out: Zotero deliberately 
 
 **Non-goals**
 
-- macOS, and Linux distros other than Ubuntu/Debian.
 - Writing the user's API keys for them.
 - Supporting macOS or non-Debian Linux distributions as first-class install targets.
 - In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
@@ -42,16 +41,16 @@ The installer is offered two ways, with **inspect-first as the documented primar
 
 ## Production Windows and Linux testing
 
-Per [ADR-64](../../adr/64-native-windows-support.md), Memoria now uses a
-two-script platform split:
+Per [ADR-64](../../adr/64-native-windows-support.md), Memoria uses a two-script
+platform split:
 
 - **Windows production:** `scripts/install.ps1` is the native Windows installer. It runs the official Hermes Windows installer, copies `src/` into the production vault, creates the vault-local MCP venv, deploys profiles and the policy-gate plugin, and wires Hermes crons.
 - **Linux/WSL testing:** `scripts/install.sh` remains the Linux/WSL test installer and CI/disposable-vault path.
 
-This removes the old production WSL bridge: no `/mnt/c` vault path, no WSL2
-gate in the PowerShell installer, and no `windowsWslMode` requirement for the
-ACP pane on production Windows. WSL-specific docs still use mirrored networking
-when validating the Linux/WSL test path against Windows Obsidian.
+The production path has no `/mnt/c` vault path, no WSL2 gate in the PowerShell
+installer, and no `windowsWslMode` requirement for the ACP pane on production
+Windows. WSL-specific docs still use mirrored networking when validating the
+Linux/WSL test path against Windows Obsidian.
 
 ## Architecture: two installers, one source tree
 
@@ -71,7 +70,7 @@ Python operations.
 Each trades a little breadth for much less shell to build and maintain:
 
 - **Guide app install, don't fully automate.** Detect Obsidian; if absent, print the exact `winget`/`apt` one-liner and run it on consent — no version parsing, no silent installs.
-- **Presence checks, not version gates.** Check a tool is there; let `pip`/Hermes surface a clear error if it is too old.
+- **Presence checks, not version gates.** Check a tool is there; let `pip`/Hermes surface a clear error if the installed tool lacks a required capability.
 - **Don't install language runtimes.** The Hermes installer provisions uv, Python, Node, ripgrep, and ffmpeg; the bootstrap adds only **Git** (pre-Hermes) and **Pandoc** (not provisioned by Hermes).
 - **Assume `local-only` deployment.** No Syncthing/VPS/sync logic — multi-device is a later phase.
 - **Default the vault off OneDrive** (`%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux; prompt to override) — OneDrive fights Obsidian indexes and file locks, and Git is the backup, so losing OneDrive sync of the vault is fine.

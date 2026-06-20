@@ -7,7 +7,7 @@ nav_order: 6
 
 # Fix profile drift
 
-**Symptom:** a deployed Hermes profile runs stale behavior — an edit you made to a `SOUL.md`, skill, or lane-override doesn't show up, or a profile acts like a version you've since changed. The deployed copy in `~/.hermes/profiles/` no longer matches the vault source in `<vault>/.memoria/profiles/`.
+**Symptom:** a deployed Hermes profile runs stale behavior — an edit you made to a `SOUL.md`, skill, or lane-override doesn't show up. The deployed copy in `~/.hermes/profiles/` no longer matches the vault source in `<vault>/.memoria/profiles/`.
 
 **Diagnosis:** either the vault source changed and the install script hasn't been re-run, or someone edited the deployed copy directly. Compare the two to confirm, then decide which case you're in before fixing.
 

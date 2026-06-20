@@ -80,12 +80,11 @@ It is a small set of streams grouped by writer and cadence — not one merged fi
 would make every reader filter and let one corrupt line poison everything) and not a file
 per metric.
 
-Two of these signals — **cost/tokens** and **disposition** — were empty, and the cause was
-misdiagnosed as an upstream Hermes limitation. In fact Hermes v0.14.0 records cost and
-tokens in its per-profile session store, reachable without modifying Hermes; the exporter
-was just querying the CLI endpoint that drops them. Disposition is a human decision captured
+Two of these signals — **cost/tokens** and **disposition** — are captured at different
+control points. Cost and token counts come from the per-profile Hermes session store,
+joined to board cards by worker session id. Disposition is a human decision captured
 at the review action, not an inference event. [ADR-106](../../adr/106-cost-and-disposition-capture.md)
-fixes both at points Memoria controls.
+records the design.
 
 ### Diagnostic — the operability plane, scoped honestly
 

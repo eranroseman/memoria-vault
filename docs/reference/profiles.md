@@ -97,21 +97,7 @@ For the full per-skill map (names and lanes) see the [Hermes CLI](hermes-cli.md)
 `src/.memoria/tool-registry.yaml` is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
-- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, operations, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md) retired the v0.1.0-alpha.1 Coder-lane `terminal`+`file` exception, so its successor the Engineer is MCP-only too; enforced by `test_no_profile_has_direct_world_access`).
-
----
-
-## Retired profiles (historical)
-
-The previous seven-profile fleet consolidated into the five above ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). These names are historical; the installer deploys only the five current profiles.
-
-| Retired profile | Where its job went |
-| --- | --- |
-| `memoria-socratic` | The Co-PI (`memoria-copi`) — the conversational front, now hard read-only |
-| `memoria-mapper` | The Librarian's `map` lane + the cluster MCP |
-| `memoria-verifier` | `memoria-peer-reviewer` (judgment checks) + the sweeps operation (deterministic checks) |
-| `memoria-coder` | `memoria-engineer` |
-| `memoria-linter` | The Linter **operation** — pre-commit hook + daily cron, not an agent (see [Linter: detectors and auto-fix](linter.md)) |
+- **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, operations, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)); enforced by `test_no_profile_has_direct_world_access`.
 
 ---
 

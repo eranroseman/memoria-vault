@@ -49,7 +49,7 @@ That is the whole shipped setup — no gateway service is required for outbound 
 
 ## Deferred: inbound mobile-capture gateway
 
-> **Status — deferred** ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). The inbound gateway that turns Telegram messages into fleeting notes is **not validated end-to-end** and not part of a supported alpha.8 install. The steps below document the intended setup so future work does not reinvent it; until it lands, use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported capture path.
+> **Status — deferred** ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). The inbound gateway that turns Telegram messages into fleeting notes is **not validated end-to-end** and not part of the supported install. The steps below document the intended setup so future work does not reinvent it; until it lands, use the in-Obsidian capture commands (`Memoria: capture fleeting` and friends — [Obsidian command palette](../../reference/obsidian-command-palette.md)) as the supported capture path.
 
 These steps additionally need the Hermes gateway service available (`hermes gateway --help` returns help text).
 

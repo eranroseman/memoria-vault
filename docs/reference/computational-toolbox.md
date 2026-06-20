@@ -92,7 +92,7 @@ Training characteristics:
 
 **Used by:** Linter `graph-analyze`, future propagation-debt enumeration.
 
-**Implementation:** build the wikilink graph from frontmatter and body links; run standard algorithms (NetworkX in Python, or `dataviewjs` queries against Obsidian's link-graph cache). The shipped v0.1 `graph-analyze` is the `graph_analyze` function in the Linter's `detectors.py` — **pure stdlib** (in-degree arithmetic over the wikilink graph for orphan detection); NetworkX is only needed if/when richer metrics (community detection, centrality) are added, which is why the Linter grants no `networkx` skill today.
+**Implementation:** build the wikilink graph from frontmatter and body links; run standard algorithms (NetworkX in Python, or `dataviewjs` queries against Obsidian's link-graph cache). The current `graph-analyze` command is the `graph_analyze` function in the Linter's `detectors.py` — **pure stdlib** (in-degree arithmetic over the wikilink graph for orphan detection); NetworkX is only needed if/when richer metrics (community detection, centrality) are added, which is why the Linter grants no `networkx` skill today.
 
 **Cost:** linear in graph size. Determinism: total.
 

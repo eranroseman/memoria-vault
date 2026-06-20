@@ -5,7 +5,7 @@ parent: Reference
 
 # Command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching is now the nav row in the four dashboard notes ([ADR-81](../adr/81-persistent-gate-dashboards.md)), not a QuickAdd workspace command. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
+The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching uses the nav row in the four dashboard notes ([ADR-81](../adr/81-persistent-gate-dashboards.md)); the command palette is for actions, not workspace switching. The Co-PI conversation remains the primary route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
 
 ---
 
@@ -72,20 +72,6 @@ not create board cards.
 | `Memoria: record exploration trace` | Capture a rejected direction/dead end beside an active or selected map/gap report under `notes/fleeting/maps/`. | QuickAdd Macro → `src/system/scripts/record-exploration-trace.js` |
 
 ---
-
-## Removed and retired commands
-
-| Command | Status | Where the job went |
-| --- | --- | --- |
-| `Memoria: lint this note` | **Removed** | The Linter is an operation, not an agent — the daily cron and the pre-commit hook cover it; nothing to invoke per note ([Linter: detectors and auto-fix](linter.md)). |
-| `Memoria: verify this draft` | Replaced | `Memoria: verify draft` (above), or ask the Co-PI. |
-| `Memoria: frame this section` | Replaced | `Memoria: draft section` (above), or ask the Co-PI. |
-| `Memoria: new project` / `Memoria: scope this project` | Replaced | `Memoria: start project` opens the Project space on-ramp; `Memoria: refresh project gate` recomputes the deterministic cache. |
-| `Memoria: open Desk/Library/Studio workspace` | Retired | Space switching is the nav row in `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, and `spaces/project.md`. |
-| `Memoria: open Project gate` | Retired | Open `spaces/project.md` from any space nav row. |
-
----
-
 ## The Co-PI delegation path
 
 For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note auto-attached): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).

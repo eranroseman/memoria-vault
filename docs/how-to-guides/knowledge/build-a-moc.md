@@ -7,7 +7,7 @@ nav_order: 4
 
 # Build a hub
 
-Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs are review-gated: agents only propose; you author (the hub is the renamed MOC, [ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
+Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs are review-gated: agents only propose; you author ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
 
 ## When to create a hub
 
@@ -29,7 +29,7 @@ links: {}
 
 **2. Name it after the topic.**
 
-`receptivity-timing.md`, not `receptivity-timing-moc.md` — the folder already says what it is.
+Use the topic slug directly, for example `receptivity-timing.md` — the folder already says what it is.
 
 **3. Write the shape of the topic.**
 

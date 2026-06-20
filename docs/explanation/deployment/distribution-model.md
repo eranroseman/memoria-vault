@@ -6,7 +6,7 @@ nav_order: 1
 
 # Distribution model
 
-Memoria ships as a single repo (`memoria-vault`), version **0.1.0-alpha.2**. **The repo is the install unit** ([ADR-26](../../adr/26-repo-as-install-unit.md), as amended by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)) — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
+Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit** ([ADR-26](../../adr/26-repo-as-install-unit.md), as amended by [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)) — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
 
 | Path | Contents | Audience |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ The agents ship as five hand-authored profile directories under `src/.memoria/pr
 - **Shared:** `AGENTS.md` — the one "how we work in this vault" instruction set every agent reads, living in the vault root so there is exactly one copy of the house rules.
 - **Unique per agent:** `SOUL.md` (its posture — the stable stance, like *faithful* or *skeptical*), `config.yaml` (model, tools, and MCP connections), optional `skills/` (assigned per lane), and `distribution.yaml` (packaging metadata).
 
-So the agents share the house rules but each brings its own stance and toolset. The old failure mode — seven near-identical SOUL files duplicating common policy by hand — is gone structurally: common content has one home (`AGENTS.md`), and what remains per-profile is genuinely per-profile. At five profiles, hand-authoring the unique layers stays cheap, and a profile compiler remains unnecessary.
+So the agents share the house rules but each brings its own stance and toolset. Common policy has one home (`AGENTS.md`), and what remains per-profile is genuinely per-profile. At five profiles, hand-authoring the unique layers stays cheap, and a profile compiler remains unnecessary.
 
 ## Why the profile install is idempotent
 

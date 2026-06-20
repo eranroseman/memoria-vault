@@ -8,7 +8,7 @@ nav_order: 7
 
 Set up a PRISMA-compliant screening protocol and process the results into Memoria. Use this when you need a defensible, reproducible literature search — not for exploratory discovery, which the normal [find → capture](find-new-sources.md) path handles.
 
-> **Status: a manual procedure.** There is no "run systematic review" command and no screening template in v0.1.0-alpha.2. The workflow composes existing pieces — a protocol note you author, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard capture pipeline. Every step below works today; the protocol discipline is yours to keep.
+> **Status: a manual procedure.** There is no "run systematic review" command and no screening template. The workflow composes existing pieces — a protocol note you author, your own database searches, optional [ASReview](https://asreview.nl/) for large pools, and the standard capture pipeline. Every step below works today; the protocol discipline is yours to keep.
 
 ## Prerequisites
 

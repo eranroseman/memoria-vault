@@ -7,7 +7,7 @@ grand_parent: Dashboards
 
 # `skill-state` dashboard
 
-Which skills are active in which lane. This is the visibility surface [ADR-43](../../../adr/43-skill-governance.md) adopted when the skill count crossed its threshold (25 skills across five profiles at v0.1.0-alpha.2): once the inventory no longer fits in the operator's head, "which lane can do what?" needs an answer that doesn't require opening ten YAML files.
+Which skills are active in which lane. This is the visibility surface [ADR-43](../../../adr/43-skill-governance.md) adopted when the skill inventory no longer fit in the operator's head: "which lane can do what?" needs an answer that doesn't require opening ten YAML files.
 
 ## What it shows
 

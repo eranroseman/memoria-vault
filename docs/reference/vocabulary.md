@@ -19,7 +19,7 @@ The shipped file lives at [`src/system/vocabulary.md`](https://github.com/eranro
 
 ## Allowed values
 
-The tables below mirror the shipped [`src/system/vocabulary.md`](https://github.com/eranroseman/memoria-vault/blob/main/src/system/vocabulary.md) as of v0.1.0-alpha.8. That note is the single source of truth — if these tables and the shipped note ever disagree, the shipped note wins. Each field takes **many values per note**.
+The tables below mirror the shipped [`src/system/vocabulary.md`](https://github.com/eranroseman/memoria-vault/blob/main/src/system/vocabulary.md). That note is the single source of truth — if these tables and the shipped note ever disagree, the shipped note wins. Each field takes **many values per note**.
 
 ### `research_area`
 

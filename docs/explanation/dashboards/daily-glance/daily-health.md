@@ -5,9 +5,11 @@ nav_order: 1
 grand_parent: Dashboards
 ---
 
-# The Daily Health dashboard
+# The Daily Health view
 
-> **Absorbed into the launch surface.** Daily Health no longer exists as a standalone dashboard file — the design update folded its job into the Inbox space. The morning "is anything red?" glance now starts with the Inbox space's `Needs me`, `Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)), so the daily ritual starts on the surface Obsidian already opens. This page records the design rationale, which survives the move unchanged.
+The morning "is anything red?" glance starts with the Inbox space's `Needs me`,
+`Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)).
+The daily ritual starts on the surface Obsidian already opens.
 
 The daily health view is the always-on system glance. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
@@ -15,7 +17,10 @@ The daily health view is the always-on system glance. The budget is 30 seconds �
 
 ## What it shows
 
-What populates the glance — the Inbox space's top views and the support dashboards behind them — is detailed where it now lives, [Home — the vault front door](../../obsidian/home.md). The framing that survives the move: each is an "is anything red?" check, not a place to do work — the deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
+What populates the glance — the Inbox space's top views and the support dashboards
+behind them — is detailed in [Home — the vault front door](../../obsidian/home.md).
+The framing: each is an "is anything red?" check, not a place to do work — the
+deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ---
 

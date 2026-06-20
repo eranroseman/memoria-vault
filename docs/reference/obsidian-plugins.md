@@ -5,7 +5,7 @@ parent: Reference
 
 # Obsidian plugins
 
-Obsidian plugin inventory, install status, and load-bearing configuration for Memoria v0.1. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [Zotero plugins](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../explanation/obsidian).
+Obsidian plugin inventory, install status, and load-bearing configuration for Memoria. For Zotero-side add-ons and the Zotero↔Obsidian connector comparison see [Zotero plugins](zotero-plugins.md). For the plugin model and reasoning see [explanation/obsidian/](../explanation/obsidian).
 
 ---
 
@@ -73,7 +73,7 @@ Documented but not in the install set. Obsidian-side evaluated alternatives. (Zo
 | Plugin | Status | Notes |
 | --- | --- | --- |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
-| Workspaces Plus | Evaluated, not shipped | Registers workspace-switching commands, but [ADR-81](../adr/81-persistent-gate-dashboards.md) retired space switching as workspace loading. The core Workspaces plugin remains only as a reset layout. |
+| Workspaces Plus | Evaluated, not shipped | Registers workspace-switching commands, but [ADR-81](../adr/81-persistent-gate-dashboards.md) keeps space switching in dashboard notes rather than saved workspace layouts. The core Workspaces plugin remains only as a reset layout. |
 | obsidian-linter | **Incompatible — do not install** ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
 
 ---
@@ -183,10 +183,9 @@ clearly instead of silently skipping those paths.
 
 ### portals
 
-Portals shipping behavior was verified during the alpha.7 UI review: its folder spaces,
-hidden items, custom icons, and file-explorer replacement settings persist to a
-vendored `data.json`. It is adopted as navigation chrome only, not as a query layer
-or space switcher.
+Portals persists its folder spaces, hidden items, custom icons, and file-explorer
+replacement settings to a vendored `data.json`. It is adopted as navigation chrome
+only, not as a query layer or space switcher.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |

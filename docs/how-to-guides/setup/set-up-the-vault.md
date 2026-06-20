@@ -64,7 +64,7 @@ obsidian-git needs a repo to commit into; the remote (your own, not the starter 
 hermes profile list
 ```
 
-All five `memoria-*` profiles appear in the output — no retired names ([Installer (bootstrap)](../../reference/installer.md) lists them), none missing. If a profile is missing, the script reported that its required files weren't present — re-run and read its output.
+All five `memoria-*` profiles appear in the output. If a profile is missing, the script reported that its required files weren't present — re-run and read its output.
 
 Check that `{{VAULT_PATH}}` was substituted:
 
@@ -78,5 +78,4 @@ The `policy` server path should show an absolute vault path, not the `{{VAULT_PA
 
 - Next step: [Set up Obsidian](set-up-obsidian.md)
 - Profile secrets: [Set up Hermes](set-up-hermes.md)
-- Re-running after a git pull: [Redeploy profiles](../operate/redeploy-profiles.md)
-- Build status: [v0.1 release plan](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md)
+- Redeploying profile configuration: [Redeploy profiles](../operate/redeploy-profiles.md)
