@@ -34,6 +34,7 @@ and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
 | `cost-misses.jsonl` | `board_export.py` | per export run | one completed card whose Hermes session join could not be completed |
 | `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |
 | `triage.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI triage decision over an Inbox card |
+| `pre-file-similarity.jsonl` | Obsidian QuickAdd | per claim/source note creation | qmd top-neighbour shadow check before filing |
 | `blind-review-samples.jsonl` | `board_export.py` | per export run | one terminal review selected for blind re-review |
 | `linkage.jsonl` | ingest `link.py` | per ingest with ID-missing names | by-name entity collision counters the linker refused to merge |
 | `cron-heartbeat.jsonl` | cron wrappers | per successful cron job | last-successful-run heartbeat for always-on trigger detection |
@@ -201,6 +202,32 @@ The PI's Inbox decision stream. The same `Memoria: resolve inbox card` action th
 ```json
 {"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "current (accept)", "lifecycle_from": "proposed", "lifecycle_to": "current", "source": "quickadd.resolve-inbox-card"}
 ```
+
+## pre-file-similarity.jsonl
+
+The ADR-38 shadow ratchet stream. When QuickAdd creates a linked claim note or a
+structured source note, it runs a report-only `qmd search --format json --full-path`
+check before writing the note, appends a `[!similarity]` callout to the note, and
+writes one content-light telemetry row here. It never blocks filing, merges notes,
+or claims a calibrated threshold.
+
+```json
+{"timestamp": "2026-06-01T11:30:00Z", "event": "pre_file_similarity_shadow", "source": "quickadd.create-linked-claim", "note_type": "claim", "path": "notes/claims/example.md", "source_path": "notes/sources/smith2026.md", "query_sha256": "64hex...", "query_chars": 118, "status": "ok", "warning": "", "neighbours": [{"path": "notes/claims/nearby.md", "score": 0.42}]}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `source` | QuickAdd surface that filed the note: `quickadd.create-linked-claim` or `quickadd.structured-source-capture` |
+| `note_type` | `claim` or `source` |
+| `path` / `source_path` | vault-relative new note path and, for linked claims, the source note it was distilled from |
+| `query_sha256` / `query_chars` | content-light fingerprint and length of the proposed claim/source text; the raw query is not logged |
+| `status` | `ok` when qmd ran, `unavailable` when the vault path was unavailable or the qmd command failed |
+| `warning` | empty, `no-scoped-neighbours`, `vault-base-path-unavailable`, or `qmd-search-failed` |
+| `neighbours` | up to three scoped neighbours under `notes/claims/` or `notes/sources/`, with qmd scores when reported |
+
+`warning` rows are expected in fresh or unindexed vaults and are shadow telemetry
+for the later #562 enforcement/tuning work, not release blockers. The human-facing
+callout points to the qmd rebuild guide when the check looks stale.
 
 ## blind-review-samples.jsonl
 
