@@ -6,8 +6,8 @@
  * and open the new claim for the PI to edit.
  */
 
-const { appendSimilarityTelemetry, buildSimilarityCallout, preFileSimilarityShadow } = require("./quickadd-similarity");
-const { slug, uniquePath, yamlString } = require("./quickadd-utils");
+const { appendSimilarityTelemetry, buildSimilarityCallout, preFileSimilarityShadow } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-similarity.js"));
+const { slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

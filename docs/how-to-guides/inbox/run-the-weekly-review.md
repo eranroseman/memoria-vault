@@ -11,7 +11,7 @@ Walk the Friday ritual: refresh your research focus, sweep the Inbox, work the w
 ## Prerequisites
 
 - Obsidian open with the vault
-- `system/dashboards/weekly-review.md` open — the Friday aggregator: Notice-level findings, the week's new catalog entries and notes, and the fleeting backlog
+- `system/dashboards/weekly-review.md` open — the Friday aggregator: Notice-level findings, the week's new catalog entries and notes, and the same fleeting queue shown in the Inbox
 
 ## Steps
 
@@ -33,7 +33,7 @@ The **New this week** sections list catalog entries and notes created in the las
 
 **Step 5 — Clear the fleeting backlog (10–15 min).**
 
-The dashboard embeds the fleeting **To process** view. Promote, attach, or archive each note — including the week's chat exports ([Triage fleeting notes](../inbox/triage-fleeting-notes.md)). Target: zero notes older than a week.
+The dashboard embeds the same fleeting **To process** view shown in the Inbox. Promote, attach, or archive each note ([Triage fleeting notes](../inbox/triage-fleeting-notes.md)). Target: zero notes older than a week.
 
 **Step 6 — Advance settled claims (5 min).**
 
@@ -50,7 +50,7 @@ Open `system/dashboards/drift-watch.md` and `loose-ends.md` — the Linter opera
 ## Verify
 
 - The Inbox shows nothing at `lifecycle: proposed`
-- The fleeting backlog on the dashboard is empty
+- The fleeting queue is empty in both the Inbox and weekly-review dashboard
 - No HIGH or CRITICAL finding is outstanding on drift-watch
 - `research-focus.md` reflects what you actually intend to read next week
 

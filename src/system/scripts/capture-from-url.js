@@ -7,7 +7,7 @@
  * `bash -lc` so it reaches the native Hermes CLI.
  */
 
-const { run, shq, slug, uniquePath, yamlString } = require("./quickadd-utils");
+const { run, shq, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

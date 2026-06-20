@@ -101,9 +101,13 @@ def generate() -> dict:
                     _field("title", "Title", {"type": "text"}, description="Optional short title."),
                     _field(
                         "body",
-                        "Capture",
+                        "Thought, quote, or idea",
                         {"type": "textarea"},
-                        description="The thought, quote, or idea.",
+                        description=(
+                            "One raw item per note. Capture first; distill or archive from "
+                            "the Inbox later."
+                        ),
+                        required=True,
                     ),
                 ],
             ),

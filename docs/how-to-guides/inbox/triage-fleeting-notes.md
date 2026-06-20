@@ -17,7 +17,7 @@ Clear `notes/fleeting/`: promote each note to something durable, attach it to an
 
 **1. Open the fleeting queue.**
 
-Open `system/dashboards/fleeting.base` (the **To process** view), or the **Fleeting backlog** section of `system/dashboards/weekly-review.md`. Both surface every fleeting note still at `lifecycle: proposed`.
+Open the Inbox space (`spaces/inbox.md`) and use the **Fleeting notes** section. It embeds the **To process** view of `system/dashboards/fleeting.base`, which is the single queue for every fleeting note still at `lifecycle: proposed`. The Friday weekly review embeds the same queue only as a backstop.
 
 **2. Open each fleeting note and decide its fate.**
 
@@ -40,7 +40,7 @@ Set `lifecycle: archived` (or delete outright — a fleeting note has no provena
 ## Verify
 
 - `notes/fleeting/` has no `proposed` notes older than 7 days
-- The fleeting backlog on the weekly-review dashboard is empty
+- The **Fleeting notes** queue in the Inbox is empty
 
 ## Notes
 

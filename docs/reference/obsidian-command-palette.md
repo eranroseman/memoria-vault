@@ -17,7 +17,7 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 
 | Command | Output | Implementation |
 | --- | --- | --- |
-| `Memoria: capture fleeting` | A new fleeting note in `notes/fleeting/` from the fleeting template (`lifecycle: proposed`, `origin: human`). | QuickAdd Template → `system/templates/fleeting.md` |
+| `Memoria: capture fleeting` | Opens the `memoria-fleeting-capture` Modal Forms form, writes one raw item to `notes/fleeting/` (`lifecycle: proposed`, `origin: human`), and leaves processing to the Inbox queue. | QuickAdd Macro → `system/scripts/capture-fleeting.js` |
 | `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
 | `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
 | `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
@@ -25,7 +25,7 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 | `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
 | `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your outcome (`current` = accept, `archived` = reject / done) and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
 
-Template-based note creation (fleeting, claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md).
+Template-based note creation (claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md). Fleeting capture uses a Modal Forms wrapper so the prompt carries the instructions instead of writing template guidance into the note body.
 
 ---
 

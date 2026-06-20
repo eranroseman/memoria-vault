@@ -62,6 +62,16 @@ def test_structured_capture_forms_cover_source_and_project_setup():
     } <= set(forms)
 
 
+def test_fleeting_capture_form_carries_prompt_instructions():
+    form = _forms_by_name()["memoria-fleeting-capture"]
+    fields = {field["name"]: field for field in form["fields"]}
+    assert fields["body"]["label"] == "Thought, quote, or idea"
+    assert fields["body"]["isRequired"] is True
+    assert (
+        "Capture first; distill or archive from the Inbox later." in fields["body"]["description"]
+    )
+
+
 def test_modal_forms_data_is_generated_from_schema():
     import subprocess
 

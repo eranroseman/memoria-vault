@@ -18,8 +18,9 @@
         },
         {
           "name": "body",
-          "label": "Capture",
-          "description": "The thought, quote, or idea.",
+          "label": "Thought, quote, or idea",
+          "description": "One raw item per note. Capture first; distill or archive from the Inbox later.",
+          "isRequired": true,
           "input": {
             "type": "textarea"
           }

@@ -93,6 +93,7 @@ def test_homepage_opens_inbox_space_on_startup():
     assert main["openOnStartup"] is True
     assert main["openMode"] == "Replace all open notes"
     assert main["view"] == "Reading view"
+    assert main["pin"] is False
 
 
 def test_space_dashboards_exist_and_link_to_each_other():
@@ -115,6 +116,13 @@ def test_space_dashboards_have_day1_empty_state_actions():
         assert "[!suggestions] First actions" in text
         for command in FIRST_ACTION_COMMANDS[space]:
             assert command in text, f"{relpath} missing first action {command!r}"
+
+
+def test_inbox_space_owns_fleeting_triage_queue():
+    text = (SRC / "spaces" / "inbox.md").read_text(encoding="utf-8")
+    assert "## Fleeting notes" in text
+    assert "![[fleeting.base#To process]]" in text
+    assert "distill, attach, or archive" in text
 
 
 def test_space_dashboards_use_non_hidden_location():
@@ -183,7 +191,7 @@ def test_app_json_ships_memoria_editor_settings():
         "newFileFolderPath": "notes/fleeting",
         "attachmentFolderPath": "attachments",
         "trashOption": "local",
-        "propertiesInDocument": "visible",
+        "propertiesInDocument": "hidden",
     }
 
 

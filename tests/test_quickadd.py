@@ -88,6 +88,22 @@ def test_macro_choices_reference_existing_scripts():
             )
 
 
+def test_quickadd_scripts_resolve_shared_helpers_from_vault_root():
+    """QuickAdd runs user scripts from plugin context, not system/scripts/.
+
+    A raw sibling import such as require("./quickadd-utils") breaks in Obsidian
+    even though it works in a Node-shaped test harness.
+    """
+    for script in SCRIPTS.glob("*.js"):
+        text = script.read_text(encoding="utf-8")
+        assert 'require("./quickadd-utils")' not in text, script.name
+        assert 'require("./quickadd-similarity")' not in text, script.name
+    for script in SCRIPTS.glob("*.js"):
+        text = script.read_text(encoding="utf-8")
+        if "system/scripts/quickadd-" in text:
+            assert "getBasePath" in text, script.name
+
+
 def test_macro_ids_exist_and_are_unique():
     seen = set()
     for choice in _choices():
@@ -195,6 +211,29 @@ def test_structured_source_capture_is_palette_wired_and_staged():
         "qmd search --format json --full-path -n 12",
     ):
         assert marker in similarity
+
+
+def test_fleeting_capture_is_guided_and_queued_for_inbox_triage():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: capture fleeting"]
+    assert choice["type"] == "Macro"
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/capture-fleeting.js"
+    assert "openFile" not in choice
+
+    script = (SCRIPTS / "capture-fleeting.js").read_text(encoding="utf-8")
+    for marker in (
+        "openForm(FORM_NAME)",
+        'FORM_NAME = "memoria-fleeting-capture"',
+        'FLEETING_FOLDER = "notes/fleeting/"',
+        '"type: fleeting"',
+        '"lifecycle: proposed"',
+        '"origin: human"',
+        "Capture text is required.",
+        "does not steal focus by opening itself",
+    ):
+        assert marker in script
+    assert "openFile" not in script
 
 
 def test_zotero_capture_writes_intake_log_where_readers_look():

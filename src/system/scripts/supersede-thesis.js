@@ -6,7 +6,7 @@
  * raise an alert card for lazy re-confirmation of the old argument graph.
  */
 
-const { slug, uniquePath, yamlString } = require("./quickadd-utils");
+const { slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

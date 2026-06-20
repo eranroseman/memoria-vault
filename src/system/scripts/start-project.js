@@ -7,7 +7,7 @@
  */
 
 const FORM_NAME = "memoria-project-start";
-const { exists, normalizeList, slug, yamlString } = require("./quickadd-utils");
+const { exists, normalizeList, slug, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;

@@ -19,15 +19,17 @@ parent: Tutorials
 
 Think of something you noticed, read, or wondered about recently. One sentence is enough. ("Most interventions assume users are unmotivated, but they're actually just distracted.")
 
-Press `Cmd/Ctrl-P` → type `capture fleeting` → select **Memoria: capture fleeting** → type your thought → Enter.
+Press `Cmd/Ctrl-P` → type `capture fleeting` → select **Memoria: capture fleeting**. The form asks for an optional title and one required field: the thought, quote, or idea. Type the raw item and submit.
 
-A new note opens in `notes/fleeting/`, timestamped, with your thought as the title. That's the whole capture — the point is zero friction between having a thought and having it on disk.
+A new note is written to `notes/fleeting/` and the capture command leaves you where you were. That's the whole capture — the point is zero friction between having a thought and having it on disk. Open the Inbox space when you are ready to process it.
 
 ---
 
-## Step 2 — Read the frontmatter
+## Step 2 — Find it in the Inbox
 
-Your note's frontmatter looks like this:
+Open `spaces/inbox.md` and look at **Fleeting notes**. The note appears in the same **To process** queue used by the weekly review.
+
+Open the note from that queue. Memoria hides Properties in the document by default, but the note carries frontmatter like this under the hood:
 
 ```yaml
 type: fleeting
@@ -61,7 +63,7 @@ For this tutorial, make the call now. If you distill, write the durable version 
 
 You won't re-find fleeting notes by browsing. They surface in the Inbox space and the Friday weekly review, so unprocessed captures can't silently pile up; how the two work together as a triage queue is covered in [Triage fleeting notes](../how-to-guides/inbox/triage-fleeting-notes.md).
 
-Open the Inbox space's fleeting-notes view now. If you archived your note in Step 3, the view is empty — and *empty is the goal state*. A fleeting queue that converges to zero means the discipline is working.
+Open the Inbox space's **Fleeting notes** section now. If you archived your note in Step 3, the view is empty — and *empty is the goal state*. A fleeting queue that converges to zero means the discipline is working.
 
 ---
 

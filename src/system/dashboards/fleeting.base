@@ -12,5 +12,6 @@ views:
         - 'lifecycle == "proposed"'
     order:
       - file.name
+      - title
       - origin
       - file.ctime

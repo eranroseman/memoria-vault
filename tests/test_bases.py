@@ -151,6 +151,15 @@ def test_fleeting_base_matches_capture_template_home():
     assert 'type == "fleeting"' in text
     names = {v.get("name") for v in quickadd.get("views", [])}
     assert "To process" in names
+    views = {v.get("name"): v for v in quickadd.get("views", [])}
+    assert "title" in views["To process"]["order"]
+
+
+def test_weekly_review_reuses_fleeting_queue_without_double_listing():
+    text = (SRC / "system" / "dashboards" / "weekly-review.md").read_text(encoding="utf-8")
+    assert 'AND type != "fleeting"' in text
+    assert "![[fleeting.base#To process]]" in text
+    assert "same proposed fleeting queue" in text
 
 
 def test_key_bases_surface_lifecycle_near_left_edge():

@@ -30,7 +30,7 @@ const LANE_LABELS = {
   verify: "Verify work",
   code: "Coordinate code handoff",
 };
-const { fnv1a, run, shq } = require("./quickadd-utils");
+const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
