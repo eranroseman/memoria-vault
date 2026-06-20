@@ -90,7 +90,6 @@ from board_export_events import (  # noqa: E402,F401
     should_sample_blind_review,
 )
 from board_export_projection import (  # noqa: E402,F401
-    _safe_name,
     _yaml_scalar,
     board_snapshot,
     card_markdown,

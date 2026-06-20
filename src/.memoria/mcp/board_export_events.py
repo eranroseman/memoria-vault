@@ -28,8 +28,6 @@ from board_export_common import (
 )
 from operations.lib import inbox
 
-_ts = now_iso
-
 
 def load_state_cache(vault: Path) -> dict:
     """Per-card {status, review_status} seen on the previous run (for diffing)."""
@@ -57,7 +55,7 @@ def save_state_cache(vault: Path, cards: list[dict]) -> None:
 def compute_events(prev: dict, cards: list[dict], cost_lookup=None) -> dict:
     """Diff previous per-card state vs current; return transition / disposition /
     cost event rows. A card unseen before counts as a transition into its state."""
-    ts = _ts()
+    ts = now_iso()
     transitions: list[dict] = []
     dispositions: list[dict] = []
     costs: list[dict] = []
