@@ -84,7 +84,7 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 
 ## Agent skills (per lane)
 
-### Librarian (12)
+### Librarian (14)
 
 | Skill | What it does |
 | --- | --- |
@@ -100,6 +100,8 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | map-report-coverage | Topic-models the corpus and composes a gap report of thin topics; records rejected directions/dead ends as a companion exploration-trace note when present. |
 | map-scope-project | Corpus-maps a project into a narrative map with thin spots named; records rejected directions/dead ends as a companion exploration-trace note when present. |
 | map-seed-canvas | Seeds a JSON Canvas from the cluster graph (communities, edges, layout). |
+| map-graph-claims | Emits a propose-class claim-debate JSON Canvas from authored `supports` / `contradicts` / `extends` links, with pruning disclosed in a companion note. |
+| map-canvas-hub | Assembles existing maps, claim graphs, project gates, and dashboards into a propose-class JSON Canvas hub for navigation. |
 
 ### Writer (4)
 
@@ -135,8 +137,12 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 
 | Action | What it does |
 | --- | --- |
+| Capture fleeting | Creates a proposed fleeting note in `notes/fleeting/` from the bundled template. |
 | Capture from Zotero | Reads the current Zotero selection (Better BibTeX JSON-RPC), writes the intake anchor, materializes a Tier-0 `catalog/papers/<citekey>.md` stub, and creates an `intake:source` card. |
 | Capture source from URL | Prompts for a URL and creates an `intake:source` card on the Librarian lane. |
+| Structured source capture | Opens the guided Modal Forms capture; writes a proposed `notes/sources/` note plus an Inbox candidate, with pre-file similarity reported but never blocking. |
+| Write claim note | Creates a human-authored claim note in `notes/claims/` from the bundled claim template. |
+| Create linked claim note | Starts from the active source note, creates a claim note with the source citekey prefilled, links it back under **Worth distilling**, and opens it for editing. |
 | Catalog a source | Prompts for a citekey / URL and creates a catalog-lane card. |
 | Extract claims | Sends the active (or chosen) source to the extract lane. |
 | Link a claim | Sends the active (or chosen) claim to the link lane. |
@@ -145,8 +151,12 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | Draft a section | Prompts for a goal and creates a draft-lane card. |
 | Verify a draft | Sends the active (or chosen) draft to the verify lane. |
 | Delegate a task | Prompts for a lane and goal — the palette twin of the Co-PI's routing skill. |
+| Assist commands | `assist find/search/patterns/ask/draft/explore` start the same task or conversation shape with active-note and selection context attached. |
 | Run a pattern | Suggester over runnable patterns; creates the card that invokes the patterns MCP. |
 | Resolve inbox card | Flips the active inbox card's `lifecycle` to a schema-valid outcome (`current` or `archived`) and stamps `resolved:`. |
+| Start project | Scaffolds `projects/<slug>/`, creates the initial active thesis, and opens the project gate index for triage. |
+| Refresh project gate | Rebuilds the project gate index from current thesis, links, saturation signals, and open risks. |
+| Supersede thesis | Creates a replacement thesis, marks the old one superseded, updates the project `active_thesis`, and raises an Inbox alert for re-confirmation. |
 | Gate dashboards | Switches mode by opening `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, or `spaces/project.md` from the dashboard nav row ([ADR-81](../adr/81-persistent-gate-dashboards.md)). |
 
 ### Review decisions

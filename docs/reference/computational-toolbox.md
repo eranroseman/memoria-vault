@@ -27,9 +27,9 @@ For the rationale — why deterministic over LLM, the hybrid pattern, cost and a
 
 **For:** finding similar notes, ranking candidate links, detecting near-duplicates, narrowing comparative-read candidates.
 
-**Used by:** `similarity-check`, `find-duplicates`, `[!brief]` candidate selection, and the deferred `[!suggestions]` ranking design.
+**Used by:** qmd-backed Co-PI and lane retrieval, Librarian comparative reads, QuickAdd pre-file similarity shadow reports, and Peer-reviewer duplicate/citation sub-checks. No standalone `similarity-check` or `find-duplicates` command ships today.
 
-**Implementation:** a sentence-transformer model embeds note bodies into an HNSW index. The shipped backend is the `qmd` skill (hybrid BM25 + vector retrieval) — the skill actually granted to the lanes that call these methods; FAISS and hnswlib are the underlying index libraries `qmd` can sit on. Re-indexed incrementally as new notes arrive. Default models:
+**Implementation:** a sentence-transformer model embeds note bodies into an HNSW index. The shipped backend is `qmd` (hybrid BM25 + vector retrieval) — the local tool and stdio MCP actually granted to the lanes that call these methods; FAISS and hnswlib are underlying index libraries `qmd` can sit on. Re-indexed incrementally as new notes arrive. Default models:
 
 | Model | Params | Best for |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 **For:** identifying underrepresented topics, comparing topic distributions across projects, surfacing methodological themes.
 
-**Used by:** `gap-report` thin-coverage detection, corpus-evolution dashboards.
+**Used by:** `map-report-coverage` thin-coverage detection and map-lane gap reports.
 
 **Implementation:** BERTopic is the modern default (combines embeddings + clustering + class-based TF-IDF for topic labels). Classical LDA over TF-IDF works for smaller corpora.
 
@@ -155,4 +155,4 @@ llm_backend_fallback: generic | none
 ## Related
 
 - Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [operations](../explanation/operations/README.md) (Linter, Clustering, Sweeps)
-- Why deterministic methods: `explanation/architecture/why-computational-methods.md` in docs/
+- Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md)
