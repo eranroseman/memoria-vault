@@ -10,7 +10,7 @@ nav_order: 15
 # GUI test plan — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI stage (**S5**) and the ten Dataview dashboards
+shell: the Obsidian/Zotero GUI stage (**S5**) and the twelve dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -42,7 +42,7 @@ end (the boxes are clickable in Obsidian).
 
 ---
 
-## Part A — Obsidian opens and the 12 bundled plugins load (S5)
+## Part A — Obsidian opens and the 14 bundled plugins load (S5)
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
@@ -55,7 +55,7 @@ end (the boxes are clickable in Obsidian).
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
 - [ ] **A2 Pass**
 
-**A3. Confirm all 12 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
+**A3. Confirm all 14 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
 | Plugin | Purpose | ✓ Validate it loaded |
 | --- | --- | --- |
@@ -71,8 +71,10 @@ end (the boxes are clickable in Obsidian).
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
 | `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
+| `Portals` | Curated folder portals for the left-side vault surface | a portal pane/command exists and loads without error |
+| `Memoria Inspector` | Read-only board, audit, and linter-status sidebar | the Memoria Inspector view opens and shows read-only status |
 
-- ✓ Pass: **12/12 enabled**, no "Failed to load plugin" notices.
+- ✓ Pass: **14/14 enabled**, no "Failed to load plugin" notices.
 - ✗ Fails: a plugin missing → reinstall via `--profiles-only` or copy `.obsidian/plugins/<name>`; a plugin disabled → enable it; load error → check its `data.json` (the two private ones ship as `data.json.example` and must be copied — see A-note).
 
 Tick each plugin that is enabled and validated:
@@ -89,7 +91,9 @@ Tick each plugin that is enabled and validated:
 - [ ] `Modal Forms`
 - [ ] `QuickAdd`
 - [ ] `Templater`
-- [ ] **A3 Pass (12/12)**
+- [ ] `Portals`
+- [ ] `Memoria Inspector`
+- [ ] **A3 Pass (14/14)**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a

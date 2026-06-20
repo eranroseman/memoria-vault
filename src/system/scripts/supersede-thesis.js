@@ -6,6 +6,8 @@
  * raise an alert card for lazy re-confirmation of the old argument graph.
  */
 
+const { slug, uniquePath, yamlString } = require("./quickadd-utils");
+
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const app = params.app || globalThis.app;
@@ -29,7 +31,7 @@ module.exports = async (params) => {
   const today = new Date().toISOString().slice(0, 10);
   const root = active.path.split("/").slice(0, 2).join("/");
   const adapter = app.vault.adapter;
-  const newPath = await uniquePath(adapter, root + "/thesis-" + slug(title) + ".md");
+  const newPath = await uniquePath(adapter, root + "/thesis-" + slug(title, "thesis") + ".md");
   const projectPath = root + "/project.md";
   const newLink = "[[" + newPath.replace(/\.md$/, "") + "|replacement thesis]]";
 
@@ -68,7 +70,7 @@ module.exports = async (params) => {
 };
 
 async function writePivotAlert(adapter, oldPath, newPath, today) {
-  const path = await uniquePath(adapter, "inbox/alert-thesis-pivot-" + slug(newPath) + ".md");
+  const path = await uniquePath(adapter, "inbox/alert-thesis-pivot-" + slug(newPath, "thesis") + ".md");
   const text = [
     "---",
     "title: " + yamlString("Re-confirm argument graph after thesis pivot"),
@@ -98,33 +100,4 @@ function setFrontmatterField(text, key, renderedValue) {
   const re = new RegExp("^" + key + ":.*$", "m");
   if (re.test(text)) return text.replace(re, key + ": " + renderedValue);
   return text.replace(/^---\n/, "---\n" + key + ": " + renderedValue + "\n");
-}
-
-async function uniquePath(adapter, firstPath) {
-  const dot = firstPath.lastIndexOf(".");
-  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
-  const ext = dot === -1 ? "" : firstPath.slice(dot);
-  let path = firstPath;
-  for (let i = 2; await exists(adapter, path); i += 1) {
-    path = base + "-" + i + ext;
-  }
-  return path;
-}
-
-async function exists(adapter, path) {
-  if (typeof adapter.exists === "function") return adapter.exists(path);
-  try {
-    await adapter.read(path);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function slug(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 70) || "thesis";
-}
-
-function yamlString(s) {
-  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }

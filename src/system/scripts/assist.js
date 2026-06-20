@@ -15,6 +15,7 @@ const RESULTS_STAGE =
   "Do not write directly to canonical/current notes.";
 
 const PATTERNS_DIR = "system/patterns/";
+const { fnv1a, run, shq } = require("./quickadd-utils");
 
 const VERBS = {
   find: {
@@ -79,19 +80,9 @@ async function entry(params, settings = {}) {
   const cp = require("child_process");
   const verb = String(settings.Verb || "").toLowerCase();
 
-  const run = (sh) =>
-    new Promise((resolve, reject) => {
-      const file = "bash";
-      const args = ["-lc", sh];
-      cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-        if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-        resolve(stdout);
-      });
-    });
-
   const ctx = selectionContext(params);
   if (verb === "patterns") {
-    await queuePattern(params, run, ctx);
+    await queuePattern(params, cp, ctx);
     return;
   }
 
@@ -112,7 +103,7 @@ async function entry(params, settings = {}) {
 
   new Notice("Queuing assist " + verb + "…", 3000);
   try {
-    await run(
+    await run(cp,
       "hermes kanban create " + shq(spec.title(goal)) +
       " --assignee " + spec.assignee + " --skill " + spec.skill +
       " --created-by quickadd" +
@@ -140,7 +131,7 @@ module.exports = {
   },
 };
 
-async function queuePattern(params, run, ctx) {
+async function queuePattern(params, cp, ctx) {
   const { Notice } = params.obsidian;
   const patterns = params.app.vault
     .getMarkdownFiles()
@@ -179,7 +170,7 @@ async function queuePattern(params, run, ctx) {
 
   new Notice("Queuing assist pattern " + patternId + "…", 3000);
   try {
-    await run(
+    await run(cp,
       "hermes kanban create " + shq("Assist patterns: " + patternId + (ctx.activePath ? " on " + ctx.activePath : "")) +
       " --assignee memoria-librarian --created-by quickadd" +
       " --idempotency-key " + shq(idemKey) +
@@ -218,19 +209,4 @@ function fence(s) {
 function short(s) {
   const oneLine = String(s).replace(/\s+/g, " ").trim();
   return oneLine.length > 72 ? oneLine.slice(0, 69) + "..." : oneLine;
-}
-
-// POSIX single-quote escape.
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
-
-// FNV-1a 32-bit hash, hex — small and dependency-free.
-function fnv1a(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, "0");
 }

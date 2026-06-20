@@ -14,19 +14,11 @@ const LANE = "verify";
 const ASSIGNEE = "memoria-peer-reviewer";
 const SKILL = "verify-check-citation";
 const DRAFT_PREFIX = "projects/";
+const { appendCallout, fnv1a, run, shq, uniquePath, yamlString } = require("./quickadd-utils");
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
-  const run = (sh) =>
-    new Promise((resolve, reject) => {
-      const file = "bash";
-      const args = ["-lc", sh];
-      cp.execFile(file, args, { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-        if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-        resolve(stdout);
-      });
-    });
 
   const active = params.app.workspace.getActiveFile();
   let ref = active && active.path.startsWith(DRAFT_PREFIX) ? active.path : "";
@@ -61,7 +53,7 @@ module.exports = async (params) => {
 
   new Notice("Wrote [!verification]; delegating to the " + LANE + " lane…", 3000);
   try {
-    await run(
+    await run(cp,
       "hermes kanban create " + shq("Verify draft: " + ref) +
       " --assignee " + ASSIGNEE + " --skill " + SKILL + " --created-by quickadd" +
       " --idempotency-key " + shq(idemKey) +
@@ -143,49 +135,6 @@ function buildVerificationCallout(trace) {
   return lines.join("\n");
 }
 
-async function appendCallout(app, file, callout) {
-  const text = await app.vault.read(file);
-  await app.vault.modify(file, text.trimEnd() + "\n\n" + callout + "\n");
-}
-
 function unique(values) {
   return [...new Set(values.filter(Boolean))].sort();
-}
-
-async function uniquePath(adapter, firstPath) {
-  const dot = firstPath.lastIndexOf(".");
-  const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
-  const ext = dot === -1 ? "" : firstPath.slice(dot);
-  let path = firstPath;
-  for (let i = 2; await exists(adapter, path); i += 1) {
-    path = base + "-" + i + ext;
-  }
-  return path;
-}
-
-async function exists(adapter, path) {
-  if (typeof adapter.exists === "function") return adapter.exists(path);
-  try {
-    await adapter.read(path);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
-
-function yamlString(s) {
-  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
-}
-
-function fnv1a(s) {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = (h * 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, "0");
 }

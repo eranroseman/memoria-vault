@@ -44,6 +44,21 @@ find the owning file, then fix the stale consumer rather than the source.
 | Product decisions | `docs/adr/` | Current docs and implementation |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 
+## Mirrors and Cached Views
+
+Mirrors are permitted only when they are explicitly consumer-facing views of an
+owned source. Treat a mirror as a cache, never as a second authority:
+
+- It names or links the owning source in prose, frontmatter, or the surrounding
+  reference section.
+- It repeats only the contract detail needed by its audience.
+- It is generated or covered by a drift check when it repeats machine-readable
+  contracts such as counts, rosters, required fields, write scopes, command
+  catalogs, lifecycle subsets, plugin inventories, required CI checks, or
+  calibration values.
+- Frozen release records may preserve historical copies, but they must be
+  labeled as frozen and must not be used as current implementation evidence.
+
 ## Mirrored constants
 
 The packaged policy layer and schema loader carry a dependency-free fallback for

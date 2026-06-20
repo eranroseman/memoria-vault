@@ -78,12 +78,12 @@ The `web` toolset is disabled on every lane — all external lookups go through 
 
 ## Bundled skills
 
-**25 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. Lane skills use a single kebab-case name, `<task>-<verb>-<object>` (e.g. `catalog-enrich-record`, in `skills/catalog-enrich-record/`) — the same spelling in prose, on disk, and at load. Co-PI conversational skills that are not lane work use bare names such as `route-task` and `explain-system`.
+**27 skills** ship inside the vault profiles, under `src/.memoria/profiles/<profile>/skills/`. Lane skills use a single kebab-case name, `<task>-<verb>-<object>` (e.g. `catalog-enrich-record`, in `skills/catalog-enrich-record/`) — the same spelling in prose, on disk, and at load. Co-PI conversational skills that are not lane work use bare names such as `route-task` and `explain-system`.
 
 | Profile | Bundled-skill count |
 | --- | --- |
 | `memoria-copi` | 5 |
-| `memoria-librarian` | 12 |
+| `memoria-librarian` | 14 |
 | `memoria-writer` | 4 |
 | `memoria-peer-reviewer` | 4 |
 | `memoria-engineer` | 0 — the code lane scaffolds an external-agent handoff |

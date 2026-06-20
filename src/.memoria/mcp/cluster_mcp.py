@@ -31,10 +31,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
+
+from memoria.runtime.paths import resolve_vault
 
 _FM_RE = re.compile(r"^---\n(.*?)\n---", re.S)
 _WIKI = re.compile(r"\[\[([^\]|#]+)")
@@ -413,16 +414,6 @@ def build_server(vault: Path):
         return model_topics(vault, folder, min_cluster_size or None, seed if seed >= 0 else None)
 
     return server
-
-
-def resolve_vault(arg: str | None) -> Path:
-    raw = arg or os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH")
-    if not raw:
-        sys.exit("provide --vault or set MEMORIA_VAULT_PATH")
-    v = Path(raw).expanduser()
-    if not v.is_dir():
-        sys.exit(f"not a directory: {v}")
-    return v
 
 
 def main() -> None:

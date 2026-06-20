@@ -7,6 +7,7 @@
  */
 
 const FORM_NAME = "memoria-project-start";
+const { exists, normalizeList, slug, yamlString } = require("./quickadd-utils");
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -130,7 +131,7 @@ async function scaffoldProject(app, data, thesisTitle) {
 function normalizeFormData(data) {
   return {
     title: String(data.title || "").trim(),
-    slug: slug(data.slug),
+    slug: slug(data.slug, "project"),
     scope_topics: normalizeList(data.scope_topics),
     inquiry_population: String(data.inquiry_population || "").trim(),
     inquiry_intervention: String(data.inquiry_intervention || "").trim(),
@@ -143,34 +144,10 @@ function normalizeFormData(data) {
   };
 }
 
-async function exists(adapter, path) {
-  if (typeof adapter.exists === "function") return adapter.exists(path);
-  try {
-    await adapter.read(path);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 async function ensureFolder(app, path) {
   const adapter = app.vault.adapter;
   if (await exists(adapter, path)) return;
   await app.vault.createFolder(path);
-}
-
-function normalizeList(value) {
-  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
-  if (typeof value === "string" && value.trim()) return value.split(",").map((v) => v.trim()).filter(Boolean);
-  return [];
-}
-
-function slug(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "project";
-}
-
-function yamlString(s) {
-  return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }
 
 function yamlList(values) {

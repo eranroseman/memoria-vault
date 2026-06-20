@@ -33,6 +33,7 @@ One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -85,6 +86,7 @@ INLINE_CODE_RE = re.compile(r"`[^`]*`")
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
+COUNT_RE = re.compile(r"\b(\d+)\b")
 
 
 def read(path: Path) -> str:
@@ -343,6 +345,184 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
             )
 
 
+def _load_schema_types(repo: Path) -> dict[str, dict]:
+    try:
+        import yaml
+    except Exception:
+        return {}
+    schema_dir = repo / "src" / ".memoria" / "schemas" / "types"
+    out: dict[str, dict] = {}
+    for path in sorted(schema_dir.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            continue
+        out[path.stem] = data
+    return out
+
+
+def _markdown_code_values(text: str) -> set[str]:
+    text = FENCE_RE.sub("", text)
+    return set(re.findall(r"`([^`]+)`", text))
+
+
+def _table_count(text: str, label: str) -> int | None:
+    m = re.search(rf"{re.escape(label)}\s*\((\d+)\)", text)
+    return int(m.group(1)) if m else None
+
+
+def check_note_type_reference_mirror(repo: Path, errors: list[str]) -> None:
+    doc = repo / "docs" / "reference" / "note-types.md"
+    frontmatter = repo / "docs" / "reference" / "frontmatter.md"
+    types = _load_schema_types(repo)
+    if not types or not doc.is_file() or not frontmatter.is_file():
+        return
+    doc_text = read(doc)
+    frontmatter_text = read(frontmatter)
+    expected_count = len(types)
+    for line_no, line in enumerate(doc_text.splitlines(), start=1):
+        if " note types" not in line and " types group" not in line:
+            continue
+        m = COUNT_RE.search(line)
+        if m and int(m.group(1)) != expected_count:
+            errors.append(
+                f"{doc}:{line_no}: note-type count mirror says {m.group(1)} but schemas define {expected_count}"
+            )
+    mentioned = _markdown_code_values(doc_text)
+    missing = sorted(set(types) - mentioned)
+    if missing:
+        errors.append(f"{doc}: note-type mirror omits schema type(s): {', '.join(missing)}")
+    lifecycle_mentions = _markdown_code_values(frontmatter_text)
+    missing_lifecycle = sorted(set(types) - lifecycle_mentions)
+    if missing_lifecycle:
+        errors.append(
+            f"{frontmatter}: lifecycle subset mirror omits schema type(s): {', '.join(missing_lifecycle)}"
+        )
+
+
+def _vocabulary_terms(path: Path) -> dict[str, set[str]]:
+    text = read(path)
+    out: dict[str, set[str]] = {"research_area": set(), "methodology": set()}
+    current = ""
+    for line in text.splitlines():
+        if line.startswith(("## research_area", "### `research_area`")):
+            current = "research_area"
+            continue
+        if line.startswith(("## methodology", "### `methodology`")):
+            current = "methodology"
+            continue
+        if line.startswith(("## topics", "### `topics`")):
+            current = ""
+            continue
+        if current:
+            bullet = re.match(r"- ([a-z0-9-]+) —", line)
+            table = re.match(r"\| `([^`]+)` \|", line)
+            if bullet:
+                out[current].add(bullet.group(1))
+            elif table:
+                out[current].add(table.group(1))
+    return out
+
+
+def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
+    source = repo / "src" / "system" / "vocabulary.md"
+    doc = repo / "docs" / "reference" / "vocabulary.md"
+    if not source.is_file() or not doc.is_file():
+        return
+    source_terms = _vocabulary_terms(source)
+    doc_terms = _vocabulary_terms(doc)
+    for field in ("research_area", "methodology"):
+        if source_terms[field] != doc_terms[field]:
+            missing = sorted(source_terms[field] - doc_terms[field])
+            extra = sorted(doc_terms[field] - source_terms[field])
+            errors.append(
+                f"{doc}: {field} vocabulary mirror differs from src/system/vocabulary.md"
+                f" (missing: {missing or 'none'}; extra: {extra or 'none'})"
+            )
+
+
+def check_quickadd_command_reference_mirror(repo: Path, errors: list[str]) -> None:
+    data = repo / "src" / ".obsidian" / "plugins" / "quickadd" / "data.json"
+    doc = repo / "docs" / "reference" / "obsidian-command-palette.md"
+    if not data.is_file() or not doc.is_file():
+        return
+    payload = json.loads(data.read_text(encoding="utf-8"))
+    commands = {choice["name"] for choice in payload.get("choices", []) if choice.get("command")}
+    doc_commands = set(re.findall(r"`(Memoria:[^`]+)`", read(doc)))
+    if commands != doc_commands:
+        errors.append(
+            f"{doc}: command palette mirror differs from QuickAdd data "
+            f"(missing: {sorted(commands - doc_commands) or 'none'}; "
+            f"extra: {sorted(doc_commands - commands) or 'none'})"
+        )
+
+
+def check_plugin_count_mirrors(repo: Path, errors: list[str]) -> None:
+    community = repo / "src" / ".obsidian" / "community-plugins.json"
+    if not community.is_file():
+        return
+    count = len(json.loads(community.read_text(encoding="utf-8")))
+    for doc in (
+        repo / "docs" / "reference" / "obsidian-plugins.md",
+        repo / "docs" / "testing" / "plans" / "gui-test-plan.md",
+    ):
+        if not doc.is_file():
+            continue
+        text = read(doc)
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            lower = line.lower()
+            if "plugin" not in lower or not ("required" in lower or "bundled" in lower):
+                continue
+            for value in COUNT_RE.findall(line):
+                if int(value) != count:
+                    errors.append(
+                        f"{doc}:{line_no}: Obsidian plugin count mirror says {value} but community-plugins.json lists {count}"
+                    )
+
+
+def check_profile_skill_count_mirror(repo: Path, errors: list[str]) -> None:
+    doc = repo / "docs" / "reference" / "profiles.md"
+    profiles = repo / "src" / ".memoria" / "profiles"
+    if not doc.is_file() or not profiles.is_dir():
+        return
+    actual: dict[str, int] = {}
+    for profile in sorted(p for p in profiles.iterdir() if p.is_dir()):
+        skills = profile / "skills"
+        actual[profile.name] = (
+            len([p for p in skills.iterdir() if p.is_dir()]) if skills.is_dir() else 0
+        )
+    text = read(doc)
+    total_match = re.search(r"\*\*(\d+) skills\*\*", text)
+    if total_match and int(total_match.group(1)) != sum(actual.values()):
+        errors.append(
+            f"{doc}: bundled-skill total mirror says {total_match.group(1)} but profile skill folders total {sum(actual.values())}"
+        )
+    rows = {}
+    for line in text.splitlines():
+        m = re.match(r"\| `([^`]+)` \| ([^|]+) \|", line)
+        if m:
+            rows[m.group(1)] = m.group(2)
+    for profile, count in actual.items():
+        value = rows.get(profile)
+        if value is None:
+            errors.append(f"{doc}: bundled-skill mirror omits {profile}")
+            continue
+        m = COUNT_RE.search(value)
+        mirrored = int(m.group(1)) if m else 0
+        if mirrored != count:
+            errors.append(
+                f"{doc}: bundled-skill mirror for {profile} says {mirrored} but filesystem has {count}"
+            )
+
+
+def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
+    check_note_type_reference_mirror(repo, errors)
+    check_vocabulary_reference_mirror(repo, errors)
+    check_quickadd_command_reference_mirror(repo, errors)
+    check_plugin_count_mirrors(repo, errors)
+    check_profile_skill_count_mirror(repo, errors)
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -388,6 +568,8 @@ def main() -> int:
             check_link_text(md, errors)
             check_wikilink_aliases(md, errors)
             check_broken_vault_wikilinks(md, errors, vault_stems)
+
+    check_source_of_truth_mirrors(root.parent, errors)
 
     if errors:
         print(f"docs-doctor: {len(errors)} issue(s)\n")
