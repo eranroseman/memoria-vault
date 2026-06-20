@@ -43,7 +43,7 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 - ✗ Fails: read the first error; a missing prereq aborts early with the exact package or app to install.
 
 **A2. Vault deployed.** `ls ~/Memoria-test`
-- ✓ Pass: the vault skeleton present — `catalog/ notes/ projects/ inbox/ system/ home.md research-focus.md troubleshooting.md .obsidian/ .memoria/`.
+- ✓ Pass: the vault skeleton present — `catalog/ notes/ projects/ inbox/ spaces/ system/ home.md research-focus.md troubleshooting.md .obsidian/ .memoria/`.
 - ✗ Fails: wrong `--vault` target, or the copy step (rsync/cp) failed.
 
 **A3. Profiles registered.** `hermes profile list`

@@ -6,10 +6,10 @@ parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the exact on-disk
-schema. Audit and analytics logs live under `system/logs/`; the diagnostic plane
-is the deliberate exception and lives outside the vault under the OS state
-directory. For the design rationale — why these particular signals and how they
+Every signal Memoria records about its own operation, with the log inventory,
+capture posture, and shared conventions. Audit and analytics logs live under
+`system/logs/`; the diagnostic plane is the deliberate exception and lives
+outside the vault under the OS state directory. For the design rationale — why these particular signals and how they
 map to a publication — see [ADR-20 (publication path)](../adr/20-publication-path.md),
 the deferred [ADR-62 (measurement and verification harnesses)](../adr/62-measurement-and-verification-harnesses.md),
 and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).

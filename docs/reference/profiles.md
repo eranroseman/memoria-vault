@@ -52,7 +52,7 @@ From `routing.write_scope` and the `policy` block in each lane-override. The pol
 | `memoria-peer-reviewer` | `inbox/` (flag / gap cards only) | `notes/**` · `catalog/**` · `projects/**` · `system/**` |
 | `memoria-engineer` | `projects/*/code/` | `notes/**` · `catalog/**` · `inbox/**` · `system/**` |
 
-All five lanes require `audit_log`; the dispatched four also require `timeout_required`, and the Librarian and Peer-reviewer additionally require `source_tracking`. `routing.external_api_policy` is `explicit_only` everywhere except the Writer (`blocked` — it composes from the vault, never researches).
+All five profile policy overrides require `audit_log`; the dispatched four also require `timeout_required`, and the Librarian and Peer-reviewer additionally require `source_tracking`. `routing.external_api_policy` is `explicit_only` everywhere except the Writer (`blocked` — it composes from the vault, never researches).
 
 ---
 

@@ -13,5 +13,5 @@ What you check at the start of a session to answer "is anything wrong, and what 
 
 | Surface | Question it answers |
 |---|---|
-| [Daily Health](daily-health.md) | Is anything broken right now? — the Inbox launch surface |
+| [Daily glance](daily-health.md) | Is anything broken right now? — the Inbox launch surface |
 | [Board state](board-state.md) | What needs me, and what's in flight? — the Inbox board (`inbox.base`) |

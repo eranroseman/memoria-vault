@@ -39,7 +39,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration |
-| [Dashboards](dashboards.md) | The twelve dashboards: source file, sort order, verdict band, trust score, eval metrics, queue counters |
+| [Dashboards](dashboards.md) | The four space dashboards, thirteen support dashboards, and Bases views: source file, sort order, verdict band, trust score, eval metrics, queue counters |
 | [Pattern library](patterns.md) | The shipped patterns, the pattern-note schema, the `patterns_list`/`patterns_run` contract, gated-target dry-run, and provenance |
 | [Clustering](clustering.md) | The cluster MCP: graph build, claim-debate Canvas, BERTopic topics — parameters, outputs, and the opt-in stack |
 

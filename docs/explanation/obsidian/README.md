@@ -36,4 +36,4 @@ The **dashboards** are also an Obsidian surface, but they have their own section
 - How to _use_ these surfaces (operate the pane, navigate dashboards, drive the palette): [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian)
 - Plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Load-bearing plugin settings: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
-- Workspace, callout, and status-line reference pages: [Reference](../../reference)
+- Workspace, callout, and dashboard reference pages: [Reference](../../reference)

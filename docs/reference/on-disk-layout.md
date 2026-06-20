@@ -5,7 +5,7 @@ parent: Reference
 
 # On-disk layout
 
-Where every file lives. The repo ships the vault under **`src/`**; the installer scaffolds the folder skeleton in your chosen runtime vault (default `~/Memoria`) and populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Repo and deployed vault have the same internal shape; the deployed vault additionally grows the runtime-only artifacts listed at the end. The tree itself is fixed by [ADR-47](../adr/47-type-first-category-folders.md): five type-first category folders, with the type → folder map living in `src/.memoria/schemas/folders.yaml`. `.memoria/` is never opened by the PI; if a workflow tells the PI to open a `.memoria/...` path, that workflow is wrong.
+Where every file lives. The repo ships the vault under **`src/`**; the installer scaffolds the folder skeleton in your chosen runtime vault (default `~/Memoria`) and populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Repo and deployed vault have the same internal shape; the deployed vault additionally grows the runtime-only artifacts listed at the end. The tree itself is fixed by [ADR-47](../adr/47-type-first-category-folders.md): six legal vault-root categories, with the type → folder map living in `src/.memoria/schemas/folders.yaml`. `.memoria/` is never opened by the PI; if a workflow tells the PI to open a `.memoria/...` path, that workflow is wrong.
 
 ---
 
@@ -28,10 +28,11 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   └── _template/             starter project scaffold copied by the Project on-ramp
 ├── inbox/                   the action queue — candidate/gap/flag/alert cards
 │   └── inbox.base             the Inbox board view
+├── spaces/                  the four persistent space dashboard notes
 └── system/                  infrastructure (untyped, except patterns/)
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
-    ├── dashboards/            12 dashboards + claims/sources/fleeting .base files
+    ├── dashboards/            13 support dashboards + claims/sources/fleeting/project-gate .base files
     ├── patterns/              the pattern library (+ patterns.base, _preamble.md)
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── board/                 board-export card projections
@@ -41,7 +42,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
-The five vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Note types](note-types.md).
+The six vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `spaces`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Note types](note-types.md).
 
 ---
 
