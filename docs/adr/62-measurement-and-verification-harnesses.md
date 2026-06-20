@@ -17,7 +17,7 @@ nav_order: 62
 
 ## Context
 
-A set of analysis capabilities would make the Peer-reviewer measurable, the claim layer richer, and the system's health visible over time. The **minimal capture** they all read — the six-signal operational log (state-transition timestamps + decision time, cost per card, deny reasons, suggestion disposition, FAMA exposure) — is the single highest-leverage action from the publication-path report, with schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see [ADR-20 publication path](20-publication-path.md)). Capture cannot be back-filled, so the schema and available emitters ship first; two card-metadata-derived streams remain blocked on Hermes serialization. This ADR records the harness family: the fleet observability aggregator has shipped, while the remaining harnesses stay deferred until their per-item conditions raise priority.
+A set of analysis capabilities would make the Peer-reviewer measurable, the claim layer richer, and the system's health visible over time. The **minimal capture** they all read — the six-signal operational log (state-transition timestamps + decision time, cost per card, deny reasons, suggestion disposition, FAMA exposure) — is the single highest-leverage action from the publication-path report, with schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see [ADR-20 publication path](20-publication-path.md)). Capture cannot be back-filled, so the schema and available emitters ship first. ADR-106 closed the former card-overlay gap by joining cost to Hermes session rows and writing disposition at the human review action. This ADR records the harness family: the fleet observability aggregator has shipped, while the remaining harnesses stay deferred until their per-item conditions raise priority.
 
 ## Decision
 
@@ -32,7 +32,7 @@ Memoria treats the following analysis harnesses as the approved direction:
 
 ## Consequences
 
-- Each remaining deferred harness reads the six-signal capture model. For signals that already emit, deferral is a scheduling question; for cost and disposition, the harnesses must treat missing rows as an implementation gap rather than valid zero activity until the [ADR-106](106-cost-and-disposition-capture.md) capture path is implemented in [#737](https://github.com/eranroseman/memoria-vault/issues/737).
+- Each remaining deferred harness reads the six-signal capture model. Cost and disposition now have first-class emitters through the [ADR-106](106-cost-and-disposition-capture.md) path; `cost-misses.jsonl` rows are data-quality misses, not zero-cost activity.
 - Several harnesses gate one another (the CiteME fixture gates the claim taxonomy; fleet observability surfaces the retry rate that gates reflection-on-retry), so order matters and the conditions encode it.
 - Partial adoption can be worse than none — a claim taxonomy with most claims untyped makes type-aware checks unreliable; a too-small or too-easy CiteME fixture gives false confidence — so each waits for its condition.
 - Verdicts stay diagnostic, not gating, consistent with [ADR-11](11-vault-eval-maintenance.md): an eval or prose-check dip informs the human and never auto-halts scheduled work.
@@ -51,19 +51,15 @@ Per-item conditions that raise priority at the cadence review:
 
 ## Current implementation mapping
 
-The telemetry schema and downstream aggregation contract are current system behavior,
-but the six signals are not all equally populated yet. `audit.jsonl`,
-`board-state.jsonl`, `board-transitions.jsonl`, `lint-findings.jsonl`, and the other
-non-Hermes-overlay streams emit through their documented writers. `disposition.jsonl`
-and `cost.jsonl` remain the live gap. The earlier implementation mapping treated that
-gap as an upstream Hermes card-overlay limitation; subsequent verification against the
-installed Hermes showed a better closure path: cost/tokens are reachable through the
-Hermes session store, joined from `hermes kanban show <id> --json`, and disposition
-belongs at the human review action rather than in an inferred card overlay. That path
-is proposed in [ADR-106](106-cost-and-disposition-capture.md) and tracked in
-[#737](https://github.com/eranroseman/memoria-vault/issues/737). Until ADR-106 is
-implemented, consumers must still treat missing disposition/cost rows as an
-implementation gap rather than valid zero activity.
+The telemetry schema and downstream aggregation contract are current system behavior.
+`audit.jsonl`, `board-state.jsonl`, `board-transitions.jsonl`,
+`lint-findings.jsonl`, `disposition.jsonl`, and `cost.jsonl` emit through their
+documented writers. ADR-106 deliberately keeps cost and disposition off the card
+metadata overlay: cost/tokens join a completed card to the Hermes session store via
+`hermes kanban show <id> --json` and
+`runs[].metadata.worker_session_id`, while disposition is written by the
+`Memoria: resolve inbox card` QuickAdd action. Consumers must treat
+`cost-misses.jsonl` rows as join-quality misses, never as valid zero-cost runs.
 
 ## Related
 
@@ -71,5 +67,5 @@ implementation gap rather than valid zero activity.
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
 - **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
   — cadence review for the harness family;
-  [#737](https://github.com/eranroseman/memoria-vault/issues/737) — proposed
+  [#737](https://github.com/eranroseman/memoria-vault/issues/737) — implemented
   session-store/review-action path for `disposition.jsonl` and `cost.jsonl`.

@@ -3,20 +3,28 @@
  *
  * Resolves the ACTIVE inbox card in place: prompts for an outcome, flips the
  * frontmatter `lifecycle:` to a schema-valid inbox value and stamps `resolved:` with
- * today's date. It also appends an Obsidian-side attention timing row to
- * `system/logs/attention.jsonl`. Pure Obsidian app API — no shelling, so it
- * works identically on every platform.
+ * today's date. It also appends Obsidian-side attention, triage, and review
+ * disposition rows. Pure Obsidian app API — no shelling, so it works
+ * identically on every platform.
  */
 
 // Outcome label → lifecycle value written to the card.
 const VERDICTS = {
   "current (accept)": "current",
+  "current (edited)": "current",
   "archived (reject)": "archived",
   "archived (done / no action)": "archived",
 };
 
+const DISPOSITIONS = {
+  "current (accept)": "accepted",
+  "current (edited)": "edited",
+  "archived (reject)": "rejected",
+};
+
 const ATTENTION_LOG = "system/logs/attention.jsonl";
 const TRIAGE_LOG = "system/logs/triage.jsonl";
+const DISPOSITION_LOG = "system/logs/disposition.jsonl";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -86,6 +94,7 @@ module.exports = async (params) => {
   const resolvedAt = nowIso();
   let attentionRow = null;
   let triageRow = null;
+  let dispositionRow = null;
   try {
     await app.fileManager.processFrontMatter(file, (fm) => {
       const openedAt = frontmatterDate(fm, "attention_opened_at")
@@ -117,6 +126,21 @@ module.exports = async (params) => {
         lifecycle_to: lifecycle,
         source: "quickadd.resolve-inbox-card",
       };
+      if ((fm.type || "") === "work-prompt" && fm.task_id && DISPOSITIONS[verdict]) {
+        dispositionRow = {
+          timestamp: resolvedAt,
+          event: "work_prompt_reviewed",
+          path: file.path,
+          lane: fm.lane || fm.assignee || "unknown",
+          task_id: fm.task_id || "",
+          disposition: DISPOSITIONS[verdict],
+          outcome: verdict,
+          lifecycle_from: fm.lifecycle || "",
+          lifecycle_to: lifecycle,
+          agent_recommendation: fm.agent_recommendation || "",
+          source: "quickadd.resolve-inbox-card",
+        };
+      }
       fm.lifecycle = lifecycle;
       fm.resolved = today;
     });
@@ -125,6 +149,9 @@ module.exports = async (params) => {
     }
     if (triageRow) {
       await appendJsonl(app, TRIAGE_LOG, triageRow);
+    }
+    if (dispositionRow) {
+      await appendJsonl(app, DISPOSITION_LOG, dispositionRow);
     }
     new Notice("✓ Resolved " + file.basename + " → lifecycle: " + lifecycle + ", resolved: " + today + ".", 6000);
   } catch (e) {
