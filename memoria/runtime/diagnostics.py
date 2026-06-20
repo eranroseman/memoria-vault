@@ -51,11 +51,7 @@ def diagnostics_dir() -> Path:
 
 
 def _is_relative_to(path: Path, parent: Path) -> bool:
-    try:
-        path.resolve().relative_to(parent.resolve())
-        return True
-    except ValueError:
-        return False
+    return path.resolve().is_relative_to(parent.resolve())
 
 
 def assert_outside_vault(path: Path, vault_path: Path | None) -> None:

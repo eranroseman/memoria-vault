@@ -25,10 +25,6 @@ def _yaml_scalar(v) -> str:
     return f'"{s}"'
 
 
-# _safe_name: use safe_filename from _shared
-_safe_name = safe_filename
-
-
 def card_markdown(card: dict) -> str:
     """One card -> a markdown note: frontmatter (queryable) + body (summary)."""
     frontmatter = {
@@ -60,7 +56,7 @@ def export_markdown(vault: Path, cards: list[dict]) -> set[str]:
     live = [normalize(c) for c in cards if c.get("status") in LIVE_STATUSES]
     written = set()
     for c in live:
-        fname = _safe_name(c["task_id"]) + ".md"
+        fname = safe_filename(c["task_id"]) + ".md"
         (board / fname).write_text(card_markdown(c), encoding="utf-8")
         written.add(fname)
     # Prune stale exports (keep .keep and any non-exported scaffolding).
