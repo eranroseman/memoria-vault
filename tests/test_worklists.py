@@ -15,7 +15,12 @@ def test_emit_worklist_writes_schema_valid_rows_and_one_prompt(tmp_path):
         "Transformer screening",
         [
             {"title": "Attention Is All You Need", "item_ref": "@vaswani2017", "group": "seed"},
-            {"title": "BERT", "item_ref": "@devlin2019", "group": "follow-up", "reason": "Cites transformer architecture."},
+            {
+                "title": "BERT",
+                "item_ref": "@devlin2019",
+                "group": "follow-up",
+                "reason": "Cites transformer architecture.",
+            },
         ],
         source_report="notes/fleeting/maps/transformer-report.md",
     )

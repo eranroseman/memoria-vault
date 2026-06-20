@@ -12,14 +12,18 @@ def _vault(tmp_path):
     (tmp_path / "catalog/papers").mkdir(parents=True)
     (tmp_path / "notes/claims/a.md").write_text(
         "---\ntype: claim\nlinks:\n  supports: ['[[b]]']\n  contradicts: ['[[c]]']\n---\n",
-        encoding="utf-8")
+        encoding="utf-8",
+    )
     (tmp_path / "notes/claims/b.md").write_text(
-        "---\ntype: claim\nlinks:\n  supports: ['[[a]]']\n---\n", encoding="utf-8")
+        "---\ntype: claim\nlinks:\n  supports: ['[[a]]']\n---\n", encoding="utf-8"
+    )
     (tmp_path / "notes/claims/c.md").write_text("---\ntype: claim\n---\n", encoding="utf-8")
     (tmp_path / "notes/hubs/h.md").write_text(
-        "---\ntype: hub\nlinks:\n  members: ['[[a]]', '[[b]]']\n---\n", encoding="utf-8")
+        "---\ntype: hub\nlinks:\n  members: ['[[a]]', '[[b]]']\n---\n", encoding="utf-8"
+    )
     (tmp_path / "catalog/papers/x2024.md").write_text(
-        "---\ntype: paper\nrelationships:\n  cited_by: ['[[y2025]]']\n---\n", encoding="utf-8")
+        "---\ntype: paper\nrelationships:\n  cited_by: ['[[y2025]]']\n---\n", encoding="utf-8"
+    )
     return tmp_path
 
 
@@ -48,7 +52,8 @@ def test_seed_defaults_from_calibration(tmp_path):
     v = _vault(tmp_path)
     (v / ".memoria/schemas").mkdir(parents=True)
     (v / ".memoria/schemas/calibration.yaml").write_text(
-        "clustering:\n  seed: 99\n", encoding="utf-8")
+        "clustering:\n  seed: 99\n", encoding="utf-8"
+    )
     g = cluster_mcp.build_graph(v)
     assert g["params_echo"]["seed"] == 99
 
@@ -66,14 +71,17 @@ def test_empty_vault_no_crash(tmp_path):
 
 # ── cluster_emit_canvas — the claim-debate map (#345) ────────────────────────
 
+
 def _canvas_vault(tmp_path):
     v = _vault(tmp_path)
     (v / "notes/claims/a.md").write_text(
         "---\ntype: claim\nmaturity: evergreen\nlinks:\n"
         "  supports: ['[[b]]']\n  contradicts: ['[[c]]']\n  extends: ['[[d]]']\n---\n",
-        encoding="utf-8")
+        encoding="utf-8",
+    )
     (v / "notes/claims/d.md").write_text(
-        "---\ntype: claim\nmaturity: seedling\n---\n", encoding="utf-8")
+        "---\ntype: claim\nmaturity: seedling\n---\n", encoding="utf-8"
+    )
     return v
 
 
@@ -91,13 +99,13 @@ def test_emit_canvas_valid_structure(tmp_path):
     out, doc = _emit(v)
     assert out["canvas_path"] == "notes/fleeting/maps/claim-debate.canvas"
     ids = [n["id"] for n in doc["nodes"]]
-    assert len(ids) == len(set(ids))                       # unique node ids
+    assert len(ids) == len(set(ids))  # unique node ids
     file_nodes = [n for n in doc["nodes"] if n["type"] == "file"]
     assert {n["id"] for n in file_nodes} == {"a", "b", "c", "d"}
-    for n in file_nodes:                                   # file nodes -> real files
+    for n in file_nodes:  # file nodes -> real files
         assert (v / n["file"]).is_file()
         assert all(k in n for k in ("x", "y", "width", "height"))
-    for e in doc["edges"]:                                 # edges join existing nodes
+    for e in doc["edges"]:  # edges join existing nodes
         assert e["fromNode"] in ids and e["toNode"] in ids
         assert e["fromSide"] in ("left", "right") and e["toSide"] in ("left", "right")
     edge_ids = [e["id"] for e in doc["edges"]]
@@ -108,13 +116,13 @@ def test_emit_canvas_color_mapping(tmp_path):
     v = _canvas_vault(tmp_path)
     _, doc = _emit(v)
     by_type = {e["label"]: e for e in doc["edges"]}
-    assert by_type["supports"]["color"] == "4"             # green
-    assert by_type["contradicts"]["color"] == "1"          # red
-    assert "color" not in by_type["extends"]               # neutral
+    assert by_type["supports"]["color"] == "4"  # green
+    assert by_type["contradicts"]["color"] == "1"  # red
+    assert "color" not in by_type["extends"]  # neutral
     by_id = {n["id"]: n for n in doc["nodes"]}
-    assert by_id["a"]["color"] == "4"                      # evergreen
-    assert by_id["d"]["color"] == "3"                      # seedling
-    assert "color" not in by_id["b"]                       # no maturity declared
+    assert by_id["a"]["color"] == "4"  # evergreen
+    assert by_id["d"]["color"] == "3"  # seedling
+    assert "color" not in by_id["b"]  # no maturity declared
 
 
 def test_emit_canvas_deterministic(tmp_path):
@@ -143,9 +151,14 @@ def test_emit_canvas_refuses_targets_outside_staging(tmp_path):
     v = _canvas_vault(tmp_path)
     # allowlist: anything outside notes/fleeting/maps/ is refused — gated zones,
     # ungated-but-foreign homes, traversal escapes, and non-.canvas suffixes alike
-    for bad in ("notes/claims/map.canvas", "notes/hubs/map.canvas",
-                "catalog/papers/map.canvas", "system/map.canvas",
-                "../escape.canvas", "notes/fleeting/maps/../../claims/x.canvas"):
+    for bad in (
+        "notes/claims/map.canvas",
+        "notes/hubs/map.canvas",
+        "catalog/papers/map.canvas",
+        "system/map.canvas",
+        "../escape.canvas",
+        "notes/fleeting/maps/../../claims/x.canvas",
+    ):
         out = cluster_mcp.emit_canvas(v, out=bad)
         assert out["error"] == "invalid-target", bad
         assert not (v / bad).exists()

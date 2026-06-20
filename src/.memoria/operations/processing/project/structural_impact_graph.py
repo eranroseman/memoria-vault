@@ -126,7 +126,9 @@ def build_edges(notes: dict[str, Note], resolver: dict[str, str]) -> list[Edge]:
                 target_raw, addressed = normalized
                 target = resolver.get(target_raw)
                 if target and target != source:
-                    edges.append(Edge(source=source, target=target, relation=relation, addressed=addressed))
+                    edges.append(
+                        Edge(source=source, target=target, relation=relation, addressed=addressed)
+                    )
     return edges
 
 
@@ -146,7 +148,14 @@ def build_descriptive_edges(notes: dict[str, Note], resolver: dict[str, str]) ->
                 target_raw, addressed = normalized
                 target = resolver.get(target_raw)
                 if target and target != source:
-                    edges.append(Edge(source=source, target=target, relation=str(relation), addressed=addressed))
+                    edges.append(
+                        Edge(
+                            source=source,
+                            target=target,
+                            relation=str(relation),
+                            addressed=addressed,
+                        )
+                    )
     return edges
 
 
@@ -177,7 +186,12 @@ def find_thesis(notes: dict[str, Note], project: Note, resolver: dict[str, str])
         note = notes.get(key)
         if note and note.note_type == "thesis":
             return note
-    project_aliases = {project.key, project.path, project.stem, str(project.frontmatter.get("slug") or "")}
+    project_aliases = {
+        project.key,
+        project.path,
+        project.stem,
+        str(project.frontmatter.get("slug") or ""),
+    }
     candidates: list[Note] = []
     for note in notes.values():
         if note.note_type != "thesis" or note.lifecycle in {"archived", "retracted"}:
@@ -246,7 +260,11 @@ def lost_reachability(root: str, removed: str, nodes: set[str], graph: dict[str,
     remaining = nodes - {removed}
     if root not in remaining:
         return len(remaining)
-    return len(nodes) - 1 - len(component(root, {n: graph.get(n, set()) & remaining for n in remaining}))
+    return (
+        len(nodes)
+        - 1
+        - len(component(root, {n: graph.get(n, set()) & remaining for n in remaining}))
+    )
 
 
 def values_as_set(value: Any) -> set[str]:

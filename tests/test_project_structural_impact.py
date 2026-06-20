@@ -91,9 +91,10 @@ def test_normalize_target_extracts_dict_wikilink_and_status():
     assert impact_graph.normalize_target(
         {"target": "[[notes/claims/a.md#section|Claim A]]", "status": "closed"}
     ) == ("notes/claims/a", True)
-    assert impact_graph.normalize_target(
-        {"target": "[[notes/claims/a]]", "status": "open"}
-    ) == ("notes/claims/a", False)
+    assert impact_graph.normalize_target({"target": "[[notes/claims/a]]", "status": "open"}) == (
+        "notes/claims/a",
+        False,
+    )
 
 
 def test_structural_impact_materializes_mature_argument_graph(tmp_path):
@@ -127,7 +128,7 @@ def test_structural_impact_materializes_mature_argument_graph(tmp_path):
 
     rendered = (tmp_path / result["path"]).read_text(encoding="utf-8")
     assert "<!-- memoria-structural-impact:json -->" in rendered
-    assert "computed_at: \"2026-06-16T12:00:00Z\"" in rendered
+    assert 'computed_at: "2026-06-16T12:00:00Z"' in rendered
 
 
 def test_structural_impact_preserves_index_when_values_do_not_change(tmp_path):

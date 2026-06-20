@@ -1,4 +1,5 @@
 """L1 component test for resolve_merge — extracted from its former --self-test (ADR-44)."""
+
 from operations.processing.ingest import resolve_merge as _m
 from operations.processing.ingest import resolve_merge_logic as _logic
 
@@ -37,32 +38,74 @@ def test_resolve_merge():
     def _run():
         """No-network test of the merge logic (fetchers are validated by --diagnose)."""
         parts = {
-            "s2": {"found": True, "title": "S2 Title", "year": 2020, "s2_id": "S2PAPER1",
-                   "pmid": "111", "pmcid": "",
-                   "authors": [{"name": "A", "orcid": ""}, {"name": "B", "orcid": ""}],
-                   "orcid_count": 0, "tldr": "a tldr", "fields_of_study": ["Computer Science"],
-                   "publication_types": ["JournalArticle"], "citation_count": 5,
-                   "refs": [{"doi": "10.1/a", "arxiv": "", "title": ""},
-                            {"doi": "10.1/b", "arxiv": "", "title": ""}], "refs_returned": 2},
-            "openalex": {"found": True, "title": "OA Title", "year": 2020,
-                         "openalex_id": "W123", "pmid": "222", "pmcid": "PMC999",
-                         "authors": [{"name": "Alice", "orcid": "x"}, {"name": "Bob", "orcid": "y"}],
-                         "orcid_count": 2, "venue": "Some Venue", "issn": "1234-5678",
-                         "topics": ["Topic A"], "referenced_works": ["W1", "W2"]},
-            "crossref": {"found": True, "title": "CR Title", "year": 2019,
-                         "authors": [{"name": "A", "orcid": ""}], "orcid_count": 0,
-                         "venue": "CR Venue", "issn": "9999",
-                         "refs": [{"doi": "10.1/b", "arxiv": "", "title": ""},
-                                  {"doi": "10.1/c", "arxiv": "", "title": ""}]},
-            "pubmed": {"found": True, "title": "PM Title", "year": 2020,
-                       "pmid": "333", "pmcid": "PMC333",
-                       "authors": [{"name": "Alice A", "orcid": ""}], "orcid_count": 0,
-                       "venue": "PubMed Journal", "publication_types": ["Journal Article"],
-                       "mesh_terms": ["Telemedicine"]},
+            "s2": {
+                "found": True,
+                "title": "S2 Title",
+                "year": 2020,
+                "s2_id": "S2PAPER1",
+                "pmid": "111",
+                "pmcid": "",
+                "authors": [{"name": "A", "orcid": ""}, {"name": "B", "orcid": ""}],
+                "orcid_count": 0,
+                "tldr": "a tldr",
+                "fields_of_study": ["Computer Science"],
+                "publication_types": ["JournalArticle"],
+                "citation_count": 5,
+                "refs": [
+                    {"doi": "10.1/a", "arxiv": "", "title": ""},
+                    {"doi": "10.1/b", "arxiv": "", "title": ""},
+                ],
+                "refs_returned": 2,
+            },
+            "openalex": {
+                "found": True,
+                "title": "OA Title",
+                "year": 2020,
+                "openalex_id": "W123",
+                "pmid": "222",
+                "pmcid": "PMC999",
+                "authors": [{"name": "Alice", "orcid": "x"}, {"name": "Bob", "orcid": "y"}],
+                "orcid_count": 2,
+                "venue": "Some Venue",
+                "issn": "1234-5678",
+                "topics": ["Topic A"],
+                "referenced_works": ["W1", "W2"],
+            },
+            "crossref": {
+                "found": True,
+                "title": "CR Title",
+                "year": 2019,
+                "authors": [{"name": "A", "orcid": ""}],
+                "orcid_count": 0,
+                "venue": "CR Venue",
+                "issn": "9999",
+                "refs": [
+                    {"doi": "10.1/b", "arxiv": "", "title": ""},
+                    {"doi": "10.1/c", "arxiv": "", "title": ""},
+                ],
+            },
+            "pubmed": {
+                "found": True,
+                "title": "PM Title",
+                "year": 2020,
+                "pmid": "333",
+                "pmcid": "PMC333",
+                "authors": [{"name": "Alice A", "orcid": ""}],
+                "orcid_count": 0,
+                "venue": "PubMed Journal",
+                "publication_types": ["Journal Article"],
+                "mesh_terms": ["Telemedicine"],
+            },
         }
         m = merge(parts)
-        m0 = merge({"s2": {"found": False}, "openalex": {"found": False},
-                    "crossref": {"found": False}, "pubmed": {"found": False}})
+        m0 = merge(
+            {
+                "s2": {"found": False},
+                "openalex": {"found": False},
+                "crossref": {"found": False},
+                "pubmed": {"found": False},
+            }
+        )
 
         # _get must retry a 429 then succeed, rather than silently dropping the source
         _calls = [0]
@@ -80,7 +123,9 @@ def test_resolve_merge():
         def _fake(req, timeout=25):
             _calls[0] += 1
             if _calls[0] == 1:
-                raise urllib.error.HTTPError(req.full_url, 429, "Too Many Requests", {"Retry-After": "0"}, None)
+                raise urllib.error.HTTPError(
+                    req.full_url, 429, "Too Many Requests", {"Retry-After": "0"}, None
+                )
             return _Resp()
 
         _orig = urllib.request.urlopen
@@ -92,25 +137,55 @@ def test_resolve_merge():
 
         checks = [
             ("429 retried then succeeded", _retried == {"ok": True} and _calls[0] == 2),
-            ("authors<-openalex (most ORCIDs)", m["provenance"]["authors"] == "openalex" and len(m["authors"]) == 2),
-            ("title<-crossref (precedence)", m["title"] == "CR Title" and m["provenance"]["title"] == "crossref"),
-            ("venue<-openalex", m["venue"] == "Some Venue" and m["provenance"]["venue"] == "openalex"),
+            (
+                "authors<-openalex (most ORCIDs)",
+                m["provenance"]["authors"] == "openalex" and len(m["authors"]) == 2,
+            ),
+            (
+                "title<-crossref (precedence)",
+                m["title"] == "CR Title" and m["provenance"]["title"] == "crossref",
+            ),
+            (
+                "venue<-openalex",
+                m["venue"] == "Some Venue" and m["provenance"]["venue"] == "openalex",
+            ),
             ("tldr<-s2", m["tldr"] == "a tldr"),
-            ("fields<-s2, topics<-openalex", m["fields_of_study"] == ["Computer Science"] and m["topics"] == ["Topic A"]),
+            (
+                "fields<-s2, topics<-openalex",
+                m["fields_of_study"] == ["Computer Science"] and m["topics"] == ["Topic A"],
+            ),
             ("refs union deduped by DOI = 3", len(m["references"]) == 3),
-            ("shared ref tagged both sources", any(set(r["sources"]) == {"s2", "crossref"} for r in m["references"])),
-            ("stable IDs surfaced (s2/openalex)", m["s2_id"] == "S2PAPER1" and m["openalex_id"] == "W123"),
+            (
+                "shared ref tagged both sources",
+                any(set(r["sources"]) == {"s2", "crossref"} for r in m["references"]),
+            ),
+            (
+                "stable IDs surfaced (s2/openalex)",
+                m["s2_id"] == "S2PAPER1" and m["openalex_id"] == "W123",
+            ),
             ("pmid/pmcid prefer pubmed", m["pmid"] == "333" and m["pmcid"] == "PMC333"),
-            ("mesh/pub types<-pubmed", m["mesh_terms"] == ["Telemedicine"]
-             and m["publication_types"] == ["Journal Article"]),
-            ("all-missing -> empty merge", m0["title"] == "" and m0["references"] == [] and m0["authors"] == []
-             and m0["s2_id"] == "" and m0["openalex_id"] == ""),
+            (
+                "mesh/pub types<-pubmed",
+                m["mesh_terms"] == ["Telemedicine"]
+                and m["publication_types"] == ["Journal Article"],
+            ),
+            (
+                "all-missing -> empty merge",
+                m0["title"] == ""
+                and m0["references"] == []
+                and m0["authors"] == []
+                and m0["s2_id"] == ""
+                and m0["openalex_id"] == "",
+            ),
         ]
         bad = [name for name, ok in checks if not ok]
         for name, ok in checks:
             print(f"  {'PASS' if ok else 'FAIL'}  {name}")
-        print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: resolve_merge merge-logic self-test")
+        print(
+            f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: resolve_merge merge-logic self-test"
+        )
         return 1 if bad else 0
+
     assert _run() == 0
 
 
@@ -137,13 +212,17 @@ def test_agreement_confidence_d51():
     score, dis = agreement(one)
     assert score == 1.0 and dis == []
 
-    agree = {"crossref": {"found": True, "title": "Same Work", "year": 2024},
-             "openalex": {"found": True, "title": "Same Work!", "year": 2024}}
-    score, dis = agreement(agree)   # punctuation-insensitive
+    agree = {
+        "crossref": {"found": True, "title": "Same Work", "year": 2024},
+        "openalex": {"found": True, "title": "Same Work!", "year": 2024},
+    }
+    score, dis = agreement(agree)  # punctuation-insensitive
     assert score == 1.0 and dis == []
 
-    clash = {"crossref": {"found": True, "title": "Work A", "year": 2024},
-             "openalex": {"found": True, "title": "Entirely Different Work", "year": 2019}}
+    clash = {
+        "crossref": {"found": True, "title": "Work A", "year": 2024},
+        "openalex": {"found": True, "title": "Entirely Different Work", "year": 2019},
+    }
     score, dis = clash and agreement(clash)
     assert score == 0.0 and len(dis) == 2
 

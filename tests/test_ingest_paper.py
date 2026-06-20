@@ -14,7 +14,9 @@ def frontmatter_by_citekey():
 
 
 @pytest.mark.parametrize(("citekey", "note_type", "source_type", "want"), _EXPECT)
-def test_ingest_paper_sets_tier0_identity(frontmatter_by_citekey, citekey, note_type, source_type, want):
+def test_ingest_paper_sets_tier0_identity(
+    frontmatter_by_citekey, citekey, note_type, source_type, want
+):
     fm = frontmatter_by_citekey[citekey]
 
     assert fm["lifecycle"] == "current"
@@ -26,13 +28,14 @@ def test_ingest_paper_sets_tier0_identity(frontmatter_by_citekey, citekey, note_
 
 
 @pytest.mark.parametrize(("citekey", "_note_type", "_source_type", "want"), _EXPECT)
-def test_ingest_paper_preserves_expected_external_ids(frontmatter_by_citekey, citekey, _note_type, _source_type, want):
+def test_ingest_paper_preserves_expected_external_ids(
+    frontmatter_by_citekey, citekey, _note_type, _source_type, want
+):
     fm = frontmatter_by_citekey[citekey]
 
     for key in ("arxiv_id", "pmcid", "isbn"):
         if key in want:
             assert fm[key] == want[key]
-
 
 
 def test_ingest_paper_frontmatter_order_surfaces_state():

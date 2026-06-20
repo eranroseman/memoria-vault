@@ -98,7 +98,9 @@ def write_profile(
         "checkpoints": {"enabled": False},
         "plugins": {"enabled": ["memoria-policy-gate"]},
     }
-    (profile_stage / "config.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+    (profile_stage / "config.yaml").write_text(
+        yaml.safe_dump(config, sort_keys=False), encoding="utf-8"
+    )
 
 
 def deploy_policy_plugin(root: Path, profile_dir: Path, profile: str, vault: Path) -> None:

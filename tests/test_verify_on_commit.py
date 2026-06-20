@@ -64,8 +64,7 @@ def _repo_with_hook(tmp_path: Path) -> tuple[Path, Path, dict[str, str]]:
     (hooks / "post-commit").chmod(0o755)
     hermes = bin_dir / "hermes"
     hermes.write_text(
-        "#!/usr/bin/env bash\n"
-        "printf '%s\\n' \"$*\" >> \"$HERMES_LOG\"\n",
+        '#!/usr/bin/env bash\nprintf \'%s\\n\' "$*" >> "$HERMES_LOG"\n',
         encoding="utf-8",
     )
     hermes.chmod(0o755)

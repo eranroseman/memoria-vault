@@ -58,9 +58,14 @@ def _report_items(report: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
-def emit_worklist(vault: Path, title: str, rows: list[dict[str, Any]],
-                  source_report: str = "", workflow: str = "screen",
-                  worklist_id: str = "") -> dict[str, Any]:
+def emit_worklist(
+    vault: Path,
+    title: str,
+    rows: list[dict[str, Any]],
+    source_report: str = "",
+    workflow: str = "screen",
+    worklist_id: str = "",
+) -> dict[str, Any]:
     """Write a file-backed worklist and one aggregate work-prompt.
 
     Returns the worklist slug, item paths, and the prompt path (or None when the
@@ -112,10 +117,14 @@ def emit_worklist(vault: Path, title: str, rows: list[dict[str, Any]],
     prompt = inbox.write_work_prompt(
         vault,
         title=f"Review worklist: {title}",
-        action=("Open the worklist Base, review the grouped rows, and set each "
-                "item's decision to include, exclude, maybe, or archived."),
-        what_happened=(f"{len(item_paths)} items were emitted into the {slug} "
-                       f"batch from {source_report or 'a report'}."),
+        action=(
+            "Open the worklist Base, review the grouped rows, and set each "
+            "item's decision to include, exclude, maybe, or archived."
+        ),
+        what_happened=(
+            f"{len(item_paths)} items were emitted into the {slug} "
+            f"batch from {source_report or 'a report'}."
+        ),
         raised_by="worklists",
         target=target,
         lane="copi",
@@ -125,14 +134,22 @@ def emit_worklist(vault: Path, title: str, rows: list[dict[str, Any]],
     return {"worklist": slug, "items": item_paths, "prompt": prompt}
 
 
-def emit_report(vault: Path, report_path: Path, title: str = "", workflow: str = "screen") -> dict[str, Any]:
+def emit_report(
+    vault: Path, report_path: Path, title: str = "", workflow: str = "screen"
+) -> dict[str, Any]:
     report = json.loads(Path(report_path).read_text(encoding="utf-8"))
     rows = _report_items(report)
     report_title = title or str(report.get("title") or Path(report_path).stem)
     source_report = str(report.get("source_report") or report_path)
     worklist_id = str(report.get("worklist") or report.get("worklist_id") or "")
-    return emit_worklist(vault, report_title, rows, source_report=source_report,
-                         workflow=workflow, worklist_id=worklist_id)
+    return emit_worklist(
+        vault,
+        report_title,
+        rows,
+        source_report=source_report,
+        workflow=workflow,
+        worklist_id=worklist_id,
+    )
 
 
 def main(argv: list[str]) -> int:
@@ -146,11 +163,16 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
     if args.cmd == "emit":
         result = emit_report(Path(args.vault), Path(args.report), args.title, args.workflow)
-        print(json.dumps({
-            "worklist": result["worklist"],
-            "items": [str(p) for p in result["items"]],
-            "prompt": str(result["prompt"]) if result["prompt"] else None,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "worklist": result["worklist"],
+                    "items": [str(p) for p in result["items"]],
+                    "prompt": str(result["prompt"]) if result["prompt"] else None,
+                },
+                indent=2,
+            )
+        )
         return 0
     parser.print_help()
     return 2

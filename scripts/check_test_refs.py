@@ -11,6 +11,7 @@ pre-reorg path) is also caught: it matches the pattern but no longer resolves.
 Exit 0 if clean, 1 if any reference is broken.
 Usage: python scripts/check_test_refs.py
 """
+
 from __future__ import annotations
 
 import re

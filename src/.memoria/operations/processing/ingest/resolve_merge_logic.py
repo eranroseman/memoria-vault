@@ -38,7 +38,8 @@ def _norm_title(value: str) -> str:
 def agreement(parts: dict) -> tuple[float, list[str]]:
     """Cross-source identity agreement in [0,1] + disagreements (ADR-56)."""
     found = [
-        source for source in ("crossref", "openalex", "pubmed", "s2")
+        source
+        for source in ("crossref", "openalex", "pubmed", "s2")
         if parts.get(source, {}).get("found")
     ]
     if not found:
@@ -54,7 +55,7 @@ def agreement(parts: dict) -> tuple[float, list[str]]:
     if len(set(titles.values())) > 1:
         disagreements.append(
             "title differs across sources: "
-            + "; ".join(f"{source}={parts[source].get('title','')!r}" for source in titles)
+            + "; ".join(f"{source}={parts[source].get('title', '')!r}" for source in titles)
         )
     years = {source: parts[source].get("year") for source in found if parts[source].get("year")}
     if len({year for year in years.values() if year}) > 1:
@@ -70,8 +71,11 @@ def merge(parts: dict) -> dict:
     # authors: prefer the source carrying the most ORCIDs (OpenAlex, per the spike)
     auth_src = max(
         ("openalex", "pubmed", "s2", "crossref"),
-        key=lambda source: parts.get(source, {}).get("orcid_count", -1)
-        if parts.get(source, {}).get("found") else -1,
+        key=lambda source: (
+            parts.get(source, {}).get("orcid_count", -1)
+            if parts.get(source, {}).get("found")
+            else -1
+        ),
     )
     authors = parts.get(auth_src, {}).get("authors") or []
     title, title_src = _pick(parts, "title", ["crossref", "openalex", "pubmed", "s2"])
@@ -102,7 +106,8 @@ def merge(parts: dict) -> dict:
         "topics_scored": parts.get("openalex", {}).get("topics_scored") or [],
         "publication_types": (
             parts.get("pubmed", {}).get("publication_types")
-            or parts.get("s2", {}).get("publication_types") or []
+            or parts.get("s2", {}).get("publication_types")
+            or []
         ),
         "mesh_terms": parts.get("pubmed", {}).get("mesh_terms") or [],
         "references": refs,

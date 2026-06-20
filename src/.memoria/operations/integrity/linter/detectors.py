@@ -17,6 +17,7 @@ are out of scope -- the first needs ~/.hermes deploy state the vault-side Linter
 doesn't have (the idempotent installer re-run is the fix), the second is a repo
 CI concern.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -61,7 +62,12 @@ TYPE_HOME = {
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
 KNOWN_TOP_DIRS = {
-    "catalog", "notes", "projects", "inbox", "spaces", "system",
+    "catalog",
+    "notes",
+    "projects",
+    "inbox",
+    "spaces",
+    "system",
 }
 # Scaffolding, not authored notes: skeleton folders, assets, and the note
 # templates (raw notes full of placeholder [[links]]). Detectors that assert
@@ -76,10 +82,19 @@ def is_untyped_infra(rp: str) -> bool:
     system/patterns/ (ADR-53) and system/eval/ (ADR-11 gold tasks) files
     carry a type schema."""
     return rp.startswith("system/") and not rp.startswith(("system/patterns/", "system/eval/"))
+
+
 LEFTOVER_PATTERNS = [
-    re.compile(p) for p in (
-        r".*\.tmp\..*", r".*\.OLD\..*", r".*\.lessOLD\..*", r".*\.bak$",
-        r".*~$", r"\.#.*", r".*\.orig$", r".*\.rej$",
+    re.compile(p)
+    for p in (
+        r".*\.tmp\..*",
+        r".*\.OLD\..*",
+        r".*\.lessOLD\..*",
+        r".*\.bak$",
+        r".*~$",
+        r"\.#.*",
+        r".*\.orig$",
+        r".*\.rej$",
     )
 ]
 # Per-type required frontmatter fields (minimal; extend as the schema firms up).
@@ -88,12 +103,36 @@ REQUIRED_FIELDS = {
     "paper": ["citekey"],
 }
 DATAVIEW_BUILTINS = {
-    "file", "rows", "type", "tags", "tag", "true", "false", "null",
+    "file",
+    "rows",
+    "type",
+    "tags",
+    "tag",
+    "true",
+    "false",
+    "null",
 }
 # Dataview query keywords -- not fields. (TABLE WITHOUT ID ..., FROM, WHERE, AS, ...)
 DATAVIEW_KEYWORDS = {
-    "without", "id", "from", "where", "as", "flatten", "group", "by", "sort",
-    "limit", "asc", "desc", "table", "list", "task", "and", "or", "not", "reverse",
+    "without",
+    "id",
+    "from",
+    "where",
+    "as",
+    "flatten",
+    "group",
+    "by",
+    "sort",
+    "limit",
+    "asc",
+    "desc",
+    "table",
+    "list",
+    "task",
+    "and",
+    "or",
+    "not",
+    "reverse",
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
@@ -113,7 +152,7 @@ try:
     _FOLDERS = _schema.load_folders()
     TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
     KNOWN_TOP_DIRS = set(_FOLDERS["categories"])
-except Exception:                                  # pragma: no cover - fallback path
+except Exception:  # pragma: no cover - fallback path
     _schema = None
 
 from operations.integrity.linter.detectors_audit import (
@@ -132,7 +171,7 @@ class Finding:
     severity: str
     path: str
     message: str
-    timestamp: str = ""   # ISO-8601 UTC; stamped per lint pass in run_all()
+    timestamp: str = ""  # ISO-8601 UTC; stamped per lint pass in run_all()
 
 
 # --------------------------------------------------------------------------- #
@@ -172,7 +211,7 @@ def parse_frontmatter(text: str) -> dict:
     end = text.find("\n---", 3)
     if end == -1:
         return {}
-    if _schema is not None:                       # PyYAML proven importable
+    if _schema is not None:  # PyYAML proven importable
         try:
             import yaml
 
@@ -184,7 +223,7 @@ def parse_frontmatter(text: str) -> dict:
     for line in text[3:end].splitlines():
         if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
             continue
-        if line[0] in " \t":          # nested key -- minimal parser skips it
+        if line[0] in " \t":  # nested key -- minimal parser skips it
             continue
         key, _, val = line.partition(":")
         key, val = key.strip(), val.strip()
@@ -229,10 +268,9 @@ def template_field_names(text: str) -> set[str]:
     still carries a ```yaml frontmatter example."""
     keys = all_frontmatter_keys(text)
     for block in _CODE_BLOCK.findall(text):
-        if "type:" in block or "---" in block:      # a frontmatter example block
+        if "type:" in block or "---" in block:  # a frontmatter example block
             keys |= set(_FM_KEY.findall(block))
     return keys
-
 
 
 _HEX_COLOR = re.compile(r"#[0-9A-Fa-f]{3,8}\b")
@@ -240,10 +278,19 @@ _PX_VALUE = re.compile(r"font(?:-size)?\s*:[^;\n]*?\b(\d+(?:\.\d+)?)px\b", re.I)
 _CALLOUT_LINE = re.compile(r"^\s*>\s*\[!([^\]|\n]+)(?:\|([^\]\n]+))?\]", re.I | re.M)
 _BANNED_TITLE_CHARS = re.compile(r"[\U0001F300-\U0001FAFF\u2600-\u27BF]")
 _TERM_DRIFT = re.compile(
-    r"\b(?:Claim Note|claimnote|Paper Note|paper note|permanent note|knowledge base)\b")
+    r"\b(?:Claim Note|claimnote|Paper Note|paper note|permanent note|knowledge base)\b"
+)
 _DESIGN_SCAN_PREFIXES = (
-    "home.md", "research-focus.md", "troubleshooting.md", "AGENTS.md",
-    "system/", "notes/", "catalog/", "inbox/", "projects/", "spaces/",
+    "home.md",
+    "research-focus.md",
+    "troubleshooting.md",
+    "AGENTS.md",
+    "system/",
+    "notes/",
+    "catalog/",
+    "inbox/",
+    "projects/",
+    "spaces/",
     ".obsidian/snippets/",
 )
 _DESIGN_SCAN_SUFFIXES = (".md", ".css", ".html")
@@ -274,8 +321,7 @@ def _px_number(value: str) -> str:
 
 
 def _allowed_font_sizes(spec: str) -> set[str]:
-    return {_px_number(m.group(1))
-            for m in re.finditer(r"\b(\d+(?:\.\d+)?)px\s*/", spec)}
+    return {_px_number(m.group(1)) for m in re.finditer(r"\b(\d+(?:\.\d+)?)px\s*/", spec)}
 
 
 def _design_consumer_files(vault: Path):
@@ -301,6 +347,7 @@ def _has_frontmatter_title_emoji(text: str) -> bool:
             return True
     return False
 
+
 # --------------------------------------------------------------------------- #
 # Detectors -- each takes the vault root and returns a list[Finding].
 # --------------------------------------------------------------------------- #
@@ -314,8 +361,14 @@ def orphan_working_files(vault: Path) -> list[Finding]:
         for pat in LEFTOVER_PATTERNS:
             if pat.fullmatch(name):
                 age_d = (time.time() - p.stat().st_mtime) / 86400
-                out.append(Finding("orphan-working-files", "LOW", rp,
-                                    f"leftover file (matches /{pat.pattern}/), {age_d:.0f}d old"))
+                out.append(
+                    Finding(
+                        "orphan-working-files",
+                        "LOW",
+                        rp,
+                        f"leftover file (matches /{pat.pattern}/), {age_d:.0f}d old",
+                    )
+                )
                 break
     return out
 
@@ -325,11 +378,19 @@ def stale_fleeting(vault: Path, days: int = 7) -> list[Finding]:
     folder = vault / "notes" / "fleeting"
     if not folder.is_dir():
         return out
-    for p in folder.rglob("*.md"):  # recursive: subfolders (e.g. chats/, the ACP-export home) count too
+    for p in folder.rglob(
+        "*.md"
+    ):  # recursive: subfolders (e.g. chats/, the ACP-export home) count too
         if p.stat().st_mtime < cutoff:
             age_d = (time.time() - p.stat().st_mtime) / 86400
-            out.append(Finding("stale-fleeting", "LOW", relpath(vault, p),
-                               f"fleeting note {age_d:.0f}d old (>{days}d); promote or discard"))
+            out.append(
+                Finding(
+                    "stale-fleeting",
+                    "LOW",
+                    relpath(vault, p),
+                    f"fleeting note {age_d:.0f}d old (>{days}d); promote or discard",
+                )
+            )
     return out
 
 
@@ -348,8 +409,14 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
     for p in folder.glob("*.md"):
         if p.stat().st_mtime < cutoff:
             age_d = (time.time() - p.stat().st_mtime) / 86400
-            out.append(Finding("stale-answer-drafts", "LOW", relpath(vault, p),
-                               f"answer draft {age_d:.0f}d old (>{days}d); keep, promote, or discard"))
+            out.append(
+                Finding(
+                    "stale-answer-drafts",
+                    "LOW",
+                    relpath(vault, p),
+                    f"answer draft {age_d:.0f}d old (>{days}d); keep, promote, or discard",
+                )
+            )
     return out
 
 
@@ -366,8 +433,14 @@ def extract_path_broken(vault: Path) -> list[Finding]:
         norm = ep.strip().lstrip("/").replace("\\", "/")
         norm = norm[2:] if norm.startswith("./") else norm
         if not (vault / norm).exists():
-            out.append(Finding("extract-path-broken", "HIGH", relpath(vault, p),
-                               f"extract_path '{ep}' does not resolve"))
+            out.append(
+                Finding(
+                    "extract-path-broken",
+                    "HIGH",
+                    relpath(vault, p),
+                    f"extract_path '{ep}' does not resolve",
+                )
+            )
     return out
 
 
@@ -375,10 +448,10 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
     out = []
     for p in iter_notes(vault):
         rp = relpath(vault, p)
-        if is_untyped_infra(rp):               # system infra isn't typed knowledge
+        if is_untyped_infra(rp):  # system infra isn't typed knowledge
             continue
-        if "/" not in rp:                      # vault-root pages (home, troubleshooting,
-            continue                           # research-focus) are navigation, not typed notes
+        if "/" not in rp:  # vault-root pages (home, troubleshooting,
+            continue  # research-focus) are navigation, not typed notes
         fm = parse_frontmatter(read(p))
         if not fm:
             continue
@@ -389,16 +462,28 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
         if TYPE_SCHEMAS is not None:
             sc = TYPE_SCHEMAS.get(ntype)
             if sc is None:
-                out.append(Finding("schema-check", "MEDIUM", rp,
-                                   f"unknown type '{ntype}' (no schema in .memoria/schemas/types/)"))
+                out.append(
+                    Finding(
+                        "schema-check",
+                        "MEDIUM",
+                        rp,
+                        f"unknown type '{ntype}' (no schema in .memoria/schemas/types/)",
+                    )
+                )
                 continue
             for err in _schema.validate_frontmatter(fm, sc):
                 out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
         else:
             for field in REQUIRED_FIELDS.get(ntype, []):
                 if field not in fm:
-                    out.append(Finding("schema-check", "MEDIUM", rp,
-                                       f"{ntype} missing required field '{field}'"))
+                    out.append(
+                        Finding(
+                            "schema-check",
+                            "MEDIUM",
+                            rp,
+                            f"{ntype} missing required field '{field}'",
+                        )
+                    )
     return out
 
 
@@ -430,8 +515,14 @@ def frontmatter_link_check(vault: Path) -> list[Finding]:
         for tgt in targets:
             stem = Path(tgt.strip().rstrip("\\")).stem
             if stem and stem not in stems:
-                out.append(Finding("frontmatter-link", "MEDIUM", rp,
-                                   f"frontmatter link [[{tgt.strip()}]] resolves to no note"))
+                out.append(
+                    Finding(
+                        "frontmatter-link",
+                        "MEDIUM",
+                        rp,
+                        f"frontmatter link [[{tgt.strip()}]] resolves to no note",
+                    )
+                )
     return out
 
 
@@ -442,7 +533,7 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
     out = []
     for p in notes:
         rp = relpath(vault, p)
-        if rp.startswith(SCAFFOLD_PREFIXES):   # scaffolding: example/placeholder links
+        if rp.startswith(SCAFFOLD_PREFIXES):  # scaffolding: example/placeholder links
             continue
         for m in link_re.finditer(read(p)):
             # rstrip a trailing "\" so a table-escaped pipe resolves: inside a
@@ -453,11 +544,17 @@ def broken_wikilinks(vault: Path) -> list[Finding]:
                 continue
             last = target.split("/")[-1]
             if "." in last and not last.endswith(".md"):
-                continue   # non-note target (.base/.canvas/image embed), not a wikilink
+                continue  # non-note target (.base/.canvas/image embed), not a wikilink
             stem = Path(target).stem
             if stem not in stems:
-                out.append(Finding("broken-wikilink", "MEDIUM", relpath(vault, p),
-                                   f"wikilink [[{target}]] resolves to no note"))
+                out.append(
+                    Finding(
+                        "broken-wikilink",
+                        "MEDIUM",
+                        relpath(vault, p),
+                        f"wikilink [[{target}]] resolves to no note",
+                    )
+                )
     return out
 
 
@@ -479,7 +576,7 @@ def dashboard_field_drift(vault: Path) -> list[Finding]:
         for block in block_re.findall(read(d)):
             frm = re.search(r'FROM\s+"([^"]+)"', block, re.I)
             if not (frm and frm.group(1).strip().startswith(NOTE_FOLDERS)):
-                continue   # only note-folder queries can drift on note frontmatter fields
+                continue  # only note-folder queries can drift on note frontmatter fields
             for line in block.splitlines():
                 m = _DV_FIELD_LINE.match(line)
                 if not m:
@@ -494,14 +591,26 @@ def dashboard_field_drift(vault: Path) -> list[Finding]:
                     field = ids[0]
                     if field in known or field.lower() in DATAVIEW_KEYWORDS:
                         continue
-                    if re.search(rf"\b{re.escape(field)}\.", col):   # dotted built-in, e.g. file.mtime
+                    if re.search(
+                        rf"\b{re.escape(field)}\.", col
+                    ):  # dotted built-in, e.g. file.mtime
                         continue
-                    if re.search(rf"\.{re.escape(field)}\b", col):   # property access, e.g. rows.length
+                    if re.search(
+                        rf"\.{re.escape(field)}\b", col
+                    ):  # property access, e.g. rows.length
                         continue
-                    if re.search(rf"\b{re.escape(field)}\s*\(", col): # function call, e.g. length(...)
+                    if re.search(
+                        rf"\b{re.escape(field)}\s*\(", col
+                    ):  # function call, e.g. length(...)
                         continue
-                    out.append(Finding("dashboard-field-drift", "HIGH", relpath(vault, d),
-                                       f"query references field '{field}' not in any template"))
+                    out.append(
+                        Finding(
+                            "dashboard-field-drift",
+                            "HIGH",
+                            relpath(vault, d),
+                            f"query references field '{field}' not in any template",
+                        )
+                    )
     return out
 
 
@@ -517,8 +626,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
     Hubs, clusters, and link-density are descriptive rather than actionable, so
     they are left out of the report to keep findings to things a human can act on;
     extend here if a graph-stats summary is wanted later."""
-    notes = [p for p in iter_notes(vault)
-             if not relpath(vault, p).startswith(("system/",))]
+    notes = [p for p in iter_notes(vault) if not relpath(vault, p).startswith(("system/",))]
     indeg = {p.stem: 0 for p in notes}
     link_re = re.compile(r"\[\[([^\]|#]+)")
     for p in notes:
@@ -533,8 +641,14 @@ def graph_analyze(vault: Path) -> list[Finding]:
         if not rp.startswith(synth):
             continue
         if indeg.get(p.stem, 0) == 0:
-            out.append(Finding("graph-analyze", "LOW", rp,
-                               "orphan synthesis note (0 inlinks) -- link it or it stays unreachable"))
+            out.append(
+                Finding(
+                    "graph-analyze",
+                    "LOW",
+                    rp,
+                    "orphan synthesis note (0 inlinks) -- link it or it stays unreachable",
+                )
+            )
     return out
 
 
@@ -544,7 +658,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
     the FAMA failure mode the supersession mechanism (ADR-10 / ADR-17) makes
     measurable -- the report's headline novelty turned into a deterministic check."""
     notes = list(iter_notes(vault))
-    superseded: dict[str, str] = {}    # claim stem -> its relpath
+    superseded: dict[str, str] = {}  # claim stem -> its relpath
     for p in notes:
         if not relpath(vault, p).startswith("notes/claims/"):
             continue
@@ -566,8 +680,14 @@ def fama_exposure(vault: Path) -> list[Finding]:
         for m in link_re.finditer(read(p)):
             stem = Path(m.group(1).strip()).stem
             if stem in superseded:
-                out.append(Finding("fama-exposure", "HIGH", rp,
-                                   f"cites superseded claim [[{stem}]] ({superseded[stem]}) -- reuse of obsolete memory"))
+                out.append(
+                    Finding(
+                        "fama-exposure",
+                        "HIGH",
+                        rp,
+                        f"cites superseded claim [[{stem}]] ({superseded[stem]}) -- reuse of obsolete memory",
+                    )
+                )
     return out
 
 
@@ -588,18 +708,19 @@ def misplaced_note(vault: Path) -> list[Finding]:
         ntype = parse_frontmatter(read(p)).get("type")
         home = TYPE_HOME.get(ntype)
         if home and not rp.startswith(home):
-            out.append(Finding("misplaced-note", "MEDIUM", rp,
-                               f"{ntype} should live under {home}"))
+            out.append(Finding("misplaced-note", "MEDIUM", rp, f"{ntype} should live under {home}"))
     # Stray top-level folders: any vault-root dir outside the numbered schema set.
     for d in vault.iterdir():
         if d.is_dir() and d.name not in SKIP_DIRS and d.name not in KNOWN_TOP_DIRS:
-            out.append(Finding("misplaced-note", "LOW", relpath(vault, d),
-                               "stray top-level folder not in the vault schema"))
+            out.append(
+                Finding(
+                    "misplaced-note",
+                    "LOW",
+                    relpath(vault, d),
+                    "stray top-level folder not in the vault schema",
+                )
+            )
     return out
-
-
-
-
 
 
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
@@ -613,7 +734,7 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     `moc`) note's `topic` or `title` matches it, case-insensitively. Never
     auto-creates -- the finding suggests the PI consider a hub."""
     counts: dict[str, int] = {}
-    label: dict[str, str] = {}                     # lowercased term -> display form
+    label: dict[str, str] = {}  # lowercased term -> display form
     hubbed: set[str] = set()
     for p in iter_notes(vault):
         rp = relpath(vault, p)
@@ -641,10 +762,16 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     out = []
     for key in sorted(counts):
         if counts[key] >= threshold and key not in hubbed:
-            out.append(Finding("hub-threshold", "LOW", "notes/hubs/",
-                               f"topic '{label[key]}' has {counts[key]} notes "
-                               f"(papers + claims, threshold {threshold}) and no hub "
-                               f"-- consider creating one (ADR-19 Tier 1)"))
+            out.append(
+                Finding(
+                    "hub-threshold",
+                    "LOW",
+                    "notes/hubs/",
+                    f"topic '{label[key]}' has {counts[key]} notes "
+                    f"(papers + claims, threshold {threshold}) and no hub "
+                    f"-- consider creating one (ADR-19 Tier 1)",
+                )
+            )
     return out
 
 
@@ -668,18 +795,36 @@ def skeleton_drift(vault: Path) -> list[Finding]:
     out = []
     for d in _FOLDERS.get("skeleton") or []:
         if not (vault / d).is_dir():
-            out.append(Finding("skeleton-drift", "MEDIUM", d,
-                               "skeleton folder missing -- re-run the installer "
-                               "(idempotent) or create the directory"))
+            out.append(
+                Finding(
+                    "skeleton-drift",
+                    "MEDIUM",
+                    d,
+                    "skeleton folder missing -- re-run the installer "
+                    "(idempotent) or create the directory",
+                )
+            )
     return out
 
 
 DETECTORS = [
-    orphan_working_files, stale_fleeting, stale_answer_drafts, extract_path_broken,
-    frontmatter_schema_check, frontmatter_link_check, broken_wikilinks,
-    dashboard_field_drift, graph_analyze, fama_exposure, misplaced_note,
-    audit_unpaired_writes, vault_hash_drift, design_system_drift,
-    audit_log_size, hub_threshold, skeleton_drift,
+    orphan_working_files,
+    stale_fleeting,
+    stale_answer_drafts,
+    extract_path_broken,
+    frontmatter_schema_check,
+    frontmatter_link_check,
+    broken_wikilinks,
+    dashboard_field_drift,
+    graph_analyze,
+    fama_exposure,
+    misplaced_note,
+    audit_unpaired_writes,
+    vault_hash_drift,
+    design_system_drift,
+    audit_log_size,
+    hub_threshold,
+    skeleton_drift,
 ]
 
 
@@ -687,7 +832,7 @@ def run_all(vault: Path) -> list[Finding]:
     findings: list[Finding] = []
     for det in DETECTORS:
         findings += det(vault)
-    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())   # one clock per pass
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())  # one clock per pass
     for f in findings:
         f.timestamp = now
     return sorted(findings, key=lambda f: (-SEVERITY_RANK[f.severity], f.detector, f.path))
@@ -715,16 +860,23 @@ def append_findings_jsonl(path: Path, findings: list[Finding]) -> None:
 # --------------------------------------------------------------------------- #
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", type=Path, help="vault root to lint")
     ap.add_argument("--json", action="store_true", help="emit findings as JSON")
-    ap.add_argument("--jsonl-out", type=Path,
-                    help="append findings as JSONL to this file; creates an empty file when clean")
-    ap.add_argument("--gate", metavar="DETECTORS",
-                    help="comma-separated detector names that MUST be zero; exit 1 if any "
-                         "such finding exists (e.g. dashboard-field-drift). All other "
-                         "findings stay advisory — printed, not fatal.")
+    ap.add_argument(
+        "--jsonl-out",
+        type=Path,
+        help="append findings as JSONL to this file; creates an empty file when clean",
+    )
+    ap.add_argument(
+        "--gate",
+        metavar="DETECTORS",
+        help="comma-separated detector names that MUST be zero; exit 1 if any "
+        "such finding exists (e.g. dashboard-field-drift). All other "
+        "findings stay advisory — printed, not fatal.",
+    )
     args = ap.parse_args()
 
     if not args.vault:
@@ -747,8 +899,10 @@ def main() -> None:
         gated_names = {n.strip() for n in args.gate.split(",") if n.strip()}
         blocking = [f for f in findings if f.detector in gated_names]
         if blocking:
-            print(f"\n  GATE FAIL: {len(blocking)} finding(s) from "
-                  f"{{{', '.join(sorted(gated_names))}}} must be zero.")
+            print(
+                f"\n  GATE FAIL: {len(blocking)} finding(s) from "
+                f"{{{', '.join(sorted(gated_names))}}} must be zero."
+            )
             sys.exit(1)
         print(f"\n  gate clean ✓ ({', '.join(sorted(gated_names))})")
     sys.exit(0)

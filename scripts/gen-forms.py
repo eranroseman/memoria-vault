@@ -99,7 +99,12 @@ def generate() -> dict:
                 "memoria-fleeting-capture",
                 [
                     _field("title", "Title", {"type": "text"}, description="Optional short title."),
-                    _field("body", "Capture", {"type": "textarea"}, description="The thought, quote, or idea."),
+                    _field(
+                        "body",
+                        "Capture",
+                        {"type": "textarea"},
+                        description="The thought, quote, or idea.",
+                    ),
                 ],
             ),
             _form(
@@ -108,8 +113,17 @@ def generate() -> dict:
                 [
                     _field("title", "Source title", {"type": "text"}, required=True),
                     _field("entity", "Catalog entity", _notes("catalog"), required=True),
-                    _field("source_type", "Source type", _fixed_select(["paper", "dataset", "repository", "web-page", "report"]), required=True),
-                    _field("evidence_level", "Evidence level", _fixed_select(source["enums"]["evidence_level"])),
+                    _field(
+                        "source_type",
+                        "Source type",
+                        _fixed_select(["paper", "dataset", "repository", "web-page", "report"]),
+                        required=True,
+                    ),
+                    _field(
+                        "evidence_level",
+                        "Evidence level",
+                        _fixed_select(source["enums"]["evidence_level"]),
+                    ),
                     _field("research_area", "Research area", _fixed_multi(research_area)),
                     _field("methodology", "Methodology", _fixed_multi(methodology)),
                     _field("summary", "In my words", {"type": "textarea"}),
@@ -120,7 +134,9 @@ def generate() -> dict:
                 "memoria-claim-capture",
                 [
                     _field("title", "Claim title", {"type": "text"}, required=True),
-                    _field("maturity", "Maturity", _radio(claim["enums"]["maturity"]), required=True),
+                    _field(
+                        "maturity", "Maturity", _radio(claim["enums"]["maturity"]), required=True
+                    ),
                     _field("sources", "Sources", _note_multi("catalog/papers"), required=True),
                     _field("topics", "Topics", _fixed_multi(topics)),
                     _field("claim", "Claim statement", {"type": "textarea"}, required=True),
@@ -142,7 +158,9 @@ def generate() -> dict:
                 [
                     _field("title", "Project title", {"type": "text"}, required=True),
                     _field("slug", "Project slug", {"type": "text"}, required=True),
-                    _field("scope_topics", "Scope topics", _fixed_multi(research_area), required=True),
+                    _field(
+                        "scope_topics", "Scope topics", _fixed_multi(research_area), required=True
+                    ),
                     _field("inquiry_population", "Population", {"type": "text"}, required=True),
                     _field("inquiry_intervention", "Intervention", {"type": "text"}),
                     _field("inquiry_comparison", "Comparison", {"type": "text"}),
@@ -150,7 +168,12 @@ def generate() -> dict:
                     _field("finer_feasible", "Feasible", {"type": "textarea"}),
                     _field("finer_novel", "Novel", {"type": "textarea"}),
                     _field("finer_relevant", "Relevant", {"type": "textarea"}),
-                    _field("output_mode", "Output mode", _radio(project["enums"]["output_mode"]), required=True),
+                    _field(
+                        "output_mode",
+                        "Output mode",
+                        _radio(project["enums"]["output_mode"]),
+                        required=True,
+                    ),
                 ],
             ),
             _form(

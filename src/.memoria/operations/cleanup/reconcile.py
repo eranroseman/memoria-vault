@@ -23,6 +23,7 @@ capture entry point *before* the gated note write — the durability anchor):
     {"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero",
      "note_path": "catalog/papers/<citekey>.md"}
 """
+
 from __future__ import annotations
 
 import json
@@ -88,10 +89,20 @@ def enqueue_reingest(citekey: str, reason: str, dry_run: bool = False) -> str:
     if dry_run:
         return "DRY"
     cmd = [
-        "hermes", "kanban", "create", f"Re-ingest {citekey}",
-        "--assignee", LIBRARIAN, "--skill", SKILL,
-        "--idempotency-key", f"reingest:{citekey}",
-        "--created-by", "sweeps", "--body", f"Re-ingest {citekey} ({reason}).",
+        "hermes",
+        "kanban",
+        "create",
+        f"Re-ingest {citekey}",
+        "--assignee",
+        LIBRARIAN,
+        "--skill",
+        SKILL,
+        "--idempotency-key",
+        f"reingest:{citekey}",
+        "--created-by",
+        "sweeps",
+        "--body",
+        f"Re-ingest {citekey} ({reason}).",
         "--json",
     ]
     try:
@@ -100,8 +111,10 @@ def enqueue_reingest(citekey: str, reason: str, dry_run: bool = False) -> str:
         return str(obj.get("id") or obj.get("task_id") or "queued")
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or e.stdout or "").strip()[:200]
-        print(f"[sweeps] enqueue failed for {citekey} (exit {e.returncode}): {detail}",
-              file=sys.stderr)
+        print(
+            f"[sweeps] enqueue failed for {citekey} (exit {e.returncode}): {detail}",
+            file=sys.stderr,
+        )
         return f"error:CalledProcessError:exit{e.returncode}"
     except subprocess.TimeoutExpired:
         print(f"[sweeps] enqueue timed out for {citekey}", file=sys.stderr)
@@ -118,26 +131,40 @@ def reconcile(log_path: Path, vault: Path, dry_run: bool = False) -> dict:
     for ck in records:
         if note_for(ck, vault) is None:
             orphans.append(ck)
-            enqueued.append({"citekey": ck, "card": enqueue_reingest(ck, "stub-never-landed", dry_run)})
-    return {"pass": "reconcile", "logged": len(records), "orphans": len(orphans),
-            "enqueued": enqueued, "dry_run": dry_run}
+            enqueued.append(
+                {"citekey": ck, "card": enqueue_reingest(ck, "stub-never-landed", dry_run)}
+            )
+    return {
+        "pass": "reconcile",
+        "logged": len(records),
+        "orphans": len(orphans),
+        "enqueued": enqueued,
+        "dry_run": dry_run,
+    }
 
 
 def retry(vault: Path, dry_run: bool = False) -> dict:
     """(b) re-drive captured notes stuck at the Tier-0 floor (Tier-1 never completed)."""
     stuck = scan_captured(vault)
-    enqueued = [{"citekey": n["citekey"], "card": enqueue_reingest(n["citekey"], "tier1-incomplete", dry_run)}
-                for n in stuck]
+    enqueued = [
+        {
+            "citekey": n["citekey"],
+            "card": enqueue_reingest(n["citekey"], "tier1-incomplete", dry_run),
+        }
+        for n in stuck
+    ]
     return {"pass": "retry", "stuck": len(stuck), "enqueued": enqueued, "dry_run": dry_run}
 
 
 # --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
-    ap = argparse.ArgumentParser(
-        description="Ingest backstops: reconcile + retry sweeps (ADR-30)")
+
+    ap = argparse.ArgumentParser(description="Ingest backstops: reconcile + retry sweeps (ADR-30)")
     ap.add_argument("--vault", help="vault root")
-    ap.add_argument("--log", help="capture-intake.jsonl (default <vault>/system/logs/capture-intake.jsonl)")
+    ap.add_argument(
+        "--log", help="capture-intake.jsonl (default <vault>/system/logs/capture-intake.jsonl)"
+    )
     ap.add_argument("--reconcile", action="store_true", help="run pass (a) only")
     ap.add_argument("--retry", action="store_true", help="run pass (b) only")
     ap.add_argument("--dry-run", action="store_true", help="report without enqueuing")

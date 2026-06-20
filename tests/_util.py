@@ -1,5 +1,6 @@
 """Helpers for the L1 pytest tree (ADR-44)."""
 
+
 class CheckHarness:
     """Minimal pass/fail harness for the extracted L1 tests (ADR-44)."""
 

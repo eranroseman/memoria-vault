@@ -10,7 +10,7 @@ def _vault(tmp_path: Path) -> Path:
     lo = tmp_path / ".memoria" / "lane-overrides"
     lo.mkdir(parents=True)
     (lo / "librarian.yaml").write_text(
-        'profile: memoria-librarian\nrouting:\n  write_scope:\n'
+        "profile: memoria-librarian\nrouting:\n  write_scope:\n"
         '    - "inbox/"\n    - "catalog/"\n'
         '    - "notes/fleeting/"\n    - "notes/sources/"\n',
         encoding="utf-8",
@@ -73,8 +73,9 @@ def test_existing_hub_suppresses_handoff(tmp_path):
         encoding="utf-8",
     )
 
-    assert hub_handoff.handoff_hub_thresholds(
-        v, threshold=3, card_runner=lambda *a, **k: None) == []
+    assert (
+        hub_handoff.handoff_hub_thresholds(v, threshold=3, card_runner=lambda *a, **k: None) == []
+    )
 
 
 def test_map_lane_ceiling_still_rejects_canonical_hub_home(tmp_path):

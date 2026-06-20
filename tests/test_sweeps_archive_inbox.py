@@ -4,6 +4,7 @@ A resolved inbox card (lifecycle current + `resolved:` stamp) older
 than N days flips to lifecycle: archived in place; everything else is left
 alone — so the inbox demonstrably converges to empty when cards are handled.
 """
+
 import datetime
 
 from operations.cleanup import archive_inbox as m
@@ -22,9 +23,12 @@ def _days_ago(n):
 
 
 def test_old_resolved_card_archived(tmp_path):
-    p = _card(tmp_path, "flag-a.md",
-              "---\ntype: flag\nlifecycle: current\n"
-              f"resolved: {_days_ago(45)}\ncertainty: likely\n---\nBody stays.\n")
+    p = _card(
+        tmp_path,
+        "flag-a.md",
+        "---\ntype: flag\nlifecycle: current\n"
+        f"resolved: {_days_ago(45)}\ncertainty: likely\n---\nBody stays.\n",
+    )
     out = m.sweep(tmp_path, days=30)
     assert out["archived"] == ["inbox/flag-a.md"]
     text = p.read_text(encoding="utf-8")
@@ -36,15 +40,21 @@ def test_old_resolved_card_archived(tmp_path):
 
 
 def test_invalid_retracted_lifecycle_is_not_archived(tmp_path):
-    _card(tmp_path, "cand-r.md",
-          f"---\ntype: candidate\nlifecycle: retracted\nresolved: {_days_ago(31)}\n---\n")
+    _card(
+        tmp_path,
+        "cand-r.md",
+        f"---\ntype: candidate\nlifecycle: retracted\nresolved: {_days_ago(31)}\n---\n",
+    )
     out = m.sweep(tmp_path, days=30)
     assert out["archived"] == [] and out["skipped_unresolved"] == 1
 
 
 def test_fresh_resolved_card_untouched(tmp_path):
-    p = _card(tmp_path, "flag-fresh.md",
-              f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(3)}\n---\n")
+    p = _card(
+        tmp_path,
+        "flag-fresh.md",
+        f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(3)}\n---\n",
+    )
     out = m.sweep(tmp_path, days=30)
     assert out["archived"] == [] and out["skipped_fresh"] == 1
     assert "lifecycle: current" in p.read_text(encoding="utf-8")
@@ -82,8 +92,11 @@ def test_default_n_when_config_absent(tmp_path, capsys):
 
 
 def test_idempotent_rerun(tmp_path):
-    _card(tmp_path, "flag-a.md",
-          f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(40)}\n---\nbody\n")
+    _card(
+        tmp_path,
+        "flag-a.md",
+        f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(40)}\n---\nbody\n",
+    )
     first = m.sweep(tmp_path, days=30)
     second = m.sweep(tmp_path, days=30)
     assert first["archived"] == ["inbox/flag-a.md"]
@@ -91,8 +104,11 @@ def test_idempotent_rerun(tmp_path):
 
 
 def test_dry_run_writes_nothing(tmp_path):
-    p = _card(tmp_path, "flag-a.md",
-              f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(40)}\n---\n")
+    p = _card(
+        tmp_path,
+        "flag-a.md",
+        f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(40)}\n---\n",
+    )
     out = m.sweep(tmp_path, days=30, dry_run=True)
     assert out["archived"] == ["inbox/flag-a.md"] and out["dry_run"] is True
     assert "lifecycle: current" in p.read_text(encoding="utf-8")
@@ -101,10 +117,16 @@ def test_dry_run_writes_nothing(tmp_path):
 def test_inbox_converges_to_empty(tmp_path):
     """Acceptance: handled cards drain; nothing active remains after the sweep."""
     import yaml
+
     for i in range(3):
-        _card(tmp_path, f"done-{i}.md",
-              f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(31 + i)}\n---\n")
+        _card(
+            tmp_path,
+            f"done-{i}.md",
+            f"---\ntype: flag\nlifecycle: current\nresolved: {_days_ago(31 + i)}\n---\n",
+        )
     m.sweep(tmp_path, days=30)
-    states = [yaml.safe_load(p.read_text(encoding="utf-8").split("---")[1])["lifecycle"]
-              for p in sorted((tmp_path / "inbox").glob("*.md"))]
+    states = [
+        yaml.safe_load(p.read_text(encoding="utf-8").split("---")[1])["lifecycle"]
+        for p in sorted((tmp_path / "inbox").glob("*.md"))
+    ]
     assert states == ["archived"] * 3

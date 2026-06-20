@@ -47,7 +47,8 @@ def gap_taxonomy(
             sources = note.frontmatter.get("sources") or []
             source_count = len(sources) if isinstance(sources, list) else 1 if sources else 0
             support_degree = sum(
-                1 for edge in component_edges
+                1
+                for edge in component_edges
                 if edge.relation == "supports" and key in {edge.source, edge.target}
             )
             if source_count == 1 or (source_count == 0 and support_degree <= 1):
@@ -102,5 +103,7 @@ def gap_taxonomy(
             }
         )
 
-    ordered = lambda rows: sorted(rows, key=lambda r: (-int(r.get("impact", 0)), r["kind"], r["path"]))
+    ordered = lambda rows: sorted(
+        rows, key=lambda r: (-int(r.get("impact", 0)), r["kind"], r["path"])
+    )
     return ordered(findings), ordered(advisories)

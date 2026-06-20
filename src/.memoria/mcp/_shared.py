@@ -3,6 +3,7 @@
 Dependency-free (stdlib only) so every module that imports this can still run and
 self-test without PyYAML, ``mcp``, or any other optional runtime dependency.
 """
+
 from __future__ import annotations
 
 from memoria.runtime.jsonl import append_jsonl, iter_jsonl

@@ -17,8 +17,11 @@ REQUIRED_SECTIONS = ("## Input", "## Expected behavior", "## Scoring rubric")
 
 
 def _gold_files():
-    return [p for p in sorted(EVAL.glob("*.md"))
-            if not p.name.startswith("_") and p.name not in ("README.md", "last-run.md")]
+    return [
+        p
+        for p in sorted(EVAL.glob("*.md"))
+        if not p.name.startswith("_") and p.name not in ("README.md", "last-run.md")
+    ]
 
 
 def _frontmatter(path: Path) -> dict:
@@ -76,14 +79,20 @@ def _fixture_vault(tmp_path: Path) -> Path:
     (d / "find-x.md").write_text(
         "---\ntype: eval-task\ntitle: Find X\nlifecycle: current\n"
         "workflow: find\nlane: catalog\n---\n## Input\nQ\n"
-        "## Expected behavior\nE\n## Scoring rubric\nR\n", encoding="utf-8")
+        "## Expected behavior\nE\n## Scoring rubric\nR\n",
+        encoding="utf-8",
+    )
     (d / "verify-y.md").write_text(
         "---\ntype: eval-task\ntitle: Verify Y\nlifecycle: current\n"
         "workflow: verify\nlane: verify\n---\n## Input\nQ\n"
-        "## Expected behavior\nE\n## Scoring rubric\nR\n", encoding="utf-8")
+        "## Expected behavior\nE\n## Scoring rubric\nR\n",
+        encoding="utf-8",
+    )
     (d / "retired.md").write_text(
         "---\ntype: eval-task\ntitle: Old\nlifecycle: archived\n"
-        "workflow: find\nlane: catalog\n---\nbody\n", encoding="utf-8")
+        "workflow: find\nlane: catalog\n---\nbody\n",
+        encoding="utf-8",
+    )
     (d / "notes.md").write_text("---\ntopic: scratch\n---\nuntyped\n", encoding="utf-8")
     return tmp_path
 
@@ -107,8 +116,7 @@ def test_dry_run_produces_the_right_card_set(tmp_path, capsys):
 def test_dispatch_is_idempotent_per_task_and_quarter(tmp_path, monkeypatch):
     v = _fixture_vault(tmp_path)
     created: list[dict] = []
-    monkeypatch.setattr(eval_dispatch, "create_card",
-                        lambda card: created.append(card) or "card-1")
+    monkeypatch.setattr(eval_dispatch, "create_card", lambda card: created.append(card) or "card-1")
     day = datetime.date(2026, 5, 1)
     eval_dispatch.dispatch(v, today=day)
     eval_dispatch.dispatch(v, today=day)  # an on-demand re-run inside the quarter

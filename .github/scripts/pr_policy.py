@@ -17,6 +17,7 @@ what future automation is allowed or encouraged to do.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
+
 import os
 
 # Trusted authors: docs-only PRs auto-approve; sensitive-path PRs fall to
@@ -54,9 +55,8 @@ SENSITIVE_PATHS = {
 
 
 def is_safe(path: str) -> bool:
-    return (
-        any(path.startswith(p) for p in SAFE_PREFIXES)
-        and any(path.endswith(s) for s in SAFE_SUFFIXES)
+    return any(path.startswith(p) for p in SAFE_PREFIXES) and any(
+        path.endswith(s) for s in SAFE_SUFFIXES
     )
 
 
@@ -75,14 +75,20 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     if sensitive_paths and not trusted:
         return "block", f"Sensitive paths changed by untrusted author: {sensitive_paths[:5]}"
     if sensitive_paths:
-        return "needs_human", f"Sensitive paths changed — manual review required: {sensitive_paths[:5]}"
+        return (
+            "needs_human",
+            f"Sensitive paths changed — manual review required: {sensitive_paths[:5]}",
+        )
     if trusted and all_safe:
         return "auto_approve", (
             f"Trusted author (@{pr_author}), all {len(changed_paths)} changed "
             "file(s) are in safe paths (docs / release / notes)."
         )
     if all_safe:
-        return "needs_human", f"Safe file types only, but @{pr_author} is not on the trusted-author list."
+        return (
+            "needs_human",
+            f"Safe file types only, but @{pr_author} is not on the trusted-author list.",
+        )
     return "needs_human", "Application code or unclassified path — human review required."
 
 
@@ -120,11 +126,13 @@ def main() -> int:
     pr_draft = os.environ.get("PR_DRAFT", "false").lower() == "true"
 
     session = requests.Session()
-    session.headers.update({
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
+    session.headers.update(
+        {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+    )
 
     files = get_pr_files(session, repo, pr_number)
     changed_paths = [f["filename"] for f in files]

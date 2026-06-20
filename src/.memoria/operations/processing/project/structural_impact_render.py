@@ -31,7 +31,7 @@ def previous_payload(path: Path) -> dict[str, Any] | None:
     end = text.find(JSON_END)
     if start == -1 or end == -1 or end <= start:
         return None
-    raw = text[start + len(JSON_START):end].strip()
+    raw = text[start + len(JSON_START) : end].strip()
     try:
         data = json.loads(raw)
         return data if isinstance(data, dict) else None

@@ -52,7 +52,7 @@ def _parse(path: Path) -> tuple[dict, str]:
     m = _FM_RE.match(text)
     if not m:
         return {}, text
-    return (yaml.safe_load(m.group(1)) or {}), text[m.end():]
+    return (yaml.safe_load(m.group(1)) or {}), text[m.end() :]
 
 
 def list_patterns(vault: Path, mode: str = "") -> list[dict]:
@@ -67,24 +67,35 @@ def list_patterns(vault: Path, mode: str = "") -> list[dict]:
             continue
         if mode and fm.get("mode") not in (mode, "both"):
             continue
-        out.append({"id": p.stem, "title": fm.get("title", p.stem),
-                    "mode": fm.get("mode"), "action": fm.get("action"),
-                    "posture": fm.get("posture"),
-                    "output_target": fm.get("output_target")})
+        out.append(
+            {
+                "id": p.stem,
+                "title": fm.get("title", p.stem),
+                "mode": fm.get("mode"),
+                "action": fm.get("action"),
+                "posture": fm.get("posture"),
+                "output_target": fm.get("output_target"),
+            }
+        )
     return out
 
 
-def run_pattern(vault: Path, pattern_id: str, input_text: str,
-                input_ref: str = "") -> dict:
+def run_pattern(vault: Path, pattern_id: str, input_text: str, input_ref: str = "") -> dict:
     """Compose preamble + pattern + input; enforce the gated-zone rule; log provenance."""
     path = vault / PATTERNS_RELDIR / f"{pattern_id}.md"
     if not path.is_file():
-        return {"error": "unknown-pattern", "pattern": pattern_id,
-                "available": [p["id"] for p in list_patterns(vault)]}
+        return {
+            "error": "unknown-pattern",
+            "pattern": pattern_id,
+            "available": [p["id"] for p in list_patterns(vault)],
+        }
     fm, body = _parse(path)
     if fm.get("lifecycle") != "current":
-        return {"error": "pattern-not-current", "pattern": pattern_id,
-                "lifecycle": fm.get("lifecycle")}
+        return {
+            "error": "pattern-not-current",
+            "pattern": pattern_id,
+            "lifecycle": fm.get("lifecycle"),
+        }
     target = (fm.get("output_target") or "").lstrip("/")
     gated = _gated_prefixes(vault)
     dry_run = (not target) or target.startswith(gated)
@@ -93,12 +104,14 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str,
     prompt = body.replace("{{input}}", input_text or f"[see {input_ref}]")
     run_id = str(uuid.uuid4())[:8]
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc)
-                       .strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "run_id": run_id, "pattern": pattern_id,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_id": run_id,
+        "pattern": pattern_id,
         "version": str(fm.get("version", "")),
-        "input_ref": input_ref, "input_chars": len(input_text or ""),
-        "output_target": target, "dry_run": dry_run,
+        "input_ref": input_ref,
+        "input_chars": len(input_text or ""),
+        "output_target": target,
+        "dry_run": dry_run,
     }
     provenance_logged = True
     try:
@@ -110,11 +123,14 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str,
         # The run is still returned (the prompt is the product), but the caller —
         # and the operator, via stderr — must know this run left no provenance.
         provenance_logged = False
-        print(f"[patterns_mcp] WARNING: provenance write to {PROVENANCE_RELPATH} "
-              f"failed for run {run_id} ({pattern_id}): {type(exc).__name__}: {exc}",
-              file=sys.stderr)
+        print(
+            f"[patterns_mcp] WARNING: provenance write to {PROVENANCE_RELPATH} "
+            f"failed for run {run_id} ({pattern_id}): {type(exc).__name__}: {exc}",
+            file=sys.stderr,
+        )
     result = {
-        "run_id": run_id, "pattern": pattern_id,
+        "run_id": run_id,
+        "pattern": pattern_id,
         "prompt": f"{preamble}\n\n---\n\n{prompt}".strip(),
         "output_target": target,
         "dry_run": dry_run,
@@ -124,8 +140,10 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str,
     if not provenance_logged:
         result["provenance_logged"] = False
     if dry_run:
-        result["note"] = ("output_target is missing or review-gated — the run is "
-                          "dry-run only; fix the pattern file (the Linter flags it)")
+        result["note"] = (
+            "output_target is missing or review-gated — the run is "
+            "dry-run only; fix the pattern file (the Linter flags it)"
+        )
     return result
 
 
@@ -160,8 +178,9 @@ def resolve_vault(arg: str | None) -> Path:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
     ap.add_argument("--list", action="store_true", help="one-shot: list runnable patterns")
     args = ap.parse_args()

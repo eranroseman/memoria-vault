@@ -67,9 +67,9 @@ def _profile_rows() -> list[tuple[str, str, str, str]]:
     overrides = ROOT / "src/.memoria/lane-overrides"
     for directory in sorted(p for p in profiles.iterdir() if p.is_dir()):
         config = yaml.safe_load((directory / "config.yaml").read_text(encoding="utf-8")) or {}
-        distribution = yaml.safe_load(
-            (directory / "distribution.yaml").read_text(encoding="utf-8")
-        ) or {}
+        distribution = (
+            yaml.safe_load((directory / "distribution.yaml").read_text(encoding="utf-8")) or {}
+        )
         lane_file = overrides / f"{directory.name.removeprefix('memoria-')}.yaml"
         lane = yaml.safe_load(lane_file.read_text(encoding="utf-8")) if lane_file.is_file() else {}
         scope = ((lane or {}).get("routing") or {}).get("write_scope") or []
@@ -117,8 +117,12 @@ def _local_link_errors() -> list[str]:
 
 def _skill_errors() -> list[str]:
     errors = []
-    skill_roots = [ROOT / ".agents" / "skills", ROOT / ".claude" / "skills",
-                   ROOT / ".codex" / "skills", ROOT / ".kilo" / "skills"]
+    skill_roots = [
+        ROOT / ".agents" / "skills",
+        ROOT / ".claude" / "skills",
+        ROOT / ".codex" / "skills",
+        ROOT / ".kilo" / "skills",
+    ]
     for path in sorted(p for root in skill_roots if root.is_dir() for p in root.glob("*/SKILL.md")):
         text = path.read_text(encoding="utf-8")
         if not text.startswith("---\n"):

@@ -87,7 +87,7 @@ def test_l2_smoke_deploys_policy_plugin_with_repo_import_path(tmp_path):
     l2_smoke.deploy_policy_plugin(ROOT, profile_dir, "memoria-writer", vault)
 
     plugin = (profile_dir / "plugins/memoria-policy-gate/__init__.py").read_text(encoding="utf-8")
-    assert "PROFILE = \"memoria-writer\"" in plugin
+    assert 'PROFILE = "memoria-writer"' in plugin
     assert f"sys.path.insert(0, {str(ROOT)!r})" in plugin
 
 
@@ -99,21 +99,26 @@ def test_l2_smoke_asserts_artifact_and_audit_row(tmp_path, capsys):
     audit = vault / "system/logs/audit.jsonl"
     audit.parent.mkdir(parents=True)
     audit.write_text(
-        json.dumps({"path": "elsewhere.md", "decision": "allow_with_log"}) + "\n"
-        + json.dumps({
-            "path": "projects/l2-smoke/live-dispatch.md",
-            "decision": "allow_with_log",
-            "before_hash": "0" * 64,
-            "task_id": "task-1",
-        })
+        json.dumps({"path": "elsewhere.md", "decision": "allow_with_log"})
         + "\n"
-        + json.dumps({
-            "path": "projects/l2-smoke/live-dispatch.md",
-            "decision": "write_complete",
-            "before_hash": "0" * 64,
-            "after_hash": "1" * 64,
-            "task_id": "task-1",
-        })
+        + json.dumps(
+            {
+                "path": "projects/l2-smoke/live-dispatch.md",
+                "decision": "allow_with_log",
+                "before_hash": "0" * 64,
+                "task_id": "task-1",
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "path": "projects/l2-smoke/live-dispatch.md",
+                "decision": "write_complete",
+                "before_hash": "0" * 64,
+                "after_hash": "1" * 64,
+                "task_id": "task-1",
+            }
+        )
         + "\n",
         encoding="utf-8",
     )

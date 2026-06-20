@@ -69,7 +69,8 @@ def test_command_labels_are_direct_and_article_free():
             assert choice["macro"]["name"] == choice["name"]
     banned = re.compile(
         r"^Memoria: (?:delegate a task|catalog a source|link a claim|map the corpus|"
-        r"draft a section|verify a draft|run a pattern|workspace )")
+        r"draft a section|verify a draft|run a pattern|workspace )"
+    )
     assert not any(banned.match(name) for name in commands)
 
 
@@ -81,10 +82,10 @@ def test_macro_choices_reference_existing_scripts():
             if cmd["type"] != "UserScript":
                 continue
             script = SRC / cmd["path"]
-            assert script.is_file(), (
-                f"{choice['name']}: script {cmd['path']} missing under src/")
+            assert script.is_file(), f"{choice['name']}: script {cmd['path']} missing under src/"
             assert cmd["path"].startswith("system/scripts/"), (
-                f"{choice['name']}: script {cmd['path']} outside system/scripts/")
+                f"{choice['name']}: script {cmd['path']} outside system/scripts/"
+            )
 
 
 def test_macro_ids_exist_and_are_unique():
@@ -121,12 +122,14 @@ def test_lane_scripts_match_lane_profile_and_skills():
         assert lane and assignee and skill, f"{fname}: missing LANE/ASSIGNEE/SKILL const"
         assert lane in lane_profile, f"{fname}: lane '{lane}' not in tasks_mcp LANE_PROFILE"
         assert assignee == lane_profile[lane], (
-            f"{fname}: assignee {assignee} != LANE_PROFILE[{lane}] ({lane_profile[lane]})")
+            f"{fname}: assignee {assignee} != LANE_PROFILE[{lane}] ({lane_profile[lane]})"
+        )
         skill_dir = PROFILES / assignee / "skills" / skill
         assert skill_dir.is_dir(), f"{fname}: skill dir {skill_dir} missing"
         seen_lanes.add(lane)
     assert seen_lanes == set(lane_profile) - {"code"}, (
-        f"lane scripts cover {sorted(seen_lanes)}, expected every non-code lane")
+        f"lane scripts cover {sorted(seen_lanes)}, expected every non-code lane"
+    )
 
 
 def test_assist_surface_commands_are_staged_and_skill_backed():
@@ -174,7 +177,7 @@ def test_structured_source_capture_is_palette_wired_and_staged():
     assert cmd["path"] == "system/scripts/structured-source-capture.js"
     script = (SCRIPTS / "structured-source-capture.js").read_text(encoding="utf-8")
     for marker in (
-        'openForm(FORM_NAME)',
+        "openForm(FORM_NAME)",
         'FORM_NAME = "memoria-source-capture"',
         'SOURCE_FOLDER = "notes/sources/"',
         '"type: source"',
@@ -189,6 +192,7 @@ def test_structured_source_capture_is_palette_wired_and_staged():
     ):
         assert marker in script
 
+
 def test_zotero_capture_writes_intake_log_where_readers_look():
     """capture-from-zotero.js must append its durability anchor to the same
     capture-intake.jsonl path the readers use (ingest_mcp INTAKE_LOG and the
@@ -198,7 +202,8 @@ def test_zotero_capture_writes_intake_log_where_readers_look():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     log = _const(script, "LOG")
     assert log == intake_log, (
-        f"capture-from-zotero.js writes {log!r} but ingest_mcp.py reads {intake_log!r}")
+        f"capture-from-zotero.js writes {log!r} but ingest_mcp.py reads {intake_log!r}"
+    )
 
 
 def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
@@ -219,15 +224,15 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     ):
         assert field in script
     assert "function hermesCommand()" in script
-    assert 'command -v hermes' in script
-    assert '$HOME/.local/bin' in script
+    assert "command -v hermes" in script
+    assert "$HOME/.local/bin" in script
     assert "Hermes not found on PATH" in script
 
 
 def test_zotero_capture_materializes_schema_valid_tier0_catalog_stub():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     start = script.index("async function writePaperStub")
-    stub = script[start:script.index("async function uniquePath", start)]
+    stub = script[start : script.index("async function uniquePath", start)]
     for marker in (
         '"type: paper"',
         '"lifecycle: current"',
@@ -272,7 +277,7 @@ def test_exploration_trace_capture_is_project_local_and_noncanonical():
         "type: hub",
     ):
         assert forbidden not in script
-    assert 'hermes kanban create' not in script
+    assert "hermes kanban create" not in script
 
 
 def test_zotero_capture_uses_bbt_json_rpc_not_cayw():
@@ -336,11 +341,12 @@ def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
     assert "[!similarity]- Pre-file similarity shadow" in script
     assert 'SIMILARITY_LOG = "system/logs/pre-file-similarity.jsonl"' in script
     assert "qmd search --format json --full-path -n 12" in script
-    assert "Report-only qmd neighbour check; no block, auto-merge, or calibrated threshold." in script
+    assert (
+        "Report-only qmd neighbour check; no block, auto-merge, or calibrated threshold." in script
+    )
     assert 'event: "pre_file_similarity_shadow"' in script
     assert "query_sha256" in script and "query_chars" in script
-    assert "SIMILARITY_SCOPES = [\"notes/claims/\", \"notes/sources/\"]" in script
-
+    assert 'SIMILARITY_SCOPES = ["notes/claims/", "notes/sources/"]' in script
 
 
 def test_link_claim_writes_suggestions_callout_before_delegating():
@@ -380,6 +386,7 @@ def test_verify_draft_writes_verification_callout_before_delegating():
     assert "The deterministic [!verification] preflight callout has been written" in script
     assert "hermes kanban create" in script
 
+
 def test_capture_and_catalog_cards_request_source_note_stub():
     for fname in ("capture-from-url.js", "capture-from-zotero.js", "catalog-source.js"):
         script = (SCRIPTS / fname).read_text(encoding="utf-8")
@@ -400,10 +407,10 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     assert 'DISPOSITION_LOG = "system/logs/disposition.jsonl"' in script
     assert 'event: "inbox_card_resolved"' in script
     assert 'event: "work_prompt_reviewed"' in script
-    assert 'duration_minutes: durationMinutes(openedAt, resolvedAt)' in script
-    assert 'appendJsonl(app, ATTENTION_LOG, attentionRow)' in script
-    assert 'appendJsonl(app, TRIAGE_LOG, triageRow)' in script
-    assert 'appendJsonl(app, DISPOSITION_LOG, dispositionRow)' in script
+    assert "duration_minutes: durationMinutes(openedAt, resolvedAt)" in script
+    assert "appendJsonl(app, ATTENTION_LOG, attentionRow)" in script
+    assert "appendJsonl(app, TRIAGE_LOG, triageRow)" in script
+    assert "appendJsonl(app, DISPOSITION_LOG, dispositionRow)" in script
 
 
 def test_delegate_task_picker_uses_work_labels_not_profile_ids():
@@ -419,15 +426,17 @@ def test_delegate_task_picker_uses_work_labels_not_profile_ids():
         "Coordinate code handoff",
     ):
         assert label in script
-    assert 'laneNames.map((l) => LANE_LABELS[l])' in script
+    assert "laneNames.map((l) => LANE_LABELS[l])" in script
     assert 'l + " → " + LANES[l]' not in script
 
 
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]
-        for c in _choices() if c["type"] == "Macro"
-        for cmd in c["macro"]["commands"] if cmd["type"] == "UserScript"
+        for c in _choices()
+        if c["type"] == "Macro"
+        for cmd in c["macro"]["commands"]
+        if cmd["type"] == "UserScript"
     }
     for fname in [
         *LANE_SCRIPTS,
@@ -444,7 +453,7 @@ def test_start_project_scaffolds_project_gate_workspace():
     script = (SCRIPTS / "start-project.js").read_text(encoding="utf-8")
     for marker in (
         'FORM_NAME = "memoria-project-start"',
-        'openForm(FORM_NAME)',
+        "openForm(FORM_NAME)",
         '"projects/" + data.slug',
         'root + "/project.md"',
         'root + "/thesis.md"',

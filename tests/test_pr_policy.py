@@ -56,15 +56,21 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
 
 
 def test_decide_auto_approves_trusted_safe_prose_only():
-    decision, _reason = decide(["docs/reference/policy-mcp.md", "docs/reference/profiles.md"], "eranroseman", False)
+    decision, _reason = decide(
+        ["docs/reference/policy-mcp.md", "docs/reference/profiles.md"], "eranroseman", False
+    )
 
     assert decision == "auto_approve"
 
 
 def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
-    sensitive_decision, reason = decide(["scripts/install.sh", "docs/reference/policy-mcp.md"], "eranroseman", False)
+    sensitive_decision, reason = decide(
+        ["scripts/install.sh", "docs/reference/policy-mcp.md"], "eranroseman", False
+    )
     adr_decision, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)
-    mixed_decision, _ = decide(["docs/reference/glossary.md", "src/.obsidian/app.json"], "eranroseman", False)
+    mixed_decision, _ = decide(
+        ["docs/reference/glossary.md", "src/.obsidian/app.json"], "eranroseman", False
+    )
     root_decision, _ = decide(["README.md"], "eranroseman", False)
 
     assert sensitive_decision == "needs_human"

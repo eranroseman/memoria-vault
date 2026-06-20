@@ -23,6 +23,7 @@ FRONTMATTER = re.compile(r"^---\n(.*?)\n---", re.S)
 
 # --- Python mirrors of the dashboard's dataviewjs parsers -------------------
 
+
 def _lane_skills_js(text: str) -> dict:
     """Mirror of the dashboard's laneSkills() line parser."""
     out = {"allow": [], "deny": []}
@@ -70,6 +71,7 @@ def _skill_files():
 
 # --- the dashboard ships and reads the right paths ---------------------------
 
+
 def test_dashboard_ships_and_reads_the_runtime_layer():
     assert DASHBOARD.is_file(), "skill-state.md missing from src/system/dashboards/"
     text = DASHBOARD.read_text(encoding="utf-8")
@@ -79,6 +81,7 @@ def test_dashboard_ships_and_reads_the_runtime_layer():
 
 
 # --- lane-override files keep the shape the JS parser assumes ----------------
+
 
 def test_lane_override_skills_parse_identically_to_yaml():
     files = sorted(LANES.glob("*.yaml"))
@@ -91,16 +94,19 @@ def test_lane_override_skills_parse_identically_to_yaml():
             expected = (policy.get(section) or {}).get("skills") or []
             assert all(isinstance(s, str) for s in expected), (
                 f"{f.name}: policy.{section}.skills must be flat strings "
-                "(the dashboard's line parser can't read nested values)")
+                "(the dashboard's line parser can't read nested values)"
+            )
             got = _lane_skills_js(text)[section]
             assert got == expected, (
                 f"{f.name}: dashboard parser reads policy.{section}.skills as "
                 f"{got}, YAML says {expected} — the file's indentation/format "
-                "drifted from what skill-state.md assumes")
+                "drifted from what skill-state.md assumes"
+            )
 
 
 # --- SKILL.md frontmatter keeps the shape the JS parser assumes,
 #     and the runtime layer is internally consistent --------------------------
+
 
 def test_skill_frontmatter_matches_js_parser_and_is_consistent():
     skills = _skill_files()
@@ -115,7 +121,8 @@ def test_skill_frontmatter_matches_js_parser_and_is_consistent():
         assert meta["lane"], f"{where}: no metadata.memoria.lane the dashboard can show"
         assert meta["skill_id"], f"{where}: no skill_id the dashboard can show"
         assert meta["skill_id"] not in seen_ids, (
-            f"{where}: skill_id duplicates {seen_ids[meta['skill_id']]}")
+            f"{where}: skill_id duplicates {seen_ids[meta['skill_id']]}"
+        )
         seen_ids[meta["skill_id"]] = where
 
 
@@ -140,4 +147,5 @@ def test_every_skill_shipping_profile_has_a_lane_override():
         lane_file = LANES / (profile.removeprefix("memoria-") + ".yaml")
         assert lane_file.is_file(), (
             f"{profile} ships skills but has no lane-override — "
-            "the dashboard would show it as a consistency finding")
+            "the dashboard would show it as a consistency finding"
+        )

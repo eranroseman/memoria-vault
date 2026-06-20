@@ -52,6 +52,7 @@ internally.
 
     python policy_hook.py --profile memoria-writer    # reads one JSON event on stdin
 """
+
 from __future__ import annotations
 
 import argparse
@@ -84,11 +85,18 @@ WRITE_KEYWORDS = {
 # (e.g. a Hermes update adding toolsets the denylist doesn't know) — fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
 # is never caught.
-DENY_DIRECT_TOOLS = frozenset({
-    "write_file", "patch", "read_file", "search_files",   # file toolset
-    "terminal", "run_command",                              # terminal toolset
-    "code_execution", "execute_code",                       # code-exec toolset
-})
+DENY_DIRECT_TOOLS = frozenset(
+    {
+        "write_file",
+        "patch",
+        "read_file",
+        "search_files",  # file toolset
+        "terminal",
+        "run_command",  # terminal toolset
+        "code_execution",
+        "execute_code",  # code-exec toolset
+    }
+)
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
 # Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
@@ -188,45 +196,54 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
 
     Side effect on allow: stashes before_hash so the post_tool_call pass can
     complete the reversibility record. Pure enough to unit-test otherwise."""
-    _prune_stale_pending(vault)            # opportunistic; never raises
+    _prune_stale_pending(vault)  # opportunistic; never raises
     tool_name = payload.get("tool_name", "")
     t = (tool_name or "").lower()
     if "obsidian" in t and any(d in t for d in DENY_OBSIDIAN):
-        return {"decision": "block",                # hard deny -> never reaches a lane check
-                "reason": f"policy gate: '{tool_name}' is not permitted for any lane "
-                          f"(arbitrary command execution / destructive op has no path to gate)."}
-    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]   # strip server/toolset prefix
+        return {
+            "decision": "block",  # hard deny -> never reaches a lane check
+            "reason": f"policy gate: '{tool_name}' is not permitted for any lane "
+            f"(arbitrary command execution / destructive op has no path to gate).",
+        }
+    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]  # strip server/toolset prefix
     if base in DENY_DIRECT_TOOLS:
-        return {"decision": "block",                # MCP-only sandbox (D40) -> fail closed
-                "reason": f"policy gate: '{tool_name}' is direct filesystem/shell access -- "
-                          f"agents reach the vault only through MCP (D40/ADR-46); no lane "
-                          f"is permitted this toolset."}
+        return {
+            "decision": "block",  # MCP-only sandbox (D40) -> fail closed
+            "reason": f"policy gate: '{tool_name}' is direct filesystem/shell access -- "
+            f"agents reach the vault only through MCP (D40/ADR-46); no lane "
+            f"is permitted this toolset.",
+        }
     action = classify(tool_name)
     if action is None:
-        return {}                                  # read / terminal / ungated tool -> not our concern
+        return {}  # read / terminal / ungated tool -> not our concern
 
     path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault)
     if path is None:
-        return {}                                  # file write outside the vault -> gate governs vault zones only
+        return {}  # file write outside the vault -> gate governs vault zones only
     extra = payload.get("extra") or {}
     task_id = extra.get("task_id") or payload.get("session_id") or ""
 
     # Fail closed on our own decision: a write we can't identify is blocked.
     if not profile or not path or not task_id:
-        return {"decision": "block",
-                "reason": f"policy gate: cannot evaluate '{payload.get('tool_name')}' "
-                          f"(missing {'profile' if not profile else 'path' if not path else 'task_id'}) "
-                          f"-- blocked fail-closed."}
+        return {
+            "decision": "block",
+            "reason": f"policy gate: cannot evaluate '{payload.get('tool_name')}' "
+            f"(missing {'profile' if not profile else 'path' if not path else 'task_id'}) "
+            f"-- blocked fail-closed.",
+        }
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         import policy_mcp  # reuse the tested decision core
-    except Exception as exc:                         # import failure -> block the write
-        return {"decision": "block",
-                "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed."}
+    except Exception as exc:  # import failure -> block the write
+        return {
+            "decision": "block",
+            "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed.",
+        }
 
     resp = policy_mcp.PolicyEngine(vault).check(
-        profile, action, path, task_id, reason=f"obsidian:{payload.get('tool_name')}")
+        profile, action, path, task_id, reason=f"obsidian:{payload.get('tool_name')}"
+    )
     decision = resp.get("decision")
     rule = resp.get("policy_rule", "")
     if decision in ("allow", "allow_with_log"):
@@ -238,12 +255,16 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
             pend.write_text(json.dumps({"before_hash": before, "path": path}), encoding="utf-8")
         return {}
     if decision == "dry_run":
-        return {"decision": "block",
-                "reason": f"review-gated ({rule}): write to '{path}' must be human-approved "
-                          f"-- surface as a board comment; do not write directly."}
-    return {"decision": "block",                     # deny / anything unexpected
-            "reason": f"policy {decision} ({rule}): "
-                      f"{resp.get('message') or f'write to {path!r} not permitted for {profile}'}"}
+        return {
+            "decision": "block",
+            "reason": f"review-gated ({rule}): write to '{path}' must be human-approved "
+            f"-- surface as a board comment; do not write directly.",
+        }
+    return {
+        "decision": "block",  # deny / anything unexpected
+        "reason": f"policy {decision} ({rule}): "
+        f"{resp.get('message') or f'write to {path!r} not permitted for {profile}'}",
+    }
 
 
 def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
@@ -254,27 +275,34 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
     reads and blocked writes leave no stash and are no-ops."""
     pend = _pending_file(vault, _stash_key(payload))
     if not pend.is_file():
-        return {}                                   # read, denied write, or unmatched -> nothing to complete
+        return {}  # read, denied write, or unmatched -> nothing to complete
     try:
         stashed = json.loads(pend.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {}
 
     action = classify(payload.get("tool_name", "")) or "write"
-    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault) or stashed.get("path", "")
+    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault) or stashed.get(
+        "path", ""
+    )
     extra = payload.get("extra") or {}
     task_id = extra.get("task_id") or payload.get("session_id") or ""
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         import policy_mcp
+
         policy_mcp.PolicyEngine(vault).complete_write(
-            profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256))
+            profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256)
+        )
     except Exception as exc:
         # Never break the agent loop on the audit-completion path, but always
         # log the failure to stderr so it is diagnosable in Hermes logs.
-        print(f"[policy_hook] audit completion failed for {profile}/{path}: "
-              f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        print(
+            f"[policy_hook] audit completion failed for {profile}/{path}: "
+            f"{type(exc).__name__}: {exc}",
+            file=sys.stderr,
+        )
         try:
             record_event(
                 component="mcp.policy_hook",
@@ -298,17 +326,21 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--profile", default=os.environ.get("HERMES_PROFILE", ""),
-                    help="profile whose lane to enforce (e.g. memoria-writer)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--profile",
+        default=os.environ.get("HERMES_PROFILE", ""),
+        help="profile whose lane to enforce (e.g. memoria-writer)",
+    )
     args = ap.parse_args()
 
     try:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError) as exc:
         print(f"[policy_hook] malformed stdin payload: {exc}", file=sys.stderr)
-        print("{}")                                  # let Hermes proceed
+        print("{}")  # let Hermes proceed
         return
     event = payload.get("hook_event_name", "pre_tool_call")
     handler = evaluate_post if event == "post_tool_call" else evaluate_pre

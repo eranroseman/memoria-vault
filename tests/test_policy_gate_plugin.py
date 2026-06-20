@@ -24,15 +24,15 @@ def _vault_with_writer_policy(tmp_path):
         "policy:\n"
         "  allow:\n"
         "    write:\n"
-        "      - \"inbox/**\"\n"
+        '      - "inbox/**"\n'
         "  deny:\n"
         "    write:\n"
-        "      - \"notes/claims/**\"\n"
+        '      - "notes/claims/**"\n'
         "  require:\n"
         "    - audit_log\n"
         "routing:\n"
         "  write_scope:\n"
-        "    - \"inbox/\"\n",
+        '    - "inbox/"\n',
         encoding="utf-8",
     )
     return tmp_path

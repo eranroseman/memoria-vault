@@ -19,6 +19,7 @@ the gated writes; this script writes nothing.
 
 `--enrich` runs the network stages; without it, only Tier-0 (offline floor).
 """
+
 from __future__ import annotations
 
 import json
@@ -50,8 +51,9 @@ def _confidence_floor(vault: Path | None) -> float:
         import yaml
 
         f = Path(vault) / ".memoria" / "schemas" / "calibration.yaml"
-        return float(yaml.safe_load(f.read_text(encoding="utf-8"))
-                     ["entity_resolution"]["confidence_floor"])
+        return float(
+            yaml.safe_load(f.read_text(encoding="utf-8"))["entity_resolution"]["confidence_floor"]
+        )
     except Exception:
         return 0.85
 
@@ -76,8 +78,11 @@ def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:
     if not raw:
         return "", ""
     # take the first .pdf among ';'-separated attachments; drop a trailing mime type
-    first = next((p for p in raw.split(";") if p.strip().lower().endswith(".pdf")),
-                 raw.split(";")[0]).strip().strip(":")
+    first = (
+        next((p for p in raw.split(";") if p.strip().lower().endswith(".pdf")), raw.split(";")[0])
+        .strip()
+        .strip(":")
+    )
     if first.lower().endswith("application/pdf"):
         first = first.rsplit(":", 1)[0]
     key_m = re.search(r"[/\\]storage[/\\]([A-Za-z0-9]{8})[/\\]", first)
@@ -87,8 +92,13 @@ def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:
     return wsl, key
 
 
-def run(citekey: str, bib_text: str, vault: Path | None = None,
-        pdf_path: str | None = None, enrich: bool = True) -> dict:
+def run(
+    citekey: str,
+    bib_text: str,
+    vault: Path | None = None,
+    pdf_path: str | None = None,
+    enrich: bool = True,
+) -> dict:
     # Tier 0 — always
     note = ingest_paper.ingest_text(citekey, bib_text)
     fm = note["frontmatter"]
@@ -101,11 +111,18 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     if zkey and not fm.get("pdf_uri"):
         fm["pdf_uri"] = f"zotero://open-pdf/library/items/{zkey}"
     bundle = {
-        "citekey": citekey, "note_type": note["note_type"], "path": note["path"],
-        "lifecycle": "current", "ingest_status": "tier0",
-        "frontmatter": fm, "body_abstract": "", "extract": None, "link_plan": None,
+        "citekey": citekey,
+        "note_type": note["note_type"],
+        "path": note["path"],
+        "lifecycle": "current",
+        "ingest_status": "tier0",
+        "frontmatter": fm,
+        "body_abstract": "",
+        "extract": None,
+        "link_plan": None,
         "holes": ["_proposed_classification", "brief"],
-        "provenance": {}, "degraded": [],
+        "provenance": {},
+        "degraded": [],
     }
     if not enrich:
         return bundle
@@ -130,17 +147,26 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
         "topics": m.get("topics", []),
         "mesh_terms": m.get("mesh_terms", []),
         "reference_count_union": len(m.get("references", [])),
-        "sources_found": [s for s in ("s2", "openalex", "crossref", "pubmed")
-                          if r["parts"].get(s, {}).get("found")],
+        "sources_found": [
+            s
+            for s in ("s2", "openalex", "crossref", "pubmed")
+            if r["parts"].get(s, {}).get("found")
+        ],
     }
     # promote stable IDs the APIs resolved (only if the bib didn't already set them)
-    for fld, mkey in (("semantic_scholar_id", "s2_id"), ("openalex_id", "openalex_id"),
-                      ("pmid", "pmid"), ("pmcid", "pmcid")):
+    for fld, mkey in (
+        ("semantic_scholar_id", "s2_id"),
+        ("openalex_id", "openalex_id"),
+        ("pmid", "pmid"),
+        ("pmcid", "pmcid"),
+    ):
         if not fm.get(fld) and m.get(mkey):
             fm[fld] = m[mkey]
     fm["enriched_date"] = date.today().isoformat()
     fm["ingest_status"] = "enriched"
-    bundle["ingest_status"] = "enriched"   # tier moves tier0 -> enriched; lifecycle stays current (ADR-50)
+    bundle["ingest_status"] = (
+        "enriched"  # tier moves tier0 -> enriched; lifecycle stays current (ADR-50)
+    )
 
     # D51 / ADR-56: below the calibration floor, cross-source identity disagreement
     # becomes a near-tie flag instead of a silent best-source-wins merge. The bundle
@@ -150,9 +176,11 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     if agr and agr.get("score", 1.0) < floor:
         bundle["flag_needed"] = {
             "title": f"Identity disagreement on {citekey}",
-            "finding": ("cross-source agreement "
-                        f"{agr.get('score', 0.0):.2f} < floor {floor:.2f}: "
-                        + "; ".join(agr.get("disagreements", []))),
+            "finding": (
+                "cross-source agreement "
+                f"{agr.get('score', 0.0):.2f} < floor {floor:.2f}: "
+                + "; ".join(agr.get("disagreements", []))
+            ),
             "citekey": citekey,
         }
 
@@ -166,7 +194,7 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
     cls = classify.decide(m, c_floor, c_margin)
     if cls["status"] == "applied":
         fm["research_area"] = cls["research_area"]
-    if cls["methodology"]:                 # deterministic from S2 pub types —
+    if cls["methodology"]:  # deterministic from S2 pub types —
         fm["methodology"] = cls["methodology"]  # independent of topic ambiguity
     bundle["classify"] = cls
     if cls["status"] == "ambiguous":
@@ -194,13 +222,20 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
             pdf_path = wsl_pdf
 
     # extract (full text) — use the enrichment-resolved PMCID/PMID when the bib lacked them
-    ex_ids = {**ids, "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
-              "pmid": ids.get("pmid") or m.get("pmid", "")}
+    ex_ids = {
+        **ids,
+        "pmcid": ids.get("pmcid") or m.get("pmcid", ""),
+        "pmid": ids.get("pmid") or m.get("pmid", ""),
+    }
     ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"), _env("NCBI_API_KEY"))
     # carry the text so the caller can persist it (the extract store is outside the agent's
     # write lane, so the ingest tool writes the extract file, not the worker)
-    bundle["extract"] = {"source": ex["source"], "chars": ex["chars"],
-                         "degraded": ex["degraded"], "text": ex.get("text", "")}
+    bundle["extract"] = {
+        "source": ex["source"],
+        "chars": ex["chars"],
+        "degraded": ex["degraded"],
+        "text": ex.get("text", ""),
+    }
     if ex["degraded"]:
         bundle["degraded"].append("extract")
     # the extract store lives at .memoria/data/extracts/ (ingest_mcp persists it there,
@@ -220,10 +255,13 @@ def run(citekey: str, bib_text: str, vault: Path | None = None,
 
 def main() -> int:
     import argparse
+
     ap = argparse.ArgumentParser(description="Deterministic ingest orchestrator (ADR-30)")
     ap.add_argument("--citekey")
     ap.add_argument("--bib", help="default <vault>/.memoria/memoria.bib")
-    ap.add_argument("--vault", help="default $MEMORIA_VAULT_PATH (or $OBSIDIAN_VAULT_PATH from ~/.hermes/.env)")
+    ap.add_argument(
+        "--vault", help="default $MEMORIA_VAULT_PATH (or $OBSIDIAN_VAULT_PATH from ~/.hermes/.env)"
+    )
     ap.add_argument("--pdf")
     ap.add_argument("--enrich", action="store_true", help="run the Tier-1 network stages")
     a = ap.parse_args()
@@ -238,8 +276,13 @@ def main() -> int:
         print(f"bib not found: {bib}", file=sys.stderr)
         return 3
     try:
-        b = run(a.citekey, bib.read_text(encoding="utf-8", errors="ignore"),
-                vault, a.pdf, enrich=a.enrich)
+        b = run(
+            a.citekey,
+            bib.read_text(encoding="utf-8", errors="ignore"),
+            vault,
+            a.pdf,
+            enrich=a.enrich,
+        )
     except KeyError:
         print(f"citekey not found: {a.citekey}", file=sys.stderr)
         return 2

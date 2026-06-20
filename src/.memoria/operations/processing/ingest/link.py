@@ -17,6 +17,7 @@ ADR-30 rules:
 This does NOT write to the vault; it returns the link plan for the gated worker.
 Reads (only) are local and un-gated.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -41,8 +42,7 @@ def read_frontmatter(md: Path) -> dict:
         import yaml
     except ImportError:
         if not _yaml_warned:
-            print("[link] PyYAML not installed; frontmatter parsing disabled",
-                  file=sys.stderr)
+            print("[link] PyYAML not installed; frontmatter parsing disabled", file=sys.stderr)
             _yaml_warned = True
         return {}
     text = md.read_text(encoding="utf-8", errors="ignore")
@@ -68,7 +68,7 @@ def index_vault(vault: Path) -> dict:
             continue
         for md in d.glob("*.md"):
             fm = read_frontmatter(md)
-            ck = (fm.get("citekey") or md.stem)
+            ck = fm.get("citekey") or md.stem
             for key in ("doi", "arxiv_id"):
                 v = str(fm.get(key) or "").strip().lower()
                 if v:
@@ -77,8 +77,11 @@ def index_vault(vault: Path) -> dict:
 
 
 # entity type -> its Catalog home (ADR-47)
-ENTITY_FOLDER = {"person": "catalog/people", "organization": "catalog/organizations",
-                 "venue": "catalog/venues"}
+ENTITY_FOLDER = {
+    "person": "catalog/people",
+    "organization": "catalog/organizations",
+    "venue": "catalog/venues",
+}
 
 
 def plan_entities(merged: dict) -> dict:
@@ -93,8 +96,13 @@ def plan_entities(merged: dict) -> dict:
         if key not in by_key:
             # path is keyed on the stable id (not the name) so find-or-create is
             # idempotent — same ORCID/ROR/ISSN always resolves to the same file.
-            rec = {"note_type": note_type, "id_type": idtype, "id": idval, "name": name or "",
-                   "path": f"{ENTITY_FOLDER[note_type]}/{idval}.md"}
+            rec = {
+                "note_type": note_type,
+                "id_type": idtype,
+                "id": idval,
+                "name": name or "",
+                "path": f"{ENTITY_FOLDER[note_type]}/{idval}.md",
+            }
             by_key[key] = rec
             entities.append(rec)
         return True
@@ -125,8 +133,15 @@ def plan_cites(merged: dict, vault_index: dict) -> list:
         ck = vault_index.get(doi) or (vault_index.get(arx) if arx else None)
         if ck and ck not in seen:
             seen.add(ck)
-            out.append({"to": ck, "via": "doi" if doi in vault_index else "arxiv",
-                        "ref_doi": doi, "ref_arxiv": arx, "sources": r.get("sources", [])})
+            out.append(
+                {
+                    "to": ck,
+                    "via": "doi" if doi in vault_index else "arxiv",
+                    "ref_doi": doi,
+                    "ref_arxiv": arx,
+                    "sources": r.get("sources", []),
+                }
+            )
     return out
 
 
@@ -137,10 +152,13 @@ def plan_links(merged: dict, vault: Path) -> dict:
     return {
         "entities": ent["entities"],
         "recorded_by_name": ent["recorded_by_name"],
-        "cites": cites,            # worker applies bidirectionally (this.cites + X.cited_by)
+        "cites": cites,  # worker applies bidirectionally (this.cites + X.cited_by)
         "vault_indexed": len(idx),
-        "summary": {"entities": len(ent["entities"]), "cites": len(cites),
-                    "by_name_authors": len(ent["recorded_by_name"]["authors"])},
+        "summary": {
+            "entities": len(ent["entities"]),
+            "cites": len(cites),
+            "by_name_authors": len(ent["recorded_by_name"]["authors"]),
+        },
     }
 
 
@@ -157,8 +175,7 @@ def append_by_name_audit(vault: Path, citekey: str, plan: dict) -> dict | None:
     if total == 0:
         return None
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc)
-                     .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "stage": "link",
         "citekey": citekey,
         "event": "recorded_by_name",
@@ -177,6 +194,7 @@ def append_by_name_audit(vault: Path, citekey: str, plan: dict) -> dict | None:
 # --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
+
     ap = argparse.ArgumentParser(description="Tier-1 deterministic linking (ADR-30)")
     ap.add_argument("--merged", help="path to a resolve_merge JSON ('-' for stdin)")
     ap.add_argument("--vault", help="vault root (for cites matching)")

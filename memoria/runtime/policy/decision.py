@@ -74,7 +74,9 @@ def decide(
         if not cls:
             return Decision("deny", f"{rule}.auto_fix.no-class", "auto_fix requires flags.class")
         if cls in AUTO_FIX_DENY_CLASSES:
-            return Decision("deny", f"{rule}.auto_fix.{cls}", f"auto_fix class '{cls}' is always denied")
+            return Decision(
+                "deny", f"{rule}.auto_fix.{cls}", f"auto_fix class '{cls}' is always denied"
+            )
         if cls in AUTO_FIX_DRY_RUN_CLASSES:
             return Decision(
                 "dry_run",
@@ -82,7 +84,9 @@ def decide(
                 f"auto_fix class '{cls}' degrades to dry_run -- needs schema-migrate",
             )
         if cls in lane.deny_auto_fix_classes:
-            return Decision("deny", f"{rule}.auto_fix.{cls}", f"auto_fix class '{cls}' denied by lane policy")
+            return Decision(
+                "deny", f"{rule}.auto_fix.{cls}", f"auto_fix class '{cls}' denied by lane policy"
+            )
         if cls in AUTO_FIX_ALLOWED_CLASSES and cls in lane.allow_auto_fix_classes:
             if not path_matches(npath, lane.allow_write):
                 return Decision(
@@ -91,22 +95,44 @@ def decide(
                     f"auto_fix path '{npath}' outside the lane's write scope",
                 )
             if is_review_gated(npath):
-                return Decision("dry_run", "review_gated.dry_run", "review-gated zone -- surface as board comment")
+                return Decision(
+                    "dry_run",
+                    "review_gated.dry_run",
+                    "review-gated zone -- surface as board comment",
+                )
             return Decision("allow_with_log", f"{rule}.auto_fix.{cls}", log_required=True)
-        return Decision("deny", f"{rule}.auto_fix.class-not-allowed", f"auto_fix class '{cls}' not permitted for {profile}")
+        return Decision(
+            "deny",
+            f"{rule}.auto_fix.class-not-allowed",
+            f"auto_fix class '{cls}' not permitted for {profile}",
+        )
 
     if action == "delete":
         if not flags.get("explicit_authorization"):
-            return Decision("deny", f"{rule}.delete.default-deny", "delete requires flags.explicit_authorization")
+            return Decision(
+                "deny",
+                f"{rule}.delete.default-deny",
+                "delete requires flags.explicit_authorization",
+            )
         if not path_matches(npath, lane.allow_write):
-            return Decision("deny", f"{rule}.delete.out-of-scope", f"delete path '{npath}' outside the lane's write scope")
+            return Decision(
+                "deny",
+                f"{rule}.delete.out-of-scope",
+                f"delete path '{npath}' outside the lane's write scope",
+            )
         if is_review_gated(npath):
-            return Decision("dry_run", "review_gated.dry_run", "review-gated zone -- delete must be human-approved")
+            return Decision(
+                "dry_run",
+                "review_gated.dry_run",
+                "review-gated zone -- delete must be human-approved",
+            )
         return Decision("allow_with_log", f"{rule}.delete", log_required=True)
 
     if action == "mkdir":
         if not within_scope(npath, lane.write_scope):
-            return Decision("deny", f"{rule}.mkdir.out-of-scope", f"mkdir '{npath}' outside routing.write_scope")
+            return Decision(
+                "deny", f"{rule}.mkdir.out-of-scope", f"mkdir '{npath}' outside routing.write_scope"
+            )
         if is_review_gated(npath):
             return Decision("dry_run", "review_gated.dry_run", "review-gated zone")
         return Decision("allow", f"{rule}.mkdir", log_required=require_log)
@@ -114,7 +140,9 @@ def decide(
     if path_matches(npath, lane.deny_write):
         return Decision("deny", f"{rule}.deny.write", f"{profile} is denied write to '{npath}'")
     if not path_matches(npath, lane.allow_write):
-        return Decision("deny", f"{rule}.default-deny", f"no allow rule matches '{npath}' for {profile}")
+        return Decision(
+            "deny", f"{rule}.default-deny", f"no allow rule matches '{npath}' for {profile}"
+        )
     if is_review_gated(npath):
         return Decision(
             "dry_run",

@@ -39,7 +39,7 @@ def test_memoria_inspector_reads_only_operational_sources():
         "requestUrl",
         "fetch(",
         "child_process",
-        "require(\"fs\")",
+        'require("fs")',
         "require('fs')",
     ):
         assert forbidden not in text

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Append successful cron heartbeats for deferred always-on triggers."""
+
 from __future__ import annotations
 
 import argparse

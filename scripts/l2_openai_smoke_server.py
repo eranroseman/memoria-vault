@@ -57,56 +57,79 @@ class SmokeHandler(BaseHTTPRequestHandler):
             return
         args = json.dumps({"path": ARTIFACT, "content": ARTIFACT_BODY})
         if not stream:
-            self._json(200, {
-                "id": "chatcmpl-l2-smoke",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": MODEL,
-                "choices": [{
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": None,
-                        "tool_calls": [{
-                            "id": "call_l2_smoke",
-                            "type": "function",
-                            "function": {"name": tool_name, "arguments": args},
-                        }],
-                    },
-                    "finish_reason": "tool_calls",
-                }],
-            })
+            self._json(
+                200,
+                {
+                    "id": "chatcmpl-l2-smoke",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": MODEL,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": None,
+                                "tool_calls": [
+                                    {
+                                        "id": "call_l2_smoke",
+                                        "type": "function",
+                                        "function": {"name": tool_name, "arguments": args},
+                                    }
+                                ],
+                            },
+                            "finish_reason": "tool_calls",
+                        }
+                    ],
+                },
+            )
             return
-        self._sse([
-            _chunk({"role": "assistant", "tool_calls": [{
-                "index": 0,
-                "id": "call_l2_smoke",
-                "type": "function",
-                "function": {"name": tool_name, "arguments": ""},
-            }]}),
-            _chunk({"tool_calls": [{"index": 0, "function": {"arguments": args}}]}),
-            _chunk({}, finish_reason="tool_calls"),
-        ])
+        self._sse(
+            [
+                _chunk(
+                    {
+                        "role": "assistant",
+                        "tool_calls": [
+                            {
+                                "index": 0,
+                                "id": "call_l2_smoke",
+                                "type": "function",
+                                "function": {"name": tool_name, "arguments": ""},
+                            }
+                        ],
+                    }
+                ),
+                _chunk({"tool_calls": [{"index": 0, "function": {"arguments": args}}]}),
+                _chunk({}, finish_reason="tool_calls"),
+            ]
+        )
 
     def _respond_final(self, stream: bool) -> None:
         if not stream:
-            self._json(200, {
-                "id": "chatcmpl-l2-smoke-final",
-                "object": "chat.completion",
-                "created": int(time.time()),
-                "model": MODEL,
-                "choices": [{
-                    "index": 0,
-                    "message": {"role": "assistant", "content": "L2_SMOKE_DONE"},
-                    "finish_reason": "stop",
-                }],
-            })
+            self._json(
+                200,
+                {
+                    "id": "chatcmpl-l2-smoke-final",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": MODEL,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": "L2_SMOKE_DONE"},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                },
+            )
             return
-        self._sse([
-            _chunk({"role": "assistant", "content": ""}),
-            _chunk({"content": "L2_SMOKE_DONE"}),
-            _chunk({}, finish_reason="stop"),
-        ])
+        self._sse(
+            [
+                _chunk({"role": "assistant", "content": ""}),
+                _chunk({"content": "L2_SMOKE_DONE"}),
+                _chunk({}, finish_reason="stop"),
+            ]
+        )
 
     def _json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")

@@ -30,13 +30,18 @@ Usage: python scripts/docs_doctor.py [docs_root]   (default: docs)
 
 One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 """
+
 from __future__ import annotations
 
 import re
 import sys
 from pathlib import Path
 
-DROPPED_KEYS = ("mode", "audience", "tags")  # mode/audience dropped in the refactor; tags unsanctioned (use the controlled topic/methods vocabularies)
+DROPPED_KEYS = (
+    "mode",
+    "audience",
+    "tags",
+)  # mode/audience dropped in the refactor; tags unsanctioned (use the controlled topic/methods vocabularies)
 
 # Scratch dirs: tracked in git so relative links resolve, but excluded from the
 # published site (docs/_config.yml) and skipped by these structural checks —
@@ -68,6 +73,7 @@ def _published(md: Path, root: Path) -> bool:
     # site-excluded dir or a scratch/tmp dir are repo-internal (read on github.com,
     # not the built site), so their out-of-site relative links are intentional.
     return not _site_excluded(md, root) and not _scratch(md, root)
+
 
 # [text](target) — but NOT images ![alt](src). Reference-style/wikilinks unused.
 LINK_RE = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
@@ -101,13 +107,16 @@ def check_thin_folders(root: Path, warnings: list[str]) -> None:
     # Advisory: flag folders thin enough to consider flattening into their parent.
     # Does not affect exit code — the human decides whether to act.
     for d in sorted(
-        p for p in root.rglob("*")
+        p
+        for p in root.rglob("*")
         if p.is_dir() and not _scratch(p, root) and not _site_excluded(p, root)
     ):
         md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
         has_readme = (d / "README.md").exists()
         if len(md_files) == 1 and not has_readme:
-            warnings.append(f"{d}/: single-file folder (no README) — consider flattening into parent")
+            warnings.append(
+                f"{d}/: single-file folder (no README) — consider flattening into parent"
+            )
         elif len(md_files) == 1 and has_readme:
             warnings.append(f"{d}/: README + one file — consider flattening into parent")
 
@@ -119,7 +128,9 @@ def check_frontmatter(md: Path, errors: list[str]) -> None:
     block = m.group(1)
     for key in DROPPED_KEYS:
         if re.search(rf"^{key}\s*:", block, re.MULTILINE):
-            errors.append(f"{md}: frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
+            errors.append(
+                f"{md}: frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)"
+            )
     # Unquoted colon-space in a scalar value breaks Jekyll's YAML loader, which
     # silently drops the page from the nav (it parses as a nested mapping).
     # e.g.  title: Linter: detectors  →  must be  title: "Linter: detectors"
@@ -133,7 +144,7 @@ def check_frontmatter(md: Path, errors: list[str]) -> None:
         if re.search(r":\s", value):
             errors.append(
                 f"{md}: frontmatter value for '{m2.group(1)}:' contains an unquoted "
-                f"colon — quote it (\"{value}\") or Jekyll drops the page from the nav"
+                f'colon — quote it ("{value}") or Jekyll drops the page from the nav'
             )
 
 
@@ -173,7 +184,7 @@ def heading_slugs(path: Path) -> set[str]:
 
 def check_links(md: Path, errors: list[str]) -> None:
     text = read(md)
-    text = FENCE_RE.sub("", text)       # ignore fenced code blocks
+    text = FENCE_RE.sub("", text)  # ignore fenced code blocks
     text = INLINE_CODE_RE.sub("", text)  # ignore inline code
     for raw in LINK_RE.findall(text):
         target = raw.strip()
@@ -223,7 +234,9 @@ def check_template_frontmatter(md: Path, errors: list[str]) -> None:
     for block in YAML_FENCE_RE.findall(read(md)):
         for key in DROPPED_KEYS:
             if re.search(rf"^\s*{key}\s*:", block, re.MULTILINE):
-                errors.append(f"{md}: template frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)")
+                errors.append(
+                    f"{md}: template frontmatter carries disallowed key '{key}:' (mode/audience dropped; tags unsanctioned)"
+                )
 
 
 def _link_is_internal(target: str) -> bool:
@@ -241,13 +254,17 @@ def check_link_text(md: Path, errors: list[str]) -> None:
         if not lbl or not _link_is_internal(target):
             continue
         if lbl.endswith(".md"):
-            errors.append(f"{md}: link text '{label.strip()}' is a filename — use the target's page title")
+            errors.append(
+                f"{md}: link text '{label.strip()}' is a filename — use the target's page title"
+            )
             continue
         t = target.strip().split()[0].split("#")[0].rstrip("/")
         base = t.split("/")[-1]
         stem = base[:-3] if base.endswith(".md") else base
         if lbl == base or lbl == stem:
-            errors.append(f"{md}: link text '{label.strip()}' restates the filename — use the target's page title")
+            errors.append(
+                f"{md}: link text '{label.strip()}' restates the filename — use the target's page title"
+            )
 
 
 def check_wikilink_aliases(md: Path, errors: list[str]) -> None:
@@ -261,7 +278,9 @@ def check_wikilink_aliases(md: Path, errors: list[str]) -> None:
         if "." in tgt.split("/")[-1] and not tgt.endswith(".md"):
             continue  # non-note target (.base/.canvas/image embed) — not a note wikilink
         if tgt:
-            errors.append(f"{md}: bare wikilink [[{inner}]] shows the filename — alias it with the page title ([[{tgt}|…]])")
+            errors.append(
+                f"{md}: bare wikilink [[{inner}]] shows the filename — alias it with the page title ([[{tgt}|…]])"
+            )
 
 
 def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[str]) -> None:
@@ -358,7 +377,11 @@ def main() -> int:
     # title — markdown link text and wikilink aliases — never the bare filename.
     vault = root.parent / "src"
     if vault.is_dir():
-        vault_stems = {p.stem.lower() for p in vault.rglob("*.md") if ".obsidian" not in p.parts and not _scratch(p, vault)}
+        vault_stems = {
+            p.stem.lower()
+            for p in vault.rglob("*.md")
+            if ".obsidian" not in p.parts and not _scratch(p, vault)
+        }
         for md in sorted(vault.rglob("*.md")):
             if ".obsidian" in md.parts or "templates" in md.parts or _scratch(md, vault):
                 continue

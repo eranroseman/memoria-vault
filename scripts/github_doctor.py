@@ -74,7 +74,9 @@ def check(root: Path = ROOT) -> list[str]:
             errors.append(f"{path.relative_to(root)}: retired label(s): {', '.join(retired)}")
         stale_terms = sorted(term for term in STALE_PROFILE_TERMS if term in _text(path))
         if stale_terms:
-            errors.append(f"{path.relative_to(root)}: stale profile term(s): {', '.join(stale_terms)}")
+            errors.append(
+                f"{path.relative_to(root)}: stale profile term(s): {', '.join(stale_terms)}"
+            )
 
     if bug.is_file() and _load_yaml(bug).get("__error__") is None:
         labels = _labels(_load_yaml(bug))
@@ -84,7 +86,9 @@ def check(root: Path = ROOT) -> list[str]:
     if feature.is_file() and _load_yaml(feature).get("__error__") is None:
         labels = _labels(_load_yaml(feature))
         if labels != FEATURE_LABELS:
-            errors.append(f"{feature.relative_to(root)}: feature requests should use Project fields, not labels")
+            errors.append(
+                f"{feature.relative_to(root)}: feature requests should use Project fields, not labels"
+            )
 
     dependabot = root / ".github" / "dependabot.yml"
     if dependabot.is_file():
@@ -111,7 +115,9 @@ def check(root: Path = ROOT) -> list[str]:
             missing = sorted(EXPECTED_DEPENDABOT_UPDATES - update_keys)
             if missing:
                 rendered = ", ".join(f"{ecosystem}:{directory}" for ecosystem, directory in missing)
-                errors.append(f"{dependabot.relative_to(root)}: missing update surface(s): {rendered}")
+                errors.append(
+                    f"{dependabot.relative_to(root)}: missing update surface(s): {rendered}"
+                )
     return errors
 
 

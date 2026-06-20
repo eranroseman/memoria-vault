@@ -15,13 +15,7 @@ from memoria.runtime.vaultio import (
 
 def test_parse_frontmatter_accepts_nested_yaml() -> None:
     data = parse_frontmatter(
-        "---\n"
-        "title: Example\n"
-        "links:\n"
-        "  supports:\n"
-        "    - \"[[Claim A]]\"\n"
-        "---\n"
-        "Body\n"
+        '---\ntitle: Example\nlinks:\n  supports:\n    - "[[Claim A]]"\n---\nBody\n'
     )
 
     assert data == {
@@ -47,13 +41,15 @@ def test_iter_jsonl_skips_missing_bad_and_non_object_lines(tmp_path) -> None:
     missing = tmp_path / "missing.jsonl"
     path = tmp_path / "events.jsonl"
     path.write_text(
-        "\n".join([
-            json.dumps({"ok": 1}),
-            "not-json",
-            json.dumps(["not", "an", "object"]),
-            json.dumps({"ok": 2}),
-            "",
-        ]),
+        "\n".join(
+            [
+                json.dumps({"ok": 1}),
+                "not-json",
+                json.dumps(["not", "an", "object"]),
+                json.dumps({"ok": 2}),
+                "",
+            ]
+        ),
         encoding="utf-8",
     )
 

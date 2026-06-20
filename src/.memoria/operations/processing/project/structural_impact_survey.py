@@ -18,17 +18,21 @@ from operations.processing.project.structural_impact_payload import (
 )
 
 
-def analyze_survey(notes: dict[str, Note], resolver: dict[str, str], project: Note) -> dict[str, Any]:
+def analyze_survey(
+    notes: dict[str, Note], resolver: dict[str, str], project: Note
+) -> dict[str, Any]:
     edges = [edge for edge in build_descriptive_edges(notes, resolver) if edge.addressed]
     graph = adjacency(edges)
     project_scope = values_as_set(project.frontmatter.get("scope_topics"))
     scoped = {
-        key for key, note in notes.items()
+        key
+        for key, note in notes.items()
         if key != project.key and (not project_scope or scope_terms(note) & project_scope)
     }
     high_degree = {key for key in scoped if len(graph.get(key, set()) & scoped) >= 2}
     open_scope_gaps = [
-        note for key, note in notes.items()
+        note
+        for key, note in notes.items()
         if key in scoped and note.note_type == "gap" and note.lifecycle != "archived"
     ]
     maturity = "cold-start"
@@ -74,7 +78,9 @@ def analyze_survey(notes: dict[str, Note], resolver: dict[str, str], project: No
                 "mature_graph": maturity == "mature",
                 "no_open_scope_gaps": not open_scope_gaps,
             },
-            "gap_findings": [] if maturity != "mature" else [
+            "gap_findings": []
+            if maturity != "mature"
+            else [
                 {
                     "kind": str(note.frontmatter.get("gap_type") or "additive"),
                     "visibility": "shown",

@@ -20,6 +20,7 @@ the detectors.
 Usage:
   python3 session_summary.py --vault <path> [--quiet-hours H]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -102,8 +103,16 @@ def digest(task_id: str, entries: list[dict]) -> list[dict]:
         p = e.get("path")
         if not p:
             continue
-        rec = paths.setdefault(p, {"record": "path", "path": p, "actions": set(),
-                                   "final_decision": None, "after_hash": None})
+        rec = paths.setdefault(
+            p,
+            {
+                "record": "path",
+                "path": p,
+                "actions": set(),
+                "final_decision": None,
+                "after_hash": None,
+            },
+        )
         if a:
             rec["actions"].add(a)
         if d == "write_complete":
@@ -128,8 +137,9 @@ def digest(task_id: str, entries: list[dict]) -> list[dict]:
     return out
 
 
-def write_summaries(vault: Path, quiet_hours: float = QUIET_HOURS,
-                    now: datetime | None = None) -> list[Path]:
+def write_summaries(
+    vault: Path, quiet_hours: float = QUIET_HOURS, now: datetime | None = None
+) -> list[Path]:
     """Digest every finished, not-yet-summarized session. Returns files written."""
     now = now or datetime.now(timezone.utc)
     done = summarized_task_ids(vault)
@@ -137,13 +147,14 @@ def write_summaries(vault: Path, quiet_hours: float = QUIET_HOURS,
     written: list[Path] = []
     sessions = load_sessions(vault)
     # Deterministic order (first timestamp, then task_id) so suffixes are stable.
-    for tid, entries in sorted(sessions.items(),
-                               key=lambda kv: (min(e["_ts"] for e in kv[1]), kv[0])):
+    for tid, entries in sorted(
+        sessions.items(), key=lambda kv: (min(e["_ts"] for e in kv[1]), kv[0])
+    ):
         if tid in done:
             continue
         last = max(e["_ts"] for e in entries)
         if (now - last).total_seconds() < quiet_hours * 3600:
-            continue                      # in-flight: inside the quiet window
+            continue  # in-flight: inside the quiet window
         first = min(e["_ts"] for e in entries)
         base = first.strftime("%Y-%m-%d-%H%M")
         name, n = f"{base}.jsonl", 2
@@ -152,19 +163,24 @@ def write_summaries(vault: Path, quiet_hours: float = QUIET_HOURS,
         outdir.mkdir(parents=True, exist_ok=True)
         records = digest(tid, entries)
         (outdir / name).write_text(
-            "\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n",
-            encoding="utf-8")
+            "\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n", encoding="utf-8"
+        )
         written.append(outdir / name)
         done.add(tid)
     return written
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", type=Path, required=True, help="vault root")
-    ap.add_argument("--quiet-hours", type=float, default=QUIET_HOURS,
-                    help="leave sessions active within the last H hours unsummarized")
+    ap.add_argument(
+        "--quiet-hours",
+        type=float,
+        default=QUIET_HOURS,
+        help="leave sessions active within the last H hours unsummarized",
+    )
     args = ap.parse_args()
     if not args.vault.is_dir():
         sys.exit(f"not a directory: {args.vault}")

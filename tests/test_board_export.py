@@ -1,4 +1,5 @@
 """L1 component test for board_export — extracted from its former --self-test (ADR-44)."""
+
 import json
 import re
 import sqlite3
@@ -63,8 +64,21 @@ def _insert_session(db, session_id="sess-1"):
                 actual_cost_usd, cost_status, cost_source, billing_provider,
                 pricing_version
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (session_id, "gpt-test", 800, 1200, 11, 22, 33, 0.41, 0.42,
-             "actual", "provider-usage", "openai", "2026-06"),
+            (
+                session_id,
+                "gpt-test",
+                800,
+                1200,
+                11,
+                22,
+                33,
+                0.41,
+                0.42,
+                "actual",
+                "provider-usage",
+                "openai",
+                "2026-06",
+            ),
         )
 
 
@@ -76,52 +90,97 @@ def test_board_export():
         check = t.check
 
         sample = [
-            {"task_id": "t_a1", "title": "Ingest smith2020", "status": "running",
-             "assignee": "memoria-librarian", "metadata": {"review_status": "unreviewed", "retry_count": 1},
-             "updated_at": "2026-05-31T10:00:00Z",
-             "runs": [{"summary": "Blocker: none\nTried: lookup\nNext: enrich"}]},
-            {"task_id": "t_b2", "title": "Draft answer", "status": "done",
-             "assignee": "memoria-writer",
-             "metadata": json.dumps({"review_status": "requested"}),    # metadata as JSON string
-             "created_at": "2026-05-30T09:00:00Z"},
+            {
+                "task_id": "t_a1",
+                "title": "Ingest smith2020",
+                "status": "running",
+                "assignee": "memoria-librarian",
+                "metadata": {"review_status": "unreviewed", "retry_count": 1},
+                "updated_at": "2026-05-31T10:00:00Z",
+                "runs": [{"summary": "Blocker: none\nTried: lookup\nNext: enrich"}],
+            },
+            {
+                "task_id": "t_b2",
+                "title": "Draft answer",
+                "status": "done",
+                "assignee": "memoria-writer",
+                "metadata": json.dumps({"review_status": "requested"}),  # metadata as JSON string
+                "created_at": "2026-05-30T09:00:00Z",
+            },
             {"task_id": "t_c3", "title": "Old", "status": "archived", "assignee": "memoria-writer"},
-            {"task_id": "t_d4", "title": "Blocked card", "status": "blocked",
-             "assignee": "memoria-librarian", "reason": "needs human input"},
-            {"task_id": "t_e5", "title": "Retry card", "status": "ready",
-             "assignee": "memoria-writer", "metadata": {"retry_count": 2}},
+            {
+                "task_id": "t_d4",
+                "title": "Blocked card",
+                "status": "blocked",
+                "assignee": "memoria-librarian",
+                "reason": "needs human input",
+            },
+            {
+                "task_id": "t_e5",
+                "title": "Retry card",
+                "status": "ready",
+                "assignee": "memoria-writer",
+                "metadata": {"retry_count": 2},
+            },
         ]
 
         # normalize: metadata-as-string parses; defaults fill in
         n = normalize(sample[1])
         check("normalize parses string metadata", n["review_status"] == "requested")
-        check("normalize defaults review_status", normalize(sample[3])["review_status"] == "unreviewed")
+        check(
+            "normalize defaults review_status",
+            normalize(sample[3])["review_status"] == "unreviewed",
+        )
         check("normalize pulls run summary", "enrich" in normalize(sample[0])["summary"])
         check("normalize reads block reason", normalize(sample[3])["reason"] == "needs human input")
-        check("normalize reads renamed agent_recommendation",
-              normalize({"metadata": {"agent_recommendation": "clean"}})["agent_recommendation"] == "clean")
-        check("normalize ignores the legacy agent_verdict (ADR-18: the rename is one-way)",
-              normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"] == "")
-        check("normalize converts epoch-seconds last_updated to ISO",
-              normalize({"updated_at": 1700000000})["last_updated"] == "2023-11-14T22:13:20Z")
-        check("normalize converts epoch-millis last_updated to ISO",
-              normalize({"updated_at": 1700000000000})["last_updated"] == "2023-11-14T22:13:20Z")
-        check("normalize passes an ISO last_updated through unchanged",
-              normalize(sample[0])["last_updated"] == "2026-05-31T10:00:00Z")
-        check("normalize passes an ISO created_at through unchanged",
-              normalize(sample[1])["created_at"] == "2026-05-30T09:00:00Z")
-        check("normalize leaves last_updated empty when no timestamp",
-              normalize(sample[2])["last_updated"] == "")
-        check("blind review sampling is deterministic",
-              should_sample_blind_review("same-card") == should_sample_blind_review("same-card"))
+        check(
+            "normalize reads renamed agent_recommendation",
+            normalize({"metadata": {"agent_recommendation": "clean"}})["agent_recommendation"]
+            == "clean",
+        )
+        check(
+            "normalize ignores the legacy agent_verdict (ADR-18: the rename is one-way)",
+            normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"]
+            == "",
+        )
+        check(
+            "normalize converts epoch-seconds last_updated to ISO",
+            normalize({"updated_at": 1700000000})["last_updated"] == "2023-11-14T22:13:20Z",
+        )
+        check(
+            "normalize converts epoch-millis last_updated to ISO",
+            normalize({"updated_at": 1700000000000})["last_updated"] == "2023-11-14T22:13:20Z",
+        )
+        check(
+            "normalize passes an ISO last_updated through unchanged",
+            normalize(sample[0])["last_updated"] == "2026-05-31T10:00:00Z",
+        )
+        check(
+            "normalize passes an ISO created_at through unchanged",
+            normalize(sample[1])["created_at"] == "2026-05-30T09:00:00Z",
+        )
+        check(
+            "normalize leaves last_updated empty when no timestamp",
+            normalize(sample[2])["last_updated"] == "",
+        )
+        check(
+            "blind review sampling is deterministic",
+            should_sample_blind_review("same-card") == should_sample_blind_review("same-card"),
+        )
 
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
             ids = export_markdown(vault, sample)
             board = vault / BOARD_RELDIR
-            check("archived card not exported", "t_c3" not in ids and not (board / "t_c3.md").exists())
-            check("live cards exported", {(board / f"{i}.md").exists() for i in ("t_a1", "t_b2", "t_d4")} == {True})
+            check(
+                "archived card not exported", "t_c3" not in ids and not (board / "t_c3.md").exists()
+            )
+            check(
+                "live cards exported",
+                {(board / f"{i}.md").exists() for i in ("t_a1", "t_b2", "t_d4")} == {True},
+            )
             body = (board / "t_a1.md").read_text(encoding="utf-8")
-            check("markdown has frontmatter task_id", "task_id: \"t_a1\"" in body)
+            check("markdown has frontmatter task_id", 'task_id: "t_a1"' in body)
             check("markdown has retry_count int", "retry_count: 1" in body)
             check("markdown body carries summary", "Next: enrich" in body)
 
@@ -132,7 +191,9 @@ def test_board_export():
             snap = export_snapshot(vault, sample)
             check("snapshot counts running", snap["totals"]["running"] == 1)
             check("snapshot counts blocked", snap["totals"]["blocked"] == 1)
-            check("snapshot counts review-queue (done+requested)", snap["totals"]["review_queue"] == 1)
+            check(
+                "snapshot counts review-queue (done+requested)", snap["totals"]["review_queue"] == 1
+            )
             check("snapshot counts retrying ready cards", snap["totals"]["retrying"] == 1)
             check("snapshot per-lane present", snap["lanes"]["memoria-librarian"]["running"] == 1)
             lines = (vault / SNAPSHOT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
@@ -142,18 +203,41 @@ def test_board_export():
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
             run1 = [
-                {"task_id": "e1", "title": "x", "status": "ready",
-                 "assignee": "memoria-writer", "metadata": {"review_status": "unreviewed"}},
-                {"task_id": "e2", "title": "y", "status": "done",
-                 "assignee": "memoria-writer", "metadata": {"review_status": "requested"}},
-                {"task_id": "e3", "title": "z", "status": "done",
-                 "assignee": "memoria-verifier", "metadata": {"review_status": "requested"}},
+                {
+                    "task_id": "e1",
+                    "title": "x",
+                    "status": "ready",
+                    "assignee": "memoria-writer",
+                    "metadata": {"review_status": "unreviewed"},
+                },
+                {
+                    "task_id": "e2",
+                    "title": "y",
+                    "status": "done",
+                    "assignee": "memoria-writer",
+                    "metadata": {"review_status": "requested"},
+                },
+                {
+                    "task_id": "e3",
+                    "title": "z",
+                    "status": "done",
+                    "assignee": "memoria-verifier",
+                    "metadata": {"review_status": "requested"},
+                },
             ]
             ev1 = export_events(vault, load_state_cache(vault), run1)
             save_state_cache(vault, run1)
-            check("first run seeds cache, emits no events",
-                  ev1 == {"transitions": 0, "dispositions": 0, "costs": 0,
-                          "cost_misses": 0, "blind_reviews": 0})
+            check(
+                "first run seeds cache, emits no events",
+                ev1
+                == {
+                    "transitions": 0,
+                    "dispositions": 0,
+                    "costs": 0,
+                    "cost_misses": 0,
+                    "blind_reviews": 0,
+                },
+            )
 
             hermes_home = vault / ".hermes"
             db = _session_store(hermes_home)
@@ -162,48 +246,99 @@ def test_board_export():
 
             def show_card(task_id):
                 seen_show.append(task_id)
-                return {"task_id": task_id,
-                        "runs": [{"metadata": {"worker_session_id": "sess-1"}}]}
+                return {"task_id": task_id, "runs": [{"metadata": {"worker_session_id": "sess-1"}}]}
 
             lookup = _m.HermesCostLookup(hermes_home=hermes_home, show_card=show_card)
 
             run2 = [
                 # e1: ready -> done; cost joins through `hermes kanban show` + state.db
-                {"task_id": "e1", "title": "x", "status": "done", "assignee": "memoria-writer",
-                 "metadata": {"review_status": "unreviewed"}},
+                {
+                    "task_id": "e1",
+                    "title": "x",
+                    "status": "done",
+                    "assignee": "memoria-writer",
+                    "metadata": {"review_status": "unreviewed"},
+                },
                 # e2: requested -> approved => blind-review sample only; disposition is QuickAdd-owned
-                {"task_id": "e2", "title": "y", "status": "done", "assignee": "memoria-writer",
-                 "metadata": {"review_status": "approved", "agent_recommendation": "clean",
-                              "blind_rereview": True}},
+                {
+                    "task_id": "e2",
+                    "title": "y",
+                    "status": "done",
+                    "assignee": "memoria-writer",
+                    "metadata": {
+                        "review_status": "approved",
+                        "agent_recommendation": "clean",
+                        "blind_rereview": True,
+                    },
+                },
                 # e3: requested -> approved; no disposition inferred from card overlay
-                {"task_id": "e3", "title": "z", "status": "done", "assignee": "memoria-verifier",
-                 "metadata": {"review_status": "approved", "disposition": "edited"}},
+                {
+                    "task_id": "e3",
+                    "title": "z",
+                    "status": "done",
+                    "assignee": "memoria-verifier",
+                    "metadata": {"review_status": "approved", "disposition": "edited"},
+                },
             ]
             ev2 = export_events(vault, load_state_cache(vault), run2, cost_lookup=lookup)
             save_state_cache(vault, run2)
-            check("second run logs three transitions (e1 status, e2/e3 review)", ev2["transitions"] == 3)
+            check(
+                "second run logs three transitions (e1 status, e2/e3 review)",
+                ev2["transitions"] == 3,
+            )
             check("second run logs cost on completion", ev2["costs"] == 1)
             check("session id came from card detail", seen_show == ["e1"])
-            check("second run does not infer dispositions from board metadata", ev2["dispositions"] == 0)
+            check(
+                "second run does not infer dispositions from board metadata",
+                ev2["dispositions"] == 0,
+            )
             check("second run has no cost misses", ev2["cost_misses"] == 0)
             check("second run samples one blind re-review", ev2["blind_reviews"] == 1)
 
-            cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
-            check("cost row carries joined spend + tokens",
-                  cost["session_id"] == "sess-1" and cost["cost"] == 0.42
-                  and cost["output_tokens"] == 1200 and cost["cost_source"] == "provider-usage")
-            blind = json.loads((vault / BLIND_REVIEW_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
-            check("blind re-review row carries terminal review context",
-                  blind["task_id"] == "e2" and blind["sample_reason"] == "blind-rereview")
-            tr = [json.loads(ln) for ln in (vault / TRANSITIONS_RELPATH).read_text(encoding="utf-8").strip().splitlines()]
-            check("transition records status change e1 ready->done",
-                  any(t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr))
-            check("no spurious events on an unchanged re-run",
-                  export_events(vault, load_state_cache(vault), run2, cost_lookup=lookup) ==
-                  {"transitions": 0, "dispositions": 0, "costs": 0,
-                   "cost_misses": 0, "blind_reviews": 0})
+            cost = json.loads(
+                (vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
+            )
+            check(
+                "cost row carries joined spend + tokens",
+                cost["session_id"] == "sess-1"
+                and cost["cost"] == 0.42
+                and cost["output_tokens"] == 1200
+                and cost["cost_source"] == "provider-usage",
+            )
+            blind = json.loads(
+                (vault / BLIND_REVIEW_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
+            )
+            check(
+                "blind re-review row carries terminal review context",
+                blind["task_id"] == "e2" and blind["sample_reason"] == "blind-rereview",
+            )
+            tr = [
+                json.loads(ln)
+                for ln in (vault / TRANSITIONS_RELPATH)
+                .read_text(encoding="utf-8")
+                .strip()
+                .splitlines()
+            ]
+            check(
+                "transition records status change e1 ready->done",
+                any(
+                    t["task_id"] == "e1" and t["from"] == "ready" and t["to"] == "done" for t in tr
+                ),
+            )
+            check(
+                "no spurious events on an unchanged re-run",
+                export_events(vault, load_state_cache(vault), run2, cost_lookup=lookup)
+                == {
+                    "transitions": 0,
+                    "dispositions": 0,
+                    "costs": 0,
+                    "cost_misses": 0,
+                    "blind_reviews": 0,
+                },
+            )
 
         return t.summary()
+
     assert _run() == 0
 
 
@@ -211,9 +346,16 @@ def test_cost_join_missing_session_is_reported_without_cost_row(tmp_path):
     db = _session_store(tmp_path / ".hermes")
     run1 = [_card("cost-miss", "ready")]
     save_state_cache(tmp_path, run1)
-    run2 = [{"task_id": "cost-miss", "title": "x", "status": "done",
-             "assignee": "memoria-writer", "metadata": {"review_status": "unreviewed"},
-             "runs": [{"metadata": {"worker_session_id": "missing-session"}}]}]
+    run2 = [
+        {
+            "task_id": "cost-miss",
+            "title": "x",
+            "status": "done",
+            "assignee": "memoria-writer",
+            "metadata": {"review_status": "unreviewed"},
+            "runs": [{"metadata": {"worker_session_id": "missing-session"}}],
+        }
+    ]
     lookup = _m.HermesCostLookup(hermes_home=tmp_path / ".hermes")
 
     ev = export_events(tmp_path, load_state_cache(tmp_path), run2, cost_lookup=lookup)
@@ -250,7 +392,9 @@ def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
     )
 
     try:
-        lookup({"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, now_iso())
+        lookup(
+            {"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, now_iso()
+        )
     except _m.CostDoctorError as exc:
         assert "runs[].metadata.worker_session_id" in str(exc)
     else:
@@ -260,10 +404,16 @@ def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
 # --------------------------------------------------------------------------- #
 # Inbox review prompts — done-card → work-prompt unification (#341)
 # --------------------------------------------------------------------------- #
-def _card(task_id, status, *, title="Draft answer", assignee="memoria-writer",
-          updated=None, metadata=None):
-    c = {"task_id": task_id, "title": title, "status": status, "assignee": assignee,
-         "metadata": metadata or {"review_status": "unreviewed"}}
+def _card(
+    task_id, status, *, title="Draft answer", assignee="memoria-writer", updated=None, metadata=None
+):
+    c = {
+        "task_id": task_id,
+        "title": title,
+        "status": status,
+        "assignee": assignee,
+        "metadata": metadata or {"review_status": "unreviewed"},
+    }
     if updated:
         c["updated_at"] = updated
     return c
@@ -279,8 +429,7 @@ def _frontmatter(path):
 
 
 def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
-    run1 = [_card("t_1", "running",
-                  metadata={"expected_outputs": "projects/p1/draft.md"})]
+    run1 = [_card("t_1", "running", metadata={"expected_outputs": "projects/p1/draft.md"})]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run1) == 0
     save_state_cache(tmp_path, run1)
 
@@ -327,9 +476,9 @@ def test_bootstrap_guard_skips_old_done_cards(tmp_path):
     old = (datetime.now(timezone.utc) - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
     recent = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     first_run = [
-        _card("t_old", "done", updated=old),          # pre-feature backlog: silent
-        _card("t_recent", "done", updated=recent),    # done within 24h: prompt
-        _card("t_nostamp", "done"),                   # no timestamp: silent (safe)
+        _card("t_old", "done", updated=old),  # pre-feature backlog: silent
+        _card("t_recent", "done", updated=recent),  # done within 24h: prompt
+        _card("t_nostamp", "done"),  # no timestamp: silent (safe)
     ]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), first_run) == 1
     files = _prompt_files(tmp_path)

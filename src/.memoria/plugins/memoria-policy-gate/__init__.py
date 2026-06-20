@@ -19,6 +19,7 @@ It reuses the tested decision core verbatim — `policy_hook.evaluate_pre` /
 
 The installer substitutes {{PROFILE}} and {{VAULT_PATH}} per lane at deploy time.
 """
+
 import sys
 import traceback
 from pathlib import Path
@@ -33,27 +34,32 @@ if str(_MCP_DIR) not in sys.path:
 
 def _payload(tool_name, args, task_id):
     tid = task_id or ""
-    return {"tool_name": tool_name, "tool_input": args or {},
-            "session_id": tid, "extra": {"task_id": tid}}
+    return {
+        "tool_name": tool_name,
+        "tool_input": args or {},
+        "session_id": tid,
+        "extra": {"task_id": tid},
+    }
 
 
 def _gate(tool_name, args, task_id, **kwargs):
     """pre_tool_call: block deny/dry_run vault writes. Fail-closed."""
     try:
         import policy_hook
+
         result = policy_hook.evaluate_pre(_payload(tool_name, args, task_id), PROFILE, VAULT)
         if result.get("decision") == "block":
             return {"action": "block", "message": result.get("reason", "policy gate: blocked")}
         return None
     except Exception as exc:  # any failure to evaluate -> block (fail-closed)
-        return {"action": "block",
-                "message": f"policy gate failed-closed (plugin error): {exc}"}
+        return {"action": "block", "message": f"policy gate failed-closed (plugin error): {exc}"}
 
 
 def _complete(tool_name, args, task_id, **kwargs):
     """post_tool_call: finish the audit record (after_hash). Never blocks."""
     try:
         import policy_hook
+
         policy_hook.evaluate_post(_payload(tool_name, args, task_id), PROFILE, VAULT)
     except Exception:
         # Never block the agent on audit-completion failures, but log so the

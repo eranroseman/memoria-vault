@@ -28,6 +28,7 @@ absent the server still works, degraded to the two live-API sources.
     python retraction.py --doi 10.x/y            # one-off CLI lookup (live)
     python retraction.py --sweep --vault V       # scan catalog DOIs; alert on retractions
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,27 +47,39 @@ RW_CSV_URL = "https://gitlab.com/crossref/retraction-watch-data/-/raw/main/retra
 TIMEOUT = 12
 
 _RW_INDEX: dict[str, dict] | None = None  # module-level cache, keyed by normalized DOI
-_warned_no_csv = False                    # one stderr warning per process
+_warned_no_csv = False  # one stderr warning per process
 
 
 # --------------------------------------------------------------------------- #
 # Helpers                                                                      #
 # --------------------------------------------------------------------------- #
 def normalize_doi(doi: str) -> str:
-    return ((doi or "").strip().removeprefix("https://doi.org/")
-            .removeprefix("http://doi.org/").removeprefix("doi:").strip().lower())
+    return (
+        (doi or "")
+        .strip()
+        .removeprefix("https://doi.org/")
+        .removeprefix("http://doi.org/")
+        .removeprefix("doi:")
+        .strip()
+        .lower()
+    )
 
 
 def _contact() -> str:
-    return (os.environ.get("MEMORIA_CONTACT_EMAIL")
-            or os.environ.get("CROSSREF_MAILTO")
-            or os.environ.get("NCBI_EMAIL") or "")
+    return (
+        os.environ.get("MEMORIA_CONTACT_EMAIL")
+        or os.environ.get("CROSSREF_MAILTO")
+        or os.environ.get("NCBI_EMAIL")
+        or ""
+    )
 
 
 def rw_csv_path() -> Path:
-    raw = (os.environ.get("MEMORIA_RW_CSV")
-           or (os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH", ""))
-           + "/.memoria/data/retraction_watch.csv")
+    raw = (
+        os.environ.get("MEMORIA_RW_CSV")
+        or (os.environ.get("MEMORIA_VAULT_PATH") or os.environ.get("OBSIDIAN_VAULT_PATH", ""))
+        + "/.memoria/data/retraction_watch.csv"
+    )
     return Path(raw).expanduser()
 
 
@@ -100,10 +113,12 @@ def build_rw_index(rows) -> dict[str, dict]:
         doi = normalize_doi(r.get("OriginalPaperDOI", ""))
         if not doi or doi == "unavailable":
             continue
-        rec = {"retracted": _nature_retracted(r.get("RetractionNature", "")),
-               "nature": (r.get("RetractionNature") or "").strip(),
-               "date": (r.get("RetractionDate") or "").strip() or None,
-               "retraction_doi": normalize_doi(r.get("RetractionDOI", "")) or None}
+        rec = {
+            "retracted": _nature_retracted(r.get("RetractionNature", "")),
+            "nature": (r.get("RetractionNature") or "").strip(),
+            "date": (r.get("RetractionDate") or "").strip() or None,
+            "retraction_doi": normalize_doi(r.get("RetractionDOI", "")) or None,
+        }
         prev = index.get(doi)
         if prev is None or (rec["retracted"] and not prev["retracted"]):
             index[doi] = rec
@@ -129,8 +144,10 @@ def rw_lookup(doi: str, path: Path | None = None) -> dict | None:
     index = load_rw_index(path)
     if not index:
         return None  # CSV not present -> this source is unavailable, not "clean"
-    return index.get(normalize_doi(doi), {"retracted": False, "nature": None,
-                                          "date": None, "retraction_doi": None})
+    return index.get(
+        normalize_doi(doi),
+        {"retracted": False, "nature": None, "date": None, "retraction_doi": None},
+    )
 
 
 def refresh_rw(path: Path | None = None, url: str = RW_CSV_URL) -> int:
@@ -148,7 +165,7 @@ def refresh_rw(path: Path | None = None, url: str = RW_CSV_URL) -> int:
     tmp.write_bytes(data)
     tmp.replace(path)
     n = max(0, data.count(b"\n") - 1)
-    print(f"  refreshed {path} ({n} rows, {len(data)//1024} KB)")
+    print(f"  refreshed {path} ({n} rows, {len(data) // 1024} KB)")
     return n
 
 
@@ -166,13 +183,22 @@ def _date_parts_to_iso(dp: dict) -> str | None:
 def crossref_retraction(message: dict) -> dict:
     for upd in message.get("update-to", []) or []:
         if "retraction" in str(upd.get("type", "")).lower():
-            return {"retracted": True, "retraction_doi": upd.get("DOI"),
-                    "date": _date_parts_to_iso(upd.get("updated", {})), "via": "update-to"}
+            return {
+                "retracted": True,
+                "retraction_doi": upd.get("DOI"),
+                "date": _date_parts_to_iso(upd.get("updated", {})),
+                "via": "update-to",
+            }
     relation = message.get("relation", {}) or {}
     rb = relation.get("is-retracted-by") or relation.get("is_retracted_by")
     if rb:
         first = rb[0] if isinstance(rb, list) and rb else {}
-        return {"retracted": True, "retraction_doi": first.get("id"), "date": None, "via": "relation"}
+        return {
+            "retracted": True,
+            "retraction_doi": first.get("id"),
+            "date": None,
+            "via": "relation",
+        }
     return {"retracted": False, "retraction_doi": None, "date": None, "via": None}
 
 
@@ -182,9 +208,11 @@ def open_retractions_verdict(status: int, data: dict | None) -> dict:
     if status and 200 <= status < 300 and isinstance(data, dict):
         retracted = bool(data.get("retracted"))
         rs = (data.get("retractions") or [{}])[0]
-        return {"retracted": retracted,
-                "date": rs.get("date") if retracted else None,
-                "retraction_doi": rs.get("doi") if retracted else None}
+        return {
+            "retracted": retracted,
+            "date": rs.get("date") if retracted else None,
+            "retraction_doi": rs.get("doi") if retracted else None,
+        }
     return {"retracted": None, "date": None, "retraction_doi": None}
 
 
@@ -212,13 +240,15 @@ def combine(doi: str, sources: dict[str, dict | None], errors: dict[str, str | N
 
     return {
         "doi": normalize_doi(doi),
-        "retracted": overall,                       # True / False / None(unknown)
+        "retracted": overall,  # True / False / None(unknown)
         "agreement": agreement,
         "nature": pick("nature"),
         "retraction_doi": pick("retraction_doi"),
         "retraction_date": pick("date"),
-        "sources": {k: {"checked": v is not None, "error": errors.get(k), **(v or {})}
-                    for k, v in sources.items()},
+        "sources": {
+            k: {"checked": v is not None, "error": errors.get(k), **(v or {})}
+            for k, v in sources.items()
+        },
         "note": _summary(doi, overall, agreement),
     }
 
@@ -226,10 +256,15 @@ def combine(doi: str, sources: dict[str, dict | None], errors: dict[str, str | N
 def _summary(doi: str, overall: bool | None, agreement: str) -> str:
     d = normalize_doi(doi)
     if overall is True:
-        return f"{d} is RETRACTED" + (" (sources agree)" if agreement == "agree"
-                                      else " (flagged by one source; others disagree — verify before acting)")
+        return f"{d} is RETRACTED" + (
+            " (sources agree)"
+            if agreement == "agree"
+            else " (flagged by one source; others disagree — verify before acting)"
+        )
     if overall is False:
-        return f"{d}: no retraction found" + (" (multiple sources)" if agreement == "agree" else " (single source)")
+        return f"{d}: no retraction found" + (
+            " (multiple sources)" if agreement == "agree" else " (single source)"
+        )
     return f"{d}: retraction status UNKNOWN — no source returned data; do not assume clean"
 
 
@@ -246,7 +281,9 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 
     # 1. Retraction Watch (authoritative, local)
     sources["retraction_watch"] = rw_lookup(doi)
-    errors["retraction_watch"] = None if sources["retraction_watch"] is not None else "csv-not-loaded"
+    errors["retraction_watch"] = (
+        None if sources["retraction_watch"] is not None else "csv-not-loaded"
+    )
 
     if offline:
         # Offline mode has ONE source; without the CSV every verdict is UNKNOWN.
@@ -254,24 +291,29 @@ def check_doi(doi: str, offline: bool = False) -> dict:
         global _warned_no_csv
         if sources["retraction_watch"] is None and not _warned_no_csv:
             _warned_no_csv = True
-            print(f"[retraction] WARNING: Retraction Watch CSV not found at "
-                  f"{rw_csv_path()} — offline mode has no data source; every DOI "
-                  f"reports status UNKNOWN. Run `retraction.py --refresh` to fetch it.",
-                  file=sys.stderr)
+            print(
+                f"[retraction] WARNING: Retraction Watch CSV not found at "
+                f"{rw_csv_path()} — offline mode has no data source; every DOI "
+                f"reports status UNKNOWN. Run `retraction.py --refresh` to fetch it.",
+                file=sys.stderr,
+            )
         return combine(doi, sources, errors)
 
     # 2. CrossRef (real-time delta)
     cr_status, cr_json, cr_err = _get_json(CROSSREF_URL.format(doi=doi))
-    sources["crossref"] = crossref_retraction(cr_json["message"]) if cr_json and "message" in cr_json else None
+    sources["crossref"] = (
+        crossref_retraction(cr_json["message"]) if cr_json and "message" in cr_json else None
+    )
     errors["crossref"] = cr_err or ("doi-not-in-crossref" if cr_status == 404 else None)
 
     # 3. Open Retractions (fallback cross-check)
     or_status, or_json, or_err = _get_json(OPEN_RETRACTIONS_URL.format(doi=doi))
-    sources["open_retractions"] = open_retractions_verdict(or_status, or_json) if or_err is None else None
+    sources["open_retractions"] = (
+        open_retractions_verdict(or_status, or_json) if or_err is None else None
+    )
     errors["open_retractions"] = or_err
 
     return combine(doi, sources, errors)
-
 
 
 def sweep(vault: Path, offline: bool = True) -> dict:
@@ -300,23 +342,38 @@ def sweep(vault: Path, offline: bool = True) -> dict:
                 hits += 1
                 ck = (ck_re.search(m.group(1)) or [None, ""])[1]
                 inbox_writer.write_finding(
-                    vault, "alert", f"Retraction: {note.stem}",
+                    vault,
+                    "alert",
+                    f"Retraction: {note.stem}",
                     f"DOI {doi_m.group(1).strip()} is retracted "
                     f"({result.get('nature') or 'see retraction record'}); claims citing it "
                     "need re-adjudication.",
-                    raised_by="sweep", agent_recommendation="issues-found",
-                    target=f"{folder}/{note.name}", citekey=ck, loudness="alert")
+                    raised_by="sweep",
+                    agent_recommendation="issues-found",
+                    target=f"{folder}/{note.name}",
+                    citekey=ck,
+                    loudness="alert",
+                )
     return {"checked": checked, "retracted": hits}
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Retraction sweep operation (Retraction Watch CSV + CrossRef + Open Retractions)")
-    ap.add_argument("--refresh", action="store_true", help="download/refresh the Retraction Watch CSV and exit")
+    ap = argparse.ArgumentParser(
+        description="Retraction sweep operation (Retraction Watch CSV + CrossRef + Open Retractions)"
+    )
+    ap.add_argument(
+        "--refresh", action="store_true", help="download/refresh the Retraction Watch CSV and exit"
+    )
     ap.add_argument("--doi", help="one-off CLI lookup (makes live HTTP calls)")
-    ap.add_argument("--sweep", action="store_true", help="scan catalog DOIs; write Inbox alerts for retracted works")
+    ap.add_argument(
+        "--sweep",
+        action="store_true",
+        help="scan catalog DOIs; write Inbox alerts for retracted works",
+    )
     ap.add_argument("--vault", type=Path, help="vault root (for --sweep)")
-    ap.add_argument("--offline", action="store_true", default=True,
-                    help="local RW CSV only — the cron default")
+    ap.add_argument(
+        "--offline", action="store_true", default=True, help="local RW CSV only — the cron default"
+    )
     args = ap.parse_args()
     if args.refresh:
         sys.exit(0 if refresh_rw() >= 0 else 1)

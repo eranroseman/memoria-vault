@@ -129,7 +129,8 @@ def test_every_pinned_file_exists_under_src():
                 file = leaf.get("state", {}).get("file")
                 if file is not None:
                     assert (SRC / file).is_file(), (
-                        f"{name}/{pane}: pinned file {file} missing under src/")
+                        f"{name}/{pane}: pinned file {file} missing under src/"
+                    )
 
 
 def test_workspace_loader_choices_are_retired():
@@ -167,9 +168,7 @@ def test_commander_ribbon_keeps_global_actions_only():
     ):
         configured = data[surface]
         assert [entry["name"] for entry in configured] == names
-        assert [entry["id"] for entry in configured] == [
-            quickadd_ids[name] for name in names
-        ]
+        assert [entry["id"] for entry in configured] == [quickadd_ids[name] for name in names]
         assert all(entry["mode"] == "any" for entry in configured)
 
 
@@ -243,9 +242,7 @@ def test_property_badge_snippet_ships_state_accents():
 
 
 def test_starter_vault_enables_memoria_snippets():
-    appearance = json.loads(
-        (SRC / ".obsidian" / "appearance.json").read_text(encoding="utf-8")
-    )
+    appearance = json.loads((SRC / ".obsidian" / "appearance.json").read_text(encoding="utf-8"))
     assert set(appearance["enabledCssSnippets"]) >= {
         "memoria-link-colors",
         "memoria-property-badges",
@@ -261,7 +258,7 @@ def test_link_color_snippet_ships_lifecycle_accents():
         'data-link-lifecycle="current"',
         'data-link-lifecycle="retracted"',
         'data-link-lifecycle="archived"',
-        '--memoria-link-proposed-color',
+        "--memoria-link-proposed-color",
     ):
         assert marker in css
 

@@ -25,14 +25,35 @@ def test_classify_maps_write_tools_and_ignores_read_or_direct_tools():
     assert classify("obsidian_get_file_contents") is None
     assert classify("obsidian_simple_search") is None
     assert classify("process") is None
-    for direct in ("terminal", "run_command", "write_file", "patch", "file__write_file", "read_file", "search_files"):
+    for direct in (
+        "terminal",
+        "run_command",
+        "write_file",
+        "patch",
+        "file__write_file",
+        "read_file",
+        "search_files",
+    ):
         assert classify(direct) is None
 
 
 def test_direct_capability_tools_are_hard_denied():
-    for direct in ("terminal", "run_command", "write_file", "patch", "file__write_file", "read_file", "search_files"):
+    for direct in (
+        "terminal",
+        "run_command",
+        "write_file",
+        "patch",
+        "file__write_file",
+        "read_file",
+        "search_files",
+    ):
         blocked = evaluate_pre(
-            {"tool_name": direct, "tool_input": {}, "session_id": "t_x", "extra": {"task_id": "t_x"}},
+            {
+                "tool_name": direct,
+                "tool_input": {},
+                "session_id": "t_x",
+                "extra": {"task_id": "t_x"},
+            },
             "memoria-engineer",
             Path("/nonexistent"),
         )
@@ -56,16 +77,20 @@ def _vault_with_policy(tmp_path):
     shutil.copy(mcp_src / "_shared.py", vault / ".memoria" / "mcp" / "_shared.py")
     (lanes / "writer.yaml").write_text(
         "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
-        "      - \"inbox/**\"\n      - \"notes/hubs/**\"\n"
-        "  deny:\n    write:\n      - \"notes/claims/**\"\n"
-        "  require:\n    - audit_log\nrouting:\n  write_scope:\n    - \"inbox/\"\n",
+        '      - "inbox/**"\n      - "notes/hubs/**"\n'
+        '  deny:\n    write:\n      - "notes/claims/**"\n'
+        '  require:\n    - audit_log\nrouting:\n  write_scope:\n    - "inbox/"\n',
         encoding="utf-8",
     )
     return vault
 
 
 def _ev(vault, tool, path, *, key="filepath"):
-    return evaluate_pre({"tool_name": tool, "tool_input": {key: path}, "extra": {"task_id": "T1"}}, "memoria-writer", vault)
+    return evaluate_pre(
+        {"tool_name": tool, "tool_input": {key: path}, "extra": {"task_id": "T1"}},
+        "memoria-writer",
+        vault,
+    )
 
 
 def test_evaluate_pre_allows_reads_and_allowed_writes_but_blocks_review_and_denied_zones(tmp_path):
@@ -106,7 +131,10 @@ def test_file_toolset_writes_are_blocked_even_for_allowed_vault_zones(tmp_path):
     assert to_vault_relative(abs_claim, vault) == "notes/claims/c.md"
     assert _ev(vault, "write_file", abs_claim, key="file_path").get("decision") == "block"
     assert to_vault_relative("/etc/passwd", vault) is None
-    assert _ev(vault, "write_file", "/tmp/external-repo/main.py", key="file_path").get("decision") == "block"
+    assert (
+        _ev(vault, "write_file", "/tmp/external-repo/main.py", key="file_path").get("decision")
+        == "block"
+    )
 
 
 def test_evaluate_post_pairs_write_hashes_and_cleans_pending_stash(tmp_path):
@@ -123,8 +151,12 @@ def test_evaluate_post_pairs_write_hashes_and_cleans_pending_stash(tmp_path):
     stash_existed = stash.is_file()
     (vault / "inbox" / "round.md").write_text("answer body", encoding="utf-8")
     post = evaluate_post(payload, "memoria-writer", vault)
-    audit_lines = (vault / "system" / "logs" / "audit.jsonl").read_text(encoding="utf-8").splitlines()
-    completes = [json.loads(ln) for ln in audit_lines if json.loads(ln).get("decision") == "write_complete"]
+    audit_lines = (
+        (vault / "system" / "logs" / "audit.jsonl").read_text(encoding="utf-8").splitlines()
+    )
+    completes = [
+        json.loads(ln) for ln in audit_lines if json.loads(ln).get("decision") == "write_complete"
+    ]
 
     assert pre == {}
     assert stash_existed
