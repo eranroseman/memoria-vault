@@ -1,6 +1,7 @@
 ---
 title: Query the vault
 parent: Knowledge
+grand_parent: How-to guides
 nav_order: 7
 ---
 

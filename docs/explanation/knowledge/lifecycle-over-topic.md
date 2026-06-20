@@ -1,6 +1,7 @@
 ---
 title: Lifecycle, not topic — and state, not folders
 parent: Knowledge
+grand_parent: Explanation
 nav_order: 4
 ---
 

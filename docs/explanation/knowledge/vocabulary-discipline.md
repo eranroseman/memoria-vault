@@ -1,6 +1,7 @@
 ---
 title: Vocabulary discipline
 parent: Knowledge
+grand_parent: Explanation
 nav_order: 6
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Advance a claim to evergreen
 parent: Knowledge
+grand_parent: How-to guides
 nav_order: 3
 ---
 
