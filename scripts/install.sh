@@ -921,6 +921,7 @@ main() {
   if [ "$PROFILES_ONLY" -eq 1 ]; then
     load_install_modules
     ensure_git_available
+    resolve_repo            # editable Memoria install (install_mcp_deps) needs REPO_DIR
     resolve_vault_for_profiles
     install_mcp_deps
     ensure_memoria_css_snippets
