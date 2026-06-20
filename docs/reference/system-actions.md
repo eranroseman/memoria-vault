@@ -137,7 +137,7 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 
 | Action | What it does |
 | --- | --- |
-| Capture from Zotero | Reads the current Zotero selection (CAYW), writes the intake anchor, creates an `intake:source` card. |
+| Capture from Zotero | Reads the current Zotero selection (Better BibTeX JSON-RPC), writes the intake anchor, materializes a Tier-0 `catalog/papers/<citekey>.md` stub, and creates an `intake:source` card. |
 | Capture source from URL | Prompts for a URL and creates an `intake:source` card on the Librarian lane. |
 | Catalog a source | Prompts for a citekey / URL and creates a catalog-lane card. |
 | Extract claims | Sends the active (or chosen) source to the extract lane. |

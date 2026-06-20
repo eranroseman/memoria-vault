@@ -70,7 +70,7 @@ The ingest MCP persists the un-gated derived artifacts the agent can't:
 | Artifact | Path | Notes |
 | --- | --- | --- |
 | Full-text extract | `.memoria/data/extracts/<citekey>.md` | Outside the Librarian's write lane; the paper note's `extract_path` points here (the `extract-path-broken` detector checks it). |
-| Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** the gated note write — the durability anchor. |
+| Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** enrichment — the durability anchor. Zotero QuickAdd capture also writes a schema-valid Tier-0 `catalog/papers/<citekey>.md` stub immediately, so the Catalog reflects the capture even before the Librarian enriches it. |
 | Classify audit | `system/logs/classify.jsonl` | One append-only line per classify decision (applied or flagged) and per project-membership proposal (`stage: project_hints`, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) — see Automated classification above. |
 
 ---

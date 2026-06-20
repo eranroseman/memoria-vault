@@ -204,7 +204,9 @@ def test_zotero_capture_writes_intake_log_where_readers_look():
 def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     assert "writeCandidateCard(params, citekey, title)" in script
+    assert "writePaperStub(params, citekey, title)" in script
     assert '"inbox/candidate-zotero-" + slug(citekey) + ".md"' in script
+    assert '"catalog/papers/" + citekey + ".md"' in script
     for field in (
         "type: candidate",
         "lifecycle: proposed",
@@ -220,6 +222,26 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     assert 'command -v hermes' in script
     assert '$HOME/.local/bin' in script
     assert "Hermes not found on PATH" in script
+
+
+def test_zotero_capture_materializes_schema_valid_tier0_catalog_stub():
+    script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
+    start = script.index("async function writePaperStub")
+    stub = script[start:script.index("async function uniquePath", start)]
+    for marker in (
+        '"type: paper"',
+        '"lifecycle: current"',
+        '"citekey: " + yamlString(citekey)',
+        '"ingest_status: tier0"',
+        '"relationships:"',
+        '"  cited_by: []"',
+        '"  authored_by: []"',
+        '"  published_in: \\"\\""',
+        "Captured from Zotero with citekey",
+        "if (await exists(adapter, path)) return path;",
+        'await ensureFolder(adapter, "catalog/papers")',
+    ):
+        assert marker in stub
 
 
 def test_exploration_trace_capture_is_project_local_and_noncanonical():
