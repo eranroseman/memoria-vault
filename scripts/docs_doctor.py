@@ -515,12 +515,104 @@ def check_profile_skill_count_mirror(repo: Path, errors: list[str]) -> None:
             )
 
 
+PROFILE_LABELS = {
+    "memoria-copi": "Co-PI",
+    "memoria-librarian": "Librarian",
+    "memoria-writer": "Writer",
+    "memoria-peer-reviewer": "Peer-reviewer",
+}
+
+
+def _profile_skill_ids(repo: Path) -> dict[str, set[str]]:
+    profiles = repo / "src" / ".memoria" / "profiles"
+    out: dict[str, set[str]] = {}
+    if not profiles.is_dir():
+        return out
+    for profile in sorted(p for p in profiles.iterdir() if p.is_dir()):
+        skills = profile / "skills"
+        out[profile.name] = (
+            {p.name for p in skills.iterdir() if p.is_dir()} if skills.is_dir() else set()
+        )
+    return out
+
+
+def _system_actions_skill_section(text: str, label: str) -> tuple[int | None, set[str]]:
+    heading = re.search(rf"^### {re.escape(label)} \((\d+)\)\s*$", text, re.MULTILINE)
+    if not heading:
+        return None, set()
+    start = heading.end()
+    tail = text[start:]
+    next_heading = re.search(r"\n(?:##|###) ", tail)
+    section = tail[: next_heading.start()] if next_heading else tail
+    skills: set[str] = set()
+    for line in section.splitlines():
+        m = re.match(r"\|\s*([^|`]+|`[^`]+`)\s*\|", line)
+        if not m:
+            continue
+        value = m.group(1).strip().strip("`")
+        if value in {"Skill", "---"} or set(value) <= {"-"}:
+            continue
+        skills.add(value)
+    return int(heading.group(1)), skills
+
+
+def check_system_actions_skill_mirror(repo: Path, errors: list[str]) -> None:
+    doc = repo / "docs" / "reference" / "system-actions.md"
+    if not doc.is_file():
+        return
+    text = read(doc)
+    actual = _profile_skill_ids(repo)
+    for profile, label in PROFILE_LABELS.items():
+        expected = actual.get(profile, set())
+        if not expected:
+            continue
+        mirrored_count, mirrored = _system_actions_skill_section(text, label)
+        if mirrored_count is None:
+            errors.append(f"{doc}: agent-skill mirror omits {label}")
+            continue
+        if mirrored_count != len(expected):
+            errors.append(
+                f"{doc}: {label} skill heading says {mirrored_count} but filesystem has {len(expected)}"
+            )
+        if mirrored != expected:
+            errors.append(
+                f"{doc}: {label} skill mirror differs from filesystem "
+                f"(missing: {sorted(expected - mirrored) or 'none'}; "
+                f"extra: {sorted(mirrored - expected) or 'none'})"
+            )
+
+
+def check_hermes_cli_skill_mirror(repo: Path, errors: list[str]) -> None:
+    doc = repo / "docs" / "reference" / "hermes-cli.md"
+    if not doc.is_file():
+        return
+    text = read(doc)
+    actual = _profile_skill_ids(repo)
+    for profile, label in PROFILE_LABELS.items():
+        expected = actual.get(profile, set())
+        if not expected:
+            continue
+        row = re.search(rf"^\| \*\*{re.escape(label)}\*\*[^|]*\|([^|]+)\|", text, re.MULTILINE)
+        if not row:
+            errors.append(f"{doc}: skill-name mirror omits {label}")
+            continue
+        mirrored = set(re.findall(r"`([^`]+)`", row.group(1)))
+        if mirrored != expected:
+            errors.append(
+                f"{doc}: {label} skill-name mirror differs from filesystem "
+                f"(missing: {sorted(expected - mirrored) or 'none'}; "
+                f"extra: {sorted(mirrored - expected) or 'none'})"
+            )
+
+
 def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
     check_note_type_reference_mirror(repo, errors)
     check_vocabulary_reference_mirror(repo, errors)
     check_quickadd_command_reference_mirror(repo, errors)
     check_plugin_count_mirrors(repo, errors)
     check_profile_skill_count_mirror(repo, errors)
+    check_system_actions_skill_mirror(repo, errors)
+    check_hermes_cli_skill_mirror(repo, errors)
 
 
 def main() -> int:

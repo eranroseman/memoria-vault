@@ -31,13 +31,8 @@ The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the
 | **Librarian** (catalog · extract · link · map) | `catalog-find-source` · `catalog-enrich-record` · `catalog-classify-source` · `catalog-rank-candidate` · `extract-stub-claim` · `extract-flag-distill` · `link-suggest-claim` · `link-surface-tension` · `map-scope-project` · `map-report-coverage` · `map-cluster-corpus` · `map-seed-canvas` · `map-graph-claims` · `map-canvas-hub` |
 | **Writer** (draft) | `draft-write-section` · `draft-outline-argument` · `draft-score-outline` · `draft-bind-citation` |
 | **Peer-reviewer** (verify) | `verify-check-citation` · `verify-trace-claim` · `verify-card-gap` · `verify-propose-fix` |
-| **Ingest** operation | `ingest:fetch-metadata` · `ingest:extract-text` · `ingest:build-relationships` · `ingest:create-records` |
-| **Search** operation | `search:query-vault` · `search:find-similar` |
-| **Clustering** operation | `cluster:model-topics` · `cluster:build-graph` |
-| **Sweeps** operation | `sweep:check-retraction` · `sweep:find-duplicates` · `sweep:check-similarity` |
-| **Linter** operation | `lint:check-schema` · `lint:migrate-schema` · `lint:analyze-graph` · `lint:report-health` |
 
-Operation "skills" run on cron/CI or behind MCP facades, not as agent chat commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
+Deterministic operation entrypoints are MCP tools, cron wrappers, or repo scripts, not Hermes chat skills. Use [Operations](operations.md), [Ingest routing](ingest.md), [Search](search.md), [Clustering](clustering.md), [Linter](linter.md), and [Sweeps](sweeps.md) for their current commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
 
 Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`src/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
 

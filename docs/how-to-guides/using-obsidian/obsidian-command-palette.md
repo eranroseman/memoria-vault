@@ -44,6 +44,12 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 
 Palette/selection assist commands create cards or proposal artifacts in staging. They never write directly to canonical notes.
 
+**Project commands** — bounded writing-project maintenance:
+
+- `Memoria: start project` — scaffold `projects/<slug>/` with the project note, first thesis, and gate surface
+- `Memoria: refresh project gate` — recalculate `project-gate-index.md` from the active project state
+- `Memoria: supersede thesis` — create a replacement thesis, mark the old one superseded, and raise the re-confirmation alert
+
 The task commands default sensibly off the **active note** — `extract claims` on an open paper or source note, `link a claim` on an open claim, `verify a draft` on an open project file. Assist commands also carry the active note and selected text as context when present.
 
 **2. Use the visible toolbar buttons for the main loop.**
@@ -70,7 +76,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Verify
 
-- `Cmd-P` -> `M` returns the `Memoria:` commands in the capture, task, and assist groups
+- `Cmd-P` -> `M` returns the `Memoria:` commands in the capture, task, assist, and project groups
 - The left ribbon exposes capture, delegate, resolve, and reset/navigation controls
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`
 - `Memoria: structured source capture` creates a proposed `notes/sources/` note and an Inbox `candidate` card

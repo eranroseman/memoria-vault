@@ -48,11 +48,10 @@ Found-by-keyword-but-not-by-meaning (or the reverse) is the diagnostic that dist
 | Consumer | Uses search for |
 | --- | --- |
 | Co-PI vault answers | The grounded retrieval behind a conversational question ([Query the vault](../how-to-guides/knowledge/query-the-vault.md)). |
-| Librarian map lane | `map-cluster-corpus`, `map-report-coverage` — coverage and gap analysis over the corpus. Scope/gap reports may carry a companion exploration trace under `notes/fleeting/maps/` for rejected directions and dead ends. |
-| Librarian comparative pulls | The `[!brief]` comparative read at ingest and similarity checks. |
-| Peer-reviewer verify | Claim-trace and citation checks pull candidate evidence. |
+| Librarian map lane | `map-cluster-corpus`, `map-report-coverage`, `map-scope-project`, `map-graph-claims`, and `map-canvas-hub` use qmd to narrow the corpus before graph, topic, and canvas work. Scope/gap reports may carry a companion exploration trace under `notes/fleeting/maps/` for rejected directions and dead ends. |
+| Librarian comparative pulls | The `[!brief]` comparative read at ingest and catalog enrichment. |
+| Writer and Peer-reviewer | Draft binding, claim tracing, citation checks, and duplicate/citation sub-checks pull candidate evidence without writing through qmd. |
 | QuickAdd pre-file shadow | `create-linked-claim` and `structured-source-capture` run a report-only top-3 neighbour check before filing claim/source notes. |
-| Sweeps operation | `sweep:check-similarity`, `sweep:find-duplicates` — pre-file similarity and dedup. |
 
 ---
 
@@ -86,6 +85,7 @@ A full `qmd embed` re-embeds every note (roughly 1–5 min under 500 notes, up t
 - **Read-only and local.** Search never mutates the vault and never calls out to a network service; it cannot be the cause of a denied write or a leaked note.
 - **Index can lag.** A new note isn't searchable until it's embedded; staleness is silent and surfaces as "the Co-PI misses notes I know exist" — the dominant search failure mode ([Failure modes](failure-modes.md)).
 - **Pre-file similarity is shadow-only.** QuickAdd surfaces neighbours in a `[!similarity]` callout and logs `pre-file-similarity.jsonl`, but it never blocks filing, auto-merges notes, or uses a calibrated threshold. qmd failures become warnings, not write failures.
+- **No standalone duplicate sweep ships today.** Retrospective duplicate detection is still skill/sub-check work, not a `sweep:find-duplicates` command. The shipped creation-time surface is the QuickAdd shadow report above.
 - **Text, not graph.** `qmd` ranks by text similarity. Relationship-aware retrieval (`supports` / `contradicts` edges, communities, centrality) is the typed-graph surface in [Clustering](clustering.md), not here.
 
 ---

@@ -41,12 +41,19 @@ The coverage read comes back through the Inbox, with **`gap` cards** for the thi
 - **Dense enough** (a hub with several mutually linked claims is the tell): proceed to sketching and drafting.
 - **Gaps that matter:** hand each gap card you agree with straight back — "that gap is real, find sources to fill it" ([Find new sources](../library/find-new-sources.md)). Archive the gaps you don't buy.
 
+**5. Record rejected directions.**
+
+When a map or gap report shows a direction you considered and intentionally rejected, open that report and run `Memoria: record exploration trace` ([Obsidian command palette](../../reference/obsidian-command-palette.md)). Capture the rejected direction, the reason, the evidence you checked, and when it would be worth revisiting.
+
+The trace lands beside the map under `notes/fleeting/maps/`. It is project-local memory for future you, not canonical knowledge: do not turn it into a claim or hub unless you later find positive evidence worth distilling.
+
 Two standing dashboards answer the same questions continuously: `system/dashboards/open-questions.md` (unconnected claims — the synthesis backlog) and `contradictions.md` (open tensions).
 
 ## Verify
 
 - The map results and gap cards arrived in the Inbox, and every gap card is resolved — turned into a discovery task or archived
 - You've made an explicit "write now / read more" decision — not just noted the map and moved on
+- Rejected directions that shaped the decision are captured as exploration traces next to the map/gap report
 
 ## Related
 
