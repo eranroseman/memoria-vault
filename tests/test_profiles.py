@@ -8,10 +8,20 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 PROFILES = SRC / ".memoria" / "profiles"
 LANES = SRC / ".memoria" / "lane-overrides"
 
-EXPECTED = {"memoria-copi", "memoria-librarian", "memoria-writer",
-            "memoria-peer-reviewer", "memoria-engineer"}
-RETIRED = {"memoria-mapper", "memoria-socratic", "memoria-verifier",
-           "memoria-coder", "memoria-linter"}
+EXPECTED = {
+    "memoria-copi",
+    "memoria-librarian",
+    "memoria-writer",
+    "memoria-peer-reviewer",
+    "memoria-engineer",
+}
+RETIRED = {
+    "memoria-mapper",
+    "memoria-socratic",
+    "memoria-verifier",
+    "memoria-coder",
+    "memoria-linter",
+}
 PROD_MODELS = {
     "memoria-copi": "~anthropic/claude-opus-latest",
     "memoria-peer-reviewer": "~anthropic/claude-opus-latest",
@@ -194,8 +204,9 @@ def test_catalog_enrich_record_creates_proposed_source_notes():
 def test_acp_pane_is_copi_only():
     import json
 
-    data = json.loads((SRC / ".obsidian/plugins/agent-client/data.json.example")
-                      .read_text(encoding="utf-8"))
+    data = json.loads(
+        (SRC / ".obsidian/plugins/agent-client/data.json.example").read_text(encoding="utf-8")
+    )
     agents = data["customAgents"]
     assert [a["id"] for a in agents] == ["memoria-copi"]
     assert agents[0]["displayName"] == "Memoria Co-PI"
@@ -212,9 +223,12 @@ def test_no_profile_has_direct_world_access():
     """D40/ADR-46: agents reach the vault, engines, and APIs ONLY through MCP.
     Every profile must disable the direct-capability toolsets — no exceptions."""
     import yaml
+
     forbidden = {"file", "terminal", "code_execution", "browser", "web", "computer_use"}
     for cfg in sorted(PROFILES.glob("*/config.yaml")):
         data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
         disabled = set((data.get("agent") or {}).get("disabled_toolsets") or [])
         missing = forbidden - disabled
-        assert not missing, f"{cfg.parent.name}: direct-access toolsets not disabled: {sorted(missing)}"
+        assert not missing, (
+            f"{cfg.parent.name}: direct-access toolsets not disabled: {sorted(missing)}"
+        )

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Shared board-export card loading and normalization."""
+
 from __future__ import annotations
 
 import json
@@ -11,13 +12,19 @@ from pathlib import Path
 BOARD_RELDIR = "system/board"
 SNAPSHOT_RELPATH = "system/logs/board-state.jsonl"
 TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # per-card status/review changes
-DISPOSITION_RELPATH = "system/logs/disposition.jsonl"        # accept | edit | reject (un-backfillable)
-COST_RELPATH = "system/logs/cost.jsonl"                      # API spend + tokens per card at completion
-COST_MISSES_RELPATH = "system/logs/cost-misses.jsonl"        # done cards whose session join was unavailable
+DISPOSITION_RELPATH = "system/logs/disposition.jsonl"  # accept | edit | reject (un-backfillable)
+COST_RELPATH = "system/logs/cost.jsonl"  # API spend + tokens per card at completion
+COST_MISSES_RELPATH = (
+    "system/logs/cost-misses.jsonl"  # done cards whose session join was unavailable
+)
 BLIND_REVIEW_RELPATH = "system/logs/blind-review-samples.jsonl"  # sampled terminal reviews
-STATE_CACHE_RELPATH = "system/logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
+STATE_CACHE_RELPATH = (
+    "system/logs/.board-state-cache.json"  # internal: last-seen state per card (for diffing)
+)
 LIVE_STATUSES = ("triage", "todo", "ready", "running", "blocked", "done")  # not archived
-REVIEW_QUEUE_STATES = ("requested",)   # done cards handed off for human review (review_status: requested)
+REVIEW_QUEUE_STATES = (
+    "requested",
+)  # done cards handed off for human review (review_status: requested)
 TERMINAL_REVIEW = {"approved": "accepted", "rejected": "rejected", "changes-requested": "rejected"}
 REQUIRED_SESSION_COLUMNS = {
     "id",
@@ -44,11 +51,14 @@ def load_cards(from_json: Path | None = None) -> list[dict]:
     else:
         try:
             proc = subprocess.run(
-                ["hermes", "kanban", "list", "--json"],
-                capture_output=True, text=True, check=True)
+                ["hermes", "kanban", "list", "--json"], capture_output=True, text=True, check=True
+            )
         except subprocess.CalledProcessError as exc:
-            print(f"[board_export] hermes kanban list failed (exit {exc.returncode}): "
-                  f"{exc.stderr.strip()}", file=sys.stderr)
+            print(
+                f"[board_export] hermes kanban list failed (exit {exc.returncode}): "
+                f"{exc.stderr.strip()}",
+                file=sys.stderr,
+            )
             raise
         except FileNotFoundError:
             print("[board_export] 'hermes' not found on PATH", file=sys.stderr)
@@ -58,6 +68,7 @@ def load_cards(from_json: Path | None = None) -> list[dict]:
     # Hermes may return a bare list or {"tasks": [...]}; accept both.
     cards = data.get("tasks", data) if isinstance(data, dict) else data
     return [c for c in cards if isinstance(c, dict)]
+
 
 def _first(card: dict, *keys: str, default=""):
     for k in keys:

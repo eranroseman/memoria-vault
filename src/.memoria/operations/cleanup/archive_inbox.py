@@ -36,6 +36,7 @@ thresholds(). ``--dry-run`` reports what would flip without touching anything.
     python archive_inbox.py --vault V             # archive eligible cards
     python archive_inbox.py --vault V --dry-run   # report only
 """
+
 from __future__ import annotations
 
 import datetime
@@ -67,9 +68,12 @@ def archive_after_days(vault: Path | None) -> int:
     except Exception as exc:
         if not _warned_calibration:
             _warned_calibration = True
-            print(f"[archive-inbox] WARNING: cannot read inbox.archive_after_days from "
-                  f"calibration.yaml ({type(exc).__name__}: {exc}) — using default "
-                  f"{DEFAULT_ARCHIVE_AFTER_DAYS} days", file=sys.stderr)
+            print(
+                f"[archive-inbox] WARNING: cannot read inbox.archive_after_days from "
+                f"calibration.yaml ({type(exc).__name__}: {exc}) — using default "
+                f"{DEFAULT_ARCHIVE_AFTER_DAYS} days",
+                file=sys.stderr,
+            )
         return DEFAULT_ARCHIVE_AFTER_DAYS
 
 
@@ -108,14 +112,25 @@ def sweep(vault: Path, days: int, dry_run: bool = False) -> dict:
     archived: list[str] = []
     skipped_fresh = skipped_unresolved = skipped_malformed = skipped_done = 0
     if not folder.is_dir():
-        return {"pass": "archive-inbox", "days": days, "archived": [], "skipped": 0,
-                "dry_run": dry_run}
+        return {
+            "pass": "archive-inbox",
+            "days": days,
+            "archived": [],
+            "skipped": 0,
+            "dry_run": dry_run,
+        }
     try:
         import yaml
     except ImportError:
         print("[archive-inbox] PyYAML not installed; sweep skipped", file=sys.stderr)
-        return {"pass": "archive-inbox", "days": days, "archived": [], "skipped": 0,
-                "dry_run": dry_run, "error": "no-yaml"}
+        return {
+            "pass": "archive-inbox",
+            "days": days,
+            "archived": [],
+            "skipped": 0,
+            "dry_run": dry_run,
+            "error": "no-yaml",
+        }
     for md in sorted(folder.rglob("*.md")):
         rel = str(md.relative_to(vault))
         text = md.read_text(encoding="utf-8", errors="ignore")
@@ -154,25 +169,35 @@ def sweep(vault: Path, days: int, dry_run: bool = False) -> dict:
             continue
         if not _flip_lifecycle(md, text, end, dry_run):
             skipped_malformed += 1
-            print(f"[archive-inbox] skip {rel}: no top-level lifecycle: line to flip",
-                  file=sys.stderr)
+            print(
+                f"[archive-inbox] skip {rel}: no top-level lifecycle: line to flip", file=sys.stderr
+            )
             continue
         archived.append(rel)
-    return {"pass": "archive-inbox", "days": days, "archived": archived,
-            "skipped_fresh": skipped_fresh, "skipped_unresolved": skipped_unresolved,
-            "skipped_already_archived": skipped_done,
-            "skipped_malformed": skipped_malformed, "dry_run": dry_run}
+    return {
+        "pass": "archive-inbox",
+        "days": days,
+        "archived": archived,
+        "skipped_fresh": skipped_fresh,
+        "skipped_unresolved": skipped_unresolved,
+        "skipped_already_archived": skipped_done,
+        "skipped_malformed": skipped_malformed,
+        "dry_run": dry_run,
+    }
 
 
 # --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
+
     ap = argparse.ArgumentParser(
         description="Inbox archival sweep (#338): flip resolved cards older than "
-                    "N days to lifecycle: archived")
+        "N days to lifecycle: archived"
+    )
     ap.add_argument("--vault", help="vault root")
-    ap.add_argument("--days", type=int,
-                    help="override inbox.archive_after_days from calibration.yaml")
+    ap.add_argument(
+        "--days", type=int, help="override inbox.archive_after_days from calibration.yaml"
+    )
     ap.add_argument("--dry-run", action="store_true", help="report without writing")
     a = ap.parse_args()
     if not a.vault:

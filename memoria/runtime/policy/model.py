@@ -26,7 +26,9 @@ class LanePolicy:
     @property
     def short(self) -> str:
         """Capitalized short name for policy rule ids."""
-        name = self.profile[len("memoria-"):] if self.profile.startswith("memoria-") else self.profile
+        name = (
+            self.profile[len("memoria-") :] if self.profile.startswith("memoria-") else self.profile
+        )
         return name[:1].upper() + name[1:]
 
 

@@ -32,10 +32,20 @@ def _yaml_str(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def write_proposal(vault: Path, card_type: str, title: str, action: str,
-                   argument_for: str, argument_against: str, what_tipped_it: str,
-                   certainty: str, raised_by: str, loudness: str = "notice",
-                   citekey: str = "", url: str = "") -> Path:
+def write_proposal(
+    vault: Path,
+    card_type: str,
+    title: str,
+    action: str,
+    argument_for: str,
+    argument_against: str,
+    what_tipped_it: str,
+    certainty: str,
+    raised_by: str,
+    loudness: str = "notice",
+    citekey: str = "",
+    url: str = "",
+) -> Path:
     """Write a candidate/gap card with the honesty body (D49). Returns the path."""
     if card_type not in PROPOSAL_TYPES:
         raise ValueError(f"not a proposal type: {card_type}")
@@ -59,17 +69,26 @@ def write_proposal(vault: Path, card_type: str, title: str, action: str,
         lines.append(f"citekey: {_yaml_str(citekey)}")
     if url:
         lines.append(f"url: {_yaml_str(url)}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}",
-              f"created: {today}", "---", ""]
-    body = (f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
-            f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n")
+    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
+    body = (
+        f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
+        f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
+    )
     return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
 
 
-def write_finding(vault: Path, card_type: str, title: str, finding: str,
-                  raised_by: str, agent_recommendation: str = "issues-found",
-                  target: str = "", citekey: str = "", loudness: str = "alert",
-                  evidence: str = "") -> Path:
+def write_finding(
+    vault: Path,
+    card_type: str,
+    title: str,
+    finding: str,
+    raised_by: str,
+    agent_recommendation: str = "issues-found",
+    target: str = "",
+    citekey: str = "",
+    loudness: str = "alert",
+    evidence: str = "",
+) -> Path:
     """Write a flag/alert card that leads with the finding (ADR-51)."""
     if card_type not in VERIFICATION_TYPES:
         raise ValueError(f"not a verification type: {card_type}")
@@ -92,18 +111,25 @@ def write_finding(vault: Path, card_type: str, title: str, finding: str,
         lines.append(f"target: {_yaml_str(target)}")
     if citekey:
         lines.append(f"citekey: {_yaml_str(citekey)}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}",
-              f"created: {today}", "---", ""]
+    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
     body = f"# Finding\n\n{finding}\n"
     if evidence:
         body += f"\n# Evidence\n\n{evidence}\n"
     return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
 
 
-def write_work_prompt(vault: Path, title: str, action: str, what_happened: str,
-                      raised_by: str, target: str = "", task_id: str = "",
-                      lane: str = "", loudness: str = "notice",
-                      dedupe_slug: str = "") -> Path | None:
+def write_work_prompt(
+    vault: Path,
+    title: str,
+    action: str,
+    what_happened: str,
+    raised_by: str,
+    target: str = "",
+    task_id: str = "",
+    lane: str = "",
+    loudness: str = "notice",
+    dedupe_slug: str = "",
+) -> Path | None:
     """Write a `work-prompt` card (ADR-51 honesty rules: action + what happened +
     where to look — never a verdict). A prompt must point somewhere: `target`
     (output path) and/or `task_id` (board card). With `dedupe_slug` the filename
@@ -128,8 +154,7 @@ def write_work_prompt(vault: Path, title: str, action: str, what_happened: str,
         lines.append(f"task_id: {_yaml_str(task_id)}")
     if lane:
         lines.append(f"lane: {_yaml_str(lane)}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}",
-              f"created: {today}", "---", ""]
+    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
     body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
     where = " · ".join(filter(None, (target, task_id and f"board card `{task_id}`")))
     if where:
@@ -157,7 +182,9 @@ def _write(vault: Path, card_type: str, title: str, content: str, loudness: str 
         n += 1
         path = inbox / f"{base}-{n}.md"
     path.write_text(content, encoding="utf-8")
-    loudness_routing.push_card(vault, path, {"title": title, "loudness": loudness, "type": card_type})
+    loudness_routing.push_card(
+        vault, path, {"title": title, "loudness": loudness, "type": card_type}
+    )
     return path
 
 

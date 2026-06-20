@@ -88,8 +88,7 @@ def stage(vault: Path) -> dict[str, str]:
         dst.write_bytes(src.read_bytes())
         manifest[rel] = _sha256(src)
     golden.mkdir(parents=True, exist_ok=True)
-    (golden / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True),
-                                   encoding="utf-8")
+    (golden / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
     return manifest
 
 
@@ -109,8 +108,7 @@ def _stage_from_source(vault: Path, source: Path) -> dict[str, str]:
         if stale.is_file():
             stale.unlink()
     golden.mkdir(parents=True, exist_ok=True)
-    (golden / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True),
-                                   encoding="utf-8")
+    (golden / MANIFEST).write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
     return manifest
 
 
@@ -151,8 +149,9 @@ def restore(vault: Path, paths: list[str] | None = None, apply: bool = False) ->
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", type=Path)
     ap.add_argument("command", nargs="?", choices=["stage", "check", "restore"])
     ap.add_argument("paths", nargs="*")

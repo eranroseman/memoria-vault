@@ -65,7 +65,7 @@ def load_lane(vault: Path, profile: str) -> LanePolicy:
         raise RuntimeError(
             "PyYAML not installed -- run `pip install -r .memoria/mcp/requirements.txt`."
         )
-    lane = profile[len("memoria-"):] if profile.startswith("memoria-") else profile
+    lane = profile[len("memoria-") :] if profile.startswith("memoria-") else profile
     path = vault / LANE_OVERRIDE_RELDIR / f"{lane}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no lane-override for profile '{profile}' at {path}")

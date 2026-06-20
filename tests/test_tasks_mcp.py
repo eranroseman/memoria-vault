@@ -11,16 +11,20 @@ def _vault(tmp_path: Path) -> Path:
     lo = tmp_path / ".memoria" / "lane-overrides"
     lo.mkdir(parents=True)
     (lo / "librarian.yaml").write_text(
-        'profile: memoria-librarian\nrouting:\n  write_scope:\n'
-        '    - "inbox/"\n    - "catalog/"\n    - "notes/sources/"\n', encoding="utf-8")
+        "profile: memoria-librarian\nrouting:\n  write_scope:\n"
+        '    - "inbox/"\n    - "catalog/"\n    - "notes/sources/"\n',
+        encoding="utf-8",
+    )
     (lo / "copi.yaml").write_text(
-        "profile: memoria-copi\nrouting:\n  write_scope: []\n", encoding="utf-8")
+        "profile: memoria-copi\nrouting:\n  write_scope: []\n", encoding="utf-8"
+    )
     (lo / "writer.yaml").write_text(
-        'profile: memoria-writer\nrouting:\n  write_scope:\n    - "projects/"\n',
-        encoding="utf-8")
+        'profile: memoria-writer\nrouting:\n  write_scope:\n    - "projects/"\n', encoding="utf-8"
+    )
     (lo / "engineer.yaml").write_text(
-        'profile: memoria-engineer\nrouting:\n  write_scope:\n'
-        '    - "projects/*/code/"\n', encoding="utf-8")
+        'profile: memoria-engineer\nrouting:\n  write_scope:\n    - "projects/*/code/"\n',
+        encoding="utf-8",
+    )
     return tmp_path
 
 
@@ -30,7 +34,14 @@ def test_every_lane_routes_to_a_shipped_profile():
         assert profile in shipped, f"lane {lane} routes to unshipped {profile}"
     # the six delegable tasks + code are all routable (ADR-48 §4.1)
     assert set(tasks_mcp.LANE_PROFILE) == {
-        "catalog", "extract", "link", "map", "draft", "verify", "code"}
+        "catalog",
+        "extract",
+        "link",
+        "map",
+        "draft",
+        "verify",
+        "code",
+    }
 
 
 def test_narrowing_passes_widening_fails(tmp_path):
@@ -62,7 +73,7 @@ def test_corrupt_lane_override_fails_closed_with_warning(tmp_path, capsys):
     lo = v / ".memoria" / "lane-overrides"
     (lo / "librarian.yaml").write_text("routing: [unclosed\n", encoding="utf-8")
     errs = tasks_mcp.validate(v, "catalog", ["catalog/papers/"])
-    assert errs and "exceeds" in errs[0]          # fail-closed: nothing delegable
+    assert errs and "exceeds" in errs[0]  # fail-closed: nothing delegable
     assert "librarian.yaml" in capsys.readouterr().err
 
 
@@ -89,9 +100,13 @@ def test_card_creation_degrades_with_fallback_hint(tmp_path, monkeypatch):
             "fallback": "manual",
         },
     )
-    out = tasks_mcp.delegate(v, "catalog", "Ingest @smith2024",
-                             allowed_paths=["catalog/"],
-                             idempotency_key="reingest:smith2024")
+    out = tasks_mcp.delegate(
+        v,
+        "catalog",
+        "Ingest @smith2024",
+        allowed_paths=["catalog/"],
+        idempotency_key="reingest:smith2024",
+    )
     # in CI there is no hermes CLI — the tool must degrade with a usable fallback
     if not out.get("created"):
         assert out["error"].startswith(("hermes-cli-not-found", "kanban-create"))

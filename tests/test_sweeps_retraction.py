@@ -36,7 +36,10 @@ def test_build_rw_index_distinguishes_retractions_from_concerns():
 def test_rw_lookup_loads_csv_case_insensitively_and_handles_missing_data(tmp_path):
     p = tmp_path / "rw.csv"
     with p.open("w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"])
+        w = csv.DictWriter(
+            f,
+            fieldnames=["OriginalPaperDOI", "RetractionNature", "RetractionDate", "RetractionDOI"],
+        )
         w.writeheader()
         w.writerows(RW_ROWS)
 
@@ -54,7 +57,11 @@ def test_rw_lookup_loads_csv_case_insensitively_and_handles_missing_data(tmp_pat
 
 
 def test_crossref_retraction_reads_update_to_relation_and_clean_records():
-    update_to = {"update-to": [{"type": "retraction", "DOI": "10.1/cr", "updated": {"date-parts": [[2021, 5, 3]]}}]}
+    update_to = {
+        "update-to": [
+            {"type": "retraction", "DOI": "10.1/cr", "updated": {"date-parts": [[2021, 5, 3]]}}
+        ]
+    }
     relation = {"relation": {"is-retracted-by": [{"id-type": "doi", "id": "10.1/rb"}]}}
 
     assert crossref_retraction(update_to)["retracted"] is True
@@ -65,16 +72,23 @@ def test_crossref_retraction_reads_update_to_relation_and_clean_records():
 
 def test_open_retractions_verdict_maps_http_statuses():
     assert open_retractions_verdict(404, None)["retracted"] is False
-    assert open_retractions_verdict(200, {"retracted": True, "retractions": [{"date": "2020-01-01"}]})[
-        "retracted"
-    ] is True
+    assert (
+        open_retractions_verdict(200, {"retracted": True, "retractions": [{"date": "2020-01-01"}]})[
+            "retracted"
+        ]
+        is True
+    )
     assert open_retractions_verdict(0, None)["retracted"] is None
 
 
 def test_combine_reports_agreement_disagreement_and_missing_data():
     all_clean = combine(
         "10.1/x",
-        {"retraction_watch": {"retracted": False}, "crossref": {"retracted": False}, "open_retractions": {"retracted": False}},
+        {
+            "retraction_watch": {"retracted": False},
+            "crossref": {"retracted": False},
+            "open_retractions": {"retracted": False},
+        },
         {},
     )
     rw_only_disagrees = combine(
@@ -88,10 +102,16 @@ def test_combine_reports_agreement_disagreement_and_missing_data():
     )
     all_retracted = combine(
         "10.1/x",
-        {"retraction_watch": {"retracted": True}, "crossref": {"retracted": True}, "open_retractions": {"retracted": True}},
+        {
+            "retraction_watch": {"retracted": True},
+            "crossref": {"retracted": True},
+            "open_retractions": {"retracted": True},
+        },
         {},
     )
-    no_data = combine("10.1/x", {"retraction_watch": None, "crossref": None, "open_retractions": None}, {})
+    no_data = combine(
+        "10.1/x", {"retraction_watch": None, "crossref": None, "open_retractions": None}, {}
+    )
     single_clean = combine(
         "10.1/x",
         {"retraction_watch": {"retracted": False}, "crossref": None, "open_retractions": None},

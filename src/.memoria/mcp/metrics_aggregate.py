@@ -22,6 +22,7 @@ repeated-run data per task and is a TODO (noted in the dashboard design).
 
 [fleet-health dashboard]: docs/explanation/dashboards/operational-health/fleet-health.md
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,27 +42,33 @@ from _shared import (
 METRICS_RELDIR = "system/metrics"
 AUDIT_RELPATH = "system/logs/audit.jsonl"
 LINT_RELPATH = "system/logs/lint-findings.jsonl"
-DISPOSITION_RELPATH = "system/logs/disposition.jsonl"        # accept | edit | reject per review
-COST_RELPATH = "system/logs/cost.jsonl"                      # API spend + tokens per card
-TRANSITIONS_RELPATH = "system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
-ATTENTION_RELPATH = "system/logs/attention.jsonl"            # Obsidian active-card resolve timing
+DISPOSITION_RELPATH = "system/logs/disposition.jsonl"  # accept | edit | reject per review
+COST_RELPATH = "system/logs/cost.jsonl"  # API spend + tokens per card
+TRANSITIONS_RELPATH = (
+    "system/logs/board-transitions.jsonl"  # status/review transitions (for decision time)
+)
+ATTENTION_RELPATH = "system/logs/attention.jsonl"  # Obsidian active-card resolve timing
 BLIND_REVIEW_RELPATH = "system/logs/blind-review-samples.jsonl"
 TERMINAL_REVIEW = frozenset({"approved", "rejected", "changes-requested"})
 MUTATING = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
-LANES = ("memoria-librarian", "memoria-writer", "memoria-peer-reviewer",
-         "memoria-engineer")   # the background agents (ADR-48); no Co-PI/operation lanes
-LOW_CONFIDENCE_SAMPLES = 5          # below this, the score is flagged insufficient-data
+LANES = (
+    "memoria-librarian",
+    "memoria-writer",
+    "memoria-peer-reviewer",
+    "memoria-engineer",
+)  # the background agents (ADR-48); no Co-PI/operation lanes
+LOW_CONFIDENCE_SAMPLES = 5  # below this, the score is flagged insufficient-data
 
 # --- Trust-score weights (tunable; bands are fixed by the glossary) ---------- #
-W_DENY = 40        # denials are the strongest negative signal (injection / misconfig)
-W_FAIL = 40        # (1 - success_rate)
-W_RETRY = 20       # per average-retry, capped
+W_DENY = 40  # denials are the strongest negative signal (injection / misconfig)
+W_FAIL = 40  # (1 - success_rate)
+W_RETRY = 20  # per average-retry, capped
 RETRY_CAP = 30
-W_DRIFT = 2        # per drift incident, capped
+W_DRIFT = 2  # per drift incident, capped
 DRIFT_CAP = 20
-W_SECRET = 10      # per secret hit, capped
+W_SECRET = 10  # per secret hit, capped
 SECRET_CAP = 30
-W_RATIO = 10       # rubber-stamping (>90% accept) or prompt-drift (<20% accept)
+W_RATIO = 10  # rubber-stamping (>90% accept) or prompt-drift (<20% accept)
 
 
 # --------------------------------------------------------------------------- #
@@ -94,12 +101,20 @@ def read_board(cards: list[dict]) -> dict[str, dict]:
     """Per-lane done/blocked + retry totals, via board_export's normalizer."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import board_export
+
     out: dict[str, dict] = {}
     for raw in cards:
         c = board_export.normalize(raw)
-        rec = out.setdefault(c["assignee"],
-                             {"done": 0, "blocked": 0, "retry_total": 0,
-                              "time_on_gate": [], "expand_then_accept": []})
+        rec = out.setdefault(
+            c["assignee"],
+            {
+                "done": 0,
+                "blocked": 0,
+                "retry_total": 0,
+                "time_on_gate": [],
+                "expand_then_accept": [],
+            },
+        )
         if c["status"] == "done":
             rec["done"] += 1
         elif c["status"] == "blocked":
@@ -157,19 +172,31 @@ def read_lint_verdict(vault: Path, period: str) -> dict:
 
 def lint_verdict_note(v: dict, period: str, now: datetime) -> str:
     fm = {
-        "type": "lint-verdict", "period": period, "verdict": v["verdict"],
-        "finding_count": v["total"], "critical_count": v["CRITICAL"],
-        "high_count": v["HIGH"], "medium_count": v["MEDIUM"], "low_count": v["LOW"],
+        "type": "lint-verdict",
+        "period": period,
+        "verdict": v["verdict"],
+        "finding_count": v["total"],
+        "critical_count": v["CRITICAL"],
+        "high_count": v["HIGH"],
+        "medium_count": v["MEDIUM"],
+        "low_count": v["LOW"],
         "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     lines = ["---"]
     for k, val in fm.items():
         lines.append(f'{k}: "{val}"' if isinstance(val, str) else f"{k}: {val}")
-    lines += ["---", "", f"# Lint verdict — {period}", "",
-              f"**{v['verdict']}** · {v['total']} finding(s): {v['CRITICAL']} critical · "
-              f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.", "",
-              f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
-              f"same period overwrites this note.*", ""]
+    lines += [
+        "---",
+        "",
+        f"# Lint verdict — {period}",
+        "",
+        f"**{v['verdict']}** · {v['total']} finding(s): {v['CRITICAL']} critical · "
+        f"{v['HIGH']} high · {v['MEDIUM']} medium · {v['LOW']} low.",
+        "",
+        f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
+        f"same period overwrites this note.*",
+        "",
+    ]
     return "\n".join(lines)
 
 
@@ -187,8 +214,7 @@ def read_disposition(vault: Path, period: str) -> dict[str, dict]:
     """Per-lane accept/edit/reject counts from disposition.jsonl for `period`."""
     out: dict[str, dict] = {}
     for e in _iter_jsonl(vault, DISPOSITION_RELPATH, period):
-        rec = out.setdefault(e.get("lane", "unknown"),
-                             {"accepted": 0, "edited": 0, "rejected": 0})
+        rec = out.setdefault(e.get("lane", "unknown"), {"accepted": 0, "edited": 0, "rejected": 0})
         d = e.get("disposition")
         if d in rec:
             rec[d] += 1
@@ -206,8 +232,10 @@ def read_cost(vault: Path, period: str) -> dict[str, dict]:
     """Per-lane API spend + token totals from cost.jsonl for `period`."""
     out: dict[str, dict] = {}
     for e in _iter_jsonl(vault, COST_RELPATH, period):
-        rec = out.setdefault(e.get("lane", "unknown"),
-                             {"cost": 0.0, "input_tokens": 0, "output_tokens": 0, "cards": 0})
+        rec = out.setdefault(
+            e.get("lane", "unknown"),
+            {"cost": 0.0, "input_tokens": 0, "output_tokens": 0, "cards": 0},
+        )
         rec["cards"] += 1
         for k in ("cost", "input_tokens", "output_tokens"):
             try:
@@ -244,9 +272,9 @@ def read_decision_time(vault: Path, period: str) -> dict[str, float]:
     """Per-lane median operator decision time (minutes) — the gap between a card's
     `review -> requested` transition and its terminal review transition, read from
     board-transitions.jsonl. Keyed to the period of the *terminal* transition."""
-    requested: dict[str, datetime] = {}   # task_id -> requested ts (across all time)
+    requested: dict[str, datetime] = {}  # task_id -> requested ts (across all time)
     samples: dict[str, list[float]] = {}
-    for e in _iter_jsonl(vault, TRANSITIONS_RELPATH, None):   # need full history to pair
+    for e in _iter_jsonl(vault, TRANSITIONS_RELPATH, None):  # need full history to pair
         if e.get("kind") != "review":
             continue
         ts = _parse_ts(e.get("timestamp", ""))
@@ -301,9 +329,14 @@ def read_blind_reviews(vault: Path, period: str) -> dict[str, int]:
     return out
 
 
-def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
-                drift: int = 0, secret_hits: int = 0,
-                accept_ratio: float | None = None) -> tuple[int, str]:
+def trust_score(
+    deny_rate: float,
+    retry_rate: float,
+    success_rate: float,
+    drift: int = 0,
+    secret_hits: int = 0,
+    accept_ratio: float | None = None,
+) -> tuple[int, str]:
     """Compose the 0-100 trust score from the glossary's inputs. Bands fixed:
     90+ healthy / 70-89 watch / <70 act."""
     score = 100.0
@@ -313,16 +346,23 @@ def trust_score(deny_rate: float, retry_rate: float, success_rate: float,
     score -= min(DRIFT_CAP, W_DRIFT * drift)
     score -= min(SECRET_CAP, W_SECRET * secret_hits)
     if accept_ratio is not None and (accept_ratio > 0.9 or accept_ratio < 0.2):
-        score -= W_RATIO                       # rubber-stamping or prompt drift
+        score -= W_RATIO  # rubber-stamping or prompt drift
     score = max(0, min(100, round(score)))
     band = "healthy" if score >= 90 else "watch" if score >= 70 else "act"
     return int(score), band
 
 
-def compute_lane(lane: str, audit: dict, board: dict, drift: int,
-                 disp: dict | None = None, cost: dict | None = None,
-                 dtime: dict | None = None, attention: dict | None = None,
-                 blind_reviews: dict | None = None) -> dict | None:
+def compute_lane(
+    lane: str,
+    audit: dict,
+    board: dict,
+    drift: int,
+    disp: dict | None = None,
+    cost: dict | None = None,
+    dtime: dict | None = None,
+    attention: dict | None = None,
+    blind_reviews: dict | None = None,
+) -> dict | None:
     """Combine the inputs for one lane into a metric dict, or None if no activity."""
     a = audit.get(lane, {})
     b = board.get(lane, {})
@@ -343,18 +383,28 @@ def compute_lane(lane: str, audit: dict, board: dict, drift: int,
     success_rate = done / runs if runs else 1.0
     retry_rate = b.get("retry_total", 0) / runs if runs else 0.0
     accept_ratio = accept_ratio_of(d) if reviews else None
-    score, band = trust_score(deny_rate, retry_rate, success_rate, drift=drift,
-                              accept_ratio=accept_ratio)
+    score, band = trust_score(
+        deny_rate, retry_rate, success_rate, drift=drift, accept_ratio=accept_ratio
+    )
     if samples < LOW_CONFIDENCE_SAMPLES:
         band = "insufficient-data"
     return {
-        "lane": lane, "trust_score": score, "band": band,
-        "deny_rate": round(deny_rate, 3), "success_rate": round(success_rate, 3),
-        "retry_rate": round(retry_rate, 3), "drift_incidents": drift,
-        "writes": writes, "denies": denies, "dry_runs": a.get("dry_run", 0),
-        "done": done, "blocked": blocked, "samples": samples,
+        "lane": lane,
+        "trust_score": score,
+        "band": band,
+        "deny_rate": round(deny_rate, 3),
+        "success_rate": round(success_rate, 3),
+        "retry_rate": round(retry_rate, 3),
+        "drift_incidents": drift,
+        "writes": writes,
+        "denies": denies,
+        "dry_runs": a.get("dry_run", 0),
+        "done": done,
+        "blocked": blocked,
+        "samples": samples,
         # --- human-loop + cost telemetry (the publication-grade signals) ---
-        "accepted": d.get("accepted", 0), "edited": d.get("edited", 0),
+        "accepted": d.get("accepted", 0),
+        "edited": d.get("edited", 0),
         "rejected": d.get("rejected", 0),
         "accept_ratio": round(accept_ratio, 3) if accept_ratio is not None else None,
         "decision_time_min": (dtime or {}).get(lane),
@@ -369,25 +419,36 @@ def compute_lane(lane: str, audit: dict, board: dict, drift: int,
         "cost": round(c.get("cost", 0.0), 4),
         "input_tokens": int(c.get("input_tokens", 0)),
         "output_tokens": int(c.get("output_tokens", 0)),
-        "consistency_passk": None,   # pass^k needs repeated-run data; harness TODO (see header)
+        "consistency_passk": None,  # pass^k needs repeated-run data; harness TODO (see header)
     }
 
 
 def lane_note(m: dict, period: str, now: datetime) -> str:
     fm = {
-        "type": "lane-metric", "lane": m["lane"], "period": period,
-        "trust_score": m["trust_score"], "band": m["band"],
-        "deny_rate": m["deny_rate"], "success_rate": m["success_rate"],
-        "retry_rate": m["retry_rate"], "drift_incidents": m["drift_incidents"],
-        "accepted": m["accepted"], "edited": m["edited"], "rejected": m["rejected"],
-        "accept_ratio": m["accept_ratio"], "decision_time_min": m["decision_time_min"],
+        "type": "lane-metric",
+        "lane": m["lane"],
+        "period": period,
+        "trust_score": m["trust_score"],
+        "band": m["band"],
+        "deny_rate": m["deny_rate"],
+        "success_rate": m["success_rate"],
+        "retry_rate": m["retry_rate"],
+        "drift_incidents": m["drift_incidents"],
+        "accepted": m["accepted"],
+        "edited": m["edited"],
+        "rejected": m["rejected"],
+        "accept_ratio": m["accept_ratio"],
+        "decision_time_min": m["decision_time_min"],
         "time_on_gate_min": m["time_on_gate_min"],
         "expand_then_accept_min": m["expand_then_accept_min"],
         "card_open_resolve_min": m["card_open_resolve_min"],
         "blind_rereview_samples": m["blind_rereview_samples"],
-        "cost": m["cost"], "input_tokens": m["input_tokens"], "output_tokens": m["output_tokens"],
+        "cost": m["cost"],
+        "input_tokens": m["input_tokens"],
+        "output_tokens": m["output_tokens"],
         "consistency_passk": m["consistency_passk"],
-        "samples": m["samples"], "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "samples": m["samples"],
+        "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     lines = ["---"]
     for k, v in fm.items():
@@ -398,25 +459,45 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
         else:
             lines.append(f"{k}: {v}")
     ratio = f" (accept_ratio {m['accept_ratio']})" if m["accept_ratio"] is not None else ""
-    dtime = f"{m['decision_time_min']} min (median)" if m["decision_time_min"] is not None else "n/a"
+    dtime = (
+        f"{m['decision_time_min']} min (median)" if m["decision_time_min"] is not None else "n/a"
+    )
     gate = f"{m['time_on_gate_min']} min (median)" if m["time_on_gate_min"] is not None else "n/a"
-    expand = f"{m['expand_then_accept_min']} min (median)" if m["expand_then_accept_min"] is not None else "n/a"
-    resolve = f"{m['card_open_resolve_min']} min (median)" if m["card_open_resolve_min"] is not None else "n/a"
-    lines += ["---", "", f"# {m['lane']} — {period}", "",
-              f"Trust score **{m['trust_score']}/100** ({m['band']}).", "",
-              f"- writes: {m['writes']} (deny {m['denies']}, dry_run {m['dry_runs']})",
-              f"- runs: done {m['done']}, blocked {m['blocked']}",
-              f"- deny_rate {m['deny_rate']} · success_rate {m['success_rate']} · retry_rate {m['retry_rate']}",
-              f"- review: accepted {m['accepted']} / edited {m['edited']} / rejected {m['rejected']}{ratio}",
-              f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['input_tokens']}/{m['output_tokens']}",
-              f"- attention: time-on-gate {gate} · expand-to-accept {expand} · card-open-to-resolve {resolve}",
-              f"- blind re-review samples: {m['blind_rereview_samples']}",
-              "",
-              f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
-              f"same period overwrites this note.*", ""]
+    expand = (
+        f"{m['expand_then_accept_min']} min (median)"
+        if m["expand_then_accept_min"] is not None
+        else "n/a"
+    )
+    resolve = (
+        f"{m['card_open_resolve_min']} min (median)"
+        if m["card_open_resolve_min"] is not None
+        else "n/a"
+    )
+    lines += [
+        "---",
+        "",
+        f"# {m['lane']} — {period}",
+        "",
+        f"Trust score **{m['trust_score']}/100** ({m['band']}).",
+        "",
+        f"- writes: {m['writes']} (deny {m['denies']}, dry_run {m['dry_runs']})",
+        f"- runs: done {m['done']}, blocked {m['blocked']}",
+        f"- deny_rate {m['deny_rate']} · success_rate {m['success_rate']} · retry_rate {m['retry_rate']}",
+        f"- review: accepted {m['accepted']} / edited {m['edited']} / rejected {m['rejected']}{ratio}",
+        f"- decision time: {dtime} · cost: ${m['cost']} · tokens {m['input_tokens']}/{m['output_tokens']}",
+        f"- attention: time-on-gate {gate} · expand-to-accept {expand} · card-open-to-resolve {resolve}",
+        f"- blind re-review samples: {m['blind_rereview_samples']}",
+        "",
+        f"*Computed {fm['computed_at']} — rerunning the aggregator in the "
+        f"same period overwrites this note.*",
+        "",
+    ]
     if m["band"] == "insufficient-data":
-        lines += [f"> Low confidence: only {m['samples']} samples this period "
-                  f"(<{LOW_CONFIDENCE_SAMPLES}). Score is indicative, not actionable.", ""]
+        lines += [
+            f"> Low confidence: only {m['samples']} samples this period "
+            f"(<{LOW_CONFIDENCE_SAMPLES}). Score is indicative, not actionable.",
+            "",
+        ]
     return "\n".join(lines)
 
 
@@ -435,18 +516,21 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
     outdir.mkdir(parents=True, exist_ok=True)
     written = []
     for lane in LANES:
-        m = compute_lane(lane, audit, board, drift.get(lane, 0), disp, cost, dtime,
-                         attention, blind_reviews)
+        m = compute_lane(
+            lane, audit, board, drift.get(lane, 0), disp, cost, dtime, attention, blind_reviews
+        )
         if m is None:
             continue
         (outdir / f"lane-{lane.replace('memoria-', '')}-{period}.md").write_text(
-            lane_note(m, period, now), encoding="utf-8")
+            lane_note(m, period, now), encoding="utf-8"
+        )
         written.append({"lane": lane, "trust_score": m["trust_score"], "band": m["band"]})
     verdict_out = None
-    if (vault / LINT_RELPATH).is_file():                      # only once the Linter has run
+    if (vault / LINT_RELPATH).is_file():  # only once the Linter has run
         lv = read_lint_verdict(vault, period)
         (outdir / f"lint-verdict-{period}.md").write_text(
-            lint_verdict_note(lv, period, now), encoding="utf-8")
+            lint_verdict_note(lv, period, now), encoding="utf-8"
+        )
         verdict_out = lv["verdict"]
     return {"period": period, "lanes": written, "verdict": verdict_out}
 
@@ -454,10 +538,15 @@ def aggregate(vault: Path, cards: list[dict], now: datetime | None = None) -> di
 # --------------------------------------------------------------------------- #
 # --------------------------------------------------------------------------- #
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", help="vault root")
-    ap.add_argument("--from-json", type=Path, help="read cards from a JSON file instead of `hermes kanban list --json`")
+    ap.add_argument(
+        "--from-json",
+        type=Path,
+        help="read cards from a JSON file instead of `hermes kanban list --json`",
+    )
     args = ap.parse_args()
 
     if not args.vault:
@@ -466,6 +555,7 @@ def main() -> None:
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import board_export
+
     cards = board_export.load_cards(args.from_json)
     print(json.dumps(aggregate(vault, cards), indent=2))
 

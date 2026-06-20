@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Audit-log detector family for the Memoria Linter."""
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ def read(p: Path) -> str:
     except (UnicodeDecodeError, OSError):
         return ""
 
+
 def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     """A mutating allow in the audit chain whose write never completed.
 
@@ -37,7 +39,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     if not log.is_file():
         return []
     mutating = {"write", "append", "move", "delete", "mkdir", "auto_fix"}
-    pending: dict[tuple[str, str], dict] = {}      # (path, task_id) -> pre-record
+    pending: dict[tuple[str, str], dict] = {}  # (path, task_id) -> pre-record
     for line in read(log).splitlines():
         try:
             e = json.loads(line)
@@ -46,8 +48,11 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
         key = (e.get("path", ""), e.get("task_id", ""))
         if e.get("decision") == "write_complete":
             pending.pop(key, None)
-        elif (e.get("decision") in ("allow", "allow_with_log")
-                and e.get("action") in mutating and e.get("before_hash")):
+        elif (
+            e.get("decision") in ("allow", "allow_with_log")
+            and e.get("action") in mutating
+            and e.get("before_hash")
+        ):
             pending[key] = e
     now = datetime.now(timezone.utc)
     out = []
@@ -58,10 +63,16 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
             continue
         age_h = (now - ts).total_seconds() / 3600
         if age_h > max_age_h:
-            out.append(Finding("audit-unpaired-writes", "MEDIUM", path,
-                               f"mutating allow ({e.get('action')}, task {task_id}) has no "
-                               f"paired write_complete after {age_h:.1f}h -- the audit "
-                               f"chain cannot pin this write's after-state"))
+            out.append(
+                Finding(
+                    "audit-unpaired-writes",
+                    "MEDIUM",
+                    path,
+                    f"mutating allow ({e.get('action')}, task {task_id}) has no "
+                    f"paired write_complete after {age_h:.1f}h -- the audit "
+                    f"chain cannot pin this write's after-state",
+                )
+            )
     return out
 
 
@@ -90,7 +101,7 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
     log = vault / "system" / "logs" / "audit.jsonl"
     if not log.is_file():
         return []
-    latest: dict[str, dict] = {}                   # path -> last write_complete
+    latest: dict[str, dict] = {}  # path -> last write_complete
     for line in read(log).splitlines():
         try:
             e = json.loads(line)
@@ -105,21 +116,31 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
     for path, e in sorted(latest.items()):
         f = vault / path
         try:
-            current = ("sha256:" + hashlib.sha256(f.read_bytes()).hexdigest()
-                       if f.exists() else empty)
+            current = (
+                "sha256:" + hashlib.sha256(f.read_bytes()).hexdigest() if f.exists() else empty
+            )
         except OSError as exc:
-            out.append(Finding("vault-hash-drift", "CRITICAL", path,
-                               f"cannot hash audited file: {exc}"))
+            out.append(
+                Finding("vault-hash-drift", "CRITICAL", path, f"cannot hash audited file: {exc}")
+            )
             continue
         if current != e["after_hash"]:
             state = "missing" if current == empty else "edited"
-            out.append(Finding("vault-hash-drift", "CRITICAL", path,
-                               f"on-disk state ({state}) no longer matches the last "
-                               f"audited after_hash ({e.get('action')}, task "
-                               f"{e.get('task_id')}, {e.get('timestamp')}) -- "
-                               f"out-of-band change; the audit trail no longer "
-                               f"pins this file's state"))
+            out.append(
+                Finding(
+                    "vault-hash-drift",
+                    "CRITICAL",
+                    path,
+                    f"on-disk state ({state}) no longer matches the last "
+                    f"audited after_hash ({e.get('action')}, task "
+                    f"{e.get('task_id')}, {e.get('timestamp')}) -- "
+                    f"out-of-band change; the audit trail no longer "
+                    f"pins this file's state",
+                )
+            )
     return out
+
+
 def audit_log_size(vault: Path, max_mb: float = 50.0) -> list[Finding]:
     """Advisory size check on the append-only-forever audit log (ADR-25).
 
@@ -134,7 +155,13 @@ def audit_log_size(vault: Path, max_mb: float = 50.0) -> list[Finding]:
     size_mb = log.stat().st_size / (1024 * 1024)
     if size_mb <= max_mb:
         return []
-    return [Finding("audit-log-size", "LOW", "system/logs/audit.jsonl",
-                    f"audit log is {size_mb:.0f} MB (advisory threshold {max_mb:.0f} MB) "
-                    f"-- append-only forever by design (ADR-25), so growth is "
-                    f"surfaced here, never rotated away")]
+    return [
+        Finding(
+            "audit-log-size",
+            "LOW",
+            "system/logs/audit.jsonl",
+            f"audit log is {size_mb:.0f} MB (advisory threshold {max_mb:.0f} MB) "
+            f"-- append-only forever by design (ADR-25), so growth is "
+            f"surfaced here, never rotated away",
+        )
+    ]

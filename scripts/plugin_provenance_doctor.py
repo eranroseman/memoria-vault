@@ -76,7 +76,9 @@ def check(root: Path = ROOT) -> list[Finding]:
 
     enabled_ids = _string_list(enabled, _rel(community_path, root), findings)
     entries = _entries_by_id(entries_raw, _rel(lock_path, root), findings)
-    plugin_dirs = {p.name for p in plugins_root.iterdir() if p.is_dir()} if plugins_root.exists() else set()
+    plugin_dirs = (
+        {p.name for p in plugins_root.iterdir() if p.is_dir()} if plugins_root.exists() else set()
+    )
 
     _compare_ids(
         expected=set(enabled_ids),
@@ -147,7 +149,9 @@ def _string_list(values: list[Any], path: str, findings: list[Finding]) -> list[
     return strings
 
 
-def _entries_by_id(entries_raw: list[Any], path: str, findings: list[Finding]) -> dict[str, dict[str, Any]]:
+def _entries_by_id(
+    entries_raw: list[Any], path: str, findings: list[Finding]
+) -> dict[str, dict[str, Any]]:
     entries: dict[str, dict[str, Any]] = {}
     ids: list[str] = []
     for index, entry in enumerate(entries_raw):
@@ -178,7 +182,9 @@ def _compare_ids(
     missing = sorted(expected - actual)
     extra = sorted(actual - expected)
     if missing:
-        findings.append(Finding(path, f"{actual_name} missing {expected_name}: {', '.join(missing)}"))
+        findings.append(
+            Finding(path, f"{actual_name} missing {expected_name}: {', '.join(missing)}")
+        )
     if extra:
         findings.append(Finding(path, f"{actual_name} not in {expected_name}: {', '.join(extra)}"))
 
@@ -197,7 +203,9 @@ def _check_metadata(
     }
     for field, value in expected.items():
         if entry.get(field) != value:
-            findings.append(Finding(path, f"{plugin_id}.{field} must match manifest value {value!r}"))
+            findings.append(
+                Finding(path, f"{plugin_id}.{field} must match manifest value {value!r}")
+            )
     for field in ("upstream", "pinned_commit", "license", "local_patch_status"):
         if not isinstance(entry.get(field), str) or not entry[field]:
             findings.append(Finding(path, f"{plugin_id}.{field} must be a non-empty string"))
@@ -215,13 +223,17 @@ def _check_artifacts(
     plugin_id = entry.get("id", "<unknown>")
     artifacts = entry.get("sha256")
     if not isinstance(artifacts, dict):
-        findings.append(Finding(_rel(root / LOCK_REL, root), f"{plugin_id}.sha256 must be an object"))
+        findings.append(
+            Finding(_rel(root / LOCK_REL, root), f"{plugin_id}.sha256 must be an object")
+        )
         return set()
 
     declared: set[str] = set()
     for relpath, digest in artifacts.items():
         if not isinstance(relpath, str) or not relpath:
-            findings.append(Finding(_rel(root / LOCK_REL, root), f"{plugin_id}.sha256 has a non-string path"))
+            findings.append(
+                Finding(_rel(root / LOCK_REL, root), f"{plugin_id}.sha256 has a non-string path")
+            )
             continue
         artifact_path = _safe_artifact_path(obsidian, relpath)
         if artifact_path is None:

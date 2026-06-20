@@ -30,6 +30,7 @@ proposal lands in `_proposed_classification.projects` for human confirmation
 at triage, never in the `projects` frontmatter field. Absent file = fully
 manual project tagging (silent no-op). Same audit trail.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -56,8 +57,8 @@ METHODOLOGY_FROM_PUBTYPE = {
 }
 
 
-_warned_calibration = False     # warn once per process, not per ingest
-_warned_hints = False           # ditto, for a malformed project-hints.yaml
+_warned_calibration = False  # warn once per process, not per ingest
+_warned_hints = False  # ditto, for a malformed project-hints.yaml
 
 
 def thresholds(vault: Path | None) -> tuple[float, float]:
@@ -75,9 +76,12 @@ def thresholds(vault: Path | None) -> tuple[float, float]:
     except Exception as exc:
         if not _warned_calibration:
             _warned_calibration = True
-            print(f"[classify] WARNING: cannot read classify thresholds from "
-                  f"calibration.yaml ({type(exc).__name__}: {exc}) — using defaults "
-                  f"floor={DEFAULT_FLOOR}, margin={DEFAULT_MARGIN}", file=sys.stderr)
+            print(
+                f"[classify] WARNING: cannot read classify thresholds from "
+                f"calibration.yaml ({type(exc).__name__}: {exc}) — using defaults "
+                f"floor={DEFAULT_FLOOR}, margin={DEFAULT_MARGIN}",
+                file=sys.stderr,
+            )
         return DEFAULT_FLOOR, DEFAULT_MARGIN
 
 
@@ -108,68 +112,79 @@ def methodology(merged: dict) -> list[str]:
     return out
 
 
-def decide(merged: dict, floor: float = DEFAULT_FLOOR,
-           margin: float = DEFAULT_MARGIN) -> dict:
+def decide(merged: dict, floor: float = DEFAULT_FLOOR, margin: float = DEFAULT_MARGIN) -> dict:
     """The classify decision for one merged record. Pure — no I/O.
 
     status: applied (clear winner) | ambiguous (near-tie / below floor; field
     stays unset) | no_data (nothing to classify — a no-op, not audited)."""
     cands = candidates(merged)
     meth = methodology(merged)
-    d = {"research_area": [], "methodology": meth,
-         "candidates": [{"name": n, "score": round(s, 4)} for n, s in cands[:5]]}
+    d = {
+        "research_area": [],
+        "methodology": meth,
+        "candidates": [{"name": n, "score": round(s, 4)} for n, s in cands[:5]],
+    }
     if not cands:
-        return {**d, "status": "no_data",
-                "reason": "no scored topics in the enrichment payload"}
+        return {**d, "status": "no_data", "reason": "no scored topics in the enrichment payload"}
     top_name, top = cands[0]
     if top < floor:
-        return {**d, "status": "ambiguous",
-                "reason": f"top candidate {top_name!r} scores {top:.2f}, "
-                          f"below the confidence floor {floor:.2f}"}
+        return {
+            **d,
+            "status": "ambiguous",
+            "reason": f"top candidate {top_name!r} scores {top:.2f}, "
+            f"below the confidence floor {floor:.2f}",
+        }
     if len(cands) > 1 and (top - cands[1][1]) < margin:
-        return {**d, "status": "ambiguous",
-                "reason": f"near-tie: {top_name!r} ({top:.2f}) vs "
-                          f"{cands[1][0]!r} ({cands[1][1]:.2f}) is within the "
-                          f"margin {margin:.2f}"}
-    return {**d, "status": "applied", "research_area": [top_name],
-            "reason": f"clear winner: {top_name!r} ({top:.2f}) >= floor "
-                      f"{floor:.2f} with margin >= {margin:.2f}"}
+        return {
+            **d,
+            "status": "ambiguous",
+            "reason": f"near-tie: {top_name!r} ({top:.2f}) vs "
+            f"{cands[1][0]!r} ({cands[1][1]:.2f}) is within the "
+            f"margin {margin:.2f}",
+        }
+    return {
+        **d,
+        "status": "applied",
+        "research_area": [top_name],
+        "reason": f"clear winner: {top_name!r} ({top:.2f}) >= floor "
+        f"{floor:.2f} with margin >= {margin:.2f}",
+    }
 
 
 def flag_payload(citekey: str, decision: dict) -> dict:
     """The ONE Inbox flag for an ambiguous decision — finding + candidates with
     scores, no verdict (ADR-51 honesty rules). The writing layer raises the card."""
-    tops = "; ".join(f"{c['name']} ({c['score']:.2f})"
-                     for c in decision["candidates"][:3]) or "none"
+    tops = (
+        "; ".join(f"{c['name']} ({c['score']:.2f})" for c in decision["candidates"][:3]) or "none"
+    )
     return {
         "title": f"Ambiguous classification for {citekey}",
-        "finding": (f"research_area left unset: {decision['reason']}. "
-                    f"Top candidates: {tops}."),
+        "finding": (f"research_area left unset: {decision['reason']}. Top candidates: {tops}."),
         "citekey": citekey,
     }
 
 
-def append_audit(vault: Path, citekey: str, decision: dict,
-                 floor: float, margin: float) -> dict:
+def append_audit(vault: Path, citekey: str, decision: dict, floor: float, margin: float) -> dict:
     """Append one JSONL audit line per classify decision (applied or flagged) to
     system/logs/classify.jsonl — the patterns.jsonl provenance pattern."""
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc)
-                       .strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "run_id": str(uuid.uuid4())[:8], "stage": "classify",
-        "citekey": citekey, "decision": decision["status"],
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_id": str(uuid.uuid4())[:8],
+        "stage": "classify",
+        "citekey": citekey,
+        "decision": decision["status"],
         "research_area": decision["research_area"],
         "methodology": decision["methodology"],
         "candidates": decision["candidates"],
         "reason": decision["reason"],
-        "confidence_floor": floor, "near_tie_margin": margin,
+        "confidence_floor": floor,
+        "near_tie_margin": margin,
         "source": "openalex.topics",
     }
     if decision["status"] == "ambiguous":
         record["classify_miss"] = True
         record["miss_kind"] = (
-            "below_floor" if "below the confidence floor" in decision["reason"]
-            else "near_tie"
+            "below_floor" if "below the confidence floor" in decision["reason"] else "near_tie"
         )
     log = Path(vault) / AUDIT_RELPATH
     log.parent.mkdir(parents=True, exist_ok=True)
@@ -214,9 +229,12 @@ def load_project_hints(vault: Path | None) -> list[dict]:
     except Exception as exc:
         if not _warned_hints:
             _warned_hints = True
-            print(f"[classify] WARNING: cannot read project hints from "
-                  f"{HINTS_RELPATH} ({type(exc).__name__}: {exc}) — project "
-                  f"membership stays manual for this run", file=sys.stderr)
+            print(
+                f"[classify] WARNING: cannot read project hints from "
+                f"{HINTS_RELPATH} ({type(exc).__name__}: {exc}) — project "
+                f"membership stays manual for this run",
+                file=sys.stderr,
+            )
         return []
 
 
@@ -255,25 +273,32 @@ def propose_projects(merged: dict, hints: list[dict]) -> dict:
             | no_data (no topic signals — a no-op, not audited)."""
     terms = paper_topic_terms(merged)
     if not terms:
-        return {"projects": [], "candidates": [], "status": "no_data",
-                "reason": "no scored topics in the enrichment payload"}
+        return {
+            "projects": [],
+            "candidates": [],
+            "status": "no_data",
+            "reason": "no scored topics in the enrichment payload",
+        }
     cands = []
     for p in hints:
-        matched = [t for t in p["primary_topics"]
-                   if _hint_matches(_norm_topic(t), terms)]
+        matched = [t for t in p["primary_topics"] if _hint_matches(_norm_topic(t), terms)]
         if matched:
-            cands.append({"id": p["id"], "score": len(matched),
-                          "matched": matched})
+            cands.append({"id": p["id"], "score": len(matched), "matched": matched})
     cands.sort(key=lambda c: (-c["score"], c["id"]))
     if not cands:
-        return {"projects": [], "candidates": [], "status": "no_match",
-                "reason": "no project's primary_topics overlap the paper's "
-                          "topic signals"}
-    return {"projects": [c["id"] for c in cands], "candidates": cands,
-            "status": "proposed",
-            "reason": "topic overlap: " + "; ".join(
-                f"{c['id']} ({c['score']} hint topic(s) matched)"
-                for c in cands)}
+        return {
+            "projects": [],
+            "candidates": [],
+            "status": "no_match",
+            "reason": "no project's primary_topics overlap the paper's topic signals",
+        }
+    return {
+        "projects": [c["id"] for c in cands],
+        "candidates": cands,
+        "status": "proposed",
+        "reason": "topic overlap: "
+        + "; ".join(f"{c['id']} ({c['score']} hint topic(s) matched)" for c in cands),
+    }
 
 
 def append_project_audit(vault: Path, citekey: str, decision: dict) -> dict:
@@ -281,10 +306,11 @@ def append_project_audit(vault: Path, citekey: str, decision: dict) -> dict:
     no_match) in system/logs/classify.jsonl — same trail as append_audit().
     Honesty rules (ADR-51): candidates carry overlap counts, never confidence."""
     record = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc)
-                       .strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "run_id": str(uuid.uuid4())[:8], "stage": "project_hints",
-        "citekey": citekey, "decision": decision["status"],
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_id": str(uuid.uuid4())[:8],
+        "stage": "project_hints",
+        "citekey": citekey,
+        "decision": decision["status"],
         "projects_proposed": decision["projects"],
         "candidates": decision["candidates"],
         "reason": decision["reason"],

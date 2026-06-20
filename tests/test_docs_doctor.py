@@ -61,7 +61,7 @@ def test_check_frontmatter_flags_disallowed_keys_and_unquoted_colons(tmp_path):
 
 def test_check_frontmatter_accepts_clean_and_missing_frontmatter(tmp_path):
     good = tmp_path / "good.md"
-    good.write_text("---\ntitle: \"Clean: title\"\nstatus: draft\n---\n# X\n")
+    good.write_text('---\ntitle: "Clean: title"\nstatus: draft\n---\n# X\n')
     nofm = tmp_path / "nofm.md"
     nofm.write_text("# Just a heading\n")
 
@@ -328,7 +328,7 @@ def test_check_bare_adr_codes_treats_site_excluded_subroots_as_internal(tmp_path
 
 def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
     md = tmp_path / "h.md"
-    md.write_text("# Top Level\n## Sub Heading\n<a id=\"custom-anchor\"></a>\n")
+    md.write_text('# Top Level\n## Sub Heading\n<a id="custom-anchor"></a>\n')
 
     slugs = heading_slugs(md)
 

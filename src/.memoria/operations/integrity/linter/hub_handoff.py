@@ -7,6 +7,7 @@ proposal in staging, but the canonical hub home (notes/hubs/) remains PI-owned.
 
     python hub_handoff.py --vault <path> [--threshold 15] [--json]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,23 +45,27 @@ def _parse_hub_threshold(finding: detectors.Finding) -> dict | None:
 
 def _expected_outputs(topic: str) -> str:
     proposal = _slug(topic)
-    return "\n".join([
-        f"- Draft one staged hub proposal at notes/fleeting/maps/hub-proposal-{proposal}.md.",
-        "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, lifecycle: current, topic, members: [].",
-        "- Include only candidate member links and the threshold evidence; do not write curation prose or annotations as if approved.",
-        "- Raise or update one Inbox candidate card pointing the PI at the staged proposal.",
-        "- Do not write, move, or create files under notes/hubs/; the PI creates or promotes the final hub.",
-    ])
+    return "\n".join(
+        [
+            f"- Draft one staged hub proposal at notes/fleeting/maps/hub-proposal-{proposal}.md.",
+            "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, lifecycle: current, topic, members: [].",
+            "- Include only candidate member links and the threshold evidence; do not write curation prose or annotations as if approved.",
+            "- Raise or update one Inbox candidate card pointing the PI at the staged proposal.",
+            "- Do not write, move, or create files under notes/hubs/; the PI creates or promotes the final hub.",
+        ]
+    )
 
 
 def _context(finding: detectors.Finding, topic: str, count: int, threshold: int) -> str:
-    return "\n".join([
-        "ADR-19 Tier 2 handoff from the Linter hub-threshold detector.",
-        f"Finding: {finding.message}",
-        f"Topic: {topic}",
-        f"Count: {count}; threshold: {threshold}",
-        "The Linter is report-only. The map lane may stage a proposal, but notes/hubs/ is review-gated and PI-owned.",
-    ])
+    return "\n".join(
+        [
+            "ADR-19 Tier 2 handoff from the Linter hub-threshold detector.",
+            f"Finding: {finding.message}",
+            f"Topic: {topic}",
+            f"Count: {count}; threshold: {threshold}",
+            "The Linter is report-only. The map lane may stage a proposal, but notes/hubs/ is review-gated and PI-owned.",
+        ]
+    )
 
 
 def handoff_hub_thresholds(
@@ -73,7 +78,9 @@ def handoff_hub_thresholds(
     for finding in detectors.hub_threshold(vault, threshold=threshold):
         parsed = _parse_hub_threshold(finding)
         if parsed is None:
-            out.append({"created": False, "error": "unparseable-finding", "finding": finding.__dict__})
+            out.append(
+                {"created": False, "error": "unparseable-finding", "finding": finding.__dict__}
+            )
             continue
         topic = parsed["topic"]
         count = parsed["count"]
@@ -90,19 +97,23 @@ def handoff_hub_thresholds(
             idempotency_key=key,
             card_runner=card_runner,
         )
-        out.append({
-            "topic": topic,
-            "count": count,
-            "finding": finding.__dict__,
-            "allowed_paths": list(_ALLOWED_PATHS),
-            "idempotency_key": key,
-            "delegation": delegation,
-        })
+        out.append(
+            {
+                "topic": topic,
+                "count": count,
+                "finding": finding.__dict__,
+                "allowed_paths": list(_ALLOWED_PATHS),
+                "idempotency_key": key,
+                "delegation": delegation,
+            }
+        )
     return out
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", type=Path, help="vault root to scan")
     ap.add_argument("--threshold", type=int, default=15, help="hub-threshold note count")
     ap.add_argument("--json", action="store_true", help="emit handoff results as JSON")
@@ -117,7 +128,9 @@ def main() -> None:
     elif rows:
         for row in rows:
             delegation = row.get("delegation", {})
-            status = "created" if delegation.get("created") else delegation.get("error", "not-created")
+            status = (
+                "created" if delegation.get("created") else delegation.get("error", "not-created")
+            )
             print(f"{row['topic']}: {status} ({row['idempotency_key']})")
     else:
         print("no hub-threshold handoffs")

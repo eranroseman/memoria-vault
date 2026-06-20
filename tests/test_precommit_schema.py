@@ -16,7 +16,9 @@ def test_clean_note_passes(tmp_path):
     v = _vault(tmp_path)
     (v / "notes/claims/c.md").write_text(
         "---\ntype: claim\nlifecycle: current\ntitle: T\nmaturity: seedling\n"
-        "sources: ['@x2020']\n---\nBody.\n", encoding="utf-8")
+        "sources: ['@x2020']\n---\nBody.\n",
+        encoding="utf-8",
+    )
     assert precommit_check.check_paths(v, ["notes/claims/c.md"]) == []
 
 
@@ -24,7 +26,8 @@ def test_schema_violation_blocks(tmp_path):
     v = _vault(tmp_path)
     # claims never start in `proposed` (ADR-50 subset), and required fields missing
     (v / "notes/claims/bad.md").write_text(
-        "---\ntype: claim\nlifecycle: proposed\ntitle: T\n---\nBody.\n", encoding="utf-8")
+        "---\ntype: claim\nlifecycle: proposed\ntitle: T\n---\nBody.\n", encoding="utf-8"
+    )
     errors = precommit_check.check_paths(v, ["notes/claims/bad.md"])
     assert any("lifecycle" in e for e in errors)
     assert any("maturity" in e for e in errors)
@@ -33,7 +36,8 @@ def test_schema_violation_blocks(tmp_path):
 def test_unknown_type_blocks(tmp_path):
     v = _vault(tmp_path)
     (v / "notes/claims/odd.md").write_text(
-        "---\ntype: reference-note\nlifecycle: current\n---\n", encoding="utf-8")
+        "---\ntype: reference-note\nlifecycle: current\n---\n", encoding="utf-8"
+    )
     errors = precommit_check.check_paths(v, ["notes/claims/odd.md"])
     assert any("unknown type" in e for e in errors)
 
@@ -46,7 +50,10 @@ def test_untyped_infra_and_outside_paths_exempt(tmp_path):
 
 
 def test_hook_script_ships_executable():
-    hook = Path(__file__).resolve().parent.parent / "src/.memoria/operations/integrity/linter/pre-commit"
+    hook = (
+        Path(__file__).resolve().parent.parent
+        / "src/.memoria/operations/integrity/linter/pre-commit"
+    )
     assert hook.is_file()
     assert hook.stat().st_mode & 0o111, "pre-commit hook must be executable"
 

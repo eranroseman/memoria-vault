@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # ruff: noqa: E402
 """Board transition, cost, blind-review, and review-prompt event handling."""
+
 from __future__ import annotations
 
 import hashlib
@@ -29,6 +30,7 @@ from operations.lib import inbox
 
 _ts = now_iso
 
+
 def load_state_cache(vault: Path) -> dict:
     """Per-card {status, review_status} seen on the previous run (for diffing)."""
     p = vault / STATE_CACHE_RELPATH
@@ -37,8 +39,7 @@ def load_state_cache(vault: Path) -> dict:
             data = json.loads(p.read_text(encoding="utf-8"))
             return data if isinstance(data, dict) else {}
         except json.JSONDecodeError as exc:
-            print(f"[board_export] corrupt state cache ({p}), resetting: {exc}",
-                  file=sys.stderr)
+            print(f"[board_export] corrupt state cache ({p}), resetting: {exc}", file=sys.stderr)
             return {}
     return {}
 
@@ -66,13 +67,21 @@ def compute_events(prev: dict, cards: list[dict], cost_lookup=None) -> dict:
         c = normalize(raw)
         tid, lane = c["task_id"], c["assignee"]
         if tid not in prev:
-            continue   # first sight this run -- seeded into the cache below, emits no event
+            continue  # first sight this run -- seeded into the cache below, emits no event
         before = prev[tid]
         old_status, old_review = before.get("status"), before.get("review_status")
 
         if c["status"] != old_status:
-            transitions.append({"timestamp": ts, "task_id": tid, "lane": lane,
-                                 "kind": "status", "from": old_status, "to": c["status"]})
+            transitions.append(
+                {
+                    "timestamp": ts,
+                    "task_id": tid,
+                    "lane": lane,
+                    "kind": "status",
+                    "from": old_status,
+                    "to": c["status"],
+                }
+            )
             # Cost is final at completion -- log it on the transition into `done`.
             if c["status"] == "done" and cost_lookup is not None:
                 cost_row, miss_row = cost_lookup(raw, c, ts)
@@ -82,20 +91,39 @@ def compute_events(prev: dict, cards: list[dict], cost_lookup=None) -> dict:
                     cost_misses.append(miss_row)
 
         if c["review_status"] != old_review:
-            transitions.append({"timestamp": ts, "task_id": tid, "lane": lane,
-                                 "kind": "review", "from": old_review, "to": c["review_status"]})
+            transitions.append(
+                {
+                    "timestamp": ts,
+                    "task_id": tid,
+                    "lane": lane,
+                    "kind": "review",
+                    "from": old_review,
+                    "to": c["review_status"],
+                }
+            )
             # Disposition is emitted by the human review action. The exporter only
             # samples terminal reviews for optional blind re-review.
             if c["review_status"] in TERMINAL_REVIEW:
                 disp = TERMINAL_REVIEW[c["review_status"]]
                 if c["blind_rereview"] or should_sample_blind_review(tid):
-                    blind_reviews.append({"timestamp": ts, "task_id": tid, "lane": lane,
-                                          "disposition": disp,
-                                          "review_status": c["review_status"],
-                                          "sample_reason": "blind-rereview",
-                                          "agent_recommendation": c["agent_recommendation"]})
-    return {"transitions": transitions, "dispositions": dispositions, "costs": costs,
-            "cost_misses": cost_misses, "blind_reviews": blind_reviews}
+                    blind_reviews.append(
+                        {
+                            "timestamp": ts,
+                            "task_id": tid,
+                            "lane": lane,
+                            "disposition": disp,
+                            "review_status": c["review_status"],
+                            "sample_reason": "blind-rereview",
+                            "agent_recommendation": c["agent_recommendation"],
+                        }
+                    )
+    return {
+        "transitions": transitions,
+        "dispositions": dispositions,
+        "costs": costs,
+        "cost_misses": cost_misses,
+        "blind_reviews": blind_reviews,
+    }
 
 
 def should_sample_blind_review(task_id: str, rate: float = 0.05) -> bool:
@@ -159,9 +187,9 @@ def newly_done(prev: dict, cards: list[dict]) -> list[dict]:
         before = prev.get(c["task_id"])
         if before is not None:
             if before.get("status") == "done":
-                continue   # prompt already raised on the transition into done
+                continue  # prompt already raised on the transition into done
         elif not _recently_done(c):
-            continue       # first sight of an old done card -- seed cache silently
+            continue  # first sight of an old done card -- seed cache silently
         out.append(raw)
     return out
 
@@ -182,8 +210,7 @@ def export_review_prompts(vault: Path, prev: dict, cards: list[dict]) -> int:
             vault,
             title=f"Review: {c['title']}",
             action="Review the work product, then accept it or archive the board card.",
-            what_happened=f'Lane {c["assignee"]} finished "{c["title"]}" '
-                          f'(card {c["task_id"]}).',
+            what_happened=f'Lane {c["assignee"]} finished "{c["title"]}" (card {c["task_id"]}).',
             raised_by="board-export",
             target=str(outputs or ""),
             task_id=c["task_id"],

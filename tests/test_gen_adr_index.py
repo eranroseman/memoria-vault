@@ -44,14 +44,18 @@ def test_parse_adr_reads_typed_frontmatter_fields():
 
 
 def test_status_cell_renders_superseded_target():
-    superseded = parse_adr(_frontmatter(id="27", title="Old", status="superseded", superseded_by="[28]"))
+    superseded = parse_adr(
+        _frontmatter(id="27", title="Old", status="superseded", superseded_by="[28]")
+    )
 
     assert superseded["superseded_by"] == [28]
     assert status_cell(superseded) == "superseded → ADR-28"
 
 
 def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
-    bad = parse_adr("---\nid: 3\ntitle: Bad\nstatus: proposed\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n")
+    bad = parse_adr(
+        "---\nid: 3\ntitle: Bad\nstatus: proposed\ndate_proposed: 2026-06-01\ndate_resolved: 2026-06-02\n---\n"
+    )
     bad_errs = validate_adr(_m.Path("docs/adr/03-bad.md"), bad)
     accepted_open = parse_adr(_frontmatter(id="4", title="Bad", date_resolved=""))
     superseded_missing_by = parse_adr(
@@ -60,7 +64,10 @@ def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
 
     assert any("missing frontmatter key `assumes`" in e for e in bad_errs)
     assert any("must leave date_resolved blank" in e for e in bad_errs)
-    assert any("accepted ADR must set date_resolved" in e for e in validate_adr(_m.Path("docs/adr/04-bad.md"), accepted_open))
+    assert any(
+        "accepted ADR must set date_resolved" in e
+        for e in validate_adr(_m.Path("docs/adr/04-bad.md"), accepted_open)
+    )
     assert any(
         "superseded ADR must set superseded_by" in e
         for e in validate_adr(_m.Path("docs/adr/05-bad.md"), superseded_missing_by)
@@ -91,7 +98,13 @@ def test_validate_adr_accepts_unresolved_proposals():
 def test_render_table_sorts_by_id_and_uses_zero_padded_links():
     table = render_table(
         [
-            {"id": 2, "slug": "second", "title": "Second", "status": "accepted", "superseded_by": []},
+            {
+                "id": 2,
+                "slug": "second",
+                "title": "Second",
+                "status": "accepted",
+                "superseded_by": [],
+            },
             {"id": 1, "slug": "first", "title": "First", "status": "accepted", "superseded_by": []},
         ]
     )
@@ -103,7 +116,9 @@ def test_render_table_sorts_by_id_and_uses_zero_padded_links():
 def test_collect_splice_and_build_round_trip(tmp_path):
     adr_dir = tmp_path
     (adr_dir / "01-alpha.md").write_text(_frontmatter(id="1", title="Alpha"))
-    (adr_dir / "02-beta.md").write_text(_frontmatter(id="2", title="Beta", status="superseded", superseded_by="[1]"))
+    (adr_dir / "02-beta.md").write_text(
+        _frontmatter(id="2", title="Beta", status="superseded", superseded_by="[1]")
+    )
     (adr_dir / "_template.md").write_text("---\nid: 0\ntitle: T\nstatus: x\n---\n")
     readme = adr_dir / "README.md"
     readme.write_text(f"# Decisions\n\n{START}\n\nstale\n\n{END}\n\ntail\n")

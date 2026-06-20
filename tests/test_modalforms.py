@@ -29,7 +29,9 @@ def test_modal_forms_plugin_is_bundled():
     plugin_dir = SRC / ".obsidian" / "plugins" / "modalforms"
     for filename in ("main.js", "manifest.json", "styles.css", "data.json"):
         assert (plugin_dir / filename).is_file(), f"Modal Forms missing {filename}"
-    assert json.loads((plugin_dir / "manifest.json").read_text(encoding="utf-8"))["id"] == "modalforms"
+    assert (
+        json.loads((plugin_dir / "manifest.json").read_text(encoding="utf-8"))["id"] == "modalforms"
+    )
     roster = json.loads((SRC / ".obsidian" / "community-plugins.json").read_text(encoding="utf-8"))
     assert "modalforms" in roster
 
@@ -46,7 +48,6 @@ def test_source_capture_form_uses_vocabulary_options():
     assert fields["methodology"]["input"]["type"] == "multiselect"
     assert fields["methodology"]["input"]["source"] == "fixed"
     assert fields["methodology"]["input"]["multi_select_options"] == _terms("methodology")
-
 
 
 def test_structured_capture_forms_cover_source_and_project_setup():
@@ -75,15 +76,23 @@ def test_project_start_form_is_available_for_later_automation():
     form = _forms_by_name()["memoria-project-start"]
     assert form["version"] == "1"
     fields = {field["name"]: field for field in form["fields"]}
-    for required in ("title", "slug", "scope_topics", "inquiry_population",
-                     "inquiry_outcome", "output_mode"):
+    for required in (
+        "title",
+        "slug",
+        "scope_topics",
+        "inquiry_population",
+        "inquiry_outcome",
+        "output_mode",
+    ):
         assert fields[required]["isRequired"] is True
     assert fields["scope_topics"]["input"]["multi_select_options"] == _terms("research_area")
     assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
 
 
 def test_source_capture_uses_catalog_note_picker():
-    fields = {field["name"]: field for field in _forms_by_name()["memoria-source-capture"]["fields"]}
+    fields = {
+        field["name"]: field for field in _forms_by_name()["memoria-source-capture"]["fields"]
+    }
     assert fields["entity"]["input"] == {"type": "note", "folder": "catalog"}
 
 

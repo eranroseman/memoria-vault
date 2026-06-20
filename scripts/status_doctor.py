@@ -21,6 +21,7 @@ prose.) Guards six drift modes:
 Scope: docs/{releasing,testing,contributing}/**/*.md + .agents/playbooks/release.md.
 Exit 0 if clean, 1 if any issue. Usage: python scripts/status_doctor.py [--self-test]
 """
+
 from __future__ import annotations
 
 import re
@@ -81,8 +82,12 @@ def check_file(p: Path, root: Path) -> list[str]:
     # 2. broken relative links (skip external, anchors, and {{ }} placeholders)
     for raw in MD_LINK.findall(text):
         target = raw.strip()
-        if (not target or target.startswith(("http://", "https://", "mailto:", "#"))
-                or "{{" in target or target in {"...", "…"}):
+        if (
+            not target
+            or target.startswith(("http://", "https://", "mailto:", "#"))
+            or "{{" in target
+            or target in {"...", "…"}
+        ):
             continue
         path_part = target.split("#", 1)[0]
         if not path_part:
@@ -100,10 +105,14 @@ def check_file(p: Path, root: Path) -> list[str]:
             status_l = status.lower()
             if status_l not in ALLOWED_RELEASE_STATUSES:
                 allowed = ", ".join(sorted(ALLOWED_RELEASE_STATUSES))
-                errs.append(f"{rel}: invalid release status `{status}` — expected one of: {allowed}")
+                errs.append(
+                    f"{rel}: invalid release status `{status}` — expected one of: {allowed}"
+                )
             is_released = released.lower() == "true"
             if is_released != (status_l == "released"):
-                errs.append(f"{rel}: frontmatter inconsistent — status:{status} vs released:{released}")
+                errs.append(
+                    f"{rel}: frontmatter inconsistent — status:{status} vs released:{released}"
+                )
     return errs
 
 

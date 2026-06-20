@@ -29,7 +29,9 @@ def _cspell_hook() -> dict:
 def test_cspell_json_owns_the_scope():
     config = json.loads(CSPELL_JSON.read_text(encoding="utf-8"))
     assert config.get("files") == ["**/*.md"], "cspell.json must select all markdown"
-    assert config.get("enableGlobDot") is True, "dot-dirs (.agents/, src/.memoria/) need enableGlobDot"
+    assert config.get("enableGlobDot") is True, (
+        "dot-dirs (.agents/, src/.memoria/) need enableGlobDot"
+    )
     assert config.get("ignorePaths"), "exclusions must live in cspell.json ignorePaths"
 
 
@@ -42,7 +44,9 @@ def test_workflow_defers_to_cspell_json():
 
 def test_precommit_hook_triggers_on_any_markdown():
     hook = _cspell_hook()
-    assert hook["files"] == r"\.md$", "pre-commit must trigger on any .md, not a docs/src/root allow-list"
+    assert hook["files"] == r"\.md$", (
+        "pre-commit must trigger on any .md, not a docs/src/root allow-list"
+    )
 
 
 def test_required_check_is_scope_agnostic():

@@ -14,6 +14,7 @@ Modes:
 
 Usage: python scripts/gen_adr_index.py [--check | --self-test]
 """
+
 from __future__ import annotations
 
 import re

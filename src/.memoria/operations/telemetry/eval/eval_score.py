@@ -52,6 +52,7 @@ scorer prints that and appends nothing (an empty run is noise, not data).
     python eval_score.py --vault <path> --quarter 2026-Q2     # an explicit quarter
     python eval_score.py --vault <path> --from-json cards.json --dry-run
 """
+
 from __future__ import annotations
 
 import argparse
@@ -72,7 +73,7 @@ from operations.telemetry.eval import (
 
 METRICS_RELDIR = "system/metrics/eval"
 RUNS_LOG = "runs.jsonl"
-DEFAULT_K = 3   # the gold rubrics score a "top 3" window
+DEFAULT_K = 3  # the gold rubrics score a "top 3" window
 
 _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(\{.*?\})\s*```", re.S)
 
@@ -87,8 +88,7 @@ def catalog_citekeys(vault: Path) -> set[str]:
     keys: set[str] = set()
     for p in (vault / "catalog").glob("*/*.md"):
         keys.add(p.stem)
-        ck = eval_dispatch.parse_frontmatter(
-            p.read_text(encoding="utf-8")).get("citekey")
+        ck = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8")).get("citekey")
         if ck:
             keys.add(str(ck))
     return keys
@@ -119,11 +119,18 @@ def load_cards(from_json: Path | None = None) -> list[dict]:
         raw = from_json.read_text(encoding="utf-8")
     else:
         try:
-            proc = subprocess.run(["hermes", "kanban", "list", "--json"],
-                                  capture_output=True, text=True, timeout=30, check=True)
+            proc = subprocess.run(
+                ["hermes", "kanban", "list", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=True,
+            )
         except subprocess.CalledProcessError as exc:
-            sys.exit(f"[eval-score] `hermes kanban list` failed (exit {exc.returncode}): "
-                     f"{(exc.stderr or '').strip()[:200]}")
+            sys.exit(
+                f"[eval-score] `hermes kanban list` failed (exit {exc.returncode}): "
+                f"{(exc.stderr or '').strip()[:200]}"
+            )
         except FileNotFoundError:
             sys.exit("[eval-score] 'hermes' not found on PATH (use --from-json offline)")
         raw = proc.stdout
@@ -183,8 +190,9 @@ def _str_list(result: dict, key: str) -> list[str] | None:
     return [str(x) for x in v]
 
 
-def score_task(task: dict, result: dict, catalog: set[str],
-               superseded: set[str], k: int = DEFAULT_K) -> dict:
+def score_task(
+    task: dict, result: dict, catalog: set[str], superseded: set[str], k: int = DEFAULT_K
+) -> dict:
     """Deterministic metrics for one gold task from its result block."""
     metrics: dict[str, float] = {}
     gold = [str(c) for c in task.get("references") or []]
@@ -193,20 +201,18 @@ def score_task(task: dict, result: dict, catalog: set[str],
         hits = sum(1 for c in gold if c in retrieved[:k])
         metrics["recall_at_k"] = round(hits / len(gold), 3)
     cited = _str_list(result, "cited")
-    if cited:   # an empty citation list scores nothing — there is no evidence to rate
-        metrics["support_rate"] = round(
-            sum(1 for c in cited if c in catalog) / len(cited), 3)
+    if cited:  # an empty citation list scores nothing — there is no evidence to rate
+        metrics["support_rate"] = round(sum(1 for c in cited if c in catalog) / len(cited), 3)
     claims = _str_list(result, "claims")
-    if claims is not None:   # [] is a positive assertion: no claims used -> clean
+    if claims is not None:  # [] is a positive assertion: no claims used -> clean
         exposed = sorted(set(claims) & superseded)
         metrics["fama_clean"] = 0.0 if exposed else 1.0
         if exposed:
-            metrics["fama_exposed"] = exposed   # name the offenders, like the Linter does
+            metrics["fama_exposed"] = exposed  # name the offenders, like the Linter does
     return metrics
 
 
-def score_run(vault: Path, cards: list[dict], quarter: str,
-              k: int = DEFAULT_K) -> dict:
+def score_run(vault: Path, cards: list[dict], quarter: str, k: int = DEFAULT_K) -> dict:
     """Score one quarter's eval run: per-task records + the aggregate."""
     catalog = catalog_citekeys(vault)
     superseded = superseded_claims(vault)
@@ -218,12 +224,17 @@ def score_run(vault: Path, cards: list[dict], quarter: str,
         result = results.get(task["id"])
         if result is None:
             counts["unscored"] += 1
-            tasks_out.append({"task": task["id"], "workflow": task["workflow"],
-                              "lane": task["lane"], "status": "unscored"})
+            tasks_out.append(
+                {
+                    "task": task["id"],
+                    "workflow": task["workflow"],
+                    "lane": task["lane"],
+                    "status": "unscored",
+                }
+            )
             continue
         metrics = score_task(task, result, catalog, superseded, k=k)
-        row: dict = {"task": task["id"], "workflow": task["workflow"],
-                     "lane": task["lane"]}
+        row: dict = {"task": task["id"], "workflow": task["workflow"], "lane": task["lane"]}
         numeric = {m: v for m, v in metrics.items() if isinstance(v, (int, float))}
         if numeric:
             counts["scored"] += 1
@@ -231,21 +242,31 @@ def score_run(vault: Path, cards: list[dict], quarter: str,
             row["metrics"] = metrics
             for m, v in numeric.items():
                 sums.setdefault(m, []).append(float(v))
-        else:   # a result that exposes nothing computable is reported, not faked
+        else:  # a result that exposes nothing computable is reported, not faked
             counts["reported"] += 1
             row["status"] = "reported"
         if isinstance(result.get("self_score"), (int, float)):
             row["self_score"] = result["self_score"]
         tasks_out.append(row)
-    aggregate: dict = {m: {"mean": round(sum(vs) / len(vs), 3), "n": len(vs)}
-                       for m, vs in sorted(sums.items())}
-    aggregate.update({"tasks_total": len(tasks_out),
-                      "tasks_scored": counts["scored"],
-                      "tasks_reported": counts["reported"],
-                      "tasks_unscored": counts["unscored"]})
+    aggregate: dict = {
+        m: {"mean": round(sum(vs) / len(vs), 3), "n": len(vs)} for m, vs in sorted(sums.items())
+    }
+    aggregate.update(
+        {
+            "tasks_total": len(tasks_out),
+            "tasks_scored": counts["scored"],
+            "tasks_reported": counts["reported"],
+            "tasks_unscored": counts["unscored"],
+        }
+    )
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return {"timestamp": now, "quarter": quarter, "k": k,
-            "tasks": tasks_out, "aggregate": aggregate}
+    return {
+        "timestamp": now,
+        "quarter": quarter,
+        "k": k,
+        "tasks": tasks_out,
+        "aggregate": aggregate,
+    }
 
 
 def append_run(vault: Path, run: dict) -> Path:
@@ -274,17 +295,31 @@ def resolve_quarter(spec: str, today: datetime.date | None = None) -> str:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", required=True, help="vault root")
-    ap.add_argument("--quarter", default="current",
-                    help="quarter to score: current (default), previous, or YYYY-Qn")
-    ap.add_argument("--k", type=int, default=DEFAULT_K,
-                    help=f"recall window (default {DEFAULT_K}, the rubrics' top-3)")
-    ap.add_argument("--from-json", type=Path,
-                    help="read cards from a JSON file instead of `hermes kanban list --json`")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="print the run record without appending to the metrics log")
+    ap.add_argument(
+        "--quarter",
+        default="current",
+        help="quarter to score: current (default), previous, or YYYY-Qn",
+    )
+    ap.add_argument(
+        "--k",
+        type=int,
+        default=DEFAULT_K,
+        help=f"recall window (default {DEFAULT_K}, the rubrics' top-3)",
+    )
+    ap.add_argument(
+        "--from-json",
+        type=Path,
+        help="read cards from a JSON file instead of `hermes kanban list --json`",
+    )
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the run record without appending to the metrics log",
+    )
     args = ap.parse_args()
     vault = Path(args.vault).expanduser()
     if not vault.is_dir():
@@ -294,16 +329,19 @@ def main() -> None:
     run = score_run(vault, cards, quarter, k=args.k)
     agg = run["aggregate"]
     if agg["tasks_scored"] == 0 and agg["tasks_reported"] == 0:
-        print(f"[eval-score] {quarter}: no result blocks on the board — "
-              "nothing scored, log untouched")
+        print(
+            f"[eval-score] {quarter}: no result blocks on the board — nothing scored, log untouched"
+        )
         return
     if args.dry_run:
         print(json.dumps(run, indent=2, ensure_ascii=False))
         return
     out = append_run(vault, run)
-    print(f"[eval-score] {quarter}: {agg['tasks_scored']} scored, "
-          f"{agg['tasks_reported']} reported, {agg['tasks_unscored']} unscored "
-          f"-> {out}")
+    print(
+        f"[eval-score] {quarter}: {agg['tasks_scored']} scored, "
+        f"{agg['tasks_reported']} reported, {agg['tasks_unscored']} unscored "
+        f"-> {out}"
+    )
 
 
 if __name__ == "__main__":

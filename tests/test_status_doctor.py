@@ -18,7 +18,9 @@ def _release_root(tmp_path):
 def test_check_file_accepts_consistent_release_frontmatter_and_valid_links(tmp_path):
     rel = _release_root(tmp_path)
     good = rel / "good.md"
-    good.write_text("---\nstatus: complete\nreleased: false\n---\n[x](adr/x.md) {{ #NN }} placeholder ok\n")
+    good.write_text(
+        "---\nstatus: complete\nreleased: false\n---\n[x](adr/x.md) {{ #NN }} placeholder ok\n"
+    )
     released_ok = rel / "released.md"
     released_ok.write_text("---\nstatus: released\nreleased: true\n---\n# x\n")
     candidate_ok = rel / "candidate.md"

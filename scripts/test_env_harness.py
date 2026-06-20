@@ -192,15 +192,15 @@ def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> 
         "policy:\n"
         "  allow:\n"
         "    write:\n"
-        "      - \"inbox/**\"\n"
+        '      - "inbox/**"\n'
         "  deny:\n"
         "    write:\n"
-        "      - \"notes/claims/**\"\n"
+        '      - "notes/claims/**"\n'
         "  require:\n"
         "    - audit_log\n"
         "routing:\n"
         "  write_scope:\n"
-        "    - \"inbox/\"\n",
+        '    - "inbox/"\n',
         encoding="utf-8",
     )
     plugin = root / "src/.memoria/plugins/memoria-policy-gate/__init__.py"
@@ -276,7 +276,7 @@ def assert_final(vault: Path, final: dict[str, Any]) -> None:
         text = (vault / gate["path"]).read_text(encoding="utf-8")
         start = text.index("<!-- memoria-structural-impact:json -->")
         end = text.index("<!-- /memoria-structural-impact:json -->")
-        payload = json.loads(text[start + len("<!-- memoria-structural-impact:json -->"):end])
+        payload = json.loads(text[start + len("<!-- memoria-structural-impact:json -->") : end])
         if payload["relation_count"] < int(gate["min_relation_count"]):
             raise HarnessError("project gate relation count below expected floor")
         if payload["evidence_saturation"] != gate["expected_saturation_state"]:
@@ -359,11 +359,11 @@ def run_model_smoke() -> int:
             data = json.loads(resp.read().decode("utf-8"))
     except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
         raise HarnessError(f"model-smoke request failed: {exc}") from exc
-    message = ((data.get("choices") or [{}])[0].get("message") or {})
+    message = (data.get("choices") or [{}])[0].get("message") or {}
     calls = message.get("tool_calls") or []
     if not calls:
         raise HarnessError(f"model-smoke produced no tool_calls: {data}")
-    fn = (calls[0].get("function") or {})
+    fn = calls[0].get("function") or {}
     if fn.get("name") != "vault_write":
         raise HarnessError(f"model-smoke called unexpected tool: {fn.get('name')!r}")
     print("model-smoke: PASS")
@@ -372,7 +372,9 @@ def run_model_smoke() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("replay", "record", "model-smoke"), nargs="?", default="replay")
+    parser.add_argument(
+        "command", choices=("replay", "record", "model-smoke"), nargs="?", default="replay"
+    )
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--vault", type=Path)
     parser.add_argument("--cassette", type=Path, default=DEFAULT_CASSETTE)

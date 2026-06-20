@@ -48,7 +48,8 @@ def parse_pubmed(xml: str) -> dict:
             authors.append({"name": collective, "orcid": ""})
             continue
         name = " ".join(
-            value for value in (
+            value
+            for value in (
                 _article_text(author, "ForeName"),
                 _article_text(author, "LastName"),
             )
@@ -82,7 +83,6 @@ def parse_pubmed(xml: str) -> dict:
         "publication_types": [pub_type for pub_type in pub_types if pub_type],
         "mesh_terms": [heading for heading in mesh if heading],
         "nlm_unique_id": (
-            _article_text(medline, "MedlineJournalInfo/NlmUniqueID")
-            if medline is not None else ""
+            _article_text(medline, "MedlineJournalInfo/NlmUniqueID") if medline is not None else ""
         ),
     }

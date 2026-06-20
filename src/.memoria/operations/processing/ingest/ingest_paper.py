@@ -12,6 +12,7 @@ Usage:
 
 Exit codes: 0 ok · 2 citekey not found · 3 bad bib · 4 usage.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -59,9 +60,9 @@ def _find_entry(text: str, citekey: str):
         brace = text.find("{", at)
         if brace == -1:
             return None
-        etype = text[at + 1:brace].strip().lower()
+        etype = text[at + 1 : brace].strip().lower()
         # match the citekey immediately after the opening brace
-        head = text[brace:brace + len(needle)]
+        head = text[brace : brace + len(needle)]
         if head.lower() == needle.lower():
             # read to the matching close brace
             depth, j = 0, brace
@@ -73,7 +74,7 @@ def _find_entry(text: str, citekey: str):
                     if depth == 0:
                         break
                 j += 1
-            inner = text[brace + 1:j]
+            inner = text[brace + 1 : j]
             after_key = inner.split(",", 1)[1] if "," in inner else ""
             return etype, after_key
         i = brace + 1
@@ -111,13 +112,13 @@ def _parse_fields(body: str) -> dict:
                     if depth == 0:
                         break
                 j += 1
-            val = body[i + 1:j]
+            val = body[i + 1 : j]
             i = j + 1
         elif body[i] == '"':
             j = i + 1
             while j < n and body[j] != '"':
                 j += 1
-            val = body[i + 1:j]
+            val = body[i + 1 : j]
             i = j + 1
         else:
             j = i
@@ -162,15 +163,19 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
                 year = int(m)
                 break
     doi = f.get("doi", "")
-    arxiv = f.get("eprint", "") if (f.get("archiveprefix", "").lower() == "arxiv" or "arxiv" in f.get("eprint", "").lower()) else ""
+    arxiv = (
+        f.get("eprint", "")
+        if (f.get("archiveprefix", "").lower() == "arxiv" or "arxiv" in f.get("eprint", "").lower())
+        else ""
+    )
     if not arxiv and doi.lower().startswith("10.48550/arxiv."):
         arxiv = doi.split("arxiv.", 1)[-1]
     fm = {
         "title": f.get("title", ""),
-        "name": f.get("title", ""),         # dataset/repository records key on name
+        "name": f.get("title", ""),  # dataset/repository records key on name
         "type": note_type,
-        "lifecycle": "current",             # entities are current from creation (ADR-50)
-        "ingest_status": "tier0",           # captured but not yet enriched (ADR-30)
+        "lifecycle": "current",  # entities are current from creation (ADR-50)
+        "ingest_status": "tier0",  # captured but not yet enriched (ADR-30)
         "citekey": citekey,
         "source_type": source_type,
         "doi": doi,
@@ -180,7 +185,7 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "venue": f.get("journal", "") or f.get("booktitle", "") or f.get("publisher", ""),
         "research_area": [],
         "methodology": [],
-        "relationships": {},                # given edges; Tier-1 link builds them (ADR-52)
+        "relationships": {},  # given edges; Tier-1 link builds them (ADR-52)
         "zotero_uri": "",
         "pdf_uri": "",
         "extract_path": "",
@@ -198,26 +203,35 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         "schema_version": SCHEMA_VERSION,
         # `projects` is filled by the deterministic ADR-15 hint overlap when
         # .memoria/project-hints.yaml exists; the other two are LLM hole #1.
-        "_proposed_classification": {"research_area": [], "methodology": [],
-                                     "projects": []},
+        "_proposed_classification": {"research_area": [], "methodology": [], "projects": []},
     }
     body_lines = [f"# {fm['title'] or citekey}", ""]
     if fm["venue"]:
         body_lines += [f"*{fm['venue']}*" + (f" ({year})" if year else ""), ""]
     if f.get("abstract"):
         body_lines += ["## Abstract", "", f["abstract"], ""]
-    body_lines += ["> [!note] Captured — not yet ingested",
-                   "> Identity from the local `.bib`. Enrichment (full text, relationships, "
-                   "classification) runs in Tier 1; `ingest_status: tier0` marks the floor.", ""]
+    body_lines += [
+        "> [!note] Captured — not yet ingested",
+        "> Identity from the local `.bib`. Enrichment (full text, relationships, "
+        "classification) runs in Tier 1; `ingest_status: tier0` marks the floor.",
+        "",
+    ]
     return {
-        "citekey": citekey, "entry_type": etype, "note_type": note_type,
-        "path": f"{folder}/{citekey}.md", "frontmatter": fm, "body": "\n".join(body_lines),
+        "citekey": citekey,
+        "entry_type": etype,
+        "note_type": note_type,
+        "path": f"{folder}/{citekey}.md",
+        "frontmatter": fm,
+        "body": "\n".join(body_lines),
     }
 
 
 def render(note: dict) -> str:
     import yaml
-    fm = yaml.safe_dump(note["frontmatter"], sort_keys=False, allow_unicode=True, default_flow_style=False)
+
+    fm = yaml.safe_dump(
+        note["frontmatter"], sort_keys=False, allow_unicode=True, default_flow_style=False
+    )
     return f"---\n{fm}---\n\n{note['body']}"
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Hermes cost/session-store joins for board export."""
+
 from __future__ import annotations
 
 import json
@@ -20,7 +21,10 @@ def load_card_detail(task_id: str) -> dict:
     try:
         proc = subprocess.run(
             ["hermes", "kanban", "show", task_id, "--json"],
-            capture_output=True, text=True, check=True)
+            capture_output=True,
+            text=True,
+            check=True,
+        )
     except subprocess.CalledProcessError as exc:
         raise CostDoctorError(
             f"hermes kanban show {task_id!r} failed with exit {exc.returncode}: "
@@ -34,6 +38,8 @@ def load_card_detail(task_id: str) -> dict:
     if isinstance(data, dict):
         return data
     raise CostDoctorError(f"hermes kanban show {task_id!r} returned non-object JSON")
+
+
 def _hermes_home(hermes_home: Path | str | None = None) -> Path:
     raw = hermes_home or os.environ.get("HERMES_HOME") or "~/.hermes"
     return Path(raw).expanduser()
@@ -91,8 +97,7 @@ def read_session_row(db_path: Path, session_id: str) -> dict | None:
     return dict(row) if row is not None else None
 
 
-def cost_event_from_session(ts: str, task_id: str, lane: str, session_id: str,
-                            row: dict) -> dict:
+def cost_event_from_session(ts: str, task_id: str, lane: str, session_id: str, row: dict) -> dict:
     cost = row.get("actual_cost_usd")
     if cost in (None, ""):
         cost = row.get("estimated_cost_usd")
@@ -118,8 +123,15 @@ def cost_event_from_session(ts: str, task_id: str, lane: str, session_id: str,
     }
 
 
-def cost_miss(ts: str, task_id: str, lane: str, reason: str, *,
-              session_id: str = "", source: str = "hermes-session-store") -> dict:
+def cost_miss(
+    ts: str,
+    task_id: str,
+    lane: str,
+    reason: str,
+    *,
+    session_id: str = "",
+    source: str = "hermes-session-store",
+) -> dict:
     return {
         "timestamp": ts,
         "task_id": task_id,
@@ -145,8 +157,7 @@ class HermesCostLookup:
         ids = worker_session_ids(detail)
         if not ids:
             raise CostDoctorError(
-                f"hermes kanban show {task_id!r} did not expose "
-                "runs[].metadata.worker_session_id"
+                f"hermes kanban show {task_id!r} did not expose runs[].metadata.worker_session_id"
             )
         return ids[-1]
 
@@ -155,10 +166,8 @@ class HermesCostLookup:
         session_id = self._session_id_for(raw, task_id)
         db_path = state_db_for_lane(lane, self.hermes_home)
         if not db_path.exists():
-            return None, cost_miss(ts, task_id, lane, "missing-state-db",
-                                   session_id=session_id)
+            return None, cost_miss(ts, task_id, lane, "missing-state-db", session_id=session_id)
         row = read_session_row(db_path, session_id)
         if row is None:
-            return None, cost_miss(ts, task_id, lane, "missing-session-row",
-                                   session_id=session_id)
+            return None, cost_miss(ts, task_id, lane, "missing-session-row", session_id=session_id)
         return cost_event_from_session(ts, task_id, lane, session_id, row), None

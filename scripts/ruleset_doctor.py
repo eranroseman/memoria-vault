@@ -70,7 +70,11 @@ def live_errors(repository: str, contract: dict | None = None) -> list[str]:
     summaries = _gh_json(f"repos/{repository}/rulesets")
     wanted = contract["ruleset_name"]
     match = next(
-        (item for item in summaries if item.get("name") == wanted and item.get("enforcement") == "active"),
+        (
+            item
+            for item in summaries
+            if item.get("name") == wanted and item.get("enforcement") == "active"
+        ),
         None,
     )
     if not match:

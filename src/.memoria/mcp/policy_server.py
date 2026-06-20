@@ -20,14 +20,21 @@ def build_server(vault: Path):
     server = FastMCP("memoria-policy")
 
     @server.tool()
-    def check_permission(profile: str, action: str, path: str, task_id: str,
-                         reason: str = "", flags: dict | None = None) -> dict:
+    def check_permission(
+        profile: str,
+        action: str,
+        path: str,
+        task_id: str,
+        reason: str = "",
+        flags: dict | None = None,
+    ) -> dict:
         """Authorize a vault action."""
         return engine.check(profile, action, path, task_id, reason, flags)
 
     @server.tool()
-    def complete_write(profile: str, action: str, path: str, task_id: str,
-                       before_hash: str) -> dict:
+    def complete_write(
+        profile: str, action: str, path: str, task_id: str, before_hash: str
+    ) -> dict:
         """Record after_hash once a write completes."""
         return engine.complete_write(profile, action, path, task_id, before_hash)
 

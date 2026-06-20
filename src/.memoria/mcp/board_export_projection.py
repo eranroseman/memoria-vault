@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Markdown and snapshot projections for board export."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -75,9 +76,10 @@ def board_snapshot(cards: list[dict]) -> dict:
     totals = {"running": 0, "ready": 0, "blocked": 0, "review_queue": 0, "retrying": 0}
     for raw in cards:
         c = normalize(raw)
-        lane = lanes.setdefault(c["assignee"],
-                                {"running": 0, "ready": 0, "blocked": 0,
-                                 "review_queue": 0, "retrying": 0})
+        lane = lanes.setdefault(
+            c["assignee"],
+            {"running": 0, "ready": 0, "blocked": 0, "review_queue": 0, "retrying": 0},
+        )
         st = c["status"]
         if st in ("running", "ready", "blocked"):
             lane[st] += 1

@@ -42,7 +42,9 @@ def read_frontmatter(path: Path) -> dict[str, Any]:
     return parse_frontmatter(safe_read(path))
 
 
-def iter_markdown(vault: Path, skip_dirs: set[str] | frozenset[str] | None = None) -> Iterator[Path]:
+def iter_markdown(
+    vault: Path, skip_dirs: set[str] | frozenset[str] | None = None
+) -> Iterator[Path]:
     """Yield markdown files below ``vault``, pruning skipped directories while walking."""
     skipped = set(DEFAULT_SKIP_DIRS if skip_dirs is None else skip_dirs)
     for dirpath, dirnames, filenames in os.walk(vault):
@@ -64,9 +66,7 @@ def _parse_frontmatter_minimal(raw: str) -> dict[str, Any]:
         if value.startswith("[") and value.endswith("]"):
             inner = value[1:-1].strip()
             data[key.strip()] = [
-                item.strip().strip("\"'")
-                for item in inner.split(",")
-                if item.strip()
+                item.strip().strip("\"'") for item in inner.split(",") if item.strip()
             ]
         else:
             data[key.strip()] = value

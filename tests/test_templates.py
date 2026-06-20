@@ -38,8 +38,7 @@ def test_one_template_per_type():
     # worker-card projections are not template-created; their writers create
     # the instances directly.
     expected = set(types) - {"pattern", "eval-task", "space", "worker-card"}
-    assert names == expected, (
-        f"templates {names ^ expected} out of sync with schemas")
+    assert names == expected, f"templates {names ^ expected} out of sync with schemas"
 
 
 def test_templates_conform_to_schemas():
@@ -55,7 +54,8 @@ def test_templates_conform_to_schemas():
             if kind.startswith("enum:"):
                 allowed = enums[kind.split(":", 1)[1]]
                 assert fm[field] in allowed, (
-                    f"{tpl.name}: {field}={fm[field]!r} not a valid default {allowed}")
+                    f"{tpl.name}: {field}={fm[field]!r} not a valid default {allowed}"
+                )
 
 
 def test_fleeting_template_keeps_origin_comment_out_of_yaml():
@@ -85,12 +85,14 @@ def test_source_template_exposes_linked_claim_button():
     assert body.index("```button") > body.index("# Worth distilling")
 
 
-
 def test_templates_surface_identity_type_lifecycle_first():
     """Properties pane scan order: identity first, then type/lifecycle (#145)."""
     for tpl in sorted(TEMPLATES.glob("*.md")):
-        keys = [line.split(":", 1)[0] for line in _frontmatter_text(tpl).splitlines()
-                if line and not line.startswith(" ")]
+        keys = [
+            line.split(":", 1)[0]
+            for line in _frontmatter_text(tpl).splitlines()
+            if line and not line.startswith(" ")
+        ]
         assert "type" in keys and "lifecycle" in keys, tpl.name
         identity = "title" if "title" in keys else "name"
         assert keys[:3] == [identity, "type", "lifecycle"], tpl.name

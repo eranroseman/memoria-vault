@@ -47,12 +47,16 @@ def assert_plugin_bundle(vault: Path) -> None:
     plugins = json.loads((vault / ".obsidian/community-plugins.json").read_text(encoding="utf-8"))
     for plugin in ["dataview", "obsidian-git", "obsidian-local-rest-api", "portals", "quickadd"]:
         assert plugin in plugins, f"bundled plugin not enabled: {plugin}"
-        assert (vault / ".obsidian/plugins" / plugin / "manifest.json").is_file(), f"missing plugin manifest: {plugin}"
+        assert (vault / ".obsidian/plugins" / plugin / "manifest.json").is_file(), (
+            f"missing plugin manifest: {plugin}"
+        )
     print("   git repo, hooks, CSS snippets, and plugin bundle asserted")
 
 
 def assert_executable(path: Path, label: str) -> None:
-    assert path.exists() and path.stat().st_mode & 0o111, f"{label} is missing or not executable: {path}"
+    assert path.exists() and path.stat().st_mode & 0o111, (
+        f"{label} is missing or not executable: {path}"
+    )
 
 
 def add_repo_paths(root: Path) -> None:
@@ -132,7 +136,9 @@ def assert_workflow_replay_artifacts(vault: Path) -> None:
         for line in (vault / "system/logs/audit.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     assert audit[-1]["decision"] == "deny", f"last audit decision was not deny: {audit[-1]}"
-    assert audit[-1]["task_id"] == "HARNESS-DENY", f"last audit task_id was not HARNESS-DENY: {audit[-1]}"
+    assert audit[-1]["task_id"] == "HARNESS-DENY", (
+        f"last audit task_id was not HARNESS-DENY: {audit[-1]}"
+    )
     print("   deny audit row and forbidden-file absence asserted")
 
 
@@ -142,16 +148,19 @@ def assert_final_verdict(verdict: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=[
-        "stage-label",
-        "vault-skeleton",
-        "plugin-bundle",
-        "executable",
-        "offline-ingest",
-        "typed-graph",
-        "workflow-artifacts",
-        "final-verdict",
-    ])
+    parser.add_argument(
+        "command",
+        choices=[
+            "stage-label",
+            "vault-skeleton",
+            "plugin-bundle",
+            "executable",
+            "offline-ingest",
+            "typed-graph",
+            "workflow-artifacts",
+            "final-verdict",
+        ],
+    )
     parser.add_argument("args", nargs="*")
     ns = parser.parse_args(argv)
 

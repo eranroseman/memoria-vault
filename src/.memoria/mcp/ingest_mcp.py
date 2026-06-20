@@ -17,6 +17,7 @@ writes the notes through the gated obsidian MCP, exactly as before.
 
     python ingest_mcp.py --vault <path>      # run the server over stdio
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,8 +50,12 @@ def append_intake_anchor(vault: Path, citekey: str, note_path: str) -> bool:
                     return False  # already anchored
             except json.JSONDecodeError:
                 continue
-    rec = {"ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-           "citekey": citekey, "source": "ingest-tool", "note_path": note_path}
+    rec = {
+        "ts": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "citekey": citekey,
+        "source": "ingest-tool",
+        "note_path": note_path,
+    }
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as f:
         f.write(json.dumps(rec) + "\n")
@@ -83,26 +88,40 @@ def build_server(vault: Path):
         except KeyError:
             return {"error": "citekey-not-found", "citekey": citekey}
         except Exception as exc:
-            print(f"[ingest_mcp] runner.run failed for {citekey}: "
-                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
-            return {"error": "pipeline-error",
-                    "citekey": citekey,
-                    "detail": f"{type(exc).__name__}: {exc}"}
+            print(
+                f"[ingest_mcp] runner.run failed for {citekey}: {type(exc).__name__}: {exc}",
+                file=sys.stderr,
+            )
+            return {
+                "error": "pipeline-error",
+                "citekey": citekey,
+                "detail": f"{type(exc).__name__}: {exc}",
+            }
         # D51/ADR-56: a low-agreement merge becomes an Inbox near-tie flag; and
         # D21/ADR-54: an ambiguous classify decision becomes ONE Inbox flag —
         # the writing layer raises them, never the agent
-        flags = [f for f in (bundle.pop("flag_needed", None),
-                             bundle.pop("classify_flag_needed", None)) if f]
+        flags = [
+            f
+            for f in (bundle.pop("flag_needed", None), bundle.pop("classify_flag_needed", None))
+            if f
+        ]
         if flags:
             try:
                 from operations.lib import inbox as inbox_writer
+
                 for flag in flags:
                     inbox_writer.write_finding(
-                        vault, "flag", flag["title"], flag["finding"],
-                        raised_by="ingest", agent_recommendation="inconclusive",
-                        citekey=flag.get("citekey", ""), loudness="alert")
+                        vault,
+                        "flag",
+                        flag["title"],
+                        flag["finding"],
+                        raised_by="ingest",
+                        agent_recommendation="inconclusive",
+                        citekey=flag.get("citekey", ""),
+                        loudness="alert",
+                    )
                 bundle["flag_raised"] = True
-            except Exception as exc:   # never fail the ingest on card-writing
+            except Exception as exc:  # never fail the ingest on card-writing
                 bundle["flag_raised"] = False
                 bundle.setdefault("degraded", []).append(f"flag-write: {exc}")
 
@@ -115,8 +134,11 @@ def build_server(vault: Path):
                 safe_ck = citekey.replace("/", "_").replace("..", "_").replace("\\", "_")
                 dest = vault / ".memoria" / "data" / "extracts" / f"{safe_ck}.md"
                 if not dest.resolve().is_relative_to((vault / ".memoria" / "data").resolve()):
-                    return {"error": "invalid-citekey", "citekey": citekey,
-                            "message": "citekey would escape the assets directory"}
+                    return {
+                        "error": "invalid-citekey",
+                        "citekey": citekey,
+                        "message": "citekey would escape the assets directory",
+                    }
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_text(text, encoding="utf-8")
         # backstop the durability anchor for non-macro ingest (board / manual cards)
@@ -137,7 +159,9 @@ def resolve_vault(arg: str | None) -> Path:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Deterministic ingest pipeline as an MCP server (ADR-30)")
+    ap = argparse.ArgumentParser(
+        description="Deterministic ingest pipeline as an MCP server (ADR-30)"
+    )
     ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
     args = ap.parse_args()
     build_server(resolve_vault(args.vault)).run()

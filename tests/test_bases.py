@@ -68,14 +68,29 @@ def _referenced_properties(base: dict) -> set[str]:
 
 # identifiers in filter strings that are functions/keywords, not properties
 _FILTER_NOISE = {
-    "file", "inFolder", "ext", "md", "and", "or", "not", "hasTag", "hasLink",
-    "now", "today", "date", "if", "true", "false",
+    "file",
+    "inFolder",
+    "ext",
+    "md",
+    "and",
+    "or",
+    "not",
+    "hasTag",
+    "hasLink",
+    "now",
+    "today",
+    "date",
+    "if",
+    "true",
+    "false",
 }
+
 
 def test_every_base_parses_as_yaml():
     assert _bases(), "no .base files shipped"
     for b in _bases():
         yaml.safe_load(b.read_text(encoding="utf-8"))
+
 
 def test_base_properties_exist_in_schemas():
     types = schema.load_types()
@@ -94,6 +109,7 @@ def test_base_properties_exist_in_schemas():
         unknown = _referenced_properties(data) - known
         assert not unknown, f"{b}: references properties not in any schema: {sorted(unknown)}"
 
+
 def test_inbox_base_has_needs_me_view():
     inbox = SRC / "inbox" / "inbox.base"
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
@@ -103,6 +119,7 @@ def test_inbox_base_has_needs_me_view():
     needs_me_order = views["Needs me"]["order"]
     assert "action" in needs_me_order
     assert "finding" in needs_me_order
+
 
 def test_reading_pipeline_embeds_source_and_claim_bases():
     text = (SRC / "system" / "dashboards" / "reading-pipeline.md").read_text(encoding="utf-8")
@@ -115,14 +132,19 @@ def test_project_gate_dashboard_embeds_project_base():
     text = (SRC / "system" / "dashboards" / "project-gate.md").read_text(encoding="utf-8")
     assert "![[project-gate.base#Active projects]]" in text
     assert "![[project-gate.base#Needs refutation stamp]]" in text
-    base = yaml.safe_load((SRC / "system" / "dashboards" / "project-gate.base").read_text(encoding="utf-8"))
+    base = yaml.safe_load(
+        (SRC / "system" / "dashboards" / "project-gate.base").read_text(encoding="utf-8")
+    )
     views = {v.get("name"): v for v in base.get("views", [])}
     assert {"Active projects", "Needs refutation stamp"} <= set(views)
     assert views["Active projects"]["groupBy"]["property"] == "output_mode"
     assert "refutation_sufficiency" in views["Active projects"]["order"]
 
+
 def test_fleeting_base_matches_capture_template_home():
-    quickadd = yaml.safe_load((SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8"))
+    quickadd = yaml.safe_load(
+        (SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8")
+    )
     text = (SRC / "system" / "dashboards" / "fleeting.base").read_text(encoding="utf-8")
     assert 'file.inFolder("notes/fleeting")' in text
     assert 'file.ext == "md"' in text
@@ -144,11 +166,15 @@ def test_key_bases_surface_lifecycle_near_left_edge():
         for view in data.get("views", []):
             order = view.get("order", [])
             if "lifecycle" in order:
-                assert order.index("lifecycle") <= 1, f"{path.name}::{view.get('name')} buries lifecycle"
+                assert order.index("lifecycle") <= 1, (
+                    f"{path.name}::{view.get('name')} buries lifecycle"
+                )
 
 
 def test_worklists_base_groups_by_worklist_decision_and_group():
-    data = yaml.safe_load((SRC / "system" / "worklists" / "worklists.base").read_text(encoding="utf-8"))
+    data = yaml.safe_load(
+        (SRC / "system" / "worklists" / "worklists.base").read_text(encoding="utf-8")
+    )
     text = (SRC / "system" / "worklists" / "worklists.base").read_text(encoding="utf-8")
     assert 'file.inFolder("system/worklists")' in text
     assert 'type == "worklist-item"' in text

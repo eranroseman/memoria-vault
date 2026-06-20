@@ -1,4 +1,5 @@
 """L1 component test for session_summary — ADR-25's per-session digests."""
+
 import json
 from datetime import datetime, timezone
 
@@ -8,8 +9,14 @@ NOW = datetime(2026, 6, 12, 12, 0, tzinfo=timezone.utc)
 
 
 def _entry(ts, task, path, action="write", decision="allow_with_log", **kw):
-    e = {"timestamp": ts, "profile": "memoria-writer", "action": action,
-         "path": path, "task_id": task, "decision": decision}
+    e = {
+        "timestamp": ts,
+        "profile": "memoria-writer",
+        "action": action,
+        "path": path,
+        "task_id": task,
+        "decision": decision,
+    }
     e.update(kw)
     return e
 
@@ -17,36 +24,54 @@ def _entry(ts, task, path, action="write", decision="allow_with_log", **kw):
 def _write_audit(v, records, extra_lines=()):
     (v / "system/logs").mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(r) for r in records] + list(extra_lines)
-    (v / "system/logs/audit.jsonl").write_text("\n".join(lines) + "\n",
-                                               encoding="utf-8")
+    (v / "system/logs/audit.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def test_grouping_naming_and_content(tmp_path):
     v = tmp_path
-    _write_audit(v, [
-        _entry("2026-06-01T09:05:00Z", "T-A", "projects/a.md"),
-        _entry("2026-06-01T09:06:00Z", "T-A", "projects/a.md",
-               decision="write_complete", after_hash="sha256:" + "a" * 64),
-        _entry("2026-06-01T09:07:00Z", "T-A", "notes/claims/c.md",
-               action="write", decision="dry_run"),
-        _entry("2026-06-02T14:30:00Z", "T-B", "inbox/x.md", action="append"),
-    ], extra_lines=["{garbage", json.dumps({"timestamp": "bad", "task_id": "T-X"}),
-                    json.dumps({"path": "no-task.md"})])
+    _write_audit(
+        v,
+        [
+            _entry("2026-06-01T09:05:00Z", "T-A", "projects/a.md"),
+            _entry(
+                "2026-06-01T09:06:00Z",
+                "T-A",
+                "projects/a.md",
+                decision="write_complete",
+                after_hash="sha256:" + "a" * 64,
+            ),
+            _entry(
+                "2026-06-01T09:07:00Z",
+                "T-A",
+                "notes/claims/c.md",
+                action="write",
+                decision="dry_run",
+            ),
+            _entry("2026-06-02T14:30:00Z", "T-B", "inbox/x.md", action="append"),
+        ],
+        extra_lines=[
+            "{garbage",
+            json.dumps({"timestamp": "bad", "task_id": "T-X"}),
+            json.dumps({"path": "no-task.md"}),
+        ],
+    )
     written = ss.write_summaries(v, now=NOW)
     names = [p.name for p in written]
     assert names == ["2026-06-01-0905.jsonl", "2026-06-02-1430.jsonl"]
 
-    lines = [json.loads(line) for line in
-             (v / "system/logs/sessions/2026-06-01-0905.jsonl")
-             .read_text(encoding="utf-8").splitlines()]
+    lines = [
+        json.loads(line)
+        for line in (v / "system/logs/sessions/2026-06-01-0905.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
     header, paths = lines[0], lines[1:]
     assert header["record"] == "session" and header["task_id"] == "T-A"
     assert header["profiles"] == ["memoria-writer"]
     assert header["started"] == "2026-06-01T09:05:00Z"
     assert header["ended"] == "2026-06-01T09:07:00Z"
     assert header["entries"] == 3
-    assert header["decisions"] == {"allow_with_log": 1, "dry_run": 1,
-                                   "write_complete": 1}
+    assert header["decisions"] == {"allow_with_log": 1, "dry_run": 1, "write_complete": 1}
     by_path = {r["path"]: r for r in paths}
     assert set(by_path) == {"projects/a.md", "notes/claims/c.md"}
     assert by_path["projects/a.md"]["after_hash"] == "sha256:" + "a" * 64
@@ -72,22 +97,28 @@ def test_quiet_window_skips_in_flight_sessions(tmp_path):
     v = tmp_path
     recent = (NOW.replace(hour=2)).strftime("%Y-%m-%dT%H:%M:%SZ")  # 10h before NOW
     _write_audit(v, [_entry(recent, "T-LIVE", "projects/a.md")])
-    assert ss.write_summaries(v, now=NOW) == []           # inside the 24h window
+    assert ss.write_summaries(v, now=NOW) == []  # inside the 24h window
     later = NOW.replace(day=14)
-    assert len(ss.write_summaries(v, now=later)) == 1     # quiet long enough
+    assert len(ss.write_summaries(v, now=later)) == 1  # quiet long enough
 
 
 def test_shared_start_minute_gets_deterministic_suffix(tmp_path):
     v = tmp_path
-    _write_audit(v, [
-        _entry("2026-06-01T09:05:10Z", "T-A", "projects/a.md"),
-        _entry("2026-06-01T09:05:50Z", "T-B", "projects/b.md"),
-    ])
+    _write_audit(
+        v,
+        [
+            _entry("2026-06-01T09:05:10Z", "T-A", "projects/a.md"),
+            _entry("2026-06-01T09:05:50Z", "T-B", "projects/b.md"),
+        ],
+    )
     written = sorted(p.name for p in ss.write_summaries(v, now=NOW))
     assert written == ["2026-06-01-0905-2.jsonl", "2026-06-01-0905.jsonl"]
     # ordering is deterministic: T-A (earlier first timestamp) took the base name
-    head = json.loads((v / "system/logs/sessions/2026-06-01-0905.jsonl")
-                      .read_text(encoding="utf-8").splitlines()[0])
+    head = json.loads(
+        (v / "system/logs/sessions/2026-06-01-0905.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
     assert head["task_id"] == "T-A"
 
 

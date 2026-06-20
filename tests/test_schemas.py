@@ -7,11 +7,30 @@ def test_all_types_load():
     types = schema.load_types()
     assert len(types) == 24
     expected = {
-        "paper", "person", "organization", "venue", "dataset", "repository",
-        "project", "thesis", "code-note",
-        "fleeting", "source", "claim", "hub", "index",
-        "candidate", "gap", "flag", "alert", "work-prompt", "space", "pattern", "eval-task",
-        "worker-card", "worklist-item",
+        "paper",
+        "person",
+        "organization",
+        "venue",
+        "dataset",
+        "repository",
+        "project",
+        "thesis",
+        "code-note",
+        "fleeting",
+        "source",
+        "claim",
+        "hub",
+        "index",
+        "candidate",
+        "gap",
+        "flag",
+        "alert",
+        "work-prompt",
+        "space",
+        "pattern",
+        "eval-task",
+        "worker-card",
+        "worklist-item",
     }
     assert set(types) == expected
 
@@ -64,8 +83,13 @@ def test_skeleton_contains_every_home():
 def test_validate_frontmatter_round_trip():
     types = schema.load_types()
     claim = types["claim"]
-    good = {"type": "claim", "lifecycle": "current", "title": "T",
-            "maturity": "evergreen", "sources": ["@smith2024"]}
+    good = {
+        "type": "claim",
+        "lifecycle": "current",
+        "title": "T",
+        "maturity": "evergreen",
+        "sources": ["@smith2024"],
+    }
     assert schema.validate_frontmatter(good, claim) == []
     # missing required
     errs = schema.validate_frontmatter({"type": "claim"}, claim)
@@ -111,8 +135,7 @@ def test_project_and_thesis_schema_contracts():
     assert schema.validate_frontmatter(thesis_note, thesis) == []
     current_without_stamp = dict(thesis_note, lifecycle="current")
     assert any(
-        "promoted_at" in e
-        for e in schema.validate_frontmatter(current_without_stamp, thesis)
+        "promoted_at" in e for e in schema.validate_frontmatter(current_without_stamp, thesis)
     )
     current_with_stamp = dict(current_without_stamp, promoted_at="2026-06-16")
     assert schema.validate_frontmatter(current_with_stamp, thesis) == []
@@ -146,8 +169,13 @@ def test_code_note_schema_contract():
 def test_required_any_on_flag_cards():
     types = schema.load_types()
     flag = types["flag"]
-    base = {"type": "flag", "lifecycle": "proposed", "title": "T",
-            "finding": "broken citekey", "agent_recommendation": "issues-found"}
+    base = {
+        "type": "flag",
+        "lifecycle": "proposed",
+        "title": "T",
+        "finding": "broken citekey",
+        "agent_recommendation": "issues-found",
+    }
     errs = schema.validate_frontmatter(base, flag)
     assert any("at least one of" in e for e in errs)
     assert schema.validate_frontmatter(dict(base, citekey="@x"), flag) == []
@@ -158,8 +186,7 @@ def test_honesty_card_fields_on_proposals():
     types = schema.load_types()
     for proposal in ("candidate", "gap"):
         req = types[proposal]["required"]
-        for field in ("action", "argument_for", "argument_against",
-                      "what_tipped_it", "certainty"):
+        for field in ("action", "argument_for", "argument_against", "what_tipped_it", "certainty"):
             assert field in req, f"{proposal} missing honesty field {field}"
         assert "finding" not in req  # no verdict line on proposals (D49)
     for verification in ("flag", "alert"):
@@ -209,6 +236,7 @@ def test_gated_prefix_fallbacks_match_folders_yaml():
     schema.load_gated_prefixes is the one loader for in-repo consumers."""
     import patterns_mcp
     import policy_mcp
+
     canonical = tuple(schema.load_folders()["gated_prefixes"])
     assert canonical == schema.load_gated_prefixes()
     assert canonical == schema.FALLBACK_GATED_PREFIXES

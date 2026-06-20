@@ -40,18 +40,23 @@ class PolicyEngine:
     def clear_session_skill(self, task_id: str) -> None:
         self._session_skill_deny.pop(task_id, None)
 
-    def _audit_traversal(self, profile: str, action: str, path: str, task_id: str, message: str) -> None:
+    def _audit_traversal(
+        self, profile: str, action: str, path: str, task_id: str, message: str
+    ) -> None:
         """Log a path traversal denial with the raw path that failed normalization."""
-        append_audit(self.vault, {
-            "timestamp": now_iso(),
-            "profile": profile,
-            "action": action,
-            "path": path,
-            "task_id": task_id,
-            "decision": "deny",
-            "policy_rule": "path.traversal",
-            "message": message,
-        })
+        append_audit(
+            self.vault,
+            {
+                "timestamp": now_iso(),
+                "profile": profile,
+                "action": action,
+                "path": path,
+                "task_id": task_id,
+                "decision": "deny",
+                "policy_rule": "path.traversal",
+                "message": message,
+            },
+        )
 
     def check(
         self,
@@ -79,16 +84,19 @@ class PolicyEngine:
             blockers = _open_blockers(self.vault)
             if blockers:
                 message = _blocker_message(blockers)
-                append_audit(self.vault, {
-                    "timestamp": now_iso(),
-                    "profile": profile,
-                    "action": action,
-                    "path": npath,
-                    "task_id": task_id,
-                    "decision": "deny",
-                    "policy_rule": "loudness.block.active",
-                    "message": message,
-                })
+                append_audit(
+                    self.vault,
+                    {
+                        "timestamp": now_iso(),
+                        "profile": profile,
+                        "action": action,
+                        "path": npath,
+                        "task_id": task_id,
+                        "decision": "deny",
+                        "policy_rule": "loudness.block.active",
+                        "message": message,
+                    },
+                )
                 return {
                     "decision": "deny",
                     "policy_rule": "loudness.block.active",

@@ -28,8 +28,10 @@ TELEGRAM_API_BASE_ENV = "MEMORIA_TELEGRAM_API_BASE"
 
 
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
-    return (str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
-            and str(frontmatter.get("lifecycle") or "").lower() == OPEN_LIFECYCLE)
+    return (
+        str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
+        and str(frontmatter.get("lifecycle") or "").lower() == OPEN_LIFECYCLE
+    )
 
 
 def open_blockers(vault: Path) -> list[dict[str, str]]:
@@ -37,11 +39,13 @@ def open_blockers(vault: Path) -> list[dict[str, str]]:
     for path in sorted((vault / "inbox").glob("*.md")):
         fm = read_frontmatter(path)
         if is_open_blocker(fm):
-            blockers.append({
-                "path": str(path.relative_to(vault)).replace("\\", "/"),
-                "title": str(fm.get("title") or path.stem),
-                "type": str(fm.get("type") or "card"),
-            })
+            blockers.append(
+                {
+                    "path": str(path.relative_to(vault)).replace("\\", "/"),
+                    "title": str(fm.get("title") or path.stem),
+                    "type": str(fm.get("type") or "card"),
+                }
+            )
     return blockers
 
 
@@ -69,7 +73,9 @@ def _append_push_log(vault: Path, row: dict[str, Any]) -> None:
     append_jsonl(vault / PUSH_LOG_RELPATH, [row])
 
 
-def push_card(vault: Path, card_path: Path, frontmatter: dict[str, Any], env: dict[str, str] | None = None) -> dict[str, Any]:
+def push_card(
+    vault: Path, card_path: Path, frontmatter: dict[str, Any], env: dict[str, str] | None = None
+) -> dict[str, Any]:
     """Push alert/block cards to Telegram when configured, and log push attempts.
 
     Missing Telegram config is a non-fatal `not-configured` routing record; card

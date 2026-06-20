@@ -15,8 +15,12 @@ def _skeleton_dirs() -> set[str]:
     text = MANIFEST.read_text(encoding="utf-8")
     m = re.search(r"SKELETON_DIRS=\((.*?)\)", text, re.S)
     assert m, "SKELETON_DIRS not found in scripts/install/manifest.sh"
-    return {line.strip() for line in m.group(1).splitlines()
-            if line.strip() and not line.strip().startswith("#")}
+    return {
+        line.strip()
+        for line in m.group(1).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+
 
 def test_skeleton_covers_the_schema_skeleton():
     """Every dir folders.yaml declares must be created by the installer."""
@@ -25,11 +29,13 @@ def test_skeleton_covers_the_schema_skeleton():
     missing = declared - installed
     assert not missing, f"installer SKELETON_DIRS missing schema dirs: {sorted(missing)}"
 
+
 def test_skeleton_covers_every_type_home():
     folders = schema.load_folders()
     installed = _skeleton_dirs()
     for t, home in folders["homes"].items():
         assert home in installed, f"type {t} home {home} not in SKELETON_DIRS"
+
 
 def test_installer_deploys_exactly_the_shipped_profiles():
     text = INSTALL.read_text(encoding="utf-8")
@@ -38,10 +44,12 @@ def test_installer_deploys_exactly_the_shipped_profiles():
     shipped = {p.name for p in (ROOT / "src/.memoria/profiles").iterdir() if p.is_dir()}
     assert listed == shipped, f"ALL_PROFILES {listed ^ shipped} out of sync with src profiles"
 
+
 def test_cron_wrappers_exist_for_wired_jobs():
     text = INSTALL.read_text(encoding="utf-8")
-    for wrapper in re.findall(r'\.memoria/scripts/([a-z-]+\.sh)', text):
+    for wrapper in re.findall(r"\.memoria/scripts/([a-z-]+\.sh)", text):
         assert (ROOT / "src/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
+
 
 def test_installer_cron_helper_keeps_all_job_schedules():
     helper = RUNTIME_TOOLS.read_text(encoding="utf-8")
@@ -61,14 +69,17 @@ def test_installer_cron_helper_keeps_all_job_schedules():
         assert schedule in text
         assert job in text
 
+
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "src/.memoria/scripts/lint-cron.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
     assert "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" in text
 
+
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text
+
 
 def test_installer_escapes_template_replacements():
     text = INSTALL.read_text(encoding="utf-8")
@@ -76,6 +87,7 @@ def test_installer_escapes_template_replacements():
     assert "s|{{VAULT_PATH}}|$VAULT_PATH|g" not in text
     assert "s|{{PYTHON}}|$pybin|g" not in text
     assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text
+
 
 def test_installers_verify_generated_profiles_use_https_ssl_verify():
     sh = INSTALL.read_text(encoding="utf-8")
@@ -91,6 +103,7 @@ def test_installers_verify_generated_profiles_use_https_ssl_verify():
         assert "OBSIDIAN_MCP_SSL_VERIFY" in text
         assert 'url: "http://127' not in text
 
+
 def test_installers_render_profile_model_placeholders():
     sh = INSTALL.read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
@@ -103,6 +116,7 @@ def test_installers_render_profile_model_placeholders():
     assert "MEMORIA_ENV" in ps
     assert "qwen2.5:7b" in sh
     assert "qwen2.5:7b" in ps
+
 
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
@@ -118,6 +132,7 @@ def test_installer_treats_python_as_a_hard_prerequisite():
     assert "python_install_guidance" in ensure_prereqs
     assert "sudo apt-get install -y$missing" in ensure_prereqs
 
+
 def test_installers_treat_git_as_a_hard_prerequisite():
     sh = INSTALL.read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
@@ -132,6 +147,7 @@ def test_installers_treat_git_as_a_hard_prerequisite():
     assert "Git is required on PATH" in ps
     assert "Assert-RequiredCommands" in ps
 
+
 def test_mcp_deps_fail_loudly_without_python():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
@@ -144,6 +160,7 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
     assert "skipping MCP deps" not in install_mcp_deps
 
+
 def test_installer_installs_memoria_package_editable():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
@@ -154,12 +171,14 @@ def test_installer_installs_memoria_package_editable():
     assert '-e "$REPO_DIR"' in install_mcp_deps
     assert "install Memoria editable" in install_mcp_deps
 
+
 def test_installers_refuse_existing_vaults_instead_of_refreshing():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
     assert "This installer is fresh-install only" in sh
     assert "Refresh it from the repo" not in sh
     assert "This installer is fresh-install only" in ps
+
 
 def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
@@ -179,9 +198,11 @@ def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance
     ).group("body")
     assert "Enable-MemoriaCssSnippets -RepoRoot (Get-LocalRepoRoot)" in ps
 
+
 def test_windows_installer_uv_fallback_enables_mcp_extra():
     text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
     assert "'--extra', 'mcp', 'hermes'" in text
+
 
 def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
     text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")

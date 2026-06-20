@@ -16,8 +16,11 @@ def _seed(v: Path) -> None:
 def test_stage_builds_manifest(tmp_path):
     _seed(tmp_path)
     manifest = golden.stage(tmp_path)
-    assert set(manifest) == {"system/templates/claim.md",
-                             "system/dashboards/home-board.md", "home.md"}
+    assert set(manifest) == {
+        "system/templates/claim.md",
+        "system/dashboards/home-board.md",
+        "home.md",
+    }
     assert golden.check(tmp_path) == {}
 
 
@@ -109,11 +112,13 @@ def test_plugin_config_drift_detected_and_restored(tmp_path):
     _seed_obsidian(tmp_path)
     golden.stage(tmp_path)
     (tmp_path / ".obsidian/plugins/dataview/data.json").write_text(
-        '{"shipped": false}', encoding="utf-8")
+        '{"shipped": false}', encoding="utf-8"
+    )
     assert golden.check(tmp_path) == {".obsidian/plugins/dataview/data.json": "drifted"}
     golden.restore(tmp_path, apply=True)
-    assert (tmp_path / ".obsidian/plugins/dataview/data.json")\
-        .read_text(encoding="utf-8") == '{"shipped": true}'
+    assert (tmp_path / ".obsidian/plugins/dataview/data.json").read_text(
+        encoding="utf-8"
+    ) == '{"shipped": true}'
     assert golden.check(tmp_path) == {}
 
 

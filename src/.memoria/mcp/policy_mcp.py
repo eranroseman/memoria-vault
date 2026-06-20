@@ -110,7 +110,7 @@ def main() -> None:
         "--decide",
         metavar="JSON",
         help='one-shot decision request, e.g. \'{"profile":"memoria-librarian",'
-             '"action":"write","path":"notes/claims/x.md","task_id":"T1"}\'',
+        '"action":"write","path":"notes/claims/x.md","task_id":"T1"}\'',
     )
     args = parser.parse_args()
 
@@ -120,14 +120,19 @@ def main() -> None:
     if args.decide:
         req = json.loads(args.decide)
         engine = PolicyEngine(vault)
-        print(json.dumps(engine.check(
-            req["profile"],
-            req["action"],
-            req["path"],
-            req.get("task_id", ""),
-            req.get("reason", ""),
-            req.get("flags"),
-        ), indent=2))
+        print(
+            json.dumps(
+                engine.check(
+                    req["profile"],
+                    req["action"],
+                    req["path"],
+                    req.get("task_id", ""),
+                    req.get("reason", ""),
+                    req.get("flags"),
+                ),
+                indent=2,
+            )
+        )
         sys.exit(0)
 
     build_server(vault).run()

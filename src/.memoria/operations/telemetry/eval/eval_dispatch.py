@@ -19,6 +19,7 @@ card, never written to the vault). A dispatch record is written to
     python eval_dispatch.py --vault <path>             # dispatch (cron + on-demand)
     python eval_dispatch.py --vault <path> --dry-run   # print the card set, create nothing
 """
+
 from __future__ import annotations
 
 import argparse
@@ -122,15 +123,17 @@ def load_gold_tasks(vault: Path) -> list[dict]:
         if lane not in LANE_PROFILE:
             print(f"[eval] {p.name}: unknown lane {lane!r} — skipped", file=sys.stderr)
             continue
-        out.append({
-            "id": p.stem,
-            "title": str(fm.get("title") or p.stem),
-            "workflow": str(fm.get("workflow") or ""),
-            "lane": lane,
-            "references": [str(c) for c in (fm.get("references") or [])],
-            "body": _FM.sub("", text, count=1).strip(),
-            "path": p,
-        })
+        out.append(
+            {
+                "id": p.stem,
+                "title": str(fm.get("title") or p.stem),
+                "workflow": str(fm.get("workflow") or ""),
+                "lane": lane,
+                "references": [str(c) for c in (fm.get("references") or [])],
+                "body": _FM.sub("", text, count=1).strip(),
+                "path": p,
+            }
+        )
     return out
 
 
@@ -151,18 +154,31 @@ def card_for(task: dict, quarter: str) -> dict:
 def create_card(card: dict) -> str:
     """Shell out to `hermes kanban create` (the proven path the sweeps and
     tasks_mcp share; board semantics stay Hermes-native). Returns the card id."""
-    cmd = ["hermes", "kanban", "create", card["goal"],
-           "--assignee", card["assignee"],
-           "--created-by", CREATED_BY, "--body", card["body"], "--json",
-           "--idempotency-key", card["idempotency_key"]]
+    cmd = [
+        "hermes",
+        "kanban",
+        "create",
+        card["goal"],
+        "--assignee",
+        card["assignee"],
+        "--created-by",
+        CREATED_BY,
+        "--body",
+        card["body"],
+        "--json",
+        "--idempotency-key",
+        card["idempotency_key"],
+    ]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=True)
         obj = json.loads(r.stdout or "{}")
         return str(obj.get("id") or obj.get("task_id") or "queued")
     except subprocess.CalledProcessError as e:
         detail = (e.stderr or e.stdout or "").strip()[:200]
-        print(f"[eval] enqueue failed for {card['idempotency_key']} "
-              f"(exit {e.returncode}): {detail}", file=sys.stderr)
+        print(
+            f"[eval] enqueue failed for {card['idempotency_key']} (exit {e.returncode}): {detail}",
+            file=sys.stderr,
+        )
         return f"error:CalledProcessError:exit{e.returncode}"
     except subprocess.TimeoutExpired:
         print(f"[eval] enqueue timed out for {card['idempotency_key']}", file=sys.stderr)
@@ -188,15 +204,16 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
         "| Gold task | Workflow | Lane | Assignee | Card |",
         "| --- | --- | --- | --- | --- |",
     ]
-    lines += [f"| {r['task']} | {r['workflow']} | {r['lane']} "
-              f"| {r['assignee']} | {r['card_id']} |" for r in rows]
+    lines += [
+        f"| {r['task']} | {r['workflow']} | {r['lane']} | {r['assignee']} | {r['card_id']} |"
+        for r in rows
+    ]
     out = vault / EVAL_DIR / LAST_RUN
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
 
 
-def dispatch(vault: Path, dry_run: bool = False,
-             today: datetime.date | None = None) -> dict:
+def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = None) -> dict:
     """Fan the gold set out: one idempotent card per (current task, quarter)."""
     quarter = quarter_of(today)
     tasks = load_gold_tasks(vault)
@@ -204,33 +221,45 @@ def dispatch(vault: Path, dry_run: bool = False,
     for t in tasks:
         card = card_for(t, quarter)
         if dry_run:
-            print(f"[dry-run] {card['idempotency_key']} -> {card['assignee']}: "
-                  f"{card['goal']}")
+            print(f"[dry-run] {card['idempotency_key']} -> {card['assignee']}: {card['goal']}")
             card_id = "DRY"
         else:
             card_id = create_card(card)
-        rows.append({"task": t["id"], "workflow": t["workflow"], "lane": t["lane"],
-                     "assignee": card["assignee"], "card_id": card_id,
-                     "idempotency_key": card["idempotency_key"]})
+        rows.append(
+            {
+                "task": t["id"],
+                "workflow": t["workflow"],
+                "lane": t["lane"],
+                "assignee": card["assignee"],
+                "card_id": card_id,
+                "idempotency_key": card["idempotency_key"],
+            }
+        )
     if not dry_run:
         write_last_run(vault, quarter, rows)
     return {"quarter": quarter, "dispatched": rows, "dry_run": dry_run}
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", required=True, help="vault root")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="print the card set without creating cards or writing last-run.md")
+    ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the card set without creating cards or writing last-run.md",
+    )
     args = ap.parse_args()
     vault = Path(args.vault).expanduser()
     if not vault.is_dir():
         sys.exit(f"not a directory: {vault}")
     result = dispatch(vault, dry_run=args.dry_run)
     n = len(result["dispatched"])
-    print(f"[eval] {result['quarter']}: {n} gold task(s) "
-          f"{'planned (dry-run)' if args.dry_run else 'dispatched'}")
+    print(
+        f"[eval] {result['quarter']}: {n} gold task(s) "
+        f"{'planned (dry-run)' if args.dry_run else 'dispatched'}"
+    )
 
 
 if __name__ == "__main__":

@@ -36,18 +36,44 @@ def test_trust_score_math_and_bands():
 def test_aggregate_rolls_up_audit_and_cards_by_lane(tmp_path):
     (tmp_path / "system" / "logs").mkdir(parents=True)
     audit_lines = [
-        json.dumps({"timestamp": "2026-05-28T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "allow"})
+        json.dumps(
+            {
+                "timestamp": "2026-05-28T10:00:00Z",
+                "profile": "memoria-writer",
+                "action": "write",
+                "decision": "allow",
+            }
+        )
         for _ in range(5)
     ]
     audit_lines.append(
-        json.dumps({"timestamp": "2026-05-28T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "deny"})
+        json.dumps(
+            {
+                "timestamp": "2026-05-28T10:00:00Z",
+                "profile": "memoria-writer",
+                "action": "write",
+                "decision": "deny",
+            }
+        )
     )
     audit_lines.append(
-        json.dumps({"timestamp": "2026-01-01T10:00:00Z", "profile": "memoria-writer", "action": "write", "decision": "deny"})
+        json.dumps(
+            {
+                "timestamp": "2026-01-01T10:00:00Z",
+                "profile": "memoria-writer",
+                "action": "write",
+                "decision": "deny",
+            }
+        )
     )
     (tmp_path / AUDIT_RELPATH).write_text("\n".join(audit_lines), encoding="utf-8")
     cards = [
-        {"task_id": "t1", "status": "done", "assignee": "memoria-writer", "metadata": {"retry_count": 1}},
+        {
+            "task_id": "t1",
+            "status": "done",
+            "assignee": "memoria-writer",
+            "metadata": {"retry_count": 1},
+        },
         {"task_id": "t2", "status": "done", "assignee": "memoria-writer"},
         {"task_id": "t3", "status": "blocked", "assignee": "memoria-writer"},
         {"task_id": "t4", "status": "running", "assignee": "memoria-linter"},
@@ -58,7 +84,7 @@ def test_aggregate_rolls_up_audit_and_cards_by_lane(tmp_path):
 
     assert any(ln["lane"] == "memoria-writer" for ln in res["lanes"])
     assert not any(ln["lane"] == "memoria-mapper" for ln in res["lanes"])
-    assert "type: \"lane-metric\"" in note
+    assert 'type: "lane-metric"' in note
     assert "deny_rate: 0.167" in note
     assert "success_rate: 0.667" in note
     assert "trust_score:" in note
@@ -68,18 +94,45 @@ def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
     logs = tmp_path / "system" / "logs"
     logs.mkdir(parents=True)
     disp_rows = (
-        [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}] * 3
+        [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}]
+        * 3
         + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "edited"}]
-        + [{"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "disposition": "rejected"}]
-        + [{"timestamp": "2026-01-01T00:00:00Z", "lane": "memoria-writer", "disposition": "accepted"}]
+        + [
+            {
+                "timestamp": "2026-05-28T10:00:00Z",
+                "lane": "memoria-writer",
+                "disposition": "rejected",
+            }
+        ]
+        + [
+            {
+                "timestamp": "2026-01-01T00:00:00Z",
+                "lane": "memoria-writer",
+                "disposition": "accepted",
+            }
+        ]
     )
-    (logs / "disposition.jsonl").write_text("\n".join(json.dumps(r) for r in disp_rows), encoding="utf-8")
+    (logs / "disposition.jsonl").write_text(
+        "\n".join(json.dumps(r) for r in disp_rows), encoding="utf-8"
+    )
     (logs / "cost.jsonl").write_text(
         "\n".join(
             json.dumps(r)
             for r in [
-                {"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "cost": 0.10, "input_tokens": 100, "output_tokens": 200},
-                {"timestamp": "2026-05-28T11:00:00Z", "lane": "memoria-writer", "cost": 0.30, "input_tokens": 50, "output_tokens": 80},
+                {
+                    "timestamp": "2026-05-28T10:00:00Z",
+                    "lane": "memoria-writer",
+                    "cost": 0.10,
+                    "input_tokens": 100,
+                    "output_tokens": 200,
+                },
+                {
+                    "timestamp": "2026-05-28T11:00:00Z",
+                    "lane": "memoria-writer",
+                    "cost": 0.30,
+                    "input_tokens": 50,
+                    "output_tokens": 80,
+                },
             ]
         ),
         encoding="utf-8",
@@ -205,9 +258,27 @@ def test_lint_verdict_rollup_writes_periodized_verdict_note(tmp_path):
         "\n".join(
             json.dumps(r)
             for r in [
-                {"timestamp": "2026-05-28T02:00:00Z", "detector": "broken-wikilink", "severity": "HIGH", "path": "a.md", "message": "x"},
-                {"timestamp": "2026-05-28T02:00:00Z", "detector": "stale-fleeting", "severity": "LOW", "path": "b.md", "message": "y"},
-                {"timestamp": "2026-01-01T02:00:00Z", "detector": "fama-exposure", "severity": "CRITICAL", "path": "c.md", "message": "z"},
+                {
+                    "timestamp": "2026-05-28T02:00:00Z",
+                    "detector": "broken-wikilink",
+                    "severity": "HIGH",
+                    "path": "a.md",
+                    "message": "x",
+                },
+                {
+                    "timestamp": "2026-05-28T02:00:00Z",
+                    "detector": "stale-fleeting",
+                    "severity": "LOW",
+                    "path": "b.md",
+                    "message": "y",
+                },
+                {
+                    "timestamp": "2026-01-01T02:00:00Z",
+                    "detector": "fama-exposure",
+                    "severity": "CRITICAL",
+                    "path": "c.md",
+                    "message": "z",
+                },
             ]
         ),
         encoding="utf-8",

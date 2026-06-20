@@ -28,6 +28,7 @@ owns rotation/cleanup of the projected files and logs.
     python board_export.py --vault <path>                  # read `hermes kanban list --json`
     python board_export.py --vault <path> --from-json cards.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -98,29 +99,48 @@ from board_export_projection import (  # noqa: E402,F401
 )
 
 
-def run_export(vault: Path, from_json: Path | None = None,
-               hermes_home: Path | str | None = None) -> dict:
+def run_export(
+    vault: Path, from_json: Path | None = None, hermes_home: Path | str | None = None
+) -> dict:
     cards = load_cards(from_json)
     prev = load_state_cache(vault)
     cost_lookup = None
     if from_json is None:
         run_cost_doctor(hermes_home)
         cost_lookup = HermesCostLookup(hermes_home=hermes_home)
-    events = export_events(vault, prev, cards, cost_lookup=cost_lookup)   # diff BEFORE cache update
+    events = export_events(vault, prev, cards, cost_lookup=cost_lookup)  # diff BEFORE cache update
     prompts = export_review_prompts(vault, prev, cards)
     exported = export_markdown(vault, cards)
     snap = export_snapshot(vault, cards)
     save_state_cache(vault, cards)
-    return {"exported_cards": len(exported), "snapshot": snap["totals"],
-            "events": events, "review_prompts": prompts}
+    return {
+        "exported_cards": len(exported),
+        "snapshot": snap["totals"],
+        "events": events,
+        "review_prompts": prompts,
+    }
+
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--vault", help="vault root")
-    ap.add_argument("--from-json", type=Path, help="read cards from a JSON file instead of `hermes kanban list --json`")
-    ap.add_argument("--hermes-home", type=Path, help="Hermes home directory (default: $HERMES_HOME or ~/.hermes)")
-    ap.add_argument("--cost-doctor", action="store_true", help="validate Hermes session-store cost capture and exit")
+    ap.add_argument(
+        "--from-json",
+        type=Path,
+        help="read cards from a JSON file instead of `hermes kanban list --json`",
+    )
+    ap.add_argument(
+        "--hermes-home",
+        type=Path,
+        help="Hermes home directory (default: $HERMES_HOME or ~/.hermes)",
+    )
+    ap.add_argument(
+        "--cost-doctor",
+        action="store_true",
+        help="validate Hermes session-store cost capture and exit",
+    )
     args = ap.parse_args()
 
     if args.cost_doctor:

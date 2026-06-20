@@ -122,7 +122,9 @@ def _log_path(state_dir: Path, now: datetime | None = None) -> Path:
     return state_dir / f"diagnostics-{stamp}.jsonl"
 
 
-def rotate_logs(state_dir: Path, *, max_bytes: int = DEFAULT_MAX_BYTES, backups: int = DEFAULT_BACKUPS) -> None:
+def rotate_logs(
+    state_dir: Path, *, max_bytes: int = DEFAULT_MAX_BYTES, backups: int = DEFAULT_BACKUPS
+) -> None:
     state_dir.mkdir(parents=True, exist_ok=True)
     for path in sorted(state_dir.glob("diagnostics-*.jsonl")):
         if not path.is_file() or path.stat().st_size <= max_bytes:
@@ -190,7 +192,12 @@ def redaction_self_test() -> None:
         ]
     )
     redacted = redact_text(corpus)
-    forbidden = ("abcdefghijklmnopqrstuvwxyz", "0123456789abcdef0123456789abcdef", "sk-testsecret", "swordfish")
+    forbidden = (
+        "abcdefghijklmnopqrstuvwxyz",
+        "0123456789abcdef0123456789abcdef",
+        "sk-testsecret",
+        "swordfish",
+    )
     leaked = [item for item in forbidden if item in redacted]
     if leaked:
         raise AssertionError(f"diagnostic redaction leaked known-sensitive strings: {leaked}")

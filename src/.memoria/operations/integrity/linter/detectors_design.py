@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Design-system detector family for the Memoria Linter."""
+
 from __future__ import annotations
 
 import os
@@ -13,10 +14,19 @@ _PX_VALUE = re.compile(r"font(?:-size)?\s*:[^;\n]*?\b(\d+(?:\.\d+)?)px\b", re.I)
 _CALLOUT_LINE = re.compile(r"^\s*>\s*\[!([^\]|\n]+)(?:\|([^\]\n]+))?\]", re.I | re.M)
 _BANNED_TITLE_CHARS = re.compile(r"[\U0001F300-\U0001FAFF\u2600-\u27BF]")
 _TERM_DRIFT = re.compile(
-    r"\b(?:Claim Note|claimnote|Paper Note|paper note|permanent note|knowledge base)\b")
+    r"\b(?:Claim Note|claimnote|Paper Note|paper note|permanent note|knowledge base)\b"
+)
 _DESIGN_SCAN_PREFIXES = (
-    "home.md", "research-focus.md", "troubleshooting.md", "AGENTS.md",
-    "system/", "notes/", "catalog/", "inbox/", "projects/", "spaces/",
+    "home.md",
+    "research-focus.md",
+    "troubleshooting.md",
+    "AGENTS.md",
+    "system/",
+    "notes/",
+    "catalog/",
+    "inbox/",
+    "projects/",
+    "spaces/",
     ".obsidian/snippets/",
 )
 _DESIGN_SCAN_SUFFIXES = (".md", ".css", ".html")
@@ -89,8 +99,7 @@ def _px_number(value: str) -> str:
 
 
 def _allowed_font_sizes(spec: str) -> set[str]:
-    return {_px_number(m.group(1))
-            for m in re.finditer(r"\b(\d+(?:\.\d+)?)px\s*/", spec)}
+    return {_px_number(m.group(1)) for m in re.finditer(r"\b(\d+(?:\.\d+)?)px\s*/", spec)}
 
 
 def _design_consumer_files(vault: Path):
@@ -131,27 +140,59 @@ def design_system_drift(vault: Path) -> list[Finding]:
             continue
         for color in sorted(_hex_colors(text)):
             if color not in allowed_colors:
-                out.append(Finding("design-system-drift", "MEDIUM", rp,
-                                   f"off-palette color {color} not declared in .memoria/design-system.md"))
+                out.append(
+                    Finding(
+                        "design-system-drift",
+                        "MEDIUM",
+                        rp,
+                        f"off-palette color {color} not declared in .memoria/design-system.md",
+                    )
+                )
         for size in {m.group(1) for m in _PX_VALUE.finditer(text)}:
             canonical = _px_number(size)
             if allowed_sizes and canonical not in allowed_sizes:
-                out.append(Finding("design-system-drift", "MEDIUM", rp,
-                                   f"font-size {size}px is outside the design-system scale"))
-        title_has_emoji = _BANNED_TITLE_CHARS.search(Path(rp).stem) or _has_frontmatter_title_emoji(text)
+                out.append(
+                    Finding(
+                        "design-system-drift",
+                        "MEDIUM",
+                        rp,
+                        f"font-size {size}px is outside the design-system scale",
+                    )
+                )
+        title_has_emoji = _BANNED_TITLE_CHARS.search(Path(rp).stem) or _has_frontmatter_title_emoji(
+            text
+        )
         if title_has_emoji:
-            out.append(Finding("design-system-drift", "LOW", rp,
-                               "emoji in note title or filename; keep emoji in the body, not titles"))
+            out.append(
+                Finding(
+                    "design-system-drift",
+                    "LOW",
+                    rp,
+                    "emoji in note title or filename; keep emoji in the body, not titles",
+                )
+            )
         for callout, variant in _CALLOUT_LINE.findall(text):
             c = callout.strip().lower()
             v = variant.strip().lower()
             if c in _ALLOWED_CALLOUTS and not v:
                 continue
-            out.append(Finding("design-system-drift", "LOW", rp,
-                               f"rainbow/ad-hoc callout [!{callout}{'|' + variant if variant else ''}] "
-                               "outside the fixed Memoria callout palette"))
+            out.append(
+                Finding(
+                    "design-system-drift",
+                    "LOW",
+                    rp,
+                    f"rainbow/ad-hoc callout [!{callout}{'|' + variant if variant else ''}] "
+                    "outside the fixed Memoria callout palette",
+                )
+            )
         term = _TERM_DRIFT.search(text)
         if term:
-            out.append(Finding("design-system-drift", "LOW", rp,
-                               f"terminology/capitalization drift: use design-system term instead of {term.group(0)!r}"))
+            out.append(
+                Finding(
+                    "design-system-drift",
+                    "LOW",
+                    rp,
+                    f"terminology/capitalization drift: use design-system term instead of {term.group(0)!r}",
+                )
+            )
     return out

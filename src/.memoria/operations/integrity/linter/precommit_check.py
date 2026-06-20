@@ -69,8 +69,10 @@ def main() -> None:
     for e in errors:
         print(f"  ✗ {e}")
     if errors:
-        print(f"pre-commit: {len(errors)} schema error(s) — commit blocked "
-              "(fix the notes, or commit non-vault changes separately)")
+        print(
+            f"pre-commit: {len(errors)} schema error(s) — commit blocked "
+            "(fix the notes, or commit non-vault changes separately)"
+        )
         sys.exit(1)
 
 
