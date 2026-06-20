@@ -13,6 +13,11 @@ space: knowledge
 > [!brief] No claims yet? Start with a claim note. A claim cites its sources and
 > keeps typed connections in `links:` frontmatter.
 
+> [!suggestions] First actions
+> - Use **Memoria: write claim note** for a claim you already stand behind.
+> - Open a source note and use **Memoria: create linked claim note** to distill it.
+> - Use **Memoria: link claim** when two existing claims should be related.
+
 ## Claims by maturity
 
 ![[claims.base#By maturity]]

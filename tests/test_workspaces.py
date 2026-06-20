@@ -20,6 +20,28 @@ SPACES = {
     "knowledge": "spaces/knowledge.md",
     "project": "spaces/project.md",
 }
+FIRST_ACTION_COMMANDS = {
+    "inbox": [
+        "Memoria: capture source from URL",
+        "Memoria: capture fleeting",
+        "Agent Client pane",
+    ],
+    "library": [
+        "Memoria: capture source from URL",
+        "Memoria: capture from Zotero selection",
+        "Memoria: structured source capture",
+    ],
+    "knowledge": [
+        "Memoria: write claim note",
+        "Memoria: create linked claim note",
+        "Memoria: link claim",
+    ],
+    "project": [
+        "Memoria: start project",
+        "Memoria: refresh project gate",
+        "Memoria: draft section",
+    ],
+}
 COPI_VIEW = "agent-client-chat-view"
 
 
@@ -85,6 +107,14 @@ def test_space_dashboards_exist_and_link_to_each_other():
                 continue
             link = other_relpath.removesuffix(".md")
             assert f"[[{link}|" in text, f"{relpath} missing nav link to {link}"
+
+
+def test_space_dashboards_have_day1_empty_state_actions():
+    for space, relpath in SPACES.items():
+        text = (SRC / relpath).read_text(encoding="utf-8")
+        assert "[!suggestions] First actions" in text
+        for command in FIRST_ACTION_COMMANDS[space]:
+            assert command in text, f"{relpath} missing first action {command!r}"
 
 
 def test_space_dashboards_use_non_hidden_location():
