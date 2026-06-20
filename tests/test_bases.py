@@ -8,8 +8,8 @@ homed in the folder(s) the base draws from.
 import re
 from pathlib import Path
 
-import schema
 import yaml
+from operations.lib import schema
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 

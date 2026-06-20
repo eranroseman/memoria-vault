@@ -8,8 +8,8 @@ parent: Reference
 Deterministic mechanisms that agents, cron, CI, and the PI can invoke. Agents reach processing operations through MCP facades; trusted local callers may use direct entries. Integrity, cleanup, and telemetry operations run directly because they are not agent-facing.
 
 Shared dependency-light helpers for operation code live under `memoria.runtime`
-(`vaultio`, `jsonl`, `time`, and `paths`). The old MCP `_shared.py` module is a
-compatibility facade over those package helpers, not a second source of truth.
+(`vaultio`, `jsonl`, `time`, and `paths`). MCP modules import those helpers
+directly; package code owns the behavior.
 
 | Operation | Primary entry point | MCP facade | Direct callers | What it does |
 | --- | --- | --- | --- | --- |

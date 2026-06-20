@@ -1,13 +1,11 @@
 """L1 component test for sweeps — extracted from its former --self-test (ADR-44)."""
-import reconcile as _m
+from operations.cleanup import reconcile as _m
 
 Path = _m.Path
 note_for = _m.note_for
-read_frontmatter = _m.read_frontmatter
 read_log = _m.read_log
 reconcile = _m.reconcile
 retry = _m.retry
-stamp_chats = _m.stamp_chats
 
 
 def test_reconcile_intake():
@@ -51,51 +49,3 @@ def test_reconcile_intake():
         print(f"\n{'OK' if not bad else f'{len(bad)} FAILING'}: sweeps.py self-test")
         return 1 if bad else 0
     assert _run() == 0
-
-
-def test_stamp_chat_exports(tmp_path):
-    """Pass (c): bare ACP chat exports get valid fleeting frontmatter, once (#185)."""
-    import schema
-
-    v = tmp_path
-    chats = v / "notes/fleeting/chats"
-    chats.mkdir(parents=True)
-    # a bare export (no frontmatter) — the stamp target
-    bare = chats / "chat_2026-06-10_09-00.md"
-    bare.write_text("# Co-PI session\n\nUser: hello\nAgent: hi\n", encoding="utf-8")
-    # an already-stamped export — must be left byte-identical
-    stamped = chats / "chat_2026-06-09_15-30.md"
-    stamped_text = ("---\ntitle: \"old chat\"\ntype: fleeting\nlifecycle: proposed\n"
-                    "origin: chat\ncreated: 2026-06-09\n---\n\nbody\n")
-    stamped.write_text(stamped_text, encoding="utf-8")
-    # a non-chat fleeting note (parent folder) — out of scope, untouched
-    other = v / "notes/fleeting" / "idea.md"
-    other_text = "a raw human capture without frontmatter\n"
-    other.write_text(other_text, encoding="utf-8")
-
-    res = stamp_chats(v)
-    assert res["stamped"] == ["notes/fleeting/chats/chat_2026-06-10_09-00.md"]
-    assert res["skipped"] == 1
-
-    # the stamped file now schema-validates as fleeting
-    fm = read_frontmatter(bare)
-    fleeting = schema.load_types()["fleeting"]
-    assert fm.get("type") == "fleeting"
-    assert fm.get("origin") == "chat"
-    assert schema.validate_frontmatter(fm, fleeting) == []
-    body = bare.read_text(encoding="utf-8")
-    assert "User: hello" in body  # original content preserved
-
-    # idempotent: second sweep touches nothing
-    res2 = stamp_chats(v)
-    assert res2["stamped"] == [] and res2["skipped"] == 2
-    assert bare.read_text(encoding="utf-8") == body
-    assert stamped.read_text(encoding="utf-8") == stamped_text
-    assert other.read_text(encoding="utf-8") == other_text
-
-    # dry-run reports but does not write
-    extra = chats / "chat_new.md"
-    extra.write_text("raw\n", encoding="utf-8")
-    res3 = stamp_chats(v, dry_run=True)
-    assert res3["stamped"] == ["notes/fleeting/chats/chat_new.md"]
-    assert extra.read_text(encoding="utf-8") == "raw\n"

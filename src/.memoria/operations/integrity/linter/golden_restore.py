@@ -12,7 +12,6 @@ Usage:
   python3 golden_restore.py --vault V stage          stage/refresh the golden copy from the live system files
   python3 golden_restore.py --vault V check          report drifted/missing system files (exit 1 if any)
   python3 golden_restore.py --vault V restore [--apply] [PATH ...]
-  python3 golden_restore.py --vault V upgrade --source SRC [--apply]
 """
 
 from __future__ import annotations
@@ -151,81 +150,13 @@ def restore(vault: Path, paths: list[str] | None = None, apply: bool = False) ->
     return targets
 
 
-def upgrade(vault: Path, source: Path, apply: bool = False) -> dict[str, list[str]]:
-    """Three-way reconcile source-system files against old golden and live.
-
-    For each covered path:
-    - old golden is the previous release baseline;
-    - source is the new release baseline;
-    - live is the user's deployed vault.
-
-    Clean release changes apply only when live still matches old golden (or the
-    path is new and absent live). User-customized paths are preserved and reported.
-    With apply=True the golden copy is refreshed to the new source baseline after
-    live reconciliation, so future drift checks compare against the new release.
-    """
-    old = load_manifest(vault)
-    new = {rel: _sha256(source / rel) for rel in _iter_system_files(source)}
-    result = {k: [] for k in ("would_apply", "would_remove", "applied", "removed",
-                              "unchanged", "customized", "conflicts")}
-    for rel in sorted(set(old) | set(new)):
-        old_hash = old.get(rel)
-        new_hash = new.get(rel)
-        live = vault / rel
-        live_hash = _sha256(live) if live.is_file() else None
-        if new_hash is None:
-            if live_hash is None:
-                result["unchanged"].append(rel)
-            elif live_hash == old_hash:
-                if apply:
-                    live.unlink()
-                    result["removed"].append(rel)
-                else:
-                    result["would_remove"].append(rel)
-            else:
-                result["conflicts"].append(rel)
-            continue
-        src = source / rel
-        if old_hash is None:
-            if live_hash is None:
-                if apply:
-                    live.parent.mkdir(parents=True, exist_ok=True)
-                    live.write_bytes(src.read_bytes())
-                    result["applied"].append(rel)
-                else:
-                    result["would_apply"].append(rel)
-            elif live_hash == new_hash:
-                result["unchanged"].append(rel)
-            else:
-                result["conflicts"].append(rel)
-            continue
-        if live_hash == new_hash:
-            result["unchanged"].append(rel)
-        elif live_hash == old_hash:
-            if apply:
-                live.parent.mkdir(parents=True, exist_ok=True)
-                live.write_bytes(src.read_bytes())
-                result["applied"].append(rel)
-            else:
-                result["would_apply"].append(rel)
-        elif old_hash == new_hash:
-            result["customized"].append(rel)
-        else:
-            result["conflicts"].append(rel)
-    if apply:
-        _stage_from_source(vault, source)
-    return result
-
-
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault", type=Path)
-    ap.add_argument("command", nargs="?", choices=["stage", "check", "restore", "upgrade"])
+    ap.add_argument("command", nargs="?", choices=["stage", "check", "restore"])
     ap.add_argument("paths", nargs="*")
     ap.add_argument("--apply", action="store_true")
-    ap.add_argument("--source", type=Path,
-                    help="new release source tree for three-way golden upgrade")
     args = ap.parse_args()
     if not args.vault or not args.command:
         ap.error("provide --vault and a command (stage | check | restore)")
@@ -244,19 +175,6 @@ def main() -> None:
         for rel in targets:
             print(f"  {rel}")
         print(f"golden: {verb} {len(targets)} file(s)")
-    else:
-        if not args.source:
-            ap.error("upgrade requires --source")
-        result = upgrade(args.vault, args.source, apply=args.apply)
-        for key in ("would_apply", "would_remove", "applied", "removed",
-                    "customized", "conflicts"):
-            for rel in result[key]:
-                print(f"  {key:12s} {rel}")
-        changed = sum(len(result[k]) for k in ("would_apply", "would_remove", "applied", "removed"))
-        conflicts = len(result["conflicts"])
-        mode = "applied" if args.apply else "would apply (use --apply)"
-        print(f"golden: upgrade {mode} {changed} clean change(s), {conflicts} conflict(s)")
-        sys.exit(2 if conflicts else 0)
 
 
 if __name__ == "__main__":

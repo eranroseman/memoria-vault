@@ -5,10 +5,10 @@ import datetime
 import re
 from pathlib import Path
 
-import eval_dispatch
-import schema
 import tasks_mcp
 import yaml
+from operations.lib import schema
+from operations.telemetry.eval import eval_dispatch
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 EVAL = SRC / "system" / "eval"

@@ -132,7 +132,6 @@ Terminal-side system upkeep. Run on a schedule or when prompted by a failure.
 | [Run a schema migration](operate/run-a-schema-migration.md) | Rewrite a frontmatter field across many notes, dry-run first |
 | [Redeploy profiles](operate/redeploy-profiles.md) | Push vault source edits out to `~/.hermes/profiles/` |
 | [Rebuild the search index](operate/rebuild-the-search-index.md) | Re-run the `qmd` embedding when vault search returns stale results |
-| [Upgrade the vault to a new release](operate/upgrade-to-a-new-release.md) | Pull a new release and three-way reconcile system files into the live vault |
 | [Run the vault eval](operate/run-the-vault-eval.md) | Dispatch and score the gold-set evaluation on demand |
 | [Inspect session logs](operate/inspect-session-logs.md) | Read the audit and per-session logs ad-hoc — filter by lane, date, or decision |
 

@@ -29,8 +29,6 @@ metadata:
 
 # catalog-rank-candidate
 
-*(legacy name: `candidate-rank`; load on disk as `catalog-rank-candidate`.)*
-
 Order the screening queue so the PI's attention lands where it pays. Given a batch of
 candidate sources (a `catalog-find-source` worklist, a `.bib` intake batch), rank them
 by stated criteria and show the work. **Ranking informs triage order — the keep/skip

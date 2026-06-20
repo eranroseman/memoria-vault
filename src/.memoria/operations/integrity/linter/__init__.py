@@ -1,0 +1,1 @@
+"""Vault linter operations."""

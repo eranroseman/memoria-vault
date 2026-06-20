@@ -93,10 +93,8 @@ def write_recorded_cassette(cassette: dict[str, Any], path: Path) -> None:
 
 def add_operation_paths(root: Path) -> None:
     for rel in (
+        "src/.memoria",
         "src/.memoria/mcp",
-        "src/.memoria/operations/processing/ingest",
-        "src/.memoria/operations/processing/project",
-        "src/.memoria/operations/lib",
     ):
         path = str(root / rel)
         if path not in sys.path:
@@ -107,7 +105,7 @@ def populate_vault(root: Path, vault: Path) -> None:
     src = root / "src"
     if not vault.exists() or not any(vault.iterdir()):
         shutil.copytree(src, vault, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*SKIP_COPY))
-    import schema
+    from operations.lib import schema
 
     folders = schema.load_folders(root / "src/.memoria/schemas")
     for folder in folders["skeleton"]:
@@ -124,7 +122,7 @@ def write_frontmatter(path: Path, fm: dict[str, Any], body: str) -> None:
 
 
 def validate_typed_note(vault: Path, rel: str) -> None:
-    import schema
+    from operations.lib import schema
 
     path = vault / rel
     fm = parse_frontmatter(path)
@@ -165,7 +163,7 @@ def assert_expectations(vault: Path, expect: dict[str, Any], artifacts: list[str
 
 
 def apply_classification(vault: Path, args: dict[str, Any]) -> str:
-    import classify
+    from operations.processing.ingest import classify
 
     citekey = args["citekey"]
     rel = f"catalog/papers/{citekey}.md"
@@ -225,10 +223,9 @@ def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> 
 
 
 def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
-    import ingest_paper
-    import structural_impact
-
-    import inbox
+    from operations.lib import inbox
+    from operations.processing.ingest import ingest_paper
+    from operations.processing.project import structural_impact
 
     tool = step["tool"]
     args = step.get("args", {})

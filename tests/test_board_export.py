@@ -1,25 +1,28 @@
 """L1 component test for board_export — extracted from its former --self-test (ADR-44)."""
+import json
 import re
+import sqlite3
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import board_export as _m
-import schema as _schema
 import yaml
 from _util import CheckHarness
+from operations.lib import schema as _schema
+
+from memoria.runtime.time import now_iso
 
 BOARD_RELDIR = _m.BOARD_RELDIR
 BLIND_REVIEW_RELPATH = _m.BLIND_REVIEW_RELPATH
 COST_MISSES_RELPATH = _m.COST_MISSES_RELPATH
 COST_RELPATH = _m.COST_RELPATH
 DISPOSITION_RELPATH = _m.DISPOSITION_RELPATH
-Path = _m.Path
 SNAPSHOT_RELPATH = _m.SNAPSHOT_RELPATH
 TRANSITIONS_RELPATH = _m.TRANSITIONS_RELPATH
 export_events = _m.export_events
 export_markdown = _m.export_markdown
 export_review_prompts = _m.export_review_prompts
 export_snapshot = _m.export_snapshot
-json = _m.json
 load_state_cache = _m.load_state_cache
 normalize = _m.normalize
 run_export = _m.run_export
@@ -46,13 +49,13 @@ def _session_store(root, lane="memoria-writer"):
         "pricing_version": "TEXT",
     }
     cols = ", ".join(f"{name} {spec}" for name, spec in fields.items())
-    with _m.sqlite3.connect(db) as con:
+    with sqlite3.connect(db) as con:
         con.execute(f"CREATE TABLE sessions ({cols})")
     return db
 
 
 def _insert_session(db, session_id="sess-1"):
-    with _m.sqlite3.connect(db) as con:
+    with sqlite3.connect(db) as con:
         con.execute(
             """INSERT INTO sessions (
                 id, model, input_tokens, output_tokens, cache_read_tokens,
@@ -188,7 +191,7 @@ def test_board_export():
             cost = json.loads((vault / COST_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
             check("cost row carries joined spend + tokens",
                   cost["session_id"] == "sess-1" and cost["cost"] == 0.42
-                  and cost["tokens_out"] == 1200 and cost["cost_source"] == "provider-usage")
+                  and cost["output_tokens"] == 1200 and cost["cost_source"] == "provider-usage")
             blind = json.loads((vault / BLIND_REVIEW_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1])
             check("blind re-review row carries terminal review context",
                   blind["task_id"] == "e2" and blind["sample_reason"] == "blind-rereview")
@@ -227,7 +230,7 @@ def test_cost_join_missing_session_is_reported_without_cost_row(tmp_path):
 def test_cost_doctor_fails_closed_on_session_schema_drift(tmp_path):
     db = tmp_path / ".hermes/profiles/memoria-writer/state.db"
     db.parent.mkdir(parents=True, exist_ok=True)
-    with _m.sqlite3.connect(db) as con:
+    with sqlite3.connect(db) as con:
         con.execute("CREATE TABLE sessions (id TEXT PRIMARY KEY)")
 
     try:
@@ -247,7 +250,7 @@ def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
     )
 
     try:
-        lookup({"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, _m.now_iso())
+        lookup({"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, now_iso())
     except _m.CostDoctorError as exc:
         assert "runs[].metadata.worker_session_id" in str(exc)
     else:

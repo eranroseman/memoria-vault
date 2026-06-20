@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
-import structural_impact as impact
-import structural_impact_graph as impact_graph
+from operations.processing.project import structural_impact as impact
+from operations.processing.project import structural_impact_graph as impact_graph
 
 
 def write(path: Path, text: str):

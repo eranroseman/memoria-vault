@@ -28,8 +28,6 @@ metadata:
 
 # map-seed-canvas
 
-*(legacy name: `canvas-seed`; load on disk as `map-seed-canvas`.)*
-
 Give the PI a spatial starting point instead of a blank canvas. The cluster operation
 computes the graph — nodes, typed edges, communities, centrality, layout coordinates —
 and **deliberately does not emit Canvas** (ADR-33): turning the JSON into a `.canvas`

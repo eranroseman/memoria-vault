@@ -78,8 +78,8 @@ def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
         "\n".join(
             json.dumps(r)
             for r in [
-                {"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "cost": 0.10, "tokens_in": 100, "tokens_out": 200},
-                {"timestamp": "2026-05-28T11:00:00Z", "lane": "memoria-writer", "cost": 0.30, "tokens_in": 50, "tokens_out": 80},
+                {"timestamp": "2026-05-28T10:00:00Z", "lane": "memoria-writer", "cost": 0.10, "input_tokens": 100, "output_tokens": 200},
+                {"timestamp": "2026-05-28T11:00:00Z", "lane": "memoria-writer", "cost": 0.30, "input_tokens": 50, "output_tokens": 80},
             ]
         ),
         encoding="utf-8",
@@ -117,7 +117,7 @@ def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
     assert disposition["memoria-writer"] == {"accepted": 3, "edited": 1, "rejected": 1}
     assert round(accept_ratio_of(disposition["memoria-writer"]), 2) == 0.6
     assert round(cost["memoria-writer"]["cost"], 2) == 0.40
-    assert cost["memoria-writer"]["tokens_out"] == 280
+    assert cost["memoria-writer"]["output_tokens"] == 280
     assert read_decision_time(tmp_path, PERIOD).get("memoria-writer") == 30.0
     assert "accept_ratio: 0.6" in note
     assert "decision_time_min: 30.0" in note

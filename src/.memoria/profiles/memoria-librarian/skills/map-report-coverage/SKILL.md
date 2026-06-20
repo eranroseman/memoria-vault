@@ -28,8 +28,6 @@ metadata:
 
 # map-report-coverage
 
-*(legacy name: `gap-report`; load on disk as `map-report-coverage`.)*
-
 Tell the PI where the corpus is thin **relative to a brief** — not where it is thin in
 the abstract (every corpus is thin almost everywhere). Topics come from the
 deterministic operation; the one judgment you exercise is **ranking which thin topics

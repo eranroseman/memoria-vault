@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
 """runner.py — the deterministic ingest orchestrator (ADR-30).
 
 Chains the four deterministic stages into a single **draft bundle** that the
@@ -26,11 +27,17 @@ import sys
 from datetime import date
 from pathlib import Path
 
-import classify
-import extract
-import ingest_paper
-import link
-import resolve_merge
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.processing.ingest import (
+    classify,
+    extract,
+    ingest_paper,
+    link,
+    resolve_merge,
+)
 
 
 def _env(k: str) -> str:

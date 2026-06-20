@@ -2,9 +2,7 @@
 
 import json
 
-import loudness
-
-import inbox
+from operations.lib import inbox, loudness
 
 
 def test_alert_card_records_push_attempt_without_telegram_config(tmp_path, monkeypatch):

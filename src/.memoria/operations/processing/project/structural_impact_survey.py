@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from structural_impact_graph import (
+from operations.processing.project.structural_impact_graph import (
     Note,
     adjacency,
     build_descriptive_edges,
     scope_terms,
     values_as_set,
 )
-from structural_impact_payload import (
+from operations.processing.project.structural_impact_payload import (
     CONFIDENT_GAP_KINDS,
     MATURITY_RELATION_THRESHOLD,
     base_payload,

@@ -6,7 +6,7 @@ alone — so the inbox demonstrably converges to empty when cards are handled.
 """
 import datetime
 
-import archive_inbox as m
+from operations.cleanup import archive_inbox as m
 
 
 def _card(vault, name, body, folder="inbox"):

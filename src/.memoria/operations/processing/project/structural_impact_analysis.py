@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from structural_impact_gap import gap_taxonomy
-from structural_impact_graph import (
+from operations.processing.project.structural_impact_gap import gap_taxonomy
+from operations.processing.project.structural_impact_graph import (
     adjacency,
     articulation_points,
     build_edges,
@@ -20,12 +20,12 @@ from structural_impact_graph import (
     truthy,
     values_as_set,
 )
-from structural_impact_payload import (
+from operations.processing.project.structural_impact_payload import (
     HIGH_IMPACT_THRESHOLD,
     MATURITY_RELATION_THRESHOLD,
     base_payload,
 )
-from structural_impact_survey import analyze_survey
+from operations.processing.project.structural_impact_survey import analyze_survey
 
 
 def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:

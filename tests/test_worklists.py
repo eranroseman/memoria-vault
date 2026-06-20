@@ -1,8 +1,7 @@
 from pathlib import Path
 
-import schema
-import worklists
 import yaml
+from operations.lib import schema, worklists
 
 
 def _frontmatter(path: Path) -> dict:

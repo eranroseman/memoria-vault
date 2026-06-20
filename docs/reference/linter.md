@@ -58,8 +58,7 @@ This is the human-facing half of template protection (#179): agents are already 
 
 | Command | Effect |
 | --- | --- |
-| `golden_restore.py --vault V stage` | Stage/refresh the golden copy from the live system files (fresh-install fallback). |
-| `golden_restore.py --vault V upgrade --source SRC [--apply]` | Three-way reconcile old golden vs new source vs live vault; with `--apply`, applies clean release changes, refreshes the golden copy, and preserves conflicts for review. |
+| `golden_restore.py --vault V stage` | Stage or refresh the golden copy from the live system files. |
 | `golden_restore.py --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
 | `golden_restore.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
 | `golden_restore.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |

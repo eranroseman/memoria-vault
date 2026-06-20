@@ -29,8 +29,6 @@ metadata:
 
 # map-cluster-corpus
 
-*(legacy name: `cluster-mapping`; load on disk as `map-cluster-corpus`.)*
-
 Map what already exists in the corpus. You retrieve notes, cluster them
 deterministically through the **cluster MCP** (ADR-33 — the operation, not you, owns the
 boundaries), aggregate recency and density, and emit a structured map. The clustering is

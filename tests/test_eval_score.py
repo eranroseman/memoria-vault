@@ -8,9 +8,8 @@ import json
 import sys
 from pathlib import Path
 
-import eval_dispatch
-import eval_score
 import pytest
+from operations.telemetry.eval import eval_dispatch, eval_score
 
 
 # --------------------------------------------------------------------------- #
@@ -77,7 +76,7 @@ def test_superseded_claims_classification(tmp_path):
 def test_superseded_classification_matches_the_linter_detector(tmp_path):
     """eval_score mirrors fama_exposure's superseded test — parity guarded here
     (same pattern as the LANE_PROFILE mirror in test_eval.py)."""
-    import detectors
+    from operations.integrity.linter import detectors
     v = _vault(tmp_path)
     # a downstream note citing every claim: the detector flags exactly the superseded set
     src = v / "notes/sources"

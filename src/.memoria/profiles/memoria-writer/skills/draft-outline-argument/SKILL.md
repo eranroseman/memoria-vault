@@ -27,8 +27,6 @@ metadata:
 
 # draft-outline-argument
 
-*(legacy name: `counter-outline`; load on disk as `draft-outline-argument`.)*
-
 Structure before prose. Given a thesis (or a question) and a claim set, produce **two
 or three genuinely different outline options** — not one outline with cosmetic
 variants — each annotated with the strongest honest case *against* its structure. The

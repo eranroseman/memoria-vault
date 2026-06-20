@@ -277,8 +277,7 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 def sweep(vault: Path, offline: bool = True) -> dict:
     """Scan catalog paper/dataset DOIs against the local RW CSV; raise an Inbox
     `alert` for each retracted work (the writing half of the sweep operation)."""
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lib"))
-    import inbox as inbox_writer
+    from operations.lib import inbox as inbox_writer
 
     fm_re = re.compile(r"^---\n(.*?)\n---", re.S)
     doi_re = re.compile(r"^doi:\s*[\"']?([^\"'\n]+)", re.M)

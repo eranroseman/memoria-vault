@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import inbox
+from operations.lib import inbox
 
 DECISIONS = ("proposed", "include", "exclude", "maybe", "archived")
 

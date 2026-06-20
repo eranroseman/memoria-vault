@@ -28,8 +28,6 @@ metadata:
 
 # catalog-classify-source
 
-*(legacy name: `classify`; load on disk as `catalog-classify-source`.)*
-
 Propose how a source is filed — `research_area`, `methodology` — without ever
 deciding it. Classification is **audited metadata, not a gate** (D16/D21): your values
 land in the note's `_proposed_classification` block; the human-owned main fields stay

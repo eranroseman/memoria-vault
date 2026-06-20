@@ -26,8 +26,6 @@ metadata:
 
 # extract-flag-distill
 
-*(legacy name: `distill-candidate-flag`; load on disk as `extract-flag-distill`.)*
-
 The PI's reading time is the scarcest resource in the loop. This skill nominates which
 kept-but-undistilled sources deserve it: it reads the evidence already in the vault and
 raises the **distill work-prompt** — a card arguing for (and honestly against)

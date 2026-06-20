@@ -30,9 +30,6 @@ metadata:
 
 # verify-trace-claim
 
-*(legacy name: `claim-trace`, shipped inside `claim-checks`; load on disk as
-`verify-trace-claim`.)*
-
 Answer one mechanical question per substantive claim in a draft: **does it trace to a
 supporting claim note in `notes/claims/`?** A claim can be perfectly cited and still
 untraced — the trace is to the vault's reviewed knowledge, not to the literature. You

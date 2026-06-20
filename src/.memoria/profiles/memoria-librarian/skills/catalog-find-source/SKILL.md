@@ -32,8 +32,6 @@ metadata:
 
 # catalog-find-source
 
-*(legacy name: `find`; load on disk as `catalog-find-source`.)*
-
 Find what the corpus is missing. Given a question, topic, or gap card, search the
 literature through the **`paper_search` MCP only** (the `web` toolset is disabled —
 ADR-32), screen against the vault, and propose. *Faithful posture*: include generously

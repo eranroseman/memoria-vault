@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from structural_impact_graph import Note
+from operations.processing.project.structural_impact_graph import Note
 
 CONFIDENT_GAP_KINDS = {"additive", "conflict", "fragility"}
 ADVISORY_GAP_KINDS = {"structural", "refutation"}

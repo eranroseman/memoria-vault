@@ -24,8 +24,6 @@ metadata:
 
 # route-task
 
-*(legacy name: `delegate-task`; load on disk as `route-task`.)*
-
 Route work from the conversation to the right background lane (ADR-48) via the tasks
 MCP (`delegate_route_task`). You converse; the lanes work; results return as Inbox cards.
 

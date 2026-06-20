@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-import schema
+from operations.lib import schema
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
@@ -154,11 +154,12 @@ def test_installer_installs_memoria_package_editable():
     assert '-e "$REPO_DIR"' in install_mcp_deps
     assert "install Memoria editable" in install_mcp_deps
 
-def test_installer_preserves_user_appearance_on_refresh():
+def test_installers_refuse_existing_vaults_instead_of_refreshing():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
-    assert "--exclude '.obsidian/appearance.json'" in sh
-    assert "'appearance.json'" in ps
+    assert "This installer is fresh-install only" in sh
+    assert "Refresh it from the repo" not in sh
+    assert "This installer is fresh-install only" in ps
 
 def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")

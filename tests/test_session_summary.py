@@ -2,7 +2,7 @@
 import json
 from datetime import datetime, timezone
 
-import session_summary as ss
+from operations.integrity.linter import session_summary as ss
 
 NOW = datetime(2026, 6, 12, 12, 0, tzinfo=timezone.utc)
 

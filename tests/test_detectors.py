@@ -3,8 +3,8 @@ import hashlib
 import json as _json
 from pathlib import Path as _Path
 
-import detectors as _m
 from _util import CheckHarness
+from operations.integrity.linter import detectors as _m
 
 Path = _m.Path
 run_all = _m.run_all

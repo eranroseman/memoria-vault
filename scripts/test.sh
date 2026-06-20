@@ -55,7 +55,7 @@ l0() {
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
   run python3 -m py_compile scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py
   run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
-  run python3 -m py_compile "$P"/mcp/*.py "$P"/memoria_runtime/*.py "$P"/memoria_runtime/policy/*.py "$P"/operations/lib/schema.py "$P"/operations/lib/inbox.py "$P"/operations/lib/loudness.py "$P"/operations/lib/worklists.py "$P"/operations/integrity/linter/detectors.py "$P"/operations/integrity/linter/hub_handoff.py "$P"/operations/integrity/linter/golden_restore.py "$P"/operations/integrity/linter/session_summary.py "$P"/operations/integrity/linter/precommit_check.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
+  run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh scripts/test-l2.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh

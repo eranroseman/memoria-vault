@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 
 import patterns_mcp
-import schema
 import yaml
+from operations.lib import schema
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 PATTERNS = SRC / "system" / "patterns"

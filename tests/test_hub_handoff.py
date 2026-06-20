@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-import hub_handoff
 import tasks_mcp
+from operations.integrity.linter import hub_handoff
 
 
 def _vault(tmp_path: Path) -> Path:
