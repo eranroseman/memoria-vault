@@ -65,7 +65,12 @@ Read from the `clustering` block of `.memoria/schemas/calibration.yaml` (drift-b
 | `seed` | `42` | all three tools (graph layout, canvas layout, UMAP) |
 | `hdbscan_min_cluster_size` | `5` | `cluster_model_topics` minimum topic size |
 | `umap_n_neighbors` | `15` | `cluster_model_topics` UMAP neighbourhood |
-| `embedding_model` | `all-MiniLM-L6-v2` | `cluster_model_topics` embedding |
+| `embedding_model` | `null` | reserved pin for the configured topic-model embedding |
+
+The `clustering.quality_thresholds` block is separate from these display
+defaults. Its `silhouette_floor` and `topic_coherence_floor` remain `null` and
+`production_enabled: false` until real reviewed map/topic runs calibrate them;
+see [Calibration](calibration.md).
 
 ---
 

@@ -35,6 +35,16 @@ Memoria will, when scheduled, add:
 - The consensus pre-filter adds latency and per-card cost, and two profiles with correlated errors can agree and be confidently wrong together — it has diminishing value on shared-model failure modes.
 - Pairwise comparison cost scales quadratically with queue size, and ranking is personalized only while `research-focus.md` is current.
 
+## Current implementation mapping
+
+#379 adds the threshold contract in
+[`calibration.yaml`](../reference/calibration.md): `hybrid_scores.candidate_rank`
+and `hybrid_scores.outline_score` are present but `production_enabled: false` with
+null thresholds until real PI decisions/outcomes fill the grounding dataset and
+error budget. The clustering quality thresholds live under
+`clustering.quality_thresholds` with the same shadow-first rule. No score from this
+ADR may change routing or review visibility until those fields are filled.
+
 ## When this matters
 
 *(Cadence-review context, not a gate.)*

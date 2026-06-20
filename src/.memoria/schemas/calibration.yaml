@@ -25,3 +25,37 @@ clustering:
   umap_n_neighbors: 15
   hdbscan_min_cluster_size: 5
   seed: 42
+  quality_thresholds:
+    # #379: typed-graph/topic clustering can surface ranked maps only after these
+    # are filled from reviewed map runs. Null thresholds mean shadow/report-only.
+    production_enabled: false
+    silhouette_floor: null
+    topic_coherence_floor: null
+    min_reviewed_maps: 20
+    max_cluster_churn_rate: 0.15
+    grounding_dataset: null
+    model_version: null
+hybrid_scores:
+  candidate_rank:
+    # #379 / ADR-66: ranking can reorder review attention only after real PI
+    # decisions calibrate the score. Until then it may log shadow scores but must
+    # not hide, auto-accept, or auto-defer candidates.
+    production_enabled: false
+    promote_threshold: null
+    defer_threshold: null
+    min_labeled_decisions: 200
+    max_false_promote_rate: 0.05
+    max_top_decile_miss_rate: 0.10
+    grounding_dataset: null
+    model_version: null
+  outline_score:
+    # Draft-outline scoring is advisory until calibrated against human accepted /
+    # revised outcomes from real project drafts.
+    production_enabled: false
+    accept_threshold: null
+    revise_threshold: null
+    min_labeled_outlines: 50
+    max_false_accept_rate: 0.05
+    max_false_revise_rate: 0.15
+    grounding_dataset: null
+    model_version: null

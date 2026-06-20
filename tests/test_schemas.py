@@ -178,6 +178,30 @@ def test_calibration_loads_with_confidence_floor():
     assert 0.0 < floor < 1.0
 
 
+def test_hybrid_score_calibration_is_shadow_first_until_thresholds_are_filled():
+    cal = schema.load_calibration()
+    scores = cal["hybrid_scores"]
+    for key, threshold_fields, sample_key in (
+        ("candidate_rank", ("promote_threshold", "defer_threshold"), "min_labeled_decisions"),
+        ("outline_score", ("accept_threshold", "revise_threshold"), "min_labeled_outlines"),
+    ):
+        spec = scores[key]
+        assert spec["production_enabled"] is False
+        assert spec["grounding_dataset"] is None
+        assert spec["model_version"] is None
+        assert spec[sample_key] > 0
+        for field in threshold_fields:
+            assert spec[field] is None
+
+    cluster_quality = cal["clustering"]["quality_thresholds"]
+    assert cluster_quality["production_enabled"] is False
+    assert cluster_quality["grounding_dataset"] is None
+    assert cluster_quality["model_version"] is None
+    assert cluster_quality["min_reviewed_maps"] > 0
+    assert cluster_quality["silhouette_floor"] is None
+    assert cluster_quality["topic_coherence_floor"] is None
+
+
 def test_gated_prefix_fallbacks_match_folders_yaml():
     """Every dependency-free fallback for the review-gated zones must stay in sync
     with the schema home (folders.yaml). The MCPs run standalone (no operations/lib
