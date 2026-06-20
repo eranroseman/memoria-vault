@@ -4,21 +4,49 @@ _Working artifact for the 0.1.0-alpha.9 checkpoint. Derived from the full litera
 
 ## How to read this
 
-The headline finding of the review is that the frontier literature **does not merely permit Memoria's design — it independently re-derives it.** The review gate ("engines write, agents judge, PI approves"), the durable vault-as-memory, the MCP-only sandbox, atomic claims, and deterministic ingest are each re-arrived-at by separate research lines. So this is a **hardening-and-sharpening agenda, not a redesign.**
+The review found the frontier literature largely *re-derives* Memoria's design. **Caveat, read §0 first:** the corpus is the PI's own curated reading and the original review used a confirm-only vocabulary, so "re-derived" is partly an artifact of how it was run. §0 holds the disconfirmations and tensions that confirmatory framing hid; treat them as load-bearing, not appendix.
 
 Every recommendation is tagged with its ADR disposition:
 
 - **Validate** — a current bet is confirmed; record the empirical backing, no design change.
 - **Amend** — sharpen an existing ADR with a specific mechanism the literature establishes.
+- **Retire** — a current bet the literature argues *against*; replace it (see §0).
+- **Tension** — two recommendations or a recommendation and a current bet pull against each other; unresolved until called out.
 - **New** — a net-new capability that needs its own ADR (or a deferred ADR moved to active).
 
 Each item gives **What → Why (papers) → ADR disposition**. Citations are short-form; full entries are in the review and `_papers/Exported Items.bib`.
 
 ---
 
+## 0. Read this before §1 — problem, disconfirmations, tensions, budgets
+
+**Content scope.** Memoria's primary content is academic papers (Zotero backbone, ADR-05/06/99) *plus* the PI's own claim/fleeting/project notes. Items below tagged **[paper-only]** assume a DOI + citation graph and do **not** apply to non-paper content: §3.3 primary-vs-review weighting, §4.4 citation-intent vocabularies. Everything else is content-agnostic.
+
+**Current-state problem (need-push, not just literature-pull).** This doc is research-derived; the build order in §1 is *not* validated against observed alpha.9 pain. **Action:** before committing §1, write a one-page baseline of what the gate / contradictions / retrieval actually get wrong today, and re-rank against it. Until then, treat §1 as candidate moves, not a committed sequence.
+
+**Where the literature argues against us (the confirm-only review hid these):**
+
+- **Retire embedding cosine as the arbiter of "same / contradicts."** §3.1 is not an Amend — it says a current bet (cosine for contradiction/dedup/supersession) *actively fails* on negation and reasoning-relevance (BRIGHT). Re-tagged **Retire**.
+- The disposition vocabulary was originally Validate/Amend/New, so nothing *could* land as a refutation. A 401-paper sweep with zero load-bearing disconfirmations is a method artifact; this section is the correction, and it is not exhaustive — a real §0 grows as the design is stress-tested.
+
+**Open tensions — unresolved, do not paper over (Tension):**
+
+1. **Compute vs. cost.** §3.6 (per-aspect prompts × 5–10 self-consistency samples ≈ 25–50 local calls/doc) is the largest compute line, not "free." It is a different axis from §5's ~6 *tool*-call budget. **Action:** add an explicit ingest-compute budget (calls/doc, nightly wall-clock) and stop calling self-consistency free.
+2. **Supersession can silently suppress.** §3.4's retrieval filter, driven by a fallible meaning-changed classifier, can hide *correct* claims — the forgetting failure it set out to fix. The append-only trace keeps it auditable, but **apply §6's "expose what was down-ranked" to the supersession filter too.**
+3. **Verbatim warrant vs. normalized claim.** §3.2 substring-grounds the **warrant = verbatim source span**; §3.1/§4.3 normalize the **claim text**. These are *different fields* (Knows/FEVER: `evidence_sentences` ≠ `claim_text`) — match the quote, never the normalized claim. Resolved by stating the separation; flagged here so no one re-collapses them.
+4. **Frozen encoder buys little.** Open-question #5's "freeze the doc encoder so the index never re-embeds" is undercut by §4.1 indexing *claims*, which change as engines improve. Keep the freeze only for encoder-version decoupling; drop the "never re-embeds" rationale.
+
+**Single PI-supervision budget (hard constraint, nothing currently models it).** Memoria is one human; co-PI is never required. These all draw on the *same* attention: NLI abstain-threshold calibration, POTENTIAL-middle review, confidently-novel escalation, warrant-check failures, judge-vs-PI validation, exemplar corrections, lesson distillation, schema-migration spot-checks. **Action:** set one annual label ceiling and make every §3–§5 mechanism draw against it. Lever: most of these can be *one* PI gate action emitting many signals (a single accept/reject resolves POTENTIAL **and** feeds the exemplar store **and** validates the judge **and** nudges the threshold) — design for one-action-many-signals, and model gate throughput, not just label count.
+
+**Benchmark numbers are external, not in-domain.** Every point estimate in §3–§6 (nDCG deltas, %-closed-with-no-LLM, override rates, token savings) is one paper's setup. The *direction* is multiply-sourced and survives; the *digits* must be re-measured on Memoria's vault/model before they drive a threshold. Treat them as illustrative.
+
+**Spike gate (do before ordering §1).** §1's #1 item (the NLI comparator) underpins §3.1/§3.3/§3.4/§5. Whether a usable NLI model fits 16 GB beside qwen2.5:7b — or the resident-LLM-as-verbalizer is accurate enough on the adversarial fixtures — is unanswered (open-question #1). **Run that spike first.** Fallback path (LLM-verbalizer) means a miss degrades rather than collapses the agenda, but the sequence below is not committed until the spike returns.
+
+---
+
 ## 1. Recommended build sequence (executive)
 
-Ordered by leverage, from the review's "what to build next" plus the cross-cutting synthesis. Detail follows in §3–§6.
+Ordered by leverage, from the review's "what to build next" plus the cross-cutting synthesis. **Not committed** until the §0 NLI spike returns and the §0 current-state baseline is written. Detail follows in §3–§6.
 
 1. **NLI/entailment comparator as a shared service** — one local entailment engine backing contradictions, dedup, supersession, and citation verification. *Highest leverage: it underpins three existing pillars at once.* (§3.1)
 2. **Epistemic-status fields on every claim** — uncertainty flag + source-span provenance grade + source-type/evidence-strength. *Foundational and cheap; unblocks the NLI and gate work.* (§3.3)
@@ -50,7 +78,7 @@ These are confirmed by the corpus; the action is to cite the evidence in the rel
 
 The genuine "change X" recommendations. Each names the current design area and the specific mechanism to adopt.
 
-### 3.1 Contradiction / supersession / dedup must run on NLI, never cosine — **Amend ADR-09, ADR-10, ADR-94, ADR-38**
+### 3.1 Contradiction / supersession / dedup must run on NLI, never cosine — **Retire (cosine) + Amend ADR-09, ADR-10, ADR-94, ADR-38**
 
 **What.** Stand up a single **local NLI/entailment comparator** as a shared MCP service and route contradictions, claim-supersession, record-linkage dedup, and the pre-file similarity gate through it. Use FEVER's tri-class verdict vocabulary **SUPPORTED / REFUTED / NOTENOUGHINFO**, and require every verdict to carry its **evidence sentence(s)**, not just a label. Default conservative with a **tunable abstain threshold**; route the uncertain middle (POTENTIAL) to the PI. Key dedup on canonical IDs.
 
@@ -70,7 +98,7 @@ The genuine "change X" recommendations. Each names the current design area and t
 
 **What.** Every atomic claim (and relation) carries: an **uncertainty flag**, a **source-span provenance grade** (complete / partial / broken), **two-axis confidence** (claim_strength vs extraction_fidelity), and **source-document-type** (review vs primary vs preprint) + **evidence-strength**. Contradiction/supersession privilege **primary evidence over echoed consensus**.
 
-**Why.** LM fluency is not knowledge (Bender 2021); reverse-inferred labels need reliability/specificity discipline (Barrett). Self-consistency disagreement *becomes* the uncertainty flag for free (Wang 2023). Knows (Yu 2026) ships this exact two-axis-confidence + replaces-chain schema as external validation. Tagging source-type and weighting primary evidence prevents a review restatement from outvoting the study it cites (Schwappach 2025).
+**Why.** LM fluency is not knowledge (Bender 2021); reverse-inferred labels need reliability/specificity discipline (Barrett). Self-consistency disagreement *becomes* the uncertainty flag (Wang 2023) — cheap as a by-product of the §3.6 sampling already being paid for, **not free** (see §0 tension 1). Knows (Yu 2026) ships this exact two-axis-confidence + replaces-chain schema as external validation. **Version-pin epistemic metadata:** the uncertainty/confidence fields are model-specific, so stamp each with the producing model + prompt version — a qwen2.5→qwen3 swap silently shifts every value otherwise. Tagging source-type and weighting primary evidence prevents a review restatement from outvoting the study it cites (Schwappach 2025).
 
 **Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from self-consistency sample-disagreement at ingest; add a `source_anchor` (page/section/figure) per claim.
 
