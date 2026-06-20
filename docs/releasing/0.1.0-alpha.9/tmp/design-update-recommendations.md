@@ -1,265 +1,225 @@
 # Memoria design-update recommendations — alpha.9
 
-_Working artifact for the 0.1.0-alpha.9 checkpoint. Derived from the full literature review of **401 papers** in `_papers/` (synthesis: `_papers/REVIEW-SUMMARY.md`; per-paper verdicts: `_notes/paper-review-verdicts.json` — 162 adopt / 216 borrow ideas across 378 keeper papers). Decisions land in ADRs; this doc proposes them and is deleted before the release closes (AGENTS.md)._
+_Working artifact for the 0.1.0-alpha.9 checkpoint; deleted before the release closes (AGENTS.md). Decisions land in ADRs — this doc proposes them._
+
+_Rewritten after the work below changed the picture. Provenance: a literature review of 401 papers (`_papers/REVIEW-SUMMARY.md`, verdicts in `_notes/paper-review-verdicts.json`), then an adversarial refutation pass (`_papers/REVIEW-REFUTATIONS.md`), then **on-box measurement** of the contested claims (`spike-nli-vs-cosine.py`, `probe-qwen-compliance.py`). Earlier confirmation-first framing is superseded by §0._
 
 ## How to read this
 
-The review found the frontier literature largely *re-derives* Memoria's design. **Caveat, read §0 first:** the corpus is the PI's own curated reading and the original review used a confirm-only vocabulary, so "re-derived" is partly an artifact of how it was run. §0 holds the disconfirmations and tensions that confirmatory framing hid; treat them as load-bearing, not appendix.
+Three passes produced this doc, in increasing trust:
 
-Every recommendation is tagged with its ADR disposition:
+1. **Literature review** — confirmation-biased (the corpus is the PI's own curated reading, scored with a confirm-only vocabulary). It claimed the literature "re-derives" Memoria's design. Treat that claim with suspicion.
+2. **Refutation pass** — attacked 14 load-bearing bets; **none survived intact**. The corpus endorses the *skeleton* (durable file state, verbatim warrants, batch surfacing, a *sparse* gate, deterministic external grounding, supersession-as-edge) and refutes most *strong claims layered on top*.
+3. **On-box measurement** — the contested, testable claims, run against the actual RTX 4060 Ti + qwen2.5:7b + local NLI. Where a claim was measured, the measurement wins over both the literature and the refutation.
 
-- **Validate** — a current bet is confirmed; record the empirical backing, no design change.
-- **Amend** — sharpen an existing ADR with a specific mechanism the literature establishes.
-- **Retire** — a current bet the literature argues *against*; replace it (see §0).
-- **Tension** — two recommendations or a recommendation and a current bet pull against each other; unresolved until called out.
-- **New** — a net-new capability that needs its own ADR (or a deferred ADR moved to active).
-
-Each item gives **What → Why (papers) → ADR disposition**. Citations are short-form; full entries are in the review and `_papers/Exported Items.bib`.
+**Trust order: measured > refuted > literature-pull.** Every item carries a disposition (**Validate / Amend / Retire / Tension / New**) and, where relevant, a **status** (`measured ✓`, `refuted on-box`, `measured-partial`, `untested`). Citations are short-form; full entries in `_papers/Exported Items.bib`.
 
 ---
 
-## 0. Read this before §1 — problem, disconfirmations, tensions, budgets
+## 0. The state of play — read before §1
 
-**Content scope.** Memoria's primary content is academic papers (Zotero backbone, ADR-05/06/99) *plus* the PI's own claim/fleeting/project notes. Items below tagged **[paper-only]** assume a DOI + citation graph and do **not** apply to non-paper content: §3.3 primary-vs-review weighting, §4.4 citation-intent vocabularies. Everything else is content-agnostic.
+### 0a. What we measured on-box (highest confidence)
 
-**Current-state problem (need-push, not just literature-pull).** This doc is research-derived; the build order in §1 is *not* validated against observed alpha.9 pain. **Action:** before committing §1, write a one-page baseline of what the gate / contradictions / retrieval actually get wrong today, and re-rank against it. Until then, treat §1 as candidate moves, not a committed sequence.
-
-**Where the literature argues against us.** The adversarial second pass (source of record: `_papers/REVIEW-REFUTATIONS.md`) attacked 14 load-bearing bets; **none survived intact.** The corpus endorses the *skeleton* — durable file state, verbatim warrants, batch surfacing, a *sparse* gate, deterministic external grounding, supersession-as-edge — and refutes most of the *strong claims layered on top*. The load-bearing disconfirmations, each forcing an ADR change:
-
-_Refute (a relied-on assumption is false):_
-
-- **Human + machine ≯ machine.** The gate's premise that PI review improves correctness is empirically false: human+ML ≈ human-alone, both far below ML-alone, and a *wrong* engine output drags the reviewer *below* their no-rec baseline (Jacobs 2021, N=220). **Add a calibration check that PI-approved writes actually beat raw engine writes, or the gate is theater. ADR-03/57/24.**
-- **Least-privilege ≠ security against poisoned papers.** Memoria's dominant threat is untrusted *data* (every ingest/fetch), not code; manipulated-content/disinformation attacks need no write/send/exec tool (Greshake 2023; Debenedetti 2024). **Drop "sufficient"; name the gate as the imperfect, itself-injectable integrity control. ADR-32/46/28/27.**
-- **Frozen ≠ fine-tuned — REFUTED on our tasks (on-box probe), so the QLoRA budget is dropped.** CrossTrace's "~0% structural compliance" was on step-level reasoning traces, and **it does not reproduce here.** Measured on frozen qwen2.5:7b + Ollama `format=schema` (`probe-qwen-compliance.py`): **6/6 clean** MASSW 5-aspect extraction on real abstracts, and **90% (18/20) verbatim** quote-per-claim warrants — with §3.2's substring checker catching the other 10% (its whole job). So **§3.6 is confirmed** and **no QLoRA is budgeted**; re-open only if a full-body / messy-OCR re-run regresses. **ADR-22/24.**
-
-_Retire / narrow (true but narrower than claimed):_
-
-- **Cosine** as arbiter of same/contradicts — fails on negation/reasoning-relevance → NLI, **but NLI is not clean either** (see §3.1 caveat). **ADR-09/10/94/38.**
-- **Atomic-as-stored-unit** hurts QA; the *contextual round* is the optimal retrieval unit and atomic is an *index over* it — this inverts §4.1's "triage over claims, not text" (LongMemEval 2025; Hu 2026). **ADR-90/56/99.**
-- **Automatic contradiction/supersession** is the *least*-reliable memory capability (~28% wrong flips, Mitchell 2022): engines propose candidates, the human sets the link; track proposer precision before any promotion. **ADR-09/10.**
-- **Durable graph memory** underperforms raw long-context and even BM25 on the synthesis tasks Memoria exists for (MemoryAgentBench) — demote the typed graph to one optional projection that must *beat a BM25+dense baseline*. **ADR-08/79/52.**
-- **Per-item human gate** → sparse, uncertainty-routed gate; item-by-item erases automation gains and the human refuses to re-decide trust at every step (AutoResearchClaw 2026; Jacobs 2021). **ADR-24.**
-
-This list is not exhaustive — it grows as the design is stress-tested.
-
-**Open tensions — unresolved, do not paper over (Tension):**
-
-1. **Compute vs. cost.** §3.6 (per-aspect prompts × 5–10 self-consistency samples ≈ 25–50 local calls/doc) is the largest compute line, not "free." It is a different axis from §5's ~6 *tool*-call budget. **Action:** add an explicit ingest-compute budget (calls/doc, nightly wall-clock) and stop calling self-consistency free.
-2. **Supersession can silently suppress.** §3.4's retrieval filter, driven by a fallible meaning-changed classifier, can hide *correct* claims — the forgetting failure it set out to fix. The append-only trace keeps it auditable, but **apply §6's "expose what was down-ranked" to the supersession filter too.**
-3. **Verbatim warrant vs. normalized claim.** §3.2 substring-grounds the **warrant = verbatim source span**; §3.1/§4.3 normalize the **claim text**. These are *different fields* (Knows/FEVER: `evidence_sentences` ≠ `claim_text`) — match the quote, never the normalized claim. Resolved by stating the separation; flagged here so no one re-collapses them.
-4. **Frozen encoder buys little.** Open-question #5's "freeze the doc encoder so the index never re-embeds" is undercut by §4.1 indexing *claims*, which change as engines improve. Keep the freeze only for encoder-version decoupling; drop the "never re-embeds" rationale.
-
-**Single PI-supervision budget (hard constraint, nothing currently models it).** Memoria is one human; co-PI is never required. These all draw on the *same* attention: NLI abstain-threshold calibration, POTENTIAL-middle review, confidently-novel escalation, warrant-check failures, judge-vs-PI validation, exemplar corrections, lesson distillation, schema-migration spot-checks. **Action:** set one annual label ceiling and make every §3–§5 mechanism draw against it. Lever: most of these can be *one* PI gate action emitting many signals (a single accept/reject resolves POTENTIAL **and** feeds the exemplar store **and** validates the judge **and** nudges the threshold) — design for one-action-many-signals, and model gate throughput, not just label count.
-
-**Benchmark numbers are external, not in-domain.** Every point estimate in §3–§6 (nDCG deltas, %-closed-with-no-LLM, override rates, token savings) is one paper's setup. The *direction* is multiply-sourced and survives; the *digits* must be re-measured on Memoria's vault/model before they drive a threshold. Treat them as illustrative.
-
-**Spike gate (do before ordering §1).** §1's #1 item (the NLI comparator) underpins §3.1/§3.3/§3.4/§5. Whether a usable NLI model fits 16 GB beside qwen2.5:7b — or the resident-LLM-as-verbalizer is accurate enough on the adversarial fixtures — is unanswered (open-question #1). **Run that spike first.** Fallback path (LLM-verbalizer) means a miss degrades rather than collapses the agenda, but the sequence below is not committed until the spike returns.
-
----
-
-## 1. Recommended build sequence (executive)
-
-Ordered by leverage, from the review's "what to build next" plus the cross-cutting synthesis. **Not committed** until the §0 NLI spike returns and the §0 current-state baseline is written. Detail follows in §3–§6.
-
-1. **NLI/entailment comparator as a shared service** — one local entailment engine backing contradictions, dedup, supersession, and citation verification. *Highest leverage: it underpins three existing pillars at once.* (§3.1)
-2. **Epistemic-status fields on every claim** — uncertainty flag + source-span provenance grade + source-type/evidence-strength. *Foundational and cheap; unblocks the NLI and gate work.* (§3.3)
-3. **Model-free warrant checker at the gate** — substring + entity-type + year-order + opposite-edge + citekey-resolves. *Pure deterministic win, no model cost.* (§3.2)
-4. **Supersession as a deterministic retrieval filter** over an append-only claim trace, with ISO temporal scope on claims. *Closes the universal memory failure (forgetting).* (§3.4)
-5. **Expected-utility gate router (act / ask / drop)** replacing undifferentiated alerting. (§3.5)
-6. **Constrained decoding + self-consistency in the engine layer.** *Highest-ROI engineering for faithful local extraction.* (§3.6)
-7. **Retriever/scout on dense-over-claims + offline index enrichment + small-k reranker.** (§4.1)
-8. **Engine certification harness** — state-based regression, pass^k, cost budgets, judges validated against PI labels. (§5)
-
----
-
-## 2. Validated skeleton — backing holds; strong claims contested (see §0)
-
-The *skeleton* of each bet is confirmed and its backing should be cited in the ADRs — but the refutation pass (§0) contests the **strong form** of four rows below, so this table is not "no change needed." Contested: **engines-write/judge** (PI review does not auto-improve correctness — Jacobs 2021); **MCP sandbox** (necessary, not *sufficient*; the threat is data, not code); **atomic claims** (the contextual round, not the bare atom, is the stored unit); **deterministic ingest + cheap local** (frozen ≠ fine-tuned on our task — CrossTrace). Read each contested row as "skeleton validated, strong claim → §0."
-
-| Design bet | Confirming literature | ADRs validated |
+| Contested claim | Measured result | Verdict |
 |---|---|---|
-| **Engines write, agents judge, PI approves** | Horvitz mixed-initiative (1999), Shneiderman–Maes (1997), Ackerman social-technical gap (2000), Bernstein/Soylent Find-Fix-Verify (2010), Cobbe verifiers (2021), Cornelio "verification is the bottleneck" (2025), Chen File-as-Bus (2026) | ADR-03, ADR-57, ADR-14, ADR-21, ADR-41, ADR-82 |
-| **MCP-only agent sandbox (no file/terminal/code-exec, ever)** | Greshake indirect injection (2023), AgentDojo (2024), InjecAgent (2024), AI-Scientist self-modification incidents (Lu 2024), Perez & Ribeiro (2022) | ADR-32, ADR-46, ADR-28, ADR-27 |
-| **Vault-as-memory / durable inspectable artifacts** | Chen File-as-Bus (2026), Zhou externalization (2026), PARNESS (2026), AgentRxiv (2025); ablations show removing durable state *collapses* multi-agent performance | ADR-01, ADR-46, ADR-23 |
-| **Atomic claims store** | Five memory benchmarks: atomic-unit retrieval beats raw-log/summary retrieval | ADR-90, ADR-56, ADR-99 |
-| **Deterministic ingest + cheap local model** | SciLitLLM (Qwen2.5, 2025), Schick & Schütze (2021), Agrawal clinical IE (2022); a 355M classifier beats GPT-4o zero-shot | ADR-30, ADR-108 |
-| **Faithfulness over flash; local/cheap by choice** | Bender stochastic parrots (2021), Galactica (2022); efficiency as a first-class metric | ADR-22, ADR-24 |
+| Cosine arbitrates same/contradicts | 0/8 on word-overlap/opposite-meaning pairs (rates all 8 "same", 0.78–1.00) | **Blind spot confirmed** — retire cosine as the arbiter |
+| NLI fixes it | 8/8 on the same trap; direction-stable; **<0.6 GB VRAM** | NLI clears the *easy* trap; HANS failure didn't materialize here |
+| NLI is clean | On same-topic / **different-variable** pairs it **confidently fabricates contradictions at 0.94–1.00** (small 6/12, ANLI 8/12) | NLI alone is a false-contradiction generator; a confidence threshold can't filter it |
+| Variable-match gate fixes that | Holistic LLM "same variable?" → **recall 1/6** (drops real contradictions). Decomposed (entity+attribute+direction) → **recall 4/6, FP dropped 6/7** | **Necessary, not sufficient**; bottleneck moves to direction/relationship extraction (negation, argument-order, value-conflict) |
+| Frozen qwen2.5:7b ≈ 0% schema compliance (CrossTrace) | MASSW aspect extraction **6/6 clean** (Ollama `format=schema`); verbatim warrant quotes **90% (18/20)** | **Refuted on our tasks.** §3.6 confirmed; **QLoRA budget dropped**; §3.2's substring checker catches the 10% |
+| NLI must fit beside qwen on 16 GB | <0.6 GB, and qwen is a test fixture not a co-resident | Fit was a phantom blocker — **dissolved** |
+
+Measurement caveat that applies to all of the above: hand fixtures (~20–30 pairs) + abstract/intro text. These are **smoke tests that answer go/no-go, not benchmarks.** Re-run on real vault claims (`current-state-baseline.md`) before any threshold is trusted.
+
+### 0b. What the literature refutes but we could NOT test here (warnings, need PI data)
+
+These are the disconfirmations with no on-box probe — they require the PI's real vault/feedback, so they stand as **open risks, ranked by blast radius**:
+
+1. **Human + machine ≯ machine — the gate's load-bearing premise may be false.** Jacobs 2021 (N=220): clinician+ML ≈ clinician-alone, both far below ML-alone, and a *wrong* recommendation dragged the human *below* their no-rec baseline. If this holds for Memoria, "PI approves" does not automatically improve correctness and the gate is theater. **This is the existential risk to the whole architecture and the first thing to measure once there is PI approve/reject data. ADR-03/57/24.**
+2. **Atomic-as-stored-unit hurts QA** — the contextual round is the optimal retrieval unit, the atom an index over it (LongMemEval, Hu 2026). Needs a labeled retrieval set on the real vault.
+3. **Durable graph memory underperforms BM25** on synthesis tasks (MemoryAgentBench). Needs the vault corpus to test.
+4. **Automatic contradiction/supersession is the least-reliable memory capability** (~28% wrong flips, Mitchell 2022). The §3.1 gate test already shows the proposer is lossy; real proposer-precision needs vault data.
+5. **Least-privilege ≠ security against poisoned papers** — the dominant threat is untrusted *data*, not code (Greshake, Debenedetti). Architectural, not benchmarkable; handled by naming the gate as an imperfect, itself-injectable integrity control.
+
+### 0c. Binding constraints (apply to everything in §1–§6)
+
+- **Content scope.** Primary content is academic papers (Zotero backbone, ADR-05/06/99) *plus* the PI's own claim/fleeting/project notes. Items tagged **[paper-only]** (§3.3 primary-vs-review weighting, §4.4 citation-intent) assume a DOI + citation graph and do **not** apply to non-paper notes. Everything else is content-agnostic.
+- **Single PI-supervision budget.** Memoria is one human; co-PI is never required. NLI threshold calibration, POTENTIAL review, novelty escalation, warrant-check failures, judge validation, exemplar corrections, lesson distillation, schema-migration spot-checks all draw on the *same* attention. Set **one annual label ceiling** and make every mechanism draw against it. Lever: design for **one PI action emitting many signals** (a single accept/reject resolves POTENTIAL *and* feeds the exemplar store *and* validates the judge *and* nudges the threshold); model **gate throughput**, not just label count.
+- **Need-push, not literature-pull.** §1's order is research-derived, **not** validated against observed alpha.9 pain. Fill `current-state-baseline.md` (gate false-approve / contradiction precision / retrieval recall on real runs) and re-rank against it before committing §1.
+- **Benchmarks are external.** Every literature point estimate (nDCG deltas, %-no-LLM, override rates, token savings) is one paper's setup. The *direction* is multiply-sourced and survives; the *digits* must be re-measured in-domain.
+
+---
+
+## 1. What to do for alpha.9 — evidence-weighted, with a cut line
+
+The original "8-item build sequence" was literature-leverage ordering. Re-weighted by what measurement and the PI-budget constraint now say:
+
+**Ship (measured-green, cheap, foundational):**
+1. **Constrained-decoding engine contract** (§3.6) — *measured 6/6*. Per-aspect schema-constrained prompts + a tiny resolver. Lowest risk, unblocks everything else.
+2. **Model-free warrant checker at the gate** (§3.2) — *measured: 90% of qwen warrants are verbatim, the checker rejects the other 10%*. Pure deterministic, no model cost.
+3. **Epistemic-status claim fields** (§3.3) — uncertainty flag + provenance grade + source-type. Cheap, and the precondition for §3.1's gate.
+
+**Build with care (measured-partial):**
+4. **NLI relationship verdict + decomposed variable-match gate** (§3.1) — *precision win, measured recall cost*. Propose-only; the hard part is faithful direction/relationship extraction, not the NLI verdict.
+
+**Measure before you build (untested, highest stakes):**
+5. **The Jacobs calibration check** (§3.5 / gate) — instrument "do PI-approved writes actually beat raw engine writes?" *before* investing more in the gate. If the answer is no, the architecture needs rethinking, not tuning.
+
+**Defer past alpha.9** (literature-pull, not yet earned): the retriever overhaul (§4.1), the typed graph (now demoted — must beat a BM25+dense baseline before it earns space), the exemplar store (§4.5), the certification harness (§5) beyond the Jacobs check.
+
+**Explicitly NOT doing for alpha.9:** QLoRA fine-tuning (refuted), ripping out cosine wholesale (keep it as a control), auto-applied contradiction/supersession links (propose-only until proposer precision is measured on real data).
+
+---
+
+## 2. Validated skeleton — backing holds; the strong form of four rows is contested (§0)
+
+Cite the backing in the ADRs, but do **not** read this table as "no change needed" — the strong claim of each starred row was contested or refuted on-box.
+
+| Design bet | Confirming literature | Status | ADRs |
+|---|---|---|---|
+| Engines write, agents judge, PI approves | Horvitz (1999), Shneiderman–Maes (1997), Ackerman (2000), Bernstein/Soylent (2010), Cobbe (2021), Cornelio (2025), Chen File-as-Bus (2026) | ⚠ strong form **untested & at risk** (Jacobs, §0b.1) | 03, 57, 14, 21, 41, 82 |
+| MCP-only sandbox (no file/terminal/code-exec) | Greshake (2023), AgentDojo (2024), InjecAgent (2024), Lu (2024), Perez & Ribeiro (2022) | ⚠ necessary, **not sufficient** (data > code, §0b.5) | 32, 46, 28, 27 |
+| Vault-as-memory / durable artifacts | Chen (2026), Zhou (2026), PARNESS (2026), AgentRxiv (2025) | ✓ validated | 01, 46, 23 |
+| Atomic claims store | five memory benchmarks (atomic > raw-log) | ⚠ as *index*, not *stored unit* (§0b.2) | 90, 56, 99 |
+| Deterministic ingest + cheap local model | SciLitLLM (2025), Schick & Schütze (2021), Agrawal (2022) | ✓ **measured-confirmed** (6/6 + 90%, §0a) | 30, 108 |
+| Faithfulness over flash; local/cheap by choice | Bender (2021), Galactica (2022) | ✓ validated (and frozen-model now measured-sufficient) | 22, 24 |
 
 ---
 
 ## 3. Sharpenings — amend existing ADRs
 
-The genuine "change X" recommendations. Each names the current design area and the specific mechanism to adopt.
+### 3.1 Contradiction / dedup / supersession: retire cosine → NLI relationship-verdict + decomposed gate — **Retire (cosine) + Amend ADR-09, ADR-10, ADR-94, ADR-38** · status: measured-partial
 
-### 3.1 Contradiction / supersession / dedup must run on NLI, never cosine — **Retire (cosine) + Amend ADR-09, ADR-10, ADR-94, ADR-38**
+**What.** A single **local NLI/entailment comparator** (FEVER tri-class SUPPORTED / REFUTED / NOTENOUGHINFO, every verdict carrying its evidence sentence) supplies the **relationship verdict only**. A contradiction/dedup edge additionally requires a **decomposed variable-match** — extract `(entity, attribute, direction)` as *separate* fields (§3.3) and confirm entity+attribute match with direction-conflict — **never a holistic LLM "same variable?" call**. Edges are **proposed, never auto-applied**; key dedup on canonical IDs.
 
-**What.** Stand up a single **local NLI/entailment comparator** as a shared MCP service and route contradictions, claim-supersession, record-linkage dedup, and the pre-file similarity gate through it. Use FEVER's tri-class verdict vocabulary **SUPPORTED / REFUTED / NOTENOUGHINFO**, and require every verdict to carry its **evidence sentence(s)**, not just a label. Default conservative with a **tunable abstain threshold**; route the uncertain middle (POTENTIAL) to the PI. Key dedup on canonical IDs.
+**Why + what we measured.** Cosine is blind to negation (0/8 on the trap, §0a) — retire it as the arbiter, keep it only as a **control baseline**. NLI clears the easy trap (8/8) but **confidently mints false contradictions between merely-different claims** (0.94–1.00 on different-variable pairs), and a confidence threshold can't filter that — so the structured variable-match gate is a **precondition, not an enhancement**. The gate works: holistic recall 1/6 → decomposed 4/6, false-positives dropped 6/7. The residual losses (negation read as same-direction, argument-swap, same-attribute/different-value) are **relationship-extraction failures, not NLI failures** — that is now the hard part. Prefer the **ANLI/FEVER model** (`MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli`, better on neutral); `small` ties only on the easy trap; read `id2label` (label order differs across models — never hardcode).
 
-**Why.** Plain embedding cosine is blind to negation and collapses (~59→~18 nDCG on BRIGHT) precisely on the reasoning-based, cross-paper relevance the argument graph exists to capture; high similarity routinely coexists with *flipped meaning* (BRIGHT/Wei 2026, Utama 2021). Frozen-NLI + MaxSAT resolves the globally consistent claim set in <20ms with no training (ConCoRD/Mitchell 2022); relation-as-NLI-hypothesis with entity-type constraints is training-free and makes "detect NO relation" — the dominant, hard case — explicit (Sainz 2021). The costly error is a false "duplicate/contradiction," so precision-first with abstention (CITETRACER, CiteGuard).
+**Concrete.** (a) ANLI/FEVER NLI under MCP, `<0.6 GB`. (b) Verdict `{verdict, evidence_sentences[], score}`, gated by decomposed variable-match before becoming an edge. (c) MaxSAT consistency pass over the *gated* edges only (ConCoRD/Mitchell 2022); surfaced to the gate, never auto-applied — track **proposer precision** first (least-reliable memory capability). (d) Keep both the HANS/trap and the different-variable **NEUTRAL** fixtures as regression tests; re-run on real claims before trusting the recall number.
 
-**Spike result (alpha.9, on-box — `spike-nli-vs-cosine.py`).** Measured, not predicted, on the RTX 4060 Ti:
-- *Fit is a non-issue.* Both `nli-deberta-v3-small` and `DeBERTa-v3-base-mnli-fever-anli` run at **<0.6 GB VRAM** — and qwen2.5:7b is a test fixture, not a co-resident, so "fits beside qwen" was a phantom blocker. Open-question #1 is closed.
-- *The easy trap: NLI wins cleanly.* On relationship-flip contradictions (increase/decrease, same variables) where cosine scores **8/8 false "same,"** both NLI models score **8/8 correct**, and contradiction direction is stable (0 flips). The predicted HANS failure **did not materialize** here.
-- *The dangerous case: NLI confidently fabricates contradictions.* On **same-topic / different-variable** pairs (drug in adults vs mice; attention vs convolution; p<0.05 vs p<0.01), NLI calls them CONTRADICTIONS at **confidence 0.94–1.00** (small 6/12, ANLI 8/12). **A confidence threshold cannot filter this** — the model is confidently wrong. This is the most common real case for a contradictions engine, and it is exactly where a false "contradiction" flag (the costly error) fires.
+### 3.2 Model-free warrant checker as a hard gate invariant — **Amend ADR-03, ADR-57, ADR-79** · status: measured ✓
 
-**Revised recommendation (supersedes "tunable abstain threshold").** NLI supplies the **relationship verdict only**. A contradiction/dedup edge must *additionally* require **variable + context MATCH** from the structured-claim schema (§3.3: `(context, variables, relationship)`) — that schema is a **precondition** for §3.1, not an enhancement. Without it, the contradictions dashboard floods with confident false positives. The "keep cosine as a control" hedge helps on the relationship-flip cases but does **nothing** for this neutral failure (cosine scores the same pairs ~0.77 "same" too). Prefer the **ANLI/FEVER model** (better neutral, ~184 M); `small` ties only on the easy trap.
+**What.** Before any claim/edge is written, a **deterministic, no-LLM checker** passes: substring grounding of the verbatim warrant quote, entity-type compatibility, year-ordering, opposite-direction-edge check, and citekey resolves in Zotero/vault. Structural validity machine-checked; semantic correctness deferred to agent/PI.
 
-**Gate test (alpha.9, on-box with qwen2.5:7b) — the variable-match gate is necessary, NOT sufficient.** Measured whether gating on §3.3 fields suppresses NLI's confident false contradictions without killing recall:
-- *Holistic* "are these the same variable?" as one LLM call **fails badly — recall 1/6.** qwen reads "increases vs decreases" as *different variables*, dropping the contradictions it must keep. Worse than the disease.
-- *Decomposed* (extract entity + attribute + direction separately, match in code) **recovers to recall 4/6, false-positives dropped 6/7** — a large precision win, but it still loses 2/6 real contradictions: qwen encoded "sufficient/insufficient" as the *same* direction (missed the negation) and "A>B vs B>A" as the same direction (missed the argument swap); the same-attribute/different-value case (p<0.05 vs p<0.01) also stays mislabeled.
-- **Implication:** the gate is a real, large precision win but carries a **measured recall cost**, and the bottleneck moves to faithful **direction/relationship extraction** (negation, argument-order, value-conflict). So contradictions stay **propose-only** with the recall cost surfaced to the PI; do not auto-apply, and treat relationship extraction — not the NLI verdict — as the hard part. Re-run on real claims before trusting the recall number.
+**Why + measured.** Bare LLM judges err 16–46% on citation calls and post-rationalize citations (CiteGuard, Wallat 2024, CITETRACER); an injection fools the judge too, so deterministic checks must adjudicate (AgentDojo). **On-box: 90% of qwen2.5:7b warrant quotes are exact substrings — the checker passes those and rejects the other 10%, which is its whole job.** Note the field separation (a §0 tension, now resolved): the **warrant is the verbatim source span** (substring-checkable); the **claim text is normalized** (never substring-matched against source). Different fields (Knows/FEVER: `evidence_sentences` ≠ `claim_text`).
 
-**Concrete.** (a) Model: `MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli`, read `id2label` (label order differs across NLI models — never hardcode). (b) Verdict schema `{verdict, evidence_sentences[], score}`, but **gate REFUTED on variable/context match** (decomposed entity+attribute+direction, never a holistic LLM "same?" call) before it becomes a contradiction edge. (c) MaxSAT consistency pass over the *gated* edges only — surfaced to the gate, never auto-applied (proposer precision is the least-reliable memory capability — track it first). (d) Keep the `NEUTRAL` (different-variable) fixture as a **regression test**, not just the HANS/trap one — the neutral class is the weak spot, and re-run on real vault claim pairs (`current-state-baseline.md`) before committing.
-
-### 3.2 Model-free warrant checker as a hard gate invariant — **Amend ADR-03, ADR-57, ADR-79**
-
-**What.** Before any claim or typed edge is written, a **deterministic, no-LLM checker** must pass: source-span **substring grounding** of the warrant quote, **entity-type** compatibility, **year-ordering**, **opposite-direction-edge** contradiction check, and **citekey resolves** in Zotero/vault. Structural validity is machine-checked; semantic correctness is deferred to agent/PI.
-
-**Why.** Bare LLM judges err 16–46% on citation/claim calls and *post-rationalize* citations they didn't use (CiteGuard, Wallat 2024, CITETRACER); an injection fools the judge too, so deterministic state-based checks must do adjudication (AgentDojo). Intern-Atlas and PubTator build exactly this verbatim-warrant + deterministic-validator pipeline (Wu 2026, Wei 2024). CITETRACER closes 61.7% of cases with **no LLM call**.
-
-**Concrete.** Add the checker to the structural review gate as a fail-fast lint stage; reject any relation/contradiction lacking correct warrant sentences. Add a **causal-faithfulness counterfactual** offline test: inject a claim's span into a decoy source; if the engine re-cites the decoy, mark the attribution low-confidence (Wallat 2024).
+**Concrete.** Fail-fast lint stage at the gate; reject any edge lacking a correct warrant sentence. Add a causal-faithfulness counterfactual offline test (inject a span into a decoy source; if the engine re-cites it, mark low-confidence — Wallat 2024).
 
 ### 3.3 Epistemic status as first-class, auditable claim data — **Amend ADR-56, ADR-08, ADR-50**
 
-**What.** Every atomic claim (and relation) carries: an **uncertainty flag**, a **source-span provenance grade** (complete / partial / broken), **two-axis confidence** (claim_strength vs extraction_fidelity), and **source-document-type** (review vs primary vs preprint) + **evidence-strength**. Contradiction/supersession privilege **primary evidence over echoed consensus**.
+**What.** Every claim (and relation) carries: uncertainty flag, source-span provenance grade (complete/partial/broken), two-axis confidence (claim_strength vs extraction_fidelity), source-document-type **[paper-only]** (review/primary/preprint) + evidence-strength, and a `source_anchor` (page/section/figure). Contradiction/supersession privilege primary evidence over echoed consensus.
 
-**Why.** LM fluency is not knowledge (Bender 2021); reverse-inferred labels need reliability/specificity discipline (Barrett). Self-consistency disagreement *becomes* the uncertainty flag (Wang 2023) — cheap as a by-product of the §3.6 sampling already being paid for, **not free** (§0 tension 1), and only on **closed-label steps** (it is blind to stable fabrication — §3.6 caveat 3). Knows (Yu 2026) ships this exact two-axis-confidence + replaces-chain schema as external validation. **Version-pin epistemic metadata:** the uncertainty/confidence fields are model-specific, so stamp each with the producing model + prompt version — a qwen2.5→qwen3 swap silently shifts every value otherwise. Tagging source-type and weighting primary evidence prevents a review restatement from outvoting the study it cites (Schwappach 2025).
+**Why.** LM fluency is not knowledge (Bender 2021). Self-consistency disagreement can populate the uncertainty flag (Wang 2023) — but it is **not free** (it is the §3.6 sampling cost) and **not a confidence signal at 7B** (blind to stable fabrication), so use it **only on closed-label steps**. **Version-pin epistemic metadata** to the producing model + prompt — a qwen2.5→qwen3 swap silently shifts every value. The `(context, variables, relationship)` decomposition here is also what §3.1's gate consumes — build it once.
 
-**Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from self-consistency sample-disagreement at ingest; add a `source_anchor` (page/section/figure) per claim.
+**Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from closed-label self-consistency; backfill is an open question (§8).
 
-### 3.4 Promote supersession from dashboard to deterministic retrieval filter; make time a first-class field — **Amend ADR-10, ADR-09, ADR-92, ADR-65**
+### 3.4 Supersession as a deterministic retrieval filter; time as a first-class field — **Amend ADR-10, ADR-09, ADR-92, ADR-65**
 
-**What.** Supersession becomes a **deterministic filter applied during retrieval** over an **append-only claim trace** (singly-linked `replaces` chain + `record_status: superseded` + `stale_after`), not just a dashboard view. Stamp every claim with **ISO temporal scope + tense + confidence**. Add **cross-period coverage metrics** (Temporal Coverage@k) to the scout and **abstain when retrieved evidence is time-mismatched**.
+**What.** Supersession becomes a deterministic filter over an **append-only** `replaces` chain (`record_status: superseded`, `stale_after`), with **ISO temporal scope + tense + confidence** on every claim and **Temporal Coverage@k** on the scout; abstain when retrieved evidence is time-mismatched.
 
-**Why.** Forgetting — not recall — is the universal memory failure: every memory agent silently surfaces superseded facts and degrades over horizon. Temporally-incomplete retrieval *actively harms* output (TEMPO/Abdallah 2026: no-retrieval beat all RAG). A newer in-context claim overrides stale belief ~85% of the time (Si), so feed superseding claims into the prompt and flag the conflict rather than trusting memory.
+**Why + caution.** Forgetting, not recall, is the universal memory failure; temporally-incomplete retrieval actively harms output (TEMPO/Abdallah 2026). **But the filter can silently suppress correct claims** if the meaning-changed classifier is wrong — so keep superseded claims **retrievable** (tagged "superseded by [[X]] on [date]"), penalize *stale-as-current reuse* rather than hard-excluding, and **expose what the filter dropped** (the §6 rule applies here too). Cross-period/trend queries need both the baseline and the current claim.
 
-**Concrete.** Append-then-compete discipline — never overwrite an approved claim; a candidate successor must re-pass the gate (Gottweis 2025, PARNESS). A **meaning-changed vs cosmetic edit** classifier on re-ingest decides when to supersede (Du 2022). Test with a **forgetting-aware metric**.
+**Concrete.** Append-then-compete (a successor re-passes the gate); a meaning-changed-vs-cosmetic classifier on re-ingest (Du 2022); a forgetting-aware metric.
 
-### 3.5 Make the gate an explicit expected-utility act / ask / drop router — **Amend ADR-70, ADR-81, ADR-41, ADR-03**
+### 3.5 Expected-utility gate router — and instrument the Jacobs question first — **Amend ADR-70, ADR-81, ADR-41, ADR-03**
 
-**What.** Replace any undifferentiated alerting with a **cost/benefit router**: auto-apply low-risk/high-confidence items, **batch-and-rank** ambiguous items to the gate, drop the rest. Route **confidently-novel** items to review, not just low-confidence ones.
+**What.** Replace undifferentiated alerting with a cost/benefit router: auto-apply low-risk/high-confidence, batch-and-rank ambiguous items, drop the rest; route **confidently-novel** items to review, not just low-confidence ones (Horvitz 1999; Alkhatib 2019). Surface capability + expected error rate + why on every output (Amershi).
 
-**Why.** Horvitz's mixed-initiative expected-utility math is the formal backbone (1999); HCI is unanimous that an alert firehose causes rubber-stamp fatigue (Chordia 2023, Friedman 2013, Brown 2007 glanceable digests). Confidently-wrong novel cases also need escalation (Alkhatib 2019). HITL evidence: targeted high-leverage approval beats both full autonomy and step-by-step approval (AutoResearchClaw 2026).
+**Why this is gated on measurement.** The router assumes PI review improves the result — the exact premise Jacobs 2021 puts in doubt (§0b.1). **So before building the router, instrument the calibration check: are PI-approved writes measurably more correct than raw engine writes?** If not, the fix is a different division of labor, not a better router. Build the measurement first.
 
-**Concrete.** Probability bands → {drop, ask-at-gate, auto-write}; a cheap pre-gate classifier guards expensive extraction (maps to ADR-38). Surface **capability + expected error rate + why** on every engine output (Amershi G1/G2/G11).
+### 3.6 Constrained decoding as the engine-layer contract — **Amend ADR-30, ADR-42, ADR-90, ADR-99** · status: measured ✓
 
-### 3.6 Constrained decoding + self-consistency as the engine-layer contract — **Amend ADR-30, ADR-42, ADR-90, ADR-99**
+**What.** Every ingest engine = decomposed, per-aspect, schema-constrained prompts + a tiny deterministic resolver; the **MASSW five-aspect schema** with mandatory "N/A" for absent aspects (Zhang 2024); temperature=0; closed label sets shown explicitly.
 
-**What.** Standardize every ingest engine as **decomposed, per-aspect, schema-constrained prompts + a tiny deterministic resolver**, wrapped in **self-consistency sampling** (5–10 paths, unweighted majority vote) whose disagreement populates the uncertainty flag. temperature=0 for extraction; closed label sets presented explicitly (OPTIONS suffix).
+**Why + measured.** Constrain the output, not the model (Schick & Schütze 2021). **On-box: frozen qwen2.5:7b + Ollama `format=schema` is 6/6 clean on MASSW aspect extraction — the CrossTrace "~0% compliance" Refute does not reproduce on our task, and no QLoRA is budgeted.** Two standing caveats: constrained decoding forces *valid, not correct* (re-validate content, budget for backtracking — LMQL/Beurer-Kellner 2023); self-consistency is a closed-label router, not a faithfulness signal (§3.3). Faithfulness comes from deterministic grounding (§3.2), not agreement.
 
-**Why.** The brittleness of cheap local models is structured-output adherence, not capability — constrain the output, not the model (Schick & Schütze 2021, SciLitLLM 2025). Guided-format decoding makes output valid by construction in one local pass (Agrawal 2022, LMQL/Beurer-Kellner 2023, Shin 2021). Adopt the **MASSW five-aspect schema** with mandatory "N/A" for absent aspects verbatim (Zhang 2024). Per-aspect prompts make each slot independently gate-checkable.
-
-**Refutation caveats (§0).** Three corrections from the adversarial pass: (1) *Frozen ≠ fine-tuned* — CrossTrace's ~0% was a harder reasoning-trace task; **measured on-box, frozen qwen2.5:7b + constrained decoding hits 6/6 on aspect extraction and 90% verbatim on warrant quotes, so constrained decoding suffices and no QLoRA is budgeted** (re-test on full-body inputs before relying on it). (2) *Constrained decoding forces valid, not correct* — LMQL itself notes it can force text the model would never generate; "deterministic" means deterministic **parse/validation**, not generation, so re-validate content and budget for backtracking/retries (Beurer-Kellner 2023). (3) *Self-consistency is not a confidence signal at 7B* — it is blind to stable (confident-wrong) fabrication and undefined for open generation (Wang 2023 footnote; Liévin 2023); use it only as a **one-sided relative router on closed-label steps**, and get faithfulness from deterministic grounding (§3.2), not agreement.
-
-**Concrete.** One targeted prompt per aspect over one mega-prompt; gate-existence-before-extraction chaining to kill hallucinated claims; counterfactual perturbation to confirm the extractor tracks text, not priors.
+**Concrete.** One prompt per aspect; gate-existence-before-extraction to kill hallucinated claims; counterfactual perturbation to confirm the extractor tracks text. Re-test compliance on full-body / messy-OCR inputs (`probe-qwen-compliance.py --body`) before relying past abstracts.
 
 ---
 
-## 4. New capabilities to add — new or activated ADRs
+## 4. New capabilities — mostly deferred past alpha.9
 
-Adopt-grade ideas not yet in the design.
+Adopt-grade in the literature, but not earned for this checkpoint (see §1 cut line). Listed for the roadmap.
 
-### 4.1 Retriever/scout: instruction-tuned dense-over-claims + offline enrichment + small-k reranker — **New / extend ADR-37, ADR-65, ADR-92**
-
-**What.** Default the retriever/scout to an **instruction-tuned dense encoder** (GritLM/E5/Instructor class) indexing **the contextual round (claim + its surrounding source span)**, with **atomic claims as the index keys over it** — *not* bare atoms, and not whole PDFs — plus a **BM25 lexical fallback**. (§0 Retire: atomic-as-*stored*-unit hurts QA; the contextual round is the retrieval unit, the atom is the index — LongMemEval, Hu 2026.) Add an **LLM reasoning-trace query expansion** front-end and a **small-k LLM-judge reranker** ("context library"). Shift LLM cost **offline**: at ingest, attach "hypothetical questions this claim answers" as searchable metadata.
-
-**Why.** Retrieval quality — not model size or agentic search — drives grounded output; one-line BM25/title baselines beat long agentic deliberation (ResearchArena/Kang 2024, BRIGHT/Su 2025). Index compact units, PQ-compress to fit 16GB (LitSearch/Ajith 2024). Off-the-shelf MS-MARCO cross-encoders *hurt* on reasoning relevance — keep k small and validate before adding (Wei 2026). Cap aggregated evidence at ~3 docs for qwen2.5:7b (Neekhra 2026).
-
-### 4.2 Cheap, non-LLM methods ahead of every model pass — **New / extend ADR-93, ADR-94, ADR-33**
-
-**What.** **MinHash-LSH / n-gram** near-duplicate detection; **PMI / class-TF-IDF** n-gram extraction for keyphrase tags and cluster labels; **per-aspect embeddings + coding-then-clustering** (UMAP→HDBSCAN→centroid-nearest-code labels) for the corpus map; **random-walk-with-restart** over the typed graph for topological discovery with path-based "why retrieved" explanations.
-
-**Why.** Most of dedup, keyphrase, and clustering needs no LLM at all (Brown 2020, Diao 2023, Hämäläinen 2023, Qiao/SciAtlas 2026). Deterministic pre-filters belong ahead of every expensive LLM pass — the "engines filter cheaply, agents judge" gate.
-
-### 4.3 Two-stage normalize/dedup: retrieve-shortlist → local-LLM-pick — **New / extend ADR-94**
-
-**What.** An embedding retriever proposes ~√N candidate canonical entities; a small local LLM under the gate picks the match. Entity canonicalization is the cross-note **join key** (char-3-gram + ANN, type-by-type, coarse-to-fine).
-
-**Why.** LLMs reliably mint near-duplicate entities, so dedup must be keyed on canonical IDs; the shortlist-then-pick pattern keeps the LLM call small (Berkowitz/RAGnorm, SciLinker, PubTator).
-
-### 4.4 Typed-relation controlled vocabularies + constructive-necessity test — **New / extend ADR-98, ADR-52, ADR-79**
-
-**What.** Replace a generic "cites" edge with **citation-intent** (Background / CompareOrContrast / Extends / Uses / Motivation) and **functional-role** (Core Method, Conceptual Framework, Data Source, Eval Protocol) taxonomies, classifiable by a 7B model on ingest. Gate dependency edges by a **constructive-necessity test** ("if I had to build this tomorrow, what would I still need?") and record an explicit **unmapped / NONE** outcome — which simultaneously surfaces a research gap for discovery.
-
-**Why.** Reasoning-relevance is multi-typed; recording NONE rather than forcing a citation prevents over-linking and feeds the discovery loop (SciPaths, CiteBench, Wei 2026). Treat the schema as a deliberate lossy KR whose **constraints ARE the representation** (Davis).
-
-### 4.5 Editable exemplar store for personalization — no training — **New / extend ADR-35, ADR-23**
-
-**What.** A FAISS/ANN datastore of **PI-confirmed exemplars** (relation/claim/aspect decisions) so a gate correction becomes a new key-value that immediately shifts future extractions. Plus **time-decayed, role-scoped "lesson" overlays** distilled from recurring PI accept/reject patterns, injected into compiled profile prompts.
-
-**Why.** Personalize through an editable store, not weights — keeps personalization inspectable, auditable, revertible, and matches the no-training constraint (RetrievalRE/Chen 2023, Gottweis 2025). Explicitly **reject** weight-internalized preferences (NanoResearch's label-free policy learning) — the co-trained-reviewer failure mode.
-
-### 4.6 Negative-results / "what never worked" store — **New / extend ADR-100, ADR-61/95**
-
-**What.** Record rejected directions and dead ends so the discovery loop and triage never re-surface them; track a per-PI **seen/dismissed** set (gray out visited, push toward unexplored).
-
-**Why.** Narrative publication discards failure knowledge — the same gap the vault has (CORAL/Qu 2026, ARA, Faste 2013). Complements supersession/contradictions.
+- **4.1 Retriever/scout** (New / extend ADR-37, 65, 92) — instruction-tuned dense encoder over the **contextual round** (atom as index key, not stored unit — §0b.2), BM25 fallback, reasoning-trace query expansion, small-k LLM-judge reranker, offline hypothetical-question enrichment. Cap aggregated evidence at ~3 docs for qwen-class (Neekhra 2026). *Defer: retrieval quality matters most but the overhaul is post-alpha.9.*
+- **4.2 Cheap non-LLM methods ahead of every model pass** (ADR-93, 94, 33) — MinHash-LSH dedup, PMI/class-TF-IDF keyphrases + cluster labels, per-aspect coding-then-clustering, random-walk-with-restart with path explanations. *Pull forward the dedup/keyphrase pieces if cheap.*
+- **4.3 Two-stage normalize/dedup** (ADR-94) — embedding shortlist → small-LLM pick, keyed on canonical IDs (LLMs mint near-duplicate entities).
+- **4.4 Typed-relation vocabularies + constructive-necessity test** **[paper-only]** (ADR-98, 52, 79) — citation-intent + functional-role taxonomies; record explicit NONE rather than forcing a citation (which also surfaces a gap). Schema as deliberate lossy KR (Davis).
+- **4.5 Editable exemplar store — no training** (ADR-35, 23) — PI-confirmed exemplars in FAISS so a gate correction shifts future extractions; reject weight-internalized preferences (NanoResearch). *This is also the §0c "one-action-many-signals" lever.*
+- **4.6 Negative-results / seen-dismissed store** (ADR-100, 61/95) — never re-surface rejected directions.
 
 ---
 
 ## 5. Evaluation & instrumentation — **Amend ADR-62, ADR-104/105/106, ADR-29, ADR-80**
 
-**What.**
-- **State-based evaluation + pass^k consistency** — judge the resulting vault state vs an expected state (path-independent); certify that *all* k reruns succeed, not best-of-k (tau-bench 2024).
-- **Groundedness as a gate metric** — NLI-entailment citation recall/precision over decomposed atomic sub-claims, validated against human judgment (ALCE/Gao 2023, κ≈0.70); a lexical span-overlap check is the cheap deterministic substitute.
-- **Validate LLM-judges against the PI's own approve/reject labels** before trusting them; sample-3-and-average; treat the score as a triage signal, not certification.
-- **Reward abstention** — score an "insufficient-evidence / choose-unknown" output as correct (DOCBENCH, BBQ, TEMPO).
-- **Trivial-control baselines** (majority-class, always-accept-venue) so triage gains aren't distributional shortcuts; partition eval into "guessable from metadata" vs "needs content."
-- **Bootstrap eval fixtures** by model-writing labeled examples (generate-then-discriminate), then PI-validating a sample (Perez 2022); synthesize via controlled mutation operators (paraphrase, negation, generalize/specialize) with round-trip diff audits (FEVER, CITETRACER).
-- **Cost as a first-class metric** with a tool-call budget (~6 calls; ≥10 degrades via context dilution) (ScienceAgentBench 2025).
+The **first build here is the Jacobs calibration check** (§3.5 / §0b.1) — everything else is standard hygiene:
 
-**Why.** Automatic surface metrics (BLEU/ROUGE/BERTScore) track human judgment only weakly; process- and abstention-level scoring catches "right answer, wrong reason" (EpiBench 2026, ExpertQA 2024). Every threshold/prompt/judge tuned on the PI's notes is **spent supervision** — freeze and version-pin, never report quality on the tuning set.
+- **State-based evaluation + pass^k consistency** — judge resulting vault state vs expected; certify all-k succeed, not best-of-k (tau-bench 2024).
+- **Groundedness as a gate metric** — NLI-entailment citation recall/precision over decomposed atomic sub-claims (ALCE/Gao 2023); the §3.2 lexical span-overlap is the cheap deterministic substitute.
+- **Validate LLM-judges against the PI's own approve/reject labels** before trusting them; treat the score as triage, not certification.
+- **Reward abstention** as a correct output (DOCBENCH, BBQ, TEMPO).
+- **Trivial-control baselines** (majority-class, always-accept-venue) so triage gains aren't distributional shortcuts.
+- **Bootstrap fixtures** by model-writing + PI-validating a sample (Perez 2022) and controlled mutation (negation/generalize) — but every threshold tuned on PI notes is **spent supervision** (§0c); freeze, version-pin, never report quality on the tuning set. Surface metrics (BLEU/ROUGE) track human judgment weakly — use process/abstention scoring.
 
 ---
 
 ## 6. Surfaces — projection, inspector, dashboards — **Amend ADR-102/103, ADR-84, ADR-87, ADR-71, ADR-101**
 
-**What.**
-- **Render over native inspectable artifacts** (Obsidian markdown / JSON Canvas / static HTML) and **diff-re-project by stable key** (citekey / claim-id) so layout is preserved across re-projection (D³/Bostock 2011, Beaudouin-Lafon 2000).
-- **Encode the single highest-priority signal preattentively** (contradiction status, uncertainty, supersession); precompute conjunctions ("contradicted AND stale") as their own mark; cap categorical color (Healey & Enns 2012, Fekete 2008).
-- **Show evidence weight + dissent + a no-suggestion baseline, never a single persuasive rationale** — confident wrong outputs and tidy feature-explanations *actively harm* an expert (Jacobs 2021, Govers 2026). The contradictions dashboard surfaces support/contradict **counts with provenance**, not a tidy "X% agree."
-- **Expose what the ranker down-ranked** so minority claims aren't silently suppressed.
-- **Computational wear** — render the PI's own read/edit/revisit history as salience, feeding learning-to-rank triage (Hill 1992).
-- **Token-tiered projection** — a statements-only projection keeps ~88% comprehension at ~93% fewer tokens; escalate to full evidence/text only on low confidence (Knows/Yu 2026).
-- **Faceted navigation** as an Obsidian Base over typed metadata with live result counts before a filter is committed (Hearst 2009).
+- **Render over native inspectable artifacts** (markdown / JSON Canvas / static HTML); diff-re-project by stable key (citekey/claim-id) so layout survives (D³/Bostock 2011).
+- **Encode the single highest-priority signal preattentively** (contradiction / uncertainty / supersession); precompute conjunctions as their own mark; cap categorical color (Healey & Enns 2012).
+- **Show evidence weight + dissent + a no-suggestion baseline, never a single persuasive rationale** — confident wrong outputs and tidy explanations actively harm an expert (Jacobs 2021, Govers 2026). The contradictions dashboard shows support/contradict **counts with provenance**, not "X% agree."
+- **Expose what was down-ranked / suppressed** — applies to the triage ranker *and* the §3.4 supersession filter, so minority/superseded claims aren't silently hidden.
+- **Computational wear** (render the PI's read/edit history as salience), **token-tiered projection** (statements-only first, escalate on low confidence — Knows/Yu 2026), **faceted navigation** over typed metadata with live counts (Hearst 2009).
 
 ---
 
-## 7. Open questions & risks
+## 7. Refuted / dropped — what measurement or the refutation pass killed
 
-1. **Local NLI model selection (blocks §3.1).** Which entailment model fits the 16GB RTX 4060 Ti alongside qwen2.5:7b — a dedicated small NLI model (DeBERTa-MNLI class) vs prompting the resident LLM as an NLI verbalizer? Validate on the adversarial fixtures before committing. Ties to the test-env model split.
-2. **Where evidence-strength / source-type metadata comes from at ingest (§3.3).** Zotero item-type gives review-vs-primary cheaply; evidence-strength may need a classifier or PI tagging.
-3. **Migration of existing claims to the new schema fields (§3.3, §3.4).** Backfill uncertainty/temporal-scope/provenance-grade on already-filed claims — one-time engine pass with PI spot-check, or lazy-on-touch?
-4. **NLI false-positive budget calibration (§3.1).** The abstain threshold trades over-linking against missed contradictions; needs the PI's own labels to set, and that is spent supervision.
-5. **Index re-embedding cost (§4.1).** Freeze the doc encoder (query-side-only adaptation) so the vault index never needs re-embedding if a retriever is ever tuned (Atlas/Izacard 2022).
+Recording these so they are not silently re-proposed:
 
----
-
-## 8. ADR worklist (proposed)
-
-| Disposition | ADRs | Recommendation |
-|---|---|---|
-| Validate (cite backing) | 03, 57, 32, 46, 28, 27, 01, 30, 90 | §2 |
-| Amend | 09, 10, 94, 38 | §3.1 NLI comparator |
-| Amend | 03, 57, 79 | §3.2 warrant checker |
-| Amend | 56, 08, 50 | §3.3 epistemic status |
-| Amend | 10, 09, 92, 65 | §3.4 supersession filter + temporal |
-| Amend | 70, 81, 41, 03 | §3.5 gate router |
-| Amend | 30, 42, 90, 99 | §3.6 constrained decoding |
-| New / extend | 37, 65, 92 | §4.1 retriever |
-| New / extend | 93, 94, 33 | §4.2 non-LLM methods |
-| New / extend | 94 | §4.3 normalize/dedup |
-| New / extend | 98, 52, 79 | §4.4 relation vocabularies |
-| New / extend | 35, 23 | §4.5 exemplar store |
-| New / extend | 100, 61/95 | §4.6 negative-results store |
-| Amend | 62, 104/105/106, 29, 80 | §5 evaluation |
-| Amend | 102/103, 84, 87, 71, 101 | §6 surfaces |
+- **QLoRA fine-tuning budget** — dropped; frozen + constrained decoding measured sufficient on our tasks (§3.6).
+- **Holistic LLM "same variable?" gate** — dropped; recall 1/6 (§3.1). Use the decomposed gate only.
+- **"NLI cleanly replaces cosine"** — narrowed; NLI fabricates different-variable contradictions, needs the structured gate, and cosine stays as a control (§3.1).
+- **Atomic claim as the *stored* unit** — narrowed to *index* over the contextual round (§0b.2, §4.1).
+- **Typed graph as a primary surface "at scale"** — demoted to one optional projection that must beat a BM25+dense baseline (§0b.3).
+- **"Self-consistency is a free confidence signal"** — false; it is the largest compute line and blind to stable fabrication; closed-label router only (§3.3/§3.6).
+- **"Least-privilege is sufficient security"** — narrowed to *necessary, not sufficient*; the gate is named as the (imperfect, itself-injectable) integrity control (§0b.5).
+- **Per-item human gate** — narrowed to a sparse, uncertainty-routed gate (§3.5).
 
 ---
 
-## 9. Provenance
+## 8. Open questions & untested risks
 
-- **Source corpus:** 401 papers, `_papers/` (Zotero export `_papers/Exported Items.bib`).
-- **Synthesis:** `_papers/REVIEW-SUMMARY.md` (executive summary, 9 cross-cutting themes, 11 category deep-dives).
+1. **The Jacobs question (highest).** Do PI-approved writes actually beat raw engine writes? Untestable here — needs real approve/reject logs. Until answered, the gate's value is assumed, not known. **ADR-03/57/24.**
+2. **Real-claim re-runs.** The §3.1/§3.2/§3.6 numbers are smoke tests on hand fixtures + abstracts. Re-run on real vault claims (`current-state-baseline.md`, `probe-qwen-compliance.py --body`) before any threshold is set.
+3. **Relationship-extraction quality** (the new §3.1 bottleneck) — negation, argument-order, same-attribute/different-value. Is a better-prompted decomposed extractor enough, or does this need its own small model?
+4. **Evidence-strength / source-type provenance** (§3.3) — Zotero item-type gives review-vs-primary cheaply; evidence-strength may need a classifier or PI tagging.
+5. **Schema migration** (§3.3/§3.4) — backfill epistemic/temporal fields on existing claims: one-time pass with PI spot-check, or lazy-on-touch?
+6. **The untested literature Refutes** (§0b.2–4) — atomic-as-unit, graph<BM25, proposer precision — all need labeled vault data.
+
+---
+
+## 9. ADR worklist (proposed)
+
+| Disposition | ADRs | Item | Status |
+|---|---|---|---|
+| Amend | 30, 42, 90, 99 | §3.6 constrained decoding | measured ✓ ship |
+| Amend | 03, 57, 79 | §3.2 warrant checker | measured ✓ ship |
+| Amend | 56, 08, 50 | §3.3 epistemic status | ship (foundational) |
+| Retire+Amend | 09, 10, 94, 38 | §3.1 NLI + decomposed gate | measured-partial |
+| Amend | 70, 81, 41, 03 | §3.5 gate router + Jacobs check | **measure first** |
+| Amend | 10, 09, 92, 65 | §3.4 supersession + temporal | |
+| Validate (caveated) | 03, 57, 32, 46, 28, 27, 01, 22, 24 | §2 skeleton | strong form contested |
+| New / extend | 37/65/92, 93/94/33, 98/52/79, 35/23, 100/61/95 | §4 (deferred past alpha.9) | |
+| Amend | 62, 104/105/106, 29, 80 | §5 evaluation (Jacobs check first) | |
+| Amend | 102/103, 84, 87, 71, 101 | §6 surfaces | |
+
+---
+
+## 10. Provenance
+
+- **Corpus:** 401 papers, `_papers/` (Zotero export `_papers/Exported Items.bib`).
+- **Pass 1 — review:** `_papers/REVIEW-SUMMARY.md` (executive summary, 9 themes, 11 category deep-dives).
+- **Pass 2 — refutation:** `_papers/REVIEW-REFUTATIONS.md` (14 bets attacked, 0 survived intact).
+- **Pass 3 — measurement:** `spike-nli-vs-cosine.py` (cosine/NLI/gate), `probe-qwen-compliance.py` (frozen-model aspect + warrant compliance), `current-state-baseline.md` (the PI-fills instrument).
 - **Per-paper verdicts:** `_notes/paper-review-verdicts.json`.
-- **Docs already wired to the review:** PR #784 (`docs/explanation/overview/intellectual-foundations.md`, `docs/explanation/rationale/why-pattern-provenance.md`, `docs/reference/bibliography.md`).
+- **Docs already wired to the review:** PR #784 (`intellectual-foundations.md`, `why-pattern-provenance.md`, `bibliography.md`).
