@@ -16,11 +16,11 @@ Put a draft in front of the **Peer-reviewer** — the independent, adversarial `
 
 **1. Delegate or commit a verify pass.**
 
-For project drafts under `projects/<slug>/`, committing the draft enqueues a verify-lane card automatically through the vault's `post-commit` hook. You can also request a pass directly in the Co-PI pane:
+For project drafts under `projects/<slug>/`, committing the draft enqueues a verify-lane card automatically through the vault's `post-commit` hook. You can also request a pass with `Cmd/Ctrl-P` → **Memoria: verify draft**, or ask in the Co-PI pane if you want help shaping the check:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 
-The Co-PI delegates a **`verify`** task. Palette twin: **Memoria: verify draft** — defaults to the active note when it's under `projects/` and writes a local `[!verification]` preflight trace before delegating (see [Command palette](../../reference/obsidian-command-palette.md)). You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
+Both manual routes create a **`verify`** task. **Memoria: verify draft** defaults to the active note when it's under `projects/` and writes a local `[!verification]` preflight trace before delegating; the Co-PI route delegates the same lane card after conversational framing (see [Command palette](../../reference/obsidian-command-palette.md)). You can point the lane at anything — one claim, a hub, a whole draft. The proposer and the checker are independent by construction: the Peer-reviewer is deliberately not the agent that gathered the evidence or wrote the prose.
 
 **2. Read the flag cards.**
 

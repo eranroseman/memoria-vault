@@ -18,5 +18,5 @@ Build durable synthesis — distill claims, connect them into the graph, and cur
 | [Build a hub](build-a-moc.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
 | [Refactor claim notes](refactor-a-note.md) | Merge near-duplicates or split compound claims |
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
-| [Query the vault](query-the-vault.md) | Ask the Co-PI, get a cited synthesis from your own notes |
+| [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |
 | [Run a pattern](run-a-pattern.md) | Run a shipped prompt-transformation over the active note or a selection |

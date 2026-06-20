@@ -17,15 +17,15 @@ Tutorials 03 and 04 brought in papers you already knew about; this is the other 
 
 ---
 
-## Step 1 — Ask the Co-PI
+## Step 1 — Delegate discovery
 
-Open the Co-PI pane and name the need in your own words:
+Use the direct command (`Cmd/Ctrl-P` → **Memoria: delegate task** → `catalog`) when you already know this is a discovery request, or open the Co-PI pane if you want help shaping it. Name the need in your own words:
 
 > "Find sources on just-in-time interventions for physical activity — what am I missing?"
 
 Phrase it as a research question, not keywords. Seed it however helps: "papers that build on `<citekey>`", "recent work that disagrees with my receptivity claims", "the foundational papers I skipped."
 
-The Co-PI delegates discovery to the Librarian's catalog lane; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
+Both routes create discovery work for the Librarian's catalog lane; the Librarian searches, compares hits against your Catalog so nothing you hold is resurfaced, and keeps discovery faithful and generous rather than an echo chamber ([The Librarian](../explanation/profiles/librarian.md)).
 
 ---
 

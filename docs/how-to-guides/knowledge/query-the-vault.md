@@ -7,7 +7,7 @@ nav_order: 7
 
 # Query the vault
 
-Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a read operation — nothing is written; anything worth keeping you author yourself.
+Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a deliberate Co-PI-only case because the product is synchronous, read-only dialogue: nothing is written, and anything worth keeping you author yourself. When you want a durable artifact instead of a conversation, use a direct command or delegated lane task.
 
 ## Which retrieval path?
 
@@ -20,7 +20,7 @@ Several surfaces overlap; pick by what you want *out*:
 | A written, citable synthesis to keep | Delegate a **`draft`** task | a draft in `projects/`, via the Inbox |
 | A fast lookup of a known term or field | Obsidian search, or a Dataview/Bases view | results in the UI |
 
-Rule of thumb: converse when *you* should do the synthesizing; delegate a draft when you want prose you'll verify and keep.
+Rule of thumb: converse when *you* should do the synthesizing; use a command or delegated lane task when you want a card, report, draft, or other durable output you'll verify and keep.
 
 ## Prerequisites
 

@@ -6,7 +6,7 @@ nav_order: 1
 
 # Find new sources
 
-Run a discovery pass — papers that build on what you hold, papers you're missing, or papers matching a research question — and judge the resulting candidate cards in the Inbox. Discovery is a delegated task: you ask, the Librarian searches, candidates come back as honest arguments.
+Run a discovery pass — papers that build on what you hold, papers you're missing, or papers matching a research question — and judge the resulting candidate cards in the Inbox. Discovery is a delegated task: use the palette directly or ask the Co-PI to route it; either way, the Librarian searches and candidates come back as honest arguments.
 
 ## Prerequisites
 
@@ -15,15 +15,15 @@ Run a discovery pass — papers that build on what you hold, papers you're missi
 
 ## Steps
 
-**1. Ask the Co-PI.**
+**1. Delegate discovery.**
 
-Open the Agent Client pane and name the need as a research question, not keywords:
+Use the direct command when you know this is a catalog/discovery job: `Cmd/Ctrl-P` → **Memoria: delegate task** → `catalog`. Or open the Agent Client pane and name the need as a research question, not keywords:
 
 > "Find sources on just-in-time interventions for physical activity — what am I missing?"
 
 Seed it however helps: "papers that build on `<citekey>`" (forward citations), "the foundational papers `<citekey>` builds on" (backward), "recent work that disagrees with my receptivity claims."
 
-The Co-PI delegates a **`catalog`** task to the Librarian via `delegate_route_task`. If you already know the lane, the palette twin is `Cmd/Ctrl-P` → **Memoria: delegate task** → `catalog`.
+Both routes create a **`catalog`** task for the Librarian. The Co-PI route uses `delegate_route_task`; the palette route is the direct action path and should be the default when the lane is already clear.
 
 **2. Let the Librarian search.**
 
@@ -40,7 +40,7 @@ Resolving a card flips it in place ([Work the review queue](../inbox/work-the-re
 
 **4. Feed it from gaps.**
 
-Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-written discovery prompt: hand it straight back to the Co-PI ("that gap is real — find sources to fill it"). This is the compounding loop: mapping finds holes, discovery fills them, verification keeps the filling honest.
+Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-written discovery prompt: use **Memoria: delegate task** → `catalog` with the gap as context, or ask the Co-PI ("that gap is real — find sources to fill it") if you want help shaping the request. This is the compounding loop: mapping finds holes, discovery fills them, verification keeps the filling honest.
 
 ## Verify
 

@@ -53,7 +53,7 @@ For a kept paper, open the proposed reading record in `notes/sources/` — `enti
 
 ## Batch capture
 
-Capture each source individually — one palette invocation (or one Zotero selection) per paper; each enqueues its own card and the Librarian processes them one at a time (one `running` card per lane). For a topic-sized batch, skip manual capture entirely and ask the Co-PI for a reading batch: [Find new sources](find-new-sources.md).
+Capture each source individually — one palette invocation (or one Zotero selection) per paper; each enqueues its own card and the Librarian processes them one at a time (one `running` card per lane). For a topic-sized batch, skip manual capture entirely and run discovery through **Memoria: delegate task** → `catalog`, or ask the Co-PI to shape the batch if you are still clarifying the request: [Find new sources](find-new-sources.md).
 
 ## If a capture stalls
 

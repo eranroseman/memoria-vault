@@ -56,11 +56,11 @@ Create one now for this batch's topic; the full template and step-by-step proced
 
 ## Step 3 — Ask for a coverage pass
 
-Now ask the system what your corpus actually covers. In the Co-PI pane:
+Now ask the system what your corpus actually covers. Use the direct command (`Cmd/Ctrl-P` → **Memoria: map corpus**) when the scope is clear, or ask in the Co-PI pane if you want help framing the pass:
 
 > "Map my corpus on `<your-topic>` — what do I have good coverage on, and where is it thin?"
 
-The Co-PI delegates a map-lane task to the Librarian, which produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
+Both routes create a map-lane task for the Librarian, which produces corpus and coverage views: how your sources and claims cluster, which sub-topics are dense, which are thin ([The Librarian](../explanation/profiles/librarian.md)). Results come back through the Inbox — a coverage read to act on, plus **`gap` cards** for the thin areas, each carrying the same honesty body as a candidate card.
 
 To find them: open the **Inbox space** and look in the **Needs me** view — the coverage read and the new `gap` cards land there alongside your other candidate cards.
 

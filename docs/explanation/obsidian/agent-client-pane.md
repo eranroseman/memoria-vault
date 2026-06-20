@@ -16,7 +16,7 @@ For *how to operate* the pane — opening it, attaching a note as context, readi
 
 Most of Memoria's work flows through the board: a card is created, dispatched, completed, reviewed. The pane is the deliberate exception — the one surface for work that is *synchronous and exploratory* rather than queued and auditable. Thinking a paper through, asking what the corpus already holds, sketching a counter-outline: these are conversations, not tasks with a fixed output. Forcing them onto the board would produce cards that never cleanly close, because the "output" lives in the human's understanding, not in a file.
 
-So the pane and the board divide cleanly: **the board is for work that produces a reviewable artifact; the pane is for thinking that produces a clearer human.** Anything from a pane session that *should* become durable (a claim note, a draft) is written through the normal gated path afterward — by the PI directly, or as a card the Co-PI delegates. The pane itself writes nothing canonical: the Co-PI is structurally read-only ([The Co-PI](../profiles/co-pi.md)).
+So the pane and the board divide cleanly: **the board is for work that produces a reviewable artifact; the pane is for thinking that produces a clearer human.** Anything from a pane session that *should* become durable (a claim note, a draft) is written through the normal gated path afterward — by the PI directly, through the matching command-palette route, or as a card the Co-PI delegates. The pane itself writes nothing canonical: the Co-PI is structurally read-only ([The Co-PI](../profiles/co-pi.md)).
 
 ## Why one agent
 
@@ -31,7 +31,7 @@ The assist surface keeps that split visible. Find/Search/Patterns/Ask/Draft/Expl
 The practical discipline the pane asks of the human:
 
 - **Stay in the pane** while the work is exploratory — questioning a source, branching framings, asking what exists. The output is your sharpened thinking; nothing needs to be filed.
-- **Leave the pane** the moment the work should produce an artifact. Either write it yourself through the gated path (a claim note, a draft edit) or ask the Co-PI to delegate it — "draft this section" becomes a card on the draft lane, with a reviewable output and an audit trail.
+- **Leave the pane** the moment the work should produce an artifact. Either write it yourself through the gated path (a claim note, a draft edit), use the matching direct command, or ask the Co-PI to delegate it — "draft this section" becomes a card on the draft lane, with a reviewable output and an audit trail.
 
 A pane session that keeps producing things you wish were files is the signal to switch modes: conversations are for converging on what to make, cards are for making it.
 

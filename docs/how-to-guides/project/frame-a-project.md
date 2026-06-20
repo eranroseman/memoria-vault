@@ -21,11 +21,11 @@ Generate competing argument structures and commit to one framing before drafting
 
 **1. Delegate competing outlines.**
 
-In the Co-PI pane:
+Use `Cmd/Ctrl-P` → **Memoria: draft section** when you already know the outline request, or use the Co-PI pane if you want to shape the alternatives conversationally:
 
 > "Outline the argument for `<research question>` two or three different ways — chronological, mechanism-of-action, and theory-first. Work from my claims on `<topic>`."
 
-The Co-PI delegates a **`draft`** task to the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
+Both routes create a **`draft`** task for the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
 
 **2. Read each option — then let them sit.**
 

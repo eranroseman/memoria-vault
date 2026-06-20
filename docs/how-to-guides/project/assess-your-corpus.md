@@ -11,7 +11,7 @@ Delegate a **`map`** task to get a corpus map — a structured read of what clai
 ## Prerequisites
 
 - At least ~5 claim notes in `notes/claims/` (fewer than that and the map is mostly gaps)
-- The Agent Client pane connected
+- Obsidian command palette available; the Co-PI pane is optional if you want help shaping the scope
 
 ## Steps
 
@@ -21,11 +21,11 @@ The map lane scopes against what you ask, so bring the deliverable into the ques
 
 **2. Delegate the map task.**
 
-In the Co-PI pane:
+Use the direct command when the scope is clear: `Cmd/Ctrl-P` → **Memoria: map corpus**. Or, if you want help framing the pass, ask in the Co-PI pane:
 
 > "Map my corpus on `<topic>` — what do I have good coverage on, and where is it thin? I'm aiming at `<deliverable>`."
 
-The Co-PI delegates a **`map`** task to the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). (Palette twin: **Memoria: map corpus** — prompts for an optional scope; see [Command palette](../../reference/obsidian-command-palette.md).)
+Both routes create a **`map`** task for the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). The palette command prompts for an optional scope; the Co-PI route delegates the same card after helping shape the request (see [Command palette](../../reference/obsidian-command-palette.md)).
 
 **3. Read the results from the Inbox.**
 
@@ -39,7 +39,7 @@ The coverage read comes back through the Inbox, with **`gap` cards** for the thi
 **4. Decide: write now or read more?**
 
 - **Dense enough** (a hub with several mutually linked claims is the tell): proceed to sketching and drafting.
-- **Gaps that matter:** hand each gap card you agree with straight back — "that gap is real, find sources to fill it" ([Find new sources](../library/find-new-sources.md)). Archive the gaps you don't buy.
+- **Gaps that matter:** use **Memoria: delegate task** → `catalog` with each accepted gap as context, or ask the Co-PI to shape the discovery request ([Find new sources](../library/find-new-sources.md)). Archive the gaps you don't buy.
 
 **5. Record rejected directions.**
 
