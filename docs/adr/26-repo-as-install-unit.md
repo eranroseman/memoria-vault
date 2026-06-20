@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 26
 ---
 
 # ADR-26: The repo is the install unit; profiles are hand-authored and idempotently deployed

@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30, 49]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 94
-nav_exclude: true
 ---
 
 # ADR-94: Record linkage for entity deduplication

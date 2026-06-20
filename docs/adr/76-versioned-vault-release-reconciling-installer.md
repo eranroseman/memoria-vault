@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [44, 46, 55, 69, 73]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 76
 ---
 
 # ADR-76: Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer

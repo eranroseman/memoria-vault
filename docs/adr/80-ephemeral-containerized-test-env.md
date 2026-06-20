@@ -8,8 +8,6 @@ date_resolved: 2026-06-17
 assumes: [28, 29, 64, 76]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
 ---
 
 # ADR-80: Ephemeral containerized Linux test-env harness

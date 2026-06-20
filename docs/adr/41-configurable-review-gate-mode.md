@@ -8,9 +8,6 @@ date_proposed: 2026-05-31
 date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 41
 ---
 
 # ADR-41: Configurable review-gate mode (blocking / advisory) for comparison studies

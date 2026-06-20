@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [48, 70, 77]
 supersedes: [82]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 101
 ---
 
 # ADR-101: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate

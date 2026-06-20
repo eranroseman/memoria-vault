@@ -8,10 +8,6 @@ date_resolved:
 assumes: [47, 57]
 supersedes: [58]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 88
-nav_exclude: true
 ---
 
 # ADR-88: Literate code-note

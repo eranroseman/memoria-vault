@@ -8,9 +8,6 @@ date_resolved: 2026-05-29
 assumes: []
 supersedes: []
 superseded_by: [52]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 8
 ---
 
 # ADR-08: Typed `relations:` frontmatter

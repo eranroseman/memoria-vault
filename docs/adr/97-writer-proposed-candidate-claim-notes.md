@@ -8,10 +8,6 @@ date_resolved:
 assumes: [21, 51]
 supersedes: [61]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 97
-nav_exclude: true
 ---
 
 # ADR-97: Writer-proposed candidate claim notes

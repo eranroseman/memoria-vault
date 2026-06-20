@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 18
 ---
 
 # ADR-18: Rename `agent_verdict` → `agent_recommendation`

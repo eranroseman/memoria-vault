@@ -8,10 +8,6 @@ date_resolved:
 assumes: [21, 48]
 supersedes: [61]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 95
-nav_exclude: true
 ---
 
 # ADR-95: Nightly proactive discovery loop

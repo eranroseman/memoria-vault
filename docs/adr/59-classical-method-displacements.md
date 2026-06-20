@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [9, 30]
 supersedes: []
 superseded_by: [89, 90, 91, 92, 93, 94]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 59
 ---
 
 # ADR-59: Classical method displacements over LLM calls

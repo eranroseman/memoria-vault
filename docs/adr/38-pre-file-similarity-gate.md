@@ -8,9 +8,6 @@ date_proposed: 2026-05-30
 date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 38
 ---
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note

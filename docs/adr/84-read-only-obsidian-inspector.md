@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [32]
 supersedes: [58]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 84
 ---
 
 # ADR-84: Read-only Obsidian Inspector

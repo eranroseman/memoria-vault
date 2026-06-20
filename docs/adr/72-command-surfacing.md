@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [48]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 72
 ---
 
 # ADR-72: Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive

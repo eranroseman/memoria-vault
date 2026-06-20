@@ -8,9 +8,6 @@ date_resolved: 2026-05-29
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 13
 ---
 
 # ADR-13: Homepage front-door note, auto-opened by obsidian-homepage

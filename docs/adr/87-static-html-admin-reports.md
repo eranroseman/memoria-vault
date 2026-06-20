@@ -8,10 +8,6 @@ date_resolved:
 assumes: [32, 62]
 supersedes: [58]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 87
-nav_exclude: true
 ---
 
 # ADR-87: Static-HTML admin reports

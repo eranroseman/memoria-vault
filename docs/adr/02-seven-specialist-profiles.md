@@ -8,9 +8,6 @@ date_resolved: 2026-05-01
 assumes: []
 supersedes: []
 superseded_by: [48]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 2
 ---
 
 # ADR-02: Seven specialist profiles over one generalist agent

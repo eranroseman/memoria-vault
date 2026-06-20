@@ -8,9 +8,6 @@ date_resolved: 2026-05-30
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 15
 ---
 
 # ADR-15: project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed

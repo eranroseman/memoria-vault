@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [23, 24]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 60
 ---
 
 # ADR-60: Cross-vault and cross-project knowledge sharing

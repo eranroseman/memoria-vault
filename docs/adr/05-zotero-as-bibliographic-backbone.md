@@ -8,9 +8,6 @@ date_resolved: 2026-05-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 5
 ---
 
 # ADR-05: Zotero + Better BibTeX as the bibliographic backbone

@@ -8,9 +8,6 @@ date_proposed: 2026-05-15
 date_resolved: 2026-06-19
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 35
 ---
 
 # ADR-35: Cross-run skill-insights memory

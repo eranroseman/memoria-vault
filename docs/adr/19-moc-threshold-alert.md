@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 19
 ---
 
 # ADR-19: Agent-proposed hubs (threshold alert and Mapper handoff)

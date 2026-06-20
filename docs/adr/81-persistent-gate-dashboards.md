@@ -8,9 +8,6 @@ date_resolved: 2026-06-18
 assumes: [13, 55, 70, 72, 74]
 supersedes: [68]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 81
 ---
 
 # ADR-81: Persistent gate dashboards

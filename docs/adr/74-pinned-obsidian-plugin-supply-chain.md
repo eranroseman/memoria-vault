@@ -8,9 +8,6 @@ date_resolved: 2026-06-18
 assumes: [26, 55, 67]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 74
 ---
 
 # ADR-74: Manage bundled Obsidian plugins with a pinned provenance manifest

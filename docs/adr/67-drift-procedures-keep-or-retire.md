@@ -8,9 +8,6 @@ date_resolved: 2026-06-12
 assumes: [25, 26, 49, 55]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 67
 ---
 
 # ADR-67: Drift procedures under the golden-copy model — keep or retire

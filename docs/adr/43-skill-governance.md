@@ -8,9 +8,6 @@ date_resolved: 2026-06-12
 assumes: [24]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 43
 ---
 
 # ADR-43: Skill governance and lifecycle

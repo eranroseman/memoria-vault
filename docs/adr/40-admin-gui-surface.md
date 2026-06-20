@@ -8,10 +8,6 @@ date_proposed: 2026-05-30
 date_resolved: 2026-06-16
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 40
-nav_exclude: true
 ---
 
 # ADR-40: Admin/forensic GUI surface (`hermes-workspace`)

@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 22
 ---
 
 # ADR-22: Build on the Hermes Agent runtime rather than a bespoke one

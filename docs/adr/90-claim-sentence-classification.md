@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30, 51]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 90
-nav_exclude: true
 ---
 
 # ADR-90: Claim-sentence classification

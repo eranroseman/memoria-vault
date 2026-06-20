@@ -8,9 +8,6 @@ assumes: []
 date_proposed: 2026-05-15
 date_resolved: 2026-06-10
 supersedes: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 36
 ---
 
 # ADR-36: Dedicated review-note type

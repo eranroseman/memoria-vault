@@ -8,9 +8,6 @@ date_resolved: 2026-06-01
 assumes: []
 supersedes: []
 superseded_by: [28]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 27
 ---
 
 # ADR-27: Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the only write path

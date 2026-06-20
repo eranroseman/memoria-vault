@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [24, 26, 55]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 63
 ---
 
 # ADR-63: Multi-machine deployment topologies and secondary-device patterns

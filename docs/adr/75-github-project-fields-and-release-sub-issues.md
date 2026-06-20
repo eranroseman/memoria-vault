@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [45]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 75
 ---
 
 # ADR-75: Use GitHub Project fields and release sub-issues for live work state

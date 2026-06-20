@@ -8,9 +8,6 @@ date_resolved: 2026-06-14
 assumes: [46]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 73
 ---
 
 # ADR-73: Documentation references — source links, ADR links, and per-operation Diátaxis split

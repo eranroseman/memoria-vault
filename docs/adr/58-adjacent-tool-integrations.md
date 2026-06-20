@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [32]
 supersedes: []
 superseded_by: [84, 85, 86, 87, 88]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 58
 ---
 
 # ADR-58: Adjacent tool integrations and added surfaces

@@ -8,9 +8,6 @@ date_resolved: 2026-06-04
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 32
 ---
 
 # ADR-32: External access over MCP

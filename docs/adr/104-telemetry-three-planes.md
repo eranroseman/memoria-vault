@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [20, 24, 25, 63]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 104
 ---
 
 # ADR-104: Telemetry as three planes — audit, analytics, diagnostic

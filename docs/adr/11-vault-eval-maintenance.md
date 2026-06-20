@@ -8,9 +8,6 @@ date_resolved: 2026-05-29
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 11
 ---
 
 # ADR-11: vault-eval as a maintenance capability

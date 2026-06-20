@@ -8,9 +8,6 @@ assumes: []
 date_proposed: 2026-05-15
 date_resolved: 2026-06-10
 supersedes: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 37
 ---
 
 # ADR-37: Retriever / Scout as a separate profile

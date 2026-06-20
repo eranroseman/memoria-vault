@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [48, 21]
 supersedes: []
 superseded_by: [95, 96, 97]
-parent: Decisions
-grand_parent: Explanation
-nav_order: 61
 ---
 
 # ADR-61: Nightly discovery loop, code-experiment loop, and Writer-proposed claims

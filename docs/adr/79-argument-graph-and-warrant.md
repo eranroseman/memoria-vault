@@ -8,9 +8,6 @@ date_resolved: 2026-06-16
 assumes: [8, 52, 77, 78]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 79
 ---
 
 # ADR-79: Argument graph and warrant

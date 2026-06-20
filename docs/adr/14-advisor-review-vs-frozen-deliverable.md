@@ -8,9 +8,6 @@ date_resolved: 2026-05-30
 assumes: []
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 14
 ---
 
 # ADR-14: advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract

@@ -8,9 +8,6 @@ date_resolved: 2026-06-11
 assumes: [30, 32, 46]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 57
 ---
 
 # ADR-57: Engines write, agents judge — no LLM agent as a mechanical writer

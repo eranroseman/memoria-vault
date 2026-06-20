@@ -8,10 +8,6 @@ date_resolved:
 assumes: [30]
 supersedes: [59]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 93
-nav_exclude: true
 ---
 
 # ADR-93: Keyphrase extraction for tag candidates

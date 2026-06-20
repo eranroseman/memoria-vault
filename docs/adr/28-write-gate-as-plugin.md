@@ -8,9 +8,6 @@ date_resolved: 2026-06-02
 assumes: []
 supersedes: [27]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 28
 ---
 
 # ADR-28: The vault write gate is a Hermes Python plugin, not a shell hook

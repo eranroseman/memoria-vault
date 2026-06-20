@@ -8,10 +8,6 @@ date_resolved:
 assumes: [49, 57, 69, 70, 81]
 supersedes: []
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 102
-nav_exclude: true
 ---
 
 # ADR-102: Disposable projection engine

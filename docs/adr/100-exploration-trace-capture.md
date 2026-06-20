@@ -8,9 +8,6 @@ date_resolved: 2026-06-19
 assumes: [30, 52]
 supersedes: [65]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 100
 ---
 
 # ADR-100: Exploration-trace capture

@@ -8,10 +8,6 @@ date_resolved:
 assumes: [21]
 supersedes: [61]
 superseded_by: []
-parent: Decisions
-grand_parent: Explanation
-nav_order: 96
-nav_exclude: true
 ---
 
 # ADR-96: Code-lane keep/revert experiment loop
