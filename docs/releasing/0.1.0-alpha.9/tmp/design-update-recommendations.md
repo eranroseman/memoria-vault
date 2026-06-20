@@ -24,10 +24,23 @@ Each item gives **What → Why (papers) → ADR disposition**. Citations are sho
 
 **Current-state problem (need-push, not just literature-pull).** This doc is research-derived; the build order in §1 is *not* validated against observed alpha.9 pain. **Action:** before committing §1, write a one-page baseline of what the gate / contradictions / retrieval actually get wrong today, and re-rank against it. Until then, treat §1 as candidate moves, not a committed sequence.
 
-**Where the literature argues against us (the confirm-only review hid these):**
+**Where the literature argues against us.** The adversarial second pass (source of record: `_papers/REVIEW-REFUTATIONS.md`) attacked 14 load-bearing bets; **none survived intact.** The corpus endorses the *skeleton* — durable file state, verbatim warrants, batch surfacing, a *sparse* gate, deterministic external grounding, supersession-as-edge — and refutes most of the *strong claims layered on top*. The load-bearing disconfirmations, each forcing an ADR change:
 
-- **Retire embedding cosine as the arbiter of "same / contradicts."** §3.1 is not an Amend — it says a current bet (cosine for contradiction/dedup/supersession) *actively fails* on negation and reasoning-relevance (BRIGHT). Re-tagged **Retire**.
-- The disposition vocabulary was originally Validate/Amend/New, so nothing *could* land as a refutation. A 401-paper sweep with zero load-bearing disconfirmations is a method artifact; this section is the correction, and it is not exhaustive — a real §0 grows as the design is stress-tested.
+_Refute (a relied-on assumption is false):_
+
+- **Human + machine ≯ machine.** The gate's premise that PI review improves correctness is empirically false: human+ML ≈ human-alone, both far below ML-alone, and a *wrong* engine output drags the reviewer *below* their no-rec baseline (Jacobs 2021, N=220). **Add a calibration check that PI-approved writes actually beat raw engine writes, or the gate is theater. ADR-03/57/24.**
+- **Least-privilege ≠ security against poisoned papers.** Memoria's dominant threat is untrusted *data* (every ingest/fetch), not code; manipulated-content/disinformation attacks need no write/send/exec tool (Greshake 2023; Debenedetti 2024). **Drop "sufficient"; name the gate as the imperfect, itself-injectable integrity control. ADR-32/46/28/27.**
+- **Frozen ≠ fine-tuned on our task.** Untuned qwen2.5:7b scored ~0% structural compliance on Memoria's exact grounded-extraction task (CrossTrace 2026); the canonical "small matches large" result needs gradient PET + distillation, not a frozen prompt (Schick & Schütze 2021). **Budget a local QLoRA adapter or accept degraded compliance. ADR-22/24.**
+
+_Retire / narrow (true but narrower than claimed):_
+
+- **Cosine** as arbiter of same/contradicts — fails on negation/reasoning-relevance → NLI, **but NLI is not clean either** (see §3.1 caveat). **ADR-09/10/94/38.**
+- **Atomic-as-stored-unit** hurts QA; the *contextual round* is the optimal retrieval unit and atomic is an *index over* it — this inverts §4.1's "triage over claims, not text" (LongMemEval 2025; Hu 2026). **ADR-90/56/99.**
+- **Automatic contradiction/supersession** is the *least*-reliable memory capability (~28% wrong flips, Mitchell 2022): engines propose candidates, the human sets the link; track proposer precision before any promotion. **ADR-09/10.**
+- **Durable graph memory** underperforms raw long-context and even BM25 on the synthesis tasks Memoria exists for (MemoryAgentBench) — demote the typed graph to one optional projection that must *beat a BM25+dense baseline*. **ADR-08/79/52.**
+- **Per-item human gate** → sparse, uncertainty-routed gate; item-by-item erases automation gains and the human refuses to re-decide trust at every step (AutoResearchClaw 2026; Jacobs 2021). **ADR-24.**
+
+This list is not exhaustive — it grows as the design is stress-tested.
 
 **Open tensions — unresolved, do not paper over (Tension):**
 
@@ -59,9 +72,9 @@ Ordered by leverage, from the review's "what to build next" plus the cross-cutti
 
 ---
 
-## 2. Validated bets — record the backing, change nothing
+## 2. Validated skeleton — backing holds; strong claims contested (see §0)
 
-These are confirmed by the corpus; the action is to cite the evidence in the relevant ADRs, not to change the design.
+The *skeleton* of each bet is confirmed and its backing should be cited in the ADRs — but the refutation pass (§0) contests the **strong form** of four rows below, so this table is not "no change needed." Contested: **engines-write/judge** (PI review does not auto-improve correctness — Jacobs 2021); **MCP sandbox** (necessary, not *sufficient*; the threat is data, not code); **atomic claims** (the contextual round, not the bare atom, is the stored unit); **deterministic ingest + cheap local** (frozen ≠ fine-tuned on our task — CrossTrace). Read each contested row as "skeleton validated, strong claim → §0."
 
 | Design bet | Confirming literature | ADRs validated |
 |---|---|---|
@@ -84,7 +97,9 @@ The genuine "change X" recommendations. Each names the current design area and t
 
 **Why.** Plain embedding cosine is blind to negation and collapses (~59→~18 nDCG on BRIGHT) precisely on the reasoning-based, cross-paper relevance the argument graph exists to capture; high similarity routinely coexists with *flipped meaning* (BRIGHT/Wei 2026, Utama 2021). Frozen-NLI + MaxSAT resolves the globally consistent claim set in <20ms with no training (ConCoRD/Mitchell 2022); relation-as-NLI-hypothesis with entity-type constraints is training-free and makes "detect NO relation" — the dominant, hard case — explicit (Sainz 2021). The costly error is a false "duplicate/contradiction," so precision-first with abstention (CITETRACER, CiteGuard).
 
-**Concrete.** (a) Pick a local NLI model sized for the 16GB box (see §7 open question). (b) Verdict schema `{verdict, evidence_sentences[], score}`. (c) MaxSAT consistency pass over the claim graph to pinpoint flagged claims — surfaced to the gate, never an autonomous overwrite. (d) Adversarial **word-overlap-but-opposite-meaning** and **near-duplicate-but-distinct** fixtures with an explicit false-positive budget.
+**But NLI is not clean either (§0 refutation).** Off-the-shelf NLI is high-precision/low-recall, uncalibrated, size-dependent, and *shares cosine's lexical-overlap blind spot* (Malaviya 2024; Sainz 2021; Utama 2021 — NLI models exploit word-overlap heuristics, exactly the HANS failure). So NLI is a **candidate filter, not the arbiter**: gate it with a HANS-style adversarial acceptance test, calibrate the threshold on PI labels, and **keep cosine as a control baseline** rather than ripping it out. And the supersession/contradiction *links* it proposes go to the human, never auto-applied (proposer precision is the least-reliable memory capability — track it first).
+
+**Concrete.** (a) Pick a local NLI model sized for the 16GB box (see §7 open question; this is the §0 spike). (b) Verdict schema `{verdict, evidence_sentences[], score}`. (c) MaxSAT consistency pass over the claim graph to pinpoint flagged claims — surfaced to the gate, never an autonomous overwrite. (d) Adversarial **word-overlap-but-opposite-meaning** + **near-duplicate-but-distinct** + **HANS** fixtures with an explicit false-positive budget, scored against the cosine control.
 
 ### 3.2 Model-free warrant checker as a hard gate invariant — **Amend ADR-03, ADR-57, ADR-79**
 
@@ -98,7 +113,7 @@ The genuine "change X" recommendations. Each names the current design area and t
 
 **What.** Every atomic claim (and relation) carries: an **uncertainty flag**, a **source-span provenance grade** (complete / partial / broken), **two-axis confidence** (claim_strength vs extraction_fidelity), and **source-document-type** (review vs primary vs preprint) + **evidence-strength**. Contradiction/supersession privilege **primary evidence over echoed consensus**.
 
-**Why.** LM fluency is not knowledge (Bender 2021); reverse-inferred labels need reliability/specificity discipline (Barrett). Self-consistency disagreement *becomes* the uncertainty flag (Wang 2023) — cheap as a by-product of the §3.6 sampling already being paid for, **not free** (see §0 tension 1). Knows (Yu 2026) ships this exact two-axis-confidence + replaces-chain schema as external validation. **Version-pin epistemic metadata:** the uncertainty/confidence fields are model-specific, so stamp each with the producing model + prompt version — a qwen2.5→qwen3 swap silently shifts every value otherwise. Tagging source-type and weighting primary evidence prevents a review restatement from outvoting the study it cites (Schwappach 2025).
+**Why.** LM fluency is not knowledge (Bender 2021); reverse-inferred labels need reliability/specificity discipline (Barrett). Self-consistency disagreement *becomes* the uncertainty flag (Wang 2023) — cheap as a by-product of the §3.6 sampling already being paid for, **not free** (§0 tension 1), and only on **closed-label steps** (it is blind to stable fabrication — §3.6 caveat 3). Knows (Yu 2026) ships this exact two-axis-confidence + replaces-chain schema as external validation. **Version-pin epistemic metadata:** the uncertainty/confidence fields are model-specific, so stamp each with the producing model + prompt version — a qwen2.5→qwen3 swap silently shifts every value otherwise. Tagging source-type and weighting primary evidence prevents a review restatement from outvoting the study it cites (Schwappach 2025).
 
 **Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from self-consistency sample-disagreement at ingest; add a `source_anchor` (page/section/figure) per claim.
 
@@ -124,6 +139,8 @@ The genuine "change X" recommendations. Each names the current design area and t
 
 **Why.** The brittleness of cheap local models is structured-output adherence, not capability — constrain the output, not the model (Schick & Schütze 2021, SciLitLLM 2025). Guided-format decoding makes output valid by construction in one local pass (Agrawal 2022, LMQL/Beurer-Kellner 2023, Shin 2021). Adopt the **MASSW five-aspect schema** with mandatory "N/A" for absent aspects verbatim (Zhang 2024). Per-aspect prompts make each slot independently gate-checkable.
 
+**Refutation caveats (§0).** Three corrections from the adversarial pass: (1) *Frozen ≠ fine-tuned on this task* — untuned qwen2.5:7b scored ~0% structural compliance on grounded closed-schema extraction (CrossTrace 2026); budget a **local QLoRA adapter** for the hardest engines or accept degraded compliance. (2) *Constrained decoding forces valid, not correct* — LMQL itself notes it can force text the model would never generate; "deterministic" means deterministic **parse/validation**, not generation, so re-validate content and budget for backtracking/retries (Beurer-Kellner 2023). (3) *Self-consistency is not a confidence signal at 7B* — it is blind to stable (confident-wrong) fabrication and undefined for open generation (Wang 2023 footnote; Liévin 2023); use it only as a **one-sided relative router on closed-label steps**, and get faithfulness from deterministic grounding (§3.2), not agreement.
+
 **Concrete.** One targeted prompt per aspect over one mega-prompt; gate-existence-before-extraction chaining to kill hallucinated claims; counterfactual perturbation to confirm the extractor tracks text, not priors.
 
 ---
@@ -134,7 +151,7 @@ Adopt-grade ideas not yet in the design.
 
 ### 4.1 Retriever/scout: instruction-tuned dense-over-claims + offline enrichment + small-k reranker — **New / extend ADR-37, ADR-65, ADR-92**
 
-**What.** Default the retriever/scout to an **instruction-tuned dense encoder** (GritLM/E5/Instructor class) indexing **title + abstract + extracted atomic claims, not whole PDFs**, with a **BM25 lexical fallback**. Add an **LLM reasoning-trace query expansion** front-end and a **small-k LLM-judge reranker** ("context library"). Shift LLM cost **offline**: at ingest, attach "hypothetical questions this claim answers" as searchable metadata.
+**What.** Default the retriever/scout to an **instruction-tuned dense encoder** (GritLM/E5/Instructor class) indexing **the contextual round (claim + its surrounding source span)**, with **atomic claims as the index keys over it** — *not* bare atoms, and not whole PDFs — plus a **BM25 lexical fallback**. (§0 Retire: atomic-as-*stored*-unit hurts QA; the contextual round is the retrieval unit, the atom is the index — LongMemEval, Hu 2026.) Add an **LLM reasoning-trace query expansion** front-end and a **small-k LLM-judge reranker** ("context library"). Shift LLM cost **offline**: at ingest, attach "hypothetical questions this claim answers" as searchable metadata.
 
 **Why.** Retrieval quality — not model size or agentic search — drives grounded output; one-line BM25/title baselines beat long agentic deliberation (ResearchArena/Kang 2024, BRIGHT/Su 2025). Index compact units, PQ-compress to fit 16GB (LitSearch/Ajith 2024). Off-the-shelf MS-MARCO cross-encoders *hurt* on reasoning relevance — keep k small and validate before adding (Wei 2026). Cap aggregated evidence at ~3 docs for qwen2.5:7b (Neekhra 2026).
 
