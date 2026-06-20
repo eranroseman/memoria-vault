@@ -37,8 +37,10 @@ S5 used a disposable vault at `/tmp/memoria-alpha8-s5-vault` and an isolated
 - Five temp Hermes profiles installed under the isolated Hermes home.
 - The Inspector plugin, Zotero capture script, exploration-trace script, QuickAdd
   command bindings, and four space empty states were present in the fresh vault.
-- The attended GUI acceptance pass was completed against the disposable vault before
-  S5 was closed.
+- S5 was operator-accepted after the disposable vault's Obsidian Git upstream was
+  fixed. The preserved machine evidence covers the installer, profile, plugin,
+  script, QuickAdd, and empty-state surfaces; no separate checklist-level GUI run
+  sheet was preserved beyond the S5 issue comments.
 
 ## Closeout
 
