@@ -96,16 +96,45 @@ So keep the seven as a **reference / routing table** ("where does X live?") — 
 - **Do not assume 0.15–0.17 features** — the box runs 0.14.0; truth is in the on-box docs, not GitHub release notes (AGENTS.md "do not infer").
 - **Do not cite the substrate split as the access-control mechanism** (nor "collapse" it on those grounds) — isolation is enforced by per-profile dirs + the `session_search`/`moa`/`delegation` denylist + the card; durable-write by the gate's path globs. The [ADR-23](../../../adr/23-scoped-memory-substrates.md) taxonomy only *describes* this. The draft's "durable × shared = 4" merge is not ADR-23's axis (scope × lifespan) and is `untested`.
 
-## 6. On-box verification findings (the part worth promoting to ADRs)
+## 6. On-box verification findings
 
-1. **ADR-28 mechanism correction `applied`.** `disabled_toolsets` is schema-subtraction only (`model_tools.py:370`); `registry.dispatch` has no enablement check (`registry.py:390`); the policy plugin's hard-deny + default-deny (`policy_hook.py:84-96, 264`) is the real boundary. Recorded as a dated in-place note on ADR-28. On 0.17 (isolated probe) the gap *narrows* — the executor adds a session-toolset-scope block (`tool_executor.py:292-312`) — so the correction is version-specific and a real upgrade would **strengthen** the sandbox (executor scope-check + plugin, defense-in-depth).
-2. **ADR-23 rationale correction `applied`.** The scope×lifespan split describes, doesn't enforce; isolation = per-profile dirs + `session_search`/`moa`/`delegation` denylist + card; durable-write = the gate's path globs (`policy_hook.py:13`); substrate #3 is disabled. Recorded as a dated in-place note on ADR-23.
-4. **Runtime test (2026-06-21) — the gate hard-denies only the filesystem/shell family `open`.** Driving the deployed gate (`policy_hook.py`) confirms it blocks `code_execution`/`terminal`/`file` (incl. `mcp_`-prefixed) + obsidian command/delete/move, and allows reads. **But** `web_search`/`web_fetch`/`browser_*`/`image_generate`/`computer_use`/`x_search`/`send_message`/`delegate_task` all return `{}` (allow) — `DENY_DIRECT_TOOLS` covers only file/terminal/code-exec. For egress/messaging/browser the sandbox relies entirely on `disabled_toolsets` = schema-hiding on v0.14.0 (a label, not a mechanism — the defect this principle names). Low practical exploitability on the normal model path (providers only allow in-schema tool calls), but a real defense-in-depth gap vs injection and req-4 (no unaudited egress). Fix (version-independent): extend `DENY_DIRECT_TOOLS` to the non-MCP capability families; upgrading to 0.17 also closes it via the executor scope-check.
+### 6a. "Enforcement is a label" — systemic (ADR audit of all 110 ADRs + runtime)
+A background audit read every ADR against the AGENTS.md principle; ~38 made a boundary claim, and **six credited a description, not the mechanism** — all corrected in place (PR #820):
 
-3. **ADR-106 path re-test `open`.** The cost *gap* is confirmed; the *only-the-join* assumption is not. Spike: can the policy plugin (or a post-LLM-call plugin hook) capture `cost_usd` at source (`plugin-llm-access.md:310`) and attach it to the card, retiring the undocumented-schema join and the version pin?
+| ADR | Credited to | Actually enforced by |
+|---|---|---|
+| 28 | `disabled_toolsets` | policy plugin hard-deny + default-deny (`policy_hook.py:84-96,264`); `registry.dispatch` has no enablement check (`registry.py:390`) |
+| 23 | the substrate split | per-profile dirs + `session_search`/`moa`/`delegation` denylist + card; gate path globs (`policy_hook.py:13`) |
+| 60 | "the policy MCP" | **not yet implemented** — no foreign-vault scope on-box (`policy_hook.py:155` is single-vault) |
+| 04 | folder structure | lane `allow/deny.write` globs + default-deny |
+| 46 | the layer contract | `DENY_DIRECT_TOOLS` + default-deny |
+| 41 | "dispatch refuses to advance a card" | the write gate (`decision.py:146`); card-advance is process discipline |
 
-Findings 1–2 are instances of the AGENTS.md principle *"Enforcement is a mechanism, not a label"* (added this session) — the rule and its two worked examples cross-reference.
+Done-right exemplars (named mechanism **and** a check): ADR-55, 74, 80, 105. On 0.17 (isolated probe) the ADR-28 gap *narrows* — the executor adds a session-toolset-scope block (`tool_executor.py:292-312`) — so a real upgrade would **strengthen** the sandbox (defense-in-depth).
 
-## 7. Next step
+### 6b. The gate is narrow and allow-by-default (runtime-confirmed)
+Driving the deployed gate blocks file/terminal/code-exec (incl. `mcp_`-prefixed) + obsidian command/delete/move, allows reads — **but allow-by-defaults everything else**: `web_*`/`browser_*`/`image_generate`/`computer_use`/`x_search`/`send_message`/`delegate_task` all return `{}`. Worse, **`DENY_DIRECT_TOOLS` is wrong against the installed version (B3, runtime-confirmed):** it lists dead names (`code_execution`/`run_command` aren't real 0.14 tools) and **misses `process`** — a real tool in the `terminal` toolset (`toolsets.py:144`) that the gate **allows**. So for egress/messaging/process the sandbox rests entirely on `disabled_toolsets` = schema-hiding on 0.14 (a label, not a mechanism). Low exploitability on the normal model path (providers only allow in-schema calls), but a real defense-in-depth gap vs injection and req-4.
 
-**Done this session:** the AGENTS.md "Enforcement is a mechanism, not a label" principle + the test-vault upgrade rule, and dated in-place corrections to ADR-28 (gate) and ADR-23 (memory). **Remaining:** the ADR-106 plugin-cost spike (`assumes:` the documented plugin cost API behaves as written), and — if the substrate routing-table reframe is adopted — a write-time lint for the placement-correctness rule. Leave the rest as the requirement-derived target, re-evaluated after a real Hermes upgrade verified in the test vault, not from release notes.
+### 6c. Two more 0.14 reliance gaps (utilization audit, List B)
+- **B4 — the gate fails OPEN on its own failure.** Plugin-hook errors are swallowed at the Hermes layer (`plugins.py:1316`); the gate is fail-closed only on decisions it *reaches*. A registration/import failure proceeds silently — nuances the "fail-closed in every mode" claim.
+- **B5 — `checkpoints.enabled: true` snapshots nothing.** It triggers only on native `write_file`/`patch`/`terminal` (`tool_executor.py:104`), none of which Memoria uses (all writes go through the obsidian MCP). The "mode-independent reversibility" comment in all 5 profiles is **false**; real reversibility = Memoria's audit-hash pairs.
+
+### 6d. ADR-106 cost (`open` spike)
+The cost *gap* is confirmed (card export drops cost on 0.14 **and** 0.17); the *only-the-join* assumption is not. Spike: capture `cost_usd` at source via a plugin hook (`plugin-llm-access.md:310`), retiring the undocumented-schema join + version pin.
+
+## 7. 0.14 features under-used (utilization audit, List A)
+- **A1 — Bitwarden secrets (`available today`).** One bootstrap token vs fanning plaintext keys into 5 per-profile `.env`. Central rotation; fits the test+private two-vault setup.
+- **A2 — auxiliary model routing (`spot-checked`).** Global `~/.hermes/config.yaml` *has* an `auxiliary:` block, but every entry is empty (`provider: auto`, `model: ''`) → aux tasks fall back to the lane's main model. On **this test box** the main model is local `qwen2.5:7b` (free), so it's moot here; in **production** (API lanes) compression/title/approval would bill at the expensive model. Fix is production-only: point `auxiliary.{compression,title_generation,approval}` at Haiku/Flash. (The audit's "unset" → precisely "present but empty," same effect where the main model is paid.)
+- **A3 — `reasoning_effort`** recommended in 4 profile comments, set in none: set it (low on mechanical lanes, high on Peer-reviewer) or drop the comment.
+- **A4 — `session_search` disabled everywhere** (deliberate isolation for workers); the Co-PI is the one lane where cross-session recall may be wanted — a privacy call, not an auto-win.
+- **A5–A7 — confirmed correct as-is:** `memory` Co-PI-only, native kanban bypassed for the gate (per-card `model_override` is plumbed-but-unwired in 0.14 anyway), external cron for the no-LLM sweeps.
+
+## 8. Recommended changes (prioritized)
+1. **P1 — security: make the gate default-deny per-lane** + an ADR-80-style runtime deny-test. Structurally fixes 6b/B1/B2/B3 in one move (no more chasing Hermes's tool list). Stopgap if deferred: add `process`/`delegate_task`, drop the dead names.
+2. **P2 — cost (production only): set `auxiliary.*` to Haiku/Flash** in global config; verify against the live API config first (moot on the local-qwen test box).
+3. **P3 — correctness: drop the no-op `checkpoints` + fix the false "reversibility" comment** in the 5 profiles (B5); record the B4 fail-open-on-registration nuance against the "fail-closed" claim.
+4. **Adopt: Bitwarden (A1)** — delete the per-profile `.env` seeding.
+5. **Open spike: ADR-106 plugin-cost capture** (§6d).
+
+## 9. Status
+**Landed (PR #820):** AGENTS.md "Enforcement is a mechanism, not a label" + upgrade rule; dated corrections to ADR-28/23/60/04/46/41; this design doc + the two audit reports. **Open:** P1 (gate default-deny — the highest-leverage security fix), P2/P3 cleanups, the ADR-106 spike. The clean-slate target stands; re-evaluate the `verified-0.17 (isolated)` items only after a real upgrade verified in the test vault.
