@@ -199,7 +199,7 @@ their result is recorded.
 - [x] 2026-06-21 -- Draft release README, release plan, and ExecPlan authored.
 - [x] G2 -- Capability-boundary hardening implemented and verified.
 - [x] G3 -- Supersession correctness implemented and verified.
-- [ ] G4 -- ADR/docs reconciliation implemented and verified.
+- [x] G4 -- ADR/docs reconciliation implemented and verified.
 - [x] G5 -- Runtime-version decision recorded and verified.
 - [ ] G1/G6 -- UI workflow and docs integrity accepted.
 - [ ] Closeout -- tmp disposition complete; release parent and milestone closed.
@@ -251,6 +251,17 @@ their result is recorded.
   UI tests, full `scripts/test.sh all`, cspell, `~/Memoria-test` refresh, golden
   restore check, and deployed-file inspection. Attended S5 still needs Obsidian GUI
   confirmation.
+- 2026-06-21 -- S3 workflow replay evidence captured on `main` with
+  `bash scripts/e2e-smoke.sh`: fresh-vault assembly, golden staging/check,
+  policy-deny replay, malformed/valid claim gate checks, offline ingest,
+  graph smoke, model-free L4 replay, and final integrity checks all passed.
+- 2026-06-21 -- S4 runtime-integration evidence captured on `main`: the Hermes
+  contract doctor passed against `~/Memoria-test` for 42 covered direct/egress
+  tools; the cost doctor passed for the installed v0.14.0 stay-on path; invoking
+  `mcp__x__web_search` by name through the deployed policy hook returned a hard
+  block; and a live `memoria-writer` write to
+  `notes/claims/alpha9-s4-deny.md` returned `Writer.deny.write`, appended
+  `system/logs/audit.jsonl`, and left the target note absent.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file
