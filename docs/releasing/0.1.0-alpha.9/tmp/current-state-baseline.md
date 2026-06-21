@@ -21,7 +21,7 @@ The whole agenda assumes gate/contradictions/retrieval are where research time l
 | **Retrieval / discovery** | What's actually failing — recall, ranking, or relevance? | recall@k on ~20 queries with a known target note | run queries, check target in top-k |
 | | | cosine "false same" rate (the spike, on real claims) | run `spike-nli-vs-cosine.py --models` over vault pairs |
 | **Ingest extraction** | Does the API engine produce schema-valid + correct claims? (qwen test-model floor was 6/6 schema-clean) | % schema-valid; % spot-checked-correct of those | dump last ~30 extractions |
-| **Baseline to beat** | Does the fancy path beat BM25 + long-context dump? | of ~10 real past questions, # the dumb baseline answers acceptably vs # the current system beats it | run both, compare |
+| **Baseline to beat** | Does the fancy path beat `qmd` alone (the existing hybrid BM25+vector+rerank) + a long-context dump? | of ~10 real past questions, # `qmd`-alone answers acceptably vs # the current system beats it | `qmd search` vs the full path, compare |
 
 ## Supervision-budget check (the constraint nothing models)
 
