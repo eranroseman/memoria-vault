@@ -17,6 +17,14 @@ superseded_by: []
 > calls **Engines** is now named **Operations** (the synonym "app" is retired too).
 > ADR-69 governs the vocabulary; this ADR keeps the architecture.
 
+> **Verified on-box 2026-06-21 (mechanism note).** "agents reach engines and the Vault
+> only through [MCP]" (Decision, below) is bound by the **gate's deny rules** —
+> `policy_hook.DENY_DIRECT_TOOLS` hard-denies `file`/`terminal`/`code_execution` and the
+> decision core default-denies unknown tools at dispatch (the [ADR-28](28-write-gate-as-plugin.md)
+> mechanism; on v0.14.0 `disabled_toolsets` alone is schema-hiding only). The strict
+> layer-dependency contract *describes* the agent write-path; the gate is what stops a
+> direct write. Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## Context
 
 ADR-01's three layers (board, workers, vault) described the v0.1.0-alpha.1 infrastructure but

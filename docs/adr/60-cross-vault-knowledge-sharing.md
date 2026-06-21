@@ -12,6 +12,16 @@ superseded_by: []
 
 # ADR-60: Cross-vault and cross-project knowledge sharing
 
+> **Verified on-box 2026-06-21 (named enforcer not yet implemented).** Decision item 1
+> says cross-vault read-only access works "with the policy MCP enforcing the boundary."
+> On the installed gate that mechanism **does not exist**: `policy_hook.vault_root()`
+> governs a single local vault and the decision core has no foreign-vault scope
+> (`src/.memoria/mcp/policy_hook.py:155`). This ADR is `accepted`-shape but unscheduled
+> ("the scheduling waits on the trigger"), so it is a *deferred* design, not shipped — it
+> must not be read as a live guarantee. When built, cross-vault read-only requires a real
+> foreign-vault scope **and** a deny-write test proving the foreign vault rejects writes.
+> Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## Context
 
 The v0.1 scope is one researcher working one vault on one machine ([ADR-24](24-single-researcher-scope.md)). But a researcher accumulates more than one vault (a collaborator's, a separate domain vault) and more than one project inside a vault, and recall does not currently cross either boundary: a claim settled in vault A is invisible from vault B, and work approved on one project never primes another. Each gap is a felt friction only once the second vault or third project is real — so the shapes are settled here while the scheduling waits on the trigger.

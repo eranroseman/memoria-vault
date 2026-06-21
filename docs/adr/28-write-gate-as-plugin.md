@@ -20,6 +20,22 @@ superseded_by: []
 > only write path all still stand (they are what make a single gated path
 > sufficient). ADR-27 is **not** fully superseded.
 
+> **Verified on-box 2026-06-21 (mechanism correction).** The sentence above
+> over-credits the capability layer: on the installed Hermes (v0.14.0),
+> `agent.disabled_toolsets` is a **schema subtraction only** — it strips a tool from
+> what the model *sees* (`model_tools.py:370`) — and `registry.dispatch(name, args)`
+> runs **any** registered tool by name with **no enablement check** at dispatch
+> (`tools/registry.py:390`). So a disabled tool is hidden from the model, not removed
+> from the runtime; against the injection threat ([ADR-32](32-external-access-over-mcp.md),
+> the dominant one) the denylist is not a capability boundary. What actually makes the
+> single gated path sufficient is the **plugin's own behaviour**, which the code
+> already gets right: `policy_hook` **independently hard-denies** `file`/`terminal`/
+> `code_execution` and **defaults to block** for any unknown tool
+> (`src/.memoria/mcp/policy_hook.py:82-96, 204, 264`), explicitly "rather than trusting
+> the capability layer." Read the Decision below with that correction: `disabled_toolsets`
+> is UX (keeps the model from seeing the tool); the plugin's hard-deny + default-deny is
+> the enforcement. Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## Context
 
 [ADR-27](27-hermes-native-config-and-gate-enforcement.md) concluded that the

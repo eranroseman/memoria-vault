@@ -12,6 +12,13 @@ superseded_by: [47]
 
 # ADR-04: Folders encode lifecycle stage, not subject area
 
+> **Verified on-box 2026-06-21 (mechanism note).** "`Librarian` writes to `20-sources/`,
+> never to `30-synthesis/`" (Why, below) is enforced by the **policy gate** — lane-override
+> `allow.write`/`deny.write` globs + the gate's default-deny (`src/.memoria/mcp/policy_hook.py`,
+> `decision.py`) — not by the folder. Folders are inert: they route and document ("what kind
+> of note is this"), they do not stop a write. The lifecycle-folder decision stands; only the
+> enforcement attribution is corrected. Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## Context
 
 The vault needs an organizing principle for its folder structure. The obvious choice is subject area — put all cognitive science notes in `cognitive-science/`. The alternative is lifecycle stage — put all sources in `20-sources/`, all synthesis in `30-synthesis/`, regardless of topic.
