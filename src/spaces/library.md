@@ -4,6 +4,7 @@ type: space
 lifecycle: current
 dashboard: space
 space: library
+cssclasses: memoria-space
 ---
 
 # Library

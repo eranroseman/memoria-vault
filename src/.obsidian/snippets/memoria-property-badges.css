@@ -5,6 +5,11 @@
  * panel and color the states that decide what needs attention.
  */
 
+.markdown-preview-view.memoria-space .metadata-container,
+.markdown-source-view.memoria-space .metadata-container {
+  display: none;
+}
+
 /* @settings
 name: Memoria property badges
 id: memoria-property-badges

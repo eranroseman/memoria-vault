@@ -144,8 +144,29 @@ function parseSelectedCitekeys(raw) {
   if (first.error) {
     throw new Error("Better BibTeX selection lookup failed: " + String(first.error.message || JSON.stringify(first.error)).slice(0, 180));
   }
-  const result = first.result || {};
-  return Object.values(result).filter((key) => typeof key === "string" && key.trim()).map((key) => key.trim());
+  return citekeysFromResult(first.result);
+}
+
+function citekeysFromResult(result) {
+  const keys = [];
+  collectCitekeys(result, keys);
+  return [...new Set(keys.map((key) => key.trim()).filter(Boolean))];
+}
+
+function collectCitekeys(value, keys) {
+  if (typeof value === "string") {
+    keys.push(value);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectCitekeys(item, keys));
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const key of ["citationkey", "citationKey", "citekey", "citeKey"]) {
+    if (typeof value[key] === "string") keys.push(value[key]);
+  }
+  Object.values(value).forEach((item) => collectCitekeys(item, keys));
 }
 
 async function chooseCitekey(params, citekeys) {
