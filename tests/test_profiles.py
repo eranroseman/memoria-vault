@@ -234,6 +234,13 @@ def test_no_profile_has_direct_world_access():
         )
 
 
+def test_profiles_do_not_ship_inert_checkpoints():
+    """Hermes checkpoints do not snapshot MCP writes; dead safety config must stay absent."""
+    for cfg in sorted(PROFILES.glob("*/config.yaml")):
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+        assert "checkpoints" not in data, f"{cfg.parent.name}: inert checkpoints config shipped"
+
+
 def test_every_profile_enables_policy_gate_plugin():
     for cfg in sorted(PROFILES.glob("*/config.yaml")):
         data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
